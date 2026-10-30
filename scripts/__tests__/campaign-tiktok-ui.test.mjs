@@ -9,18 +9,20 @@ const require=createRequire(import.meta.url),{JSDOM}=require('jsdom');
 const root=resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const dir=resolve(root,'services/campaign-platform/ui');
 const account='a'.repeat(32),asset='b'.repeat(32),image='c'.repeat(32);
-async function setup({blocked=false}={}){
- const dom=new JSDOM(readFileSync(resolve(dir,'index.html'),'utf8'),{url:'https://api.tdfrecords.net/campaign-platform/',runScripts:'outside-only'}),calls=[];
+async function setup({blocked=false,sandbox=false}={}){
+ const prefix=sandbox?'/campaign-platform-sandbox':'/campaign-platform';
+ const dom=new JSDOM(readFileSync(resolve(dir,'index.html'),'utf8'),{url:'https://api.tdfrecords.net'+prefix+'/',runScripts:'outside-only'}),calls=[];
  dom.window.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
  dom.window.HTMLElement.prototype.scrollIntoView=function(){};
  dom.window.fetch=async(url,options={})=>{
-  const path=String(url).replace('/campaign-platform','');calls.push({path,body:options.body?JSON.parse(options.body):null});
+  const path=String(url).replace(prefix,'');calls.push({path,body:options.body?JSON.parse(options.body):null});
   let value;
   if(path==='/session')value={user:{name:'Artista',admin:false},usage:{used_bytes:0,limit_bytes:5e9,plans:{},notices:[]},accounts:[{id:account,platform:'tiktok',handle:'Artista',scope:'own'}],capabilities:{youtube:{},instagram:{},facebook:{},tiktok:{}}};
   else if(path==='/campaigns')value=[];
   else if(path.endsWith('/tiktok-creator')){
    if(blocked)return {ok:false,status:409,json:async()=>({error:'Aplicación pendiente de configurar'})};
    value={context:'opaque-context',creator:{creator_username:'artista',creator_nickname:'Nombre actual del artista',privacy_level_options:['PUBLIC_TO_EVERYONE','SELF_ONLY'],comment_disabled:true,duet_disabled:false,stitch_disabled:true,max_video_post_duration_sec:180}};
+   if(sandbox){value.creator.environment='sandbox';value.creator.privacy_level_options=['SELF_ONLY'];}
   }else if(path.endsWith('/tiktok-consent'))value={review_token:'opaque-consent'};
   else throw Error('Unexpected network boundary '+path);
   return {ok:true,status:200,json:async()=>value};
@@ -31,6 +33,19 @@ async function setup({blocked=false}={}){
  await vm.runInContext('refreshTikTok()',context);
  return {dom,context,calls,document:dom.window.document,run:code=>vm.runInContext(code,context),close:()=>dom.window.close()};
 }
+
+test('TikTok sandbox labels private testing and keeps requests and previews in its isolated route',async()=>{
+ const page=await setup({sandbox:true});try{
+  const d=page.document;
+  assert.match(d.querySelector('.intro').textContent,/SANDBOX.*Solo yo/);
+  assert.match(d.querySelector('#tiktok-options').textContent,/SANDBOX.*Prueba privada/);
+  assert.deepEqual([...d.querySelector('#tt-privacy').options].map(x=>x.value),['','SELF_ONLY']);
+  assert.equal(d.querySelector('#tt-privacy').value,'');
+  assert.equal(d.querySelector('#tt-preview video').getAttribute('src'),'/campaign-platform-sandbox/assets/'+asset);
+  assert.deepEqual([...d.querySelector('#piece-form').elements.platform.options].map(x=>x.value),['tiktok']);
+  assert.equal(d.querySelector('#connect').textContent,'Conectar tiktok');
+ }finally{page.close();}
+});
 
 test('TikTok export uses current creator options without selecting privacy or interactions by default',async()=>{
  const page=await setup();try{

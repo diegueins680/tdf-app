@@ -53,7 +53,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
    origin=self.headers.get('Origin')
    if origin and origin not in self.server.config['ALLOWED_ORIGINS']:raise Denied('Origen no autorizado.',403)
    if not origin and not self.headers.get('Authorization','').startswith('Bearer '):raise Denied('Falta el origen de la operación.',403)
-  actor=upstream_actor(self.headers,self.server.config);self.server.store.user(actor);return actor
+  actor=upstream_actor(self.headers,self.server.config)
+  from tiktok_environment import actor as environment_actor
+  environment_actor(self.server.config,actor);self.server.store.user(actor);return actor
  def do_OPTIONS(self):self.respond(204,extra={'Access-Control-Allow-Headers':'Authorization,Content-Type,Upload-Offset','Access-Control-Allow-Methods':'GET,POST,PUT,DELETE,OPTIONS'})
  def do_HEAD(self):self.dispatch()
  def do_GET(self):self.dispatch()
@@ -69,8 +71,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
    sys.stderr.write('campaign_request_internal_error\n');self.respond(500,{'error':'No se completó la operación. Revisa su estado antes de repetirla.'})
  def route(self):
   url=urllib.parse.urlsplit(self.path);path=url.path
-  if not path.startswith(PREFIX+'/') and path!=PREFIX:raise Denied('No encontrado.',404)
-  path=path[len(PREFIX):] or '/';method=self.command;s=self.server.store;cfg=self.server.config
+  cfg=self.server.config;prefix=urllib.parse.urlsplit(cfg['PUBLIC_BASE']).path.rstrip('/')
+  if prefix not in (PREFIX,PREFIX+'-sandbox'):raise Denied('Ruta de servicio inválida.',503)
+  if not path.startswith(prefix+'/') and path!=prefix:raise Denied('No encontrado.',404)
+  path=path[len(prefix):] or '/';method=self.command;s=self.server.store
   if path in ('/','/app.js','/tiktok.js','/style.css','/tdf-logo.svg') and method in ('GET','HEAD'):
    f=STATIC/({'/':'index.html','/tdf-logo.svg':'tdf-logo.svg'}.get(path,path[1:]));content=f.read_bytes();ctype=mimetypes.guess_type(str(f))[0] or 'application/octet-stream';self.respond(200,content,ctype,{'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-ancestors https://www.tdfrecords.net https://tdfrecords.net; base-uri 'none'; form-action 'self'"});return
   if path=='/health' and method=='GET':
@@ -79,7 +83,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
   if path.startswith('/oauth/callback/') and method=='GET':
    q=urllib.parse.parse_qs(url.query)
    if q.get('error'):raise Denied('El proveedor no autorizó la conexión.',409)
-   self.server.providers.callback(path.rsplit('/',1)[1],q.get('state',[''])[0],q.get('code',[''])[0],self.actor());self.respond(303,extra={'Location':PREFIX+'/'});return
+   self.server.providers.callback(path.rsplit('/',1)[1],q.get('state',[''])[0],q.get('code',[''])[0],self.actor());self.respond(303,extra={'Location':prefix+'/'});return
   if re.fullmatch('/media/[0-9a-f]{32}',path) and method in ('GET','HEAD'):
    aid=path.rsplit('/',1)[1];q=urllib.parse.parse_qs(url.query);expires=q.get('expires',['0'])[0];sig=q.get('signature',[''])[0]
    expected=hmac.new(cfg['MEDIA_KEY'].encode(),(aid+':'+expires).encode(),hashlib.sha256).hexdigest()

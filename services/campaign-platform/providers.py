@@ -32,8 +32,12 @@ class Providers:
  def capabilities(self):
   return {'youtube':{'video':'automatic_after_oauth_and_studio_checks','short':'automatic_after_oauth_and_studio_checks','community':'assisted','comment':'automatic_after_oauth','collaboration':'assisted','related_video':'assisted','end_screen':'assisted'},'instagram':{'reel':'automatic_after_oauth','post':'automatic_after_oauth','carousel':'automatic_after_oauth','story':'automatic_if_eligible_without_link_sticker','story_link_sticker':'assisted','message':'assisted_with_separate_approval'},'facebook':{'post':'connector_ready_pending_page_authorization_and_live_validation','video':'connector_ready_pending_page_authorization_and_live_validation','reel':'connector_ready_pending_page_authorization_and_live_validation','story':'assisted','carousel':'connector_ready_pending_page_authorization_and_live_validation','message':'assisted_with_separate_approval'},'tiktok':{'video':'tiktok_connector_pending_audit_and_verified_domain','photo':'tiktok_connector_pending_audit_and_verified_domain'},'oauth_configured':{p:bool(self.config.get(k)) for p,k in [('youtube','GOOGLE_CLIENT_ID'),('instagram','FACEBOOK_APP_ID'),('facebook','FACEBOOK_APP_ID'),('tiktok','TIKTOK_CLIENT_KEY')]}}
  def known_tdf_identity(self,platform,external_id):
+  from tiktok_environment import mode
+  if mode(self.config)=='sandbox' and platform=='tiktok':return True # Callback verifies the configured username with TikTok before storage.
   return external_id in self.config.get('TDF_ACCOUNT_IDS',{}).get(platform,[])
  def start(self,actor,platform,scope):
+  from tiktok_environment import connection
+  connection(self.config,actor,platform,scope)
   if platform not in ('youtube','instagram','facebook','tiktok','drive'):raise Denied('Plataforma inválida.')
   if platform=='tiktok' and not self.config.get('TIKTOK_CLIENT_SECRET'):raise Denied('Falta configurar la aplicación de TikTok en el servidor.',409)
   if platform=='drive' and (not actor.get('admin') or scope!='tdf'):raise Denied('El respaldo de TDF requiere un administrador y una conexión de TDF.',403)
@@ -52,6 +56,8 @@ class Providers:
    row=d.execute('SELECT * FROM oauth_states WHERE state=? AND platform=? AND used=0 AND expires_at>?',(state,platform,time.time())).fetchone()
    if not row:raise Denied('Autorización inválida o vencida.',403)
    if row['owner']!=actor['id'] or (row['scope']=='tdf' and not actor.get('admin')):raise Denied('La autorización no pertenece a esta sesión o ya no tienes permiso administrativo.',403)
+   from tiktok_environment import connection
+   connection(self.config,actor,platform,row['scope'])
    d.execute('UPDATE oauth_states SET used=1 WHERE state=?',(state,));row=dict(row)
   redirect=self.config['PUBLIC_BASE']+'/oauth/callback/'+platform
   if platform in ('youtube','drive'):
@@ -69,6 +75,12 @@ class Providers:
    for candidate in candidates:candidate['permissions']=granted
   else:
    body={'client_key':self.config['TIKTOK_CLIENT_KEY'],'client_secret':self.config['TIKTOK_CLIENT_SECRET'],'code':code,'grant_type':'authorization_code','redirect_uri':redirect};token,_=request('https://open.tiktokapis.com/v2/oauth/token/',data=urllib.parse.urlencode(body).encode(),headers={'Content-Type':'application/x-www-form-urlencoded'});info,_=request('https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name',token['access_token']);u=info['data']['user'];candidates=[{'id':u['open_id'],'handle':u['display_name'],'platform':platform,'token':token}]
+   from tiktok_environment import mode,binding
+   if mode(self.config)=='sandbox':
+    if 'video.publish' not in token.get('scope','').split(','):raise Denied('La cuenta de prueba no autorizó la publicación de TikTok.',403)
+    creator,_=request('https://open.tiktokapis.com/v2/post/publish/creator_info/query/',token['access_token'],{},method='POST')
+    if creator.get('error',{}).get('code')!='ok' or creator.get('data',{}).get('creator_username')!=self.config['TIKTOK_SANDBOX_USERNAME']:raise Denied('La cuenta no coincide con el usuario autorizado para el sandbox.',403)
+   token['_tdf_tiktok_client_binding']=binding(self.config)
   if platform!='drive':
    # Provider grants can include unrelated assets already connected to this app.
    # A TDF OAuth connection must never turn those assets into shared TDF channels.
@@ -98,6 +110,8 @@ class Providers:
    account=self.store.execution_guard(d,current)
    if self.known_tdf_identity(account['platform'],account['external_id']) and account['scope']!='tdf':raise Denied('Un canal oficial de TDF requiere su conexión y aprobación administrativa.',403)
  def publish(self,p,a,media_url=None):
+  from tiktok_environment import mode
+  if mode(self.config)=='sandbox' and p['platform']!='tiktok':raise Denied('Este entorno solo permite pruebas privadas de TikTok.',403)
   self.effect_guard(p)
   settings=json.loads(p['settings']);token=self.token(a);platform=p['platform']
   if platform=='instagram':

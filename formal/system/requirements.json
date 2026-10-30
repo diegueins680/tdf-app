@@ -13408,6 +13408,7 @@
         "services/campaign-platform/tdf-campaign-monitor.timer",
         "services/campaign-platform/tdf-campaign-worker.service",
         "services/campaign-platform/tiktok.py",
+        "services/campaign-platform/tiktok_environment.py",
         "services/campaign-platform/tiktok_token.py",
         "services/campaign-platform/ui/app.js",
         "services/campaign-platform/ui/index.html",
@@ -13423,7 +13424,7 @@
         "tdf-hq/assets/feature-registry.json",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
-      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook publishing protocol uses controlled mocks, without a connected Page or live publication. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no live TikTok publication or app-audit qualification.",
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook publishing protocol uses controlled mocks, without a connected Page or live publication. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no live TikTok publication or app-audit qualification. Isolated private-only sandbox policy has separate HTTP/admin, provider-username, environment/client binding and real UI tests; production audit remains required.",
       "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run; reports/campaign-platform-tiktok-2026-10-29.json",
       "status": "specified and implemented",
       "critical": true,
@@ -13490,7 +13491,8 @@
         "services/campaign-platform/tests/test_http.py",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "services/campaign-platform/tests/test_tiktok.py",
-        "scripts/__tests__/campaign-tiktok-ui.test.mjs"
+        "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "services/campaign-platform/tests/test_tiktok_sandbox.py"
       ],
       "formalModels": [
         "services/campaign-platform/model_check.py"

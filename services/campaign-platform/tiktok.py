@@ -12,6 +12,7 @@ import subprocess
 import time
 import urllib.parse
 from pathlib import Path
+import tiktok_environment as environment
 
 from domain import Denied, uid
 from providers import ProviderError, request
@@ -24,9 +25,11 @@ BOOLS = ('allow_comment', 'allow_duet', 'allow_stitch', 'commercial', 'brand_own
 def configured(providers):
     cfg = providers.config
     prefix = cfg['PUBLIC_BASE'].rstrip('/') + '/media/'
+    if environment.mode(cfg) == 'sandbox' and Path(providers.store.path).parent.resolve() != Path(cfg['STATE_DIR']).resolve():
+        raise Denied('El sandbox no puede utilizar la base de datos de otro entorno.', 409)
     if not cfg.get('TIKTOK_CLIENT_KEY') or not cfg.get('TIKTOK_CLIENT_SECRET'):
         raise Denied('La conexión con TikTok aún no está habilitada en TDF. Puedes guardar el borrador.', 409)
-    if cfg.get('TIKTOK_CLIENT_AUDITED') is not True:
+    if environment.mode(cfg) == 'production' and cfg.get('TIKTOK_CLIENT_AUDITED') is not True:
         raise Denied('TikTok aún no habilita la publicación desde esta plataforma. Puedes guardar el borrador; su visibilidad no cambiará automáticamente.', 409)
     if cfg.get('TIKTOK_VERIFIED_MEDIA_PREFIX') != prefix:
         raise Denied('TDF debe completar la verificación de archivos con TikTok. Puedes conservar el borrador.', 409)
@@ -72,17 +75,25 @@ def creator(providers, account):
             or any(type(data.get(k)) is not bool for k in ('comment_disabled', 'duet_disabled', 'stitch_disabled'))
             or type(data.get('max_video_post_duration_sec')) is not int):
         raise ProviderError('tiktok_invalid_creator_information')
-    return {key: data[key] for key in ('creator_username', 'creator_nickname', 'privacy_level_options',
+    result = {key: data[key] for key in ('creator_username', 'creator_nickname', 'privacy_level_options',
                                        'comment_disabled', 'duet_disabled', 'stitch_disabled',
                                        'max_video_post_duration_sec')}
+    if environment.mode(providers.config) == 'sandbox':
+        if data['creator_username'] != providers.config['TIKTOK_SANDBOX_USERNAME'] or 'SELF_ONLY' not in options:
+            raise Denied('TikTok no confirmó la cuenta o la visibilidad privada autorizada para esta prueba.', 409)
+        result['privacy_level_options'] = ['SELF_ONLY']
+        result['environment'] = 'sandbox'
+    return result
 
 
 def review_context(providers, actor, campaign, identifier):
+    environment.actor(providers.config, actor)
     account = account_for(providers, actor, campaign, identifier)
     data = creator(providers, account)
     token = providers.vault.seal({'purpose': 'tiktok_creator_review', 'actor': actor['id'],
                                   'campaign': campaign, 'account': identifier,
-                                  'external_id': account['external_id'], 'at': time.time(), 'creator': data})
+                                  'external_id': account['external_id'], 'at': time.time(), 'creator': data,
+                                  'client_binding': environment.binding(providers.config)})
     return {'creator': data, 'context': token}
 
 
@@ -145,12 +156,14 @@ def content_digest(piece, value, media):
 
 
 def consent(providers, actor, campaign, data):
+    environment.actor(providers.config, actor)
     account = account_for(providers, actor, campaign, data.get('account'))
     try:context = providers.vault.open(data.get('context', ''))
     except Exception:raise Denied('Consulta nuevamente las opciones actuales de TikTok.', 409) from None
     if (context.get('purpose') != 'tiktok_creator_review' or context.get('actor') != actor['id']
             or context.get('campaign') != campaign or context.get('account') != account['id']
             or context.get('external_id') != account['external_id']
+            or context.get('client_binding') != environment.binding(providers.config)
             or not 0 <= time.time() - context.get('at', 0) <= 900):
         raise Denied('La revisión de TikTok venció o corresponde a otra cuenta.', 409)
     if (data.get('music_agreed') is not True or data.get('preview_confirmed') is not True
@@ -160,14 +173,15 @@ def consent(providers, actor, campaign, data):
              'asset':data.get('asset') or None,'copy':str(data.get('copy','')),
              'destination':str(data.get('destination') or ''),'settings':data.get('settings',{})}
     if type(piece.get('due_at')) not in (int,float) or not math.isfinite(piece['due_at']):raise Denied('Selecciona una fecha válida para TikTok.')
-    value = fields(piece);choices(value, context['creator'])
+    value = fields(piece);environment.private_choice(providers.config, value);choices(value, context['creator'])
     if value['brand_paid'] and data.get('brand_policy_agreed') is not True:
         raise Denied('Confirma la política de contenido de marca de TikTok.')
     media = assets_for(providers, piece, value)
     token = providers.vault.seal({'purpose': 'tiktok_explicit_consent', 'actor': actor['id'],
                                   'campaign': campaign, 'account': account['id'],
                                   'external_id': account['external_id'], 'at': time.time(),
-                                  'digest': content_digest(piece, value, media)})
+                                  'digest': content_digest(piece, value, media),
+                                  'client_binding': environment.binding(providers.config)})
     with providers.store.db(True) as db:
         try:
             db.execute('INSERT INTO tiktok_consents(id,token_hash,context_hash,campaign,actor,digest,created_at) VALUES(?,?,?,?,?,?,?)',
@@ -221,12 +235,13 @@ def check_media(providers, piece, media, info):
 
 def publish(providers, piece, account, media_url=None):
     configured(providers);permission(account)
-    value = fields(piece);media = assets_for(providers, piece, value)
+    value = fields(piece);environment.private_choice(providers.config, value);media = assets_for(providers, piece, value)
     try:saved_consent = providers.vault.open(json.loads(piece['settings'])['tiktok']['review_token'])
     except Exception:raise Denied('Completa la revisión y el consentimiento de TikTok para esta pieza.', 409) from None
     if (saved_consent.get('purpose') != 'tiktok_explicit_consent'
             or saved_consent.get('campaign') != piece['campaign'] or saved_consent.get('account') != account['id']
             or saved_consent.get('external_id') != account['external_id']
+            or saved_consent.get('client_binding') != environment.binding(providers.config)
             or saved_consent.get('digest') != content_digest(piece, value, media)):
         raise Denied('La pieza o su cuenta cambiaron después del consentimiento de TikTok.', 409)
     with providers.store.db() as db:
@@ -255,7 +270,8 @@ def publish(providers, piece, account, media_url=None):
     access_token = providers.token(account)
     providers.effect_guard(piece)
     session = {'platform': 'tiktok', 'version': piece['version'], 'account': account['id'],
-               'created_at': time.time(), 'privacy': value['privacy'], 'phase': 'init_requested'}
+               'created_at': time.time(), 'privacy': value['privacy'], 'phase': 'init_requested',
+               'client_binding': environment.binding(providers.config)}
     with providers.store.db(True) as db:
         db.execute('INSERT INTO provider_sessions VALUES(?,?,?)', (piece['id'], providers.vault.seal(session), time.time()))
     providers.effect_guard(piece)
@@ -275,6 +291,7 @@ def verify(providers, piece, account):
     with providers.store.db() as db:row = db.execute('SELECT payload FROM provider_sessions WHERE piece=?', (piece['id'],)).fetchone()
     session = providers.vault.open(row[0]) if row else {}
     if (session.get('platform') != 'tiktok' or session.get('publish_id') != piece['external_id']
+            or session.get('client_binding') != environment.binding(providers.config)
             or session.get('account') != account['id'] or session.get('version') != piece['version']):
         raise Denied('El seguimiento de TikTok no corresponde a esta pieza.', 409)
     if time.time()-session['created_at'] > 86400:raise Denied('TikTok requiere una revisión de estado; no se volverá a enviar el material.', 409)

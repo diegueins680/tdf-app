@@ -29,6 +29,16 @@ class HttpBoundaryTests(unittest.TestCase):
  def create(self):
   return json.loads(self.req('/campaigns',{'name':'Lanzamiento','objective':'Escuchar música'})[1])['id']
  def test_unauthenticated_session_denied(self):self.assertEqual(self.req('/session',who='bad')[0],401)
+ def test_sandbox_prefix_and_designated_admin_are_enforced_over_http(self):
+  state=Path(self.tmp.name)/'tdf-campaign-platform-sandbox';state.mkdir()
+  self.config.update(STATE_DIR=str(state),PUBLIC_BASE='https://api.tdfrecords.net/campaign-platform-sandbox',TIKTOK_MODE='sandbox',TIKTOK_CLIENT_AUDITED=False,TIKTOK_SANDBOX_ADMIN_ID=1,TIKTOK_SANDBOX_USERNAME='artista')
+  self.store=Store(state/'campaigns.sqlite3');self.server.store=self.store;self.server.providers.store=self.store
+  original=self.base;self.base=original+'-sandbox'
+  self.assertEqual(self.req('/session')[0],403)
+  with patch('server.upstream_actor',return_value={'id':1,'name':'Admin de prueba','admin':True}):
+   self.assertEqual(self.req('/session')[0],200)
+   self.assertEqual(self.req('/app.js')[0],200)
+   self.base=original;self.assertEqual(self.req('/session')[0],404)
  def test_cross_user_record_hidden(self):
   cid=self.create();self.assertEqual(self.req('/campaigns/'+cid,who='user2')[0],404)
  def test_cross_origin_mutation_denied(self):self.assertEqual(self.req('/campaigns',{'name':'Bad','objective':'Bad'},origin='https://evil.example')[0],403)

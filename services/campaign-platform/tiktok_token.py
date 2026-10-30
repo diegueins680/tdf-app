@@ -20,6 +20,11 @@ def refresh(providers, account):
             row = db.execute('SELECT * FROM accounts WHERE id=? AND platform="tiktok" AND revoked=0', (account['id'],)).fetchone()
         if not row:raise Denied('La conexión de TikTok fue revocada.', 409)
         token = providers.vault.open(row['credentials'])
+        from tiktok_environment import mode, binding
+        saved_binding = token.get('_tdf_tiktok_client_binding')
+        if ((mode(providers.config) == 'sandbox' or saved_binding is not None)
+                and saved_binding != binding(providers.config)):
+            raise Denied('Reconecta TikTok en el entorno y aplicación que corresponden.', 409)
         if row['expires_at'] and row['expires_at'] > time.time() + 300:
             return token['access_token']
         if not token.get('refresh_token'):

@@ -663,7 +663,9 @@
       "services/campaign-platform/tests/test_facebook.py",
       "services/campaign-platform/tests/test_http.py",
       "services/campaign-platform/tests/test_tiktok.py",
+      "services/campaign-platform/tests/test_tiktok_sandbox.py",
       "services/campaign-platform/tiktok.py",
+      "services/campaign-platform/tiktok_environment.py",
       "services/campaign-platform/tiktok_token.py",
       "services/campaign-platform/ui/app.js",
       "services/campaign-platform/ui/index.html",
@@ -3396,7 +3398,7 @@
     {
       "id": "SURFACE-f351982a52e6f37a",
       "path": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "sha256": "1592e44f7bd1c12fd5ced8148baa0d2fd16e419acb46eb3aff8bdc6255683d2f",
+      "sha256": "d306aff194ca4a6a6e4c8475d7cc6a9074cc140fb3f3e564d94f1b260ece8f30",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6540,7 +6542,7 @@
     {
       "id": "SURFACE-dd915c4b36f5a11e",
       "path": "services/campaign-platform/providers.py",
-      "sha256": "a580c67bbd071434e0cbd9ad3d6d22016b162106bd3c5166b2e06489adfdb21f",
+      "sha256": "8a573e1a1d38acce1cc43271c2cb0bd0f4621329c2b406bacb0c23c6f00eaa20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6564,7 +6566,7 @@
     {
       "id": "SURFACE-046f5b5bc5783c06",
       "path": "services/campaign-platform/server.py",
-      "sha256": "df1c7b8902c72d05fbcc3afae0bc593f7422c9cda56bb227321643e92562f188",
+      "sha256": "c1f18b484bad0da2e8d7a1296b6d4c94c1e5af2f5499cc30a6c0c4a95b042e65",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6642,7 +6644,7 @@
     {
       "id": "SURFACE-682ec32ac659d8cb",
       "path": "services/campaign-platform/tests/test_http.py",
-      "sha256": "0b0df9d992a48f30d37f045c96ab0a764aea096e17c08c453cda977baa78bd6a",
+      "sha256": "3048528c17bf1ca8b467e8b75695d8a913be178f9bd9fa0e734990f389b26bda",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6652,21 +6654,33 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-72f554acbb1033be",
+      "path": "services/campaign-platform/tests/test_tiktok_sandbox.py",
+      "sha256": "254a538f696625f9a6a9b8f1cf442b763c52243347f08a41e6b390314fd3e71d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9a16e9f2b660bf49",
       "path": "services/campaign-platform/tiktok.py",
-      "sha256": "102978cd2f110c205f06b59f83e252d2aafc9e57290ce15a39c14faeceda9c6d",
+      "sha256": "b66fa94ec5e2c2fb7d6887cc0a1971bad6b9f51ea399fe6e80e2151c4cd39ead",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-84fa59a6dd1219e2",
+      "path": "services/campaign-platform/tiktok_environment.py",
+      "sha256": "db040535b85b198a4bb4153d95ca4c6336bbc83f127e61dcc93a7ed34b83a4c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dbce437071d03bba",
       "path": "services/campaign-platform/tiktok_token.py",
-      "sha256": "7fdc81f84cf5577ccba3c62e434821bc9b062fb3b6e0517ba3331ac958734e3c",
+      "sha256": "58d634247f9e327db9333ca61b6f2df6ca7bc74eac894b2ff500901dc89b6a35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-39b88f2b72e34e12",
       "path": "services/campaign-platform/ui/app.js",
-      "sha256": "859f877be53e813f0f78f475a2f909e99199c2752f1ad98c53ddf8c683576e94",
+      "sha256": "209b9bb08f0a2d67d2fa9b3e46494780716091257af1d802178ebf228937e2e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6696,7 +6710,7 @@
     {
       "id": "SURFACE-0988cfc5d5669fc0",
       "path": "services/campaign-platform/ui/tiktok.js",
-      "sha256": "86618007e3b34fb024388898caa35dde6e94891ee14a7caad14a5a39c4df05e6",
+      "sha256": "2f810ccb4c4d8723a1e81aa0f86da761ce11291c5e58987c4ee779b75814f26d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20117,7 +20131,7 @@
     },
     {
       "path": "docs/campaign-platform/operations.md",
-      "sha256": "cf6d1fadd26263949ff5ca8577ec2fce60b7c50cd24e8c3ec25b9d52ec197aa0",
+      "sha256": "46876f048b7b1cdb74720f44af1430468d40a69c038654cacce6e6d1686018e5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27642,7 +27656,7 @@
     },
     {
       "path": "formal/system/campaign-server.md",
-      "sha256": "fe9522176eb43ad982d3650d133a1cd7e913b974dafdefff46b2f7a163fb5e0e",
+      "sha256": "4e23c712e21d99e58ebd90192b9ccdc4a2fc6753064baec45ace30b44f7c77aa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28237,7 +28251,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "850b648bf3f98cd744b381904f39356f7a31e66fbbbd4a3a85e44fcab31e4204",
+      "sha256": "60e62a3fc9d2b5c0e8e731fb37c516a28ecdb119a953d3ed9156293965652e8e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -14,6 +14,7 @@ async function refreshTikTok(){
   const response=await post('/campaigns/'+current.id+'/tiktok-creator',{account});
   if(serial!==tiktokRequest||account!==f.elements.account.value)return;
   tiktokContext=response.context;tiktokInfo=response.creator;note.textContent='Publicarás en '+tiktokInfo.creator_nickname+' (@'+tiktokInfo.creator_username+'). Duración máxima: '+tiktokInfo.max_video_post_duration_sec+' segundos.';
+  if(tiktokInfo.environment==='sandbox')note.textContent='SANDBOX · Prueba privada «Solo yo». '+note.textContent;
   const label=el('label','Quién podrá ver esta pieza'),select=el('select',undefined,{id:'tt-privacy',required:true});fillOptions(select,tiktokInfo.privacy_level_options.map(x=>[x,TT_PRIVACY[x]]),'Selecciona la visibilidad');select.required=false;label.append(select);root.append(label);
   const interactions=el('div');ttCheck('tt-comment','Permitir comentarios',interactions).disabled=tiktokInfo.comment_disabled;
   if(f.elements.format.value==='video'){ttCheck('tt-duet','Permitir Duet',interactions).disabled=tiktokInfo.duet_disabled;ttCheck('tt-stitch','Permitir Stitch',interactions).disabled=tiktokInfo.stitch_disabled;}
