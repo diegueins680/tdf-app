@@ -13252,7 +13252,9 @@ createPurchase user req = do
               , packagePurchaseProductId      = productKey
               , packagePurchasePurchasedAt    = now
               , packagePurchasePriceCents     = priceC
-              , packagePurchaseExpiresAt      = Nothing
+              , packagePurchaseExpiresAt      =
+                  (\days -> addUTCTime (fromIntegral days * 86400) now)
+                    <$> packageProductExpiresDays productRecord
               , packagePurchaseRemainingUnits = qty
               , packagePurchaseStatus         = "Active"
               }
@@ -13286,6 +13288,8 @@ resolvePackagePurchaseRefs PackagePurchaseReq{buyerId = rawBuyerId, productId = 
               Just productRecord
                 | not (packageProductActive productRecord) ->
                     Left err409 { errBody = "Package product is inactive" }
+                | maybe False (<= 0) (packageProductExpiresDays productRecord) ->
+                    Left err409 { errBody = "Package product validity must be positive when configured" }
                 | otherwise ->
                     Right (buyerKey, productKey, productRecord)
 

@@ -15320,7 +15320,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+      "sha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16238,7 +16238,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+      "sha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27835,6 +27835,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/package-purchase-expiry.md",
+      "sha256": "c3fcb526015fe5d1dafb38252f9f345484e9a2ec27da4435d9009be6a87a088c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "12a4062aaf08facfbb3ecdb71ddc105b71a72009f1bdf607db4aac0bf48274c0",
       "authority": "inferred",
@@ -27976,7 +27983,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sha256": "90b607cd96fe6498fc212d91e52e40d5539ca31a040c992bda539a8c21e1ac02",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

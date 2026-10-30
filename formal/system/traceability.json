@@ -13561,6 +13561,82 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001",
+      "title": "Persist configured validity on new legacy package purchases",
+      "statement": "New package purchases snapshot positive product validity as stored purchase time plus elapsed days; absent validity stays nonexpiring; nonpositive configuration is refused without inserting a purchase.",
+      "domain": "ORD",
+      "authority": "docs/Manual_Usuario_TDF.md Paquetes de Clases; shipped Guitar24h120day seed; explicit owner decisions2026-10-30 purchase-time elapsed days and refuse nonpositive validity.",
+      "source": "formal/system/package-purchase-expiry.md",
+      "contract": "formal/system/package-purchase-expiry.md",
+      "property": "Positive n implies expiresAt = purchasedAt + n*86400seconds; Nothing implies no expiry; Just n<=0 implies409 and no row. Preserve existing reference/module/inactive checks and purchase fields.",
+      "actors": [
+        "Authorized legacy package operator",
+        "Package buyer"
+      ],
+      "preconditions": [
+        "Existing module authorization and reference validity",
+        "Product active",
+        "Elapsed duration fits deployed database timestamp range"
+      ],
+      "inputs": [
+        "buyerId",
+        "productId",
+        "Current product expiresDays"
+      ],
+      "state": {
+        "initial": "Validated new purchase request",
+        "terminal": [
+          "Persisted new purchase with snapshotted terms",
+          "Existing reference/permission refusal",
+          "Invalid validity configuration refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate existing references and active state",
+        "Refuse nonpositive validity before insert",
+        "Persist positive validity using stored purchasedAt",
+        "Keep absent validity nonexpiring"
+      ],
+      "forbiddenTransitions": [
+        "Discard positive product validity",
+        "Use a second clock for expiry anchor",
+        "Interpret days as seconds",
+        "Create a row while refusing invalid validity",
+        "Rewrite historical purchases to simulate correctness"
+      ],
+      "effects": [
+        "One new package purchase on successful admission; none on refusal"
+      ],
+      "authorization": "Existing ModulePackages guard unchanged; no new ownership/payment/gift policy inferred.",
+      "privacy": "Owned synthetic SQLite buyers/products only; no production financial records.",
+      "concurrency": "Existing product-read/insert transaction behavior retained; no new lock or temporal snapshot guarantee.",
+      "idempotency": "Existing duplicate purchase behavior unchanged; no new payment or retry contract.",
+      "failure": "Existing400/403/409/422 precedence retained; invalid configured validity returns409 before insert.",
+      "recovery": "Correct product configuration before retry; do not rewrite historical purchases under this change.",
+      "observability": "Native typed-handler/persisted-row regressions and controlled source mutations.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real pooled SQLite Handler cases, source fault controls and canonical Stack full-suite qualification; no complete proof.",
+      "evidence": "formal/system/package-purchase-expiry.md; reports/package-purchase-expiry-2026-10-30.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Actual finite-term omission reproduced; exact timing and invalid-term handling explicitly owner-authorized.",
+      "ambiguity": [
+        "Database timestamp-range admission for extremely large durations remains separate.",
+        "Payment/actor/gift/redemption and historical records unchanged.",
+        "No production PostgreSQL trigger/authenticatedHTTP/deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite Handler tests; complete implementation/refinement and deployment correspondence unproven."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -14744,7 +14820,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
-    "tdf-hq/src/TDF/Server.hs": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+    "tdf-hq/src/TDF/Server.hs": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
@@ -14836,7 +14912,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
-    "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+    "tdf-hq/test/TDF/ServerSpec.hs": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -15837,6 +15913,10 @@
       {
         "requirement": "PRIV-RAG-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PKG-PURCHASE-EXPIRY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -15918,6 +15998,10 @@
       },
       {
         "requirement": "COURSE-ENROLL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PKG-PURCHASE-EXPIRY-001",
         "relationship": "tests"
       }
     ],
@@ -47432,7 +47516,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+      "sha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47513,6 +47597,10 @@
         },
         {
           "requirement": "PRIV-RAG-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PKG-PURCHASE-EXPIRY-001",
           "relationship": "implementation"
         }
       ]
@@ -49431,7 +49519,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+      "sha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49464,6 +49552,10 @@
         },
         {
           "requirement": "COURSE-ENROLL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PKG-PURCHASE-EXPIRY-001",
           "relationship": "tests"
         }
       ]
@@ -55380,7 +55472,8 @@
     "SOCIAL-EVENT-MODERATION-001",
     "SOCIAL-EVENT-SESSION-001",
     "MEDIA-MUSIC-PRIVACY-001",
-    "SYS-CI-SELECTED-001"
+    "SYS-CI-SELECTED-001",
+    "PKG-PURCHASE-EXPIRY-001"
   ],
   "stateMachines": [
     {
@@ -56499,7 +56592,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "90b607cd96fe6498fc212d91e52e40d5539ca31a040c992bda539a8c21e1ac02",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56527,7 +56620,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "90b607cd96fe6498fc212d91e52e40d5539ca31a040c992bda539a8c21e1ac02",
       "definition": {
         "states": [
           "absent",
@@ -56557,7 +56650,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "90b607cd96fe6498fc212d91e52e40d5539ca31a040c992bda539a8c21e1ac02",
       "definition": {
         "export": [
           "queued",
@@ -79044,7 +79137,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

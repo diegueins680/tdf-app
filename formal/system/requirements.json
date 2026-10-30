@@ -13560,6 +13560,82 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001",
+      "title": "Persist configured validity on new legacy package purchases",
+      "statement": "New package purchases snapshot positive product validity as stored purchase time plus elapsed days; absent validity stays nonexpiring; nonpositive configuration is refused without inserting a purchase.",
+      "domain": "ORD",
+      "authority": "docs/Manual_Usuario_TDF.md Paquetes de Clases; shipped Guitar24h120day seed; explicit owner decisions2026-10-30 purchase-time elapsed days and refuse nonpositive validity.",
+      "source": "formal/system/package-purchase-expiry.md",
+      "contract": "formal/system/package-purchase-expiry.md",
+      "property": "Positive n implies expiresAt = purchasedAt + n*86400seconds; Nothing implies no expiry; Just n<=0 implies409 and no row. Preserve existing reference/module/inactive checks and purchase fields.",
+      "actors": [
+        "Authorized legacy package operator",
+        "Package buyer"
+      ],
+      "preconditions": [
+        "Existing module authorization and reference validity",
+        "Product active",
+        "Elapsed duration fits deployed database timestamp range"
+      ],
+      "inputs": [
+        "buyerId",
+        "productId",
+        "Current product expiresDays"
+      ],
+      "state": {
+        "initial": "Validated new purchase request",
+        "terminal": [
+          "Persisted new purchase with snapshotted terms",
+          "Existing reference/permission refusal",
+          "Invalid validity configuration refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate existing references and active state",
+        "Refuse nonpositive validity before insert",
+        "Persist positive validity using stored purchasedAt",
+        "Keep absent validity nonexpiring"
+      ],
+      "forbiddenTransitions": [
+        "Discard positive product validity",
+        "Use a second clock for expiry anchor",
+        "Interpret days as seconds",
+        "Create a row while refusing invalid validity",
+        "Rewrite historical purchases to simulate correctness"
+      ],
+      "effects": [
+        "One new package purchase on successful admission; none on refusal"
+      ],
+      "authorization": "Existing ModulePackages guard unchanged; no new ownership/payment/gift policy inferred.",
+      "privacy": "Owned synthetic SQLite buyers/products only; no production financial records.",
+      "concurrency": "Existing product-read/insert transaction behavior retained; no new lock or temporal snapshot guarantee.",
+      "idempotency": "Existing duplicate purchase behavior unchanged; no new payment or retry contract.",
+      "failure": "Existing400/403/409/422 precedence retained; invalid configured validity returns409 before insert.",
+      "recovery": "Correct product configuration before retry; do not rewrite historical purchases under this change.",
+      "observability": "Native typed-handler/persisted-row regressions and controlled source mutations.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real pooled SQLite Handler cases, source fault controls and canonical Stack full-suite qualification; no complete proof.",
+      "evidence": "formal/system/package-purchase-expiry.md; reports/package-purchase-expiry-2026-10-30.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Actual finite-term omission reproduced; exact timing and invalid-term handling explicitly owner-authorized.",
+      "ambiguity": [
+        "Database timestamp-range admission for extremely large durations remains separate.",
+        "Payment/actor/gift/redemption and historical records unchanged.",
+        "No production PostgreSQL trigger/authenticatedHTTP/deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite Handler tests; complete implementation/refinement and deployment correspondence unproven."
+      }
     }
   ]
 }
