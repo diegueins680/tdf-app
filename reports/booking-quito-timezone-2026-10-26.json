@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "baseRevision": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "executionIdentity": "Base checkout plus the SHA-256-bound working files below. Not relabeled as a later commit or production release.",
+  "businessRule": {
+    "authority": "Product owner confirmed directly in chat on 2026-10-26: Quito, 08:00–22:00.",
+    "studioTimeZone": "America/Guayaquil",
+    "open": "08:00",
+    "close": "22:00"
+  },
+  "problem": "Anonymous canonical production source63 displayed studio UTC; general display default was being used as the physical studio timezone.",
+  "change": "Use fixed physical Quito timezone; keep visitor-local inputs and UTC request serialization. Show explicit Quito opening hours. No persisted timestamps, backend, API, SQL, workflow, package lock or Mobile pin changed. Visitor offset labels use the selected date, fixing Madrid summer GMT+2 mislabeled as current winter GMT+1.",
+  "sourceFingerprints": {
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "2c2a4d20e63e1466f27200fc5e15079043429c26da74b1afd4c32eade5c1b150",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "31be0bb8e21e70358412f6e782fd8919eb3910b8d59c4bded1f694b4734f3e28",
+    "e2e/web/booking-timezone.spec.mjs": "90fc5de59db64a4c8476079f928f6c4a09640173c5272de642a724d7077430fe"
+  },
+  "nodeVersion": "22.14.0",
+  "unit": {
+    "passed": 15,
+    "failed": 0,
+    "report": "booking-quito-timezone-evidence-20261026/unit-dst-final.json",
+    "originalComponentNegativeControl": "Original63 component fails the new studio-zone assertion; restored corrected component passes all15 form tests, including UTC payload. The original negative control was before the additional offset-label correction; final15 unit tests were rerun after that change."
+  },
+  "build": {
+    "typecheck": "passed",
+    "optimizedBuild": "passed",
+    "initialGzipBytes": 336524,
+    "preloads": 5,
+    "durationSeconds": 30.11,
+    "scope": "Built corrected component on dirty base63; source label remains63. Not a clean committed-candidate or production build."
+  },
+  "browser": {
+    "passed": 4,
+    "failedToLaunch": 0,
+    "notRunAfterStop": 0,
+    "scope": "Chromium desktop and Pixel7 emulation, UTC January and Europe/Madrid July. All API responses synthetic; one intercepted POST per case deliberately returns409; no API request reaches a business backend.",
+    "assertions": [
+      "Quito hours visible despite general UTC preference",
+      "07:45 normalizes to08:00 Quito",
+      "22:00 start normalizes to21:30 for explicit30-minute duration",
+      "availability startsAt equals selected UTC instant",
+      "opening accepted and30-minute interval ends exactly at22:00",
+      "submission preserves expected UTC instant, duration and contact",
+      "synthetic409 yields actionable failure and no false success",
+      "zero uncaught page errors"
+    ],
+    "limitation": "Pinned WebKit executable absent. Installation explicitly fails: Playwright does not support webkit on mac12. Do not count as a product assertion failure or browser success. Hosted compatible CI still required. No WebKit case attempted on the final offset-label correction; hosted verification remains pending.",
+    "finalRun": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 18.1,
+      "projects": [
+        "Chromium desktop",
+        "Pixel7 emulation"
+      ],
+      "extraAssertion": "Confirmation zone label UTC for UTC visitor, GMT+2 for Madrid July despite fixed clock in December.",
+      "externalTraffic": "Explicitly aborted; all business API responses synthetic."
+    },
+    "previousFinalRun": {
+      "passed": 4,
+      "failedToLaunch": 1,
+      "notRun": 3,
+      "cause": "Pinned WebKit not installed and unsupported macOS12."
+    },
+    "report": "booking-quito-timezone-evidence-20261026/browser-publication-final.json"
+  },
+  "retainedAttempts": [
+    {
+      "attempt": 1,
+      "outcome": "2FAIL,1interrupted,5notRun",
+      "reason": "Exact email-label locator did not resolve required field; own runner stopped. Fixed accessible textbox locator."
+    },
+    {
+      "attempt": 2,
+      "outcome": "1FAIL,1notRun",
+      "reason": "New test expected an error where existing product normalizes input into opening window. Test corrected to assert actual normalization and exact values."
+    },
+    {
+      "attempt": 3,
+      "outcome": "1FAIL,1notRun",
+      "reason": "Test assumed30-minute default while form starts at60. Explicit30-minute user input added before checking close boundary."
+    },
+    {
+      "attempt": 4,
+      "outcome": "2PASS desktop",
+      "reason": "UTC/Madrid boundary, UTC serialization and refused synthetic submission passed."
+    }
+  ],
+  "delivery": {
+    "implemented": true,
+    "tested": "Scoped15unit/4Chromium and negative control; hosted WebKit pending",
+    "merged": false,
+    "deployed": false,
+    "verifiedInProduction": false
+  },
+  "limits": [
+    "No actual booking, checkout, payment, availability claim, human activation, physical device or conversion outcome.",
+    "No backend opening-hours enforcement proof or timestamp migration.",
+    "Catalog recovery636 and gallery628 remain separate protected queue items."
+  ],
+  "catalog": {
+    "candidates": 1341,
+    "addedOrRemoved": 0,
+    "historicalDecisions": "All baseline decision objects and historical metadata kept byte-exact after rejecting unnecessary canonical refresh review-record churn. One source line offset is refreshed.",
+    "strictFinalCheck": "passed;1341candidates, no unreviewed or stale decisions"
+  },
+  "basePreservation": {
+    "all148WholeRequirementObjects": true,
+    "unchanged": [
+      "backend",
+      "API",
+      "SQL",
+      "scripts",
+      "workflows",
+      "ops",
+      "dependencies",
+      "Mobile pin d832bb3057dd03d44c0f35eea05be9f36320429d"
+    ],
+    "all1341CatalogDecisionObjectsAndHistoryByteExact": true
+  },
+  "verificationMetadata": "Specification inventory and traceability regenerated after final source and baseline decision preservation; checks and committed-surface admission recorded separately."
+}
