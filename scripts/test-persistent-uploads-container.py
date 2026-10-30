@@ -33,6 +33,15 @@ class ContainerCleanupError(RuntimeError):
                          + json.dumps(self.diagnostic, sort_keys=True))
 
 
+def confirms_container_absent(name, result):
+    # Docker versions differ in capitalization. Admit only the exact inspected
+    # nonce name, expected failure code and empty result; daemon/transport errors
+    # mentioning a missing file are not evidence that the container is absent.
+    return (result.returncode == 1
+            and result.stdout.strip() in ('', '[]')
+            and result.stderr.strip().casefold() == f'error: no such object: {name}'.casefold())
+
+
 def main():
     if os.environ.get('GITHUB_ACTIONS') != 'true' or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted':
         raise SystemExit('This synthetic Docker check requires an isolated GitHub-hosted runner')
@@ -102,7 +111,7 @@ esac
                     if row['Config']['Labels'].get('net.tdf.upload-test') != nonce:
                         raise RuntimeError('Refusing cleanup of a foreign container')
                     require(invoke(['rm', '-f', row['Id']]))
-                elif 'No such' not in found.stderr:
+                elif not confirms_container_absent(name, found):
                     raise ContainerCleanupError(name, found, results)
         print(json.dumps({'sourceRevision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                           'image': IMAGE, 'checks': results,

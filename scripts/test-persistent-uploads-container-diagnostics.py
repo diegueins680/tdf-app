@@ -23,10 +23,12 @@ NAME = f'tdf-upload-test-{NONCE}-0'
 class SimulatedDocker:
     """Every subprocess boundary is mocked; unexpected calls fail the test."""
 
-    def __init__(self, inspect='absent', primary_failure=False, remove_failure=False):
+    def __init__(self, inspect='absent', primary_failure=False, remove_failure=False,
+                 inspect_response=None):
         self.inspect = inspect
         self.primary_failure = primary_failure
         self.remove_failure = remove_failure
+        self.inspect_response = inspect_response
         self.calls = []
         self.names = []
 
@@ -59,7 +61,9 @@ class SimulatedDocker:
         elif args[0] == 'inspect' and len(args) == 2 and args[1] in self.names:
             if timeout != 90:
                 raise AssertionError('Inspect timeout changed')
-            if args[1] != NAME or self.inspect == 'absent':
+            if args[1] == NAME and self.inspect_response is not None:
+                status, stdout, stderr = self.inspect_response
+            elif args[1] != NAME or self.inspect == 'absent':
                 status, stderr = 1, f'Error: No such object: {args[1]}'
             elif self.inspect == 'unexpected':
                 status, stdout, stderr = 42, 'simulated stdout', 'simulated inspect failure'
@@ -121,6 +125,31 @@ class CleanupDiagnosticsTest(unittest.TestCase):
         self.assertEqual([row['actualExit'] for row in result['checks']], [0, 0, 78, 78, 78])
         self.assertEqual(len([args for args in docker.calls if args[0] == 'inspect']), 5)
         self.assertFalse(any(args[0] == 'rm' for args in docker.calls))
+
+    def test_exact_old_and_new_docker_absence_responses_are_accepted(self):
+        for prefix in ('Error: No such object: ', 'error: no such object: '):
+            for stdout in ('', '[]\n'):
+                with self.subTest(prefix=prefix, stdout=stdout):
+                    docker = SimulatedDocker(inspect_response=(1, stdout, prefix + NAME + '\n'))
+                    self.assertEqual(len(self.invoke(docker)['checks']), 5)
+                    self.assertFalse(any(args[0] == 'rm' for args in docker.calls))
+
+    def test_nearby_errors_never_become_an_absence_verdict(self):
+        responses = [
+            (2, '[]\n', f'error: no such object: {NAME}\n'),
+            (1, '[{}]\n', f'error: no such object: {NAME}\n'),
+            (1, 'not JSON', f'error: no such object: {NAME}\n'),
+            (1, '[]\n', 'error: no such object: another-container\n'),
+            (1, '[]\n', f'error: no such object: {NAME}\npermission denied'),
+            (1, '[]\n', 'Cannot connect to the Docker daemon: No such file or directory'),
+            (1, '', ''),
+        ]
+        for response in responses:
+            with self.subTest(response=response):
+                docker = SimulatedDocker(inspect_response=response)
+                error = self.cleanup_error(docker)
+                self.assertEqual(error.diagnostic['returncode'], response[0])
+                self.assertFalse(any(args[0] == 'rm' for args in docker.calls))
 
     def test_unexpected_inspect_retains_command_result_and_completed_cases(self):
         error = self.cleanup_error(SimulatedDocker('unexpected'))
