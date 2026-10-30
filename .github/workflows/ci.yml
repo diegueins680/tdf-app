@@ -116,7 +116,9 @@ jobs:
   repo-quality:
     needs: changes
     if: needs.changes.outputs.repo == 'true'
-    runs-on: ubuntu-latest
+    # Docker container replacement test is currently failing on the ubuntu-latest 26.04 image.
+    # Keep the validated CI host on the prior stable LTS while diagnosing Docker compatibility.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
