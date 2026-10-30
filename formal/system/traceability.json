@@ -13797,6 +13797,81 @@
         "classification": "PARTIAL",
         "reason": "Persisted preference implementation and client validation; no local Stack/PostgreSQL execution, published Mobile dependency, current-head native pass or deployed acceptance."
       }
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+      "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",
+      "domain": "SYS",
+      "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
+      "source": "formal/system/container-cleanup-evidence.md",
+      "contract": "formal/system/container-cleanup-evidence.md",
+      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout and exact case-insensitive error: no such object: <inspected nonce name>. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
+      "actors": [
+        "Hosted CI upload verifier",
+        "Maintainer diagnosing a failed gate"
+      ],
+      "preconditions": [
+        "Existing isolated GitHub-hosted guard",
+        "Existing nonce ownership boundary",
+        "subprocess capture_output/text contract"
+      ],
+      "inputs": [
+        "Owned synthetic inspect CompletedProcess",
+        "Actually completed synthetic-case records"
+      ],
+      "state": {
+        "initial": "Cleanup inspect response",
+        "terminal": [
+          "Existing confirmed cleanup path",
+          "Exact inspected-container absence",
+          "Failure retaining bounded diagnostic context"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain unexpected response while refusing success",
+        "Preserve prior Python exception chain",
+        "Remove only verified owned container ID under the existing guard",
+        "Accept only the recorded Docker absence response for the exact inspected nonce name"
+      ],
+      "forbiddenTransitions": [
+        "Discard unexpected response into a constant error",
+        "Accept unknown inspect errors as absence",
+        "Remove a foreign container",
+        "Suppress an existing primary exception chain"
+      ],
+      "effects": [
+        "Bounded failure evidence and strict missing-container response classification; Docker commands and isolation unchanged"
+      ],
+      "authorization": "Existing hosted runner gate, local socket and nonce/ownership refusal unchanged.",
+      "privacy": "Only synthetic command status/streams/name/case records; no environment, host-wide inventory or private upload-content dump.",
+      "concurrency": "Existing sequential synthetic runner unchanged; no daemon/process synchronization claim.",
+      "idempotency": "No retry or new cleanup operation; successful inspection retains the existing nonce-checked ID removal.",
+      "failure": "Unexpected cleanup still fails; malformed JSON, removal errors and timeouts retain existing behavior outside new structured path.",
+      "recovery": "Review the captured response before changing classification; require fresh hosted execution before claiming actual Docker repair.",
+      "observability": "Structured error context with each stream limited to2000characters before JSONserialization and explicit truncation flags.",
+      "implementation": [
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-persistent-uploads-container-diagnostics.py"
+      ],
+      "formalModels": [],
+      "verification": "12 mocked actual-main-path tests including four recognized missing-object variants and seven nearby refusals; old classifier reproduces lowercase-response refusal and daemon-error false acceptance. Original diagnostic fault controls remain historical.",
+      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Actual hosted response identifies the later failure cause; finite actual-runner simulations pass. No local Docker or current-head hosted qualification claim.",
+      "ambiguity": [
+        "The original PR677 Docker response remains unknown; later PR679 response is retained in job123928715883.",
+        "Exact classifier covers the recorded Docker spellings, not every version or concurrent daemon state.",
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Simulated diagnostics and source preservation tested; actual hosted Docker run and complete implementation/refinement remain separate."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -14316,7 +14391,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+    "scripts/quality-repo.sh": "ab872beca4a6208d69ca737b7d12af1e925dae38fde6b9b1ba919f29c6331ba7",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14397,7 +14472,8 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
-    "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+    "scripts/test-persistent-uploads-container-diagnostics.py": "a2e35a6d897b0cfeeaa5f8ccfd60b3f33ea896399e4c8b3172c2cdfb6bcd0da7",
+    "scripts/test-persistent-uploads-container.py": "29f52440066cf054433220032739ba270253a37bb39f5f01c694827eb87cdc30",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
@@ -14728,8 +14804,8 @@
     "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx": "517be4f01f31b64e2a53c7fef1cb4469a05c85d71c32e4b6943e5f706ab0d517",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
-    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "da57b6caaf5bcecc8427dadf68f5c2107905b032653679ef5d879bffccf522e6",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "cd5f418eb89804c0d2b67dd8f876d74bc50c99f51fabd846290c138024108df9",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "b1dcd742b534ff8a1b4e49bac46b99b266d51ada21b3cf9799310ef99a79a508",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "239dff8584ac52d2ab5ef80d1e1a639a43fbeef220300d4b39333e8a8d40dfc6",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
@@ -15548,6 +15624,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
         "relationship": "implementation"
       }
     ],
@@ -18565,6 +18645,10 @@
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/app/Main.hs": [
@@ -26830,6 +26914,12 @@
         "requirement": "MEDIA-ARTIST-FEATURED-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/test-persistent-uploads-container-diagnostics.py": [
+      {
+        "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -30799,7 +30889,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+      "sha256": "ab872beca4a6208d69ca737b7d12af1e925dae38fde6b9b1ba919f29c6331ba7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30852,6 +30942,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
           "relationship": "implementation"
         }
       ]
@@ -32807,14 +32901,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-5c0faab232af0d35",
+      "path": "scripts/test-persistent-uploads-container-diagnostics.py",
+      "sha256": "a2e35a6d897b0cfeeaa5f8ccfd60b3f33ea896399e4c8b3172c2cdfb6bcd0da7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+      "sha256": "29f52440066cf054433220032739ba270253a37bb39f5f01c694827eb87cdc30",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-PERSIST-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -40814,7 +40924,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "da57b6caaf5bcecc8427dadf68f5c2107905b032653679ef5d879bffccf522e6",
+      "sha256": "b1dcd742b534ff8a1b4e49bac46b99b266d51ada21b3cf9799310ef99a79a508",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40834,7 +40944,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "cd5f418eb89804c0d2b67dd8f876d74bc50c99f51fabd846290c138024108df9",
+      "sha256": "239dff8584ac52d2ab5ef80d1e1a639a43fbeef220300d4b39333e8a8d40dfc6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57363,7 +57473,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f038b91483a25d97facaeba9c547f47d4b0943101e0a7b8015e80d4e6773f2b1",
+      "sourceSha256": "a15177e98f99604cb05426297c37f3bc8269d79212f1f94329e25b88d98a9866",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57391,7 +57501,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f038b91483a25d97facaeba9c547f47d4b0943101e0a7b8015e80d4e6773f2b1",
+      "sourceSha256": "a15177e98f99604cb05426297c37f3bc8269d79212f1f94329e25b88d98a9866",
       "definition": {
         "states": [
           "absent",
@@ -57421,7 +57531,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f038b91483a25d97facaeba9c547f47d4b0943101e0a7b8015e80d4e6773f2b1",
+      "sourceSha256": "a15177e98f99604cb05426297c37f3bc8269d79212f1f94329e25b88d98a9866",
       "definition": {
         "export": [
           "queued",
@@ -79958,7 +80068,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 161,
+    "PARTIAL": 162,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

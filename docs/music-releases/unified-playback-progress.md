@@ -143,3 +143,29 @@ workflows are successful but admission is still pending. Required media-health
 implementation, Mobile publication, current-head hosted checks/review and the
 guarded deployment/recovery prerequisites above remain incomplete. This
 checkpoint does not accept the full discovery/listening/follow delivery request.
+
+### Retired native event recovery
+
+The next hosted native run on0430693 passed68/69 journeys. Firefox's unchanged
+PW-MUSIC-NATIVE-07 next-track clock assertion failed. Artifact12974515778
+(SHA256355140ce805c4cf02f1f0f556b094ec26ec4a5db877818eceb723633c334f82d)
+shows the second source loaded, readyState4 and duration24.021333, but paused at0.
+This identifies a failed recovery, not a unique proof of browser scheduling.
+
+A controlled component interleaving reproduces the stalled transition: an old
+source error arrives after the next queue render but before passive source and
+listener cleanup. Its old closure can consume the new queue's recovery intent.
+The loaded source now carries its generation; native handlers additionally
+require current generation and current selected-track identity. Recovery already
+retires the generation synchronously. The new regression fails on the prior
+provider (expected playing, actual loading) and passes with these guards;
+98 focused player/provider/identity/analytics tests pass. Existing retry limits,
+explicit pause/autoplay policy and the native assertion remain intact. Fresh
+whole-suite, build and hosted Firefox qualification remain separate obligations.
+The source-bound synthetic observations and counterexample are retained in
+`reports/player-recovery-source-generation-2026-10-30.json`.
+
+The normal dependency merge also includes catalogue3c995310 and its qualified
+cleanup repair, preserving both histories. Shared requirement objects match;
+only the incoming cleanup requirement is added. Generated discovery counters
+and traceability are reconciled, with no Mobile pin or authorization change.

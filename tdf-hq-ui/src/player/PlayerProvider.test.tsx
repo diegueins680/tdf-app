@@ -3,6 +3,7 @@ import { act, cleanup, render, waitFor } from '@testing-library/react';
 import type { PlayerTrack, RepeatMode } from './types';
 import { PLAYER_ANALYTICS_EVENT } from './types';
 import type { ReactNode } from 'react';
+import { useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 jest.unstable_mockModule('./analytics', () => ({ installPlayerAnalyticsBridge: () => () => undefined }));
@@ -140,6 +141,34 @@ it('an obsolete play rejection cannot remove or stop the next source', async () 
   expect(view.container.querySelector('audio')?.getAttribute('src')).toBe('https://media.invalid/two.m4a');
   expect(player.status).toBe('playing');
   expect(player.error).toBeNull();
+});
+
+it('a retired source error during the next render cannot cancel automatic recovery', async () => {
+  jest.mocked(HTMLMediaElement.prototype.load).mockImplementation(function (this: HTMLMediaElement) {
+    Object.defineProperty(this, 'error', { configurable: true, value: null });
+  });
+  function ErrorBeforeSourceCleanup() {
+    const context = usePlayer();
+    useLayoutEffect(() => {
+      if (context.currentTrack?.id === 'two') {
+        // Native events can arrive after the queue renders but before passive
+        // source/listener cleanup. The retired element still identifies one.
+        document.querySelector('audio')!.dispatchEvent(new Event('error'));
+      }
+    }, [context.currentTrack?.id]);
+    return null;
+  }
+  const view = render(<PlayerProvider><Probe /><ErrorBeforeSourceCleanup /></PlayerProvider>);
+  await act(async () => { player.playTrack(track('one'), [track('one'), track('two')]); });
+  const audio = view.container.querySelector('audio')!;
+  expect(player.status).toBe('playing');
+  Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  expect(player.currentTrack?.id).toBe('two');
+  expect(audio.getAttribute('src')).toBe('https://media.invalid/two.m4a');
+  expect(player.status).toBe('playing');
+  expect(player.error).toBeNull();
+  expect(jest.mocked(audio.play)).toHaveBeenCalledTimes(2);
 });
 
 it('a late play resolution does not undo an explicit pause', async () => {

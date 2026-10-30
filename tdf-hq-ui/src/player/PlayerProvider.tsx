@@ -275,7 +275,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const sourceGenerationRef = useRef(0);
   const playAttemptRef = useRef(0);
   const startedPlayAttemptRef = useRef<number | null>(null);
-  const loadedSourceRef = useRef<{ trackId: string; url: string; preview?: boolean; quality: PlayerQuality; candidate: PlayerSource } | null>(null);
+  const loadedSourceRef = useRef<{ generation: number; trackId: string; url: string; preview?: boolean; quality: PlayerQuality; candidate: PlayerSource } | null>(null);
   const pendingPositionRef = useRef<{ generation: number; trackId: string; url: string; position: number } | null>(null);
   const lastContinuousPositionRef = useRef(0);
   const listenedSinceProgressRef = useRef(0);
@@ -496,7 +496,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       const loadedSource = loadedSourceRef.current;
       // pause/load can deliver old timeupdate events while the next track's
       // signed URL is pending. Never attribute that position/listening to it.
-      if (!loadedSource || loadedSource.trackId !== track?.id || audio.currentSrc !== loadedSource.url) return;
+      if (!loadedSource || loadedSource.generation !== sourceGenerationRef.current
+        || loadedSource.trackId !== track?.id || audio.currentSrc !== loadedSource.url) return;
       if (pendingPositionRef.current?.generation === sourceGenerationRef.current) return;
       const position = audio.currentTime;
       const delta = position - lastContinuousPositionRef.current;
@@ -520,16 +521,24 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       setCurrentTime(audio.currentTime);
       if (track) positionsRef.current[track.id] = audio.currentTime;
     };
-    const handleDuration = () => setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    const handleDuration = () => {
+      if (ownsNativeSource()) setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    };
     const handlePrepared = () => {
       const loadedSource = loadedSourceRef.current;
-      if (loadedSource?.trackId !== queue.tracks[queue.currentIndex]?.id
+      if (loadedSource?.generation !== sourceGenerationRef.current
+        || loadedSource?.trackId !== queue.tracks[queue.currentIndex]?.id
         || loadedSource?.url !== audio.currentSrc || !audio.paused || autoplayRef.current) return;
       // preload=metadata may stop before canplay. A prepared source awaiting
       // the user's play gesture is paused, not indefinitely loading.
       setStatus((current) => current === 'loading' || current === 'buffering' ? 'paused' : current);
     };
-    const ownsNativeSource = () => loadedSourceRef.current?.trackId === currentTrack?.id
+    // Recovery retires a source immediately, before React's passive listener
+    // cleanup. A second queued native error must not consume the new queue's
+    // recovery intent through the old track's closure.
+    const ownsNativeSource = () => loadedSourceRef.current?.generation === sourceGenerationRef.current
+      && recoveryQueueRef.current.tracks[recoveryQueueRef.current.currentIndex]?.id === currentTrack?.id
+      && loadedSourceRef.current?.trackId === currentTrack?.id
       && loadedSourceRef.current?.url === audio.currentSrc;
     const handlePlaying = () => {
       if (!ownsNativeSource() || pendingPositionRef.current || !autoplayRef.current || audio.paused) return;
@@ -715,7 +724,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         }
         if (!resolved?.url) throw Object.assign(new Error('No authorized source'), { status: 403 });
         if (!resolved.source.torrentSource) audio.src = resolved.url;
-        loadedSourceRef.current = { trackId: currentTrack.id, url: audio.src,
+        loadedSourceRef.current = { generation, trackId: currentTrack.id, url: audio.src,
           preview: resolved.source.preview, quality: resolved.source.quality, candidate: resolved.source };
         setResolvedQuality(resolved.source.quality);
         const storedPosition = positionsRef.current[currentTrack.id] ?? 0;
