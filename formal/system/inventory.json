@@ -2804,7 +2804,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
+      "sha256": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2822,7 +2822,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+      "sha256": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5936,7 +5936,7 @@
     {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+      "sha256": "6d1b200600fb4d95b56e3f14401f7aee12adcdb478a3949349b1a05f829d3c3e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
