@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "source": "f28fe3163f7191f08e78cb022d0960c7c63d12a4",
+  "preparedPredecessor642": "39b329ca769c6755f77c88ef42118fdb0502dc1f",
+  "actualProtectedMainAtPreparation": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "scope": "Checkout execution/property evidence; no business arithmetic or runtime change. Prepared predecessor is not represented as a protected merge.",
+  "preservation": {
+    "normativeObjects": 159,
+    "onlyOwnNormativeAmendments": [
+      "PAY-CHECKOUT-001",
+      "PAY-CHECKOUT-003"
+    ],
+    "wholeRuntimeDependenciesAndCatalogExactPredecessor": true,
+    "precedingBrowserAndRecoveryNobleCorrectionRetained": true
+  },
+  "validation": {
+    "actualIntendedExamples": 61,
+    "failed": 0,
+    "pending": 0,
+    "propertyPassCounts": [
+      1000,
+      1000,
+      1000
+    ],
+    "actualArithmeticMutationsDetected": 9,
+    "everyMutationExecutesComplete61ExampleSuite": true,
+    "verifierControls": 8,
+    "ciScopeControls": 19,
+    "changedMappedSurfaces": 5,
+    "canonicalInventoryAndConformance": "Regenerated; no difference from merge output"
+  },
+  "receiptSha256": {
+    "tdf-report-643-money-actual-final-20261030.json": "ccba8ff3cde84502f85d63d98319c174902c58fc15eb98d84b8eeaf7f69b03dd",
+    "tdf-report-643-money-actual-final-20261030.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tdf-report-643-money-verifier-controls-20261030.log": "5b8a3ccb28c32f172271a641e8142fdb66c37cd396f681ca016266abfdb51bb3",
+    "tdf-report-643-money-scope-controls-20261030.log": "351641278d7f1b81f008747279bf7581e95535b3bb04d4fa79cf2b3cfe72b066",
+    "tdf-report-643-sourcegate-preparation-20261030.json": "7d91f9670762feb1c72e9cef827aa05ef531e0ae4ed960e253b2cd24f1f842e0"
+  },
+  "limits": [
+    "Fresh actual protected predecessor ancestry, source admission, CI and independent current-head review still required before integration",
+    "Initial local sandbox attempt could not access Pantry lock and did not execute Hspec; retained separately, excluded from passing evidence",
+    "No production database, reservation, payment, capture, provider or ledger write",
+    "No complete implementation/refinement proof or deployment claim"
+  ]
+}
