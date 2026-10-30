@@ -1,0 +1,96 @@
+{
+  "kind": "FINITE_DESIGN_MODEL_QUALIFICATION",
+  "nodeVersion": "v22.14.0",
+  "sourceHashes": {
+    "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
+    "scripts/__tests__/music-track-search-model.test.mjs": "2e61f61fdd8dac32222ed6d9e650b960646f7dbc87ac62237004902e17957b28",
+    "/private/tmp/tdf-track-search-model-final-20261026.json": "dca3d6c478e0426d3626bc73b278626ac6aa90a2accb47c32b9d47d9c0c76712",
+    "/private/tmp/tdf-track-search-model-tests-final-20261026.log": "4a6801891c983ad6685aa6668db994b2d4b52889720202b4335bfccb3704b022"
+  },
+  "bounds": {
+    "queries": [
+      "alpha",
+      "beta"
+    ],
+    "recordings": [
+      "A",
+      "B"
+    ],
+    "pages": [
+      0,
+      1
+    ],
+    "hitsPerPage": 1,
+    "searchGenerations": 2,
+    "sessionGenerations": 2,
+    "maxEvents": 12
+  },
+  "designSafety": "MODEL_CHECKED_WITH_BOUNDS",
+  "states": 9642,
+  "transitions": 54454,
+  "frontierStatesAtEventBound": 936,
+  "liveness": {
+    "status": "PARTIAL",
+    "conditionalTerminalReachability": "MODEL_CHECKED_WITH_BOUNDS",
+    "checkedStates": 9642,
+    "maxDrainSteps": 3,
+    "scope": "From each design state reached within the twelve-event safety bound, with no new user commands and every pending response eventually supplied, at most four additional response events reach resolved search and PLAYING/BLOCKED/ERROR/IDLE playback. No unconditional liveness or fairness proof."
+  },
+  "negativeControls": {
+    "acceptStaleResults": {
+      "detected": true,
+      "shortestCounterexampleEvents": 4,
+      "properties": [
+        "SEARCH-STALE-RESPONSE"
+      ]
+    },
+    "firstTrackSubstitution": {
+      "detected": true,
+      "shortestCounterexampleEvents": 4,
+      "properties": [
+        "PLAYER-SELECTION-IDENTITY",
+        "PLAYER-EXACT-RENDERED-HIT"
+      ]
+    },
+    "autoplayOnResponse": {
+      "detected": true,
+      "shortestCounterexampleEvents": 3,
+      "properties": [
+        "PLAYER-SELECTION-IDENTITY",
+        "PLAYER-NO-RESPONSE-AUTOPLAY",
+        "MEDIA-NEW-PLAY-AUTHORIZED"
+      ]
+    },
+    "acceptStaleSession": {
+      "detected": true,
+      "shortestCounterexampleEvents": 6,
+      "properties": [
+        "PLAYER-STALE-SESSION",
+        "MEDIA-NEW-PLAY-AUTHORIZED"
+      ]
+    },
+    "deniedRecordingFallback": {
+      "detected": true,
+      "shortestCounterexampleEvents": 6,
+      "properties": [
+        "PLAYER-SELECTION-IDENTITY",
+        "MEDIA-NEW-PLAY-AUTHORIZED"
+      ]
+    },
+    "exposeDraftActions": {
+      "detected": true,
+      "shortestCounterexampleEvents": 4,
+      "properties": [
+        "SEARCH-DRAFT-ACTIONS"
+      ]
+    }
+  },
+  "unitTests": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0
+  },
+  "implementationRefinement": "UNPROVEN",
+  "executionPreparation": "Initial test invocation stopped at JavaScript syntax parsing after an assumption-comment edit omitted one array comma. Corrected syntax only; final model CLI and ten tests ran successfully. No suppressed check or mutated implementation.",
+  "scope": "Independent finite design model, not implementation formula extraction or a mathematical proof; backend authorization, one engine and bounded delivery/session abstractions are explicit assumptions. No application/backend/source tests, pipeline, Git, build or database changes by this task."
+}

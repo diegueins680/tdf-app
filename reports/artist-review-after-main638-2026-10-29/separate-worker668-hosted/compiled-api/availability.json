@@ -1,0 +1,31 @@
+{
+  "deferredOperations": [
+    "GET /merch/admin/reputation/cases",
+    "GET /merch/admin/reputation/category-suggestions",
+    "GET /merch/artists/{}/stores",
+    "GET /merch/orders/{}/reviews/eligibility",
+    "GET /merch/products/{}/reputation",
+    "GET /merch/products/{}/reviews",
+    "GET /merch/reputation/formula",
+    "GET /merch/reputation/notification-preferences",
+    "GET /merch/reputation/preferences/{}",
+    "GET /merch/seller/stores/{}/reputation",
+    "GET /merch/stores/{}/reputation",
+    "GET /merch/stores/{}/reviews",
+    "POST /merch/admin/reputation/appeals/{}/decision",
+    "POST /merch/admin/reputation/cases/{}/decision",
+    "POST /merch/admin/reputation/cases/{}/workflow",
+    "POST /merch/admin/reputation/category-suggestions/{}/decision",
+    "POST /merch/reputation/category-suggestions",
+    "POST /merch/reputation/decisions/{}/appeal",
+    "POST /merch/reputation/reports",
+    "PUT /merch/orders/{}/lines/{}/product-review",
+    "PUT /merch/orders/{}/review-buyer-claim",
+    "PUT /merch/orders/{}/store-review",
+    "PUT /merch/reputation/notification-preferences",
+    "PUT /merch/reputation/preferences/{}",
+    "PUT /merch/reviews/{}/response"
+  ],
+  "unexpectedUnmounted": [],
+  "limitations": "Explicit typed-route deferrals only; Raw mount behavior, production flags and authorization require separate evidence."
+}

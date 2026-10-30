@@ -1,0 +1,6 @@
+{
+  "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+  "cases": [],
+  "passed": 0,
+  "scope": "Four local Chrome desktop/phone-emulation cases; no real API/provider operations or physical iOS guarantee."
+}
