@@ -13493,12 +13493,12 @@
     {
       "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
       "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
-      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact case-sensitive nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic prefix.",
       "domain": "SYS",
       "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
       "source": "formal/system/container-cleanup-evidence.md",
       "contract": "formal/system/container-cleanup-evidence.md",
-      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout and exact case-insensitive error: no such object: <inspected nonce name>. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
+      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout, a case-insensitive fixed error: no such object: prefix and a byte-exact inspected nonce name suffix after existing outer whitespace stripping. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
       "actors": [
         "Hosted CI upload verifier",
         "Maintainer diagnosing a failed gate"
@@ -13550,15 +13550,16 @@
         "scripts/test-persistent-uploads-container-diagnostics.py"
       ],
       "formalModels": [],
-      "verification": "12 mocked actual-main-path tests including four recognized missing-object variants and seven nearby refusals; old classifier reproduces lowercase-response refusal and daemon-error false acceptance. Original diagnostic fault controls remain historical.",
-      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "verification": "13 mocked actual-main-path tests retain the published12 cases and add case-different-name refusal. On unchanged b99, the new expected-refusal assertion fails; removing only the additive exact-name check reproduces that assertion and restored13 pass. Earlier lowercase/daemon-error and diagnostic controls remain historical source-bound evidence.",
+      "evidence": "formal/system/container-cleanup-evidence.md; historical reports/container-cleanup-evidence-2026-10-30.json; separate follow-up reports/container-exact-name-2026-10-30.json",
       "critical": false,
       "status": "specified and implemented",
-      "confidence": "Actual hosted response identifies the later failure cause; finite actual-runner simulations pass. No local Docker or current-head hosted qualification claim.",
+      "confidence": "Tagged Docker/Moby source establishes case-sensitive name identity. The current wrong-case response-binding counterexample is simulated; the published lowercase repair remains distinct. No hosted wrong-case response or production incident is claimed.",
       "ambiguity": [
         "The original PR677 Docker response remains unknown; later PR679 response is retained in job123928715883.",
         "Exact classifier covers the recorded Docker spellings, not every version or concurrent daemon state.",
-        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee.",
+        "The b99 wording combined exact inspected identity and whole-message case insensitivity; this refinement limits capitalization independence to the fixed diagnostic prefix. Correct CLI behavior echoes the requested ref; no real misbound response has been observed."
       ],
       "conformance": {
         "classification": "PARTIAL",
