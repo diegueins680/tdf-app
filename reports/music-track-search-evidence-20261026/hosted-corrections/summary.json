@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "status": "LOCAL_CORRECTIONS_TESTED_HOSTED_WEBKIT_AND_EXACT_CANDIDATE_RELEASE_PENDING",
+  "hostedFailureSource": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "hostedRun": 40423799149,
+  "testedMerge": "c5e44c0af9a321d7c0c8d5dae3450d2842a060eb",
+  "personaFailure": {
+    "job": 121925970481,
+    "artifact": 12701041459,
+    "passed": 570,
+    "failed": 10,
+    "skipped": 22,
+    "artifactSha256": "b2c32baad965639510710078b5d9d589ac4e355073d2569508032a4bdf1804f4",
+    "confirmedCauses": "7 legacy empty-title regressions and3 detail-link failures after /music/search200text/html SPA fallback reached unvalidated map; exact trace/real-client counterexamples retained."
+  },
+  "nativeFailure": {
+    "job": 121925970570,
+    "artifact": 12700297671,
+    "passed": 52,
+    "failed": 2,
+    "failedProjects": [
+      "webkit-iphone",
+      "webkit-critical"
+    ],
+    "artifactSha256": "2b90e46a3ed33fd4698f60e97460195aafefcc78527245950e2777079b73f2bf",
+    "boundary": "Hosted search happy-path advancing-clock assertions failed. Deterministic metadata readiness corrections and local Chromium/Firefox passes do not prove WebKit repaired; fresh hosted WebKit remains UNVERIFIED."
+  },
+  "localSourceContext": "ObservedHEADf630 with root-owned current parent composition/corrections in working tree; raw source fingerprints bind executions, not a clean final commit claim.",
+  "corrections": {
+    "directoryAndWireGuard": {
+      "affectedTests": 100,
+      "suites": 5,
+      "status": "PASS",
+      "lintFiles": 4,
+      "appTypecheck": "PASS",
+      "counterexample": "Real client previously resolved HTML and actualPage crashed; two desired tests fail before closed response validation. Legacy directory title restored with scoped paragraph.",
+      "receiptSha256": "783130eb6c2d174bdc6d24d8f58b9585a47d22942bf1eeab6136ffc1e8ac25ec"
+    },
+    "playerMetadataReadiness": {
+      "affectedTests": 115,
+      "suites": 7,
+      "status": "PASS",
+      "lint": "PASS",
+      "appTypecheck": "PASS",
+      "baseline": "2 desired failures/1pass/39notselected; fractional restore sought before metadata and pause during readiness incorrectly autoplayed.",
+      "receiptSha256": "6556f381441ccf968151b86793c0a1967f017441ad9b7eec7eb39c71baae14b6",
+      "webKit": "UNVERIFIED_PENDING_FRESH_HOSTED"
+    },
+    "intermediateTitleOnly63": "Historical narrower prototype retained; superseded by100-case validated-client correction, not final separate proof."
+  },
+  "localBrowsers": {
+    "legacyDirectory": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "scope": "Original discovery3 and welcome5 installed-project executions, exact unchanged legacy tests; synthetic intercepted APIs. Not the full earlier11-case directory run or WebKit."
+    },
+    "nativeRegression": {
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "projects": [
+        "Chromium desktop",
+        "phone web emulation",
+        "Firefox"
+      ],
+      "scope": "Existing real-media regressions plus mockglobal-player scenario and new exactB/deniedB cases. Synthetic API/auth/media replies; no production or WebKit qualification."
+    },
+    "strongerSearchNative": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "rootSession": 19625,
+      "actualExitCode": 0,
+      "sourceFilesCompared": 877,
+      "sourceUnchanged": true,
+      "change": "Search happy-path now awaits trusted lossless seeked completion before recording advancing-clock baseline; no timeout/retry bypass. Local stricter successor, not retroactive repair of prior results.",
+      "scope": "Same3 installed browser projects; exactB realAAC/FLAC decoder/clock plus deniedB/noA fallback. Synthetic services; lateA cancelled does not prove delivered stale response."
+    }
+  },
+  "canonicalReflection": {
+    "actualExitCode": 0,
+    "typedOperations": 906,
+    "rawMounts": 2,
+    "canonicalDocumentedOperations": 532,
+    "undocumentedPreexisting": 399,
+    "documentedWithoutTypedRoute": 25,
+    "statusDifferences": 8,
+    "competing": 0,
+    "newSearchReferenceGapResolved": true,
+    "binarySha256": "8df6e58359fe29ec2a841d232094106038be08f703abb5a698eeb23eb6cb51cb",
+    "binarySource": "b8a13e66fb40613250c047df92b6775a04eebf67",
+    "observedLocalHead": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+    "boundary": "Actual compiled declaration inspector with current canonical docs; oldb8a binary, not final-source build attestation or whole API conformance approval."
+  },
+  "mobileHostedValidate": {
+    "run": 40427917280,
+    "head": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40427917280",
+    "scope": "Actual hosted Validate workflow result, not native device/EAS/deployment or rootPR640 success."
+  },
+  "integration": {
+    "currentCompositionParent": "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+    "latestProtectedMain": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "latestMainRelationship": "PR626 is actually protected-merged at01:28:41UTC to4b81; rawREST confirms merged. 7bee and4b81 Git trees equivalent; normal ancestry merge and PR640 retarget still pending at packaging.",
+    "mainProtection": {
+      "strict": true,
+      "requiredChecks": 20,
+      "requiredApprovals": 1
+    },
+    "sourceReview": {
+      "backendPathsCompared": 975,
+      "onlyBackendDeltaFromQualifiedB8a": [
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "reviewSha256": "dd1fb23b4bb96bf9de5ff348a957d2df9b93ae780f382ce5206dc86b0f74dd13"
+    },
+    "historicalPremergeObservation": "Earlier root observation of Vercel rate-limit/review unknown preceded actual protected merge; not current pending626 status."
+  },
+  "metadata": "Prepared-final receipt and checks preserved as BEFORE this evidence/doc refresh. Drift gate correctly caught native-spec edit; root must regenerate/check final freshness after packaging. No child generators/metadata/source writes.",
+  "archive": {
+    "path": "hosted-failures-local-corrections-evidence.tar.gz",
+    "members": 114,
+    "bytes": 8148918,
+    "sha256": "48b3a6e8a85ac987b8d4c1d11d67bcea4c14c4b5f2a02434a6a68139d2a27ee2"
+  },
+  "priorLeavesPreserved": 56,
+  "limits": "No production writes, real upload, server/storage/media rights, SLO/device or full mission acceptance. No check failures, skips or histories hidden."
+}
