@@ -1,7 +1,9 @@
 import { jest } from '@jest/globals';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import type { PlayerTrack, RepeatMode } from './types';
+import { PLAYER_ANALYTICS_EVENT } from './types';
 import type { ReactNode } from 'react';
+import { useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 jest.unstable_mockModule('./analytics', () => ({ installPlayerAnalyticsBridge: () => () => undefined }));
@@ -22,9 +24,74 @@ beforeEach(() => {
   jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockImplementation(function (this: HTMLMediaElement) { return this.src; });
   jest.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => undefined);
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
-  jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  jest.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(false);
+  jest.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(function (this: HTMLMediaElement) {
+    this.dispatchEvent(new Event('playing'));
+    return Promise.resolve();
+  });
 });
 afterEach(() => { cleanup(); jest.restoreAllMocks(); localStorage.clear(); });
+
+describe('confirmed playback analytics', () => {
+  const starts = () => {
+    const events: Record<string, unknown>[] = [];
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<Record<string, unknown>>).detail;
+      if (detail['eventType'] === 'play_start') events.push(detail);
+    };
+    window.addEventListener(PLAYER_ANALYTICS_EVENT, listener);
+    return { events, stop: () => window.removeEventListener(PLAYER_ANALYTICS_EVENT, listener) };
+  };
+
+  it('does not count a fulfilled play promise until the current source actually plays', async () => {
+    jest.mocked(HTMLMediaElement.prototype.play).mockResolvedValue(undefined);
+    const observed = starts();
+    try {
+      const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+      await act(async () => { player.playTrack(track('one')); });
+      expect(observed.events).toHaveLength(0);
+      const audio = view.container.querySelector('audio')!;
+      act(() => { audio.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(1);
+      expect(observed.events[0]).toMatchObject({ recordingId: 'one', quality: 'high' });
+    } finally { observed.stop(); }
+  });
+
+  it('counts the native playing event even if the play promise is still pending, once per attempt', async () => {
+    let settle: () => void = () => undefined;
+    jest.mocked(HTMLMediaElement.prototype.play).mockImplementationOnce(() => new Promise<void>((resolve) => { settle = resolve; }));
+    const observed = starts();
+    try {
+      const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+      await act(async () => { player.playTrack(track('one')); });
+      const audio = view.container.querySelector('audio')!;
+      act(() => { audio.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(1);
+      act(() => { audio.dispatchEvent(new Event('waiting')); audio.dispatchEvent(new Event('playing')); });
+      await act(async () => { settle(); });
+      expect(observed.events).toHaveLength(1);
+      act(() => { player.pause(); audio.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(1);
+      await act(async () => { await player.play(); });
+      expect(observed.events).toHaveLength(2);
+    } finally { observed.stop(); }
+  });
+
+  it('does not count rejected autoplay or a stale source while the next authorization is pending', async () => {
+    jest.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException('Gesture required', 'NotAllowedError'));
+    const observed = starts();
+    try {
+      const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+      await act(async () => { player.playTrack(track('blocked')); });
+      act(() => { view.container.querySelector('audio')!.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(0);
+      jest.mocked(authorizePlayerAsset).mockImplementationOnce(() => new Promise(() => undefined));
+      await act(async () => { player.playTrack({ ...track('pending'), sources: [{ ...track('pending').sources[0]!, assetId: 'pending' }] }); });
+      act(() => { view.container.querySelector('audio')!.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(0);
+    } finally { observed.stop(); }
+  });
+});
 
 it('does not replace authorized full audio with a same-quality preview', async () => {
   const view = render(<PlayerProvider><Probe /></PlayerProvider>);
@@ -74,6 +141,34 @@ it('an obsolete play rejection cannot remove or stop the next source', async () 
   expect(view.container.querySelector('audio')?.getAttribute('src')).toBe('https://media.invalid/two.m4a');
   expect(player.status).toBe('playing');
   expect(player.error).toBeNull();
+});
+
+it('a retired source error during the next render cannot cancel automatic recovery', async () => {
+  jest.mocked(HTMLMediaElement.prototype.load).mockImplementation(function (this: HTMLMediaElement) {
+    Object.defineProperty(this, 'error', { configurable: true, value: null });
+  });
+  function ErrorBeforeSourceCleanup() {
+    const context = usePlayer();
+    useLayoutEffect(() => {
+      if (context.currentTrack?.id === 'two') {
+        // Native events can arrive after the queue renders but before passive
+        // source/listener cleanup. The retired element still identifies one.
+        document.querySelector('audio')!.dispatchEvent(new Event('error'));
+      }
+    }, [context.currentTrack?.id]);
+    return null;
+  }
+  const view = render(<PlayerProvider><Probe /><ErrorBeforeSourceCleanup /></PlayerProvider>);
+  await act(async () => { player.playTrack(track('one'), [track('one'), track('two')]); });
+  const audio = view.container.querySelector('audio')!;
+  expect(player.status).toBe('playing');
+  Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  expect(player.currentTrack?.id).toBe('two');
+  expect(audio.getAttribute('src')).toBe('https://media.invalid/two.m4a');
+  expect(player.status).toBe('playing');
+  expect(player.error).toBeNull();
+  expect(jest.mocked(audio.play)).toHaveBeenCalledTimes(2);
 });
 
 it('a late play resolution does not undo an explicit pause', async () => {
@@ -242,7 +337,7 @@ it('does not repeatedly reload media that cannot be decoded', async () => {
     act(() => { audio.dispatchEvent(new Event('error')); });
     await act(async () => { jest.advanceTimersByTime(10000); });
     expect(jest.mocked(audio.load).mock.calls.length).toBe(before);
-    expect(player.status).toBe('error');
+    expect(player.status).toBe('unavailable');
   } finally { jest.useRealTimers(); }
 });
 
@@ -295,15 +390,13 @@ it('aborts superseded authorization and rejects its late result without substitu
   expect(player.status).toBe('playing');
 });
 
-it('never substitutes another queued track when every rendition of the selection is denied', async () => {
+it('skips a denied selection without using its stale direct URL', async () => {
   jest.mocked(authorizePlayerAsset).mockRejectedValue({ status: 403 });
   const secured = { ...track('one'), sources: [{ ...track('one').sources[0]!, assetId: 'one-full' }] };
   const view = render(<PlayerProvider><Probe /></PlayerProvider>);
   await act(async () => { player.playTrack(secured, [secured, track('two')]); });
-  expect(player.currentTrack?.id).toBe('one');
-  expect(player.status).toBe('unavailable');
-  expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
-  expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+  expect(player.currentTrack?.id).toBe('two');
+  expect(view.container.querySelector('audio')?.getAttribute('src')).toBe('https://media.invalid/two.m4a');
   expect(authorizePlayerAsset).toHaveBeenCalledTimes(1);
 });
 
@@ -417,7 +510,7 @@ it('keeps the terminal native error when its pending play promise rejects afterw
   act(() => { audio.dispatchEvent(new Event('error')); });
   await act(async () => { rejectPlay(new DOMException('Decode failed', 'NotSupportedError')); });
   expect(player.error).toBe('La fuente dejó de estar disponible. Puedes reintentar o pasar a la siguiente pista.');
-  expect(player.status).toBe('error');
+  expect(player.status).toBe('unavailable');
 });
 
 it('recovers when the browser rejects play before dispatching the protected-source native error', async () => {
@@ -552,10 +645,12 @@ it('removes the pending metadata listener on unmount', async () => {
 it('does not resurrect a terminal decoding failure when pending metadata arrives later', async () => {
   const { audio, seek, ready } = await pendingQualityMetadata();
   Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
-  act(() => { audio.dispatchEvent(new Event('error')); });
-  expect(player.status).toBe('error');
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  // Exhaust both renditions before asserting terminal metadata cannot revive them.
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  expect(player.status).toBe('unavailable');
   await ready();
-  expect(player.status).toBe('error');
+  expect(player.status).toBe('unavailable');
   expect(seek).not.toHaveBeenCalled();
   expect(audio.play).not.toHaveBeenCalled();
 });
@@ -572,4 +667,107 @@ it('ignores queued native transport events while the restored source is preparin
   expect(player.currentTrack?.id).toBe('metadata');
   await ready();
   expect(audio.play).toHaveBeenCalledTimes(1);
+});
+
+it('prepares a different artist silently after an explicit pause and resumes on user play', async () => {
+  render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(track('one')); });
+  act(() => player.pause());
+  const before = jest.mocked(HTMLMediaElement.prototype.play).mock.calls.length;
+  act(() => player.beginArtist('two'));
+  await act(async () => player.loadArtist('two', [track('two')]));
+  expect(player.currentTrack?.id).toBe('two');
+  expect(jest.mocked(HTMLMediaElement.prototype.play).mock.calls.length).toBe(before);
+  await act(async () => player.play());
+  expect(jest.mocked(HTMLMediaElement.prototype.play).mock.calls.length).toBe(before + 1);
+});
+
+it('ignores obsolete artist results and preserves an unchanged profile selection', async () => {
+  render(<PlayerProvider><Probe /></PlayerProvider>);
+  act(() => player.beginArtist('A'));
+  act(() => player.beginArtist('B'));
+  await act(async () => player.loadArtist('B', [track('B')]));
+  act(() => player.loadArtist('A', [track('A')]));
+  const before = jest.mocked(HTMLMediaElement.prototype.load).mock.calls.length;
+  act(() => player.beginArtist('B'));
+  expect(player.currentTrack?.id).toBe('B');
+  expect(jest.mocked(HTMLMediaElement.prototype.load).mock.calls.length).toBe(before);
+});
+
+it('exhausts broken tracks once even with queue repetition enabled', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => player.playTrack(track('one'), [track('one'), track('two')]));
+  act(() => player.setRepeat('queue'));
+  const audio = view.container.querySelector('audio')!;
+  jest.mocked(audio.load).mockImplementation(() => {
+    Object.defineProperty(audio, 'error', { configurable: true, value: null });
+  });
+  Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  expect(player.currentTrack?.id).toBe('two');
+  Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  expect(player.status).toBe('unavailable');
+  expect(player.currentTrack?.id).toBe('two');
+});
+
+it('does not skip or condemn a track when autoplay is blocked', async () => {
+  jest.mocked(HTMLMediaElement.prototype.play).mockRejectedValue(new DOMException('Blocked', 'NotAllowedError'));
+  render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => player.playTrack(track('one'), [track('one'), track('two')]));
+  expect(player.currentTrack?.id).toBe('one');
+  expect(player.status).toBe('paused');
+});
+
+
+it('tries another rendition before dropping a recording and exhausts each only once', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  const recording = { ...track('one'), sources: [track('one').sources[0]!,
+    { url: 'https://media.invalid/alternate.flac', quality: 'lossless' as const, mediaType: 'audio/flac' }] };
+  await act(async () => player.playTrack(recording, [recording, track('two')]));
+  const audio = view.container.querySelector('audio')!;
+  jest.mocked(audio.load).mockImplementation(() => {
+    Object.defineProperty(audio, 'error', { configurable: true, value: null });
+  });
+  const fail = async () => {
+    Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
+    await act(async () => { audio.dispatchEvent(new Event('error')); });
+  };
+  await fail();
+  expect(player.currentTrack?.id).toBe('one');
+  expect(audio.src).toBe('https://media.invalid/alternate.flac');
+  expect(player.unavailableTrackIds).toEqual([]);
+  await fail();
+  expect(player.currentTrack?.id).toBe('two');
+  expect(player.unavailableTrackIds).toEqual(['one']);
+  await fail();
+  expect(player.status).toBe('unavailable');
+  expect(player.unavailableTrackIds).toEqual(['one', 'two']);
+});
+
+it('advances after an unsupported play rejection even before a native error event', async () => {
+  jest.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException('Unsupported', 'NotSupportedError'));
+  render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => player.playTrack(track('one'), [track('one'), track('two')]));
+  expect(player.currentTrack?.id).toBe('two');
+  expect(player.status).toBe('playing');
+  expect(player.unavailableTrackIds).toEqual(['one']);
+});
+
+
+it('can explicitly retry a recording after every rendition was exhausted', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => player.playTrack(track('one')));
+  const audio = view.container.querySelector('audio')!;
+  Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  expect(player.status).toBe('unavailable');
+  expect(player.unavailableTrackIds).toEqual(['one']);
+  jest.mocked(audio.load).mockImplementation(() => {
+    Object.defineProperty(audio, 'error', { configurable: true, value: null });
+  });
+  await act(async () => player.play());
+  expect(player.currentTrack?.id).toBe('one');
+  expect(player.status).toBe('playing');
+  expect(player.unavailableTrackIds).toEqual([]);
 });

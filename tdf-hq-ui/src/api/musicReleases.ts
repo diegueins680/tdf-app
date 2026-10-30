@@ -540,7 +540,15 @@ export interface MusicPublicCatalogPage {
   signal?: AbortSignal;
 }
 
+export type ArtistFeaturedTrack = components['schemas']['ArtistFeaturedTrack'];
+
 export const musicReleases = {
+  getArtistFeaturedTrack: (artistId: number, signal?: AbortSignal) =>
+    get<ArtistFeaturedTrack>(apiPath(`/artists/${artistId}/featured-track`), { signal }),
+  getMyFeaturedTrack: (signal?: AbortSignal) =>
+    get<ArtistFeaturedTrack>(apiPath('/me/featured-track'), { signal }),
+  setMyFeaturedTrack: (selection: Pick<ArtistFeaturedTrack, 'artistPartyId' | 'recordingId' | 'legacyReleaseId'>, signal?: AbortSignal) =>
+    put<ArtistFeaturedTrack>(apiPath('/me/featured-track'), selection, { signal }),
   searchTracks: (query: string, page?: MusicPublicCatalogPage) => {
     const term = query.trim();
     if (Array.from(term).length > 200) throw new RangeError('Music search query must contain at most 200 characters.');
@@ -576,7 +584,7 @@ export const musicReleases = {
     const path = apiPath(`/releases${suffix ? `?${suffix}` : ''}`);
     return page?.signal ? get<MusicPublicReleaseSummary[]>(path, { signal: page.signal }) : get<MusicPublicReleaseSummary[]>(path);
   },
-  getPublic: (slug: string) => get<MusicPublicRelease>(apiPath(`/releases/${encodeURIComponent(slug)}`)),
+  getPublic: (slug: string, signal?: AbortSignal) => get<MusicPublicRelease>(apiPath(`/releases/${encodeURIComponent(slug)}`), { signal }),
   getAssetAccess: (assetId: string) => get<MusicAssetAccess>(apiPath(`/assets/${assetId}/access`)),
   listFavorites: () => get<MusicFavorite[]>(apiPath('/favorites')),
   favorite: (recordingId: string) => put(apiPath('/favorites'), { recordingId }),

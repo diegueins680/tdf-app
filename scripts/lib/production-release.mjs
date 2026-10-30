@@ -698,6 +698,8 @@ ROLLBACK;
 // as undefined_function at request time. The release test derives the called set
 // from source and fails if a newly called function is missing here.
 export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
+  'music_artist_featured_track_eligible(bigint,uuid,bigint,text)',
+  'music_set_artist_featured_track(bigint,uuid,bigint,text)',
   'music_can(bigint,bigint,text)',
   'music_checkout_payment_attempt_allowed(uuid)',
   'music_check_ddex_export(uuid)',
@@ -2713,6 +2715,7 @@ BEGIN
     RAISE EXCEPTION 'Music migration 2026-10-07_artist_invitation_links is not applied';
   END IF;
   FOREACH music_table IN ARRAY ARRAY[
+    'music_artist_featured_track',
     'music_release', 'music_release_version', 'music_party', 'music_party_identifier',
     'music_recording', 'music_release_track', 'music_credit', 'music_identifier',
     'music_rights_declaration', 'music_rights_split', 'music_asset', 'music_upload_session',
@@ -2729,6 +2732,22 @@ BEGIN
       RAISE EXCEPTION 'Music release relation public.% is missing', music_table;
     END IF;
   END LOOP;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('artist_party_id','bigint','NO'),('recording_id','uuid','YES'),
+      ('legacy_release_id','bigint','YES'),('updated_at','timestamp with time zone','NO')
+    ) expected(column_name,data_type,is_nullable)
+    LEFT JOIN information_schema.columns actual ON actual.table_schema='public'
+      AND actual.table_name='music_artist_featured_track'
+      AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+      OR actual.is_nullable<>expected.is_nullable
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.music_artist_featured_track'::regclass
+      AND conname='music_artist_featured_track_one_source' AND contype='c' AND convalidated
+  ) THEN
+    RAISE EXCEPTION 'Artist featured-track preference schema is incompatible';
+  END IF;
   FOREACH music_table IN ARRAY ARRAY[
     ${MUSIC_RUNTIME_FUNCTION_SIGNATURES.map((signature) => `'${signature}'`).join(',\n    ')}
   ] LOOP

@@ -13587,6 +13587,217 @@
       "evidence": "Local checks and current-head hosted results must be reported separately; no formal refinement proof is claimed."
     },
     {
+      "id": "MEDIA-ARTIST-PLAYBACK-001",
+      "title": "Shared artist and radio playback with bounded source recovery",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Artist profiles and the radio catalogue command the same PlayerProvider and HTMLAudioElement. Artist navigation replaces the listening context, preserving explicit pause. Public artist queues preserve Party/source identity, use canonical tracks then direct public legacy media, and offer radio rather than automatically switching when exhausted. Native terminal failures try remaining eligible renditions, then move forward through the queue without repeat cycles. This client implementation does not establish authoritative media health or persisted artist featured-track selection.",
+      "authority": "User authorization to implement, test and publish artist autoplay, resilient playable-source selection and unification of the global player with the radio widget.",
+      "source": "docs/music-releases/unified-playback-progress.md",
+      "contract": "docs/music-releases/unified-playback-progress.md",
+      "actors": [
+        "Public listener",
+        "Artist",
+        "Radio listener"
+      ],
+      "preconditions": [
+        "Existing public catalogue and asset authorization gates remain authoritative.",
+        "PlayerProvider is mounted around both artist pages and RadioWidget."
+      ],
+      "inputs": [
+        "Profile route and linked Party ID",
+        "Canonical and legacy public catalogue results",
+        "Explicit play, pause and station selection",
+        "Native playing/error/waiting events",
+        "Asset authorization results and timeout"
+      ],
+      "state": {
+        "playback": [
+          "idle",
+          "loading",
+          "playing",
+          "paused",
+          "buffering",
+          "error",
+          "unavailable"
+        ],
+        "recovery": [
+          "bounded rendition retries",
+          "next rendition",
+          "next track",
+          "exhausted"
+        ],
+        "artistIntent": [
+          "automatic entry",
+          "explicit pause"
+        ]
+      },
+      "allowedTransitions": [
+        "Profile entry -> stop previous context -> public artist queue; explicit pause remains silent.",
+        "Terminal rendition failure -> untried eligible rendition -> later unfailed queue track -> unavailable.",
+        "Autoplay denial -> paused selected source -> explicit user play.",
+        "Empty artist queue -> show availability message and explicit radio link.",
+        "Explicit silent radio selection -> prepared global track without invoking play."
+      ],
+      "forbiddenTransitions": [
+        "Radio rerender reclaims a newer artist context.",
+        "Known provider page is loaded as native legacy audio.",
+        "A late aborted artist request overwrites a newer context.",
+        "Repeat or shuffle loops across terminally failed tracks during recovery.",
+        "Client decoding/network failure writes globally authoritative invalidity.",
+        "Unresolved play promise alone establishes visible playing state.",
+        "Artist exhaustion starts radio without user selection."
+      ],
+      "effects": [
+        "Replace the global listening queue and resolve asset grants through existing authorization.",
+        "Dispose the previous torrent session when its selected source changes.",
+        "Hide session-failed radio entries; replace the redundant radio dock with a catalogue launcher when a global track is selected."
+      ],
+      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted.",
+      "privacy": "No new server diagnostics, credentials, authorization grants or global health writes. Existing per-account listening persistence fences remain active; torrent files remain session-only.",
+      "concurrency": "Latest profile/source generation and play-attempt fences discard obsolete asynchronous results. Metadata position restoration from main remains fenced to the matching track, URL and generation.",
+      "idempotency": "A profile key cannot repeatedly replace its completed queue; failed rendition objects and track IDs are bounded to the current selection context.",
+      "failure": "Two automatic network retries per rendition and a 15-second load/stall watchdog bound client recovery. Offline and browser-policy failures do not condemn media globally. An exhausted artist catalogue remains visible as unavailable.",
+      "recovery": "Try other eligible renditions, then advance forward without repeat/shuffle. Explicit selection/retry permits another attempt; radio fallback requires user action.",
+      "observability": "Existing playback events and executable component/engine regressions. Radio presence requires native playing. Local quarantine is not a persistent media-health verdict.",
+      "implementation": [
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/types.ts",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "e2e/web/music-player.spec.mjs",
+        "e2e/web/music-player-native.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped local client execution; current-head hosted/native checks and deployment are separate obligations.",
+      "ambiguity": [
+        "Artist-owned featured-track persistence and selector are implemented in MEDIA-ARTIST-FEATURED-001 with backend/contract qualification pending. Authoritative source-versioned media health, SSRF-safe ingestion/periodic probes and owner/admin repair/revalidation remain missing.",
+        "Client timeout or unsupported media is not a global assertion that a live station no longer exists.",
+        "Catalogues beyond the shared 10,000-row bound and physical legacy/canonical provenance reconciliation remain outside this implementation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client shared-engine and bounded recovery implementation only. No global health service, featured-track persistence, mathematical proof, current-head native pass or production deployment is established."
+      },
+      "property": "One listening HTMLAudioElement; latest context owns selection; explicit pause prevents automatic artist playback; bounded recovery never cycles over failed sources or tracks; no client failure establishes authoritative global invalidity.",
+      "verification": "Jest engine and rendered-component regressions, TypeScript, production build, changed-source lint, catalogue authority and immutable source admission. Native Playwright cases require current-head hosted execution; no implementation refinement proof is claimed.",
+      "evidence": "docs/music-releases/unified-playback-progress.md; PR #670 final candidate checks. Historical native results retain their earlier revision."
+    },
+    {
+      "id": "MEDIA-ARTIST-FEATURED-001",
+      "title": "Artist-owned persisted featured recording preference",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "One preference per artist references an owned canonical recording or legacy public release. Public reads recheck reference eligibility and conceal unavailable IDs/timestamps; authenticated owner reads retain the saved choice. Only the authenticated Party matching the explicit expected artist can write or clear it. The player prioritizes only a matching eligible queue item, retains other order and bounds optional preference lookup. Saving does not interrupt current playback.",
+      "authority": "Explicit user instruction to begin artist profiles with the artist-selected featured track and then public playable music.",
+      "source": "docs/music-releases/artist-featured-track.md",
+      "contract": "docs/music-releases/artist-featured-track.md",
+      "property": "An accepted preference mutation has authenticated actor=expected artist and at most one owned source identity; public unavailable selections reveal no reference or timestamp; stale UI receipts cannot acknowledge a different account.",
+      "actors": [
+        "Artist owner",
+        "Public listener"
+      ],
+      "preconditions": [
+        "Existing authentication and music_releases.public gate.",
+        "Reviewed migration and published generated Mobile contract before release."
+      ],
+      "inputs": [
+        "Expected artist Party ID",
+        "Optional recording UUID or legacy release ID",
+        "Trusted edge territory",
+        "Current public catalogue",
+        "Authenticated session lifetime"
+      ],
+      "state": {
+        "preference": [
+          "unset",
+          "selected",
+          "unavailable"
+        ],
+        "editor": [
+          "loading",
+          "ready",
+          "saving",
+          "failed",
+          "saved"
+        ]
+      },
+      "allowedTransitions": [
+        "Owner selects a currently eligible owned reference -> persist -> authoritative receipt.",
+        "Owner clears an unavailable reference -> default catalogue order.",
+        "Withdrawal or territory denial -> hide public reference while retaining it for the owner.",
+        "Next profile visit -> move matching featured item first; keep remaining order."
+      ],
+      "forbiddenTransitions": [
+        "A switched-account command mutates another artist preference.",
+        "Foreign/ambiguous/unpublished canonical reference is accepted.",
+        "A public request enables private diagnostics.",
+        "Unavailable public reference exposes an ID or updated timestamp.",
+        "Preference lookup failure blocks otherwise available catalogue music.",
+        "Saving forces an automatic playback restart."
+      ],
+      "effects": [
+        "Persist reference preference only; no media grant or publication.",
+        "Reorder an existing artist-scoped player queue."
+      ],
+      "authorization": "Servant protected routes derive the database actor from AuthedUser and compare the required expected artist ID. Canonical reference eligibility reuses music_public_asset_accessible and the public release view. Legacy eligibility establishes existing public-release membership; direct-media classification and decoding remain player responsibilities.",
+      "privacy": "Public responses conceal unavailable source IDs and their timestamps; settings are scoped to the authenticated Party. Success responses use private, no-store. No signed URL is persisted or returned by preference endpoints.",
+      "concurrency": "Last successful server write wins. Editor requests are aborted and receipts fenced by session identity and component generation; the expected-owner field also guards the server-side account boundary.",
+      "idempotency": "Repeated selection has the same chosen reference; clearing an absent choice succeeds. Timestamp may change on an explicit repeated save.",
+      "failure": "Owner settings read failure blocks writes until retry. Public preference read aborts after two seconds and falls back to the normal catalogue. No authoritative media-health verdict is inferred.",
+      "recovery": "Retry settings read/write; replace or clear unavailable selection. Rollback preserves preference rows for reapplication.",
+      "observability": "Client regression cases, shipped-query guard-removal controls and an actual-publication PostgreSQL runner; hosted execution remains required.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/sql/2026-10-30_artist_featured_track.sql",
+        "tdf-hq/sql/2026-10-30_artist_featured_track_rollback.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/artist-playback.yaml",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.tsx",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
+        ".github/workflows/ci.yml",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs"
+      ],
+      "tests": [
+        "scripts/test-artist-featured-track.mjs",
+        "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
+        "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.test.tsx",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
+        "scripts/__tests__/production-release.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Rendered owner/session regression cases and queue-priority tests; type/build/lint and generated contract comparison; actual SQL/binding guard-removal controls. Full PostgreSQL and compiled-handler/native evidence require hosted CI.",
+      "evidence": "docs/music-releases/artist-featured-track.md; PR #670 validation.",
+      "confidence": "Client execution and source-level backend correspondence only until hosted backend/PostgreSQL qualification.",
+      "ambiguity": [
+        "Mobile generated-contract publication is blocked by GitHub integration write permissions (403); the published pin is preserved and the required generated-client gate remains active.",
+        "Canonical eligibility reuses existing delivery authorization; legacy membership does not prove native decoding or persistent media health."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Persisted preference implementation and client validation; no local Stack/PostgreSQL execution, published Mobile dependency, current-head native pass or deployed acceptance."
+      }
+    },
+    {
       "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
       "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
       "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",

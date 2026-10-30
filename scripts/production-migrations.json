@@ -1155,6 +1155,11 @@
       "id": "2026-10-25_event_memory_source_permission_locks",
       "path": "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql",
       "introducedBy": "baab857f085b74f333c9f5d29e31306072fbc496"
+    },
+    {
+      "id": "2026-10-30_artist_featured_track",
+      "path": "tdf-hq/sql/2026-10-30_artist_featured_track.sql",
+      "introducedBy": "1f1b5a48555500144996bd2d51d1f4f660421f2f"
     }
   ]
 }

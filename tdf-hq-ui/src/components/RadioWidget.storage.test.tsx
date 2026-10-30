@@ -11,6 +11,7 @@ jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: { search, clearPrese
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listItems: jest.fn(async () => ({ items: [], total: 0 })) } }));
 jest.unstable_mockModule('../utils/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
 const { default: RadioWidget } = await import('./RadioWidget');
+const { PlayerProvider } = await import('../player/PlayerProvider');
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 it.each(['getter', 'getItem', 'setItem'] as const)('keeps authenticated radio preferences usable under %s denial', async (operation) => {
@@ -25,7 +26,7 @@ it.each(['getter', 'getItem', 'setItem'] as const)('keeps authenticated radio pr
   const root = createRoot(container);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   try {
-    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/admin/diagnosticos']}><RadioWidget /></MemoryRouter></QueryClientProvider>); });
+    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/admin/diagnosticos']}><PlayerProvider><RadioWidget /></PlayerProvider></MemoryRouter></QueryClientProvider>); });
     const mute = await waitFor(() => {
       const button = container.querySelector<HTMLButtonElement>('[aria-label="Silenciar radio"]');
       expect(button).not.toBeNull(); return button!;

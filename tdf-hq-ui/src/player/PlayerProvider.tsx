@@ -1,3 +1,4 @@
+import type { TorrentAudioSession, TorrentPlaybackProgress } from '../utils/torrentAudio';
 import {
   createContext,
   useCallback,
@@ -40,6 +41,8 @@ interface PersistedPlayerState {
 }
 
 interface PlayerContextValue {
+  unavailableTrackIds: string[];
+  torrentProgress: TorrentPlaybackProgress | null;
   queue: QueueState;
   currentTrack: PlayerTrack | null;
   status: PlaybackStatus;
@@ -50,6 +53,8 @@ interface PlayerContextValue {
   muted: boolean;
   quality: PlayerQuality | 'auto';
   resolvedQuality: PlayerQuality | null;
+  beginArtist: (key: string) => void;
+  loadArtist: (key: string, tracks: PlayerTrack[]) => void;
   playTrack: (track: PlayerTrack, queue?: PlayerTrack[], autoplay?: boolean) => void;
   enqueue: (tracks: PlayerTrack[]) => void;
   selectTrack: (index: number) => void;
@@ -257,12 +262,20 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const positionsRef = useRef<Record<string, number>>(persisted.positions);
   const autoplayRef = useRef(false);
+  const explicitPauseRef = useRef(false);
+  const artistContextRef = useRef<string | null>(null);
+  const failedTracksRef = useRef(new Set<string>());
+  const failedSourcesRef = useRef(new Set<PlayerSource>());
+  const [unavailableTrackIds, setUnavailableTrackIds] = useState<string[]>([]);
   const retryRef = useRef(0);
+  const cancelWatchdogRef = useRef<() => void>(() => undefined);
   const retryTimerRef = useRef<number | null>(null);
+  const [torrentProgress, setTorrentProgress] = useState<TorrentPlaybackProgress | null>(null);
   const [resolvedQuality, setResolvedQuality] = useState<PlayerQuality | null>(null);
   const sourceGenerationRef = useRef(0);
   const playAttemptRef = useRef(0);
-  const loadedSourceRef = useRef<{ trackId: string; url: string; preview?: boolean; quality: PlayerQuality } | null>(null);
+  const startedPlayAttemptRef = useRef<number | null>(null);
+  const loadedSourceRef = useRef<{ generation: number; trackId: string; url: string; preview?: boolean; quality: PlayerQuality; candidate: PlayerSource } | null>(null);
   const pendingPositionRef = useRef<{ generation: number; trackId: string; url: string; position: number } | null>(null);
   const lastContinuousPositionRef = useRef(0);
   const listenedSinceProgressRef = useRef(0);
@@ -303,6 +316,39 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     return true;
   }, []);
 
+  const recoveryQueueRef = useRef(queue);
+  recoveryQueueRef.current = queue;
+  const skipFailed = useCallback((): boolean => {
+    const queue = recoveryQueueRef.current;
+    if (!currentTrack || navigator.onLine === false) return false;
+    const loaded = loadedSourceRef.current;
+    if (loaded?.trackId === currentTrack.id) {
+      failedSourcesRef.current.add(loaded.candidate);
+      if (candidates.some((candidate) => !failedSourcesRef.current.has(candidate))) {
+        const audio = audioRef.current;
+        positionsRef.current[currentTrack.id] = pendingPositionRef.current?.position ?? audio?.currentTime ?? 0;
+        cancelRetry();
+        retryRef.current = 0;
+        sourceGenerationRef.current += 1;
+        playAttemptRef.current += 1;
+        audio?.pause();
+        setSourceRefresh((value) => value + 1);
+        return true;
+      }
+    }
+    failedTracksRef.current.add(currentTrack.id);
+    setUnavailableTrackIds([...failedTracksRef.current]);
+    const nextIndex = queue.tracks.findIndex((track, index) => index > queue.currentIndex
+      && !failedTracksRef.current.has(track.id));
+    if (nextIndex < 0) return false;
+    cancelRetry();
+    sourceGenerationRef.current += 1;
+    playAttemptRef.current += 1;
+    audioRef.current?.pause();
+    dispatchQueue({ type: 'select', index: nextIndex });
+    return true;
+  }, [cancelRetry, candidates, currentTrack, dispatchQueue]);
+
   const flushProgress = useCallback((track: PlayerTrack, audio: HTMLAudioElement) => {
     const listenedDeltaMs = Math.round(listenedSinceProgressRef.current);
     if (listenedDeltaMs <= 0) return;
@@ -310,7 +356,9 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     emitPlayerEvent('progress', track, audio.currentTime, { listenedDeltaMs });
   }, []);
 
-  const pause = useCallback(() => {
+  const pause = useCallback((explicit = true) => {
+    if (explicit) explicitPauseRef.current = true;
+    cancelWatchdogRef.current();
     const audio = audioRef.current;
     if (!audio) return;
     playAttemptRef.current += 1;
@@ -325,6 +373,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   }, [cancelRetry, currentTrack, flushProgress]);
 
   const play = useCallback(async () => {
+    explicitPauseRef.current = false;
     const audio = audioRef.current;
     if (!audio || !currentTrack || !source) {
       setStatus('unavailable');
@@ -332,6 +381,16 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       return;
     }
     autoplayRef.current = true;
+    // A user retry starts a fresh bounded source attempt after exhaustion.
+    // Automatic rendition/track recovery never enters with a failed current ID.
+    if (failedTracksRef.current.delete(currentTrack.id)) {
+      failedSourcesRef.current.clear();
+      setUnavailableTrackIds([...failedTracksRef.current]);
+      retryRef.current = 0;
+      setStatus('loading');
+      setSourceRefresh((value) => value + 1);
+      return;
+    }
     if (pendingPositionRef.current?.generation === sourceGenerationRef.current) {
       setStatus('loading');
       return;
@@ -349,9 +408,9 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     try {
       await audio.play();
       if (generation !== sourceGenerationRef.current || attempt !== playAttemptRef.current) return;
-      setStatus('playing');
+      // Native 'playing' owns the visible playback state. A fulfilled promise
+      // alone is insufficient, especially when a pause races its settlement.
       setError(null);
-      emitPlayerEvent('play_start', currentTrack, audio.currentTime, { quality: loadedSourceRef.current?.quality ?? source.quality });
     } catch (caught) {
       if (generation !== sourceGenerationRef.current || attempt !== playAttemptRef.current) return;
       // Browsers may reject play() before dispatching their native error
@@ -359,22 +418,29 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       // The native engine can set error while play() is pending; TypeScript's
       // pre-await narrowing does not describe that external mutation.
       const mediaError = audio.error as MediaError | null;
-      const recoverable = mediaError?.code === 2 || (Boolean(source.assetId) && mediaError?.code === 4);
+      const recoverable = mediaError?.code === 2 || (Boolean(loadedSourceRef.current?.candidate.assetId ?? source.assetId) && mediaError?.code === 4);
       const blocked = caught instanceof DOMException && caught.name === 'NotAllowedError';
+      const unsupported = caught instanceof DOMException && caught.name === 'NotSupportedError';
+      if (blocked) cancelWatchdogRef.current();
       if (!blocked && recoverable && scheduleRecovery(currentTrack, audio.currentTime, generation)) return;
+      if (!blocked && (mediaError || unsupported) && skipFailed()) return;
       autoplayRef.current = false;
       audio.pause();
       // Browser policy rejection is recoverable by a fresh user gesture. Keep
       // the selected source so that retrying direct/legacy audio also works.
-      setStatus(blocked ? 'paused' : 'error');
+      setStatus(blocked ? 'paused' : mediaError || unsupported ? 'unavailable' : 'error');
       setError(blocked ? 'Pulsa Reproducir para permitir el audio en este navegador.'
         : recoverable ? 'La fuente dejó de estar disponible. Puedes reintentar o pasar a la siguiente pista.'
           : 'No se pudo iniciar la reproducción. Revisa la conexión o vuelve a intentarlo.');
       logger.warn('Global player could not start playback', caught);
     }
-  }, [currentTrack, scheduleRecovery, source]);
+  }, [currentTrack, scheduleRecovery, skipFailed, source]);
 
   const selectTrack = useCallback((index: number) => {
+    explicitPauseRef.current = false;
+    failedTracksRef.current.clear();
+    failedSourcesRef.current.clear();
+    setUnavailableTrackIds([]);
     if (index === queue.currentIndex) { void play(); return; }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index });
@@ -396,7 +462,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const next = useCallback(() => {
     const nextIndex = nextQueueIndex(queue);
     if (nextIndex < 0) {
-      pause();
+      pause(false);
       return;
     }
     if (nextIndex === queue.currentIndex) {
@@ -430,7 +496,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       const loadedSource = loadedSourceRef.current;
       // pause/load can deliver old timeupdate events while the next track's
       // signed URL is pending. Never attribute that position/listening to it.
-      if (!loadedSource || loadedSource.trackId !== track?.id || audio.currentSrc !== loadedSource.url) return;
+      if (!loadedSource || loadedSource.generation !== sourceGenerationRef.current
+        || loadedSource.trackId !== track?.id || audio.currentSrc !== loadedSource.url) return;
       if (pendingPositionRef.current?.generation === sourceGenerationRef.current) return;
       const position = audio.currentTime;
       const delta = position - lastContinuousPositionRef.current;
@@ -454,21 +521,35 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       setCurrentTime(audio.currentTime);
       if (track) positionsRef.current[track.id] = audio.currentTime;
     };
-    const handleDuration = () => setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    const handleDuration = () => {
+      if (ownsNativeSource()) setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    };
     const handlePrepared = () => {
       const loadedSource = loadedSourceRef.current;
-      if (loadedSource?.trackId !== queue.tracks[queue.currentIndex]?.id
+      if (loadedSource?.generation !== sourceGenerationRef.current
+        || loadedSource?.trackId !== queue.tracks[queue.currentIndex]?.id
         || loadedSource?.url !== audio.currentSrc || !audio.paused || autoplayRef.current) return;
       // preload=metadata may stop before canplay. A prepared source awaiting
       // the user's play gesture is paused, not indefinitely loading.
       setStatus((current) => current === 'loading' || current === 'buffering' ? 'paused' : current);
     };
-    const ownsNativeSource = () => loadedSourceRef.current?.trackId === currentTrack?.id
+    // Recovery retires a source immediately, before React's passive listener
+    // cleanup. A second queued native error must not consume the new queue's
+    // recovery intent through the old track's closure.
+    const ownsNativeSource = () => loadedSourceRef.current?.generation === sourceGenerationRef.current
+      && recoveryQueueRef.current.tracks[recoveryQueueRef.current.currentIndex]?.id === currentTrack?.id
+      && loadedSourceRef.current?.trackId === currentTrack?.id
       && loadedSourceRef.current?.url === audio.currentSrc;
     const handlePlaying = () => {
       if (!ownsNativeSource() || pendingPositionRef.current || !autoplayRef.current || audio.paused) return;
       lastContinuousPositionRef.current = audio.currentTime;
       setStatus('playing');
+      // A resolved play() promise is not evidence that media is playing.
+      // Buffer recovery can emit 'playing' repeatedly for the same attempt.
+      if (currentTrack && startedPlayAttemptRef.current !== playAttemptRef.current) {
+        startedPlayAttemptRef.current = playAttemptRef.current;
+        emitPlayerEvent('play_start', currentTrack, audio.currentTime, { quality: loadedSourceRef.current?.quality });
+      }
     };
     const handleWaiting = () => {
       if (!ownsNativeSource() || pendingPositionRef.current || !autoplayRef.current || audio.paused) return;
@@ -508,14 +589,15 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       // A protected URL can also surface an expired HTTP grant as unsupported
       // media. Reauthorization remains bounded and may deny access outright.
       const retryable = !audio.error || audio.error.code === 2
-        || (Boolean(source?.assetId) && audio.error.code === 4);
+        || (Boolean(loadedSourceRef.current?.candidate.assetId ?? source?.assetId) && audio.error.code === 4);
       const position = pendingPositionRef.current?.generation === generation
         ? pendingPositionRef.current.position : audio.currentTime;
       pendingPositionRef.current = null;
       if (retryable && currentTrack && scheduleRecovery(currentTrack, position, generation)) return;
+      if (skipFailed()) return;
       autoplayRef.current = false;
       audio.pause();
-      setStatus('error');
+      setStatus('unavailable');
       setError('La fuente dejó de estar disponible. Puedes reintentar o pasar a la siguiente pista.');
       const track = queue.tracks[queue.currentIndex];
       if (track) emitPlayerEvent('error', track, audio.currentTime, { code: audio.error?.code });
@@ -541,7 +623,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [currentTrack, flushProgress, next, play, queue, scheduleRecovery, source?.assetId]);
+  }, [currentTrack, flushProgress, next, play, queue, scheduleRecovery, skipFailed, source?.assetId]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -565,6 +647,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     const audio = audioRef.current;
     cancelRetry();
     const controller = new AbortController();
+    let torrentSession: TorrentAudioSession | null = null;
+    setTorrentProgress(null);
     const generation = sourceGenerationRef.current + 1;
     sourceGenerationRef.current = generation;
     loadedSourceRef.current = null;
@@ -585,12 +669,47 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       return;
     }
     setStatus('loading');
+    let watchdog: number | undefined;
+    const clearWatchdog = () => { if (watchdog !== undefined) window.clearTimeout(watchdog); };
+    cancelWatchdogRef.current = clearWatchdog;
+    const waitForMedia = () => {
+      clearWatchdog();
+      watchdog = window.setTimeout(() => {
+        if (controller.signal.aborted || generation !== sourceGenerationRef.current) return;
+        if (skipFailed()) return;
+        autoplayRef.current = false;
+        playAttemptRef.current += 1;
+        audio.pause();
+        setStatus('unavailable');
+        setError(navigator.onLine === false ? 'Sin conexión. Vuelve a intentar cuando estés en línea.'
+          : 'No quedan fuentes reproducibles. Puedes reintentar o elegir otra música.');
+      }, 15000);
+    };
+    const prepared = () => { if (!autoplayRef.current) clearWatchdog(); };
+    audio.addEventListener('playing', clearWatchdog);
+    audio.addEventListener('timeupdate', clearWatchdog);
+    audio.addEventListener('waiting', waitForMedia);
+    audio.addEventListener('canplay', prepared);
+    audio.addEventListener('pause', prepared);
+    waitForMedia();
     void (async () => {
       try {
         let resolved: { source: PlayerSource; url: string } | null = null;
         for (const candidate of candidates) {
+          if (failedSourcesRef.current.has(candidate)) continue;
           if (generation !== sourceGenerationRef.current || controller.signal.aborted) return;
           try {
+            if (candidate.torrentSource) {
+              const { createTorrentAudioSession } = await import('../utils/torrentAudio');
+              if (controller.signal.aborted) return;
+              torrentSession = await createTorrentAudioSession({ source: candidate.torrentSource, audio,
+                signal: controller.signal, onProgress: (progress) => {
+                  if (generation === sourceGenerationRef.current && !controller.signal.aborted) setTorrentProgress(progress);
+                } });
+              if (controller.signal.aborted || generation !== sourceGenerationRef.current) { torrentSession.destroy(); return; }
+              resolved = { source: candidate, url: audio.src };
+              break;
+            }
             const access = candidate.assetId ? await authorizePlayerAsset(candidate.assetId, controller.signal) : null;
             if (generation !== sourceGenerationRef.current || controller.signal.aborted) return;
             resolved = { source: candidate, url: access?.url ?? candidate.url };
@@ -604,9 +723,9 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
           }
         }
         if (!resolved?.url) throw Object.assign(new Error('No authorized source'), { status: 403 });
-        audio.src = resolved.url;
-        loadedSourceRef.current = { trackId: currentTrack.id, url: audio.src,
-          preview: resolved.source.preview, quality: resolved.source.quality };
+        if (!resolved.source.torrentSource) audio.src = resolved.url;
+        loadedSourceRef.current = { generation, trackId: currentTrack.id, url: audio.src,
+          preview: resolved.source.preview, quality: resolved.source.quality, candidate: resolved.source };
         setResolvedQuality(resolved.source.quality);
         const storedPosition = positionsRef.current[currentTrack.id] ?? 0;
         const savedPosition = resolved.source.preview && currentTrack.previewEndMs
@@ -642,6 +761,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         const transient = httpStatus === null || httpStatus === 408 || httpStatus === 429
           || (typeof httpStatus === 'number' && httpStatus >= 500);
         if (transient && scheduleRecovery(currentTrack, positionsRef.current[currentTrack.id] ?? 0, generation)) return;
+        if (skipFailed()) return;
         autoplayRef.current = false;
         setStatus('unavailable');
         setError('El servidor no autorizó una fuente vigente para esta pista.');
@@ -649,11 +769,31 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       }
     })();
     return () => {
-      controller.abort();
+      controller.abort(); torrentSession?.destroy(); clearWatchdog();
       removePreparationListener();
       if (pendingPositionRef.current?.generation === generation) pendingPositionRef.current = null;
+      audio.removeEventListener('playing', clearWatchdog);
+      audio.removeEventListener('timeupdate', clearWatchdog);
+      audio.removeEventListener('waiting', waitForMedia);
+      audio.removeEventListener('canplay', prepared);
+      audio.removeEventListener('pause', prepared);
     };
-  }, [cancelRetry, candidates, currentTrack, play, quality, scheduleRecovery, source, sourceRefresh]);
+  }, [cancelRetry, candidates, currentTrack, play, quality, scheduleRecovery, skipFailed, source, sourceRefresh]);
+
+  useEffect(() => {
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (!artistContextRef.current || connection?.saveData || navigator.onLine === false) return;
+    const upcoming = queue.tracks[queue.currentIndex + 1];
+    const candidate = orderedSources(upcoming ?? null, quality).find((item) => item.assetId);
+    if (!candidate?.assetId) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 5000);
+    // Warm authorization only; selection still obtains a fresh grant and never
+    // trusts this result as proof of decoding or a reason to hide content.
+    void Promise.resolve(authorizePlayerAsset(candidate.assetId, controller.signal)).catch(() => undefined)
+      .finally(() => window.clearTimeout(timer));
+    return () => { controller.abort(); window.clearTimeout(timer); };
+  }, [quality, queue.currentIndex, queue.tracks]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -670,10 +810,15 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       if (typeof detail.startPositionMs === 'number' && Number.isFinite(detail.startPositionMs) && detail.startPositionMs >= 0) {
         positionsRef.current[detail.track.id] = detail.startPositionMs / 1000;
       }
+      artistContextRef.current = null;
+      explicitPauseRef.current = false;
+      failedTracksRef.current.clear();
+      failedSourcesRef.current.clear();
+      setUnavailableTrackIds([]);
       autoplayRef.current = detail.autoplay !== false;
       dispatchQueue({ type: 'replace', tracks, currentTrackId: detail.track.id });
     };
-    const handleRadioTakeover = () => pause();
+    const handleRadioTakeover = () => { artistContextRef.current = null; pause(false); };
     window.addEventListener(PLAYER_LOAD_TRACK_EVENT, handleLoad as EventListener);
     window.addEventListener(RADIO_TAKEOVER_EVENT, handleRadioTakeover);
     return () => {
@@ -698,7 +843,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       mediaSession.metadata = null;
     }
     const handlers: Partial<Record<MediaSessionAction, MediaSessionActionHandler>> = {
-      play: () => { void play(); }, pause, previoustrack: previous, nexttrack: next,
+      play: () => { void play(); }, pause: () => pause(), previoustrack: previous, nexttrack: next,
       seekto: (details) => {
         if (details.seekTime !== undefined) seek(details.seekTime);
       },
@@ -751,7 +896,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       try {
         const persistedQueue: QueueState = {
           ...queue,
-          tracks: queue.tracks.map((track) => ({
+          tracks: queue.tracks.filter((track) => !track.sources.some((source) => source.torrentSource instanceof File)).map((track) => ({
             ...track,
             artworkUrl: null,
             sources: track.sources.map((item) => item.assetId
@@ -759,6 +904,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
               : item),
           })),
         };
+        persistedQueue.currentIndex = currentTrack
+          ? persistedQueue.tracks.findIndex((track) => track.id === currentTrack.id) : -1;
         window.localStorage.setItem(PERSISTENCE_KEY, JSON.stringify({
           ownerPartyId,
           queue: persistedQueue,
@@ -772,10 +919,15 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       }
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [currentTime, identityReady, listeningHydrated, muted, ownerPartyId, quality, queue, volume]);
+  }, [currentTime, currentTrack, identityReady, listeningHydrated, muted, ownerPartyId, quality, queue, volume]);
 
   const playTrack = useCallback((track: PlayerTrack, replacementQueue?: PlayerTrack[], autoplay = true) => {
     queueIntentRef.current = true;
+    artistContextRef.current = null;
+    explicitPauseRef.current = !autoplay;
+    failedTracksRef.current.clear();
+    failedSourcesRef.current.clear();
+    setUnavailableTrackIds([]);
     if (track === currentTrack && !replacementQueue) {
       if (autoplay) void play(); else pause();
       return;
@@ -785,8 +937,33 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     dispatchQueue({ type: 'replace', tracks, currentTrackId: track.id });
   }, [currentTrack, dispatchQueue, pause, play]);
 
+  const beginArtist = useCallback((key: string) => {
+    if (artistContextRef.current === key) return;
+    artistContextRef.current = key;
+    failedTracksRef.current.clear();
+    failedSourcesRef.current.clear();
+    setUnavailableTrackIds([]);
+    autoplayRef.current = false;
+    playAttemptRef.current += 1;
+    sourceGenerationRef.current += 1;
+    cancelRetry();
+    audioRef.current?.pause();
+    window.dispatchEvent(new CustomEvent(PLAYER_TAKEOVER_EVENT));
+    dispatchQueue({ type: 'clear' });
+  }, [cancelRetry, dispatchQueue]);
+
+  const loadArtist = useCallback((key: string, tracks: PlayerTrack[]) => {
+    if (artistContextRef.current !== key) return;
+    const seen = new Set<string>();
+    const eligible = tracks.filter((track) => isTrack(track) && !seen.has(track.id) && Boolean(seen.add(track.id)));
+    autoplayRef.current = !explicitPauseRef.current;
+    dispatchQueue({ type: 'replace', tracks: eligible });
+  }, [dispatchQueue]);
+
   const contextValue = useMemo<PlayerContextValue>(() => ({
     queue,
+    torrentProgress,
+    unavailableTrackIds,
     currentTrack,
     status,
     error,
@@ -797,6 +974,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     quality,
     resolvedQuality,
     playTrack,
+    beginArtist,
+    loadArtist,
     enqueue: (tracks) => dispatchQueue({ type: 'enqueue', tracks: tracks.filter(isTrack) }),
     selectTrack,
     removeTrack: (index) => dispatchQueue({ type: 'remove', index }),
@@ -817,7 +996,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     setShuffle: (enabled) => dispatchQueue({ type: 'shuffle', enabled }),
     setRepeat: (mode) => dispatchQueue({ type: 'repeat', mode }),
   }), [
-    currentTime, currentTrack, duration, error, muted, next, pause, play, playTrack, previous,
+    beginArtist, loadArtist, torrentProgress, unavailableTrackIds, currentTime, currentTrack, duration, error, muted, next, pause, play, playTrack, previous,
     quality, queue, resolvedQuality, seek, selectTrack, status, volume, dispatchQueue, updateMuted, updateQuality, updateVolume,
   ]);
 
@@ -836,3 +1015,5 @@ export function usePlayer(): PlayerContextValue {
   if (!value) throw new Error('usePlayer must be used within PlayerProvider');
   return value;
 }
+
+export function useOptionalPlayer() { return useContext(PlayerContext); }
