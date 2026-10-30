@@ -391,12 +391,20 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
       return Fans.updateMyArtistProfile(request.payload);
     },
-    onSuccess: (_profile, request) => {
-      void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+    onSuccess: (profile, request) => {
+      if (!request.isCurrentOwner()) return;
+      // A successful write is not permission to share a draft slug or another Party's identity.
+      if (profile?.apArtistId !== request.payload.apuArtistId) {
+        void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+        setArtistToast('No pudimos confirmar el perfil guardado. Actualiza la página antes de compartirlo.');
+        return;
+      }
+      // Only the authoritative server receipt can change the shareable URL.
+      qc.setQueryData(['artist-profile', profile.apArtistId], profile);
+      void qc.invalidateQueries({ queryKey: ['artist-profile', profile.apArtistId] });
       void qc.invalidateQueries({ queryKey: ['directory', 'search'] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist'] });
-      if (!request.isCurrentOwner()) return;
       request.acknowledgeSave(request.submittedDraft);
       setArtistToast('Perfil de artista actualizado.');
     },
@@ -716,10 +724,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const artistPublicPath = useMemo(() => {
-    if (!session?.partyId) return null;
-    const slug = slugify(artistDraft.apuSlug ?? '');
-    return buildArtistPublicPath(session.partyId, slug);
-  }, [artistDraft.apuSlug, session?.partyId]);
+    const published = artistProfileQuery.data;
+    if (sessionLoading || !canEditArtist || !artistProfileQuery.isSuccess
+        || published?.apArtistId !== viewerId) return null;
+    // Never expose an unsaved or cross-account draft as a public, shareable URL.
+    return buildArtistPublicPath(published.apArtistId, published.apSlug);
+  }, [artistProfileQuery.data, artistProfileQuery.isSuccess, canEditArtist, sessionLoading, viewerId]);
 
   const artistPublicUrl = useMemo(() => {
     if (!artistPublicPath) return null;
@@ -1649,7 +1659,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             setArtistDraft((prev) => ({ ...prev, apuSlug: cleaned }));
                           }}
                           placeholder="mi-proyecto"
-                          helperText={artistPublicPath ? `URL pública: ${artistPublicPath}` : ' '}
+                          helperText={artistPublicPath ? `URL pública guardada: ${artistPublicPath}` : 'Guarda tu perfil para obtener un enlace público.'}
                           fullWidth
                         />
                       </Stack>
