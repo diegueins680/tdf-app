@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+  "previousPublishedHead": "2609922b89bd44822e790be8225356cc65dc5ab6",
+  "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+  "evidenceCommit": "Containing report-only child; exactly four new report paths and all archive members verified from committed Git after packaging.",
+  "scope": "Current-main reconciliation of an existing defect correction; no new application semantics introduced.",
+  "composition": {
+    "normalParents": [
+      "2609922b89bd44822e790be8225356cc65dc5ab6",
+      "8cbd23c1a4e3c8b24c3d0abd0ab1a29339fc6fce"
+    ],
+    "qualifiedParent": "8cbd23c1a4e3c8b24c3d0abd0ab1a29339fc6fce",
+    "all159NewMainNormativeObjectsPreserved": true,
+    "ownedRequirementUnchanged": true,
+    "totalRequirements": 161,
+    "all160QualifiedParentNormativeObjectsPreserved": true,
+    "applicationComponentExactOldHead": true,
+    "protectedMain643VerificationRulesPreserved": true,
+    "allParentEvidencePreserved": true
+  },
+  "problem": {
+    "classification": "Confirmed currency-unit provenance omission and incomplete CSV column specification",
+    "authority": "Owner explicitly supports foreign finance-entry authoring; individual entry listing/UI preserves efeCurrency. Summary totals have separate contributor rules. Bounded repository investigation found no authoritative external consumer contract defining the common CSV column as global event metadata.",
+    "counterexample": "USD event with validUSD30summary plusEUR100void andUSD30posted entries exported the EUR record as currencyUSD/raw100, with no entry-currency field. Void does not contribute to totals but remains listed.",
+    "productionExposure": "UNKNOWN; actual source-function/Jest synthetic evidence, no production incident or external consumer compatibility claim."
+  },
+  "correction": "Define existing CSV currency column as the unit of the amount in that record. Bind only finance_entry row currency cell to authoritative entry.efeCurrency, keeping raw efeAmountCents. Summary/budget rows retain report/event units. Preserve all24columns, row order, statuses, event metadata, numeric guards and CSV escaping. NoFX, inventeddefault, omittedrows, backend/API/schema/provider/financialrecord change.",
+  "properties": [
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001/ROW-UNIT",
+      "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "status": "TESTED",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "contractGitSha256": "f270b599cf5031e17511f22590e5dfa677507aa38f4d2f473171fa45a3226727",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts"
+      ],
+      "statement": "Every finance-entry currency cell follows its own authoritative wireunit without converting or relabeling its unchanged raw cents; summary/budget units remain separate.",
+      "assumptions": [
+        "Existing DTOentrycurrency validation trusted; not a general malformed-DTO decoder.",
+        "Per-record amountunit meaning is the explicitly corrected CSVspecification; external consumers expectations remainunknown."
+      ],
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    },
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001/COMPATIBILITY",
+      "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "status": "TESTED",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "statement": "Existing24-column positions, raw amount/status/eventmetadata, samecurrency records and parentprecision/queryreadiness behavior remain.",
+      "assumptions": [
+        "Current78targetedcases include actualPage/API/money/CSV components; no source-wide complete refinement guarantee.",
+        "Parentfull3811 belongs83533 only; current fullUI local NOT_RUN and mandatoryselected hostedCI remainsrequired."
+      ],
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    }
+  ],
+  "historicalEvidence": {
+    "report": "reports/event-finance-csv-currency-2026-10-30.json",
+    "gitBlob": "cb6c27bbd9ec898e76dd50203c0e65c9dc6c2aa3",
+    "sha256": "f7fa5cad11956c905df01f0b30457b60794243cc7aaabf012fd491bcdce031e6",
+    "scope": "Historical baseline failures, source faults, browser/full-suite evidence remain tied to original source identities; not relabeled as fresh executions."
+  },
+  "verification": {
+    "current": {
+      "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "phase": "QUALIFIED_CURRENT_MAIN_CSV_SOURCE",
+      "startedAtUTC": "2026-10-30T23:44:28.867255+00:00",
+      "actualExits": {
+        "targeted": 0,
+        "typecheck": 0,
+        "lint": 0,
+        "build": 0,
+        "root-quality": 0,
+        "source-admission": 0,
+        "catalog-unit": 0
+      },
+      "activePID": 22742,
+      "targetedTests": 78,
+      "targetedSuites": 4,
+      "fullUiCurrentSource": "NOT_RUN_LOCAL; selected hosted UI quality remains required",
+      "historicalFullUi": {
+        "hostedHead": "2609922b89bd44822e790be8225356cc65dc5ab6",
+        "tests": 3813,
+        "suites": 327,
+        "scope": "Historical hosted child260 only; not current-source execution"
+      },
+      "allInputsGitExactAndUnchanged": true,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true,
+      "finishedAtUTC": "2026-10-30T23:52:06.695994+00:00"
+    },
+    "sourceSeal": {
+      "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "previousPublishedHead": "2609922b89bd44822e790be8225356cc65dc5ab6",
+      "normalParents": [
+        "2609922b89bd44822e790be8225356cc65dc5ab6",
+        "8cbd23c1a4e3c8b24c3d0abd0ab1a29339fc6fce"
+      ],
+      "qualifiedParent": "8cbd23c1a4e3c8b24c3d0abd0ab1a29339fc6fce",
+      "sourceDigest": "121a302bb4e390214219d4f11ed7f2494819aba0efae3ea0296e5d018556164d",
+      "registeredHashesVerified": 1435,
+      "uiInputHashesVerified": 911,
+      "assuranceArtifactHashesVerified": 52,
+      "allUiInputsByteExactOld260": true,
+      "backendScriptsWorkflowsOpsExactMain234": true,
+      "all160ParentRequirementsExactPlusUnchangedCsv161": true,
+      "strictCatalogCandidates": 1356,
+      "historicalFourReportBlobs": {
+        "reports/event-finance-csv-currency-2026-10-30.json": "f7fa5cad11956c905df01f0b30457b60794243cc7aaabf012fd491bcdce031e6",
+        "reports/event-finance-csv-currency-2026-10-30/evidence.tar.gz": "3ba703db0cbcd3c94ecb6b177e8b46db237b92b35dc8de0a0a8c8dea1cc9d425",
+        "reports/event-finance-csv-currency-2026-10-30/independent-review.txt": "038b88b89aa7e30f6bcd060c13415d5e3f62382f1f05928b771daeeeee5b81de",
+        "reports/event-finance-csv-currency-2026-10-30/manifest.json": "1c30b81ec2e1ad7fb2c5acfb3e82aa984527a7dd980922d31082c50470d15f78"
+      },
+      "allParentHistoricalEvidencePreserved": true,
+      "currentUiQuality": {
+        "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+        "phase": "QUALIFIED_CURRENT_MAIN_CSV_SOURCE",
+        "startedAtUTC": "2026-10-30T23:44:28.867255+00:00",
+        "actualExits": {
+          "targeted": 0,
+          "typecheck": 0,
+          "lint": 0,
+          "build": 0,
+          "root-quality": 0,
+          "source-admission": 0,
+          "catalog-unit": 0
+        },
+        "activePID": 22742,
+        "targetedTests": 78,
+        "targetedSuites": 4,
+        "fullUiCurrentSource": "NOT_RUN_LOCAL; selected hosted UI quality remains required",
+        "historicalFullUi": {
+          "hostedHead": "2609922b89bd44822e790be8225356cc65dc5ab6",
+          "tests": 3813,
+          "suites": 327,
+          "scope": "Historical hosted child260 only; not current-source execution"
+        },
+        "allInputsGitExactAndUnchanged": true,
+        "aliasesRemoved": true,
+        "sourceCleanAfter": true,
+        "finishedAtUTC": "2026-10-30T23:52:06.695994+00:00"
+      },
+      "historicalFullUi": {
+        "hostedHead": "2609922b89bd44822e790be8225356cc65dc5ab6",
+        "tests": 3813,
+        "suites": 327,
+        "scope": "Historical actual hosted260 only; current local full NOT_RUN, fresh published-head CI required."
+      },
+      "historicalCounterexamplesAndFaults": "Original valid EUR detail row emittedUSD; sixCSVtests/oneactualassertionfailure/fivecompatibilitypasses. ROOT independent AST oracle27validunitcases; oldbinding18unitmismatches/ninecompatible; corrected27. Historical executions retained, not rerun or relabeled. Precision browser/fault evidence remains in prior parent report archives.",
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 145,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "limitations": [
+        "TESTED finite UI scope; full implementation/refinement remains UNPROVEN.",
+        "Current local full UI NOT_RUN; new head must run hosted full CI and receive a fresh exact-head review.",
+        "No new browser/HTTP/WebKit/PostgreSQL/provider execution.",
+        "CSV unit correction684 retained; backend currency/range fixes673/671 remain separate, concurrency/snapshot consistency not established.",
+        "No production writes or deployment, no interruption-cleanup universal guarantee."
+      ],
+      "atUTC": "2026-10-30T23:54:51.113219+00:00"
+    },
+    "bindingControls": {
+      "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "sealScriptSha256": "9e295f62f9c3d0ed1a5b97e0b080ba70c099fb82582cca72ddf04a9c3d12b02b",
+      "method": "AST-extract actual seal binder; actualvalid artifacts before/after, onein-memorycorruptionpercase; canonical expectedinputpaths independentlyenumeratedfromGit. Disk/source nevermutated.",
+      "validBefore": true,
+      "negativeControls": [
+        {
+          "label": "FailedLintPromotedAsPass",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "HistoricalFullRunPromotedAsCurrent",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "WrongQualifiedCommit",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceDigestMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedWholeRequirementProof",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedExtraSMTClaim",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnexpectedReleasePermission",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "ConsistentlyRelabeledDirtySource",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "CorruptedCapturedUIBytes",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "OmittedInputWithMatchedReducedBytes",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "ReducedTargetedTests",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "MissingRequiredCheck",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        }
+      ],
+      "intendedAssertionRejections": 12,
+      "restoredValidAfter": true,
+      "diskArtifactsUnchanged": true,
+      "scope": "Evidence binder controls, not full verification-system correctness or product-source mutants.",
+      "atUTC": "2026-10-30T23:54:51.972271+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 161,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 145,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "reports/event-finance-csv-currency-main643-2026-10-30/independent-review.txt"
+  },
+  "regressionProtection": {
+    "automaticExistingSuiteDiscovery": true,
+    "currentTargetedExamples": 78,
+    "evidenceCorruptionsRejected": 12,
+    "dependenciesChanged": false
+  },
+  "limitations": [
+    "TESTED finite UI scope; full implementation/refinement remains UNPROVEN.",
+    "Current local full UI NOT_RUN; new head must run hosted full CI and receive a fresh exact-head review.",
+    "No new browser/HTTP/WebKit/PostgreSQL/provider execution.",
+    "CSV unit correction684 retained; backend currency/range fixes673/671 remain separate, concurrency/snapshot consistency not established.",
+    "No production writes or deployment, no interruption-cleanup universal guarantee."
+  ],
+  "integration": {
+    "pullRequest": 684,
+    "merged": false,
+    "currentHeadReviewAndCiRequired": true,
+    "approvalOnOldHeadNotReused": true,
+    "autoMergeUnchanged": true,
+    "mainFifoAndProtectionMustBeRechecked": true,
+    "productionWrites": false,
+    "manualDeployment": false
+  },
+  "nextHighestValueTask": "Verify both changed parent/child heads in hosted CI and obtain fresh exact-head approvals; preserve protected main FIFO. Then reassess the legacy payment/refund correctness stack and worker failure diagnostics.",
+  "archive": {
+    "path": "reports/event-finance-csv-currency-main643-2026-10-30/evidence.tar.gz",
+    "sha256": "03b6ac2d4ca3166d05bb0d0d1dddd52e584d84c1ec8b5ddf517377d8bcc7dcca",
+    "bytes": 1813744,
+    "innerFiles": 166,
+    "manifest": "reports/event-finance-csv-currency-main643-2026-10-30/manifest.json"
+  },
+  "createdAtUTC": "2026-10-30T23:58:15.086283+00:00",
+  "orchestrationHistory": {
+    "initialAssuranceActualExit": 1,
+    "reason": "Concurrent UI qualification created two temporary untracked dependency aliases after assurance fingerprint capture; verifier correctly marked all claims stale.",
+    "registeredContentMismatches": 0,
+    "correction": "Serialize assurance after all UI checks and exact-target alias cleanup; no source, spec, test or verifier-policy weakening.",
+    "failedArtifacts": "Complete failed receipts/logs retained underinitial-assurance-concurrent-aliases in archive.",
+    "diagnostic": {
+      "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "initialFingerprintWorktreeDirty": false,
+      "currentStatus": "?? node_modules\n?? tdf-hq-ui/node_modules\n",
+      "registeredSourceContentMismatches": [],
+      "registeredSourceFilesChecked": 1435,
+      "aliases": {
+        "node_modules": "/private/tmp/tdf-correctness-cycle-20261028/node_modules",
+        "tdf-hq-ui/node_modules": "/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules"
+      },
+      "actualAssuranceExit": 1,
+      "verifierReason": "Sources changed or became unreadable during verification; all claims stale",
+      "atUTC": "2026-10-30T23:46:19.170341+00:00"
+    },
+    "freshSerializedExecution": {
+      "sourceCommit": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "initialActualExit": 1,
+      "diagnosis": "Fingerprint includes worktreeDirty. Initial false changed to true when concurrent QA created two untracked dependency aliases; registered content mismatch list was empty. Verifier correctly marked all claims stale.",
+      "confirmedTemporaryPaths": [
+        "node_modules",
+        "tdf-hq-ui/node_modules"
+      ],
+      "verifierSource": "scripts/verification-report.py",
+      "verifierSourceSha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+      "correction": "Serialize assurance after all UI QA jobs and alias cleanup. No source/spec/test/verification policy change. Failed complete artifacts retained, not overwritten or promoted.",
+      "preFreshRunClean": true,
+      "preFreshRunSource": "c9a64af88139bfa10375e5e55b168578e3c9b96f",
+      "atUTC": "2026-10-30T23:52:10.528707+00:00",
+      "freshSerializedActualExit": 0,
+      "sourceCleanAfter": true,
+      "finishedAtUTC": "2026-10-30T23:52:19.970524+00:00"
+    },
+    "productFailureClaim": false
+  }
+}

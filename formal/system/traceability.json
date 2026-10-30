@@ -13640,6 +13640,78 @@
         "classification": "PARTIAL",
         "reason": "Finite implementation tests; complete refinement and deployed browser/API correspondence remain unproven."
       }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "title": "Preserve each finance-entry amount currency in CSV",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A finance_entry CSV row retains its authoritative efeCurrency with the unchanged raw efeAmountCents. Summary and budget rows retain reporting currency; the existing 24-column layout and all other values remain unchanged.",
+      "authority": "Owner financial-integrity mandate; explicit foreign-currency authoring is supported; PAY-EVENT-REPORT-CURRENCY-001 preserves individual entry units; the page renders entry amounts with efeCurrency. Existing common CSV currency semantics are explicitly clarified as amount units by this successor.",
+      "source": "formal/system/event-finance-csv-currency.md",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "property": "For every valid finance-entry DTO exported, row.currency equals entry.efeCurrency and row.entry_amount_cents equals entry.efeAmountCents; summary/budget units,24-column positions, event metadata and status remain unchanged.",
+      "actors": [
+        "Authorized event finance reader",
+        "CSV report consumer"
+      ],
+      "preconditions": [
+        "Existing event authorization and finance DTO validation",
+        "Entry currency and integer cents are authoritative wire values",
+        "CSV currency is an amount unit per record_type; no exchange rate is provided"
+      ],
+      "inputs": [
+        "Event and summary reporting currency",
+        "Listed finance entries including supported foreign void records",
+        "Budget rows and safe integer monetary fields"
+      ],
+      "state": {
+        "read": "Validated report objects",
+        "terminal": [
+          "CSV rows preserve amount-unit bindings",
+          "Existing precision/query/export refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Copy efeCurrency into finance_entry currency cell",
+        "Keep reporting currency for summary and budget rows",
+        "Preserve amounts, statuses, event metadata and row/column layout"
+      ],
+      "forbiddenTransitions": [
+        "Label a raw foreign entry amount with event currency",
+        "Invent an exchange rate or fallback currency",
+        "Drop a void or foreign row to force a single currency"
+      ],
+      "effects": [
+        "Read-only CSV representation only; no financial data or provider writes"
+      ],
+      "authorization": "Existing event finance authorization unchanged; no additional access granted.",
+      "privacy": "Synthetic fixtures only; no customer or provider records used as evidence.",
+      "concurrency": "Input objects are exported as observed; no serializable multi-query snapshot guarantee.",
+      "idempotency": "Equal input DTOs produce equal unit bindings; no mutation or provider retry is introduced.",
+      "failure": "Existing monetary-precision/query/CSV refusal is preserved; no silent currency substitution or amount conversion.",
+      "recovery": "Correct the authoritative source DTO through existing authorized workflows; never rewrite records or infer conversion in export.",
+      "observability": "Retain actual old-binding assertion and corrected CSV-helper logs/source hashes; bind final metadata/source/evidence separately.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven actual CSV helper Jest tests: a EUR void entry of 100 cents with valid USD summary of 30 cents and USD posted entry of 30 cents; existing precision and USD 24-column compatibility. TESTED only with exact-source execution evidence, not a complete implementation proof.",
+      "evidence": "formal/system/event-finance-csv-currency.md; source-bound execution reports recorded separately.",
+      "status": "specified and implemented",
+      "confidence": "Scoped source-function regression evidence; deployed consumers and implementation refinement remain unproven.",
+      "ambiguity": [
+        "No external CSV consumer/global currency-column contract was located; this successor explicitly defines amount-unit semantics.",
+        "Production exposure and mounted download/browser acceptance remain unknown.",
+        "Backend contributing-total currency policy and snapshot consistency remain separate."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite direct CSV-helper tests; full implementation refinement, deployed integration and external consumers unproven."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13655,7 +13727,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "ecef5be46d75d5eecd9b1a1365e32f98e7074a1a69ad3a4deed8d00b032dcaa8",
+    "docs/catalog-persistence/catalog-list-decisions.json": "7f36eae3f52d0860ebd89175dd84493e275cb683348e1f928bb94d63f84475c3",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14610,8 +14682,8 @@
     "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts": "b4a6a6e54eef828d5795ca8ffd8d30db2599429eaf6ecdfafa3bfbff2894763b",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": "e1363bf4bc181a089249899b5ab81cdcaae74ff61fcefa1c9d1b1bcfcc86e7dc",
     "tdf-hq-ui/src/utils/directoryPreviewImage.ts": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
-    "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts": "9cb84e248c7926a530b61da8a3afb76320b793f03b996c00a1507ca5b460335e",
-    "tdf-hq-ui/src/utils/eventFinanceCsv.ts": "bea9cf70026317f9a0dfccdb975d261f41761197c79254a366d3d17fb219a163",
+    "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts": "8e37da4bff606202bf681c4780ddc3cff0dfa412f587bc95b823c1a9f3d28f4d",
+    "tdf-hq-ui/src/utils/eventFinanceCsv.ts": "cab8d6497924db12782d9e40959a4862b9b692fa67fb6414d4b3b32ec6f1c579",
     "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts": "06ceabc3ed6366b3320f0019d9f9a766d6c0113b34aec21f9e7f23cc034459d9",
     "tdf-hq-ui/src/utils/eventFinanceMoney.ts": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
@@ -26438,6 +26510,10 @@
       {
         "requirement": "UI-EVENT-FINANCE-PRECISION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts": [
@@ -26449,6 +26525,10 @@
     "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts": [
       {
         "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
         "relationship": "tests"
       }
     ],
@@ -41149,11 +41229,15 @@
     {
       "id": "SURFACE-ff56e80d7cd555eb",
       "path": "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
-      "sha256": "9cb84e248c7926a530b61da8a3afb76320b793f03b996c00a1507ca5b460335e",
+      "sha256": "8e37da4bff606202bf681c4780ddc3cff0dfa412f587bc95b823c1a9f3d28f4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
           "relationship": "tests"
         }
       ]
@@ -41161,11 +41245,15 @@
     {
       "id": "SURFACE-a43bc2151acd2e54",
       "path": "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
-      "sha256": "bea9cf70026317f9a0dfccdb975d261f41761197c79254a366d3d17fb219a163",
+      "sha256": "cab8d6497924db12782d9e40959a4862b9b692fa67fb6414d4b3b32ec6f1c579",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
           "relationship": "implementation"
         }
       ]
@@ -55606,7 +55694,8 @@
     "SOCIAL-EVENT-SESSION-001",
     "MEDIA-MUSIC-PRIVACY-001",
     "SYS-CI-SELECTED-001",
-    "UI-EVENT-FINANCE-PRECISION-001"
+    "UI-EVENT-FINANCE-PRECISION-001",
+    "UI-EVENT-FINANCE-CSV-CURRENCY-001"
   ],
   "stateMachines": [
     {
@@ -56725,7 +56814,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
+      "sourceSha256": "518de3e859c141a42bff2a1dc321fdd2ff2b7d27392536dfaf8b3e008c343625",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56753,7 +56842,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
+      "sourceSha256": "518de3e859c141a42bff2a1dc321fdd2ff2b7d27392536dfaf8b3e008c343625",
       "definition": {
         "states": [
           "absent",
@@ -56783,7 +56872,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
+      "sourceSha256": "518de3e859c141a42bff2a1dc321fdd2ff2b7d27392536dfaf8b3e008c343625",
       "definition": {
         "export": [
           "queued",
@@ -79270,7 +79359,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 160,
+    "PARTIAL": 161,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -13639,6 +13639,78 @@
         "classification": "PARTIAL",
         "reason": "Finite implementation tests; complete refinement and deployed browser/API correspondence remain unproven."
       }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "title": "Preserve each finance-entry amount currency in CSV",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A finance_entry CSV row retains its authoritative efeCurrency with the unchanged raw efeAmountCents. Summary and budget rows retain reporting currency; the existing 24-column layout and all other values remain unchanged.",
+      "authority": "Owner financial-integrity mandate; explicit foreign-currency authoring is supported; PAY-EVENT-REPORT-CURRENCY-001 preserves individual entry units; the page renders entry amounts with efeCurrency. Existing common CSV currency semantics are explicitly clarified as amount units by this successor.",
+      "source": "formal/system/event-finance-csv-currency.md",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "property": "For every valid finance-entry DTO exported, row.currency equals entry.efeCurrency and row.entry_amount_cents equals entry.efeAmountCents; summary/budget units,24-column positions, event metadata and status remain unchanged.",
+      "actors": [
+        "Authorized event finance reader",
+        "CSV report consumer"
+      ],
+      "preconditions": [
+        "Existing event authorization and finance DTO validation",
+        "Entry currency and integer cents are authoritative wire values",
+        "CSV currency is an amount unit per record_type; no exchange rate is provided"
+      ],
+      "inputs": [
+        "Event and summary reporting currency",
+        "Listed finance entries including supported foreign void records",
+        "Budget rows and safe integer monetary fields"
+      ],
+      "state": {
+        "read": "Validated report objects",
+        "terminal": [
+          "CSV rows preserve amount-unit bindings",
+          "Existing precision/query/export refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Copy efeCurrency into finance_entry currency cell",
+        "Keep reporting currency for summary and budget rows",
+        "Preserve amounts, statuses, event metadata and row/column layout"
+      ],
+      "forbiddenTransitions": [
+        "Label a raw foreign entry amount with event currency",
+        "Invent an exchange rate or fallback currency",
+        "Drop a void or foreign row to force a single currency"
+      ],
+      "effects": [
+        "Read-only CSV representation only; no financial data or provider writes"
+      ],
+      "authorization": "Existing event finance authorization unchanged; no additional access granted.",
+      "privacy": "Synthetic fixtures only; no customer or provider records used as evidence.",
+      "concurrency": "Input objects are exported as observed; no serializable multi-query snapshot guarantee.",
+      "idempotency": "Equal input DTOs produce equal unit bindings; no mutation or provider retry is introduced.",
+      "failure": "Existing monetary-precision/query/CSV refusal is preserved; no silent currency substitution or amount conversion.",
+      "recovery": "Correct the authoritative source DTO through existing authorized workflows; never rewrite records or infer conversion in export.",
+      "observability": "Retain actual old-binding assertion and corrected CSV-helper logs/source hashes; bind final metadata/source/evidence separately.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven actual CSV helper Jest tests: a EUR void entry of 100 cents with valid USD summary of 30 cents and USD posted entry of 30 cents; existing precision and USD 24-column compatibility. TESTED only with exact-source execution evidence, not a complete implementation proof.",
+      "evidence": "formal/system/event-finance-csv-currency.md; source-bound execution reports recorded separately.",
+      "status": "specified and implemented",
+      "confidence": "Scoped source-function regression evidence; deployed consumers and implementation refinement remain unproven.",
+      "ambiguity": [
+        "No external CSV consumer/global currency-column contract was located; this successor explicitly defines amount-unit semantics.",
+        "Production exposure and mounted download/browser acceptance remain unknown.",
+        "Backend contributing-total currency policy and snapshot consistency remain separate."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite direct CSV-helper tests; full implementation refinement, deployed integration and external consumers unproven."
+      }
     }
   ]
 }

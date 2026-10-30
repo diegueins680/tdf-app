@@ -19783,6 +19783,22 @@
       },
       "reviewBatch": "event-finance-browser-precision-2026-10-30",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "280d7c369a6f39bd4a13",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the synthetic event fixture could weaken the CSV row-unit and layout regression coverage.",
+      "justification": "Single complete synthetic SocialEventDTO fixture used only by actual CSV helper tests; fields are transport fixture shape, not selectable business values or a currency/event registry. Matches reviewed technical fixture precedents caafb621f3c699640707 and be74b101363c9d782b7d; production authorities remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "line": 29
+      },
+      "reviewBatch": "event-finance-csv-currency-2026-10-30",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }
