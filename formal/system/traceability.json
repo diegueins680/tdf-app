@@ -1853,10 +1853,11 @@
         "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
         "scripts/verify-checkout-money.py",
         "scripts/__tests__/checkout-money-http.mjs",
-        "scripts/__tests__/identity-http-runtime.mjs"
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/test-checkout-money-verifier.py"
       ],
       "formalModels": [],
-      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa.",
+      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",
@@ -2012,10 +2013,11 @@
         "scripts/verify-checkout-money.py",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "scripts/test-artist-merch-runtime.sh",
-        "scripts/__tests__/merch-commission-postgres.mjs"
+        "scripts/__tests__/merch-commission-postgres.mjs",
+        "scripts/test-checkout-money-verifier.py"
       ],
       "formalModels": [],
-      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints.",
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
       "evidence": "merch-money-controls.json; merch-commission-postgres.log",
       "critical": true,
       "status": "specified and implemented",
@@ -14028,7 +14030,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "91549b10ba840aae75743b8954498f4e2d05be31beeb56deb51b7d9fbfa33143",
+    "scripts/__tests__/ci-change-scope.test.mjs": "54c909b7ed7a25c77ad113338b988199520dbc3bb7a3dc1778b99d1e588bcbb2",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
     "scripts/__tests__/ci-pipeline.test.mjs": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
@@ -14101,7 +14103,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "cbc5ee9e7ce0e57797b5f35ee8e384349be44c07be4c0c3ed2481c0fdd652ea1",
+    "scripts/ci-change-scope.mjs": "b7b8a01efd976ac9938452fac60ff6f00864a407550fe5e09c0f660e1427d8c6",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -14158,7 +14160,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+    "scripts/quality-repo.sh": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14185,6 +14187,7 @@
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
     "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
+    "scripts/test-checkout-money-verifier.py": "cff1bbe3bfb77b881d3e2c8e9f3f04070615f7e1353ccffc5c7891e30e2c023c",
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
@@ -14280,7 +14283,7 @@
     "scripts/verification-report.py": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
     "scripts/verify-alloy-controls.mjs": "3a609d6e22e004563fba4a4c58ec9e62267b1db572b073d880bd7feb19870e9c",
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
-    "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
+    "scripts/verify-checkout-money.py": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
@@ -17086,6 +17089,16 @@
     "scripts/__tests__/checkout-money-http.mjs": [
       {
         "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-checkout-money-verifier.py": [
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
       }
     ],
@@ -27713,7 +27726,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "91549b10ba840aae75743b8954498f4e2d05be31beeb56deb51b7d9fbfa33143",
+      "sha256": "54c909b7ed7a25c77ad113338b988199520dbc3bb7a3dc1778b99d1e588bcbb2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29103,7 +29116,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "cbc5ee9e7ce0e57797b5f35ee8e384349be44c07be4c0c3ed2481c0fdd652ea1",
+      "sha256": "b7b8a01efd976ac9938452fac60ff6f00864a407550fe5e09c0f660e1427d8c6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30401,7 +30414,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+      "sha256": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31415,6 +31428,22 @@
       "sha256": "32324ad3adc0f2b943284b71637548b54ee2e9d38adf68b483037dd0555e8710",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-1b1c5e57fb68ec97",
+      "path": "scripts/test-checkout-money-verifier.py",
+      "sha256": "cff1bbe3bfb77b881d3e2c8e9f3f04070615f7e1353ccffc5c7891e30e2c023c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-CHECKOUT-003",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-408b8094f29cfa84",
@@ -33111,7 +33140,7 @@
     {
       "id": "SURFACE-8b6766b7ee7590fd",
       "path": "scripts/verify-checkout-money.py",
-      "sha256": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
+      "sha256": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56696,7 +56725,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "82f6de87d037e29635c67b92916b8cb3f686a1635d6954046c99194f2bfbeec4",
+      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56724,7 +56753,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "82f6de87d037e29635c67b92916b8cb3f686a1635d6954046c99194f2bfbeec4",
+      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
       "definition": {
         "states": [
           "absent",
@@ -56754,7 +56783,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "82f6de87d037e29635c67b92916b8cb3f686a1635d6954046c99194f2bfbeec4",
+      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
       "definition": {
         "export": [
           "queued",

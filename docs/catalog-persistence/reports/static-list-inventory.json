@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-30T19:50:57.473Z",
+  "generatedAt": "2026-10-30T23:15:18.834Z",
   "repositoryRoot": ".",
-  "filesScanned": 2464,
+  "filesScanned": 2465,
   "candidateCount": 1355,
   "byClassification": {
     "dynamic-business-catalog": 874,
@@ -81933,7 +81933,7 @@
       "lines": [
         10938
       ],
-      "consumerCount": 957,
+      "consumerCount": 958,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -90207,7 +90207,7 @@
       "lines": [
         18569
       ],
-      "consumerCount": 952,
+      "consumerCount": 953,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
