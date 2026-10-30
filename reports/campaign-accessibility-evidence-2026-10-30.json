@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+  "sourceCommit": "3a69b75c87024c917080cf200f0ce63246275aed",
+  "evidenceCommit": "Containing report-only child commit; verified separately aftercommit.",
+  "problemClassification": "Confirmed verification-evidence completeness gap, not a confirmed product contrast rootcause.",
+  "problem": "The campaign axe projection retains only id/targets and discards node/check/color/ratio/failureSummary. One hosted WebKit320 failure therefore lacks structured diagnostic data. Its target is the unselected Creativos tab; postfailure screenshot shows clipping but cannot establish atomic axe-time cause.",
+  "correction": "Attach complete unfiltered violations plus observational before/after tab and ancestor CSSOM geometry. Preserve existing rules/all-violation/overflow assertions, retries and deadlines. Add an actual axe/real Playwright attachment control with a known badcontrast paragraph and genuinely clipped tab.",
+  "property": {
+    "id": "SYS-VERIFY-CAMPAIGN-001",
+    "status": "TESTED",
+    "sourceCommit": "3a69b75c87024c917080cf200f0ce63246275aed",
+    "contract": "formal/system/campaign-accessibility-evidence.md",
+    "implementation": "e2e/web/helpers/campaign-accessibility.mjs",
+    "tests": "e2e/web/campaign-accessibility.spec.mjs",
+    "assumptions": "Successful axe run, inspectable page, writable attachment storage; finite Chromium/Firefox sample. No guaranteed artifact under teardown/IOfailure.",
+    "limits": "Sampled axis-aligned rectangular clips and WAAPI data are not visualpixel/compositor/RAFscroll readiness or an atomic snapshot over axe."
+  },
+  "evidence": {
+    "committedSourceSeal": {
+      "sourceCommit": "3a69b75c87024c917080cf200f0ce63246275aed",
+      "baseline": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+      "registeredGitFilesystemMobileHashes": 1419,
+      "sourceDigest": "8bcbc2098d068294c649f8824a166966fba69107ad30deb9c0164d6b4f517f0c",
+      "all157IncomingRequirementsExact": true,
+      "wholeUIBackendMobileTreesExactBaseline": true,
+      "historicalCatalogWholeFileExactBaseline": true,
+      "existingCampaignSourceExactExceptDeclaredEvidenceCapture": true,
+      "newContractGitSha256": "db5a9d3dc2ff37687b8064a4ed0b1a1ca1441dd6eb8d350516430a3538e969ff",
+      "helperSourceRestoredSha256": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
+      "browserMatrix": [
+        {
+          "project": "chromium-desktop",
+          "results": [
+            [
+              "passed",
+              0
+            ]
+          ]
+        },
+        {
+          "project": "chromium-desktop",
+          "results": [
+            [
+              "passed",
+              0
+            ]
+          ]
+        },
+        {
+          "project": "chromium-desktop",
+          "results": [
+            [
+              "passed",
+              0
+            ]
+          ]
+        },
+        {
+          "project": "firefox-critical",
+          "results": [
+            [
+              "passed",
+              0
+            ]
+          ]
+        },
+        {
+          "project": "firefox-critical",
+          "results": [
+            [
+              "passed",
+              0
+            ]
+          ]
+        },
+        {
+          "project": "firefox-critical",
+          "results": [
+            [
+              "passed",
+              0
+            ]
+          ]
+        }
+      ],
+      "qualifiedBrowserStats": {
+        "startTime": "2026-10-30T01:34:52.946Z",
+        "duration": 51117.366,
+        "expected": 6,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "actualAttachments": [
+        {
+          "path": "qualified-decoded-attachment-0.json",
+          "sha256": "581365a668573a75ac8d05a5861ac310f0f18c99afd225b0a48a8641c39591aa",
+          "contrastData": {
+            "fgColor": "#eeeeee",
+            "bgColor": "#ffffff",
+            "contrastRatio": 1.16,
+            "fontSize": "12.0pt (16px)",
+            "fontWeight": "normal",
+            "messageKey": null,
+            "expectedContrastRatio": "4.5:1"
+          },
+          "binding": "Exact decoded base64 body from real qualified Playwright results.json, not a standalone reporter attachment file."
+        },
+        {
+          "path": "qualified-decoded-attachment-1.json",
+          "sha256": "fc20b5b6a5b0c22c44fa470b92d7a12ccaccec127272c21ca96697ccc45b541f",
+          "contrastData": {
+            "fgColor": "#eeeeee",
+            "bgColor": "#ffffff",
+            "contrastRatio": 1.16,
+            "fontSize": "12.0pt (16px)",
+            "fontWeight": "normal",
+            "messageKey": null,
+            "expectedContrastRatio": "4.5:1"
+          },
+          "binding": "Exact decoded base64 body from real qualified Playwright results.json, not a standalone reporter attachment file."
+        }
+      ],
+      "realFaultVariants": 2,
+      "intendedAssertionFailures": 4,
+      "rootQuality": {
+        "sourceCommit": "3a69b75c87024c917080cf200f0ce63246275aed",
+        "actualExits": {
+          "root-quality": 0,
+          "new-surface-admission": 0,
+          "catalog-unit": 0
+        },
+        "catalogUnitCases": 8,
+        "aliasesRemoved": true,
+        "sourceCleanAfter": true
+      },
+      "freshAssuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 158,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 142,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 158,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 158,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "limits": [
+        "Original WebKit cause UNKNOWN and not repaired.",
+        "Local pinned WebKit unsupportedmac12; only Chromium/Firefox executed.",
+        "CompiledUI baselineCD component reused; no runtimeUI/backend/Mobile changes.",
+        "Before/after CSSOM observations are not paint or atomic scan-time proofs."
+      ]
+    },
+    "unmodifiedMacChromiumSample": {
+      "scans": 25,
+      "violations": 0,
+      "interpretation": "No reproduction of original failure; not WebKit parity."
+    },
+    "initialCorrectedMatrix": "Sixactualcases across Chromium/Firefox,0failure/0skip/0retry. Raw inherited MacChromium-only scope label is explicitly corrected by diagnostic-scope-erratum.json.",
+    "faultControls": {
+      "variants": 2,
+      "actualIntendedAssertionFailures": 4,
+      "originalLossyProjection": "Verified byteexact from baselineGit and applied to actualaxe results;2assertionfailures expectednodesArray/gotundefined. This is a source control, not an unmodified-source rerun.",
+      "suppressedAttachment": "2actualassertionfailures expected1/got0; originalassertionsnotweakened.",
+      "restoration": "Helperbytehash restored and final clean-source matrix6/0."
+    },
+    "actualAttachedContrast": "Synthetic negative-control fixture only:1.16 against expected4.5, foreground#eeeeee/background#ffffff; all rule/node/check fields and before/after clipped widths0 independently read.",
+    "independentReview": "reports/campaign-accessibility-evidence-2026-10-30/independent-review.txt",
+    "independentReviewScope": "Source, rawreceipts and actual attachment decoding; no independent browser rerun, GitHubapproval or complete proof.",
+    "formalMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 158,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 142,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 158,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 158,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0
+  },
+  "harnessHistory": [
+    "Initial shell stayed in sharedroot after worktreeadd; only own Vite/shellbuild was stopped143 beforequalification. Correct build explicitly used isolatedworkdir. Initial logsuperseded; bounded history retained.",
+    "PinnedPlaywright1.59.1 WebKit launch/install fails on mac12 before tests. No setup failure counted as product counterexample; supported Chromium/Firefox used explicitly.",
+    "Initial controller postvalidator accepted only toEqual although suppressedattachment correctly failedtoBe. Raw artifacts/oldrunner retained; corrected controller freshly confirmed both2assertionfailures.",
+    "First seal collector expected standalone attachmentfiles, but the real JSON reporter embedded base64 bodies. It failedclosed; corrected collector strictlydecoded and verified both realbodies. Initial collector/history retained; no required evidence or browser assertion removed."
+  ],
+  "integration": {
+    "draftIntended": true,
+    "autoMerge": false,
+    "merged": false,
+    "freshPublishedHeadCIReview": "Pending; currenthead CI must establish pinned Linux/WebKit behavior.",
+    "mainAndFIFOProtections": "Required; no bypass or early merge.",
+    "runtimeApplicationChanges": false,
+    "productionWrites": false,
+    "providerOperations": false,
+    "deployment": "UNVERIFIED",
+    "parentFinancialHeads": "671a7 and673c3 unchanged;673hostedqualitySUCCESS, independentcurrentC3approval pending at lastread."
+  },
+  "outstanding": [
+    "Original WebKit contrast cause UNKNOWN and unrepaired; parent671 failed gate preserved.",
+    "Before/after diagnostics can perturb timing; never interpreted as paint-readiness or a fix.",
+    "New published-head Linux/WebKit and exactreview remain pending.",
+    "Compiled UI baselineCD component reused with exactwholeUI tree; no localWebKit or newnativebackend artifact qualification claimed.",
+    "Complete implementation/refinement proofs remain unproven and formal release BLOCKED."
+  ],
+  "nextHighestValueTask": "Use full check/color/geometry evidence from a pinned hosted recurrence to distinguish real contrast from scan/scroll behavior; preserve648gallery work and FIFO640owner integration.",
+  "archive": {
+    "path": "reports/campaign-accessibility-evidence-2026-10-30/evidence.tar.gz",
+    "sha256": "4630904405b18d1ec7ac48d19300eaa74e6a0dec92e83f56e5924291c62c54fd",
+    "bytes": 1554778,
+    "innerFiles": 145,
+    "manifest": "reports/campaign-accessibility-evidence-2026-10-30/manifest.json",
+    "binding": "Report/archive/manifest/review become fourGitblobs; included files are individually hash-bound members. Optional binarytrace/screenshots retained locally and explicitly excluded."
+  },
+  "createdAtUTC": "2026-10-30T01:38:54.045492+00:00"
+}
