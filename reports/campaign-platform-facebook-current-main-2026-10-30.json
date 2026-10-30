@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "facebook_live_campaign_and_protected_ci_integration",
-  "at": "2026-10-30T16:17:14.850302+00:00",
+  "at": "2026-10-30T16:25:04.506693+00:00",
   "sourceParent": "6a7e33a0c24bd5a1ab8e33238031ae76f70fd280",
   "protectedMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
   "facebook": {
@@ -72,9 +72,23 @@
     "originalRepositoryFailure": "Synthetic container cleanup could not be confirmed; original cause remains unknown.",
     "protectedMainChanges": "Adopt the protected Ubuntu 24.04 runner pins and cleanup diagnostics through a normal merge; preserve all original assertions and policies.",
     "freshHostedResults": "pending after publication",
-    "focusedWebTests": "running",
-    "repositoryQuality": "pending",
-    "strictCatalog": "running"
+    "focusedWebTests": {
+      "passed": 32,
+      "suites": 2,
+      "seconds": 17.122
+    },
+    "repositoryQuality": "PASS on the combined inputs; platform-specific skips retain their limitations",
+    "strictCatalog": {
+      "result": "PASS",
+      "candidates": 1355,
+      "csv": "Canonical CSV derived from the same fresh strict JSON; not a second source scan."
+    },
+    "webLint": "PASS",
+    "webBuild": {
+      "result": "PASS including TypeScript",
+      "gzipInitialBytes": 338335,
+      "preloads": 5
+    }
   },
   "sourceLimits": {
     "priorFullWebTests": 3760,
@@ -88,5 +102,44 @@
     "thisSourceIntegrationRestartsServices": false,
     "protectedMergeOrSelfApproval": false,
     "modelRefinementClaimed": false
-  }
+  },
+  "sourceMerge": "eacf87b00cf7013f9083989c232106ebb92a4ed5",
+  "inputEquivalence": {
+    "priorManifestSha256": "2e92ff8c19cc66f1c833cdebb97acf814339c75bf1fb9f6ec0ab49dcad80b394",
+    "priorSealedInputs": 1294,
+    "identicalInputs": 1292,
+    "changedInputs": [
+      "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+      "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+    ],
+    "protectedInputsExact": true,
+    "incomingNormativeRecordsExact": 159,
+    "combinedNorms": 160,
+    "campaignRuntimeSourceFilesUnchanged": 47,
+    "mobileRevisionUnchanged": "3d6f911c1b7570ac439561a159101ba78be4f01b",
+    "newWholeWebExecutionNotClaimed": true
+  },
+  "backup": {
+    "manifest": "1UR9squK9yvb2MPsIlYte9a7qBVMsz_AP",
+    "result": "PASS",
+    "readyAssets": 49,
+    "objects": 52,
+    "reusedPriorProofs": 48,
+    "vaultRecordsRecovered": 5,
+    "sqliteIntegrity": "ok",
+    "foreignKeys": "ok",
+    "privateKeySentToServer": false,
+    "sandboxStateIncluded": false,
+    "restoredServicesStarted": false
+  },
+  "qualificationLogSha256": {
+    "focused-web-tests.log": "a9a1d9bb31aed17b5477686ddded1b1587dc56de1fdf4c16ad04624f0f71e669",
+    "web-lint.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+    "web-build.log": "56fc22504277d9ee2d088dfa578ed1a83ee817fef2da8ef085975eff9646ae34",
+    "catalog-json.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "raci-failed-6a.log": "f4c870dd05454585213b2eaf7b37f9f77946e6709c998efa53ad59d6ac9fb42a",
+    "repo-quality-failed-6a.log": "21c006ce67eeeb2a6fbc92de1ccd1c55e6340d6a8544477fb54c59e23ec643f0",
+    "repo-quality.log": "f2b6590a68a86a4a7cbf71fd1d75f9ce880677040829ee65e9e4bacd4d4002a6"
+  },
+  "canonicalMetadata": "Regeneration and committed checks recorded separately after this report-only child"
 }
