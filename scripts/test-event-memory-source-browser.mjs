@@ -132,7 +132,10 @@ try {
   await owner.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(card(owner)).toBeVisible({ timeout: 30000 });
   await participant.reload(); await expect(card(participant)).toBeVisible();
-  await card(participant).scrollIntoViewIfNeeded();
+  // Moderation controls are lazy: InteractionPanel loads its summary only near
+  // the viewport. Scroll the existing card atomically before locating a control
+  // that does not exist yet. The locator re-resolves after any feed replacement.
+  await card(participant).evaluate((element) => element.scrollIntoView({ block: 'center' }));
   await card(participant).getByRole('button', { name: 'Denunciar recuerdo' }).click();
   await participant.getByRole('textbox', { name: 'Motivo' }).fill('Revisión sintética del consentimiento de imagen');
   await participant.getByRole('button', { name: 'Confirmar', exact: true }).click();

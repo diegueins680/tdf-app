@@ -1,3 +1,6 @@
+import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
+import { loadArtistCatalogs } from '../api/artistCatalog';
+import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { logger } from '../utils/logger';
 import { useMemo, useState } from 'react';
 import {
@@ -110,21 +113,19 @@ export default function LabelReleasesPage() {
   const releasesQuery = useQuery({
     queryKey: ['admin', 'artist-releases'],
     enabled: artistsQuery.isSuccess,
-    queryFn: async () => {
+    retry: false,
+    queryFn: async ({ signal }) => {
       const artists = artistsQuery.data ?? [];
-      const releasesPerArtist = await Promise.all(
-        artists.map(async (artist) => {
-          const releases = await Fans.getReleases(artist.apArtistId);
-          return releases.map((release) => ({
-            ...release,
-            artistName: artist.apDisplayName,
-            artistCity: artist.apCity,
-            artistHeroImageUrl: artist.apHeroImageUrl,
-          }));
-        }),
-      );
-      const flat = releasesPerArtist.flat() as ReleaseRow[];
-      return flat.sort((a, b) => compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc'));
+      const artistMap = new Map(artists.map((artist) => [artist.apArtistId, artist]));
+      const catalogs = await loadArtistCatalogs(artists.map((artist) => artist.apArtistId), signal);
+      const legacy: ReleaseRow[] = catalogs.flatMap((catalog) => catalog.entries.flatMap((entry) => {
+        if (entry.source !== 'legacy') return [];
+        const artist = artistMap.get(catalog.artistId)!;
+        return [{ ...entry.release, artistName: artist.apDisplayName,
+          artistCity: artist.apCity, artistHeroImageUrl: artist.apHeroImageUrl }];
+      }));
+      const canonical = catalogs.flatMap((catalog) => catalog.entries.flatMap((entry) => entry.source === 'canonical' ? [entry.release] : []));
+      return { legacy, canonical, partial: catalogs.some((catalog) => catalog.unavailableSources.length > 0) };
     },
   });
 
@@ -136,12 +137,12 @@ export default function LabelReleasesPage() {
 
   const createMutation = useMutation({
     mutationFn: (payload: ArtistReleaseUpsert) => Admin.createArtistRelease(payload),
-    onSuccess: async () => {
+    onSuccess: async (_result, payload) => {
       setBanner('Release guardado.');
       setError(null);
       setForm(emptyForm);
       setCoverFileName('');
-      await qc.invalidateQueries({ queryKey: ['admin', 'artist-releases'] });
+      await invalidateArtistCatalog(qc, payload.aruArtistId);
     },
     onError: (err: unknown) => {
       setBanner(null);
@@ -150,7 +151,7 @@ export default function LabelReleasesPage() {
   });
 
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
-  const releases = useMemo(() => releasesQuery.data ?? [], [releasesQuery.data]);
+  const releases = useMemo(() => releasesQuery.data?.legacy ?? [], [releasesQuery.data]);
   const artistsError = useMemo(() => {
     if (!artistsQuery.isError) return null;
     if (artistsQuery.error instanceof Error) return artistsQuery.error.message;
@@ -180,12 +181,27 @@ export default function LabelReleasesPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-    return [...filtered].sort((a, b) => {
-      if (sortOrder === 'artist') return a.artistName.localeCompare(b.artistName);
-      if (sortOrder === 'oldest') return compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'asc');
-      return compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc');
-    });
-  }, [filterArtistId, filterWindow, releases, search, sortOrder]);
+    return filtered;
+  }, [filterArtistId, filterWindow, releases, search]);
+
+  const canonicalReleases = useMemo(() => (releasesQuery.data?.canonical ?? []).filter((release) => {
+    if (filterArtistId && release.artistPartyId !== filterArtistId) return false;
+    const timestamp = parseReleaseTimestamp(release.releaseAtUtc ?? release.publishedAt);
+    if (filterWindow !== 'all' && (timestamp === null
+      || (filterWindow === 'upcoming' ? timestamp < Date.now() : timestamp >= Date.now()))) return false;
+    return `${release.title} ${release.displayArtist}`.toLowerCase().includes(search.trim().toLowerCase());
+  }), [filterArtistId, filterWindow, releasesQuery.data, search]);
+
+  const unifiedReleases = useMemo(() => {
+    const rows = [
+      ...filteredReleases.map((release) => ({ source: 'legacy' as const, release,
+        artist: release.artistName, date: release.arReleaseDate })),
+      ...canonicalReleases.map((release) => ({ source: 'canonical' as const, release,
+        artist: release.displayArtist, date: release.releaseAtUtc ?? release.publishedAt })),
+    ];
+    return rows.sort((a, b) => sortOrder === 'artist' ? a.artist.localeCompare(b.artist)
+      : compareReleaseDateValues(a.date, b.date, sortOrder === 'oldest' ? 'asc' : 'desc'));
+  }, [canonicalReleases, filteredReleases, sortOrder]);
 
   const handleCoverFileChange = (file: File | null) => {
     if (!file) {
@@ -237,11 +253,16 @@ export default function LabelReleasesPage() {
     createMutation.mutate(payload);
   };
 
-  const totalReleases = releases.length;
-  const totalArtistsWithReleases = new Set(releases.map((r) => r.artistName)).size;
+  const catalogSummaryRows = [
+    ...releases.map((release) => ({ artistId: release.arArtistId, date: release.arReleaseDate })),
+    ...(releasesQuery.data?.canonical ?? []).map((release) => ({ artistId: release.artistPartyId,
+      date: release.releaseAtUtc ?? release.publishedAt })),
+  ];
+  const totalReleases = catalogSummaryRows.length;
+  const totalArtistsWithReleases = new Set(catalogSummaryRows.map((release) => release.artistId)).size;
   const recentThreshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const upcomingOrRecent = releases.filter((r) => {
-    const ts = parseReleaseTimestamp(r.arReleaseDate);
+  const upcomingOrRecent = catalogSummaryRows.filter((release) => {
+    const ts = parseReleaseTimestamp(release.date);
     return ts !== null && ts >= recentThreshold;
   }).length;
 
@@ -558,12 +579,13 @@ export default function LabelReleasesPage() {
             {releasesQuery.isError && (
               <Alert severity="error">No pudimos cargar los releases. Intenta nuevamente.</Alert>
             )}
-            {!releasesQuery.isLoading && filteredReleases.length === 0 && (
+            {!releasesQuery.isLoading && !releasesQuery.isError && !releasesQuery.data?.partial && filteredReleases.length === 0 && canonicalReleases.length === 0 && (
               <Typography color="text.secondary">No hay releases registrados aún.</Typography>
             )}
 
+            {releasesQuery.data?.partial && <Alert severity="warning" action={<Button onClick={() => { void releasesQuery.refetch(); }}>Reintentar</Button>}>No pudimos cargar todas las fuentes del catálogo.</Alert>}
             <LazyPaginatedList
-              items={filteredReleases}
+              items={unifiedReleases}
               pagination={{
                 itemLabel: 'lanzamientos',
                 initialRowsPerPage: 12,
@@ -571,7 +593,11 @@ export default function LabelReleasesPage() {
               }}
               renderItems={(visibleReleases) => (
                 <Grid container spacing={2}>
-                  {visibleReleases.map((release) => {
+                  {visibleReleases.map((entry) => {
+                    if (entry.source === 'canonical') return <Grid item key={`canonical:${entry.release.id}`} xs={12} md={6}>
+                      <PublishedReleaseCard compact release={entry.release} />
+                    </Grid>;
+                    const release = entry.release;
                     const artworkSources = getReleaseArtworkSources(release, recordsQuery.data?.releases ?? []);
                     const sources = buildReleaseStreamingSources({
                       arReleaseId: release.arReleaseId,

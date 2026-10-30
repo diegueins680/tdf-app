@@ -73,6 +73,19 @@ systems proof. PostgreSQL fixtures exercise the real migrated functions, source
 relations, notification privacy and rollback. HTTP, browser, device, full-suite,
 CI and production results must each retain their actual execution identity.
 
+Run `41049601356`, job `124042086355`, executed merge source
+`a9d8f9f9777704e07587812d70747d31158881eb`: all eight RACI browser
+cases passed, then the memory source journey stopped before its first report
+command because a standalone `scrollIntoViewIfNeeded` held a detached card.
+Artifact `12974018540` (ZIP SHA256
+`29378e93154881a9ebe622d316aaa916a95301920a9153dd1a1b6d09b539a32f`)
+retains the browser error, actual API responses and failure images. The report
+interaction now uses the button locator's normal click, whose actionability
+checks scroll and re-resolve a replaced target. It does not force a click, retry
+a submitted command, fabricate a receipt or change any downstream permission,
+409 conflict, moderation, restart or persistence assertion. This harness repair
+requires a fresh complete hosted journey; the failed run is not passing evidence.
+
 The dispatcher also respects the existing global interaction delivery pause.
 
 The feature requires the appended reviewed migration. Installation creates no
