@@ -2803,7 +2803,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
+      "sha256": "dcadb9a3c3a0e459709ca592c2fddec83cff8fd58fedfb328f7e1f5f64790785",
       "semanticConformance": "not-established-by-discovery"
     },
     {
