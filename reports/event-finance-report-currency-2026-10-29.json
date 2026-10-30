@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-29",
+  "baseline": "a7ae597f7c111d6858561280cdf080d4e62b0d70",
+  "sourceCommit": "37ffca0348620583a214f7c76b6a011ca9d6da29",
+  "sourceParents": [
+    "a7ae597f7c111d6858561280cdf080d4e62b0d70"
+  ],
+  "evidenceCommit": "Containing report-only child commit, verified separately after commit.",
+  "parentPR": 671,
+  "parentRangeHead": "a7ae597f7c111d6858561280cdf080d4e62b0d70",
+  "problem": "An ordinary successful EUR entry create/store can be summarized as USD without any exchange rate; budget actual and legacy ticket aggregates also lose currency units. Eight real handler assertion counterexamples on the unchanged baseline confirm this failure family.",
+  "ownerDecision": "Refuse totals until contributing amounts match the event currency. Preserve intentionally supported explicit foreign-currency entry authoring.",
+  "correction": "Validate contributing nonzero amount currencies against the existing event metadata/default resolver before reporting. Preserve exact contributor filters, canonical captured-order exclusion, void/cancelled/free/unrelated rows, existing writer/listing currency semantics and exact range arithmetic. Refuse mismatched budget actual before its first UPDATE.",
+  "properties": [
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001/UNIT-CONSISTENCY",
+      "statement": "No successful single-currency summary or budget actual relabels, silently omits or converts a nonzero contributing foreign amount.",
+      "sourceCommit": "37ffca0348620583a214f7c76b6a011ca9d6da29",
+      "status": "TESTED",
+      "method": "Real typed Servant handlers and SQLite fixtures; normal create/store foreign-currency path plus legacy fixture amounts; eight baseline failures; shared guard bypass mutant detected by eight assertions.",
+      "assumptions": "Existing resolver/dimension validation and canonical captured-ticket checks; trusted compiler and database reads; finite fixtures, not complete refinement or a production PostgreSQL proof."
+    },
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001/PREWRITE-REFUSAL",
+      "statement": "A budget update with observed contributing currency mismatch refuses before its first write.",
+      "sourceCommit": "37ffca0348620583a214f7c76b6a011ca9d6da29",
+      "status": "TESTED",
+      "method": "Requested planned99 preserves stored7 after refusal; check-after-write native source mutant fails that real database assertion.",
+      "assumptions": "Observed-row precheck, not a new serializable snapshot or whole transaction proof."
+    }
+  ],
+  "reproduction": {
+    "ordinaryCreateAndStored": "EUR100",
+    "actualBadSummary": "USD currency with actualIncome100/net100",
+    "observationSource": "2a057442d4b1a803d52860af2c524f0a7bbea37c",
+    "observationStatus": "Actual native build0 / one observation case0; this confirms prior defect, not corrected behavior.",
+    "baselineSource": "a7ae597f7c111d6858561280cdf080d4e62b0d70",
+    "baselineProductUnchanged": true,
+    "baselineNativeBuildExit": 0,
+    "baselineCases": 13,
+    "baselineAssertionFailures": 8,
+    "baselineCompatibilityPasses": 5,
+    "extraZeroBudgetCompatibilityCaseAddedAfterBaseline": true
+  },
+  "verification": {
+    "nativeCleanSourceTestBinary": {
+      "sourceCommit": "37ffca0348620583a214f7c76b6a011ca9d6da29",
+      "phase": "QUALIFIED_TARGETED_AND_FULL",
+      "startedAt": "2026-10-29T23:38:24.944196+00:00",
+      "actualExits": {
+        "build": 0,
+        "targeted": 0,
+        "full": 0
+      },
+      "buildPID": 32079,
+      "binary": "/private/tmp/tdf-event-finance-report-currency-20261029/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "binarySha256": "ef1b4a01de062ca4d718e00fd5774cb9097f5f1db45b88320360471ece780780",
+      "targetedPID": 37308,
+      "targeted": {
+        "examples": 29,
+        "failures": 0,
+        "pending": 0
+      },
+      "fullPID": 37310,
+      "full": {
+        "examples": 4074,
+        "failures": 0,
+        "pending": 21
+      },
+      "allBackendInputsUnchangedAndGitExact": true,
+      "sourceCleanAfter": true,
+      "finishedAt": "2026-10-29T23:50:56.588745+00:00"
+    },
+    "rootQuality": {
+      "sourceCommit": "37ffca0348620583a214f7c76b6a011ca9d6da29",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "mutations": {
+      "sourceCommit": "37ffca0348620583a214f7c76b6a011ca9d6da29",
+      "phase": "TWO_REAL_MUTANTS_DETECTED_AND_RESTORED",
+      "results": [
+        {
+          "label": "correct-native-control",
+          "sourceSha256": "47d38da8d2d9c80cdd0b7478d4a516243b11254a8125157a375e949c51e5a793",
+          "buildExit": 0,
+          "actualExit": 0,
+          "examples": 29,
+          "assertionFailures": 0,
+          "pending": 0,
+          "binarySha256": "448a76bfd94a2fd4334e0a85dd6effda6ce34d352ee3310f2a662f3559ccbe88",
+          "logSha256": "bd3bd6dd8315ff6df103f3344a9395c9591957c60d9aa2d57ca675bc60374d6a"
+        },
+        {
+          "label": "currency-guard-bypass",
+          "sourceSha256": "2812d3534f474533aa0afb8d5a60416aeff84bb1b7cf66fd68f3dc23c8431363",
+          "buildExit": 0,
+          "actualExit": 1,
+          "examples": 14,
+          "assertionFailures": 8,
+          "pending": 0,
+          "binarySha256": "b0a09362b84de7dd1791a9df1a3ab20f5c0b8dc51394928f225f3b638a1df532",
+          "logSha256": "1b909f13d53b14ac9e66bf1b7bc16236113018063e6a6f1e05d7793ff27cf21c"
+        },
+        {
+          "label": "late-budget-currency-check",
+          "sourceSha256": "a1d03566093a48c77d36b9625078508444cfe7aad43b84beef164070dd269176",
+          "buildExit": 0,
+          "actualExit": 1,
+          "examples": 14,
+          "assertionFailures": 1,
+          "pending": 0,
+          "binarySha256": "398a65545fdcef7aaff6444ad2be9c75eb875529d89ea6925de5a8dbb26c18fa",
+          "logSha256": "442c11e88a3456c59584679b218fae2a986775dd24ae41b57abb30dd7c1566be"
+        },
+        {
+          "label": "restored-native-control",
+          "sourceSha256": "47d38da8d2d9c80cdd0b7478d4a516243b11254a8125157a375e949c51e5a793",
+          "buildExit": 0,
+          "actualExit": 0,
+          "examples": 29,
+          "assertionFailures": 0,
+          "pending": 0,
+          "binarySha256": "448a76bfd94a2fd4334e0a85dd6effda6ce34d352ee3310f2a662f3559ccbe88",
+          "logSha256": "a93b1245c60cc48f330632a9aa0eb90343f99e625a9a7a60f6455a0b6976eece"
+        }
+      ],
+      "activePID": 38367,
+      "qualifiedBinarySha256Unchanged": "ef1b4a01de062ca4d718e00fd5774cb9097f5f1db45b88320360471ece780780",
+      "qualifiedRestoredTargetedExit": 0,
+      "sourceCleanAfter": true,
+      "scope": "Finite native O0 source mutation sensitivity; not complete mutation coverage or proof. Canonical qualified full-suite binary unchanged."
+    },
+    "sourceCorrespondence": {
+      "sourceCommit": "37ffca0348620583a214f7c76b6a011ca9d6da29",
+      "baseline": "a7ae597f7c111d6858561280cdf080d4e62b0d70",
+      "sourceParents": [
+        "a7ae597f7c111d6858561280cdf080d4e62b0d70"
+      ],
+      "registeredFilesystemGitMobileHashesVerified": 1417,
+      "sourceDigest": "6808d96fa3ba5cd02ea6f581cff698efb613cc53d81d817578fbad4dc44eda68",
+      "all158ParentRequirementsPreserved": true,
+      "totalRequirements": 159,
+      "contractGitSha256": {
+        "formal/system/event-finance-report-currency.md": "69015488aae669c32821e6be4ef88524e10d486e284adb97258c2b8de0490b9f",
+        "formal/system/event-finance-report-range.md": "18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf"
+      },
+      "backendChangesOnly": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "wholeBackendGitTree": "ead9f59a88829cc4a6de476b788d38a8694aea87",
+      "all986BackendInputsQualifiedGitExact": true,
+      "canonicalDecisionsWholeFileExactParent": true,
+      "nativeQualifiedTestBinarySha256": "ef1b4a01de062ca4d718e00fd5774cb9097f5f1db45b88320360471ece780780",
+      "nativeTargeted": {
+        "examples": 29,
+        "failures": 0,
+        "pending": 0
+      },
+      "nativeFull": {
+        "examples": 4074,
+        "failures": 0,
+        "pending": 21
+      },
+      "actualControls": [
+        {
+          "label": "correct-native-control",
+          "sourceSha256": "47d38da8d2d9c80cdd0b7478d4a516243b11254a8125157a375e949c51e5a793",
+          "buildExit": 0,
+          "actualExit": 0,
+          "examples": 29,
+          "assertionFailures": 0,
+          "pending": 0,
+          "binarySha256": "448a76bfd94a2fd4334e0a85dd6effda6ce34d352ee3310f2a662f3559ccbe88",
+          "logSha256": "bd3bd6dd8315ff6df103f3344a9395c9591957c60d9aa2d57ca675bc60374d6a"
+        },
+        {
+          "label": "currency-guard-bypass",
+          "sourceSha256": "2812d3534f474533aa0afb8d5a60416aeff84bb1b7cf66fd68f3dc23c8431363",
+          "buildExit": 0,
+          "actualExit": 1,
+          "examples": 14,
+          "assertionFailures": 8,
+          "pending": 0,
+          "binarySha256": "b0a09362b84de7dd1791a9df1a3ab20f5c0b8dc51394928f225f3b638a1df532",
+          "logSha256": "1b909f13d53b14ac9e66bf1b7bc16236113018063e6a6f1e05d7793ff27cf21c"
+        },
+        {
+          "label": "late-budget-currency-check",
+          "sourceSha256": "a1d03566093a48c77d36b9625078508444cfe7aad43b84beef164070dd269176",
+          "buildExit": 0,
+          "actualExit": 1,
+          "examples": 14,
+          "assertionFailures": 1,
+          "pending": 0,
+          "binarySha256": "398a65545fdcef7aaff6444ad2be9c75eb875529d89ea6925de5a8dbb26c18fa",
+          "logSha256": "442c11e88a3456c59584679b218fae2a986775dd24ae41b57abb30dd7c1566be"
+        },
+        {
+          "label": "restored-native-control",
+          "sourceSha256": "47d38da8d2d9c80cdd0b7478d4a516243b11254a8125157a375e949c51e5a793",
+          "buildExit": 0,
+          "actualExit": 0,
+          "examples": 29,
+          "assertionFailures": 0,
+          "pending": 0,
+          "binarySha256": "448a76bfd94a2fd4334e0a85dd6effda6ce34d352ee3310f2a662f3559ccbe88",
+          "logSha256": "a93b1245c60cc48f330632a9aa0eb90343f99e625a9a7a60f6455a0b6976eece"
+        }
+      ],
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 143,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 159,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 159,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteImplementationProofs": 0,
+      "sourceCleanAfter": true,
+      "limit": "Native qualification is the current clean-source test binary. Cached app server executable is not qualified. Report-only child Git identities require fresh hosted build; no deployment/production or new serialized snapshot guarantee."
+    },
+    "strictCatalogJSONCSV": "PASS;1352candidates; canonical decisions whole file exact parent",
+    "canonicalInventoryAndConformance": "Generated and checked at actualexit0",
+    "CISelection": {
+      "scopes": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      },
+      "files": [
+        "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "docs/catalog-persistence/reports/static-list-inventory.json",
+        "formal/system/event-finance-report-currency.md",
+        "formal/system/inventory.json",
+        "formal/system/requirements.json",
+        "formal/system/traceability.json",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "fallback": false
+    },
+    "independentReview": "reports/event-finance-report-currency-2026-10-29/independent-review.txt",
+    "independentReviewLimit": "Read-only source/raw receipt review; reviewer did not independently execute the tests. Not a GitHub approval.",
+    "formalExecutionPassed": true,
+    "formalMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteImplementationProofs": 0,
+    "statusInterpretation": "Finite handler properties TESTED. Existing conditional SMT slices retain their assumptions. Whole implementation/refinement remain UNKNOWN/UNPROVEN; no proof promotion."
+  },
+  "regressionProtection": {
+    "newCurrencyRealHandlerCases": 14,
+    "existingRangeCasesRetained": 15,
+    "criticalFailuresCovered": true,
+    "actualNativeSourceMutantsDetected": 2,
+    "existingCISpecRegistration": "FollowHandlerSpec.spec already runs in backend-quality; current source selection backend=true and repo=true. No CI suppression or new heavyweight runner.",
+    "qualifiedCabalBinaryUnchangedByControls": true
+  },
+  "integration": {
+    "draftIntended": true,
+    "baseBranch": "fix/event-finance-report-range-20261029",
+    "merged": false,
+    "autoMerge": false,
+    "freshPublishedHeadCIAndApproval": "Required; not yet claimed by source evidence.",
+    "strictFIFOAndProtections": "Required; no bypass, no early parent/child merge.",
+    "parentHostedPersona": "PR671 run40971456580:642pass/1failure/22skip; WebKit320 campaign Calendario tab color-contrast; root cause UNKNOWN and gate failure preserved.",
+    "productionFinancialWrites": false,
+    "providerOperations": false,
+    "deployment": "UNVERIFIED"
+  },
+  "limits": [
+    "Test fixtures use SQLite; no new production PostgreSQL/provider/concurrency guarantee.",
+    "Existing optional native cases remain pending and are reported in the actual full-suite receipt.",
+    "Historical mixed-currency contributing records may block reports pending authorized reconciliation; no rates or financial data edits are invented.",
+    "Canonical captured-ticket validation remains unchanged. Nonzero budget contributors also invoke the existing summary metadata/budget validator, even when their sum is zero.",
+    "The locally qualified clean-source artifact is the native test binary. Cached app executable is not qualified; report-only child Git identity requires fresh hosted build.",
+    "Whole-platform formal release remains BLOCKED. No deployment, serialized snapshot, browser53-bit precision or ledger/settlement guarantee is established."
+  ],
+  "nextHighestValueTask": "Fresh published-head CI and independent review; preserve FIFO640 onward and parent671 draft. Reassess the next confirmed financial/security issue after completing this correction.",
+  "archive": {
+    "path": "reports/event-finance-report-currency-2026-10-29/evidence.tar.gz",
+    "sha256": "27e8633f1d76938db34b33d9c7f2fa4f90791c67dcd22fbf62f190c04a22cc12",
+    "bytes": 1798626,
+    "innerFiles": 125,
+    "manifest": "reports/event-finance-report-currency-2026-10-29/manifest.json",
+    "binding": "Report, manifest, archive and review become Git blobs; inner evidence files are individually hash-bound archive members."
+  },
+  "createdAt": "2026-10-29T23:54:37.007521+00:00"
+}

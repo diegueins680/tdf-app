@@ -51,6 +51,7 @@ import TDF.DTO.SocialEventsDTO
     , ArtistFollowerDTO (..)
     , EventBudgetLineDTO (..)
     , EventFinanceSummaryDTO (..)
+    , EventFinanceEntryDTO (..)
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
     , EventMomentCreateDTO (..)
@@ -565,6 +566,92 @@ spec = describe "social event handler helpers" $ do
                 result <- rangeSummary env
                 fmap (\dto -> (efsActualIncomeCents dto,efsAccountsPayableCents dto,
                     efsActualExpenseCents dto,efsBudgetCents dto)) result `shouldBe` Right (maxBound,3,0,Nothing)
+
+    describe "event finance report currency" $ do
+        it "keeps EUR authoring allowed but refuses to label its income as USD" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEntry env "EUR" "income" "posted" 100 Nothing
+                rows <- runSqlPool (selectList [EventFinanceEntryEventId ==. toSqlKey 7] []) (envPool env)
+                [(eventFinanceEntryCurrency row,eventFinanceEntryAmountCents row) | Entity _ row <- rows]
+                    `shouldBe` [("EUR",100)]
+                currencyReject =<< rangeSummary env
+
+        it "refuses a mismatched pending amount in accounts payable" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEntry env "EUR" "expense" "pending" 20 Nothing
+                currencyReject =<< rangeSummary env
+
+        it "refuses a mismatched posted amount in budget actuals" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 1000
+                currencyEntry env "EUR" "expense" "posted" 100 (Just "1")
+                currencyReject =<< rangeBudgetList env
+
+        it "refuses mismatched budget actuals before saving the requested edit" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 7
+                currencyEntry env "EUR" "expense" "posted" 100 (Just "1")
+                currencyReject =<< rangeBudgetUpdate env (rangeBudgetPayload 99)
+                row <- runSqlPool (get (toSqlKey 1 :: EventBudgetLineId)) (envPool env)
+                fmap eventBudgetLinePlannedCents row `shouldBe` Just 7
+
+        forM_ ["paid", "refunded", "pending"] $ \status ->
+            it ("refuses mismatched legacy ticket " <> T.unpack status <> " amounts") $
+                withFinanceRangeEnv $ \env -> do
+                    currencyTicket env "EUR" status 100
+                    currencyReject =<< rangeSummary env
+
+        it "ignores valid foreign void entries when computing USD totals" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEntry env "EUR" "income" "void" 100 Nothing
+                currencyEntry env "USD" "income" "posted" 30 Nothing
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsActualIncomeCents dto,efsNetCents dto)) result
+                    `shouldBe` Right ("USD",30,30)
+
+        it "ignores a cancelled foreign ticket that contributes no amount" $
+            withFinanceRangeEnv $ \env -> do
+                currencyTicket env "EUR" "cancelled" 100
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsTicketPaidRevenueCents dto,efsTicketPendingRevenueCents dto)) result
+                    `shouldBe` Right ("USD",0,0)
+
+        it "keeps a free foreign legacy ticket reportable without inventing FX" $
+            withFinanceRangeEnv $ \env -> do
+                currencyTicket env "EUR" "paid" 0
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsTicketPaidRevenueCents dto,efsActualIncomeCents dto)) result
+                    `shouldBe` Right ("USD",0,0)
+
+        it "ignores foreign entries outside a budget line's actual filters" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 1000
+                currencyEntry env "USD" "expense" "posted" 30 (Just "1")
+                currencyEntry env "EUR" "expense" "posted" 20 Nothing
+                currencyEntry env "EUR" "income" "posted" 50 (Just "1")
+                result <- rangeBudgetList env
+                fmap (map eblActualCents) result `shouldBe` Right [Just 30]
+
+        it "does not require conversion for a zero historical budget actual" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 1000
+                rangeEntry env "expense" "manual" "posted" 0
+                runSqlPool (rawExecute "UPDATE event_finance_entry SET currency='EUR' WHERE event_id=7" []) (envPool env)
+                result <- rangeBudgetList env
+                fmap (map eblActualCents) result `shouldBe` Right [Just 0]
+
+        it "uses the explicit event currency rather than its configured default" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEvent env "eur"
+                currencyEntry env "EUR" "income" "posted" 100 Nothing
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsActualIncomeCents dto)) result `shouldBe` Right ("EUR",100)
+
+        it "refuses USD contributions when the event explicitly reports EUR" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEvent env "EUR"
+                currencyEntry env "USD" "income" "posted" 100 Nothing
+                currencyReject =<< rangeSummary env
 
     it "decodes stored promo-code tier ids only from JSON text arrays" $ do
         decodeStoredPromoCodeTierIds Nothing `shouldBe` Nothing
@@ -2935,3 +3022,42 @@ rangeReject (Left err) = do
     errHTTPCode err `shouldBe` 500
     BL8.unpack (errBody err) `shouldContain` "supported reporting range"
 rangeReject (Right value) = expectationFailure ("Expected range refusal, got " <> show value)
+
+-- Foreign-currency authoring is intentional; reporting must check the rows
+-- that actually contribute instead of relabelling or silently dropping them.
+currencyEntry :: Env -> T.Text -> T.Text -> T.Text -> Int -> Maybe T.Text -> IO ()
+currencyEntry env currency direction status amount budget = do
+    let dto = EventFinanceEntryDTO
+            { efeId=Nothing, efeEventId=Nothing, efeBudgetLineId=budget
+            , efeDirection=direction, efeSource="manual", efeCategory="other"
+            , efeConcept="Currency fixture", efeAmountCents=amount, efeCurrency=currency
+            , efeStatus=status, efeExternalRef=Nothing, efeNotes=Nothing
+            , efeOccurredAt=socialEventStartFixture, efeRecordedByPartyId=Nothing
+            , efeCreatedAt=Nothing, efeUpdatedAt=Nothing }
+    result <- case socialEventsServer (strictAdminSocialEventUser 1) of
+        _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+            :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+            :<|> _budget :<|> (_ :<|> createHandler :<|> _ :<|> _) :<|> _ ->
+            runHandler $ runReaderT (createHandler "7" dto) env
+    fmap (\row -> (efeCurrency row,efeAmountCents row,efeStatus row)) result
+        `shouldBe` Right (currency,amount,status)
+
+currencyTicket :: Env -> T.Text -> T.Text -> Int -> IO ()
+currencyTicket env currency status amount = do
+    -- Keep the ordinary legacy order and its tier currency/unit price coherent.
+    runSqlPool (rawExecute "UPDATE event_ticket_tier SET currency=?,price_cents=? WHERE id=1"
+        [toPersistValue currency,toPersistValue amount]) (envPool env)
+    rangeTicket env 1 status amount
+    runSqlPool (rawExecute "UPDATE event_ticket_order SET currency=? WHERE id=1"
+        [toPersistValue currency]) (envPool env)
+
+currencyEvent :: Env -> T.Text -> IO ()
+currencyEvent env currency = runSqlPool
+    (rawExecute "UPDATE social_event SET metadata=? WHERE id=7"
+        [toPersistValue (T.pack (BL8.unpack (Aeson.encode (Aeson.object ["currency" Aeson..= currency]))))]) (envPool env)
+
+currencyReject :: Show a => Either ServerError a -> Expectation
+currencyReject (Left err) = do
+    errHTTPCode err `shouldBe` 500
+    BL8.unpack (errBody err) `shouldContain` "currency"
+currencyReject (Right value) = expectationFailure ("Expected currency refusal, got " <> show value)

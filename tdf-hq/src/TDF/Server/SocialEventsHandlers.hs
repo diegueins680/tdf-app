@@ -6157,7 +6157,7 @@ socialEventsServer user =
     listBudgetLines :: T.Text -> AppM [EventBudgetLineDTO]
     listBudgetLines eventIdStr = do
         Env{..} <- ask
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, eventRec) <- requireManagedEvent eventIdStr
         budgetRows <-
             liftIO $
                 runSqlPool
@@ -6170,13 +6170,13 @@ socialEventsServer user =
                     envPool
         forM budgetRows $ \lineEnt@(Entity lineKey lineRec) -> do
             let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
-                exactActualCents = sum
-                    [ toInteger (eventFinanceEntryAmountCents entry)
-                    | Entity _ entry <- postedEntries
+                contributingEntries =
+                    [ entryEnt
+                    | entryEnt@(Entity _ entry) <- postedEntries
                     , eventFinanceEntryBudgetLineId entry == Just lineKey
                     , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
                     ]
-            actualCents <- checkedEventFinanceCents exactActualCents
+            actualCents <- checkedEventBudgetActualCents (defaultCurrency envConfig) eventRec contributingEntries
             pure (budgetLineEntityToDTO eventKey (Just actualCents) lineEnt)
 
     createBudgetLine :: T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
@@ -6218,7 +6218,7 @@ socialEventsServer user =
     updateBudgetLine eventIdStr lineIdStr dto = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, eventRec) <- requireManagedEvent eventIdStr
         lineKey <- parseKeyOr400 "budget line" lineIdStr
         mLine <- liftIO $ runSqlPool (get lineKey) envPool
         lineRec <- maybe (throwError err404{errBody = "Budget line not found"}) pure mLine
@@ -6246,13 +6246,12 @@ socialEventsServer user =
                         []
                     )
                     envPool
-        let exactActualCents =
-                sum
-                    [ toInteger (eventFinanceEntryAmountCents entry)
-                    | Entity _ entry <- postedEntries
-                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                    ]
-        actualCents <- checkedEventFinanceCents exactActualCents
+        let contributingEntries =
+                [ entryEnt
+                | entryEnt@(Entity _ entry) <- postedEntries
+                , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                ]
+        actualCents <- checkedEventBudgetActualCents (defaultCurrency envConfig) eventRec contributingEntries
         liftIO $
             runSqlPool
                 ( update
@@ -6446,7 +6445,7 @@ socialEventsServer user =
             either
                 (throwError . financeInvariantServerError)
                 pure
-                (traverse storedFinanceEntrySummaryFields allFinanceRows)
+                (traverse (storedFinanceEntrySummaryFields eventCurrencyVal) allFinanceRows)
         captured <- liftIO $ runSqlPool (TicketRefund.capturedTicketRevenue eventKey eventCurrencyVal) envPool
         let capturedIds = Set.fromList [key | (key,_,_) <- captured]
             canonicalGross = sum [toInteger paid | (_,paid,_) <- captured]
@@ -6457,7 +6456,7 @@ socialEventsServer user =
             either
                 (throwError . financeInvariantServerError)
                 pure
-                (traverse storedTicketOrderSummaryFields (filter (\(Entity key _) -> key `Set.notMember` capturedIds) ticketOrders))
+                (traverse (storedTicketOrderSummaryFieldsInCurrency eventCurrencyVal) (filter (\(Entity key _) -> key `Set.notMember` capturedIds) ticketOrders))
 
         let plannedIncomeCents =
                 sum
@@ -10469,9 +10468,31 @@ financeEntryEntityToDTOEither (Entity entryKey entryRec) = do
             , efeUpdatedAt = Just (eventFinanceEntryUpdatedAt entryRec)
             }
 
-storedFinanceEntrySummaryFields :: Entity EventFinanceEntry -> Either T.Text (Int, T.Text, T.Text, T.Text)
-storedFinanceEntrySummaryFields (Entity _ entryRec) = do
+-- Authoring may retain other currencies; a single-currency report cannot
+-- combine their contributing amounts without an established conversion.
+validateEventFinanceReportCurrency :: T.Text -> T.Text -> Either T.Text ()
+validateEventFinanceReportCurrency eventCurrency rawCurrency =
+    case normalizeEventCurrencyCode rawCurrency of
+        Just currency | currency == eventCurrency -> Right ()
+        _ -> Left "Contributing amount currency does not match the event reporting currency"
+
+checkedEventBudgetActualCents :: T.Text -> SocialEvent -> [Entity EventFinanceEntry] -> AppM Int
+checkedEventBudgetActualCents reportDefault eventRec entries = do
+    let contributingAmounts = filter ((/= 0) . eventFinanceEntryAmountCents . entityVal) entries
+    unless (null contributingAmounts) $ do
+        (eventCurrency, _) <-
+            either (throwError . storedEventMetadataServerError) pure
+                (validateStoredEventFinanceMetadata reportDefault eventRec)
+        forM_ contributingAmounts $ \(Entity _ entry) ->
+            either (throwError . financeInvariantServerError) pure
+                (validateEventFinanceReportCurrency eventCurrency (eventFinanceEntryCurrency entry))
+    checkedEventFinanceCents (sum [toInteger (eventFinanceEntryAmountCents entry) | Entity _ entry <- entries])
+
+storedFinanceEntrySummaryFields :: T.Text -> Entity EventFinanceEntry -> Either T.Text (Int, T.Text, T.Text, T.Text)
+storedFinanceEntrySummaryFields eventCurrency (Entity _ entryRec) = do
     (directionVal, sourceVal, statusVal) <- validateStoredFinanceEntryDimensions entryRec
+    when (statusVal /= "void") $
+        validateEventFinanceReportCurrency eventCurrency (eventFinanceEntryCurrency entryRec)
     pure (eventFinanceEntryAmountCents entryRec, directionVal, sourceVal, statusVal)
 
 storedBudgetLineSummaryFields :: Entity EventBudgetLine -> Either T.Text (Int, T.Text)
@@ -10483,6 +10504,13 @@ storedTicketOrderSummaryFields (Entity _ orderRec) =
     case parseTicketOrderStatus (eventTicketOrderStatus orderRec) of
         Just statusVal -> Right (eventTicketOrderAmountCents orderRec, statusVal)
         Nothing -> Left "Stored ticket order status is invalid"
+
+storedTicketOrderSummaryFieldsInCurrency :: T.Text -> Entity EventTicketOrder -> Either T.Text (Int, T.Text)
+storedTicketOrderSummaryFieldsInCurrency eventCurrency orderEnt@(Entity _ orderRec) = do
+    fields@(amountCents, statusVal) <- storedTicketOrderSummaryFields orderEnt
+    when (amountCents /= 0 && statusVal /= "cancelled") $
+        validateEventFinanceReportCurrency eventCurrency (eventTicketOrderCurrency orderRec)
+    pure fields
 
 ticketOrderAccountingEntriesEither ::
     SocialEventId ->
