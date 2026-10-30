@@ -13560,6 +13560,73 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "ANALYTICS-WEEKLY-001",
+      "title": "Bounded aggregate weekly platform measurement",
+      "statement": "Prepare a read-only, repeatable-read aggregate query and summarize supplied current/previous seven-day windows without treating profile imports, telemetry milestones or missing data as verified human growth or campaign causality.",
+      "authority": "User instruction to implement weekly platform measurement, 2026-10-30; production collection remains contingent on an authorized read-only source.",
+      "domain": "analytics",
+      "actors": [
+        "Authorized report operator"
+      ],
+      "preconditions": [
+        "Explicit timezone-aware cutoff",
+        "Two comparable aggregate windows for summaries"
+      ],
+      "inputs": [
+        "Cutoff datetime",
+        "Aggregate-only JSON exported by the generated query"
+      ],
+      "state": {
+        "source": "supplied aggregate export, not independently verified"
+      },
+      "allowedTransitions": [
+        "No input -> read-only SQL text",
+        "Validated aggregate export -> labeled report"
+      ],
+      "forbiddenTransitions": [
+        "Missing metric -> zero",
+        "All-origin profile count -> human signup count",
+        "Synthetic fixture -> production result"
+      ],
+      "effects": [
+        "Print query or aggregate report; never open database or network connection"
+      ],
+      "authorization": "Existing authorized operator executes query with an approved read-only connection; tool does not obtain credentials or broaden grants.",
+      "privacy": "Export aggregate counts only, rejecting unexpected input fields; no identity/contact/token fields are queried or emitted.",
+      "concurrency": "Generated query uses one repeatable-read snapshot; output serialization does not mutate state.",
+      "idempotency": "Same cutoff and aggregate input produce the same summary.",
+      "failure": "Reject naive/injected cutoff, stale or incomplete export and invalid counts; missing coverage stays null.",
+      "recovery": "Obtain corrected aggregate input through existing authorized source; never substitute fixtures.",
+      "observability": "Source, collection time, local cutoff, half-open intervals, deltas and limitations accompany results.",
+      "source": "docs/analytics/weekly-platform-metrics.md",
+      "implementation": [
+        "scripts/weekly-platform-metrics.py"
+      ],
+      "tests": [
+        "scripts/test-weekly-platform-metrics.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped offline tests; production SQL and collection unverified.",
+      "ambiguity": [
+        "Synthetic account exclusions and historical deletions are not classified.",
+        "No reliable origin/claim partition or campaign attribution is supplied.",
+        "SQL has not run against PostgreSQL in this environment."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Offline preparation and validation implemented; production permission, actual SQL execution and complete growth coverage remain unverified."
+      },
+      "critical": false,
+      "property": "Unknown growth coverage cannot become a verified human or attributed conversion count.",
+      "contract": "docs/analytics/weekly-platform-metrics.md",
+      "verification": "Offline window/validation/unknown-data tests; SQL, grants and production collection remain unverified.",
+      "evidence": [
+        "Offline unit tests only; no production data collected."
+      ],
+      "historicalStatus": "New bounded measurement tooling, not a production observation."
     }
   ]
 }

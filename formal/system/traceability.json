@@ -13561,6 +13561,73 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "ANALYTICS-WEEKLY-001",
+      "title": "Bounded aggregate weekly platform measurement",
+      "statement": "Prepare a read-only, repeatable-read aggregate query and summarize supplied current/previous seven-day windows without treating profile imports, telemetry milestones or missing data as verified human growth or campaign causality.",
+      "authority": "User instruction to implement weekly platform measurement, 2026-10-30; production collection remains contingent on an authorized read-only source.",
+      "domain": "analytics",
+      "actors": [
+        "Authorized report operator"
+      ],
+      "preconditions": [
+        "Explicit timezone-aware cutoff",
+        "Two comparable aggregate windows for summaries"
+      ],
+      "inputs": [
+        "Cutoff datetime",
+        "Aggregate-only JSON exported by the generated query"
+      ],
+      "state": {
+        "source": "supplied aggregate export, not independently verified"
+      },
+      "allowedTransitions": [
+        "No input -> read-only SQL text",
+        "Validated aggregate export -> labeled report"
+      ],
+      "forbiddenTransitions": [
+        "Missing metric -> zero",
+        "All-origin profile count -> human signup count",
+        "Synthetic fixture -> production result"
+      ],
+      "effects": [
+        "Print query or aggregate report; never open database or network connection"
+      ],
+      "authorization": "Existing authorized operator executes query with an approved read-only connection; tool does not obtain credentials or broaden grants.",
+      "privacy": "Export aggregate counts only, rejecting unexpected input fields; no identity/contact/token fields are queried or emitted.",
+      "concurrency": "Generated query uses one repeatable-read snapshot; output serialization does not mutate state.",
+      "idempotency": "Same cutoff and aggregate input produce the same summary.",
+      "failure": "Reject naive/injected cutoff, stale or incomplete export and invalid counts; missing coverage stays null.",
+      "recovery": "Obtain corrected aggregate input through existing authorized source; never substitute fixtures.",
+      "observability": "Source, collection time, local cutoff, half-open intervals, deltas and limitations accompany results.",
+      "source": "docs/analytics/weekly-platform-metrics.md",
+      "implementation": [
+        "scripts/weekly-platform-metrics.py"
+      ],
+      "tests": [
+        "scripts/test-weekly-platform-metrics.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped offline tests; production SQL and collection unverified.",
+      "ambiguity": [
+        "Synthetic account exclusions and historical deletions are not classified.",
+        "No reliable origin/claim partition or campaign attribution is supplied.",
+        "SQL has not run against PostgreSQL in this environment."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Offline preparation and validation implemented; production permission, actual SQL execution and complete growth coverage remain unverified."
+      },
+      "critical": false,
+      "property": "Unknown growth coverage cannot become a verified human or attributed conversion count.",
+      "contract": "docs/analytics/weekly-platform-metrics.md",
+      "verification": "Offline window/validation/unknown-data tests; SQL, grants and production collection remain unverified.",
+      "evidence": [
+        "Offline unit tests only; no production data collected."
+      ],
+      "historicalStatus": "New bounded measurement tooling, not a production observation."
     }
   ],
   "sourceFingerprints": {
@@ -14195,6 +14262,7 @@
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
     "scripts/test-verification-report.py": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+    "scripts/test-weekly-platform-metrics.py": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -14218,6 +14286,7 @@
     "scripts/verify-recovery-expiry.py": "05aaa2a08d1381939d4f48d9d25dcd0b1076d7f596dee2f07db414c2f1bf96c5",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-system-evidence.mjs": "01928fc197382c5a4a0e0e4107ed5311771d276217715b8bc88d42bb9f85ac17",
+    "scripts/weekly-platform-metrics.py": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
@@ -26320,6 +26389,18 @@
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/weekly-platform-metrics.py": [
+      {
+        "requirement": "ANALYTICS-WEEKLY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-weekly-platform-metrics.py": [
+      {
+        "requirement": "ANALYTICS-WEEKLY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -32867,6 +32948,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-d0a29d547d2a49db",
+      "path": "scripts/test-weekly-platform-metrics.py",
+      "sha256": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ANALYTICS-WEEKLY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-da68a6be269c4e94",
       "path": "scripts/test-whatsapp-consent.sh",
       "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
@@ -33290,6 +33383,18 @@
       "requirements": [
         {
           "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-00fd92180a50abfd",
+      "path": "scripts/weekly-platform-metrics.py",
+      "sha256": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ANALYTICS-WEEKLY-001",
           "relationship": "implementation"
         }
       ]
@@ -56499,7 +56604,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "27712aa63eb256346fb9d4e8356056bd2d69fdc03ee5387ba307aba643b0fdaf",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56527,7 +56632,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "27712aa63eb256346fb9d4e8356056bd2d69fdc03ee5387ba307aba643b0fdaf",
       "definition": {
         "states": [
           "absent",
@@ -56557,7 +56662,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "27712aa63eb256346fb9d4e8356056bd2d69fdc03ee5387ba307aba643b0fdaf",
       "definition": {
         "export": [
           "queued",
@@ -79044,7 +79149,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
