@@ -1,0 +1,367 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "sourceCommit": "437564ced1b2ea38b590e6b2d2043e85e17aabb9",
+  "baselineMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+  "qualifiedParent": "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+  "parentFunctionalSource": "83533b3d980432aea6bab30361453311da4f3905",
+  "evidenceCommit": "Report-only child; all four paths must be NEW additions, every other source tree and each safe unique regular archive member verified against Git.",
+  "problem": {
+    "classification": "Confirmed currency-unit provenance omission and incomplete CSV column specification",
+    "authority": "Owner explicitly supports foreign finance-entry authoring; individual entry listing/UI preserves efeCurrency. Summary totals have separate contributor rules. Bounded repository investigation found no authoritative external consumer contract defining the common CSV column as global event metadata.",
+    "counterexample": "USD event with validUSD30summary plusEUR100void andUSD30posted entries exported the EUR record as currencyUSD/raw100, with no entry-currency field. Void does not contribute to totals but remains listed.",
+    "productionExposure": "UNKNOWN; actual source-function/Jest synthetic evidence, no production incident or external consumer compatibility claim."
+  },
+  "correction": "Define existing CSV currency column as the unit of the amount in that record. Bind only finance_entry row currency cell to authoritative entry.efeCurrency, keeping raw efeAmountCents. Summary/budget rows retain report/event units. Preserve all24columns, row order, statuses, event metadata, numeric guards and CSV escaping. NoFX, inventeddefault, omittedrows, backend/API/schema/provider/financialrecord change.",
+  "composition": {
+    "normalParent": "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+    "parentPullRequest": 683,
+    "all160ParentRequirementObjectsExact": true,
+    "csvUnitRequirementAdded": true,
+    "totalRequirements": 161,
+    "oneProductionCellOnly": true,
+    "onlyOtherUiChange": "Append two tests; original four precision tests are a byte-exact prefix.",
+    "backendWorkflowsMobileOpsScriptsDependenciesExactMain": true,
+    "allParentHistoricalReportsTreeExact": true,
+    "parentFourReportBlobsSha256": {
+      "reports/event-finance-browser-precision-2026-10-30.json": "782690e9d11d4485584a75862a2c030366cc54cc9351a154efde9a699627b18a",
+      "reports/event-finance-browser-precision-2026-10-30/evidence.tar.gz": "50b794104973fb13fe4ffcef42049efea85f1042515f444d8587109457bcc71c",
+      "reports/event-finance-browser-precision-2026-10-30/independent-review.txt": "6969b4ab024e8da97a94b476b3de8a3d8b0896da6c1047ab8f41354fc2853bf2",
+      "reports/event-finance-browser-precision-2026-10-30/manifest.json": "dc3351dda0a3bc48f2c3a712715add8bcc40e6359542e926860ae1eaaa816097"
+    },
+    "catalog": "All1355parent decisions/order/topfields preserved plus one independently reviewed synthetic currencyEvent DTO fixture; fulltracked strict1356JSON/CSV confirmsactualstablefingerprint. No productioncatalog change."
+  },
+  "properties": [
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001/ROW-UNIT",
+      "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "sourceCommit": "437564ced1b2ea38b590e6b2d2043e85e17aabb9",
+      "status": "TESTED",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "contractGitSha256": "f270b599cf5031e17511f22590e5dfa677507aa38f4d2f473171fa45a3226727",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts"
+      ],
+      "statement": "Every finance-entry currency cell follows its own authoritative wireunit without converting or relabeling its unchanged raw cents; summary/budget units remain separate.",
+      "assumptions": [
+        "Existing DTOentrycurrency validation trusted; not a general malformed-DTO decoder.",
+        "Per-record amountunit meaning is the explicitly corrected CSVspecification; external consumers expectations remainunknown."
+      ]
+    },
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001/COMPATIBILITY",
+      "requirement": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "sourceCommit": "437564ced1b2ea38b590e6b2d2043e85e17aabb9",
+      "status": "TESTED",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "statement": "Existing24-column positions, raw amount/status/eventmetadata, samecurrency records and parentprecision/queryreadiness behavior remain.",
+      "assumptions": [
+        "Current78targetedcases include actualPage/API/money/CSV components; no source-wide complete refinement guarantee.",
+        "Parentfull3811 belongs83533 only; current fullUI local NOT_RUN and mandatoryselected hostedCI remainsrequired."
+      ]
+    }
+  ],
+  "counterexamplesAndControls": {
+    "actualOldHelperBaseline": {
+      "cases": 6,
+      "intendedAssertionFailures": 1,
+      "compatibilityPasses": 5,
+      "scope": "Actualold helper Git-exact parent; finalvalid completeEventDTO fixture, EURexpected/USDactual tuple."
+    },
+    "correctedHelper": {
+      "cases": 6,
+      "failures": 0
+    },
+    "rootAlternativeVerification": {
+      "actualExtractedSourceCases": 27,
+      "currentPass": 27,
+      "oldOneCellBindingUnitMismatches": 18,
+      "oldCompatibleCases": 9,
+      "restoredPass": 27,
+      "defaultCurrencyCalls": 0,
+      "scope": "Finite actual JS source-function check, not browser/HTTP/backend/provider/production or complete proof",
+      "note": "18 observed unit counterexamples in the controlled old-binding function, not18 thrown Jest assertion failures. Actual/current and faulty emittedJavaScript retained."
+    },
+    "regressionRegistration": "Two new Jestcases automatically discovered through existing UIquality CI; oldfour precisioncases unchanged.",
+    "setupHistory": "Initialpartial newEventDTO fixture didnot satisfy current requiredfields; rawattempts retained, completevalidfixture rerun before genuinebaseline. No test assertion weakened. ROOTfirstexact-diff audit matched prevalidation foreach ratherthan rowloop; corrected locator after realdiff inspection, no productsource change."
+  },
+  "verification": {
+    "scopedUi": {
+      "sourceCommit": "437564ced1b2ea38b590e6b2d2043e85e17aabb9",
+      "phase": "QUALIFIED_SCOPED_CSV_SOURCE",
+      "startedAtUTC": "2026-10-30T20:29:05.505908+00:00",
+      "actualExits": {
+        "targeted": 0,
+        "typecheck": 0,
+        "lint": 0,
+        "build": 0,
+        "root-quality": 0,
+        "source-admission": 0,
+        "catalog-unit": 0
+      },
+      "activePID": 17979,
+      "targetedTests": 78,
+      "targetedSuites": 4,
+      "fullUiCurrentSource": "NOT_RUN_LOCAL; selected hosted UI quality remains required",
+      "parentFullUi": {
+        "sourceCommit": "83533b3d980432aea6bab30361453311da4f3905",
+        "tests": 3811,
+        "suites": 327,
+        "scope": "Historical parent source only, not current CSV source"
+      },
+      "allInputsGitExactAndUnchanged": true,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true,
+      "finishedAtUTC": "2026-10-30T20:36:37.196596+00:00"
+    },
+    "sourceSeal": {
+      "sourceCommit": "437564ced1b2ea38b590e6b2d2043e85e17aabb9",
+      "baselineMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+      "qualifiedParent": "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+      "parentFunctionalSource": "83533b3d980432aea6bab30361453311da4f3905",
+      "sourceDigest": "7a7cd4febe0a2b35762f161ce7ba5c019356c1ba1319b8064bf84d10b93ece5c",
+      "registeredHashesVerified": 1434,
+      "uiInputHashesVerified": 911,
+      "assuranceArtifactHashesVerified": 52,
+      "all160ParentNormativeObjectsExactPlusCsv161": true,
+      "allBackendWorkflowsMobileOpsScriptsDependenciesExactMain": true,
+      "onlyOneProductionCurrencyCellChanged": true,
+      "allOtherUiExactParentExceptAppendOnlyTwoTests": true,
+      "allParentHistoricalReportTreeExact": true,
+      "parentFourReportBlobsSha256": {
+        "reports/event-finance-browser-precision-2026-10-30.json": "782690e9d11d4485584a75862a2c030366cc54cc9351a154efde9a699627b18a",
+        "reports/event-finance-browser-precision-2026-10-30/evidence.tar.gz": "50b794104973fb13fe4ffcef42049efea85f1042515f444d8587109457bcc71c",
+        "reports/event-finance-browser-precision-2026-10-30/independent-review.txt": "6969b4ab024e8da97a94b476b3de8a3d8b0896da6c1047ab8f41354fc2853bf2",
+        "reports/event-finance-browser-precision-2026-10-30/manifest.json": "dc3351dda0a3bc48f2c3a712715add8bcc40e6359542e926860ae1eaaa816097"
+      },
+      "strictCatalogCandidates": 1356,
+      "all1355PriorCatalogDecisionsExactPlusSyntheticFixture": true,
+      "currentTargetedTests": 78,
+      "currentFullUi": "NOT_RUN_LOCAL; current-head mandatory selected CI stillrequired",
+      "parentFullUi": {
+        "sourceCommit": "83533b3d980432aea6bab30361453311da4f3905",
+        "tests": 3811,
+        "suites": 327,
+        "scope": "Historical parent source only, not current CSV source"
+      },
+      "baselineCases": 6,
+      "baselineAssertionFailures": 1,
+      "baselineCompatibilityPasses": 5,
+      "correctedCsvCases": 6,
+      "alternativeActualSourceCases": 27,
+      "alternativeOldBindingMismatches": 18,
+      "alternativeRestoredCases": 27,
+      "alternativeScope": "Finite actual JS source-function check, not browser/HTTP/backend/provider/production or complete proof",
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 145,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "limitations": [
+        "TESTED finite source-function/Jest/component cases, no complete implementation/refinement proof.",
+        "Full3811UI result belongsparent83533 only, not current CSV source; selected hostedUI fullsuite required beforeintegration.",
+        "CommonCSVcolumn per-record amountunit interpretation is nowexplicit; no authoritativeexternalconsumercontract found, externalcompatibility expectationsunknown.",
+        "BackendDTOcurrency validationtrusted; noFX/defaultunit invention, malformedDTOdecoder, financialrecord/provider or snapshotguarantee.",
+        "No new localbrowser/HTTP/DB/native run forone-cellpresentation correction. Parenthistoricalreports remainimmutable.",
+        "Ownedprocessgroup/SIGTERM cleanup exists inrunner but interruptedrun cleanupnotfault-tested."
+      ],
+      "createdAtUTC": "2026-10-30T20:40:01.080136+00:00"
+    },
+    "binderControls": {
+      "sourceCommit": "437564ced1b2ea38b590e6b2d2043e85e17aabb9",
+      "sealScriptSha256": "5bdf7a1f7881b5554a32ce21271266923c311140037f62ebadb96f289bd8edd5",
+      "method": "AST-extract actual CSV seal binder, actualvalid receipts before/after; onein-memorycorruptionpercontrol. CompleteUIinputset independentGit enumeration. Checkout/artifacts nevermutated.",
+      "validBefore": true,
+      "negativeControls": [
+        {
+          "label": "FailedLintPromoted",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "ReducedTargetedCount",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "ParentFullUiPromotedToCurrent",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "WrongSourceCommit",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceDigestMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedWholeRequirementProof",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnexpectedReleasePermission",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "OmittedUiInputWithMatchedReducedTable",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UndetectedOldUnitBinding",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnexpectedDefaultCurrencyFallback",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "WrongCsvSourceFingerprint",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        }
+      ],
+      "intendedAssertionRejections": 11,
+      "restoredValidAfter": true,
+      "diskArtifactsUnchanged": true,
+      "scope": "Evidence binder negative controls; no complete verification-pipeline theorem",
+      "atUTC": "2026-10-30T20:40:02.358931+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 161,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 145,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "reports/event-finance-csv-currency-2026-10-30/independent-review.txt",
+    "reviewSeparation": "Agent authored product/tests/spec; ROOT independently reviewed actualone-cell implementation and validcounterexample, then executed fresh scopedqualification and independentactualAST alternative. Agent independently reviewed ROOT harness/evidence without claiming its own independent productapproval/runtime or GitHubreview."
+  },
+  "regressionProtection": {
+    "currentTargeted": 78,
+    "currentTargetedSuites": 4,
+    "correctedCsvCases": 6,
+    "alternativeActualSourceCases": 27,
+    "evidenceCorruptionsRejected": 11,
+    "currentFullUiLocal": "NOT_RUN; hosted selected UIgate required",
+    "parentFullUiHistorical": {
+      "sourceCommit": "83533b3d980432aea6bab30361453311da4f3905",
+      "tests": 3811,
+      "suites": 327
+    },
+    "newDependencies": false
+  },
+  "limitations": [
+    "TESTED finite actualsource/Jest/VM cases.161whole and322implementation/refinement obligations remainUNPROVEN;11inheritedconditionalSMTclaims retainassumptions; formalreleaseBLOCKED.",
+    "No current localfullUI/browser/HTTP/DB/native/provider/deployment run for one-cell presentation change. Mandatory current-head hostedUI must complete before integration.",
+    "Existing DTOcurrency validation trusted; no financial conversion, aggregation, range, transaction snapshot, auth or provider-settlement guarantee.",
+    "Externalspreadsheet consumers expectations unknown; per-rowamountcurrency meaning nowexplicit without changingcolumnpositions.",
+    "Inherited historical reports immutable; priorfailed source/setup records retaintheir datedscopes. Worker stop/campaigncontrast causes remainseparateUNKNOWNs.",
+    "Runner ownsprocessgroups and SIGTERM entry but interruptioncleanup notfault-tested."
+  ],
+  "integration": {
+    "pullRequest": "Assigned after guarded publication",
+    "basePullRequest": 683,
+    "draft": true,
+    "autoMerge": false,
+    "merged": false,
+    "currentHeadCiReview": "Mandatory selectedhostedCI, independentexactheadGitHubreview, parent683integration, latestmain and normalprotectedFIFO required.",
+    "productionWrites": false,
+    "deployment": false
+  },
+  "nextHighestValueTask": "Inspect current683/childCI and exact-head reviews; respectparentdependency andFIFO643. Retainunknown worker completion/campaigncontrast causes ratherthan unchangedretries or proofpromotion.",
+  "archive": {
+    "path": "reports/event-finance-csv-currency-2026-10-30/evidence.tar.gz",
+    "sha256": "3ba703db0cbcd3c94ecb6b177e8b46db237b92b35dc8de0a0a8c8dea1cc9d425",
+    "bytes": 1580374,
+    "innerFiles": 128,
+    "manifest": "reports/event-finance-csv-currency-2026-10-30/manifest.json"
+  },
+  "createdAtUTC": "2026-10-30T20:48:29.655282+00:00"
+}
