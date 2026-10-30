@@ -1,0 +1,68 @@
+Independent final review: truthful unsupported contract send
+Date: 2026-10-30
+Qualified source M3: 58f8cd02c3929d56de4faea60d9bf33bfb6cd146
+Baseline protected main E1: e1cec5b59723c2ff9828ac4fce45abb930d73055
+Result: zero blocking defects identified within this correction and evidence scope.
+
+Review scope and corrected behavior:
+I reviewed immutable/applied source, the ten real Handler cases, normative contract and gap update, raw baseline and corrected native logs, three source fault controls, strict-snapshot IO probe, archived intermediate failures, source-context binding refresh and final clean-source correspondence. I did not independently rerun compiler/tests/handlers, start a database/server, send messages, change source/refs or act remotely. This is not a current-head GitHub approval, merge/deployment authority, successful delivery qualification or complete proof.
+The production change preserves route ID, recipient/payload and stored-contract existence/envelope validation in order. Existing 400/404/500 outcomes remain. A valid existing contract now returns 501 with an explicit not-implemented error instead of successful status sent. Creation, PDF and file storage helpers remain byte-identical to E1, and outer authorization is unchanged. No provider, queue, credential, receipt or persisted delivery state is introduced. RFC9110 §15.6.2 supports 501 for absent functionality; this is not a temporary-outage claim. Source: https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.2.
+The historical audit remains unchanged. EO-038 and the new contract explicitly keep actual delivery, secure versions and party acceptance missing. Truthful refusal neither implements sending nor repairs past false confirmation consequences.
+
+Executed evidence inspected:
+The original native O0 baseline completed ten examples with one real false-success assertion failure and nine compatibility passes. It returned actual successful JSON with normalized email/id/status sent. The baseline valid-send assertion fails before later file-preservation assertions, so those later baseline reads are not claimed. Exact restoration of original E1 module in a strict-fixture fault control reproduces the same false response.
+The final canonical Stack/GHC 9.10.3 Cabal test build exits 0 at M3; targeted ten cases pass with zero failures/pending, and the full suite completes 4055 examples / 0 failures / 21 inherited pending. I read the actual target/full logs and native-quality.json; the counts and actual exits agree. The final build log compiles the strict DeliverySpec, canonical Main and TDF.Version before linking the qualified test binary. The build's no-run-tests phase is separate from subsequent actual target/full execution; build success alone is not being counted as test execution. The binary SHA256 is 18980ef07cd13ac8dbc8c7743545fb56c5c6203c3894d105d59062bc6ff7ddc5. Cached copy/register of serving executables does not constitute a separately qualified serving binary or new deployment artifact.
+
+Fixture fidelity and controls:
+Each example uses real typed Contracts.server handlers and a bracketed owned temporary directory/current-directory scope, with sequential Hspec scheduling. Valid fixture creation uses the actual create handler and production stored decoder. Cases preserve successful canonical storage, malformed ID/email/overpost 400, absent contract 404, corrupt/id-mismatched stored envelope 500 and pre-render PDF 404/500. No successful PDF rendering or authenticated contract HTTP request is established by these direct Handler cases. Cwd remains process-global under the documented scheduling assumption.
+The first file snapshots now use strict ByteString reads before and after send. I independently reversed only the strict import and two read sites to reproduce immutable M2 test bytes exactly; all statuses/assertions/fixtures otherwise remain. The actual retained IO probe demonstrates that the old lazy reader held a read lock and blocked a same-file write in this native environment, while strict snapshots permitted a write and preserved old/new bytes. This is observer interference, NOT evidence that the old fixture accepted writes or caused the original false-sent behavior. The probe itself prints observations, not a universal IO theorem.
+Three native O0 source fault variants each built successfully and completed all ten focused tests: false success produces 1 intended assertion failure; bypassing validation/lookup produces 6 precise status assertions (three 400, one 404, two 500 instead of 501); mutate-store-then 501 produces 1 actual byte assertion. In the latter, assertStatus 501 succeeds, then expected original JSON differs from actual MUTATED-CONTRACT at DeliverySpec line 27. It is not an IOError/resource-busy/timeout detection. Corrected and restored sources each pass 10/0. This is THREE variants and EIGHT intended assertions, not eight independent mutations or exhaustive fault coverage. I checked all five control log hashes and restored production hash; the strict control test bytes match qualified M3.
+The raw phase label saying TWO and raw baseline-context sourceCommit E1 are explicitly explained in control-scope-erratum.json and final correspondence. Actual rows/counters establish 3/8; focused precommit controls are bound by module/test/binary hashes, not mislabeled whole-E1 or whole-M3 qualification. The separate final canonical M3 binary provides full current-source execution evidence.
+
+Transparent intermediate stages and model context:
+Archived M684 assurance remains failed: authorization/recovery fingerprints rejected the changed Cabal manifest after adding DeliverySpec. Independent comparison showed exactly one test other-modules registration, with no dependency, compiler flag, source path or production module change. The two artifact updates refresh only that reviewed Cabal binding and append a precise context review; all seven auth/recovery obligation objects and prior six context reviews remain intact, as do all other source bindings and translation/helper code. This is source-context revalidation, not weakening the checker or expanding theorem scope. Fresh M3 solver/replay/control execution succeeds.
+The M684 and M2 native states each retain build exit -15 while still BUILDING; neither is a qualified full run. M2 root quality/assurance passes keep their own scopes. The second interruption followed the snapshot observer finding. The final M3 run, rather than either interrupted build, is the only current full qualification asserted here.
+
+Independent final correspondence:
+All 1430 registered filesystem hashes and corresponding Git blobs independently match M3: 1330 main blobs plus 100 Mobile blobs. I derived and checked the actual Mobile pin 7586be92f447faaf05d1f7d7073af6321ad1496a. All 988 tracked backend qualification inputs also match current files and Git. The source worktree is clean; actual test binary hash matches the native receipt. Global digest: a6eab2519ebe86e6699956db8ae6cf369b066b889cb64328fbdaae2d15c57aee. The normative Markdown and historical audit, outside generic source coverage, are separately bound to Git/file hashes. All 158 incoming requirement objects are structurally exact, with new MSG-CONTRACT-DELIVERY-001 bringing total 159. The whole 1354-row historical catalog decision file is byte-exact E1. Only the reviewed contract module, Cabal registration, MainSpec registration and DeliverySpec differ within the backend; UI/Mobile/workflows remain baseline trees.
+Root-quality/admission/catalog receipts record actual exit0, including 8 catalog unit cases. Strict current catalog/index checks and fresh clean-source assurance pass. Assurance correctly leaves 159 whole requirements and 318 implementation/refinement obligations UNPROVEN, with 11 inherited conditional SMT claims and release BLOCKED. There is no new complete implementation/refinement or delivery theorem.
+
+Empirical and integration limits:
+Finite direct Handler/temp-filesystem tests support TESTED scope only. No actual SMTP/provider delivery, authenticated end-to-end contract HTTP, successful PDF generation, PostgreSQL, production filesystem/concurrency, historical remediation or deployment is qualified. Existing file IO races and global-cwd concurrency assumptions are not redesigned. A future actual delivery system needs reviewed transport/queue semantics, evidence and new tests. Published-head hosted CI, required current-head review, main/FIFO reconciliation and branch protections remain separate integration obligations, not waived by this local review.
+
+Reviewed source SHA256 values:
+- tdf-hq/src/TDF/Contracts/Server.hs: a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567
+- tdf-hq/test/TDF/Contracts/DeliverySpec.hs: cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f
+- tdf-hq/test/Spec.hs: 7a26f30781c9f2d7639df702eaf30038921d75053ecb1f71df0cda01dbcf65a8
+- tdf-hq/tdf-hq.cabal: 2dcba94604be8524981fc1789b9e77735890d1d933f3f3d48be64a1e6a756a4d
+- formal/system/contract-send-truthfulness.md: 4ed5649f01c9b7bc8845c950f23511b875dcfc6c4ba07a2c9a8dba20cca6f213
+- formal/system/auth-predicates.json: e9661a12bb47be4ca9e5ae6ce8d54d0d6ebb047f7fa5024eb62d3bf4733e6888
+- formal/system/recovery-expiry-arithmetic.json: 4d2bee18c666020bc74c3963eca4d1efcd41cf4f820a7ba296198baef36cac81
+- formal/system/requirements.json: 1300cd930846309167cc0c3cb72efd85f35be28d963150348205f7c64fc23316
+- docs/event-operations/gap-matrix.md: e9a00fe793e80e197e652dde11a828de042d3f6978dc09024818f3e47cef9786
+
+Raw evidence SHA256 values (artifact root /private/tmp/tdf-contract-send-strict-qualification-20261030):
+- native-quality.json: b2d07c7c5e03a9f311012e99721310aa59044fe272acd1be1156417ffba2d67d
+- native-qualified-inputs.json: 625af2d2ab3bf17d403fbf3c965b6e416c1d02bd6b38f54cdf41702ed296ee79
+- qualified-build.log: 8282a385754938105dbc8cde2d54a1419adcb3d9c7d7e22a67067d5dff15e846
+- qualified-targeted.log: fbec19ccc35c3510130f3001465d44d98c5058f4984771543ced065b9e029ece
+- qualified-full.log: c1ea3337e03078cba666700a5aaa5634844c41a4860529dc6dab9ef10056c744
+- verification-state.json: b728f05fb396b1f38bcc752c7dcfd6c2459669e559f4abec47642a1b3c63f83f
+- source-correspondence.json: 77e1d2ea1cbf8ebcc66b23e856c8dd949f76dc9ce019218faabf48b77dcc2152
+- baseline-confirmed.json: c5d8a97665163a638f30074e041b87bf812434ae8e5d8138f8593f7f38bc9cc7
+- baseline-tests.log: b57158223f5c6a1c50e8b0db56f8dc4dab04d7a383663cee70fa7e6574dc8837
+- controls.json: d565eb82b6347b5158be2873e9517fb58e6b038c959af4c5b75a46cf64825744
+- corrected-tests.log: f80c2c51c35525df3417c9be36df5e7d732516f8e16b5bcd76a176b397bb3266
+- false-success-tests.log: 0bb907630f3d73360c7e322c42abb75ec15a839f1ecd7f49825194e644f8d7fa
+- validation-bypass-tests.log: 8ea1e6f698ca23c0597d786364678cfe2ba7cae88d9af7dfcefbdc3a6d819b84
+- store-mutation-tests.log: a0fb0d70a82810f87fdb10acc28405521cac5e402aa1fc3eeb1d2654cb040168
+- restored-tests.log: ef5fdba4f7b2a997f92d397739d05ea273d4a882cc1c51fd86f823f49c52c1a7
+- strict-test-correspondence.json: d6b08ea1980e1017a6b16a11701eac58ac251c553ff7a8cda4ef36ec15146526
+- control-scope-erratum.json: ad66aa5947974930cde6e6197137b8202c7d4ee36f1ce6dae864a46ff3fa5ecf
+- snapshot-fidelity-history.json: e9e3f129e86950f7dea5a4809921d39491fa3f8e7775ff3bfe0e812f918a298b
+- snapshot-fidelity-probe.log: b97e115d8f23f9d6c32fff9d65118c819ef2cb429a262771e0a1c98cfd428d02
+- root-quality-result.json: 23f4ba96e2c20a22908bcc43e022b42c492ca69d6d8c6949b60cc9d889c1e511
+- assurance-committed/report.json: 7524a7ad9ca1cea8ddea670cbb67e05ba34e0274376343d158d1afbc97d6be97
+- earlier-stages/M2/initial-M684/assurance-failed/report.json: abbcb987d2b9c3e30b0ead8e1de15b1c4a8bf7174e047c527d484c00e4ba5bd5
+- earlier-stages/M2/initial-M684/native-run-state.json: 9d9806a18344c2b3dcc96867042d40a07933504f6fe8a36921f02c14def30172
+- earlier-stages/M2/native-run-state.json: cb5063f38c254493c8994094f914dc020791fe9f43a9b6d6ccea77b2ce51c3e1

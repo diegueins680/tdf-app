@@ -2224,6 +2224,7 @@
       "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
       "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
       "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+      "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
       "tdf-hq/test/TDF/CorsSpec.hs",
       "tdf-hq/test/TDF/CourseIdentitySpec.hs",
       "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
@@ -14852,7 +14853,7 @@
     {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
-      "sha256": "000e0da46d1d410af6798ed5ef07a13b69191128225587399990097bdac7638d",
+      "sha256": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15800,7 +15801,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+      "sha256": "2dcba94604be8524981fc1789b9e77735890d1d933f3f3d48be64a1e6a756a4d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15872,7 +15873,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+      "sha256": "7a26f30781c9f2d7639df702eaf30038921d75053ecb1f71df0cda01dbcf65a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15951,6 +15952,12 @@
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
       "sha256": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8a3bcf7db1bd362a",
+      "path": "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+      "sha256": "cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20150,7 +20157,7 @@
     },
     {
       "path": "docs/event-operations/gap-matrix.md",
-      "sha256": "a5fadfa6a31ec50f4337d654c23c57e5f55b3d4adaff44ea7ba7e0db8a32806d",
+      "sha256": "e9a00fe793e80e197e652dde11a828de042d3f6978dc09024818f3e47cef9786",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27415,6 +27422,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/contract-send-truthfulness.md",
+      "sha256": "4ed5649f01c9b7bc8845c950f23511b875dcfc6c4ba07a2c9a8dba20cca6f213",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/cors-boundary.md",
       "sha256": "d426b708f015c87949a58f254dbbad3dbdc39aea26e92a2131e5808123a9c019",
       "authority": "inferred",
@@ -27976,7 +27990,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sha256": "fb3ac673098bb4f8649c91317be87ec4f89d1acdce50772b3722ab6d944545e2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -47,6 +47,7 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.Contracts.DeliverySpec as ContractDeliverySpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
@@ -885,6 +886,7 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    ContractDeliverySpec.spec
     AccountNameSpec.spec
     FailureBoundarySpec.spec
     ReadinessSpec.spec

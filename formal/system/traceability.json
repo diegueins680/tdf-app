@@ -13561,6 +13561,76 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "MSG-CONTRACT-DELIVERY-001",
+      "title": "Do not report unsupported contract email as sent",
+      "statement": "The file-backed contract send route must refuse unsupported delivery with501 after preserving existing input and stored-file validation; it must never claim sent/queued without an implementation.",
+      "domain": "MSG",
+      "authority": "Existing repository-audit-2026-09-14 fake-send finding and EO-038 gap; owner correctness/reliability mandate.",
+      "source": "formal/system/contract-send-truthfulness.md",
+      "contract": "formal/system/contract-send-truthfulness.md",
+      "property": "Validexistinglegacycontract+validrecipient+absentdeliveryimplementation impliesHTTP501, no successfulsent/queuedresult or storemutation;400/404/500 precedence and create/PDF behavior retained.",
+      "actors": [
+        "Authorized contract API caller",
+        "Contract recipient"
+      ],
+      "preconditions": [
+        "Existing outer contract authorization unchanged",
+        "Current legacy Handler has no delivery/queue implementation"
+      ],
+      "inputs": [
+        "RouteUUID",
+        "Email-only JSONpayload",
+        "File-backed storedcontract"
+      ],
+      "state": {
+        "initial": "Validated route request",
+        "terminal": [
+          "Existing400/404/500refusal",
+          "501unsupported-delivery refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate before loading",
+        "Refuse absent functionality after successful file validation"
+      ],
+      "forbiddenTransitions": [
+        "Claim sent or queued without implementation",
+        "Bypass established input/storage errors to returngenericunavailable",
+        "Modify a contract to simulate delivery"
+      ],
+      "effects": [
+        "Owned read-only send filesystem access; no send/queue effect"
+      ],
+      "authorization": "Outer production guard unchanged; directHandler tests do not prove authenticatedHTTP.",
+      "privacy": "Syntheticcontract/recipient fixtures only; no realprovider/messages or productionrecords.",
+      "concurrency": "No new production filesystem synchronization; test temporarycwd uses sequentialHspec.",
+      "idempotency": "Repeated unsupported requests cannot claim or create delivery effects.",
+      "failure": "501 for unsupportedfunction; existing400/404/500 validations retained.",
+      "recovery": "Implement actual reviewed delivery with receipts and tests before enabling successful delivery claims; do not alter historicalrecords to hide falseconfirmations.",
+      "observability": "Actual native handler failure/success-compatible logs, originalfake-success control and validation-bypass control.",
+      "implementation": [
+        "tdf-hq/src/TDF/Contracts/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Ten realhandler cases and source fault controls; current fullStack qualification recorded against exactcommits.",
+      "evidence": "formal/system/contract-send-truthfulness.md; reports/contract-send-truthfulness-2026-10-30.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Existing authoritativefake-send finding and actual native false-sent counterexample; no deliveryfeature claim.",
+      "ambiguity": [
+        "Actual delivery/versionedacceptance remains separate missingfunctionality underEO-038.",
+        "SuccessfulPDF/authenticatedHTTP/productionfilesystem/provider behavior not established by these focusedfixtures."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite handler truthfulness/compatibility tests; complete implementation/refinement and deployment correspondence remain unproven."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13910,7 +13980,7 @@
     "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "ef15fb5c615f577bf11c4158d8032a04714318f1033b68ffdb3f00e5f040c43f",
+    "formal/system/recovery-expiry-arithmetic.json": "4d2bee18c666020bc74c3963eca4d1efcd41cf4f820a7ba296198baef36cac81",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -14706,6 +14776,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+    "tdf-hq/src/TDF/Contracts/Server.hs": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -14788,13 +14859,13 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+    "tdf-hq/tdf-hq.cabal": "2dcba94604be8524981fc1789b9e77735890d1d933f3f3d48be64a1e6a756a4d",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+    "tdf-hq/test/Spec.hs": "7a26f30781c9f2d7639df702eaf30038921d75053ecb1f71df0cda01dbcf65a8",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
@@ -14804,6 +14875,7 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": "cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
     "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
@@ -17386,6 +17458,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-CONTRACT-DELIVERY-001",
         "relationship": "tests"
       }
     ],
@@ -26318,6 +26394,18 @@
     "e2e/web/booking-timezone.spec.mjs": [
       {
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/Server.hs": [
+      {
+        "requirement": "MSG-CONTRACT-DELIVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": [
+      {
+        "requirement": "MSG-CONTRACT-DELIVERY-001",
         "relationship": "tests"
       }
     ]
@@ -46564,9 +46652,14 @@
     {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
-      "sha256": "000e0da46d1d410af6798ed5ef07a13b69191128225587399990097bdac7638d",
+      "sha256": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-CONTRACT-DELIVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2bac4bb831675dd6",
@@ -48484,7 +48577,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+      "sha256": "2dcba94604be8524981fc1789b9e77735890d1d933f3f3d48be64a1e6a756a4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48630,7 +48723,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+      "sha256": "7a26f30781c9f2d7639df702eaf30038921d75053ecb1f71df0cda01dbcf65a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48691,6 +48784,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-CONTRACT-DELIVERY-001",
           "relationship": "tests"
         }
       ]
@@ -48879,6 +48976,18 @@
       "requirements": [
         {
           "requirement": "OPS-WORKER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8a3bcf7db1bd362a",
+      "path": "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+      "sha256": "cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-CONTRACT-DELIVERY-001",
           "relationship": "tests"
         }
       ]
@@ -54880,7 +54989,6 @@
     "SURFACE-b3ab13afc655164b",
     "SURFACE-e566657be7de3ed5",
     "SURFACE-95011c3eb812e7fd",
-    "SURFACE-de7641689e63ad01",
     "SURFACE-2bac4bb831675dd6",
     "SURFACE-7774c01ac1644990",
     "SURFACE-980d517db26f5cab",
@@ -55380,7 +55488,8 @@
     "SOCIAL-EVENT-MODERATION-001",
     "SOCIAL-EVENT-SESSION-001",
     "MEDIA-MUSIC-PRIVACY-001",
-    "SYS-CI-SELECTED-001"
+    "SYS-CI-SELECTED-001",
+    "MSG-CONTRACT-DELIVERY-001"
   ],
   "stateMachines": [
     {
@@ -56499,7 +56608,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "fb3ac673098bb4f8649c91317be87ec4f89d1acdce50772b3722ab6d944545e2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56527,7 +56636,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "fb3ac673098bb4f8649c91317be87ec4f89d1acdce50772b3722ab6d944545e2",
       "definition": {
         "states": [
           "absent",
@@ -56557,7 +56666,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "fb3ac673098bb4f8649c91317be87ec4f89d1acdce50772b3722ab6d944545e2",
       "definition": {
         "export": [
           "queued",
@@ -79044,7 +79153,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

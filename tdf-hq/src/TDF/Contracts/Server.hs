@@ -113,14 +113,14 @@ server = createH :<|> pdfH :<|> sendH
     sendH :: Text -> A.Value -> Handler A.Value
     sendH cid body = do
       contractId <- either throwError pure (validateContractId cid)
-      recipientEmail <- either throwError pure (validateContractSendPayload body)
+      _ <- either throwError pure (validateContractSendPayload body)
       storedResult <- liftIO (loadContract contractId)
       case storedResult of
         Left errMsg ->
           throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
         Right Nothing -> throwError err404 { errBody = "Contract not found" }
-        Right (Just _)  ->
-          pure (A.object ["status" .= ("sent" :: Text), "id" .= contractId, "email" .= recipientEmail])
+        Right (Just _) ->
+          throwError err501 { errBody = "Contract email delivery is not implemented" }
 
 persistContract :: StoredContract -> IO ()
 persistContract stored = do

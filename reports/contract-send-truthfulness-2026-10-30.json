@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "initialImplementationCommit": "6845381756620d4607ad6459cfab7c356c67f0d0",
+  "sourceCommit": "58f8cd02c3929d56de4faea60d9bf33bfb6cd146",
+  "evidenceCommit": "Containing report-only childcommit, independently Gitverified aftercommit.",
+  "problem": "Legacy contract sendH loads a validfile then returns successful status sent/id/email without any delivery or queue implementation. Existing datedaudit and EO-038 already identify fake-send.",
+  "correction": "After preserving existing route/body/storage validation, return501 unsupported email delivery for a valid existing contract. Keep create/PDF/storage helpers, outer authorization, API routes and provider/configuration unchanged. No real delivery implemented.",
+  "properties": [
+    {
+      "id": "MSG-CONTRACT-DELIVERY-001/TRUTHFUL-REFUSAL",
+      "status": "TESTED",
+      "statement": "No successful sent/queuedclaim for unsupported legacycontract delivery.",
+      "method": "Real typedHandler fixture, actualnative baselinefalse-sentcounterexample, corrected10cases, fake-success sourcecontrol detected.",
+      "assumptions": "Existing filevalidation/authorization and absentdeliveryimplementation; direct native Handler tests are not authenticatedHTTP/provider or complete implementation proof."
+    },
+    {
+      "id": "MSG-CONTRACT-DELIVERY-001/COMPATIBILITY",
+      "status": "TESTED",
+      "statement": "Existing400/404/500 precedence, create/storage and pre-renderPDF errors remain; refusedsend leaves storedbytes/files unchanged.",
+      "method": "Realfilefixtures created by actualcreatehandler; preservedvalidationcases; bypasscontrolcauses6intendedHTTPcodeassertions.",
+      "assumptions": "Ownedtemporarydirectory and sequentialHspec cwd; no production filesystem/concurrency or successfulPDF rendering qualification."
+    }
+  ],
+  "reproduction": {
+    "source": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+    "nativeBuildExit": 0,
+    "cases": 10,
+    "realFalseSentAssertionFailures": 1,
+    "compatibilityPasses": 9,
+    "productHandlerGitExactBeforeRepair": true,
+    "setupErrorsCountedAsCounterexamples": false
+  },
+  "verification": {
+    "nativeCleanSource": {
+      "sourceCommit": "58f8cd02c3929d56de4faea60d9bf33bfb6cd146",
+      "phase": "QUALIFIED_TARGETED_AND_FULL",
+      "startedAt": "2026-10-30T05:18:34.989489+00:00",
+      "actualExits": {
+        "build": 0,
+        "targeted": 0,
+        "full": 0
+      },
+      "buildPID": 73402,
+      "binary": "/private/tmp/tdf-contract-send-truthfulness-20261030/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "binarySha256": "18980ef07cd13ac8dbc8c7743545fb56c5c6203c3894d105d59062bc6ff7ddc5",
+      "targetedPID": 76614,
+      "targeted": {
+        "examples": 10,
+        "failures": 0,
+        "pending": 0
+      },
+      "fullPID": 76624,
+      "full": {
+        "examples": 4055,
+        "failures": 0,
+        "pending": 21
+      },
+      "allBackendInputsUnchangedAndGitExact": true,
+      "sourceCleanAfter": true,
+      "finishedAt": "2026-10-30T05:22:45.201443+00:00"
+    },
+    "rootQuality": {
+      "sourceCommit": "58f8cd02c3929d56de4faea60d9bf33bfb6cd146",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "sourceSeal": {
+      "baseline": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+      "sourceCommit": "58f8cd02c3929d56de4faea60d9bf33bfb6cd146",
+      "registeredGitFilesystemMobileHashesVerified": 1430,
+      "sourceDigest": "a6eab2519ebe86e6699956db8ae6cf369b066b889cb64328fbdaae2d15c57aee",
+      "all158IncomingRequirementsExact": true,
+      "requirementsTotal": 159,
+      "contractAndHistoricalAuditGitSha256": {
+        "formal/system/contract-send-truthfulness.md": "4ed5649f01c9b7bc8845c950f23511b875dcfc6c4ba07a2c9a8dba20cca6f213",
+        "docs/event-operations/repository-audit-2026-09-14.md": "0e2e86cf28d1a414503fa9240c0ddbcb730e9365f96a7ddc5217db19e3fe1113"
+      },
+      "allQualifiedBackendInputsGitExact": true,
+      "qualifiedBackendInputCount": 988,
+      "nativeTargeted": {
+        "examples": 10,
+        "failures": 0,
+        "pending": 0
+      },
+      "nativeFull": {
+        "examples": 4055,
+        "failures": 0,
+        "pending": 21
+      },
+      "nativeTestBinarySha256": "18980ef07cd13ac8dbc8c7743545fb56c5c6203c3894d105d59062bc6ff7ddc5",
+      "controlsComponent": {
+        "phase": "REPAIRED_TWO_CONTROLS_DETECTED_RESTORED",
+        "sourceCommit": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+        "results": [
+          {
+            "label": "corrected",
+            "sourceSha256": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
+            "buildExit": 0,
+            "testExit": 0,
+            "examples": 10,
+            "assertionFailures": 0,
+            "binarySha256": "d1ff49458c702516dc213a88a95bbd880326a4a01796d146e98cd6ddaf2aa033",
+            "logSha256": "f80c2c51c35525df3417c9be36df5e7d732516f8e16b5bcd76a176b397bb3266"
+          },
+          {
+            "label": "false-success",
+            "sourceSha256": "000e0da46d1d410af6798ed5ef07a13b69191128225587399990097bdac7638d",
+            "buildExit": 0,
+            "testExit": 1,
+            "examples": 10,
+            "assertionFailures": 1,
+            "binarySha256": "99ef963223833a4ef4d1afde0ccf12cd94a8c37e55903b65a14ed935982195b1",
+            "logSha256": "0bb907630f3d73360c7e322c42abb75ec15a839f1ecd7f49825194e644f8d7fa"
+          },
+          {
+            "label": "validation-bypass",
+            "sourceSha256": "db0418b7d402c1c88e1da336b51fab6ad302ffc9b417472c2c9b181c67cdabd4",
+            "buildExit": 0,
+            "testExit": 1,
+            "examples": 10,
+            "assertionFailures": 6,
+            "binarySha256": "e93ea04697d3eed7f29d63bd40157b15debed117240da2397d7c01ecc84e61f9",
+            "logSha256": "8ea1e6f698ca23c0597d786364678cfe2ba7cae88d9af7dfcefbdc3a6d819b84"
+          },
+          {
+            "label": "store-mutation",
+            "sourceSha256": "5d7667080c820ee5dab8fada396a7d771e9935926828ffa3e830768267850e98",
+            "buildExit": 0,
+            "testExit": 1,
+            "examples": 10,
+            "assertionFailures": 1,
+            "binarySha256": "4050d33732e8dcd9b8c96b1ac319256355299fd6c43e15267dae196215456378",
+            "logSha256": "a0fb0d70a82810f87fdb10acc28405521cac5e402aa1fc3eeb1d2654cb040168"
+          },
+          {
+            "label": "restored",
+            "sourceSha256": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
+            "buildExit": 0,
+            "testExit": 0,
+            "examples": 10,
+            "assertionFailures": 0,
+            "binarySha256": "5330ed31a3016f59e2693712da512f4a6ed13785b838b92ebdc963a937d13442",
+            "logSha256": "ef5fdba4f7b2a997f92d397739d05ea273d4a882cc1c51fd86f823f49c52c1a7"
+          }
+        ],
+        "activePID": 39435,
+        "actualVariants": 3,
+        "intendedAssertionFailures": 8,
+        "sourceRestoredSha256": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
+        "limits": "Realfilesystem/typedHandler finite tests; no delivery/authenticatedHTTP/PDFsuccess/PGclaim."
+      },
+      "strictControlTestBytesExactQualifiedM": true,
+      "originalBaselineFixtureReversalCorrespondence": {
+        "oldSource": "6e0076faa38b70844d7945f25cd5d80a714d0cf4",
+        "oldTestSha256": "abb74a85cc6ae016cfc23b29cb9c5ecdea20d12119b7c8f0c9e7eae96c57ee65",
+        "strictTestSha256": "cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f",
+        "reversingOnlyStrictSnapshotEditsEqualsOldTest": true,
+        "assertionsStatusesFixturesOtherwiseUnchanged": true,
+        "actualControls": "false-success1/validationbypass6/storemutation1;restored10/0;seeactualrawlogs",
+        "scope": "Newstrictsnapshot closesreadhandle before operation; not a productionhandlerchange or originalfalseconfirmationcausedbyfixture."
+      },
+      "createPDFAndStorageHelperSourceByteExactBaseline": true,
+      "wholeUIAndMobileWorkflowTreesExactBaseline": true,
+      "historicalCatalogWholeFileExactBaseline": true,
+      "backendChangesOnly": [
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs"
+      ],
+      "freshAssuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 143,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 159,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 159,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "limits": [
+        "No actual delivery implementation, provider attempt or historicaldata correction.",
+        "DirecttypedHandler/filesystem fixtures, not authenticatedHTTP/successfulPDF/provider/productionfilesystem proof.",
+        "PrecommitO0controls bind by exactsource/testbytes; fullcanonicalStacktest binary independentlyqualifiedcurrentM.",
+        "Cached servingexecutable is not independentlyqualified; reportonly childidentity needs freshhostedbuild."
+      ]
+    },
+    "sourceControls": "3precommitworking-source nativeO0variants (raw sourceCommit field is baseline context, not M3 artifact identity): false-success10/1, validation-bypass10/6 and store-mutation10/1 actualbyteassertion aftercompletedwrite/501; restored10/0. StrictcomponenttestsourcebytesmatchqualifiedM;8intendedassertionfailures, not8faults.",
+    "independentReview": "reports/contract-send-truthfulness-2026-10-30/independent-review.txt",
+    "independentScope": "Source/rawreceipt/hashreview; no independent runtime rerun/GitHubapproval/release authority.",
+    "strictCatalogAndCanonical": "PASS;all158main requirements+new159 preserved;whole1354catalogdecisionfileexactmain.",
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteImplementationProofs": 0
+  },
+  "verificationDependencyRepair": {
+    "initialM684": "Fresh assurance correctly rejected stale Cabal manifestbindings in auth and recovery; deliberately stopped owned nativebuild beforetests. This initial build is not qualified and remains archived.",
+    "exactChange": "Only one test-suite other-modules line TDF.Contracts.DeliverySpec; removing it reconstructs E1 Cabalbytes. No dependency,flag,source-path or productionmodule change.",
+    "remediation": "Independent source-context review; appendreviews and refresh only reviewedSources Cabal hash in two contracts. Every other reviewed source and allmodelobligations/translations/assumptions remain unchanged. Fresh finalM quality/native/solver/replay qualification required and recorded.",
+    "history": "earlier-stages/M2/initial-M684 subtree contains the failedreport, nativeinput/build interruption and original exits. No verifier/check/assertion weakened."
+  },
+  "regressionProtection": {
+    "newRealHandlerCases": 10,
+    "baselineActualFailure": 1,
+    "strictSnapshotFidelity": "Oldlazyreadprobeheldfilelock; strictsnapshotsclosebeforeoperation. Newstoremutationcompleteswrite/501thenfailsactualbyteassertion, not IOlock. EarlierM2nativebuildstoppedbeforetests; not a productionwrite/false-negativeclaim.",
+    "faultVariantsDetected": 3,
+    "intendedFaultAssertionFailures": 8,
+    "CabalAndMainSpecRegistered": true,
+    "nativeFullSuiteIncludesNewGroup": true,
+    "noNewDependenciesOrExternalMailTests": true
+  },
+  "integration": {
+    "draftIntended": true,
+    "autoMerge": false,
+    "merged": false,
+    "currentHeadCIReview": "Fresh published-head CI and independent currentreview required.",
+    "mainFIFOAndProtection": "Required; no bypass.",
+    "productionWrites": false,
+    "emailsOrProviderCalls": false,
+    "deployment": "UNVERIFIED"
+  },
+  "remaining": [
+    "Actual email delivery, immutableversionedcontracts and all-party acceptance remain missing underEO-038.501 is an honest refusal, not feature completion.",
+    "No authenticatedHTTP, successfulPDF rendering, provider-delivery or production filesystem/concurrency guarantee.",
+    "159 complete requirements and318 implementation/refinement obligations remain unproven; inheritedconditionalSMTclaims retain originalassumptions.",
+    "Qualified localartifact is the native testbinary; cached serving executable not qualified and reportonly childGitidentity requires freshhostedbuild.",
+    "Older671/673/674sources retain their qualified historicalbase and need actualmain640composition beforeintegration; no oldapproval borrowed."
+  ],
+  "nextHighestValueTask": "FreshheadCI/review and normalintegration; investigate separately seededpackage expiry omission without assuming unresolved actor/payment/gift policy.",
+  "archive": {
+    "path": "reports/contract-send-truthfulness-2026-10-30/evidence.tar.gz",
+    "sha256": "fa8cd6a20d0fa357fa7e5d1ea16b5323c4f73340cba8509e852b4f74708b4fbb",
+    "bytes": 3521068,
+    "innerFiles": 265,
+    "manifest": "reports/contract-send-truthfulness-2026-10-30/manifest.json",
+    "binding": "FourGitblobs aftercommit; every innerfile is a separately hashbound archive member."
+  },
+  "createdAtUTC": "2026-10-30T05:30:22.534341+00:00"
+}

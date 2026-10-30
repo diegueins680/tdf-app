@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+  "previousPublishedHead": "801b133aecf38ffd16da8b910139081e14f4e446",
+  "sourceCommit": "9fbe706fcfaf3771efe2bbed856044c8dbd32a21",
+  "evidenceCommit": "Containing report-only child; qualified source trees and all archive members independently verified against Git after commit.",
+  "problem": "The legacy contract send handler claimed status sent after reading a stored file without any delivery or queue implementation. Repository audit and EO-038 establish the missing implementation.",
+  "correction": "Preserve established validation/read error precedence; valid stored contract send returns501 unsupported. Actual email delivery remains unimplemented. No provider/configuration/migration change.",
+  "composition": {
+    "normalMerge": true,
+    "parents": [
+      "801b133aecf38ffd16da8b910139081e14f4e446",
+      "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5"
+    ],
+    "backendWholeTreeExactPreviousPublishedHead": true,
+    "allMainRequirementsPreserved": 159,
+    "contractRequirementExactPrevious": true,
+    "allWorkflowUiMobileScriptsDependencyTreesExactMain": true,
+    "history": "Original M3/801 report/archive and all four Git blobs preserved byte-exact; original qualification is historical, not relabeled as this source. Incoming main Ubuntu24 pins and image retained. Unmerged679/682 are not imported."
+  },
+  "properties": [
+    {
+      "id": "MSG-CONTRACT-DELIVERY-001/TRUTHFUL-REFUSAL",
+      "status": "TESTED",
+      "statement": "No successful sent/queued claim for unsupported legacy delivery after existing validation.",
+      "evidence": "Fresh current-source native typed Handler suite; historical false-success counterexample and native mutation controls bind unchanged production/test bytes.",
+      "assumptions": "Direct Handler/file fixtures; no authenticated HTTP or actual mail provider/delivery guarantee."
+    },
+    {
+      "id": "MSG-CONTRACT-DELIVERY-001/COMPATIBILITY",
+      "status": "TESTED",
+      "statement": "Existing400/404/500 precedence and stored-byte nonmutation remain supported by fixtures.",
+      "evidence": "Fresh10 targeted/4055 full native examples,21 inherited pending; unchanged strict snapshots.",
+      "assumptions": "Finite sequential owned filesystem fixtures, not complete concurrent or production filesystem proof."
+    }
+  ],
+  "historicalCounterexamples": {
+    "baselineMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+    "validStoredSend": "Native10 cases,1 false-sent assertion/9compatibility; successful build first.",
+    "nativeControls": "3 working-source faults: false success1, validation bypass6, completed store mutation1 intended assertions; restored10/0. Not rerun on this composition; complete backend tree and tests remain exact801.",
+    "verificationObserver": "Strict snapshot correction closes read handles; old lazy read-lock probe remains documented.",
+    "originalHostedRun": 41009219715,
+    "originalRepoQualityFailure": "Underlying Docker cleanup response/cause UNKNOWN; no speculative cause assigned. Subsequent parent679 diagnostics/fix remain separate unmerged work.",
+    "historicalEvidenceGitSha256": {
+      "reports/contract-send-truthfulness-2026-10-30.json": "170ad2fbfac29ba750d477481d091097eb114120f233fea2e87b0b76cf9a9183",
+      "reports/contract-send-truthfulness-2026-10-30/evidence.tar.gz": "fa8cd6a20d0fa357fa7e5d1ea16b5323c4f73340cba8509e852b4f74708b4fbb",
+      "reports/contract-send-truthfulness-2026-10-30/manifest.json": "343c96fa2f2b623498ebcfe695ed88c33685b4292f0c05b408b4a571e75ef5ef",
+      "reports/contract-send-truthfulness-2026-10-30/independent-review.txt": "ff3d54784f2aa0f99e64fdfd68e733396003df41f3510fcf274eb1f93ce39f6e"
+    }
+  },
+  "verification": {
+    "native": {
+      "sourceCommit": "9fbe706fcfaf3771efe2bbed856044c8dbd32a21",
+      "phase": "QUALIFIED_TARGETED_AND_FULL",
+      "startedAt": "2026-10-30T16:49:10.692204+00:00",
+      "actualExits": {
+        "build": 0,
+        "targeted": 0,
+        "full": 0
+      },
+      "buildPID": 88674,
+      "binary": "/private/tmp/tdf-contract-send-main642-20261030/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "binarySha256": "8c1de63592122dbff34cfc39bacc4a561ff265ee333cd5b8d3597183093a28d6",
+      "forceDirtyIdentity": {
+        "sourceCommit": "9fbe706fcfaf3771efe2bbed856044c8dbd32a21",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "8c1de63592122dbff34cfc39bacc4a561ff265ee333cd5b8d3597183093a28d6",
+        "versionObjectSha256": "a75422bc948894b42a01330f8ed52b2ca916651924d4bcddeb6524997658ee35",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "targetedPID": 89609,
+      "targeted": {
+        "examples": 10,
+        "failures": 0,
+        "pending": 0
+      },
+      "fullPID": 89660,
+      "full": {
+        "examples": 4055,
+        "failures": 0,
+        "pending": 21
+      },
+      "allBackendInputsUnchangedAndGitExact": true,
+      "sourceCleanAfter": true,
+      "finishedAt": "2026-10-30T16:50:27.627135+00:00"
+    },
+    "rootQuality": {
+      "sourceCommit": "9fbe706fcfaf3771efe2bbed856044c8dbd32a21",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "sourceSeal": {
+      "sourceCommit": "9fbe706fcfaf3771efe2bbed856044c8dbd32a21",
+      "baselineMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+      "previousPublishedHead": "801b133aecf38ffd16da8b910139081e14f4e446",
+      "normalMergeParents": [
+        "801b133aecf38ffd16da8b910139081e14f4e446",
+        "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5"
+      ],
+      "sourceDigest": "10f8ae316a7ee511a3eb8408b32e1a50fc70ee616c3db6868b5b83ad74f2f789",
+      "registeredHashesVerified": 1431,
+      "allBackendInputCount": 988,
+      "backendWholeTreeExactPreviousQualifiedHead": true,
+      "workflowUiMobileScriptDependencyTreesExactMain": true,
+      "allMainNormativeRequirementsPreserved": 159,
+      "contractDeliveryRequirementExactPrevious": true,
+      "totalRequirements": 160,
+      "historicalEvidenceGitSha256": {
+        "reports/contract-send-truthfulness-2026-10-30.json": "170ad2fbfac29ba750d477481d091097eb114120f233fea2e87b0b76cf9a9183",
+        "reports/contract-send-truthfulness-2026-10-30/evidence.tar.gz": "fa8cd6a20d0fa357fa7e5d1ea16b5323c4f73340cba8509e852b4f74708b4fbb",
+        "reports/contract-send-truthfulness-2026-10-30/manifest.json": "343c96fa2f2b623498ebcfe695ed88c33685b4292f0c05b408b4a571e75ef5ef",
+        "reports/contract-send-truthfulness-2026-10-30/independent-review.txt": "ff3d54784f2aa0f99e64fdfd68e733396003df41f3510fcf274eb1f93ce39f6e"
+      },
+      "historicalEvidenceScope": "Original E1/M3 local counterexamples, 3 source faults/8 intended assertions, and801 hosted run remain historical; those controls not rerun on this composition. Complete backend tree/test bytes exact801 and native current-source suite re-executed.",
+      "nativeTargeted": {
+        "examples": 10,
+        "failures": 0,
+        "pending": 0
+      },
+      "nativeFull": {
+        "examples": 4055,
+        "failures": 0,
+        "pending": 21
+      },
+      "nativeForceDirtyIdentity": {
+        "sourceCommit": "9fbe706fcfaf3771efe2bbed856044c8dbd32a21",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "8c1de63592122dbff34cfc39bacc4a561ff265ee333cd5b8d3597183093a28d6",
+        "versionObjectSha256": "a75422bc948894b42a01330f8ed52b2ca916651924d4bcddeb6524997658ee35",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 144,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "recheckedVersionObjectAndAssuranceProvenance": true,
+      "limitations": [
+        "Direct typed Handler and owned filesystem fixtures; no authenticated HTTP, successful PDF rendering, mail delivery/provider, production filesystem or serving-executable qualification.",
+        "No new actual Docker or PostgreSQL runtime; required hosted lanes must execute on published current head.",
+        "No import of unmerged679/682; original677 cleanup failure is unreconstructed and remains historical.",
+        "Protected current-head review/checks/FIFO and later main advances must be re-evaluated before integration.",
+        "Temporary qualification-driver cancellation/process-tree cleanup was not tested; completed actual0 runs do not prove interrupted-run cleanup. Outer timeout3900s is shorter than the sum of per-phase maxima, and detached descendant cleanup needs separate hardening before reuse for that scenario."
+      ],
+      "createdAtUTC": "2026-10-30T16:56:00.770515+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 160,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 144,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "reports/contract-send-main642-2026-10-30/independent-review.txt",
+    "scope": "Fresh source-bound local native and repository qualification; required current published-head hosted CI and exact-head GitHub approval remain pending."
+  },
+  "verificationHarnessReview": {
+    "mechanicalChecksAdded": "After independent review, reread actual test Version.o, compare assurance provenance table/digest and explicit UNPROVEN/conditional/BLOCKED claims. Earlier seal retained.",
+    "evidenceControls": {
+      "sourceCommit": "9fbe706fcfaf3771efe2bbed856044c8dbd32a21",
+      "sealScriptSha256": "920fa47da7a183f785f95826387f86eef46bd5bd581c3d2de7cfed29d98a6078",
+      "method": "AST-extract actual seal binding function; valid actual receipts/artifacts accepted, one in-memory evidence corruption per negative case; do not mutate bound disk artifacts or source.",
+      "validBefore": true,
+      "negativeControls": [
+        {
+          "label": "VersionObjectBytesCorrupted",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceProvenanceDigestMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceProvenanceFileTableMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceDirtyFlagMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedWholeRequirementProofPromotion",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedRefinementProofPromotion",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedExtraSMTClaim",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnexpectedReleasePermission",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "MissingCurrentGitLiteralDespiteConsistentRewrittenObjectHash",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        }
+      ],
+      "intendedAssertionRejections": 9,
+      "restoredValidAfter": true,
+      "diskArtifactsUnchanged": true,
+      "scope": "Temporary evidence seal controls, not production source mutants or complete proof of the verification pipeline",
+      "atUTC": "2026-10-30T16:54:32.396321+00:00"
+    },
+    "interruptedRunLimitation": "Completed actual0 run only. Temporary driver cancellation/process-tree cleanup not tested; outer3900s timeout is shorter than summed per-phase maxima, and detached-descendant SIGTERM needs separate hardening before reuse for that scenario. No orphan-cleanup guarantee claimed."
+  },
+  "regressionProtection": {
+    "targetedCases": 10,
+    "targetRegisteredInCanonicalCabalAndSpec": true,
+    "fullSuiteCases": 4055,
+    "inheritedPending": 21,
+    "canonicalForceDirty": true,
+    "qualifiedCommitInRebuiltVersionObjectAndTestBinary": true,
+    "sourceTreeComparisonPreservesHistoricalFaultDetectionBytes": true,
+    "newDependencies": false
+  },
+  "integration": {
+    "pullRequest": 677,
+    "draft": true,
+    "autoMerge": false,
+    "merged": false,
+    "currentHeadChecksAndReview": "Required after publication; old801 approval does not approve changed head.",
+    "protectedFIFO": "Required; no bypass, actual main/head must be rechecked before integration.",
+    "deployment": false,
+    "productionOrProviderWrites": false
+  },
+  "remainingRisks": [
+    "Actual email delivery, immutable contract versions and all-party acceptance remain missing;501 is truthful refusal rather than feature completion.",
+    "No authenticated HTTP, successful PDF rendering, actual mail provider, production filesystem/concurrency, serving executable or deployment qualification.",
+    "Whole requirements and implementation/refinement obligations remain UNPROVEN; inherited conditional SMT claims retain original translation assumptions; formal release BLOCKED.",
+    "Source tests use canonical Stack --force-dirty; report-only child Git identity needs fresh hosted build.",
+    "Current main may advance; recomposition/requalification, independent exact-head review and all protected admission rules remain required."
+  ],
+  "nextHighestValueTask": "Fresh published-head CI/exact-head independent review and normal protected admission; retain outstanding financial and accessibility defects with original counterexamples.",
+  "archive": {
+    "path": "reports/contract-send-main642-2026-10-30/evidence.tar.gz",
+    "sha256": "2ebe482d5d29b0e20f04950affc4747d486b338588118d0cacd3ce9f98336366",
+    "bytes": 1670908,
+    "innerFiles": 105,
+    "manifest": "reports/contract-send-main642-2026-10-30/manifest.json",
+    "binding": "Every member hash and four containing Git blobs must be checked after commit."
+  },
+  "createdAtUTC": "2026-10-30T16:59:03.521195+00:00"
+}

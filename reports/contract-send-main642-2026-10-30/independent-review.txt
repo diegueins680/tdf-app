@@ -1,0 +1,60 @@
+Final scoped peer review: PR677 actual-main reconciliation qualification
+Date: 2026-10-30
+Qualified SOURCE: 9fbe706fcfaf3771efe2bbed856044c8dbd32a21
+Protected-main baseline: 0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5
+Previous published PR677 head: 801b133aecf38ffd16da8b910139081e14f4e446
+Normal source merge parents: [801b133aecf38ffd16da8b910139081e14f4e446, 0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5]
+
+Disposition: zero blocking findings for the completed source-bound local qualification and the reviewed report-only packaging design. The source correction is preserved and freshly exercised. Publication is not yet verified by this receipt: the report-only evidence child, every archive member/four Git blobs, fresh published-head CI and protected exact-head independent review remain required. No merge, deployment or GitHub approval is conferred.
+Reviewer role and scope: I prepared the source reconciliation and its static metadata checks. This later bounded review independently inspects ROOT-authored qualification/publication harnesses, raw results and artifact bindings. ROOT separately reviewed the reconciliation. It is not independent external GitHub source approval. I ran no compiler, test suite, solver, Docker, PostgreSQL, provider or production operation during this review, and changed no tracked source/ref/remote state.
+
+Source and preservation:
+The source is the normal merge of 801 and actual main 0bd, not a rebase, cherry-pick substitute or relabeled E1 build. The complete backend tree remains exact801, including the 501 truthful-refusal production handler, strict DeliverySpec, Cabal registration and canonical Spec invocation. Cabal SHA256 2dcba94604be8524981fc1789b9e77735890d1d933f3f3d48be64a1e6a756a4d and both auth/recovery reviewedSources/context histories remain unchanged. Main UI, workflows, Mobile, scripts, dependencies and its Ubuntu24 environment pins are preserved. No unmerged 679 or 682 cleanup work was imported. All 159 incoming main requirement objects plus the unchanged MSG-CONTRACT-DELIVERY-001 object yield 160. The whole historical catalog decision file remains exact main.
+The old E1/M3/801 report and archive/manifest/review blobs remain byte-exact and historical. Original false-success/validation-bypass/store-mutation controls retain their actual eight intended assertions across three logical faults; they were not rerun on this composition. Byte-exact backend/test correspondence supports reuse of those component observations, while current-source native execution is separately recorded below. The original PR677 Docker response remains unknown and is not repaired or reconstructed by this reconciliation.
+
+Completed native/root qualification:
+Raw qualified-targeted.log contains 10 examples,0 failures,0 pending under --match contract delivery reporting with --fail-on=empty. Raw qualified-full.log contains 4055 examples,0 failures,21 inherited pending. Those pending external-runner cases are not PostgreSQL coverage. native-quality.json records actual build/targeted/full exits0 at 9fbe with unchanged Git-exact backend inputs. The actual command includes canonical --force-dirty. qualified-build.log shows TDF.Version rebuilt and the test binary linked; this is not a claim that every unchanged module was cold-compiled.
+I independently rehashed the actual current test binary 8c1de63592122dbff34cfc39bacc4a561ff265ee333cd5b8d3597183093a28d6 and exact test-target Version.o a75422bc948894b42a01330f8ed52b2ca916651924d4bcddeb6524997658ee35, and verified 9fbe's full literal in both. The q.forceDirtyIdentity equals the force receipt. This closes current compiled Git metadata identity rather than borrowing the original 801 binary. Root's APFS copy admission records distinct inodes and initial byte equality; its first observer's incorrect library-layout object path was corrected to the actual test-tmp target before native qualification and retained as harness history. No old cache/artifact was overwritten.
+ROOT root-quality, current-main admission and catalog 8 report actual0 with aliases removed. These fresh root results are inspected rather than rerun by this reviewer. The preparation's strict 1354 JSON/CSV and inventory/conformance generation/checks passed separately. There is no new email delivery implementation, authenticated HTTP transport, successful PDF renderer or mail-provider qualification. Canonical native test-binary identity does not establish a current serving executable or deployment.
+
+Independent artifact/source recheck:
+I rehashed all 1431 registered filesystem/Git bindings: 1331 root files and 100 Mobile files at pinned 7586be92f447faaf05d1f7d7073af6321ad1496a. I independently compared the full 988 backend qualification input set with Git ls-tree and rehashed every input against Git and filesystem. All 52 recorded assurance artifact hashes match. Assurance provenance files/digest equal sources.json; its digest recomputes correctly. The 159 incoming main objects and own MSG object match their exact authoritative objects. This corroborates the root correspondence seal rather than relying solely on boolean summary fields.
+Fresh assurance reports 160 whole requirements and 320 implementation/refinement obligations UNPROVEN, with 11 inherited conditional source-derived SMT results under their existing translation assumptions. Release remains BLOCKED and executionAllowed false. No new complete implementation/refinement proof was created by this change or by passing native tests.
+
+Qualification-harness findings addressed:
+My initial review identified two missing mechanical seal rechecks: the actual current Version.o hash/literal was trusted from a stored force flag, and assurance provenance/proof-category scope was not compared fully to sources.json and the intended unproven counts. My independent reads verified the concrete artifacts were correct. ROOT then strengthened the actual seal with verify_current_artifact_bindings and reran only the seal; no source/native rerun was needed. The earlier seal script and correspondence are retained under earlier-seal, not silently discarded.
+I inspected the actual AST-extracted binding control function and controller. Valid actual evidence is accepted before/after. Nine independent in-memory evidence corruptions are rejected by assertions: object bytes; provenance digest/files/dirty mismatch; unsupported whole/refinement proof promotion; extra SMT result; release permission; and missing current literal despite consistently rewritten object hash/context. The last case tests the literal check beyond simple hash consistency. The controller catches only AssertionError for expected rejections; setup exceptions do not qualify. Disk artifacts/source remain unchanged. These are finite temporary seal controls, not production source mutants or complete verification-pipeline proof.
+Final seal actual0 is recorded in seal-execution.json, with seal script 920fa47da7a183f785f95826387f86eef46bd5bd581c3d2de7cfed29d98a6078, control receipt f756e899b67bccdeb8f9c5afc84114b35856b566e83540d1079a22ca790846ce and final source correspondence 499397ee558f54df9f12466b6095dcb996f742b157ef17dc681cdf914a463354. Its recheckedVersionObjectAndAssuranceProvenance flag is true and supported by the actual checks/independent rehash.
+
+Retained private-harness limitation:
+Cancellation and timeout process-tree cleanup was not tested. The orchestration's 3900-second limit is shorter than the sum of its per-phase maxima, and a detached native child need not receive cancellation cleanup when its driver receives default SIGTERM. ROOT retained this caveat in the seal/report rather than retroactively changing the executed native drivers. The actual successful completed run is unaffected and no interrupted-run cleanup guarantee is claimed. Harden and test that lifecycle before reusing the temporary harness for cancellation/fault scenarios.
+
+Publication/Git/archive design review:
+The root publish script creates only a new report/archive namespace and copies the independent review and exact temporary scripts/receipts. It does not push, merge, enable readiness or send approvals. Its source consistency precondition and explicit historical/current evidence distinction are appropriate. The separate verify-committed script must execute after the report-only child commit: it requires parent 9fbe, exactly four changed report paths, exact Git-versus-filesystem bytes, archive/manifest hashes, unique safe regular-file paths, every member's size/hash/content, review identity and unchanged other source trees. That future verification has not yet happened here; no report/archive is declared committed or merged by this receipt. Fresh child-head hosted build and exact-head review cannot be borrowed from the local source binary or older 801 review. Main/head/FIFO/protection must be rechecked before protected integration.
+
+Evidence is TESTED and source-bound within these limits. Actual delivery/versioning/all-party acceptance remains missing;501 corrects a false confirmation and does not complete the delivery feature. No provider, financial record or production filesystem was changed by this source correction/reconciliation.
+
+Exact reviewed receipt/log/harness SHA256 bindings:
+- preparation-state.json: 0357b37980edfa79533afd675c3c7ec59bcbbe4bc4f84f12c099f3d5135c4113
+- root-quality-result.json: 289c61a562ef5b459357ce44fbd07bcfa468c62a9c35d6091b4482ffd1d3fbe5
+- native-quality.json: 19bf05d9d9ac2af5b91f50d08a886d1f441239d8f1eada466cf44013293e84c4
+- native-qualified-inputs.json: 498e61f12809ced1f2e7fa8bd99083ed071eb956bb9e59c57362579fa038b23a
+- native-force-dirty-confirmed.json: be10de19f3175099951bb9ce450857e40b4ad8e70976bb3b62ec022817712951
+- verification-state.json: 97be17cd11ad71826114e7f27ec18dd5ab7a57595eac9991294453590700c804
+- source-correspondence.json: 499397ee558f54df9f12466b6095dcb996f742b157ef17dc681cdf914a463354
+- seal-binding-controls.json: f756e899b67bccdeb8f9c5afc84114b35856b566e83540d1079a22ca790846ce
+- seal-execution.json: 1de88ad8ad47fee6fe52274056f6db9bc99287f9bdcc5c7c0a71b5d04f787de3
+- cache-clone.json: 32e51bd09a42a4ec74fbfebc485386351a8d2f5e28a33ef31ecf24ae2963ce77
+- qualified-build.log: c0377e935abbd9877c5fae6dcf922c167aace165fa2c26b738bee59197260f81
+- qualified-targeted.log: 420d3fb51ecd4831937f6a74ea1af3d7435f0fcafb5d6d4e9a2f65af1f23408a
+- qualified-full.log: e27d3177f74163de7195a39974ceb032faf19e096baa4eaf6d421bc120e3a26c
+- assurance-committed/sources.json: d1e2aab94244ee00ba2a31c6e9d7394751b8464766ecf73070efa65932a51971
+- assurance-committed/report.json: 2e47a145b854d980e52ceb4a1e3ca8e1b195fb79d72b2343540893949b66fc7e
+- earlier-seal/source-correspondence.json: eb90e7e8bcf086414ee4582d257c230bca5c8820d9c2d078f945146b2fd2e1d7
+- tdf-contract-send-main642-root-quality-20261030.py: f044f578dae536efdc16c46c4c587f8a15c73441f42ef5112ffb41cda61588ee
+- tdf-contract-send-main642-qualify-native-20261030.py: e449a6a38e66cc2bafff1e18f8e4475bd84c20f03f1ad1e2a268f91d1b09ef93
+- tdf-contract-send-main642-verify-20261030.py: 44bf990cd23e376ec6604f1d5f588da7289975a2738fb2dd1d73fe9a3605758c
+- tdf-contract-send-main642-seal-20261030.py: 920fa47da7a183f785f95826387f86eef46bd5bd581c3d2de7cfed29d98a6078
+- tdf-contract-send-main642-seal-controls-20261030.py: 699192185f348302430314655496cf37ec692ccb56c7144d4bebf08a0a8608ff
+- tdf-contract-send-main642-publish-20261030.py: 98a022d886acf298f0b09949faedc45d53f7b0689537012347e6b9d78c3c0ddd
+- tdf-contract-send-main642-verify-committed-20261030.py: bf43150b4161207c8085cd24e009a27df45d8523f241a898947ff99eda5a13eb
