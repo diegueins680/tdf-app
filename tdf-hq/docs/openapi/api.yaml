@@ -9,6 +9,10 @@ servers:
     description: Development server
 
 paths:
+  /music/artists/{artistPartyId}/featured-track:
+    $ref: './artist-playback.yaml#/paths/~1music~1artists~1{artistPartyId}~1featured-track'
+  /music/me/featured-track:
+    $ref: './artist-playback.yaml#/paths/~1music~1me~1featured-track'
   /invoices:
     get:
       operationId: listInvoices
@@ -10335,6 +10339,10 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    ArtistFeaturedTrack:
+      $ref: './artist-playback.yaml#/components/schemas/ArtistFeaturedTrack'
+    MusicArtistFeaturedTrackRequest:
+      $ref: './artist-playback.yaml#/components/schemas/MusicArtistFeaturedTrackRequest'
     InvoiceLineDTO:
       type: object
       required:

@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Stack } from '@mui/material';
-import { musicReleases, type MusicPublicRelease, type MusicPublicReleaseSummary } from '../api/musicReleases';
+import { musicReleases, type ArtistFeaturedTrack, type MusicPublicRelease, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import { useOptionalPlayer } from './PlayerProvider';
 import { publicMusicTrack } from './publicMusicTrack';
+import ArtistFeaturedTrackEditor from './ArtistFeaturedTrackEditor';
 import type { ArtistReleaseDTO } from '../api/types';
 import { resolveReleasePlaybackAction } from '../features/releases/ReleasePlayerActions';
 import type { PlayerTrack } from './types';
+
+const EMPTY_LEGACY_RELEASES: ArtistReleaseDTO[] = [];
 
 /** Public detail responses supply membership; asset access is reauthorized by the engine. */
 export function artistTracks(releases: MusicPublicRelease[], artistId: number): PlayerTrack[] {
@@ -28,8 +31,16 @@ export function legacyArtistTracks(releases: ArtistReleaseDTO[], artistId: numbe
   });
 }
 
-export default function ArtistProfilePlayback({ profileKey, artistId, artistName, releases, legacyReleases = [], loading, failed, retryCatalog }: {
-  profileKey: string; artistId: number | null; artistName: string;
+export function prioritizeFeaturedTrack(tracks: PlayerTrack[], artistId: number, featured: ArtistFeaturedTrack | null): PlayerTrack[] {
+  if (!featured?.available || featured.artistPartyId !== artistId) return tracks;
+  const index = tracks.findIndex((track) => featured.recordingId
+    ? track.recordingId === featured.recordingId : track.id === `legacy-release-${featured.legacyReleaseId}`);
+  if (index < 1) return tracks;
+  return [tracks[index]!, ...tracks.slice(0, index), ...tracks.slice(index + 1)];
+}
+
+export default function ArtistProfilePlayback({ profileKey, artistId, artistName, releases, legacyReleases = EMPTY_LEGACY_RELEASES, loading, failed, retryCatalog, canManage = false }: {
+  profileKey: string; artistId: number | null; artistName: string; canManage?: boolean;
   releases: MusicPublicReleaseSummary[] | undefined; legacyReleases?: ArtistReleaseDTO[]; loading: boolean; failed: boolean; retryCatalog?: () => void;
 }) {
   const player = useOptionalPlayer();
@@ -38,10 +49,12 @@ export default function ArtistProfilePlayback({ profileKey, artistId, artistName
   const loadedKey = useRef<string | null>(null);
   const [state, setState] = useState<'loading' | 'loaded' | 'empty' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
+  const [catalogTracks, setCatalogTracks] = useState<PlayerTrack[]>([]);
   useEffect(() => {
     beginArtist?.(profileKey);
     loadedKey.current = null;
     setState('loading');
+    setCatalogTracks((current) => current.length ? [] : current);
   }, [beginArtist, profileKey]);
 
   useEffect(() => {
@@ -50,6 +63,14 @@ export default function ArtistProfilePlayback({ profileKey, artistId, artistName
     if (failed && !fallbackTracks.length) { setState('error'); return; }
     if (!releases && !failed) return;
     const controller = new AbortController();
+    const preference = new AbortController();
+    const cancelPreference = () => preference.abort();
+    controller.signal.addEventListener('abort', cancelPreference, { once: true });
+    const preferenceTimer = window.setTimeout(cancelPreference, 2000);
+    const featured = Promise.resolve().then(() => musicReleases.getArtistFeaturedTrack(artistId, preference.signal))
+      .catch(() => null).finally(() => {
+        window.clearTimeout(preferenceTimer); controller.signal.removeEventListener('abort', cancelPreference);
+      });
     const timer = window.setTimeout(() => { controller.abort(); setState('error'); }, 15000);
     void (async () => {
       const details: MusicPublicRelease[] = [];
@@ -62,18 +83,21 @@ export default function ArtistProfilePlayback({ profileKey, artistId, artistName
           catch { errors = true; }
         }
         if (controller.signal.aborted) { setState('error'); return; }
-        const tracks = [...artistTracks(details, artistId), ...fallbackTracks];
+        const tracks = prioritizeFeaturedTrack([...artistTracks(details, artistId), ...fallbackTracks], artistId, await featured);
+        if (controller.signal.aborted) return;
+        setCatalogTracks(tracks);
         loadArtist(profileKey, tracks);
         loadedKey.current = profileKey;
         setState(tracks.length ? 'loaded' : errors ? 'error' : 'empty');
       } finally { window.clearTimeout(timer); }
     })();
-    return () => { window.clearTimeout(timer); controller.abort(); };
+    return () => { window.clearTimeout(timer); window.clearTimeout(preferenceTimer); controller.abort(); preference.abort(); };
   }, [artistId, artistName, attempt, failed, legacyReleases, loadArtist, loading, profileKey, releases]);
 
   if (!player) return null;
   const exhausted = state === 'empty' || (state === 'loaded' && player.status === 'unavailable');
   return <Stack spacing={1}>
+    {canManage && artistId && state !== 'loading' && <ArtistFeaturedTrackEditor artistId={artistId} tracks={catalogTracks} />}
     {state === 'loading' && <span role="status">Preparando música de {artistName}…</span>}
     {state === 'error' && <Alert severity="warning" action={<Button onClick={() => {
       loadedKey.current = null; retryCatalog?.(); setAttempt((value) => value + 1);

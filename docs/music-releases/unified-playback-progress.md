@@ -70,7 +70,9 @@ Playwright installation returned truncated ZIPs; no new local native pass is cla
 - Bounded, SSRF-safe validation on ingestion and periodic revalidation. Client
   failures must not write global invalidity; live/offline streams need a policy
   distinct from missing stored files.
-- Artist-owned persisted featured-track selection and validation.
+- Qualification of the implemented artist-owned featured-track preference and
+  selector (artist-featured-track.md), including hosted backend/PostgreSQL checks
+  and publication of the matching Mobile contract.
 - Physical reconciliation/provenance mapping of legacy ArtistRelease uploads
   with canonical MusicRelease records. Read-time composition preserves source
   identity and does not infer equivalent recordings or rights.

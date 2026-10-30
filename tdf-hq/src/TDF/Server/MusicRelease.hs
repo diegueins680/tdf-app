@@ -50,6 +50,7 @@ musicReleasePublicServer =
   :<|> Assets.getPublicMusicAssetAccess
   :<|> recordAnonymousPlaybackEvent
   :<|> searchPublicTracks
+  :<|> getArtistFeaturedTrack False
 
 musicReleaseProtectedServer :: AuthedUser -> ServerT MusicReleaseProtectedAPI AppM
 musicReleaseProtectedServer user =
@@ -71,6 +72,8 @@ musicReleaseProtectedServer user =
   :<|> Upload.completeMusicUpload user
   :<|> Upload.confirmMusicUpload user
   :<|> Upload.cancelMusicUpload user
+  :<|> getOwnFeaturedTrack user
+  :<|> setOwnFeaturedTrack user
   :<|> listFavorites user
   :<|> addFavorite user
   :<|> removeFavorite user
@@ -1001,3 +1004,45 @@ searchPublicTracks edgeCountry query requestedLimit requestedOffset =
     decodeHit value = case fromJSON value of
       Success hit -> pure hit
       Error _ -> throwError err500
+
+
+-- Public reads return only a currently eligible reference. Owner reads retain an
+-- unavailable selection so an artist can diagnose, replace or clear it.
+getArtistFeaturedTrack :: Bool -> Int64 -> Maybe Text
+  -> AppM (Headers '[Header "Cache-Control" Text] Value)
+getArtistFeaturedTrack includeUnavailable artistId edgeCountry = do
+  requirePublicFeature
+  when (artistId <= 0) (throwError err400)
+  territory <- Assets.trustedEdgeTerritory edgeCountry
+  value <- jsonOne err404
+    "SELECT jsonb_build_object('artistPartyId',?::bigint,\
+    \ 'recordingId',CASE WHEN ?::boolean OR choice.available THEN choice.recording_id END,\
+    \ 'legacyReleaseId',CASE WHEN ?::boolean OR choice.available THEN choice.legacy_release_id END,\
+    \ 'available',COALESCE(choice.available,FALSE),'updatedAt',CASE WHEN ?::boolean OR choice.available THEN choice.updated_at END)\
+    \ FROM (SELECT 1) anchor LEFT JOIN LATERAL (\
+    \ SELECT selection.*,music_artist_featured_track_eligible(selection.artist_party_id,\
+    \ selection.recording_id,selection.legacy_release_id,?::text) available\
+    \ FROM music_artist_featured_track selection WHERE selection.artist_party_id=?\
+    \ ) choice ON TRUE"
+    [ PersistInt64 artistId, PersistBool includeUnavailable, PersistBool includeUnavailable
+    , PersistBool includeUnavailable, optionalText territory, PersistInt64 artistId ]
+  pure (addHeader ("private, no-store" :: Text) value)
+
+getOwnFeaturedTrack :: AuthedUser -> Maybe Text
+  -> AppM (Headers '[Header "Cache-Control" Text] Value)
+getOwnFeaturedTrack user = getArtistFeaturedTrack True (currentPartyId user)
+
+setOwnFeaturedTrack :: AuthedUser -> Maybe Text -> MusicArtistFeaturedTrackRequest
+  -> AppM (Headers '[Header "Cache-Control" Text] Value)
+setOwnFeaturedTrack user edgeCountry MusicArtistFeaturedTrackRequest{..} = do
+  unless (musicFeaturedArtistPartyId == currentPartyId user) (throwError err403)
+  requirePublicFeature
+  territory <- Assets.trustedEdgeTerritory edgeCountry
+  saved <- runDB (rawSql
+    "SELECT music_set_artist_featured_track(?::bigint,?::uuid,?::bigint,?::text)"
+    [ PersistInt64 (currentPartyId user), maybe PersistNull toPersistValue musicFeaturedRecordingId
+    , maybe PersistNull PersistInt64 musicFeaturedLegacyReleaseId, optionalText territory ]
+    :: SqlPersistT IO [Single Bool])
+  unless (saved == [Single True]) $
+    throwError (badRequest "Choose one currently public track belonging to your artist profile.")
+  getOwnFeaturedTrack user edgeCountry

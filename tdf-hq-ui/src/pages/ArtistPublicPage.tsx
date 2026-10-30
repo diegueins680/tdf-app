@@ -373,7 +373,7 @@ export default function ArtistPublicPage() {
 
   return (
     <Box sx={{ maxWidth: 1040, mx: 'auto' }}>
-      <ArtistProfilePlayback profileKey={segment} artistId={artistId} artistName={artist.apDisplayName}
+      <ArtistProfilePlayback profileKey={segment} artistId={artistId} artistName={artist.apDisplayName} canManage={isSelf && hasToken}
         releases={catalogQuery.data ? canonicalReleases : undefined} legacyReleases={releases} loading={catalogQuery.isPending}
         failed={catalogQuery.isError || Boolean(catalogQuery.data?.unavailableSources.includes('canonical'))} retryCatalog={() => { void catalogQuery.refetch(); }} />
       <Card sx={{ borderRadius: 4, overflow: 'hidden' }} variant="outlined">

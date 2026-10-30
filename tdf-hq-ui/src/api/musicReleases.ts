@@ -540,7 +540,15 @@ export interface MusicPublicCatalogPage {
   signal?: AbortSignal;
 }
 
+export type ArtistFeaturedTrack = components['schemas']['ArtistFeaturedTrack'];
+
 export const musicReleases = {
+  getArtistFeaturedTrack: (artistId: number, signal?: AbortSignal) =>
+    get<ArtistFeaturedTrack>(apiPath(`/artists/${artistId}/featured-track`), { signal }),
+  getMyFeaturedTrack: (signal?: AbortSignal) =>
+    get<ArtistFeaturedTrack>(apiPath('/me/featured-track'), { signal }),
+  setMyFeaturedTrack: (selection: Pick<ArtistFeaturedTrack, 'artistPartyId' | 'recordingId' | 'legacyReleaseId'>, signal?: AbortSignal) =>
+    put<ArtistFeaturedTrack>(apiPath('/me/featured-track'), selection, { signal }),
   searchTracks: (query: string, page?: MusicPublicCatalogPage) => {
     const term = query.trim();
     if (Array.from(term).length > 200) throw new RangeError('Music search query must contain at most 200 characters.');
