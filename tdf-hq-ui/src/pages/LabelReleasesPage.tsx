@@ -253,11 +253,16 @@ export default function LabelReleasesPage() {
     createMutation.mutate(payload);
   };
 
-  const totalReleases = releases.length + (releasesQuery.data?.canonical.length ?? 0);
-  const totalArtistsWithReleases = new Set(releases.map((r) => r.artistName)).size;
+  const catalogSummaryRows = [
+    ...releases.map((release) => ({ artistId: release.arArtistId, date: release.arReleaseDate })),
+    ...(releasesQuery.data?.canonical ?? []).map((release) => ({ artistId: release.artistPartyId,
+      date: release.releaseAtUtc ?? release.publishedAt })),
+  ];
+  const totalReleases = catalogSummaryRows.length;
+  const totalArtistsWithReleases = new Set(catalogSummaryRows.map((release) => release.artistId)).size;
   const recentThreshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const upcomingOrRecent = releases.filter((r) => {
-    const ts = parseReleaseTimestamp(r.arReleaseDate);
+  const upcomingOrRecent = catalogSummaryRows.filter((release) => {
+    const ts = parseReleaseTimestamp(release.date);
     return ts !== null && ts >= recentThreshold;
   }).length;
 

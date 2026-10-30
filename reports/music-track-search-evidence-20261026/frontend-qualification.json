@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "status": "FRONTEND_IMPLEMENTED_FROZEN_LOCAL_QUALIFIED_NATIVE_PENDING",
+  "worktree": "/private/tmp/tdf-universal-music-search-20261026",
+  "branch": "feat/universal-music-search-20261026",
+  "actualDirtyHead": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "ownedSourceSha256": {
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+    "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+    "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+    "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721"
+  },
+  "implementation": {
+    "route": "/buscar only, no /inicio music mount/request",
+    "query": "Canonical normalized q plus independent local page state;13 requested/12 shown;query-bound page reset;AbortSignal passed;no placeholder/previous-data actions;draft changes immediately hide old rows.",
+    "selection": "Synchronous exact-hit PLAYER_LOAD_TRACK_EVENT with visible authorized page queue and deferred empty-url asset IDs;no detail/sign/artwork request before selection;no mount autoplay.",
+    "isolation": "Directory filters/URL/history unchanged by music pagination;directory/music loading/error/empty/retry independent.",
+    "adapter": "Shared search/release conversion preserves track/recording/release/version identity,sourcequality,finite loudness,nullable duration and conditional30s preview cap.",
+    "accessibility": "Separate named region,semantic list/headings/native focusable buttons/links,44px controls,responsive wrapping,Spanish/English labels. Not a WCAG certification."
+  },
+  "verification": {
+    "node": "22.14.0",
+    "affectedTests": 55,
+    "affectedSuites": 6,
+    "newFocusedTests": 15,
+    "testBoundary": "Real React Query/route mounts;synthetic API replies and event inspection,no real decoder/backend rights claim.",
+    "lint": "PASS10ownedfiles",
+    "typecheck": "PASS canonical tsc --noEmit -p tdf-hq-ui/tsconfig.app.json",
+    "diffCheck": "PASS",
+    "native": "Pending separately owned QA qualification; no browser claim by frontend agent.",
+    "logs": {
+      "affected55": {
+        "path": "/private/tmp/tdf-universal-music-search-ui-affected-v2-20261026.log",
+        "sha256": "f555d9417523b861d7f92069982c8991fc4a0459d6e71d51a223c5d2cdae0e2c"
+      },
+      "postLintStyleOnlyComponent4": {
+        "path": "/private/tmp/tdf-universal-music-search-ui-final-component-20261026.log",
+        "sha256": "a590d8a27e4f418c3d98572b5c004ede6edb2c4ef638657bf7493221f693dc60"
+      },
+      "canonicalAppTypecheck": {
+        "path": "/private/tmp/tdf-universal-music-search-tsc-app-20261026.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "targeted10FileLint": {
+        "path": "/private/tmp/tdf-universal-music-search-ui-lint-v2-20261026.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "preservation": {
+    "existingDirectoryTest": "Exactly4lines mock-only module boundary addition;all existing assertions/timeouts preserved.",
+    "playerProviderSessionBackendApiClientGlobalMetadataConfigs": "Not edited by frontend owner.",
+    "releasePage": "Minimal shared conversion reuse;existing playback/login regressions PASS.",
+    "noNewDependenciesFlagsPaymentsOrLibraryChanges": true
+  },
+  "historicalSetupFailures": {
+    "firstAffectedRun": "Existing directory test export mock lacked del/get;root authorized narrow music API mock,original assertions preserved;other23tests passed.",
+    "broadTypecheck": "Wrong tsconfig.json included unrelated preexisting test typings;correct canonical tsconfig.app.json subsequently PASS.",
+    "firstLint": "Test-only type alias style replaced by interface;scoped lint thenPASS;dedicated component4rerun retained."
+  },
+  "noGitStageCommitPushReviewOrProductionAction": true,
+  "next": "QA native qualification,root integration/source admission/formal inventory/strict catalog/CI after source freeze. Stacked626mustintegrateprotected first."
+}
