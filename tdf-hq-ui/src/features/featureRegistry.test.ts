@@ -9,6 +9,17 @@ import {
 } from './featureRegistry';
 
 describe('featureRegistry', () => {
+  it('makes music campaigns available to every authenticated user without artist or admin roles', () => {
+    expect(getFeatureByPath('/social/campanas')?.id).toBe('social.music-campaigns');
+    for (const action of ['discover', 'view', 'create', 'edit', 'approve', 'publish'] as const) {
+      expect(evaluateFeatureAccess('social.music-campaigns', { authenticated: false }, action).state).not.toBe('allowed');
+      expect(evaluateFeatureAccess('social.music-campaigns', {
+        authenticated: true, roles: ['Fan', 'Customer'], modules: [],
+      }, action).state).toBe('allowed');
+    }
+    expect(getFeatureByPath('/social/campanas')?.recordScope).toBe('owner-and-explicit-team');
+  });
+
   it('discovers account deletion in both languages and requires an authenticated owner', () => {
     const feature = getFeatureByPath('/cuenta/eliminar');
     expect(feature?.id).toBe('account.deletion');

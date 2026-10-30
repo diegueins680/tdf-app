@@ -1,0 +1,413 @@
+{
+  "at": "2026-10-29T15:47:30.547174+00:00",
+  "scope": "Server campaign platform and existing Roj(o) pilot; scoped observed qualification, not full-system refinement or universal external provider automation.",
+  "live_panel": "https://api.tdfrecords.net/campaign-platform/",
+  "release": "f3f5b0c4d9b1201079cf",
+  "deployed_source_manifest": {
+    "backup.py": "096fe80be625cbed09efee05b3f3abe2c330e183638d57e972b04c2290f303df",
+    "deploy.py": "5b243088053a5e50d3473010d4ed37334f1ffb9d0bb149448c6d66b4a7041628",
+    "domain.py": "c449947fb05a0b17d5109a99fe48c876e3b46ce446071257f409276e55691a83",
+    "graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+    "import_rojo.py": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+    "media.py": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+    "model_check.py": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+    "monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+    "notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
+    "planning.py": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
+    "providers.py": "a31cb90aaadc1063aadd470d3f18bc73735fd777fd00627fa3eb2a5b11dcf933",
+    "qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+    "requirements.txt": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
+    "schema.sql": "8b5755a355bf1ea8fb67569024e8f6ab31dcd64a617f3273b4184867c4383d1a",
+    "server.py": "68adde653ca9153253167974a0b696e6db32d28d9ddd2a0433a08a268f9e54a8",
+    "tdf-campaign-api.service": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
+    "tdf-campaign-backup.service": "7ffc4f368bf7e978b15352e6de1b56d8cf279edabdd41fc531b046ff50749102",
+    "tdf-campaign-backup.timer": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
+    "tdf-campaign-monitor.service": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
+    "tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
+    "tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
+    "tests/test_domain.py": "e1fcfcb79c736e0783d650e5d8a179a4e316c389a58876ea49659979d8119d6f",
+    "tests/test_http.py": "14da0852850ee2c455e49af98a5a5dc881ec11e7716334399374a01eda4efdf1",
+    "ui/app.js": "d5d54fd52a49beb1881838565d0dea9bb5afb684dcd021d19bfe43d9258dbae2",
+    "ui/index.html": "b69997b418c5bac57bb8b68ec35655e096f854cf1285ca6663612bf93e330004",
+    "ui/style.css": "6cad8291175503191933c9e25118cae0011aeeace5f7bef5d9045dc820c13cce",
+    "ui/tdf-logo.png": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
+    "ui/tdf-logo.svg": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+    "worker.py": "a4149ddb33ed6ffb57be3990c1ab72abd9bd7766ce54bcaa5e564034bd69fdb3",
+    "youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f"
+  },
+  "mobile_revision": "f7d2e5a3eb599adeb16b096c60649116f495bb31",
+  "mobile_pr": "https://github.com/diegueins680/TDF-mobile/pull/177",
+  "pilot": {
+    "status": "active",
+    "full_video": "https://youtu.be/uRNyIMLiqU8",
+    "original_sha256": "b41584f625938a5774803a62697e891179a352c3792248eed1c5b161e76966da",
+    "recording_date": "2025-02-24",
+    "published_at_quito": "2026-10-28T19:34:10.599-05:00",
+    "next_approved_reel_quito": "2026-10-29T18:30:00-05:00",
+    "prior_effects_not_replayed": true,
+    "late_initial_stories": "blocked for date/link-sticker review",
+    "checkpoints_hours": [
+      24,
+      72,
+      168,
+      336
+    ]
+  },
+  "oauth": {
+    "youtube_channel": "UCx9Jpaw_XDrMtIdzWYlU51g",
+    "instagram": "tdf.records.label",
+    "youtube_analytics_api": "enabled; all three read queries respond without errors",
+    "google_publishing_status": "Production; 1 of 100 users for unverified additional scopes observed; unrestricted verification pending"
+  },
+  "tests": {
+    "campaign_server": {
+      "tests": 35,
+      "result": "PASS",
+      "on_actual_server": true
+    },
+    "web": {
+      "tests": 3670,
+      "suites": 318,
+      "result": "PASS",
+      "build": "PASS",
+      "lint": "PASS"
+    },
+    "mobile": {
+      "tests": 653,
+      "suites": 98,
+      "result": "PASS",
+      "node": "20.19.4",
+      "release_check": "PASS",
+      "offline_metro": "packager-status:running; owned process stopped"
+    },
+    "abstract_model": {
+      "result": "PASS",
+      "positive": {
+        "states": 1024,
+        "violations": []
+      },
+      "negative_controls": {
+        "ignore_owner": {
+          "states": 1024,
+          "violations": [
+            "cross_tenant"
+          ]
+        },
+        "ignore_approval": {
+          "states": 1024,
+          "violations": [
+            "stale_approval"
+          ]
+        },
+        "retry_unknown": {
+          "states": 1024,
+          "violations": [
+            "uncertain_replay"
+          ]
+        }
+      },
+      "scope": "Finite abstract dispatch admission only; SQLite interleavings, OAuth and real providers verified separately."
+    },
+    "real_media": {
+      "result": "PASS",
+      "clip_count": 6,
+      "stories": 8,
+      "carousel_slides": 6,
+      "elapsed_seconds": 414.0011653949623,
+      "source_manifest": {
+        "qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+        "model_check.py": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+        "planning.py": "56da643f46134f46d666fd051ace3005c171b8d99f839fdb4b266df22321a005",
+        "import_rojo.py": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+        "server.py": "677d59a7b99aecdd62193ce003045aa2aa6aaa62517bcfb1ed228b6e7a56fdeb",
+        "media.py": "52b62cf6c529217ce083d85fa6744227ee65cdbf430690ef440bb2f44f8754fa",
+        "youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f",
+        "notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
+        "deploy.py": "f790118d9b62c724986c60286f060936464fd8cbf9c54e58b9df35307e3c83d6",
+        "domain.py": "2d62dc6e7b6e3371d40fb242dd31189691afb5c004249beb2352c66a8b23730e",
+        "monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+        "worker.py": "a4149ddb33ed6ffb57be3990c1ab72abd9bd7766ce54bcaa5e564034bd69fdb3",
+        "backup.py": "096fe80be625cbed09efee05b3f3abe2c330e183638d57e972b04c2290f303df",
+        "graphics.py": "4d485ecb0b542ba1f9c507f9ae38cf6069a0edbd579f6c9bdf67f51984862bcc",
+        "providers.py": "83751d7d450913f7dfa15d87418ce5ed0f1f85a003d1b5a542c125fab872debd"
+      },
+      "source_preserved": true,
+      "publication_jobs": 0,
+      "latest_graphics": {
+        "result": "PASS",
+        "at": 1793288337.7693532,
+        "graphics_source_sha256": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+        "files": [
+          {
+            "name": "S01",
+            "asset": "e76b0bfb26b7471fbad870b4bc90a0f6",
+            "sha256": "14b8d850404f47a6261962743780e9a2fa2c70fb3ac587f6b12b19881fcf590b"
+          },
+          {
+            "name": "S02",
+            "asset": "21f0829936e649ccb3ba604ea54b8b74",
+            "sha256": "bc445677ef86cf2122ba07d98c919add3f6657594ac7d0d65eb74dfec915bdbd"
+          },
+          {
+            "name": "S03",
+            "asset": "63017cba56d54f399b7d643114f80b99",
+            "sha256": "784b131c2de32bf188e44b4c734a8e79247e58a3fcf20aa5ee8f98da141e7b57"
+          },
+          {
+            "name": "S04",
+            "asset": "920bc48a417c42a9a11b8b80beafa209",
+            "sha256": "001e52ffcc9e59f77842af3abc63cfe08cf5bc80c62cb6dc4f166a7bc3ddd37f"
+          },
+          {
+            "name": "S05",
+            "asset": "6d278b248d70457d8975c12a122cbda9",
+            "sha256": "a207165fb67f3589e1be621e0d82eb86db0ffa6a4bcd6426381cc5f2bbcfb038"
+          },
+          {
+            "name": "S06",
+            "asset": "b9838ab1eed048318b907382f1d6c98a",
+            "sha256": "ee11d719cf1e19e6118821d82e2ff4589d33b2624db860bcf0a73b8fd567e3de"
+          },
+          {
+            "name": "S07",
+            "asset": "46b1a9cb25144786b8a75960a4b5e0f1",
+            "sha256": "8f6e74a51e8b2c9d94a6e901ebfa379813344c260e9093e21135d5f16d9a5848"
+          },
+          {
+            "name": "S08",
+            "asset": "5ccd2742f66e4fb49d357e2e911b1dac",
+            "sha256": "092f5265ead13906fa16eb4319a721f6f5bb8a5d69dff984df803ece94b16a56"
+          },
+          {
+            "name": "CAR01",
+            "asset": "0ae4d1ba095e463aac7782309d3dced8",
+            "sha256": "9b630d25dde233da13092474eac8002833da279dbf78c663fbe4d8e4c6516619"
+          },
+          {
+            "name": "CAR02",
+            "asset": "4390a1b7d4a948c5a8479f8276a44ef2",
+            "sha256": "f12eaca0134897d55cb298d5219252bff0ca5da618af229f098f050e5bc8f13d"
+          },
+          {
+            "name": "CAR03",
+            "asset": "0cfddacf7ed9405aaea860c8223fcb49",
+            "sha256": "2a30819150f8bb4ddb9ceb17d5beaa135dfe5591afc8d350b5c68f72e1f43aaf"
+          },
+          {
+            "name": "CAR04",
+            "asset": "6351fb51a50a4474bc86ced45da551ba",
+            "sha256": "6664431fd4dbded4af75b763778020d626ff4918c74dd0943f52d8aac55b2512"
+          },
+          {
+            "name": "CAR05",
+            "asset": "117b4010444b40bba0ecf456656d5a6c",
+            "sha256": "e2b1e0fceb4c5a664bb7ce654b8283dcf479bec88c650eb934fabc7f64822854"
+          },
+          {
+            "name": "CAR06",
+            "asset": "060c8cea2ecd426daefbbb134292c631",
+            "sha256": "d6034c04e44301a8d820ab8381d3905ade1924ed117bdb518e1777c381d805b2"
+          }
+        ],
+        "publication_jobs": 0,
+        "scope": "Latest graphic template actual server FFmpeg run, 8 Stories and 6 carousel slides. Link sticker instruction excluded from exported graphic."
+      }
+    },
+    "client_disconnect_restart": {
+      "result": "PASS",
+      "start": {
+        "started_at": 1793287540.6340876,
+        "job_ids": [
+          "db4b144384564ffda8df7a2061f92834",
+          "29fbdf6a91db7d080ab7342f59a3e09c"
+        ],
+        "only_internal_heartbeat_jobs": true,
+        "external_publications_requested": 0,
+        "procedure": "SSH command exits before either deadline. Restart feature worker only, then observe each durable result."
+      },
+      "jobs": [
+        {
+          "id": "db4b144384564ffda8df7a2061f92834",
+          "kind": "heartbeat",
+          "state": "completed",
+          "attempts": 1,
+          "claimed_at": 1793287590.4967442,
+          "finished_at": 1793287590.5006733,
+          "payload": "{\"status\": \"server_owned_job_completed\", \"at\": 1793287590.5003397}"
+        },
+        {
+          "id": "29fbdf6a91db7d080ab7342f59a3e09c",
+          "kind": "heartbeat",
+          "state": "completed",
+          "attempts": 1,
+          "claimed_at": 1793287635.5827935,
+          "finished_at": 1793287635.5872164,
+          "payload": "{\"status\": \"server_owned_job_completed\", \"at\": 1793287635.5868478}"
+        }
+      ],
+      "scope": "Durable internal jobs ran after SSH closed and feature worker restarted; Mac was not physically powered off.",
+      "at": 1793287655.0112238
+    },
+    "database_snapshot_restore": {
+      "result": "PASS",
+      "source_snapshot": "20261029T152529Z.sqlite3",
+      "snapshot_sha256": "920a9b803a3b5a2548464da7a2d56f3fef4c2b60f6c4e019b1179b4300f74230",
+      "table_counts": {
+        "users": 1,
+        "campaigns": 1,
+        "members": 0,
+        "accounts": 2,
+        "pieces": 20,
+        "assets": 22,
+        "jobs": 21,
+        "audit": 12,
+        "notices": 2,
+        "metrics": 0,
+        "oauth_states": 3,
+        "notification_preferences": 0,
+        "usage": 0,
+        "heartbeat": 2,
+        "imports": 1,
+        "provider_sessions": 0
+      },
+      "integrity_check": "ok",
+      "foreign_key_check": [],
+      "scope": "Isolated SQLite snapshot restore only. No provider calls, secret/key restoration, media restoration or off-host disaster-recovery claim.",
+      "at": 1793287581.2967172
+    },
+    "import_replay": {
+      "status": "already_imported",
+      "key": "rojo-20261028-v1"
+    },
+    "repository_quality": {
+      "result": "PASS",
+      "explicit_platform_skips": 11,
+      "log_scope": "Final isolated worktree, verified private jq and Python venv"
+    }
+  },
+  "measurement_baseline": {
+    "status": "pending",
+    "public_statistics": {
+      "viewCount": "94",
+      "likeCount": "13",
+      "dislikeCount": "0",
+      "favoriteCount": "0",
+      "commentCount": "8"
+    },
+    "retention": {
+      "status": "pending",
+      "report": {
+        "kind": "youtubeAnalytics#resultTable",
+        "columnHeaders": [
+          {
+            "name": "elapsedVideoTimeRatio",
+            "columnType": "DIMENSION",
+            "dataType": "FLOAT"
+          },
+          {
+            "name": "audienceWatchRatio",
+            "columnType": "METRIC",
+            "dataType": "FLOAT"
+          },
+          {
+            "name": "relativeRetentionPerformance",
+            "columnType": "METRIC",
+            "dataType": "FLOAT"
+          }
+        ],
+        "rows": []
+      }
+    },
+    "watch_time": null,
+    "attributed_subscribers": null,
+    "reason": "Datos de API con posible retraso. Suscriptores del video corresponden a su página de reproducción; no implican atribución causal a piezas promocionales.",
+    "qa_views_may_be_included": true,
+    "thumbnail_impressions": null,
+    "thumbnail_ctr": null,
+    "reach_status": "Revisar/exportar desde Studio o integrar Reporting API; no se confunden con impresiones publicitarias.",
+    "report_errors": {},
+    "analytics": {
+      "status": "pending",
+      "report": {
+        "kind": "youtubeAnalytics#resultTable",
+        "columnHeaders": [
+          {
+            "name": "views",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+          },
+          {
+            "name": "estimatedMinutesWatched",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+          },
+          {
+            "name": "averageViewDuration",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+          },
+          {
+            "name": "averageViewPercentage",
+            "columnType": "METRIC",
+            "dataType": "FLOAT"
+          },
+          {
+            "name": "subscribersGained",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+          },
+          {
+            "name": "subscribersLost",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+          }
+        ],
+        "rows": []
+      }
+    },
+    "traffic_sources": {
+      "status": "pending",
+      "report": {
+        "kind": "youtubeAnalytics#resultTable",
+        "columnHeaders": [
+          {
+            "name": "insightTrafficSourceType",
+            "columnType": "DIMENSION",
+            "dataType": "STRING"
+          },
+          {
+            "name": "views",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+          },
+          {
+            "name": "estimatedMinutesWatched",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+          }
+        ],
+        "rows": []
+      }
+    }
+  },
+  "remaining": [
+    "Protected frontend navigation integration and paired Mobile review; standalone panel is already live.",
+    "Google verification for unrestricted external users; Meta account/app review and TikTok app configuration/audit.",
+    "Facebook video/reel/story/carousel and private messages are assisted in this version.",
+    "Instagram link-sticker Stories, YouTube Community/collaboration/end screens/related video remain native assisted tasks.",
+    "Optional push/WhatsApp and other notification channels require integration and explicit opt-in. In-app is active; SMTP email is opt-in, not externally delivery-tested.",
+    "Off-host complete objects/database/key recovery is not configured. Local snapshot restore does not establish disaster recovery.",
+    "Large commercial tiers require physical capacity and cost validation; all prices are proposals and billing is disabled.",
+    "Analytics reports for the recent session still have no rows; thumbnail CTR/impressions need Studio export or Reporting API. No promotional causality is asserted."
+  ],
+  "no_spend": true,
+  "no_new_external_test_posts_or_messages": true,
+  "qualification_history": [
+    "Initial media planning SQL fixture failed; implementation corrected and regression added.",
+    "Shared Mobile dependencies lacked hermes-parser; isolated npm ci fixed setup.",
+    "Initial Mobile full run had one existing 5s notification timeout; focused unchanged rerun and subsequent full suite passed.",
+    "Initial repo quality missed jq; final run uses a privately copied binary matching the cached official checksum.",
+    "Latest graphic qualification first used a service user against root-owned isolated fixtures; rerun used the fixture owner. No live permissions were weakened.",
+    "First hosted catalog audit found stale historical-successor pointers for the new Mobile mirror. Current pointers updated with full previous-resolution objects preserved; original historical decisions/hashes and all test assertions unchanged."
+  ]
+}

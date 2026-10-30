@@ -3625,7 +3625,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7669,7 +7669,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7769,7 +7769,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7781,7 +7781,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9526,7 +9526,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -10529,7 +10529,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
       },
-      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure \u2026', 'operations worker \u2026', 'operations retried \u2026', 'operations migration \u2026'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
       "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
@@ -10875,7 +10875,7 @@
     {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
-      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image\u2019s temporary initialization socket server is insufficient.",
       "domain": "SYS",
       "actors": [
         "CI fixture runner",
@@ -11025,7 +11025,7 @@
       "domain": "PAY",
       "critical": true,
       "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
-      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "authority": "User audit sections 14\u201315 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
       "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
       "contract": "formal/system/music-purchase-replay.md",
       "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
@@ -11114,7 +11114,7 @@
       "critical": true,
       "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
       "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
-      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "source": "User audit sections9\u201315 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
       "contract": "formal/system/music-money-wire.md",
       "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
       "actors": [
@@ -11228,7 +11228,7 @@
       "critical": false,
       "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
       "authority": "User audit validation and traceability requirements",
-      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "source": "User audit sections9,24\u201325; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
       "contract": "formal/system/music-test-entrypoint.md",
       "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
       "actors": [
@@ -13230,7 +13230,7 @@
       },
       "observability": "Record exact source, tool versions, cases and control exits; inspect current-head hosted checks.",
       "recovery": "Repair the failed validation/selection contract and rerun; never relax selected validation to skip.",
-      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls.",
+      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls. The selected experiment HTTP fixture finalizer is executed with real child processes covering normal, already-signalled and concurrent exits, descriptor closure, original assertion preservation and an exact historical exit-13 control. Functional HTTP/database assertions remain unchanged; full hosted rerun remains separate.",
       "id": "SYS-CI-SELECTED-001",
       "title": "Selected validation cannot be admitted as skipped",
       "domain": "SYS",
@@ -13283,19 +13283,21 @@
         ".github/workflows/ci.yml",
         "scripts/ci-job-admission.mjs",
         "package.json",
-        "scripts/ci-change-scope.mjs"
+        "scripts/ci-change-scope.mjs",
+        "scripts/__tests__/experiment-http-runtime.mjs"
       ],
       "tests": [
         "scripts/__tests__/ci-job-admission.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        "scripts/__tests__/experiment-http-cleanup.test.mjs"
       ],
       "formalModels": [],
       "ambiguity": [
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
-      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven. reports/campaign-platform-ci-cleanup-2026-10-30.json"
     },
     {
       "id": "ART-ENRICH-REVIEW-001",
@@ -13494,8 +13496,8 @@
       "id": "BOOK-STUDIO-TIMEZONE-001",
       "title": "Public studio hours use Quito time independently of visitor preferences",
       "domain": "BOOK",
-      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
-      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
+      "statement": "The public studio booking page interprets 08:00\u201322:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00\u201322:00.",
       "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
       "contract": "formal/system/public-booking-timezone.md",
       "actors": [
@@ -13559,6 +13561,147 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
+      }
+    },
+    {
+      "id": "CAMP-SERVER-001",
+      "title": "Server-owned musical campaign execution with scoped authorization",
+      "statement": "Any registered user may prepare and execute musical campaigns on their own connected accounts; TDF posts require current admin approval, and execution survives browser disconnection without automatically replaying uncertain provider effects.",
+      "authority": "approved",
+      "source": "Diego explicit campaign-platform implementation instruction, 2026-10-29; docs/campaign-platform/operations.md",
+      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries",
+      "contract": "formal/system/campaign-server.md",
+      "implementation": [
+        ".github/workflows/campaign-platform.yml",
+        "scripts/quality-repo.sh",
+        "services/campaign-platform/backup.py",
+        "services/campaign-platform/backup_control.py",
+        "services/campaign-platform/backup_crypto.py",
+        "services/campaign-platform/deploy.py",
+        "services/campaign-platform/deploy_sandbox.py",
+        "services/campaign-platform/domain.py",
+        "services/campaign-platform/drive_backup.py",
+        "services/campaign-platform/facebook.py",
+        "services/campaign-platform/graphics.py",
+        "services/campaign-platform/import_rojo.py",
+        "services/campaign-platform/media.py",
+        "services/campaign-platform/model_check.py",
+        "services/campaign-platform/monitor.py",
+        "services/campaign-platform/notifications.py",
+        "services/campaign-platform/planning.py",
+        "services/campaign-platform/providers.py",
+        "services/campaign-platform/qualify_media.py",
+        "services/campaign-platform/requirements.txt",
+        "services/campaign-platform/schema.sql",
+        "services/campaign-platform/server.py",
+        "services/campaign-platform/stream_backup_object.py",
+        "services/campaign-platform/tdf-campaign-api.service",
+        "services/campaign-platform/tdf-campaign-backup-request.service",
+        "services/campaign-platform/tdf-campaign-backup-request.timer",
+        "services/campaign-platform/tdf-campaign-backup.service",
+        "services/campaign-platform/tdf-campaign-backup.timer",
+        "services/campaign-platform/tdf-campaign-monitor.service",
+        "services/campaign-platform/tdf-campaign-monitor.timer",
+        "services/campaign-platform/tdf-campaign-worker.service",
+        "services/campaign-platform/tiktok.py",
+        "services/campaign-platform/tiktok_environment.py",
+        "services/campaign-platform/tiktok_token.py",
+        "services/campaign-platform/ui/app.js",
+        "services/campaign-platform/ui/index.html",
+        "services/campaign-platform/ui/style.css",
+        "services/campaign-platform/ui/tdf-logo.png",
+        "services/campaign-platform/ui/tdf-logo.svg",
+        "services/campaign-platform/ui/tiktok.js",
+        "services/campaign-platform/verify_drive_backup.py",
+        "services/campaign-platform/worker.py",
+        "services/campaign-platform/youtube_upload.py",
+        "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook protocols retain controlled mocks; two explicitly selected TDF Pages now have live server-side identity/permission checks and two real approved text/link posts, one attempt each, verified by provider readback and native Page views with the exact YouTube route. Other Facebook formats and external-user review remain unqualified. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no production/public TikTok posting or app-audit qualification. Isolated private-only sandbox policy has separate HTTP/admin, provider-username, environment/client binding and real UI tests; production audit remains required. A separate authorized personal-account sandbox send completed once as SELF_ONLY with read-only status confirmation and authenticated owner HD playback; this does not establish production audit, public or anonymous playback, photo sending or auditory synchronization.",
+      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run; reports/campaign-platform-tiktok-2026-10-29.json; reports/campaign-platform-current-main-2026-10-30.json; reports/campaign-platform-facebook-current-main-2026-10-30.json",
+      "status": "specified and implemented",
+      "critical": true,
+      "domain": "CAMP",
+      "actors": [
+        "Authenticated campaign owner",
+        "Explicit campaign team member",
+        "Strict TDF administrator",
+        "Durable server worker"
+      ],
+      "preconditions": [
+        "A canonical TDF session identifies the actor",
+        "External providers grant the required application and account permissions"
+      ],
+      "inputs": [
+        "Master and derivative media, rights consent, connected accounts, text, dates with IANA timezone, exact-version approval"
+      ],
+      "state": {
+        "campaign": [
+          "draft",
+          "approved",
+          "active",
+          "paused",
+          "cancelled",
+          "completed"
+        ],
+        "job": [
+          "queued",
+          "running",
+          "completed",
+          "blocked",
+          "unknown",
+          "failed",
+          "cancelled"
+        ],
+        "storage": "SQLite WAL metadata and separately retained file objects"
+      },
+      "allowedTransitions": [
+        "draft -> approved only for current reviewed versions",
+        "approved -> active subject to quotas",
+        "queued -> running through one transactional claim",
+        "uncertain publication -> unknown with manual reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "Cross-user access without explicit team authority",
+        "Publication to TDF without current admin approval",
+        "Automatic replay after uncertain publication",
+        "Public YouTube release before HD and exact-video Studio confirmation"
+      ],
+      "effects": [
+        "Private uploads, derived real media, approved supported publications, explicit assisted tasks, durable notifications and measurement checkpoints"
+      ],
+      "authorization": "Canonical TDF session; owner and per-campaign roles; independent TDF and private-message approvals. Admin alone does not grant blanket private-campaign access. The isolated TikTok sandbox restricts entry to its designated administrator, verifies its configured creator username and account scope, and preserves personal ownership for a private test account.",
+      "privacy": "Provider credentials stay encrypted on server; export and logs omit credentials; media capabilities expire. Private Drive backup is restricted to its admin custodian, encrypted before upload, with separately held recovery key and owner-only folder.",
+      "concurrency": "SQLite immediate transactions serialize local claims/reservations. No distributed exactly-once guarantee across provider boundaries.",
+      "idempotency": "Imported existing publications never create new publication jobs. Unique piece/kind jobs preserve identity. Unknown provider effects cannot auto-retry.",
+      "failure": "Fail closed on missing credentials, expired dates, quota, unavailable providers or stale authorization; retain uncertain results for review.",
+      "recovery": "Systemd restarts local services; uncertain publications require reconciliation. Independent private Drive backup resumes acknowledged encrypted ranges and commits manifest last; recovery qualification is scoped to captured ready objects, configuration and isolated campaign SQLite. Core PostgreSQL, production failover and incomplete uploads are excluded.",
+      "observability": "Versioned audit records, server heartbeat, independent monitor, notifications, per-provider status and metric availability.",
+      "tests": [
+        "services/campaign-platform/tests/test_backups.py",
+        "services/campaign-platform/tests/test_domain.py",
+        "services/campaign-platform/tests/test_facebook.py",
+        "services/campaign-platform/tests/test_http.py",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "services/campaign-platform/tests/test_tiktok.py",
+        "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "services/campaign-platform/tests/test_tiktok_sandbox.py"
+      ],
+      "formalModels": [
+        "services/campaign-platform/model_check.py"
+      ],
+      "confidence": "Observed finite implementation boundaries and bounded design model; external provider completeness and unbounded refinement not established.",
+      "ambiguity": [
+        "Google/Meta/TikTok verification and native assisted features remain external prerequisites.",
+        "Push/WhatsApp notifications and physical capacity for larger tiers remain pending. Key replacement, retention deletion and full-host disaster recovery require separate procedures.",
+        "Native web route requires normal protected integration; live standalone panel is independently deployed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped local/server checks cover authorization and recovery boundaries. Full refinement, unrestricted provider automation, protected frontend rollout and full-host failover remain unestablished."
       }
     }
   ]

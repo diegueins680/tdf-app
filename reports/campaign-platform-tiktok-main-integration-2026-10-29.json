@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-29T22:34:42.680036+00:00",
+  "source": "317294f90a5332fd10884dc031ed669de7bcf922",
+  "parents": [
+    "698e6d52b59a0a4dffd4028a3dc540b05b35ef61",
+    "cd091a3c81d5ab70e175d339860fa1921ca1f0c3"
+  ],
+  "protected_main": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+  "result": "PASS for declared finite local qualification; independent review and current-head CI remain separate",
+  "preservation": {
+    "incoming_main_files": 131,
+    "incoming_requirements": 157,
+    "campaign_requirement": "unchanged from 698e6d52b59a0a4dffd4028a3dc540b05b35ef61",
+    "service_files_unchanged": 44,
+    "mobile_pin": "f7d2e5a3eb599adeb16b096c60649116f495bb31",
+    "historical_catalog_decisions_preserved": 1352,
+    "historical_reconciliation_preserved": true,
+    "generated_conflicts": [
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+      "docs/catalog-persistence/reports/static-list-inventory.json",
+      "formal/system/inventory.json",
+      "formal/system/traceability.json"
+    ],
+    "canonical_requirement_conflict": "all 157 incoming objects plus unchanged current campaign object",
+    "new_catalog_review": {
+      "candidate": "7c4fd4b445f988d4bf38",
+      "file": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+      "classification": "genuine-technical-constant",
+      "reason": "Test-only synthetic current-creator privacy options; real options remain provider-controlled",
+      "initial_strict_audit": "FAIL: one unreviewed fixture; preserved privately",
+      "final_strict_json": "PASS",
+      "final_strict_csv": "PASS"
+    }
+  },
+  "tests": {
+    "web": {
+      "passed": 3680,
+      "suites": 320,
+      "duration_seconds": 655.019
+    },
+    "web_lint": "PASS",
+    "web_build": {
+      "result": "PASS",
+      "initial_js_gzip_bytes": 337664,
+      "preloads": 5
+    },
+    "service": {
+      "passed": 80,
+      "duration_seconds": 18.559
+    },
+    "actual_form": {
+      "passed": 4,
+      "included_in_repository_quality": true
+    },
+    "catalog": {
+      "passed": 8
+    },
+    "repository_quality": {
+      "result": "PASS",
+      "explicit_platform_skips": 11
+    },
+    "design_model": {
+      "result": "PASS",
+      "positive": {
+        "states": 1024,
+        "violations": []
+      },
+      "negative_controls": {
+        "ignore_owner": {
+          "states": 1024,
+          "violations": [
+            "cross_tenant"
+          ]
+        },
+        "ignore_approval": {
+          "states": 1024,
+          "violations": [
+            "stale_approval"
+          ]
+        },
+        "retry_unknown": {
+          "states": 1024,
+          "violations": [
+            "uncertain_replay"
+          ]
+        }
+      },
+      "scope": "Finite abstract dispatch admission only; SQLite interleavings, OAuth and real providers verified separately."
+    },
+    "source_admission": {
+      "result": "PASS",
+      "mapped_changed_surfaces": 54,
+      "base": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3"
+    },
+    "source_seal": {
+      "result": "PASS",
+      "files": 862,
+      "manifest_sha256": "3ede6590cc0db6f371b74f067901e5b725db50fa213ed847192bbba2aceec48d",
+      "checks": "working qualification files equal committed Git blobs"
+    }
+  },
+  "environment": {
+    "python": "3.13.5",
+    "node": "v24.13.1"
+  },
+  "operational_state": {
+    "release": "c1e5170dce4732959262",
+    "restart_for_integration": false,
+    "media_modified": false,
+    "campaign": "active approved version 4",
+    "cl01": "approved piece version 1 and TDF approval 1; queued attempts 0 at latest postdeploy read for 2026-10-29T23:30:00Z",
+    "tiktok": "code deployed; client credentials, provider audit, verified prefix and connected account absent",
+    "facebook": "Page choice and native final consent pending user answer",
+    "independent_review": "required; root PR667 stays draft and auto-merge off",
+    "mobile_pr177": "unchanged draft; previous execution identities retained",
+    "external_test_posts": 0,
+    "external_messages": 0,
+    "spend": 0
+  },
+  "limitations": [
+    "No live TikTok app or publication qualification",
+    "No real Facebook publication qualification",
+    "No protected-main merge or canonical www menu deployment",
+    "Earlier backup recovery, FFmpeg, disconnection and Mobile evidence keep original source identities",
+    "Finite tests and design model do not establish full provider or implementation refinement"
+  ],
+  "log_sha256": {
+    "repository-quality.log": "1d7a4ac5eba036309992429c6907bb8e7cb20b867d5fe0ef0a6754852b0e3fef",
+    "inventory-final.log": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+    "service-tests.log": "0551aed3423c21fee76702168186135d42fbdf461f11cb999e96e03ab3733ec6",
+    "conformance-final.log": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+    "catalog-strict-csv.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "web-build.log": "afaa7e1245370aade45cb89c292321446ee4ed296d9b66194a02581e3d00c9a5",
+    "conformance.log": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+    "catalog-strict-json.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog-tests.log": "cd91b7b044a56d99c75ff4c71d4ae32d75d262bcb6672514a267d582be134eaa",
+    "web-lint.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+    "inventory.log": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+    "web-tests.log": "8f9b6075f1859843ba3468ac0f0f0e9e3ce4d640d0d4285f5060f85e8a0880f2"
+  }
+}

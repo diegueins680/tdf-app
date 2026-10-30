@@ -17,6 +17,8 @@ Historical green results are not current-candidate evidence.
 
 - [follow-response-recovery.md](follow-response-recovery.md): reconcile ambiguous follow/unfollow responses with current account-scoped server truth and no automatic write replay.
 
+- [campaign-server.md](campaign-server.md): scoped multiuser campaign authority, durable execution, real-media drafts and explicit external provider/backup limitations.
+
 ## Executable gates
 
 These checks make drift fail CI; run them before changing a mapped surface.
