@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "kind": "facebook_live_campaign_and_protected_ci_integration",
+  "at": "2026-10-30T16:17:14.850302+00:00",
+  "sourceParent": "6a7e33a0c24bd5a1ab8e33238031ae76f70fd280",
+  "protectedMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+  "facebook": {
+    "campaignVersion": 6,
+    "campaignApprovedVersion": 6,
+    "pieces": [
+      {
+        "name": "FB02 — TDF Estudio",
+        "page": "TDF Estudio",
+        "url": "https://www.facebook.com/1756382363164678/posts/1756402893162625",
+        "externalId": "169846481310276_1756402893162625",
+        "providerCreatedAt": "2026-10-30T16:04:04+0000",
+        "version": 1,
+        "approvedVersion": 1,
+        "tdfApprovalVersion": 1,
+        "job": {
+          "id": "c3f11e3000ea4de5a77dfe3b613d353c",
+          "state": "completed",
+          "attempts": 1,
+          "error": null,
+          "finished_at": 1793376248.2412813
+        },
+        "providerIsPublished": true,
+        "authorMatchesPage": true,
+        "messageExact": false,
+        "providerRemovedTrailingDuplicateLink": true,
+        "attachmentRoutesToExactSession": true
+      },
+      {
+        "name": "FB01 — TDF Records",
+        "page": "TDF Records",
+        "url": "https://www.facebook.com/122142606687192354/posts/122142607635192354",
+        "externalId": "893238397214560_122142607635192354",
+        "providerCreatedAt": "2026-10-30T16:02:03+0000",
+        "version": 1,
+        "approvedVersion": 1,
+        "tdfApprovalVersion": 1,
+        "job": {
+          "id": "20baedf7ec464b6dab1a2701b3fd4f53",
+          "state": "completed",
+          "attempts": 1,
+          "error": null,
+          "finished_at": 1793376133.8116417
+        },
+        "providerIsPublished": true,
+        "authorMatchesPage": true,
+        "messageExact": true,
+        "providerRemovedTrailingDuplicateLink": false,
+        "attachmentRoutesToExactSession": true
+      }
+    ],
+    "nativeRecordsPostAndLink": "PASS; rendered Page/title/caption and exact YouTube route",
+    "nativeStudioPost": "PASS; rendered Page/title/caption",
+    "nativeStudioCardClick": "PASS; native click opened YouTube watch?v=uRNyIMLiqU8",
+    "anonymousPlaybackClaimed": false,
+    "youtubePreviewOfficialLogoVisuallyVerified": true,
+    "recordingDate": "2025-02-24",
+    "liveTransmissionClaimed": false,
+    "duplicateChecksCoverLaunchPeriod": true,
+    "initialSeparateCampaignActivation": "Refused by existing one-active-campaign plan; no job or publication created. Unused campaign cancelled, new posts integrated into existing campaign. No plan change or charge.",
+    "expiredAssistedStories": "Three old Stories were refused by the existing lateness guard before provider calls during normal reactivation. Their existing job attempts increased to two; no external identity or duplicate post resulted.",
+    "allOtherFacebookFormatsLiveQualified": false
+  },
+  "ci": {
+    "originalRaciFailureJob": 123925635370,
+    "originalRaciFailure": "Playwright 1.59.1 cannot install Chromium dependencies on Ubuntu 26.04; preserved failed run.",
+    "originalRepositoryFailureJob": 123925861712,
+    "originalRepositoryFailure": "Synthetic container cleanup could not be confirmed; original cause remains unknown.",
+    "protectedMainChanges": "Adopt the protected Ubuntu 24.04 runner pins and cleanup diagnostics through a normal merge; preserve all original assertions and policies.",
+    "freshHostedResults": "pending after publication",
+    "focusedWebTests": "running",
+    "repositoryQuality": "pending",
+    "strictCatalog": "running"
+  },
+  "sourceLimits": {
+    "priorFullWebTests": 3760,
+    "priorFullWebSuites": 324,
+    "priorFullExecution": "bc2d26f67528e1e2372b07e394d09f820438310d; report metadata child6a preserves these inputs",
+    "newWholeWebRunClaimed": false,
+    "mobile": "3d6f911c1b7570ac439561a159101ba78be4f01b unchanged; prior 653 local tests / hosted run 41013521376 SUCCESS retain identities",
+    "campaignServiceFilesUnchanged": 47,
+    "productionRuntime": "49032779d0c53f0fdca5",
+    "sandboxRuntime": "8bcb09173562d9b6df57",
+    "thisSourceIntegrationRestartsServices": false,
+    "protectedMergeOrSelfApproval": false,
+    "modelRefinementClaimed": false
+  }
+}
