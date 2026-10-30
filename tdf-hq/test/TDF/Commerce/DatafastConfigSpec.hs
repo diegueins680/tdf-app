@@ -12,9 +12,36 @@ import Network.HTTP.Types.URI (parseQuery)
 import Test.Hspec
 
 import TDF.Commerce.DatafastConfig (validateDatafastMerchantParameters, encodeDatafastForm)
+import TDF.Commerce.TicketBuyerContact (ticketPaymentBuyerPhone, normalizeTicketBuyerPhone)
 
 spec :: Spec
 spec = describe "Dataweb merchant metadata" $ do
+  it "preserves the phone saved when the ticket order was created" $ do
+    let saved = Just "{\"runtime\":\"canonical_public_checkout\",\"buyer_phone\":\"+593 99 123 4567\",\"buyer_fee_minor\":20}"
+    ticketPaymentBuyerPhone saved `shouldBe` Just "+593 99 123 4567"
+    let fields = maybe [] (\phone -> [("customer.phone", TE.encodeUtf8 phone)])
+          (ticketPaymentBuyerPhone saved)
+    lookup "customer.phone" (parseQuery (encodeDatafastForm fields))
+      `shouldBe` Just (Just "+593 99 123 4567")
+
+  it "keeps absent or malformed stored phones absent without using another field" $
+    forM_ [Nothing, Just "", Just "invalid json", Just "[]", Just "null"
+          , Just "{}", Just "{\"buyer_phone\":null}"
+          , Just "{\"buyer_email\":\"buyer@example.invalid\"}"
+          , Just "{\"buyer_phone\":1234567}", Just "{\"buyer_phone\":[]}"
+          , Just "{\"buyer_phone\":\"   \"}"
+          , Just "{\"buyer_phone\":\"+593 99\\n1234567\"}"
+          , Just "{\"buyer_phone\":\"1234567890123456789012345\"}"
+          ] $ \saved -> ticketPaymentBuyerPhone saved `shouldBe` Nothing
+
+  it "uses the initial order's existing normalization and length boundary" $ do
+    normalizeTicketBuyerPhone (Just "  +593 (99) 123-4567  ")
+      `shouldBe` Right (Just "+593 (99) 123-4567")
+    ticketPaymentBuyerPhone (Just "{\"buyer_phone\":\"  +593 (99) 123-4567  \"}")
+      `shouldBe` Just "+593 (99) 123-4567"
+    normalizeTicketBuyerPhone (Just (T.replicate 25 "1")) `shouldSatisfy` isLeft
+    normalizeTicketBuyerPhone (Just "1234\n5678") `shouldSatisfy` isLeft
+
   it "preserves accented buyer names and separators in the actual form encoder" $ do
     let fields =
           [ ("customer.givenName", TE.encodeUtf8 "José")

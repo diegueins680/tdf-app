@@ -52,6 +52,7 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.EventTickets as TicketDomain
+import TDF.Commerce.TicketBuyerContact (ticketPaymentBuyerPhone, normalizeTicketBuyerPhone)
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..))
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
@@ -191,14 +192,7 @@ validatePositiveKey fieldName value
   | otherwise = Right value
 
 normalizePhone :: Maybe Text -> Either ServerError (Maybe Text)
-normalizePhone raw = case T.strip <$> raw of
-  Nothing -> Right Nothing
-  Just "" -> Right Nothing
-  Just clean
-    | T.length clean > 24 -> Left (badRequest "buyerPhone is too long")
-    | T.any (\char -> not (isAlphaNum char || char `elem` ['+','-',' ','(',')'])) clean ->
-        Left (badRequest "buyerPhone contains unsupported characters")
-    | otherwise -> Right (Just clean)
+normalizePhone = either (Left . badRequest) Right . normalizeTicketBuyerPhone
 
 normalizePromoCode :: Maybe Text -> Either ServerError (Maybe Text)
 normalizePromoCode raw = case T.toUpper . T.strip <$> raw of
@@ -984,7 +978,7 @@ loadTicketPaymentContext orderKey = do
   case rows of
     [( Single eventId, Single checkoutId, Single createKey, Single checkoutStatus
      , Single environmentText, Single amountMinor, Single currency
-     , Single holdExpiresAt, Single mBuyerName, Single mBuyerEmail, _
+     , Single holdExpiresAt, Single mBuyerName, Single mBuyerEmail, Single mMetadata
      )] -> do
       environment <- either (throwError . internal) pure $
         Checkout.resolveCheckoutEnvironment (Just (T.unpack environmentText))
@@ -1002,7 +996,7 @@ loadTicketPaymentContext orderKey = do
         , tpcHoldExpiresAt = holdExpiresAt
         , tpcBuyerName = buyerName
         , tpcBuyerEmail = buyerEmail
-        , tpcBuyerPhone = Nothing
+        , tpcBuyerPhone = ticketPaymentBuyerPhone mMetadata
         }
     [] -> throwError notFound
     _ -> throwError (internal "Ticket payment context is ambiguous")

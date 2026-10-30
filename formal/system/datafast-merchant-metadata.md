@@ -20,6 +20,12 @@ characters and values containing ampersands, equals signs or plus signs must
 survive form decoding unchanged. No buyer or merchant value may create another
 request parameter.
 
+Ticket payment creation must retain the optional buyer_phone saved in the order
+metadata. The stored projection uses the same trim, 24-character limit and
+character validation as initial ticket input. Missing, null, malformed or invalid
+stored phones remain absent; another metadata field never supplies a fallback.
+No phone is invented and no new collection or availability requirement is added.
+
 Creation metadata is not required to query an existing payment. A removed MID,
 TID, PSERV or USER_DATA2 must hide fresh checkout availability while preserving
 the existing credential-based status query configuration. This does not permit
