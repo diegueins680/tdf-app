@@ -12201,7 +12201,8 @@
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        "tdf-hq-ui/src/components/StudioGallery.tsx"
+        "tdf-hq-ui/src/components/StudioGallery.tsx",
+        "tdf-hq-ui/src/pages/NotFoundPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12212,7 +12213,8 @@
         "e2e/web/directory-favorite-recovery.spec.mjs",
         "e2e/web/directory-language.spec.mjs",
         "e2e/web/public-welcome.spec.mjs",
-        "tdf-hq-ui/src/components/StudioGallery.test.tsx"
+        "tdf-hq-ui/src/components/StudioGallery.test.tsx",
+        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
