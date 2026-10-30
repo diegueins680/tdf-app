@@ -13596,7 +13596,7 @@
     ".github/workflows/ci.yml": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
-    ".github/workflows/event-raci-browser.yml": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+    ".github/workflows/event-raci-browser.yml": "3d1860a1f26ec39a8aa0ffe474eb4ddc6933413c71506a0948749d33c95ce801",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
@@ -14465,7 +14465,7 @@
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "faadd0d1757c9485eea6a145ebddbcb5e5b35367736019bcbfc099a08a57a785",
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
     "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "9eb2a0bcef5cf17d3e04a73df79774ad7215f04812a692129458284981000615",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "6f3057f77c25d929dc27ba0c2cdf36ecb2118b183cd340f9a15d1fb6b13f4299",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
@@ -26649,7 +26649,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+      "sha256": "3d1860a1f26ec39a8aa0ffe474eb4ddc6933413c71506a0948749d33c95ce801",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38693,7 +38693,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "9eb2a0bcef5cf17d3e04a73df79774ad7215f04812a692129458284981000615",
+      "sha256": "6f3057f77c25d929dc27ba0c2cdf36ecb2118b183cd340f9a15d1fb6b13f4299",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

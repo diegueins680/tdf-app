@@ -392,19 +392,21 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       return Fans.updateMyArtistProfile(request.payload);
     },
     onSuccess: (profile, request) => {
-      if (!request.isCurrentOwner()) return;
       // A successful write is not permission to share a draft slug or another Party's identity.
       if (profile?.apArtistId !== request.payload.apuArtistId) {
         void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+        if (!request.isCurrentOwner()) return;
         setArtistToast('No pudimos confirmar el perfil guardado. Actualiza la página antes de compartirlo.');
         return;
       }
-      // Only the authoritative server receipt can change the shareable URL.
-      qc.setQueryData(['artist-profile', profile.apArtistId], profile);
       void qc.invalidateQueries({ queryKey: ['artist-profile', profile.apArtistId] });
       void qc.invalidateQueries({ queryKey: ['directory', 'search'] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist'] });
+      // The public write still invalidates public projections after an account
+      // switch; only its current owner can hydrate a draft or see a save receipt.
+      if (!request.isCurrentOwner()) return;
+      qc.setQueryData(['artist-profile', profile.apArtistId], profile);
       request.acknowledgeSave(request.submittedDraft);
       setArtistToast('Perfil de artista actualizado.');
     },

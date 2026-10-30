@@ -2831,7 +2831,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+      "sha256": "3d1860a1f26ec39a8aa0ffe474eb4ddc6933413c71506a0948749d33c95ce801",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9563,7 +9563,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "9eb2a0bcef5cf17d3e04a73df79774ad7215f04812a692129458284981000615",
+      "sha256": "6f3057f77c25d929dc27ba0c2cdf36ecb2118b183cd340f9a15d1fb6b13f4299",
       "semanticConformance": "not-established-by-discovery"
     },
     {
