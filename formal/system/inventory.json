@@ -47,6 +47,7 @@
       "e2e/web/event-task-view.spec.mjs",
       "e2e/web/fanhub-onboarding.spec.mjs",
       "e2e/web/fixtures/native-music-setup.mjs",
+      "e2e/web/helpers/campaign-accessibility.mjs",
       "e2e/web/helpers/local-api-fixture.mjs",
       "e2e/web/helpers/review-paint.mjs",
       "e2e/web/legacy-provider-playback.spec.mjs",
@@ -2907,7 +2908,7 @@
     {
       "id": "SURFACE-99efca801c54dd18",
       "path": "e2e/web/campaign-accessibility.spec.mjs",
-      "sha256": "a139094a63cf3084ff1f5a47c7d282db5864e9ba9a052dd55df2087984904f95",
+      "sha256": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2986,6 +2987,12 @@
       "id": "SURFACE-b6f1ea0e72275bfa",
       "path": "e2e/web/fixtures/native-music-setup.mjs",
       "sha256": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ff05b940eefd8fe4",
+      "path": "e2e/web/helpers/campaign-accessibility.mjs",
+      "sha256": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27289,6 +27296,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/campaign-accessibility-evidence.md",
+      "sha256": "db5a9d3dc2ff37687b8064a4ed0b1a1ca1441dd6eb8d350516430a3538e969ff",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/catalog-reorder.md",
       "sha256": "580ced6527529065e1cae981e56fcdf0943d2548c3c0a08074879d9afa188dad",
       "authority": "inferred",
@@ -27878,7 +27892,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
+      "sha256": "0c71d654be958c85e6524f6b28529b527a83f3b7e5395b125fefdb8aae82bb34",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

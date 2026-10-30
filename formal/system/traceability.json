@@ -13368,6 +13368,75 @@
         "classification": "PARTIAL",
         "reason": "Bounded worker/UI correction; approval policy, external image rights and source publication remain separate obligations."
       }
+    },
+    {
+      "id": "SYS-VERIFY-CAMPAIGN-001",
+      "title": "Retain campaign accessibility counterexample evidence",
+      "statement": "When a campaign axe audit returns violations on an inspectable page with writable artifact storage, attach the complete unfiltered violations and before/after tab observations before the unchanged all-violations assertion fails.",
+      "domain": "SYS",
+      "authority": "Owner mission sections2,6,7,8 require credible counterexamples and independently checked verification; hosted671 stripped the diagnostic fields needed to investigate a real failure.",
+      "source": "formal/system/campaign-accessibility-evidence.md",
+      "contract": "formal/system/campaign-accessibility-evidence.md",
+      "property": "Preserve all axe violation/node/check fields and rule scope; include observational tab/ancestor/viewport/scroll data. Never heal a failing audit, add retries or infer root cause from readiness assumptions.",
+      "actors": [
+        "CI reviewer",
+        "Verification engineer"
+      ],
+      "preconditions": [
+        "Successful axe execution",
+        "Live inspectable page and writable Playwright artifact storage"
+      ],
+      "inputs": [
+        "All campaign axe violations",
+        "Before/after tab geometry and computed ancestor styles"
+      ],
+      "state": {
+        "initial": "Campaign audit result",
+        "terminal": [
+          "Existing empty audit passes",
+          "Full evidence attached and existing nonempty assertion fails",
+          "Diagnostic IO/page failure remains a failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Attach unfiltered structured counterexamples",
+        "Record observational geometry without deciding readiness"
+      ],
+      "forbiddenTransitions": [
+        "Discard axe colors/ratio/checks from the only structured failure record",
+        "Filter severity or relax the empty-violations assertion",
+        "Treat sampled geometry or successful rerun as proof of the original WebKit cause"
+      ],
+      "effects": [
+        "Local synthetic browser artifacts only"
+      ],
+      "authorization": "No production writes, provider calls, new permissions or integration-control changes.",
+      "privacy": "Synthetic campaign network fixtures and test DOM only.",
+      "concurrency": "Before and after are distinct CSSOM samples; no atomic snapshot across asynchronous axe or RAF scrolling is claimed.",
+      "idempotency": "No new retry or external effect; original assertion semantics retained.",
+      "failure": "Nonempty audits remain failures; diagnostic/page/storage errors are not converted into passes.",
+      "recovery": "Use full source-bound evidence to investigate the original unknown cause; preserve failed CI.",
+      "observability": "Actual Playwright JSON attachment with full violations plus tab/ancestor/scroll observations.",
+      "implementation": [
+        "e2e/web/helpers/campaign-accessibility.mjs"
+      ],
+      "tests": [
+        "e2e/web/campaign-accessibility.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Actual supported-browser control cases and loss/attachment fault sensitivity; per-source execution receipts separate.",
+      "evidence": "formal/system/campaign-accessibility-evidence.md; reports/campaign-accessibility-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Confirmed original information loss; original WebKit contrast cause remains unknown.",
+      "ambiguity": [
+        "Rectangular CSSOM clips are not complete visible-pixel or compositor evidence.",
+        "Pinned WebKit is unsupported on localmac12; hosted current-head verification remains separate."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite browser counterexample-retention tests; original contrast cause and complete verification-pipeline refinement are not proven."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13393,6 +13462,7 @@
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
     "e2e/web/booking-catalog-recovery.spec.mjs": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+    "e2e/web/campaign-accessibility.spec.mjs": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
@@ -13402,6 +13472,7 @@
     "e2e/web/event-memories.spec.mjs": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+    "e2e/web/helpers/campaign-accessibility.mjs": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
     "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
     "e2e/web/marketplace-cart.spec.mjs": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
@@ -25959,6 +26030,18 @@
         "requirement": "ART-ENRICH-REVIEW-001",
         "relationship": "tests"
       }
+    ],
+    "e2e/web/helpers/campaign-accessibility.mjs": [
+      {
+        "requirement": "SYS-VERIFY-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/web/campaign-accessibility.spec.mjs": [
+      {
+        "requirement": "SYS-VERIFY-CAMPAIGN-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -26338,9 +26421,14 @@
     {
       "id": "SURFACE-99efca801c54dd18",
       "path": "e2e/web/campaign-accessibility.spec.mjs",
-      "sha256": "a139094a63cf3084ff1f5a47c7d282db5864e9ba9a052dd55df2087984904f95",
+      "sha256": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2b332f1e11171387",
@@ -26483,6 +26571,18 @@
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ff05b940eefd8fe4",
+      "path": "e2e/web/helpers/campaign-accessibility.mjs",
+      "sha256": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-CAMPAIGN-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -53132,7 +53232,6 @@
     "SURFACE-fe7afb5c9c916e52",
     "SURFACE-b18780932504c8a1",
     "SURFACE-b6a53fc19d550b31",
-    "SURFACE-99efca801c54dd18",
     "SURFACE-e442d994f4a6caf5",
     "SURFACE-84f7b910bd4577fb",
     "SURFACE-5eb821e0243ca097",
@@ -55934,7 +56033,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
+      "sourceSha256": "0c71d654be958c85e6524f6b28529b527a83f3b7e5395b125fefdb8aae82bb34",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55962,7 +56061,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
+      "sourceSha256": "0c71d654be958c85e6524f6b28529b527a83f3b7e5395b125fefdb8aae82bb34",
       "definition": {
         "states": [
           "absent",
@@ -55992,7 +56091,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
+      "sourceSha256": "0c71d654be958c85e6524f6b28529b527a83f3b7e5395b125fefdb8aae82bb34",
       "definition": {
         "export": [
           "queued",
@@ -78466,7 +78565,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 157,
+    "PARTIAL": 158,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
