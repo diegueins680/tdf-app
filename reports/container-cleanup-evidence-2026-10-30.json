@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "sourceCommit": "047178c5c15690641e05efdde2c2347acd62d05f",
+  "evidenceCommit": "Containing report-only child; independently verify Git blobs and complete archive aftercommit.",
+  "rootQuality": {
+    "sourceCommit": "047178c5c15690641e05efdde2c2347acd62d05f",
+    "actualExits": {
+      "root-quality": 0,
+      "new-surface-admission": 0,
+      "catalog-unit": 0
+    },
+    "catalogUnitCases": 8,
+    "aliasesRemoved": true,
+    "sourceCleanAfter": true
+  },
+  "sourceSeal": {
+    "baseline": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+    "sourceCommit": "047178c5c15690641e05efdde2c2347acd62d05f",
+    "registeredGitFilesystemMobileHashesVerified": 1429,
+    "sourceDigest": "ccaf1dc8a3be4f8a0c4c4da75a0f0749a9541ad07c7a7a1b8d1cbb51d679f58e",
+    "all158IncomingRequirementsExact": true,
+    "requirementsTotal": 159,
+    "newRequirementCritical": false,
+    "contractGitSha256": "1c2d969a5917d554c58dbb96ca080306536167f82d4cdab3349a7eac50a9469c",
+    "rootQuality": {
+      "sourceCommit": "047178c5c15690641e05efdde2c2347acd62d05f",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "independentSimulatedCases": 10,
+    "independentExistingShellCases": 2,
+    "sourceControlVariants": 4,
+    "intendedControlAssertionFailures": 4,
+    "runnerAndRegistrationDeclaredReversalExactMain": true,
+    "uiBackendMobileWorkflowDependenciesModelContractsExactMain": true,
+    "scriptChangesOnly": [
+      "scripts/quality-repo.sh",
+      "scripts/test-persistent-uploads-container-diagnostics.py",
+      "scripts/test-persistent-uploads-container.py"
+    ],
+    "freshAssuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "actualLocalDockerExecuted": false,
+    "originalHostedResponseAndCause": "UNKNOWN",
+    "sourceCleanAfter": true,
+    "limits": [
+      "Mocked actual-main runner flow and existing local shell guard cases are TESTED only.",
+      "The old hosted response/cause cannot be reconstructed; no Docker/storage repair or production/durability/deployment claim.",
+      "Existing absence classifier, command deadlines and cleanup safeguards are preserved rather than proved complete."
+    ]
+  },
+  "formal": {
+    "executionPassed": true,
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "release": "BLOCKED",
+    "newCompleteImplementationProofs": 0,
+    "scope": "Inherited conditional results retain their original assumptions; no passing test is promoted to a complete proof."
+  },
+  "independentReview": {
+    "path": "reports/container-cleanup-evidence-2026-10-30/independent-review.txt",
+    "sha256": "1c675997f736154ca345a53aab49d37b64be9496ff1a1682f23f6bc2e8240fc1",
+    "scope": "Root independently reviewed separate-agent implementation and reran10mock+2shell; metadata authored byroot. Fourmutants/rawreceiptsinspectednotindependentlyrepeated. No Docker/proof/GHapproval/deploy."
+  },
+  "archive": {
+    "path": "reports/container-cleanup-evidence-2026-10-30/evidence.tar.gz",
+    "sha256": "c17ca46c4c83f08fc76b2299b12b6ce500442075c990a5f993be3dec1d1fd096",
+    "bytes": 1577358,
+    "innerFiles": 94,
+    "manifest": "reports/container-cleanup-evidence-2026-10-30/manifest.json"
+  },
+  "integration": {
+    "draftIntended": true,
+    "autoMerge": false,
+    "merged": false,
+    "deployment": "UNVERIFIED",
+    "productionWrites": false,
+    "realProviderCalls": false,
+    "requirements": "Fresh published-head CI/current review/main composition/protected FIFO; no bypass or borrowed approval."
+  },
+  "createdAtUTC": "2026-10-30T06:28:12.096331+00:00",
+  "problem": "PR677 hostedCI41009219715/job123911806221 received an unexpected cleanup inspect response but replaced it with a constant error, dropping command status/output. The original response and cause remainUNKNOWN.",
+  "correction": "Retain a bounded diagnostic in the existing refusal: operation, synthetic name, exit code, first2000characters of each stream/truncation flags and actually completed cases. Preserve existing exception chaining and all cleanup classifications/commands/ownership safeguards.",
+  "properties": [
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001/RETENTION",
+      "status": "TESTED",
+      "statement": "Unexpected inspect refusal retains bounded response context.",
+      "bounds": "Mocked actual-main-path scenarios; no actual Docker execution."
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001/PRESERVATION",
+      "status": "TESTED",
+      "statement": "Existing failure/absence handling, foreign no-delete, verified-ID deletion and primary exception display remain.",
+      "bounds": "Mocked actual-main scenarios, four source controls and exact declared-edit reversal; no universal absence-classifier or forced-termination cleanup proof."
+    }
+  ],
+  "verification": {
+    "implementerSimulatedCases": 10,
+    "independentRootSimulatedCases": 10,
+    "independentExistingShellCases": 2,
+    "actualDockerExecutedLocally": false,
+    "sourceControls": {
+      "scope": "Simulated subprocess responses, no Docker/daemon/provider execution",
+      "baseline": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+      "sourceRestored": true,
+      "runnerSha256": "664dd6667f43c2b9949721c0b076d3b709a1d64a67abf619a58f51d5075afe6e",
+      "testSha256": "72a038a1e00995d71c034522fcf8b93488e12b35b2b4d2e49f973f13660061ef",
+      "variants": [
+        {
+          "variant": "discard-context",
+          "command": [
+            "python3",
+            "scripts/test-persistent-uploads-container-diagnostics.py",
+            "CleanupDiagnosticsTest.test_unexpected_inspect_retains_command_result_and_completed_cases"
+          ],
+          "exit": 1,
+          "tests": 1,
+          "assertionFailures": 1,
+          "mutantSha256": "9d790605193a8fc3c5350d6cde29def1898dfdce9a3e863c17df465ef806af05",
+          "logSha256": "3cb2eea4d753908cbcff544095caaea07b8e4ad77660719f8beec3eaa2143dd3"
+        },
+        {
+          "variant": "omit-ownership-guard",
+          "command": [
+            "python3",
+            "scripts/test-persistent-uploads-container-diagnostics.py",
+            "CleanupDiagnosticsTest.test_foreign_container_is_never_removed"
+          ],
+          "exit": 1,
+          "tests": 1,
+          "assertionFailures": 1,
+          "mutantSha256": "19065b37bd9929a6bd02c6fecfd0e727c873f668256ff7b0ad1fe319d918c7bb",
+          "logSha256": "89079b0301e0910a7b826c5737bd47b6e9a14dc5ad5ab6f04afa6d522edfdeec"
+        },
+        {
+          "variant": "accept-unknown-as-absent",
+          "command": [
+            "python3",
+            "scripts/test-persistent-uploads-container-diagnostics.py",
+            "CleanupDiagnosticsTest.test_empty_unexpected_response_does_not_become_absence"
+          ],
+          "exit": 1,
+          "tests": 1,
+          "assertionFailures": 1,
+          "mutantSha256": "5ccf0da48037b987a3a4ce49819aab836c72fb653cf2018b6e308f540bc611ed",
+          "logSha256": "a6498e92369148c27bdcd8f678f8e9cc3dfd546f1a4d6b37f57906597b377b7d"
+        },
+        {
+          "variant": "suppress-primary-context",
+          "command": [
+            "python3",
+            "scripts/test-persistent-uploads-container-diagnostics.py",
+            "CleanupDiagnosticsTest.test_primary_failure_remains_chained_with_cleanup_failure"
+          ],
+          "exit": 1,
+          "tests": 1,
+          "assertionFailures": 1,
+          "mutantSha256": "25ae6a4cbd5f2c60ec7143adb7c51ce23af7c875d70110a1fcf1b2ddab1025e2",
+          "logSha256": "60980bd6ee549f650a67f1316e861672000456bfc48c9c8ea5375ec2631c94fd"
+        }
+      ],
+      "restored": {
+        "exit": 0,
+        "tests": 10,
+        "failures": 0,
+        "logSha256": "95d52c2b0870cd8d3ddede2c1bb20abc0c9b641e3746b45f94a83d58497fd4be"
+      },
+      "atUTC": "2026-10-30T06:07:16.846562+00:00"
+    },
+    "normalCIProtection": "New stdlib suite registered in quality-repo.sh; original real Docker lane retained.",
+    "harnessHistory": "Initial independent Node shell suite failed to import yaml before cachealias; proper scoped dependencyalias rerun2/0. Initial failure retained and not counted as product defect."
+  },
+  "regressionProtection": "Actual runner main is exercised with every Docker subprocess and Git query intercepted. Four selected faulty sources each cause one intended assertion failure/zeroerrors; restored10/0. No mock result is an actual Linux/container pass.",
+  "remaining": [
+    "Original hosted Docker response/cause and primary-case outcomes remainUNKNOWN; this is diagnostic retention, not Docker/storage repair.",
+    "Existing absence substring classification is preserved rather than proved universally correct.",
+    "Stream retention limits do not bound subprocess capture memory; malformed JSON/remove/timeouts retain prior behavior.",
+    "MEDIA-PERSIST-001 production durability, actual hosted Docker execution and deployment remain separate; its requirement is unchanged.",
+    "PR676 UbuntuRACI change remains separate; new source must qualify normally without retrying an unchanged failure into a repair claim."
+  ],
+  "nextHighestValueTask": "Inspect the first actual hosted response on the diagnostic head and repair its evidenced root cause; retain all security/cleanup refusals."
+}
