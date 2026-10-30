@@ -1,0 +1,33 @@
+{
+  "source": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "file": ".github/workflows/ci.yml",
+  "gates": {
+    "quality": {
+      "run": "for result in \"$CHANGES_RESULT\" \"$REPO_RESULT\" \"$UI_RESULT\" \"$PERSONA_WEB_E2E_RESULT\" \"$NATIVE_MUSIC_RESULT\" \"$MOBILE_RESULT\" \"$BACKEND_RESULT\" \"$NATIVE_ANDROID_RESULT\"; do\n  case \"$result\" in\n    success|skipped) ;;\n    *) echo \"Selected quality job did not pass: $result\" >&2; exit 1 ;;\n  esac\ndone\n",
+      "environmentNames": [
+        "CHANGES_RESULT",
+        "REPO_RESULT",
+        "UI_RESULT",
+        "PERSONA_WEB_E2E_RESULT",
+        "NATIVE_MUSIC_RESULT",
+        "MOBILE_RESULT",
+        "BACKEND_RESULT",
+        "NATIVE_ANDROID_RESULT"
+      ]
+    },
+    "api-contracts": {
+      "run": "test \"$CHANGES_RESULT\" = success\ncase \"$CONTRACT_RESULT\" in success|skipped) ;; *) exit 1 ;; esac\n",
+      "environmentNames": [
+        "CHANGES_RESULT",
+        "CONTRACT_RESULT"
+      ]
+    },
+    "production-migrations": {
+      "run": "test \"$CHANGES_RESULT\" = success\ncase \"$MIGRATION_RESULT\" in success|skipped) ;; *) exit 1 ;; esac\n",
+      "environmentNames": [
+        "CHANGES_RESULT",
+        "MIGRATION_RESULT"
+      ]
+    }
+  }
+}

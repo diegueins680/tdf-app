@@ -1,0 +1,9 @@
+{
+  "candidateCount": 1352,
+  "semanticJSONMatches": true,
+  "onlyClockChanged": true,
+  "originalGeneratedAtPreserved": "2026-10-28T07:51:06.733Z",
+  "freshAuditGeneratedAt": "2026-10-28T23:22:07.101Z",
+  "csvByteIdentical": true,
+  "freshJSONSha256": "c2b8f44fce16c053b6aafa61c232b1087d9142f2b357b559459b39254bd07351"
+}

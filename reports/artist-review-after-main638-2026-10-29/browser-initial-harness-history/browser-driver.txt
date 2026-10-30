@@ -1,0 +1,8 @@
+file:///private/tmp/tdf-artist-639-browser-20261029.mjs:66
+      if (errors.length || writes.length) throw new Error(`Unexpected browser errors/writes: ${JSON.stringify({ errors, writes })}`);
+                                                ^
+
+Error: Unexpected browser errors/writes: {"errors":[],"writes":[{"method":"POST","path":"/session/onboarding/reconcile"},{"method":"DELETE","path":"/radio/presence"},{"method":"POST","path":"/navigation/preferences/admin.artist-enrichment/visit"}]}
+    at file:///private/tmp/tdf-artist-639-browser-20261029.mjs:66:49
+
+Node.js v24.13.1

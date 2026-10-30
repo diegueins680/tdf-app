@@ -1,0 +1,482 @@
+[
+  {
+    "testTitle": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+    "attachment": "booking-viewport-geometry",
+    "value": {
+      "requestedViewport": {
+        "width": 320,
+        "height": 740
+      },
+      "initial": {
+        "at": 10551,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 362,
+        "clientWidth": 320,
+        "scrollWidth": 362,
+        "visualViewport": {
+          "width": 361.0000305175781,
+          "scale": 0.886426568031311
+        },
+        "overflow": true,
+        "devicePixelRatio": 3,
+        "scrollY": 1466,
+        "anchor": {
+          "x": 200.25,
+          "y": 415.4375,
+          "right": 260.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 99,
+          "y": 447.3333740234375,
+          "right": 361.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "samples": [
+        {
+          "label": "after-failed-one-shot",
+          "at": 10564,
+          "innerWidth": 362,
+          "clientWidth": 320,
+          "scrollWidth": 362,
+          "visualViewport": {
+            "width": 361.0000305175781,
+            "scale": 0.886426568031311
+          },
+          "bookingCard": {
+            "tag": "DIV",
+            "id": "",
+            "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+            "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+            "x": 16,
+            "right": 304,
+            "width": 288,
+            "clientWidth": 286,
+            "scrollWidth": 298,
+            "transform": ""
+          },
+          "serviceSelect": {
+            "tag": "DIV",
+            "id": ":r3v:",
+            "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+            "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 263,
+            "transform": ""
+          },
+          "dateInput": {
+            "tag": "INPUT",
+            "id": ":r41:",
+            "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+            "text": "",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 238,
+            "transform": ""
+          },
+          "tooltip": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "tooltipPositioner": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "beyondClientViewport": [
+            {
+              "tag": "P",
+              "id": "",
+              "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+              "text": "USD 100 / hour",
+              "x": 230.84375,
+              "right": 328.375,
+              "width": 97.53125,
+              "clientWidth": 98,
+              "scrollWidth": 98,
+              "transform": ""
+            },
+            {
+              "tag": "DIV",
+              "id": ":r47:",
+              "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 99,
+              "right": 361.046875,
+              "width": 262.046875,
+              "clientWidth": 262,
+              "scrollWidth": 262,
+              "transform": "translate3d(99px, 1913.33px, 0px)"
+            },
+            {
+              "tag": "DIV",
+              "id": "",
+              "classes": "MuiTooltip-tooltip MuiTooltip-tooltipPlacementBottom css-162rsn9",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 101,
+              "right": 359.046875,
+              "width": 258.046875,
+              "clientWidth": 258,
+              "scrollWidth": 258,
+              "transform": "none"
+            }
+          ]
+        },
+        {
+          "label": "next-frame-or-250ms",
+          "at": 10580,
+          "innerWidth": 362,
+          "clientWidth": 320,
+          "scrollWidth": 362,
+          "visualViewport": {
+            "width": 361.0000305175781,
+            "scale": 0.886426568031311
+          },
+          "bookingCard": {
+            "tag": "DIV",
+            "id": "",
+            "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+            "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+            "x": 16,
+            "right": 304,
+            "width": 288,
+            "clientWidth": 286,
+            "scrollWidth": 298,
+            "transform": ""
+          },
+          "serviceSelect": {
+            "tag": "DIV",
+            "id": ":r3v:",
+            "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+            "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 263,
+            "transform": ""
+          },
+          "dateInput": {
+            "tag": "INPUT",
+            "id": ":r41:",
+            "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+            "text": "",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 238,
+            "transform": ""
+          },
+          "tooltip": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "tooltipPositioner": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "beyondClientViewport": [
+            {
+              "tag": "P",
+              "id": "",
+              "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+              "text": "USD 100 / hour",
+              "x": 230.84375,
+              "right": 328.375,
+              "width": 97.53125,
+              "clientWidth": 98,
+              "scrollWidth": 98,
+              "transform": ""
+            },
+            {
+              "tag": "DIV",
+              "id": ":r47:",
+              "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 99,
+              "right": 361.046875,
+              "width": 262.046875,
+              "clientWidth": 262,
+              "scrollWidth": 262,
+              "transform": "translate3d(99px, 1913.33px, 0px)"
+            },
+            {
+              "tag": "DIV",
+              "id": "",
+              "classes": "MuiTooltip-tooltip MuiTooltip-tooltipPlacementBottom css-162rsn9",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 101,
+              "right": 359.046875,
+              "width": 258.046875,
+              "clientWidth": 258,
+              "scrollWidth": 258,
+              "transform": "none"
+            }
+          ]
+        },
+        {
+          "label": "another-100ms",
+          "at": 10680,
+          "innerWidth": 362,
+          "clientWidth": 320,
+          "scrollWidth": 362,
+          "visualViewport": {
+            "width": 361.0000305175781,
+            "scale": 0.886426568031311
+          },
+          "bookingCard": {
+            "tag": "DIV",
+            "id": "",
+            "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+            "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+            "x": 16,
+            "right": 304,
+            "width": 288,
+            "clientWidth": 286,
+            "scrollWidth": 298,
+            "transform": ""
+          },
+          "serviceSelect": {
+            "tag": "DIV",
+            "id": ":r3v:",
+            "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+            "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 263,
+            "transform": ""
+          },
+          "dateInput": {
+            "tag": "INPUT",
+            "id": ":r41:",
+            "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+            "text": "",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 238,
+            "transform": ""
+          },
+          "tooltip": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "tooltipPositioner": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "beyondClientViewport": [
+            {
+              "tag": "P",
+              "id": "",
+              "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+              "text": "USD 100 / hour",
+              "x": 230.84375,
+              "right": 328.375,
+              "width": 97.53125,
+              "clientWidth": 98,
+              "scrollWidth": 98,
+              "transform": ""
+            },
+            {
+              "tag": "DIV",
+              "id": ":r47:",
+              "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 99,
+              "right": 361.046875,
+              "width": 262.046875,
+              "clientWidth": 262,
+              "scrollWidth": 262,
+              "transform": "translate3d(99px, 1913.33px, 0px)"
+            },
+            {
+              "tag": "DIV",
+              "id": "",
+              "classes": "MuiTooltip-tooltip MuiTooltip-tooltipPlacementBottom css-162rsn9",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 101,
+              "right": 359.046875,
+              "width": 258.046875,
+              "clientWidth": 258,
+              "scrollWidth": 258,
+              "transform": "none"
+            }
+          ]
+        },
+        {
+          "label": "another-300ms",
+          "at": 10981,
+          "innerWidth": 362,
+          "clientWidth": 320,
+          "scrollWidth": 362,
+          "visualViewport": {
+            "width": 361.0000305175781,
+            "scale": 0.886426568031311
+          },
+          "bookingCard": {
+            "tag": "DIV",
+            "id": "",
+            "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+            "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+            "x": 16,
+            "right": 304,
+            "width": 288,
+            "clientWidth": 286,
+            "scrollWidth": 298,
+            "transform": ""
+          },
+          "serviceSelect": {
+            "tag": "DIV",
+            "id": ":r3v:",
+            "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+            "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 263,
+            "transform": ""
+          },
+          "dateInput": {
+            "tag": "INPUT",
+            "id": ":r41:",
+            "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+            "text": "",
+            "x": 65,
+            "right": 303,
+            "width": 238,
+            "clientWidth": 238,
+            "scrollWidth": 238,
+            "transform": ""
+          },
+          "tooltip": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "tooltipPositioner": {
+            "tag": "DIV",
+            "id": ":r47:",
+            "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+            "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+            "x": 99,
+            "right": 361.046875,
+            "width": 262.046875,
+            "clientWidth": 262,
+            "scrollWidth": 262,
+            "transform": "translate3d(99px, 1913.33px, 0px)"
+          },
+          "beyondClientViewport": [
+            {
+              "tag": "P",
+              "id": "",
+              "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+              "text": "USD 100 / hour",
+              "x": 230.84375,
+              "right": 328.375,
+              "width": 97.53125,
+              "clientWidth": 98,
+              "scrollWidth": 98,
+              "transform": ""
+            },
+            {
+              "tag": "DIV",
+              "id": ":r47:",
+              "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1ydfzmo",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 99,
+              "right": 361.046875,
+              "width": 262.046875,
+              "clientWidth": 262,
+              "scrollWidth": 262,
+              "transform": "translate3d(99px, 1913.33px, 0px)"
+            },
+            {
+              "tag": "DIV",
+              "id": "",
+              "classes": "MuiTooltip-tooltip MuiTooltip-tooltipPlacementBottom css-162rsn9",
+              "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+              "x": 101,
+              "right": 359.046875,
+              "width": 258.046875,
+              "clientWidth": 258,
+              "scrollWidth": 258,
+              "transform": "none"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

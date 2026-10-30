@@ -10437,8 +10437,8 @@
       "title": "Every published service is selectable from the first step of the public booking form",
       "domain": "BOOK",
       "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
-      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
-      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link. Product owner UX execution mission, continued 2026-10-26: actionable recovery from temporary failures while preserving form data and backend booking authority.",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links; formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001); formal/system/booking-tooltip-viewport.md (BOOK-TOOLTIP-VIEWPORT-001)",
       "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "actors": [
         "Visitor",
@@ -10463,7 +10463,8 @@
       "allowedTransitions": [
         "catalog loading -> first active offering selected",
         "first active offering selected -> visitor-selected offering (any step before confirmation)",
-        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)",
+        "catalog unavailable -> visitor-triggered catalog retry -> available service selection, or another recoverable unavailable state without leaving the page"
       ],
       "forbiddenTransitions": [
         "Service selector hidden until the schedule step",
@@ -10479,8 +10480,8 @@
       "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
       "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise. Changing the service synchronously clears the previous quote and terms acceptance. New availability requests clear stale pricing; aborted responses and cancellations cannot overwrite a newer quote.",
       "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
-      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
-      "recovery": "Reloading the page refetches the catalog.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps. Retrying does not create a booking, checkout or payment, and the form remains disabled while an unavailable catalog is being refetched.",
+      "recovery": "The catalog-unavailable notice provides an explicit retry of GET /services/catalog/public without reloading the page or clearing contact edits, the service query parameter or the current step. The retry button is disabled while fetching. Another failure or empty response retains the retry action; a nonempty successful response restores normal service selection and form progression. Reloading the page also refetches the catalog.",
       "observability": "Existing booking and API telemetry; no new events.",
       "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
       "implementation": [
@@ -10501,10 +10502,11 @@
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "tdf-mobile/__tests__/featureRegistry.test.ts"
+        "tdf-mobile/__tests__/featureRegistry.test.ts",
+        "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression.",
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked. Viewport verification uses a shared client-width bound instead of expandable mobile innerWidth. A permanent visible-width fault fixture must be detected and recover after removal; comparator mutation must fail the mobile regression. Initial numeric widths/result remain authoritative while bounded failure-only geometry observes later layout; local controls do not establish the original hosted WebKit cause. See formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001). Suggested-time helper viewport repair: actual open-before/closed-before/open-after resize controls isolate local mobile document expansion and zoom. A fixed-position overlay must preserve the immutable first client-bound result, helper text/accessibility name, scale1, real keyboard reachability and scroll tracking. Deterministic Date leaves timers running. Removing only the positioning option must fail the permanent keyboard case on actual persistent362/320 overflow; correct source restored. Local evidence does not establish the original hosted WebKit cause, all browsers or complete CSSOM refinement.",
       "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
       "status": "specified and implemented",
       "critical": false,
@@ -13215,6 +13217,350 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Named client ownership/latest-intent and matched-owner corrupt-source rejection behaviors TESTED locally at b625969 with86tests and27browser cases (24real+3mock). No extracted identity model or mathematical proof. Exact integrated-candidate hosted checks,independent review and deployed acceptance remain pending."
+      }
+    },
+    {
+      "authority": ".github/workflows/ci.yml aggregate step contracts and the requested verification mission",
+      "contract": "formal/system/ci-selected-job-admission.md",
+      "critical": true,
+      "source": "formal/system/ci-selected-job-admission.md",
+      "status": "specified and implemented",
+      "confidence": "Exact component counterexamples; no claim that the injected upstream state occurred in GitHub.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite component behavior tested; GitHub orchestration, classifier correctness and full refinement remain unproven."
+      },
+      "observability": "Record exact source, tool versions, cases and control exits; inspect current-head hosted checks.",
+      "recovery": "Repair the failed validation/selection contract and rerun; never relax selected validation to skip.",
+      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls.",
+      "id": "SYS-CI-SELECTED-001",
+      "title": "Selected validation cannot be admitted as skipped",
+      "domain": "SYS",
+      "statement": "Quality, API-contract and migration admission requires every selected dependency to succeed; skips are admissible only with an explicit false selection. Missing, failed, cancelled or ambiguous classification/results reject admission.",
+      "actors": [
+        "GitHub Actions",
+        "Repository contributors"
+      ],
+      "preconditions": [
+        "GitHub result reporting, checked-in execution, path classification and selection expressions are trusted."
+      ],
+      "inputs": [
+        "Exact workflow revision",
+        "Serialized needs context",
+        "Six exact scope flags",
+        "Native Android dispatch selection"
+      ],
+      "state": {
+        "validation": [
+          "success",
+          "skipped",
+          "failure",
+          "cancelled",
+          "missing",
+          "unknown"
+        ],
+        "admission": [
+          "accepted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit successful classification and successful selected validations.",
+        "Admit an explicitly unselected skipped dependency."
+      ],
+      "forbiddenTransitions": [
+        "Admit a selected skipped dependency.",
+        "Admit missing, failed, cancelled or malformed evidence."
+      ],
+      "effects": [
+        "Required status admission or rejection"
+      ],
+      "authorization": "Existing branch protections and independent review remain required; no deployment authority is granted.",
+      "privacy": "Never log unrelated dependency outputs or credentials.",
+      "concurrency": "Superseded and cancelled checks are not passing evidence.",
+      "idempotency": "Each run/attempt records its own revision-bound result.",
+      "failure": "The required aggregate exits nonzero for invalid or insufficient evidence.",
+      "property": "For each dependency, success OR (unselected AND skipped), with valid successful classification.",
+      "implementation": [
+        ".github/workflows/ci.yml",
+        "scripts/ci-job-admission.mjs",
+        "package.json",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Historical skipped-state reachability under GitHub orchestration is not established."
+      ],
+      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "ART-ENRICH-REVIEW-001",
+      "title": "Separate artist verification, profile completeness and image-rights review",
+      "statement": "Artist review distinguishes supported identity verification from optional missing profile data, and distinguishes actual link availability failures from permission to ingest externally hosted images. Legacy hotlink-rights observations must not hide real network failures or label working images as broken.",
+      "authority": "Explicit product owner request, 2026-10-26: explain artist verification and repair Verde70 issues.",
+      "domain": "Artist enrichment",
+      "source": "docs/artist-enrichment-runbook.md",
+      "contract": "docs/artist-enrichment-runbook.md",
+      "actors": [
+        "Strict administrator",
+        "Artist enrichment worker"
+      ],
+      "preconditions": [
+        "Existing enrichment API and source observations",
+        "Existing strict-admin review authorization"
+      ],
+      "inputs": [
+        "Profile completeness and verification metadata",
+        "Artist-scoped timestamped source observations and URLs"
+      ],
+      "state": {
+        "boundary": "Artist review presentation and worker source classification",
+        "authority": "Source observations, existing field-decision API and audit history"
+      },
+      "allowedTransitions": [
+        "Working external image -> rights review without broken-link classification",
+        "Actual HTTP failure -> broken-link result, independently of media rights",
+        "New image URL -> supersede stale warnings about the previous URL",
+        "Evidence review -> approve supported fields, confidence and date before verified status"
+      ],
+      "forbiddenTransitions": [
+        "Infer image reuse rights from HTTP200 or identity verification",
+        "Hide a genuine HTTP failure behind media-rights review",
+        "Use another artist source observation",
+        "Require invented awards or optional metadata to remove an incomplete-profile chip",
+        "Audit action automatically verifies identity"
+      ],
+      "effects": [
+        "Record media-rights observations separately from availability",
+        "Render accurate review guidance, status and link filters"
+      ],
+      "authorization": "Existing strict-admin field-decision and identity-review boundaries are unchanged; no new approval bypass.",
+      "privacy": "Profile and source review retains current authorization. No automatic image copying or account-ownership grants.",
+      "concurrency": "Resolve latest evidence by observation timestamp and source ID; existing server stale-value guards remain authoritative.",
+      "idempotency": "Existing source and suggestion idempotency remains; rendering and filtering perform no decisions.",
+      "failure": "Malformed legacy attribution remains a network failure; missing detailed evidence retains server-reported failures.",
+      "recovery": "Retain all historical observations; rerun availability checks or obtain authorized media without deleting earlier evidence.",
+      "observability": "Source type, decision history and deterministic worker/UI regression coverage.",
+      "property": "Working legacy hotlinks retain permission review but are excluded from broken-only results. Real failures remain visible; URL replacements and actor scope isolate evidence. Artist-specific views include only matching artists or their references, retaining legitimate competing candidates.",
+      "implementation": [
+        "scripts/artist-enrichment.mjs",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.ts",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx"
+      ],
+      "tests": [
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Worker and rendered-review regressions with injected network observations; no formal proof claimed.",
+      "evidence": "Source-bound test logs and separate production data-repair receipt.",
+      "status": "specified and implemented",
+      "openQuestions": [],
+      "confidence": "Deterministic local checks; actual source publication and production data corrections are recorded separately.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded worker/UI correction; approval policy, external image rights and source publication remain separate obligations."
+      }
+    },
+    {
+      "id": "MEDIA-MUSIC-TRACK-SEARCH-001",
+      "title": "Authorized exact-recording search and synchronous universal selection",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Canonical public track search returns only currently discoverable recording/release/version contexts with eligible same-context assets. The /buscar music region selects that exact recording synchronously through the existing global engine, hides obsolete query actions, distinguishes service failure from empty results, and never substitutes a release first track or starts playback on result arrival.",
+      "authority": "Explicit universal audio implementation directive sections9,13,14,17 and P1; normal protected integration of source-authorization dependency626 and current-head review remain required.",
+      "source": "docs/music-releases/track-search-delivery-2026-10-26.md; tdf-hq/docs/openapi/music-search.yaml",
+      "contract": "formal/system/music-track-search.md",
+      "property": "Every projected track has an eligible same-recording/version public delivery asset at retrieval. Deduplication precedes pagination. Only current-query explicit controls emit a selection, and that command names the rendered recording; stale results, navigation and denial cannot select a different recording.",
+      "actors": [
+        "Public listener",
+        "Existing public music authorization policy",
+        "Global playback engine"
+      ],
+      "preconditions": [
+        "Existing published views, directory normalizer, public feature gate and trusted territory policy are deployed.",
+        "The existing single engine reauthorizes selected sources and rejects obsolete playback generations.",
+        "Finite model assumes ordinary actions on current rendered controls; no source-extracted refinement theorem.",
+        "Stable offset page coverage assumes no concurrent catalog mutation."
+      ],
+      "inputs": [
+        "Trimmed query up to200 Unicode characters; limit1-100/default13; nonnegative offset; trusted edge country",
+        "Draft/committed queries, independent music page, explicit hit Play and release-link navigation",
+        "Nondeterministic request/source responses, failures and authorization revocation"
+      ],
+      "state": {
+        "database": "Current public release/track/recording contexts and authorized same-context source aggregates",
+        "client": "Draft versus committed query, query/page cache key, pending/result/error and exact selected context",
+        "engine": "Existing authoritative player session and source generation; no new audio element or persistence"
+      },
+      "allowedTransitions": [
+        "Match public contexts internally -> retain only authorized nonempty source contexts -> deduplicate recordings -> paginate minimal metadata",
+        "Draft edit -> hide old actions -> request committed query/page with cancellation; stale results remain outside current view",
+        "Explicit Play -> synchronous exact-hit deferred-descriptor command -> current engine source authorization",
+        "Search failure -> independent retry; result arrival/pagination/navigation preserve selected engine session",
+        "Revoked selected source -> selected-recording failure without unrelated fallback",
+        "Malformed or out-of-contract music wire response -> independent music error; directory results and legacy empty-state title remain usable.",
+        "Nonzero source position -> await matching-source metadata under current generation -> restore latest requested seek -> honor current explicit play/pause intent."
+      ],
+      "forbiddenTransitions": [
+        "Project a hidden recording/source through an artist or release-title match without eligible same-context audio.",
+        "Guess the first track of a release or fetch/sign every search result before selection.",
+        "Expose actionable previous-query rows during draft transition or accept obsolete results as current.",
+        "Autoplay on mount/results or introduce a second player/session.",
+        "Treat unavailable service as an observed empty catalog or apply directory geography/profession filters silently to music."
+      ],
+      "effects": [
+        "Read-only private/no-store authorized track metadata; fresh delivery authorization remains separate",
+        "Twelve visible music hits plus one lookahead, independent ES/EN accessible status/retry/navigation controls",
+        "Retain the legacy directory empty-state title, adding scope clarification for active music queries; closed wire-schema field checks reject unexpected keys and malformed hits."
+      ],
+      "authorization": "Reuse requirePublicFeature, trustedEdgeTerritory, published view and music_public_asset_accessible per same recording/version source before JSON projection. Every returned hit must have eligible audio regardless of text match. Selection reauthorizes through the existing engine.",
+      "privacy": "Return only exact context/display metadata and eligible deferred source IDs; technical metadata is numeric bitrate/loudness only. No URL, storage location, master/uploader/rights blob, private index or new listening persistence. Internal database text matching is not a timing noninterference proof.",
+      "concurrency": "AbortSignal plus query/page identity and immediate draft-action hiding. Existing engine generations protect delivery; offset pages have no snapshot guarantee under concurrent catalog mutation. Nonzero rendition restoration waits for matching source metadata, rejects superseded generations, preserves a newer queued seek and never overrides explicit pause.",
+      "idempotency": "GET is read-only; stable catalog requests preserve stable recording/context ordering. Explicit commands use existing engine ownership and do not create media or server jobs.",
+      "failure": "Disabled or failed service stays a recoverable independent music error. Invalid query/pagination fails400; late results do not acquire current actions. Denied selected delivery does not substitute another recording. Malformed music wire data fails closed as a music-only error without crashing directory rendering.",
+      "recovery": "Retry the current search or previous music page without resetting playback. Application-source rollback needs no schema or master changes; coordinate frontend/backend order.",
+      "observability": "Source-bound actual SQL/binding controls, finite design exploration/mutants, component and native-decoder fixtures, actual compiled HTTP qualification and exact-head CI recorded separately. No operational p95 or production acceptance claim.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "formal/system/public-routes.json",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs",
+        "scripts/quality-repo.sh",
+        "playwright.config.mjs",
+        "playwright.music-native.config.mjs",
+        "tdf-hq/docs/openapi/music-search.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-SOURCES-001",
+        "MEDIA-MUSIC-DISCOVERY-001",
+        "MEDIA-MUSIC-PLAYER-001",
+        "AUTH-PUBLIC-001"
+      ],
+      "tests": [
+        "scripts/test-music-track-search.mjs",
+        "scripts/__tests__/music-track-search-model.test.mjs",
+        "tdf-hq-ui/src/api/musicReleases.search.test.ts",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
+        "tdf-hq-ui/src/player/publicMusicTrack.test.ts",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "e2e/web/music-search-native.spec.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [
+        "formal/system/music-track-search-model.mjs"
+      ],
+      "verification": "Finite design model explores two queries/recordings/pages with bounded generations/events and counterexample mutants; not extracted implementation or a refinement theorem. Real SQL/binding, React and native fixtures test implementation boundaries separately. Compiled HTTP/current CI/production obligations remain explicitly scoped.",
+      "evidence": "docs/music-releases/track-search-delivery-2026-10-26.md; original setup/test failures and exact-source qualification archives remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation tests and bounded design exploration; no whole-platform catalog, production delivery or complete formal refinement claim.",
+      "ambiguity": [
+        "Only canonical release audio is covered; non-release sources, historical import, credits/genre/alias and typo-tolerant ranking remain incomplete.",
+        "Bounded model trusts backend authorization/current engine guards; liveness remains conditional and implementation refinement unproven.",
+        "Offset pages can miss/repeat rows as catalog changes.",
+        "Representative SLOs, actual object delivery/revocation, physical devices, fullAA and deployed acceptance remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Exact authorized track discovery and synchronous selection implemented; scoped SQL/component/native evidence and bounded design model do not establish full production catalog completeness or mathematical implementation proof. Compiled HTTP/current-head CI/review/release remain separately recorded."
+      },
+      "allowedVerification": [
+        "TESTED",
+        "MODEL_CHECKED_WITH_BOUNDS",
+        "PARTIAL",
+        "UNVERIFIED"
+      ]
+    },
+    {
+      "id": "BOOK-STUDIO-TIMEZONE-001",
+      "title": "Public studio hours use Quito time independently of visitor preferences",
+      "domain": "BOOK",
+      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
+      "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
+      "contract": "formal/system/public-booking-timezone.md",
+      "actors": [
+        "Visitor",
+        "Signed-in customer"
+      ],
+      "preconditions": [
+        "Active canonical offering available; existing backend booking admission applies."
+      ],
+      "inputs": [
+        "Visitor timezone",
+        "Selected local start and duration",
+        "General display timezone preference"
+      ],
+      "state": {
+        "schedule": [
+          "contact",
+          "schedule",
+          "confirmation",
+          "submitted or recoverable failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Contact -> schedule -> confirmation for an interval within the Quito opening window",
+        "Confirmation -> recoverable booking error without false success",
+        "Schedule -> suggested time within the same selected Quito calendar date"
+      ],
+      "forbiddenTransitions": [
+        "General display timezone changes the physical studio zone",
+        "Start before 08:00 or end after 22:00 Quito admitted by the public form",
+        "Reinterpret persisted UTC booking timestamps",
+        "A quick-suggestion click moves the booking to the previous Quito calendar date"
+      ],
+      "effects": [
+        "Studio opening hours remain in Quito; selected visitor-local instants are serialized in UTC."
+      ],
+      "authorization": "Existing public and authenticated booking authorization is unchanged; frontend validation grants no backend authority.",
+      "privacy": "Regression traffic uses synthetic identities and intercepted API responses; no real reservations or payments.",
+      "concurrency": "Existing cancellation and stale availability response guards remain unchanged.",
+      "idempotency": "Existing booking idempotency semantics are unchanged; no automatic write replay.",
+      "failure": "Out-of-hours selection remains on schedule with actionable feedback; refused booking is never shown as successful.",
+      "recovery": "User can select another valid schedule while retaining contact details.",
+      "observability": "Source-bound unit and browser results; no new analytics events.",
+      "property": "QuitoOpeningWindowAndUtcInstantPreserved",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "e2e/web/booking-timezone.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Rendered component regression with general UTC preference; browser boundary and refused synthetic submission tests for UTC and summer Europe/Madrid visitors. Not a proof of backend hours enforcement. Rendered-form regression reproduces original75 shifting January15 toJanuary14; corrected form preserves the date through repeated clicks. Browser UTC/Madrid scenarios now click suggestions repeatedly before and after a visitor-local midnight crossing.",
+      "evidence": "reports/booking-quito-timezone-2026-10-26.json",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Owner-confirmed business rule; current source execution recorded separately.",
+      "ambiguity": [
+        "Backend schedule-policy authority is outside this frontend correction. No production deployment or existing booking migration is implied."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
     }
   ]

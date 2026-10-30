@@ -1,0 +1,66 @@
+{
+  "hosted-run.json": {
+    "bytes": 264,
+    "sha256": "d807434fe77aae55bb6ad50e227d21133ecb0b8b1fe62dbd7958706842d6777e"
+  },
+  "persona-artifact.zip": {
+    "bytes": 104233378,
+    "sha256": "b2c32baad965639510710078b5d9d589ac4e355073d2569508032a4bdf1804f4"
+  },
+  "persona-discovery-desktop-trace.zip": {
+    "bytes": 1855234,
+    "sha256": "3b370d5280fef7829de1aa1cd884eca6e2effad80023e5ebcade79e3e10891fd"
+  },
+  "webkit-iphone-trace.zip": {
+    "bytes": 5788832,
+    "sha256": "9bc95916c2975f44cd74a27796bed30dc992b5b0046e721f15b7fd2f3e1203d0"
+  },
+  "hosted-jobs.json": {
+    "bytes": 3357,
+    "sha256": "fd82fc4cc606c98d81e924122d48caa9924bf80886703724fe3f17d2df6e6b00"
+  },
+  "android-chrome-small-boundary.json": {
+    "bytes": 9388,
+    "sha256": "89f144607b0dacbb6b6fb30b59e10765fa6d87968f6b474a067c6b6c43bccd2f"
+  },
+  "firefox-critical-boundary.json": {
+    "bytes": 10272,
+    "sha256": "d1642ac7a2a16c33b1436ef3b86573682f6cbd18e066ca3d277593053e189eed"
+  },
+  "chromium-tablet-boundary.json": {
+    "bytes": 9833,
+    "sha256": "f3f01f8bb61a5b5bb4623a00b53fea07cad64a68c9c9bbd08950377fb8bcb61f"
+  },
+  "webkit-iphone-boundary.json": {
+    "bytes": 9609,
+    "sha256": "67b7591245621e2b8a56cc2dff5af49eb122d03d9559122beef6acc0f057737e"
+  },
+  "webkit-critical-trace.zip": {
+    "bytes": 6708460,
+    "sha256": "8362be1b782281371fc648e26f51dd280b1bfa6ec9b8f85ebb3f16a639499070"
+  },
+  "persona.log": {
+    "bytes": 198199,
+    "sha256": "96e9c48b9a2b59f07b1e3c7ef2a8a73b223672ab499a1f1725827ca828d5e2b6"
+  },
+  "native.log": {
+    "bytes": 69546,
+    "sha256": "ea4554725a6b498163b8948f4b912ec0c0118ebbebdc55fa452740f65deb7773"
+  },
+  "chromium-desktop-boundary.json": {
+    "bytes": 9835,
+    "sha256": "ec4830d05d14ad57dbce4f41629d86df7ea6b56474874655b7d40d40c0b05ace"
+  },
+  "chromium-phone-boundary.json": {
+    "bytes": 9687,
+    "sha256": "a4872798137eb264c0c1b026156e611cfbb1227a72dd2e195978c641c75474fc"
+  },
+  "native-artifact.zip": {
+    "bytes": 27498808,
+    "sha256": "2b90e46a3ed33fd4698f60e97460195aafefcc78527245950e2777079b73f2bf"
+  },
+  "webkit-critical-boundary.json": {
+    "bytes": 9320,
+    "sha256": "8ae2658c4970866d4bb0fbcf6149f8c4bd5bf80dbec0c11d6d9de7fac377645d"
+  }
+}

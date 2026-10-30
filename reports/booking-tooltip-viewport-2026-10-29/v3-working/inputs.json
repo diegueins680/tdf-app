@@ -1,0 +1,10 @@
+{
+  "UICompilationCommit": "a5d8b29987acfeb460a86e662fd5ead53ab379e8",
+  "UIFileSha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+  "workingFinalTestSha256": "401c4c15062d4337d53a118c25b0d52b0facb7db0e3119fdc98ded8a05932198",
+  "executedTestSha256": "46d8b4492545b9a1e77f74f570d04a438ae84d2216fb76d60edda3524d3a3d76",
+  "testTransform": "Only package import locations; complete test body matches workingV3.",
+  "change": "After immutable original first assertion, center focused anchor; acknowledge actual tracking scroll event plus following task.",
+  "allUISourceAndDependenciesEqualCompiledC1": true,
+  "scope": "Code-behavior validation against identical UI inputs; not a claim of a newly stamped C2 build."
+}
