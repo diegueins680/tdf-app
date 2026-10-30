@@ -13561,6 +13561,87 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "SYS-WORKER-COMPLETION-001",
+      "title": "Preserve close-based worker deadlines and first-failure lifecycle evidence",
+      "domain": "SYS",
+      "critical": false,
+      "statement": "The synthetic music runtime runner accepts asynchronous completion only after ChildProcess close, preserving status and full captured output. Its default completion deadline remains30000ms. A timeout remains fatal and includes the observed process/stream lifecycle and bounded output tails, distinguishing an observed exit awaiting close from no observed exit. Spawn failures remain rejected. Diagnostics never substitute process exit, stream destruction, a longer deadline or a later successful attempt for completion.",
+      "authority": "User mission sections1.2,8,9 require credible failure evidence, verification-control testing and no suppression of failing checks; existing runtime close/deadline behavior and Node24 child-process event contract.",
+      "source": "formal/system/music-worker-completion-observation.md; scripts/test-music-release-worker-runtime.mjs atmain e302; hosted40831374480/job123306367783 generic watchdog failure.",
+      "contract": "formal/system/music-worker-completion-observation.md",
+      "property": "Default deadline30000ms; success implies observed close; timeout preserves separate spawn/exit/close/stream fields and at most4000characters per output tail; error/timeout remain failures.",
+      "actors": [
+        "Synthetic worker runtime runner",
+        "CI maintainer investigating a failing worker scenario"
+      ],
+      "preconditions": [
+        "Observer attaches synchronously to a newly spawned ChildProcess with piped stdout/stderr.",
+        "Output belongs only to scrubbed synthetic local/CI fixtures; this is not a production logger."
+      ],
+      "inputs": [
+        "ChildProcess lifecycle and stream events",
+        "Completion promise and test deadline"
+      ],
+      "state": {
+        "process": [
+          "awaiting-exit",
+          "exited-awaiting-close",
+          "closed",
+          "spawn-error"
+        ],
+        "completion": [
+          "pending",
+          "closed-result",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Observed exit before output closure -> retain pending completion and exit milestone",
+        "Observed close -> preserve status/signal/full captured output",
+        "Deadline without close -> reject with bounded first-failure snapshot",
+        "Spawn error -> reject even when awaited after readiness"
+      ],
+      "forbiddenTransitions": [
+        "Exit alone -> accepted completion",
+        "Timeout -> discard all available lifecycle/output evidence",
+        "Timeout -> extend deadline or destroy streams to claim close",
+        "Missing fixture readiness -> unbounded unit-test wait preventing cleanup"
+      ],
+      "effects": [
+        "Additional synthetic diagnostics only; existing worker outcome assertions and process cleanup remain.",
+        "Root repository quality executes the real-child lifecycle regression tests."
+      ],
+      "authorization": "No provider/production authorization or deployed worker behavior change; fixtures own their child processes.",
+      "privacy": "Diagnostics include no environment or command arguments; tails are bounded synthetic fixture output, not a redaction guarantee for arbitrary production streams.",
+      "concurrency": "Exit and close milestones are observed separately; timeout snapshots reflect event delivery at the deadline and do not infer why a process is waiting.",
+      "idempotency": "Snapshots are read-only observations; successful completion retains the original result. Repeated observations cannot qualify a timed-out attempt.",
+      "failure": "Timeout and spawn errors reject; no observation is a claim of descendant quiescence or PostgreSQL/rootcause correctness.",
+      "recovery": "Investigate captured first-failure process/pipe/fixtureSQL state; preserve failed run. Actual shutdown corrections require their own counterexample and verification.",
+      "observability": "Monotonic start/spawn/exit/close/observation timestamps, PID/status/signal, stream flags, total character counts and bounded tails.",
+      "implementation": [
+        "scripts/lib/test-child-completion.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/test-child-completion.test.mjs",
+        "scripts/test-music-release-worker-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Real normal/live/exited-parent-with-held-pipe/spawn-error/missing-readiness fixtures; unchanged default timer assertion; single-guard mutations; actual music concurrency lane. Passing receipts are separate source-bound artifacts, not a mathematical proof.",
+      "evidence": "reports/music-worker-completion-2026-10-29.json when committed; original hosted failure and setup/local probe receipts retain separate scopes.",
+      "confidence": "High for scoped local lifecycle observations under tested Node/OS; hosted worker shutdown cause remains UNKNOWN.",
+      "ambiguity": [
+        "An exit awaiting close does not identify the descriptor holder; a live process does not identify its wait cause.",
+        "No claim of output redaction for nonsynthetic callers, universal process-tree cleanup or whole-worker liveness."
+      ],
+      "status": "specified and implemented",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local observation controls are executable; actual hosted first-failure rootcause, product shutdown liveness and protected integration remain separate."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -14008,6 +14089,7 @@
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
+    "scripts/__tests__/test-child-completion.test.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
@@ -14063,6 +14145,7 @@
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
+    "scripts/lib/test-child-completion.mjs": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
@@ -14081,7 +14164,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+    "scripts/quality-repo.sh": "55bbdf29d7a8ea844439c1ce42e014c5f76e4c689860afa7a3297635df036ee0",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14153,7 +14236,7 @@
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
     "scripts/test-music-release-audio-pipeline.sh": "872c969557cc8cde9e5e135d768cfa5da60937beacb954de5ad1301c5331b8de",
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
-    "scripts/test-music-release-worker-runtime.mjs": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
+    "scripts/test-music-release-worker-runtime.mjs": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
     "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
@@ -15290,6 +15373,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WORKER-COMPLETION-001",
         "relationship": "implementation"
       }
     ],
@@ -22685,6 +22772,14 @@
       {
         "requirement": "MEDIA-MUSIC-DDEX-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-WORKER-COMPLETION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WORKER-COMPLETION-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-music-release-audio-pipeline.sh": [
@@ -26320,6 +26415,18 @@
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/lib/test-child-completion.mjs": [
+      {
+        "requirement": "SYS-WORKER-COMPLETION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/test-child-completion.test.mjs": [
+      {
+        "requirement": "SYS-WORKER-COMPLETION-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -28629,6 +28736,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-a1dd9455f7a2ce96",
+      "path": "scripts/__tests__/test-child-completion.test.mjs",
+      "sha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WORKER-COMPLETION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f108b694973ffac6",
       "path": "scripts/__tests__/test-process-session.test.mjs",
       "sha256": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
@@ -29884,6 +30003,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-0ebd44c86ad332c6",
+      "path": "scripts/lib/test-child-completion.mjs",
+      "sha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WORKER-COMPLETION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-cf6df3f57a9edc7c",
       "path": "scripts/lib/test-process-session.mjs",
       "sha256": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
@@ -30277,7 +30408,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+      "sha256": "55bbdf29d7a8ea844439c1ce42e014c5f76e4c689860afa7a3297635df036ee0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30330,6 +30461,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WORKER-COMPLETION-001",
           "relationship": "implementation"
         }
       ]
@@ -32143,7 +32278,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
+      "sha256": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32152,6 +32287,14 @@
         },
         {
           "requirement": "MEDIA-MUSIC-DDEX-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-WORKER-COMPLETION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WORKER-COMPLETION-001",
           "relationship": "tests"
         }
       ]
@@ -56499,7 +56642,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "ac96346a769612949ba56c8dc7fc685a44d363da143ee3077671e62ba9c843dd",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56527,7 +56670,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "ac96346a769612949ba56c8dc7fc685a44d363da143ee3077671e62ba9c843dd",
       "definition": {
         "states": [
           "absent",
@@ -56557,7 +56700,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "15acd50e040ad635f97bdce36e22834577f29ecbf087c81e3c91c53e36d465b8",
+      "sourceSha256": "ac96346a769612949ba56c8dc7fc685a44d363da143ee3077671e62ba9c843dd",
       "definition": {
         "export": [
           "queued",
@@ -79044,7 +79187,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

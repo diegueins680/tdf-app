@@ -1,0 +1,18 @@
+Supplemental independent read-only review: final unit timeout bounds
+
+Blocking findings: 0 in this limited follow-up. Previous final and blocking receipts remain retained. No tests/processes, server, DB or source edits by this reviewer.
+
+Compared final unit1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67 against the prior reviewed3922d2bd retained copy. Exactly two changes: normal-completion and live-child outer node:test timeouts5000->8000ms. Test bodies, assertions and their inner deadlines are unchanged. This contains the normal3s completion+up to3s cleanup and live2s readiness+40ms observation+up to3s cleanup; it does not extend the application/worker watchdog or convert a failed child into success. Default completion remains30000ms and close-based; helper hash remains e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c.
+
+Final correct helper/unit copies equal working source exactly. Refreshed raw unit output reports6pass/0fail/0cancelled/0skipped. Each refreshed selected mutation produces the intended one-case assertion failure: missing exit classification, missing expected rejection when accepting exit, and missing snapshot-message context. These are source-bound actual results from supplied receipts, not independent execution.
+
+The earlier seven-scenario worker execution remains bound to unchanged runtime/helper/product/core hashes and its older unit0cd8cbb2. Its unit difference from the latest file comprises the previously reviewed normal-test finally plus these two outer timeout edits. The final6-case/mutation receipt qualifies current unit bytes separately; no need or claim to relabel the older runtime manifest as containing the latest unit. No hosted-rootcause, universal cleanup/liveness proof, GitHub approval or protected integration claim follows.
+
+Reviewed SHA256 values:
+/private/tmp/tdf-music-worker-completion-20261029/scripts/__tests__/test-child-completion.test.mjs: 1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67
+/private/tmp/tdf-music-worker-completion-20261029/scripts/lib/test-child-completion.mjs: e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c
+/private/tmp/tdf-worker-completion-final-bound-controls-20261029/controls.json: cf84017dc77fd17725124d6574538387d8576c68b5165d41502a28bc0704c5ac
+/private/tmp/tdf-worker-completion-final-bound-controls-20261029/correct-unit.txt: 230d1639949126a6194578af655fb2bf6df90cc02a1185091eefee55fa6bd28f
+/private/tmp/tdf-worker-completion-final-bound-controls-20261029/omit-exit-observation.txt: e86448176fa94182501c36b6f4882cfe19e7055c8abcd29f214c4ef0f1f7c13d
+/private/tmp/tdf-worker-completion-final-bound-controls-20261029/complete-at-exit.txt: 97651e3a63b5f7fc13978492fa8e4b30982b807ea09fa16ad40bb00a90f192ac
+/private/tmp/tdf-worker-completion-final-bound-controls-20261029/discard-timeout-context.txt: c8d1292a1afe8bd5d9a42879d719b4602140ef3aa46fcfd71b2ce03e2b8923cd

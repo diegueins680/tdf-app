@@ -1,0 +1,698 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+  "previousPublishedHead": "7082d7d045dcd6b2c7f8d33282e9ff2d6588d617",
+  "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+  "evidenceCommit": "Containing report-only child; four new report Git blobs and all member hashes checked after commit.",
+  "problem": "The real music-worker runtime watchdog reported only Worker did not stop within 30s. Teardown then removed the state needed to distinguish a still-live worker, process exit with inherited output pipes open, and output-drain completion. Multiple hosted failures lack that context; underlying worker completion cause remains UNKNOWN.",
+  "correction": "Observe synthetic child spawn, exit and close separately; preserve normal close-based completion/default 30s, retain bounded stdout/stderr tails, lengths and stream state in both CLI error and structured workerSnapshot at timeout. Keep early spawn rejection awaitable. Register real-process regression coverage in normal repository CI. No application worker, production schema, deadline, close/assertion/retry semantics changed.",
+  "composition": {
+    "normalParents": [
+      "7082d7d045dcd6b2c7f8d33282e9ff2d6588d617",
+      "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5"
+    ],
+    "wholeProductionBackendUiWorkflowOpsDependenciesMobileExactMain": true,
+    "threeWorkerScriptsExactPrevious": true,
+    "qualityMainPlusOriginalUnitRegistrationOnly": true,
+    "all159MainRequirementObjectsAndOwnedSYSExact": true,
+    "totalRequirements": 160,
+    "historicalBlobs": 208,
+    "historicalScope": "All original report/tree files stay byte-exact7082 and source-bound to their dated stages, not relabeled as this source. No671/673/677/679/682 imported."
+  },
+  "properties": [
+    {
+      "id": "SYS-WORKER-COMPLETION-001/OBSERVABILITY",
+      "requirement": "SYS-WORKER-COMPLETION-001",
+      "contract": "formal/system/music-worker-completion-observation.md",
+      "implementation": [
+        "scripts/lib/test-child-completion.mjs",
+        "scripts/test-music-release-worker-runtime.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/test-child-completion.test.mjs"
+      ],
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "status": "TESTED",
+      "statement": "A modeled timeout remains failure and retains process milestones, PID/status/stream state and bounded output context before teardown.",
+      "method": "Current real-child six-case suite through rootquality plus isolated-copy fault controls; dropping timeout context or exit observation causes intended real assertions.",
+      "assumptions": [
+        "Synthetic child processes with piped streams on tested macOS/Node 24; previousLinux/Node22 observations are separately historical.",
+        "No universal process scheduling/forced termination/provider/production completion guarantee."
+      ]
+    },
+    {
+      "id": "SYS-WORKER-COMPLETION-001/CLOSE-FIDELITY",
+      "requirement": "SYS-WORKER-COMPLETION-001",
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "status": "TESTED",
+      "statement": "Completion awaits close/output drainage rather than only parent exit; default completion deadline stays 30000ms.",
+      "method": "Real parent exits while a descendant holds pipes; unit expects timeout and exited-awaiting-close. Complete-at-exit fault fails the intended assertion. Native current-source seven concurrency scenarios pass unchanged.",
+      "assumptions": [
+        "Finite owned child/descendant fixtures; current local PostgreSQL16 runtime is not hosted PostgreSQL 17 parity or an underlying timeout repair."
+      ]
+    }
+  ],
+  "verification": {
+    "rootQuality": {
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "sourceSeal": {
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "baseMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+      "previousPublishedHead": "7082d7d045dcd6b2c7f8d33282e9ff2d6588d617",
+      "normalParents": [
+        "7082d7d045dcd6b2c7f8d33282e9ff2d6588d617",
+        "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5"
+      ],
+      "wholeProductionBackendUiWorkflowOpsDependenciesMobileExactMain": true,
+      "threeOwnedScriptsExactPrevious": true,
+      "qualityOnlyOriginalUnitRegistrationAdded": true,
+      "all159MainRequirementObjectsAndOwnedSYSExact": true,
+      "totalRequirements": 160,
+      "registeredHashesVerified": 1431,
+      "sourceDigest": "a4e294ba8c1e1880c5094a2aa59562f5d864185108a03afc8378df784c2fe4d9",
+      "all987BackendGitFilesystemInputsVerified": 987,
+      "historicalGitFilesystemBlobCount": 208,
+      "historicalGitFilesystemSha256": {
+        "reports/music-worker-completion-2026-10-29.json": "4cf5738ebc94102ca9f839a26024936967801e43d3771b0737541337e2576060",
+        "reports/music-worker-completion-2026-10-29/baseline-probe-setup-not-run/execution.json": "b270857b2100a0b39867c48f2bb5ff3dbc326869e7f184fbe1cd4143c141efa0",
+        "reports/music-worker-completion-2026-10-29/baseline-probe-setup-not-run/observations.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "reports/music-worker-completion-2026-10-29/baseline-probe-setup-not-run/postgres-server.log": "0d0dbdd5bcc2a78f787833d372c69a61804c083d78af6a727adb11483fbe2408",
+        "reports/music-worker-completion-2026-10-29/baseline-probe-setup-not-run/postgres-stop.txt": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+        "reports/music-worker-completion-2026-10-29/baseline-probe-setup-not-run/postgres.log": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad",
+        "reports/music-worker-completion-2026-10-29/changed-runner-seven-concurrency-scenarios/execution.json": "ed1a8671dda57fe66c64115078b8e1c0ad1e60bb0a9044355bc43af9988f4c6a",
+        "reports/music-worker-completion-2026-10-29/changed-runner-seven-concurrency-scenarios/observations.json": "6cc6d4dd73adafccccf59b6dbf876ddd67b9be18a00a5b945eec45ed47a7f1d4",
+        "reports/music-worker-completion-2026-10-29/changed-runner-seven-concurrency-scenarios/postgres-server.log": "82394924679a8cd5ff5e92744b26a291441f6a8e6b350d4b010c9c20fef382fb",
+        "reports/music-worker-completion-2026-10-29/changed-runner-seven-concurrency-scenarios/postgres-stop.txt": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+        "reports/music-worker-completion-2026-10-29/changed-runner-seven-concurrency-scenarios/postgres.log": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad",
+        "reports/music-worker-completion-2026-10-29/changed-runner-seven-concurrency-scenarios/worker-runtime.txt": "0b4d3f49478899cd45be2cd8795718527b36366870124f9beb7f6dd7a8bbe669",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-completion-compose-20261029.py": "10b186d22a44c1a6dd115679e3e0c4b236fe58b5fc9c091c77e4146158d4f043",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-completion-compose-resume-20261029.py": "4d0d76206e0f557b4b719c61b67a9141441ba70b9baad0dd117b1be6f010b58b",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-completion-composed-seal-resume-20261029.py": "0ac48e7dbd8e9cc32d46ac465f3f6582bf3fd4b61a9045ff888ed4d9b5c8ea72",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-completion-final-bound-controls-20261029.py": "9ef76ff81bf49955485b788892f3ac890dd4d9956c1727a45d00a0c2d8658a83",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-completion-qualify-20261029.py": "d8fd7f6909b98ac2af0d4197059af37b24caae3d9174e53d8082bc7b554925a1",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-completion-seal-20261029.py": "65f56006237633d9250a7d2412bd375e8d84e53ff7bca140b37cada5742c20a2",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-concurrency-completion-20261029.py": "7faea5f83a6ad4fffe2e509a8db7a8d5466f4c2f390339dc2862682a14c6b9e8",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-sibling-probe-20261029.py": "547531ae414fc510c6dc39a8d38e6bed9e62c8ea5f693665fa464fd855bd3631",
+        "reports/music-worker-completion-2026-10-29/execution-drivers/tdf-worker-sibling-probe-v2-20261029.py": "e59d4971bb1a4d1e623a55c0fcad12f7b39881174563d1b450065706e0670e37",
+        "reports/music-worker-completion-2026-10-29/final-controls/complete-at-exit.txt": "97651e3a63b5f7fc13978492fa8e4b30982b807ea09fa16ad40bb00a90f192ac",
+        "reports/music-worker-completion-2026-10-29/final-controls/controls.json": "cf84017dc77fd17725124d6574538387d8576c68b5165d41502a28bc0704c5ac",
+        "reports/music-worker-completion-2026-10-29/final-controls/correct-library.mjs": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+        "reports/music-worker-completion-2026-10-29/final-controls/correct-unit.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+        "reports/music-worker-completion-2026-10-29/final-controls/correct-unit.txt": "230d1639949126a6194578af655fb2bf6df90cc02a1185091eefee55fa6bd28f",
+        "reports/music-worker-completion-2026-10-29/final-controls/discard-timeout-context.txt": "c8d1292a1afe8bd5d9a42879d719b4602140ef3aa46fcfd71b2ce03e2b8923cd",
+        "reports/music-worker-completion-2026-10-29/final-controls/omit-exit-observation.txt": "e86448176fa94182501c36b6f4882cfe19e7055c8abcd29f214c4ef0f1f7c13d",
+        "reports/music-worker-completion-2026-10-29/hosted-existing-failure/run40831374480-job123306367783-excerpt.txt": "6976a767c7a5f30f292d1a86d64c527ac87f334ab28766dab0c35b7df788c777",
+        "reports/music-worker-completion-2026-10-29/independent-review/tdf-worker-completion-bound-review-20261029.txt": "7efd48fa76cee3f08da58692e5a360853d342995b0cadca4030084e8548f1cb0",
+        "reports/music-worker-completion-2026-10-29/independent-review/tdf-worker-completion-code-review-20261029.txt": "4082b57cf1dcaed0d6516ff28938834606e0de7d0b24fb81c400ba5033bd7339",
+        "reports/music-worker-completion-2026-10-29/independent-review/tdf-worker-completion-composed-review-20261029.txt": "d4de0be507dccb089bc222016a5562c1e468e32d2845de57e87e2f09a654f03c",
+        "reports/music-worker-completion-2026-10-29/independent-review/tdf-worker-completion-final-review-20261029.txt": "6152393ea3e1f9251280dc0380bdef58d6a64789820f710ac244163692d601c9",
+        "reports/music-worker-completion-2026-10-29/independent-review/tdf-worker-completion-hardened-review-20261029.txt": "64f7e5a2bd5b465f9498f728fa70b8e32eccecb4281198103d50d7fa65d7b4d3",
+        "reports/music-worker-completion-2026-10-29/independent-review/tdf-worker-stop-independent-investigation-20261029.txt": "857fbbacc81821caa106618cc37235b8cd2fc06706e4e321fe0b47556841e7b7",
+        "reports/music-worker-completion-2026-10-29/prior-booking-hosted/artifact.json": "68fd4d53366cb7516ff0b7077e2585c2535d5c971e0c30238cadefcb46030e4a",
+        "reports/music-worker-completion-2026-10-29/prior-booking-hosted/booking-results.json": "3191b2d535145ef4f51239b0a9ad9af05a578014e2db597739c5e9389e6b03b9",
+        "reports/music-worker-completion-2026-10-29/prior-booking-hosted/independent-integration-review.txt": "64c47f8d95926413dbb58d60c127adeb7d640dbf4fa03270a1f65c869d0abe81",
+        "reports/music-worker-completion-2026-10-29/prior-booking-hosted/raw-persona-results.json": "efbe834e6aae0c910d089724573ea5f1e66c8b660d56cc273d5621d9befc993e",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/checks.json": "268e1e3a9bf5a87809b67b119c99f2eb45d9296179d3e4dec4bce504bebb8e25",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/final-checks.json": "268e1e3a9bf5a87809b67b119c99f2eb45d9296179d3e4dec4bce504bebb8e25",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/final-main.json": "902821422e3268b31ac6a50514dbaafce5a1a8f10af91cb13634ed5687bc1f98",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/final-pr.json": "ca2ce85170703ffe1677333e91d2bc426f0f3b9bc4027547aab91aa5ca7e226c",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/final-protection.json": "44433adb0c6e69e9e4bb3e7fcc774d403e86ad5f828d6a829f49df5596cf59bf",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/final-reviews.json": "e91d9ded1f2db14224178ab8fc0e151b9f6554807cb77f2d3df8379269be9c5d",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/final-statuses.json": "ac22a74e57952cac5ed5d9eb54d9d200fa7e42e9c957a5836c9b878212967224",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/final-summary.json": "91381f06e4e0013d22a85422a3b6754873452f174b3c9cfee3feadef5042ce62",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/gate-summary.json": "4e063008a6004452c0d381a2a5cd514b0855cdbe8ce628c0f2cd93e2872292b4",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/main.json": "902821422e3268b31ac6a50514dbaafce5a1a8f10af91cb13634ed5687bc1f98",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/merge-result.json": "adaab1bc3f1d4f422369ce35c55e459e313e8a8ab2e32edd56d6837df4589ab3",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/postmerge-tree.json": "0f2c358afeb15234d4381b80c5842daa5c487a93c81ea9ee15544e91ae4314cb",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/pr.json": "1fcea9cbe3beb6d48be89dd6b5f50f57dc7d195dc973e2c4a4b5ded3c93e7c6c",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/premerge-chronology.json": "ea3f214d757d69f090e86b3bec040eb0cefc34b8ff6d8667a8e178facb7e28d0",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/protection.json": "44433adb0c6e69e9e4bb3e7fcc774d403e86ad5f828d6a829f49df5596cf59bf",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/reviews.json": "e91d9ded1f2db14224178ab8fc0e151b9f6554807cb77f2d3df8379269be9c5d",
+        "reports/music-worker-completion-2026-10-29/prior-booking-integration/statuses.json": "ac22a74e57952cac5ed5d9eb54d9d200fa7e42e9c957a5836c9b878212967224",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed.txt": "d4f493a73598ab9bb0d36e1ddfdbc35a515e2a69197c07c0d1dea4855af5563c",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/capture-admission.smt2": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/capture-legacy-counterexample.smt2": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/capture-safety.smt2": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/capture-witness-0.smt2": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/capture-witness-1.smt2": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/refund-admission.smt2": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/refund-legacy-counterexample.smt2": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/refund-safety.smt2": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/refund-witness-0.smt2": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/refund-witness-1.smt2": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/arithmetic/result.json": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization-execution.log": "0d72bab0b59d316c2456f681ccd0fd0758220f63dd8329c924acce2a418e3a75",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization-replay.json": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/cardinality-nonnegative.smt2": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/cardinality-sum.smt2": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/cardinality-zero.smt2": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/control-admit-operational-role.smt2": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/control-allow-zero-identity.smt2": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/control-drop-coherence.smt2": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/control-drop-module-grant.smt2": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/control-module-implies-admin.smt2": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission-witness-false.smt2": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission-witness-true.smt2": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission.smt2": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/module-access-witness-false.smt2": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/module-access-witness-true.smt2": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/module-access.smt2": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/result.json": "dd71f632974ad4f9d4567de7113e6a5e025b778001a655adf631f4966816c2d1",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/strict-admin-witness-false.smt2": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/strict-admin-witness-true.smt2": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/authorization/strict-admin.smt2": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/execution-0.log": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/execution-1.log": "cfbe664e608724897cafb3cc463c2d5138506c8cdc891164e91f04322525476b",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery-execution.log": "7bce4a722cec3c6daa3037f3bb9e32cee3ce295e60abfb9d2bf8bdde369bbe24",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery-replay.json": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/control-database-lifetime.smt2": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/control-future-issuance.smt2": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/control-inclusive-deadline.smt2": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/control-issuance-lifetime.smt2": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/control-validator-lifetime.smt2": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/issuance-admission.smt2": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/issuance-exact.smt2": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/result.json": "b20953061af0158c845323645a055d5e9a05c0a865a4f18db6a62e14fe749d40",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/schema-correspondence.smt2": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/window-equivalence.smt2": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/witness-0-0.smt2": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/witness-0-899.smt2": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/witness-9223372036854774907-0.smt2": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/witness-9223372036854774907-899.smt2": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/recovery/witness-overflow-rejection.smt2": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/replay.json": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/report.json": "db20000791f266d8e52544443569c97e5cff7116d1f37f5890815cfa450726e9",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/report.md": "23605ec253aaace861b25df5e756e70efacc0acfa540a75d979225e60187ba03",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-committed/sources.json": "c44f3a53d52e773ca9d7992a65305ba42c51e100f1eedf18f8eb7a64746ec3d4",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed.txt": "d1af17a5597cb4a7060da7418375c85efc5e2a8271f73f62319b732e9cb9102d",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/capture-admission.smt2": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/capture-legacy-counterexample.smt2": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/capture-safety.smt2": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/capture-witness-0.smt2": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/capture-witness-1.smt2": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/refund-admission.smt2": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/refund-legacy-counterexample.smt2": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/refund-safety.smt2": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/refund-witness-0.smt2": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/refund-witness-1.smt2": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/arithmetic/result.json": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization-execution.log": "e5bc130625967337d50161158e1d372ed3c226bdd2ac689f5564c4bd5f58c217",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization-replay.json": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/cardinality-nonnegative.smt2": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/cardinality-sum.smt2": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/cardinality-zero.smt2": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/control-admit-operational-role.smt2": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/control-allow-zero-identity.smt2": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/control-drop-coherence.smt2": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/control-drop-module-grant.smt2": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/control-module-implies-admin.smt2": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/ingestion-admission-witness-false.smt2": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/ingestion-admission-witness-true.smt2": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/ingestion-admission.smt2": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/module-access-witness-false.smt2": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/module-access-witness-true.smt2": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/module-access.smt2": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/result.json": "7418f1d92aa5e6531eb4b508d11fe70a5a7471507b6028d478e0687022d8c19a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/strict-admin-witness-false.smt2": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/strict-admin-witness-true.smt2": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/authorization/strict-admin.smt2": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/execution-0.log": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/execution-1.log": "e8944f2fc87d22fdd21ac5a9abd11d0053ee139384d09c27b46c223e18efbdee",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery-execution.log": "052f0cd3bc9304fa9a5289d91cd33e309af6b0f8251e2f8144f21d6a309f0dc3",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery-replay.json": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/control-database-lifetime.smt2": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/control-future-issuance.smt2": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/control-inclusive-deadline.smt2": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/control-issuance-lifetime.smt2": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/control-validator-lifetime.smt2": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/issuance-admission.smt2": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/issuance-exact.smt2": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/result.json": "5523d248abc2b90e9568c8beef1d8aa49ee04539afb5afa65244d14a89082bbf",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/schema-correspondence.smt2": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/window-equivalence.smt2": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/witness-0-0.smt2": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/witness-0-899.smt2": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/witness-9223372036854774907-0.smt2": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/witness-9223372036854774907-899.smt2": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/recovery/witness-overflow-rejection.smt2": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/replay.json": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/report.json": "ced002cedea435720e7052c0fb5bda6d01ffb16219c21d3218e0009d2f3c3c9f",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/report.md": "4c1eeb4f81a7de7ab713df1115ed6427b92dbebea85295c675e2176a9611fcf9",
+        "reports/music-worker-completion-2026-10-29/source-verification/assurance-composed/sources.json": "7e2f7ded530d09db9c8de233399044ee64bf58b2810bed7752d3dbb243e07a92",
+        "reports/music-worker-completion-2026-10-29/source-verification/catalog-unit.txt": "5893d01b576034a8e494d0826aba172983b2ac1207fb3f3fa45df87767d4f9e7",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-catalog-csv.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-catalog-json.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-catalog-unit.txt": "fc5be9d1026bdcee851a91e01ed227ac184cd626a8045ae41f2ff4730085a018",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-conformance-check.txt": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-conformance.txt": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-inventory-check.txt": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-inventory.txt": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-source-diff-check.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/composed-source-seal.json": "c197ee2b8f2f231bd009e4569194e8d61c23172ba3cb55a5face2750a9965f49",
+        "reports/music-worker-completion-2026-10-29/source-verification/conformance-check.txt": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+        "reports/music-worker-completion-2026-10-29/source-verification/conformance-final-check.txt": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+        "reports/music-worker-completion-2026-10-29/source-verification/conformance-final.txt": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+        "reports/music-worker-completion-2026-10-29/source-verification/conformance.txt": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+        "reports/music-worker-completion-2026-10-29/source-verification/current-main-admission.txt": "b4b54e379ebb706ea3b2ef3cf6890dce8cf85bf5a492303a95ca66ade7a88c4f",
+        "reports/music-worker-completion-2026-10-29/source-verification/diff-check.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/fresh-catalog-discovery.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/incoming-requirement-preservation.json": "a748f0e56aa1b661fac2304f3e73f9a18a03a7693e83d8f1367dd3bb24908493",
+        "reports/music-worker-completion-2026-10-29/source-verification/inventory-check.txt": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+        "reports/music-worker-completion-2026-10-29/source-verification/inventory-final-check.txt": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+        "reports/music-worker-completion-2026-10-29/source-verification/inventory-final.txt": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+        "reports/music-worker-completion-2026-10-29/source-verification/inventory.txt": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+        "reports/music-worker-completion-2026-10-29/source-verification/qualification.json": "d3d4024f9ffc8e0ba57ada9a5d192cc0dcb382fce22eaa953cb24594863e3efa",
+        "reports/music-worker-completion-2026-10-29/source-verification/resolve-generated-conflicts.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/resume-conformance-check.txt": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+        "reports/music-worker-completion-2026-10-29/source-verification/resume-inventory-check.txt": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+        "reports/music-worker-completion-2026-10-29/source-verification/root-quality.txt": "548ac066f715c490f3ab6fe50b677a015a66a042e35e4858aaf6eff88e02508c",
+        "reports/music-worker-completion-2026-10-29/source-verification/source-C.json": "0fadd768364a457072c92bd01cb1e739ff484d97b226b68e2ceba1f403345246",
+        "reports/music-worker-completion-2026-10-29/source-verification/source-add.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/source-admission.txt": "30213a4d2ac573f6e1911e0401be15e7fa93c05889ccf493a411ae32d26506c4",
+        "reports/music-worker-completion-2026-10-29/source-verification/source-commit.txt": "aeb82ff70a2d37214badc1c251e09e1c799c5ba8d32803deb93291d1b1d52ddb",
+        "reports/music-worker-completion-2026-10-29/source-verification/source-merge-commit.txt": "17ee92aac311202db87e7ec354a22b522e2bc07e317e76572faab2c00b1405eb",
+        "reports/music-worker-completion-2026-10-29/source-verification/source-seal.json": "8d052bdd5546c1083a16bfcba8d94e5845d8411dc614035ff2b3bf1977f98af8",
+        "reports/music-worker-completion-2026-10-29/source-verification/strict-catalog-csv.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/strict-catalog-json.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reports/music-worker-completion-2026-10-29/source-verification/unchanged-allowed-inputs.json": "5476b583d8b78a9e3249c89478b9b45918bcc6144bdf416fb5207aeaa481b6bd",
+        "reports/music-worker-completion-2026-10-29/unchanged-baseline-single-scenario/execution.json": "6f497557595f1bb2f7b266f6a763db4584b58191cff1a99a485fe23e4cadc40d",
+        "reports/music-worker-completion-2026-10-29/unchanged-baseline-single-scenario/observations.json": "8cd7261a82acdb1c20676f3672791789d16bb21826138850a58d17724586ad8c",
+        "reports/music-worker-completion-2026-10-29/unchanged-baseline-single-scenario/postgres-server.log": "b44314654162414a03588f4c10daf41b22b62543b9a7fdecb7e270c4c533154b",
+        "reports/music-worker-completion-2026-10-29/unchanged-baseline-single-scenario/postgres-stop.txt": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+        "reports/music-worker-completion-2026-10-29/unchanged-baseline-single-scenario/postgres.log": "1e71001bad1c6c15d18b94ca0c08e4b5c2e03092a42c069bcc69255efa07a2c2",
+        "reports/music-worker-completion-2026-10-29/unchanged-baseline-single-scenario/worker-runtime.txt": "d0d0e4d4f274a6fdfc2c9df5833b4a6a307195a8a141f4411dd59cac4427b2d3"
+      },
+      "assuranceArtifactHashesVerified": 52,
+      "controls": {
+        "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+        "correctLibrarySha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+        "correctTestsSha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+        "variants": [
+          {
+            "label": "omit-exit-observation",
+            "actualExit": 1,
+            "intendedRealProcessAssertionFailures": 1,
+            "mutantSha256": "01b76d4475d0268f23579687408b7c0b84fabc2fb08098c2c5b2aad61380d9fb",
+            "logSha256": "ebe7e6f31b7e88e4581cec257c65e19d96dadd29f305a04ad4f42c535ec488a1"
+          },
+          {
+            "label": "complete-at-exit",
+            "actualExit": 1,
+            "intendedRealProcessAssertionFailures": 1,
+            "mutantSha256": "7a1609defc320dd3657c925918a6d67836c68278e6d0a2609329c7630dfdc88a",
+            "logSha256": "26b5b37ed794f1773f470d5cfcb80a8921651a4b9a15f4bf431dbdfb906dc095"
+          },
+          {
+            "label": "discard-timeout-context",
+            "actualExit": 1,
+            "intendedRealProcessAssertionFailures": 1,
+            "mutantSha256": "801d66710aa484c7318732c32b62e4a97a6d7fe575ab2b766184d5745e2eed2b",
+            "logSha256": "8aefea77dc103fd4d04fe4f63539d513a66d8a34c7c0102e314cb03acc7d8f89"
+          }
+        ],
+        "faultVariants": 3,
+        "intendedAssertionFailures": 3,
+        "restoredPositiveCases": 6,
+        "restoredPositiveExit": 0,
+        "qualifiedWorktreeNeverMutated": true,
+        "scope": "Actual current-source copies and real child processes; source faults isolated outside checkout. No product worker shutdown repair or universal lifecycle proof.",
+        "atUTC": "2026-10-30T18:00:47.716918+00:00"
+      },
+      "localNativeConcurrency": {
+        "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+        "phase": "QUALIFIED_LOCAL_PG16_CONCURRENCY_CLEANED",
+        "sourceSha256": {
+          "scripts/test-music-release-worker-runtime.mjs": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
+          "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+          "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+          "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+          "scripts/lib/test-child-completion.mjs": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+          "scripts/__tests__/test-child-completion.test.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+          "test/fixtures/music-worker/curl.mjs": "1b816316017ca5081325de224176d3f48deb3d60d6ae46db230f052df8c3bb46"
+        },
+        "scope": "Seven actual worker concurrency scenarios with owned new loopback PostgreSQL16 cluster and transport fault injector; same30s close-based completion; no production/provider/S3 compatibility or hosted-failure repair claim.",
+        "dataDirectory": "/private/tmp/tdf-worker642-data-9500c0d94b68",
+        "socketDirectory": "/private/tmp/tdf-worker642-sock-9500c0d94b68",
+        "port": 60934,
+        "postgresBinary": "/usr/local/opt/postgresql@16/bin",
+        "periodicSchedulingObservers": false,
+        "startedAtUTC": "2026-10-30T18:06:11.142123+00:00",
+        "initdbExit": 0,
+        "postgresStartExit": 0,
+        "dataDirectoryIndependentlyVerified": true,
+        "postgresVersion": "16.13 (Homebrew)",
+        "runnerPid": 87779,
+        "runnerProcessGroup": 87779,
+        "actualExit": 0,
+        "remainingOwnedFixtureSessions": "0",
+        "remainingOwnedFixtureDatabases": "0",
+        "ownedProcessGroupRemoved": true,
+        "postgresStopExit": 0,
+        "ownedPostgresStopped": true,
+        "sourceUnchanged": true,
+        "finishedAtUTC": "2026-10-30T18:07:33.104471+00:00"
+      },
+      "nativeDriverResult": {
+        "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+        "driverActualExit": 0,
+        "driverSha256": "416f48ebccb879d72b50aecc7472fe0e8a1023d689d2d1dd502d0f840fff8613",
+        "executionSha256": "45be87c07933ec6791a1ebce82778df03780f83f61e254e3d5373e1746d30d82",
+        "actualToolSession": 5046,
+        "atUTC": "2026-10-30T18:08:02.986057+00:00"
+      },
+      "cleanupFaultControls": {
+        "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+        "driverSha256": "416f48ebccb879d72b50aecc7472fe0e8a1023d689d2d1dd502d0f840fff8613",
+        "cases": [
+          {
+            "case": "child-permission-error",
+            "pgStopAndStatusAttempted": true,
+            "finalStateSaved": true,
+            "esrchTolerated": false,
+            "unexpectedErrorRetained": true,
+            "originalErrorRetained": null
+          },
+          {
+            "case": "esrch-race",
+            "pgStopAndStatusAttempted": true,
+            "finalStateSaved": true,
+            "esrchTolerated": true,
+            "unexpectedErrorRetained": false,
+            "originalErrorRetained": null
+          },
+          {
+            "case": "primary-plus-child-error",
+            "pgStopAndStatusAttempted": true,
+            "finalStateSaved": true,
+            "esrchTolerated": false,
+            "unexpectedErrorRetained": true,
+            "originalErrorRetained": true
+          },
+          {
+            "case": "postgres-stop-error",
+            "pgStopAndStatusAttempted": true,
+            "finalStateSaved": true,
+            "esrchTolerated": false,
+            "unexpectedErrorRetained": true,
+            "originalErrorRetained": null
+          }
+        ],
+        "all4Passed": true,
+        "scope": "Actual AST-extracted cleanup function with mocked child-group/pg_ctl failures; no OS signal/server/database executed. Supports ordering/error-retention under listed faults, not universal interruption cleanup.",
+        "atUTC": "2026-10-30T18:04:43.220783+00:00"
+      },
+      "formalMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 144,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "noLocalHaskellBinaryQualificationClaim": true,
+      "currentHeadCIRequired": true,
+      "sourceCleanAfter": true,
+      "limits": [
+        "Synthetic child/process and localPG16 with curl faultinjector only; no real S3/provider, production, DDEXschema, PostgreSQL17 or universal interruptedcleanup proof.",
+        "Underlying recurring hosted worker30s shutdown cause remains UNKNOWN/unrepaired; successful local7/historicalhosted23 samples do not establish its repair.",
+        "All selected fresh published-head CI/current independent approval/FIFO required; no borrowed oldhead review."
+      ],
+      "atUTC": "2026-10-30T18:09:45.716738+00:00"
+    },
+    "sourceFaultControls": {
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "correctLibrarySha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+      "correctTestsSha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+      "variants": [
+        {
+          "label": "omit-exit-observation",
+          "actualExit": 1,
+          "intendedRealProcessAssertionFailures": 1,
+          "mutantSha256": "01b76d4475d0268f23579687408b7c0b84fabc2fb08098c2c5b2aad61380d9fb",
+          "logSha256": "ebe7e6f31b7e88e4581cec257c65e19d96dadd29f305a04ad4f42c535ec488a1"
+        },
+        {
+          "label": "complete-at-exit",
+          "actualExit": 1,
+          "intendedRealProcessAssertionFailures": 1,
+          "mutantSha256": "7a1609defc320dd3657c925918a6d67836c68278e6d0a2609329c7630dfdc88a",
+          "logSha256": "26b5b37ed794f1773f470d5cfcb80a8921651a4b9a15f4bf431dbdfb906dc095"
+        },
+        {
+          "label": "discard-timeout-context",
+          "actualExit": 1,
+          "intendedRealProcessAssertionFailures": 1,
+          "mutantSha256": "801d66710aa484c7318732c32b62e4a97a6d7fe575ab2b766184d5745e2eed2b",
+          "logSha256": "8aefea77dc103fd4d04fe4f63539d513a66d8a34c7c0102e314cb03acc7d8f89"
+        }
+      ],
+      "faultVariants": 3,
+      "intendedAssertionFailures": 3,
+      "restoredPositiveCases": 6,
+      "restoredPositiveExit": 0,
+      "qualifiedWorktreeNeverMutated": true,
+      "scope": "Actual current-source copies and real child processes; source faults isolated outside checkout. No product worker shutdown repair or universal lifecycle proof.",
+      "atUTC": "2026-10-30T18:00:47.716918+00:00"
+    },
+    "nativeConcurrency": {
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "phase": "QUALIFIED_LOCAL_PG16_CONCURRENCY_CLEANED",
+      "sourceSha256": {
+        "scripts/test-music-release-worker-runtime.mjs": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
+        "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+        "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+        "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+        "scripts/lib/test-child-completion.mjs": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+        "scripts/__tests__/test-child-completion.test.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+        "test/fixtures/music-worker/curl.mjs": "1b816316017ca5081325de224176d3f48deb3d60d6ae46db230f052df8c3bb46"
+      },
+      "scope": "Seven actual worker concurrency scenarios with owned new loopback PostgreSQL16 cluster and transport fault injector; same30s close-based completion; no production/provider/S3 compatibility or hosted-failure repair claim.",
+      "dataDirectory": "/private/tmp/tdf-worker642-data-9500c0d94b68",
+      "socketDirectory": "/private/tmp/tdf-worker642-sock-9500c0d94b68",
+      "port": 60934,
+      "postgresBinary": "/usr/local/opt/postgresql@16/bin",
+      "periodicSchedulingObservers": false,
+      "startedAtUTC": "2026-10-30T18:06:11.142123+00:00",
+      "initdbExit": 0,
+      "postgresStartExit": 0,
+      "dataDirectoryIndependentlyVerified": true,
+      "postgresVersion": "16.13 (Homebrew)",
+      "runnerPid": 87779,
+      "runnerProcessGroup": 87779,
+      "actualExit": 0,
+      "remainingOwnedFixtureSessions": "0",
+      "remainingOwnedFixtureDatabases": "0",
+      "ownedProcessGroupRemoved": true,
+      "postgresStopExit": 0,
+      "ownedPostgresStopped": true,
+      "sourceUnchanged": true,
+      "finishedAtUTC": "2026-10-30T18:07:33.104471+00:00"
+    },
+    "nativeDriverResult": {
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "driverActualExit": 0,
+      "driverSha256": "416f48ebccb879d72b50aecc7472fe0e8a1023d689d2d1dd502d0f840fff8613",
+      "executionSha256": "45be87c07933ec6791a1ebce82778df03780f83f61e254e3d5373e1746d30d82",
+      "actualToolSession": 5046,
+      "atUTC": "2026-10-30T18:08:02.986057+00:00"
+    },
+    "cleanupFaultControls": {
+      "sourceCommit": "12583b56d60ad4fc8a3dfdf93a9fc395447d7790",
+      "driverSha256": "416f48ebccb879d72b50aecc7472fe0e8a1023d689d2d1dd502d0f840fff8613",
+      "cases": [
+        {
+          "case": "child-permission-error",
+          "pgStopAndStatusAttempted": true,
+          "finalStateSaved": true,
+          "esrchTolerated": false,
+          "unexpectedErrorRetained": true,
+          "originalErrorRetained": null
+        },
+        {
+          "case": "esrch-race",
+          "pgStopAndStatusAttempted": true,
+          "finalStateSaved": true,
+          "esrchTolerated": true,
+          "unexpectedErrorRetained": false,
+          "originalErrorRetained": null
+        },
+        {
+          "case": "primary-plus-child-error",
+          "pgStopAndStatusAttempted": true,
+          "finalStateSaved": true,
+          "esrchTolerated": false,
+          "unexpectedErrorRetained": true,
+          "originalErrorRetained": true
+        },
+        {
+          "case": "postgres-stop-error",
+          "pgStopAndStatusAttempted": true,
+          "finalStateSaved": true,
+          "esrchTolerated": false,
+          "unexpectedErrorRetained": true,
+          "originalErrorRetained": null
+        }
+      ],
+      "all4Passed": true,
+      "scope": "Actual AST-extracted cleanup function with mocked child-group/pg_ctl failures; no OS signal/server/database executed. Supports ordering/error-retention under listed faults, not universal interruption cleanup.",
+      "atUTC": "2026-10-30T18:04:43.220783+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 160,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 144,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "reports/music-worker-completion-main642-2026-10-30/independent-review.txt",
+    "scope": "Actual current-source Node/process and owned local PostgreSQL 16 qualification; no local Haskell/app-binary rebuild claim. All selected fresh published-head CI and exact-head approval required."
+  },
+  "knownHostedEvidence": {
+    "currentFailure": {
+      "pr": 677,
+      "head": "3d49f83783e407366b2dc8691feec3603e8aabbb",
+      "run": 41095304499,
+      "backendJob": 124199802477,
+      "native": "4055/0/21pending",
+      "failure": "Worker did not stop within 30s after 17 synchronous PASS lines; later runtime steps skipped.",
+      "cause": "UNKNOWN; last-pass/source-order inference suggests following sibling-jobs scenario, not observed worker state. No unchanged rerun or deadline increase."
+    },
+    "olderDiagnosticSample": {
+      "head": "7082d7d045dcd6b2c7f8d33282e9ff2d6588d617",
+      "base": "6197b87326a437350dca239ee64902e78da6964c",
+      "run": 40911214007,
+      "backendJob": 123580013894,
+      "backendConclusion": "SUCCESS",
+      "native": "4045/0/21pending",
+      "workerRuntimeScenarios": 23,
+      "siblingScenario": "PASS",
+      "aggregateRun": "FAILURE; do not mislabel as backend failure",
+      "scope": "Historical sample with unchanged diagnostic helper; no timeout snapshot and no proof the recurring cause is repaired."
+    }
+  },
+  "verificationHarnessCorrections": {
+    "preExecutionFinding": "Peer review found child cleanup errors could skip own PostgreSQL stop/state save. Before any runtime, nestedfinally was added; ESRCH specifically tolerated and original/unexpected errors retained by BaseExceptionGroup. Original driver preserved.",
+    "fourMockControls": "Actual AST-extracted cleanup verifies PGstop/status/save under child permission failure, ESRCH race, original+child failure and PGstop error. These are mocks, not universalOS cleanup tests.",
+    "actualCleanup": "Normal real7 run observed zero owned databases/sessions, removed owned process group and stopped exact new cluster; data retained stopped outside archive. No unknown preexisting cluster used."
+  },
+  "regressionProtection": {
+    "currentSourceRealChildPositiveCases": 6,
+    "isolatedSourceFaultVariantsDetected": 3,
+    "intendedRealAssertions": 3,
+    "correctSourceNeverMutated": true,
+    "currentLocalNativeConcurrencyScenarios": 7,
+    "oldHostedScenariosHistorical": 23,
+    "existingCIUnitLane": "scripts/quality-repo.sh -> node --test scripts/__tests__/test-child-completion.test.mjs",
+    "noNewDependencies": true,
+    "noTimeoutOrClosePredicateRelaxation": true
+  },
+  "integration": {
+    "pullRequest": 668,
+    "draft": true,
+    "autoMerge": false,
+    "merged": false,
+    "currentHeadChecksReview": "Fresh published-head all-selected CI and independent exact-head approval pending; oldhead reviews/results not borrowed.",
+    "mainFIFO": "Required; recheck latestmain/head/review/quality/admission before integration.",
+    "productionDeployment": false,
+    "productionFinancialWrites": false,
+    "providerCalls": false
+  },
+  "remainingRisks": [
+    "Recurring hosted worker stop cause remains UNKNOWN/unrepaired; currentlocal7/historicalhosted23 successes are finite samples.",
+    "LocalPG16/curlfaultinjector does not establish actualS3/provider/DDEXschema/PG17/production or universal interruptedcleanup correctness.",
+    "160 whole requirements and 320 implementation/refinement obligations remain UNPROVEN; 11 inherited conditional SMT results retain their assumptions; formal release BLOCKED.",
+    "No Haskell/application changes or local serving-binary qualification; fresh selected hosted backend/UI/Mobile/browser/formal checks remain required.",
+    "Financial671/Currency673, originalcampaign/gallerycontrast and browserprecision issues remain separately tracked; no broadplatform correctness claim."
+  ],
+  "nextHighestValueTask": "Inspect fresh current-head hosted worker result; if timeout recurs use retained lifecycle/output snapshot to construct a real root-cause counterexample, then correct the worker or harness under unchanged safety contracts.",
+  "archive": {
+    "path": "reports/music-worker-completion-main642-2026-10-30/evidence.tar.gz",
+    "sha256": "bf5c8a267bdf49714f6f21e9b48e4dfeb4831beb8c6b35b7566c291b39187e9f",
+    "bytes": 1547531,
+    "innerFiles": 124,
+    "manifest": "reports/music-worker-completion-main642-2026-10-30/manifest.json",
+    "binding": "Unique safe regular members, separately hash/size bound and checked against Git after commit; PostgreSQL data/socket directories excluded."
+  },
+  "createdAtUTC": "2026-10-30T18:19:33.804592+00:00"
+}

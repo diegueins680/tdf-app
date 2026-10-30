@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-10-29T16:00:49.758673+00:00",
+  "head": "959cf3bc31cc794717e1786b7d133b2907f79322",
+  "base": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "requiredSuccessContexts": 20,
+  "requiredAppIdentitiesVerified": true,
+  "independentExactHeadApprovalId": 5700446188,
+  "allReviewThreadsResolved": "Fresh plugin observation immediately before this gate",
+  "FIFOSelected": 638,
+  "protectionUnchanged": true,
+  "localAndHostedSelectedPropertyQualified": true,
+  "knownResidualRisk": "Existinggallerycontrast counterexampleunrepaired; currentrunpass isnotuniversalproof. Approved648651 preservedforFIFOslots.",
+  "state": "READY_FOR_NORMAL_PROTECTED_EXPECTED_HEAD_MERGE"
+}

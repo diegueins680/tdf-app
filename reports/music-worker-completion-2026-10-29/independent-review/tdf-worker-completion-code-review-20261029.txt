@@ -1,0 +1,25 @@
+Independent read-only code review: synthetic child completion diagnostics
+
+Baseline protected main e302dc7fa76ac1c20e4e95cb946c82019ee17bb2 in /private/tmp/tdf-music-worker-completion-20261029. Reviewed new helper/tests, runtime extraction/import and quality-repo unit registration. No test/process, server, DB, provider or permission execution performed. This is not runtime qualification, hosted-worker root-cause evidence or GitHub approval.
+
+Blocking finding: one unit-fixture lifecycle gap remains in the reviewed test source.
+
+The live-child test awaits once(child,'message') without a deadline; the descendant test likewise awaits its message and exit promises without deadlines. A node:test test timeout does not settle those arbitrary pending promises, so their finally blocks need not execute while a startup/fixture failure leaves a child alive. The descendant PID is only delivered after its own ready message; if that handshake fails, the test can lack the PID while the parent has already spawned a child. Killing only the parent does not reliably reap that unknown descendant. Explicit bounded readiness/exit waits that reject within the test's outer timeout are required, plus ownership/cleanup of the descendant before that handshake can fail (for example an immediately reported PID and/or a parent fixture TERM handler that terminates and reaps its child). This should be closed before treating the new quality lane as robust against fixture faults. Finding was promptly sent to root; no source edit performed by this reviewer.
+
+Helper/extraction assessment
+
+The production worker scripts are unchanged. observeTestChild preserves full stdout/stderr for existing successful results and readiness snapshots, records spawn/exit/close milestones and stream state, and resolves success on close rather than exit. Early spawn rejection remains observable to future callers while an attached catch prevents an unhandled rejection beforehand. Runtime children-set removal still occurs on close; no false success at exit is introduced. Same-event close listeners run before Promise continuations, preserving cleanup ordering.
+
+completedTestChild retains the default30000ms, validates explicit positive deadlines, clears its timer on success or failure and races the original done rejection without swallowing it. Timeout captures lifecycle plus character lengths and at most4000 code units per stream tail; it remains a rejection and does not kill/close streams or retry. Snapshot storage remains full-output as before; only timeout rendering is bounded. Scope is synthetic children with piped output, not a general arbitrary-stdio process API or production logging boundary.
+
+The tests meaningfully separate normal full output/stream completion, default deadline, delayed consumption of spawn error, live-process timeout and exited-parent/held-pipe timeout. The descendant test uses real inherited output descriptors and requires the original parent exit before expecting close to remain pending. Once ownership is established its finally kills the known descendant and waits for close, retaining the resource obligation. The lifecycle flaw above concerns pre-handshake/exit failure paths, not the demonstrated happy fixture behavior. Initial four passes and fifth-test execution were supplied by root; this review did not independently inspect or execute those runtime results.
+
+Meaningful negative controls after cleanup is fixed: changing done success from close to exit must make the actual held-pipe test fail its expected timeout while still reaping every owned process; dropping the exit observer must fail lifecycle classification or timestamp assertions with tests otherwise unchanged. Qualify specific assertion failures and collected case counts, not generic CLI1/compile failures/timeouts. A controlled missing-ready/parent-startup failure should also demonstrate bounded termination and no retained child. Keep the30second runtime deadline and close-based success invariant intact.
+
+No confirmed cause of hosted PR666's shutdown timeout follows from this helper. Earlier current-main sibling-probe success is separate evidence and cannot erase the original hosted failure or qualify the backend/date gates that were not reached. Traceability/contracts/indices and final unit/control qualification remain pending.
+
+Reviewed exact SHA256 values:
+scripts/lib/test-child-completion.mjs: e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c
+scripts/__tests__/test-child-completion.test.mjs: 06bb6a1a51924ebbcd51ddf93f72bd7702ff85e3f2314b44b2c48fed99758403
+scripts/test-music-release-worker-runtime.mjs: b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5
+scripts/quality-repo.sh: 2dece353b5d14b49fdaf4a1a8bb4497c1cab746a3f4e2e1999c8fc0c809750ac
