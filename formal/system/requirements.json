@@ -8486,11 +8486,11 @@
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request. Purchase creation admits the rule only when its asset belongs to the offered release version and satisfies the same downloadable-asset predicate at the offer query snapshot; rejection creates no purchase.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "formal/system/music-purchase-entitlement.md",
-      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit.",
+      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit. At purchase offer admission, asset.release_version_id equals the offered release version and the existing shared downloadable-asset predicate is true.",
       "actors": [
         "Buyer",
         "Payment provider"
@@ -8553,17 +8553,19 @@
         "scripts/test-music-download-predicate.mjs",
         "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
         "scripts/test-music-purchase.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-music-purchase-asset-query.py"
       ],
-      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
-      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised. A 324-case extracted-SQL relation projection independently checks purchase/download admission agreement and requires two guard-removal counterexamples. Nine real-handler rejection cases are registered in the existing fully migrated PostgreSQL runner; new-candidate hosted execution is pending.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10. See formal/system/evidence/2026-10-27-music-purchase-asset/README.md for source-bound admission evidence and its exact limits.",
       "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
         "No live payment provider wiring for music_download has been verified.",
         "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
         "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
         "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
-        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established."
+        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established.",
+        "Purchase asset admission is sampled at the offer query, before the order transaction and provider execution. No guarantee against later withdrawal, storage loss or availability changes is established; publication reachability of all synthetic matrix combinations is not claimed."
       ],
       "conformance": {
         "classification": "PARTIAL",
