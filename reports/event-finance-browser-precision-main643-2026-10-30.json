@@ -1,0 +1,383 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+  "previousPublishedHead": "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+  "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+  "evidenceCommit": "Containing report-only child; exactly four new report paths and all archive members verified from committed Git after packaging.",
+  "scope": "Current-main reconciliation of an existing defect correction; no new application semantics introduced.",
+  "composition": {
+    "normalParents": [
+      "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+      "234ff6f7faf1aecf347c8e92a374228f4ec07aaa"
+    ],
+    "all159NewMainNormativeObjectsPreserved": true,
+    "ownedRequirementUnchanged": true,
+    "totalRequirements": 160,
+    "applicationComponentExactOldHead": true,
+    "protectedMain643VerificationRulesPreserved": true,
+    "allParentEvidencePreserved": true
+  },
+  "problem": {
+    "classification": "Confirmed mathematical and report-admission defects",
+    "authority": "Owner financial-integrity mandate; integer-cent DTO/CSV contract, existing safe-integer authoring and locale/currency conventions.",
+    "counterexamples": [
+      "JSON9007199254740993 becomes9007199254740992 and actual getters/CSV accepted the changed cent.",
+      "Safe9007199254740991 cents formattedUSD.90 instead of.91; safe7036874417766401 formatted.02 instead of.01; negative analogues.",
+      "Failed/pending/stale-error budget or entry reads became empty arrays while an independent valid summary left CSV enabled.",
+      "Two individually safe authorable inputs can yield an unsafe total, so input-only checks do not protect report reads."
+    ],
+    "productionExposure": "UNKNOWN; numerical examples are very large amounts. No production incident or provider charge claim."
+  },
+  "correction": "Validate all present non-null Cents fields at summary/budget/entry read boundaries and independently before CSV rows. Reject unsafe/noninteger amounts instead of exporting rounded values. Format signed safe cents using BigInt integer whole/fraction units and Intl presentation, preserving locale/ISO fraction rounding, null/undefined and percentages. Disable CSV until both independent list queries have data without errors, including stale-data errors; successful empty lists remain valid. Catch cached-data precision refusal before any download. Backend Int64 wire and monetary writers are unchanged.",
+  "properties": [
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001/READ-AND-CSV-ADMISSION",
+      "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+      "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+      "status": "TESTED",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "statement": "Present non-null finance monetary fields are safe integer cents before admitted reads or CSV rows; independent budget/entry data cannot bypass admission.",
+      "assumptions": [
+        "Backend integer-cent/DTOfield naming contract; this helper is not a complete DTO shape decoder.",
+        "Already rounded upstream values inside the safe range remain undetectable."
+      ],
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    },
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001/EXACT-DISPLAY",
+      "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+      "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+      "status": "TESTED",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "statement": "Admitted signed safe cents display the exact rational c/100 under existing default currency fraction rounding and selected locale without binary major-unit division.",
+      "assumptions": [
+        "Standard BigInt/Intl semantics and default currency fraction data.",
+        "Finite Node locale/currency comparisons and26actualformatter cases in Chromium/Firefox; all engines/locales and WebKit not established."
+      ],
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    },
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001/EXPORT-READINESS",
+      "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+      "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+      "status": "TESTED",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "statement": "Actual page disables export for absent/failed independent finance lists and stale-data errors, preserves successful empty exports and shows cached precision error before download.",
+      "assumptions": [
+        "Mounted actual React page with mocked query/session/ancillary dependencies; not actualHTTP/ReactQuerytransition testing.",
+        "No serializable multi-query snapshot guarantee."
+      ],
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    }
+  ],
+  "historicalEvidence": {
+    "report": "reports/event-finance-browser-precision-2026-10-30.json",
+    "gitBlob": "59daa9d9b5e1eb39f7943676c1daf73876615f28",
+    "sha256": "782690e9d11d4485584a75862a2c030366cc54cc9351a154efde9a699627b18a",
+    "scope": "Historical baseline failures, source faults, browser/full-suite evidence remain tied to original source identities; not relabeled as fresh executions."
+  },
+  "verification": {
+    "current": {
+      "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+      "phase": "QUALIFIED_CURRENT_MAIN_UI_SOURCE",
+      "startedAtUTC": "2026-10-30T23:21:35.019389+00:00",
+      "actualExits": {
+        "targeted": 0,
+        "typecheck": 0,
+        "lint": 0,
+        "build": 0,
+        "root-quality": 0,
+        "source-admission": 0,
+        "catalog-unit": 0
+      },
+      "activePID": 82439,
+      "targetedTests": 76,
+      "targetedSuites": 4,
+      "fullUiCurrentSource": "NOT_RUN_LOCAL; selected hosted UI quality remains required",
+      "parentFullUi": {
+        "sourceCommit": "83533b3d980432aea6bab30361453311da4f3905",
+        "tests": 3811,
+        "suites": 327,
+        "scope": "Historical parent source only, not current main composition"
+      },
+      "allInputsGitExactAndUnchanged": true,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true,
+      "finishedAtUTC": "2026-10-30T23:29:09.750515+00:00"
+    },
+    "sourceSeal": {
+      "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+      "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "previousPublishedHead": "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+      "normalParents": [
+        "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+        "234ff6f7faf1aecf347c8e92a374228f4ec07aaa"
+      ],
+      "sourceDigest": "8613816caea23bd0fa9236d390eddc0133783a5d52cc2c14433972d887de7db5",
+      "registeredHashesVerified": 1435,
+      "uiInputHashesVerified": 911,
+      "assuranceArtifactHashesVerified": 52,
+      "allUiInputsByteExactOldEC7": true,
+      "backendScriptsWorkflowsOpsExactMain234": true,
+      "all159NewMainRequirementsExactPlusUnchangedPrecision160": true,
+      "strictCatalogCandidates": 1355,
+      "historicalFourReportBlobs": {
+        "reports/event-finance-browser-precision-2026-10-30.json": "782690e9d11d4485584a75862a2c030366cc54cc9351a154efde9a699627b18a",
+        "reports/event-finance-browser-precision-2026-10-30/evidence.tar.gz": "50b794104973fb13fe4ffcef42049efea85f1042515f444d8587109457bcc71c",
+        "reports/event-finance-browser-precision-2026-10-30/independent-review.txt": "6969b4ab024e8da97a94b476b3de8a3d8b0896da6c1047ab8f41354fc2853bf2",
+        "reports/event-finance-browser-precision-2026-10-30/manifest.json": "dc3351dda0a3bc48f2c3a712715add8bcc40e6359542e926860ae1eaaa816097"
+      },
+      "allParentHistoricalEvidencePreserved": true,
+      "currentUiQuality": {
+        "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+        "phase": "QUALIFIED_CURRENT_MAIN_UI_SOURCE",
+        "startedAtUTC": "2026-10-30T23:21:35.019389+00:00",
+        "actualExits": {
+          "targeted": 0,
+          "typecheck": 0,
+          "lint": 0,
+          "build": 0,
+          "root-quality": 0,
+          "source-admission": 0,
+          "catalog-unit": 0
+        },
+        "activePID": 82439,
+        "targetedTests": 76,
+        "targetedSuites": 4,
+        "fullUiCurrentSource": "NOT_RUN_LOCAL; selected hosted UI quality remains required",
+        "parentFullUi": {
+          "sourceCommit": "83533b3d980432aea6bab30361453311da4f3905",
+          "tests": 3811,
+          "suites": 327,
+          "scope": "Historical parent source only, not current main composition"
+        },
+        "allInputsGitExactAndUnchanged": true,
+        "aliasesRemoved": true,
+        "sourceCleanAfter": true,
+        "finishedAtUTC": "2026-10-30T23:29:09.750515+00:00"
+      },
+      "historicalFullUi": {
+        "localSource": "83533b3d980432aea6bab30361453311da4f3905",
+        "hostedHead": "ec7b43b9cf4c34144e5a7176e454a56f20ee73bb",
+        "tests": 3811,
+        "suites": 327,
+        "scope": "Historical full executions only; current composition UI byte-identical. Current full local NOT_RUN, fresh published-head CI required."
+      },
+      "historicalCounterexamplesAndFaults": "Retained exact in original four report blobs/archive: baseline66/33failures, sourcefault21/3/4, actualpagewiring6 assertions, restored76, bundledbrowser26. No new execution of these historical faults/browser runs claimed.",
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 144,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "limitations": [
+        "TESTED finite UI scope; full implementation/refinement remains UNPROVEN.",
+        "Current local full UI NOT_RUN; new head must run hosted full CI and receive a fresh exact-head review.",
+        "No new browser/HTTP/WebKit/PostgreSQL/provider execution.",
+        "CSV unit correction684 remains separate; concurrency/snapshot consistency not established.",
+        "No production writes or deployment, no interruption-cleanup universal guarantee."
+      ],
+      "atUTC": "2026-10-30T23:31:32.043338+00:00"
+    },
+    "bindingControls": {
+      "sourceCommit": "5e60c4ced02b02dd20eb8f0574a9bd61bea62065",
+      "sealScriptSha256": "7a97535ce0b3ae8790260bbfc7d2d80d63d7b186cde65f814a1bcb8fc7bf89e2",
+      "method": "AST-extract actual seal binder; actualvalid artifacts before/after, onein-memorycorruptionpercase; canonical expectedinputpaths independentlyenumeratedfromGit. Disk/source nevermutated.",
+      "validBefore": true,
+      "negativeControls": [
+        {
+          "label": "FailedLintPromotedAsPass",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "HistoricalFullRunPromotedAsCurrent",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "WrongQualifiedCommit",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceDigestMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedWholeRequirementProof",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedExtraSMTClaim",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnexpectedReleasePermission",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "ConsistentlyRelabeledDirtySource",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "CorruptedCapturedUIBytes",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "OmittedInputWithMatchedReducedBytes",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "ReducedTargetedTests",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "MissingRequiredCheck",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        }
+      ],
+      "intendedAssertionRejections": 12,
+      "restoredValidAfter": true,
+      "diskArtifactsUnchanged": true,
+      "scope": "Evidence binder controls, not full verification-system correctness or product-source mutants.",
+      "atUTC": "2026-10-30T23:31:32.886241+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 160,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 144,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "reports/event-finance-browser-precision-main643-2026-10-30/independent-review.txt"
+  },
+  "regressionProtection": {
+    "automaticExistingSuiteDiscovery": true,
+    "currentTargetedExamples": 76,
+    "evidenceCorruptionsRejected": 12,
+    "dependenciesChanged": false
+  },
+  "limitations": [
+    "TESTED finite UI scope; full implementation/refinement remains UNPROVEN.",
+    "Current local full UI NOT_RUN; new head must run hosted full CI and receive a fresh exact-head review.",
+    "No new browser/HTTP/WebKit/PostgreSQL/provider execution.",
+    "CSV unit correction684 remains separate; concurrency/snapshot consistency not established.",
+    "No production writes or deployment, no interruption-cleanup universal guarantee."
+  ],
+  "integration": {
+    "pullRequest": 683,
+    "merged": false,
+    "currentHeadReviewAndCiRequired": true,
+    "approvalOnOldHeadNotReused": true,
+    "autoMergeUnchanged": true,
+    "mainFifoAndProtectionMustBeRechecked": true,
+    "productionWrites": false,
+    "manualDeployment": false
+  },
+  "nextHighestValueTask": "Reconcile child684 CSV currency correction against this qualified parent; re-evaluate current-head CI/reviews and protected admission.",
+  "archive": {
+    "path": "reports/event-finance-browser-precision-main643-2026-10-30/evidence.tar.gz",
+    "sha256": "a3568327a0ea7dd7699e8af8bce612af962a221bb936d06d13b74afb7268d5a7",
+    "bytes": 1777036,
+    "innerFiles": 109,
+    "manifest": "reports/event-finance-browser-precision-main643-2026-10-30/manifest.json"
+  },
+  "createdAtUTC": "2026-10-30T23:35:40.093506+00:00"
+}
