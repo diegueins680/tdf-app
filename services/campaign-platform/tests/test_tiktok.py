@@ -61,6 +61,18 @@ class TikTokTests(unittest.TestCase):
             result=self.provider.publish(piece,self.account(),'unused')
         piece['external_id']=result['external_id'];return piece,api.call_args.args
 
+    def test_oauth_requests_only_scopes_used_by_implemented_features(self):
+        import urllib.parse
+        with patch('providers.request') as network:
+            url=self.provider.start(self.actor,'tiktok','own')
+        params=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+        self.assertEqual(params['scope'],['user.info.basic,video.publish'])
+        self.assertEqual(params['redirect_uri'],['https://api.tdfrecords.net/campaign-platform/oauth/callback/tiktok'])
+        network.assert_not_called()
+        with self.store.db() as db:
+            state=db.execute('SELECT owner,platform,scope,used FROM oauth_states WHERE state=?',(params['state'][0],)).fetchone()
+            self.assertEqual(tuple(state),(self.actor['id'],'tiktok','own',0))
+
     def test_default_missing_audit_and_domain_block_before_any_network(self):
         for key,value in [('TIKTOK_CLIENT_KEY',None),('TIKTOK_CLIENT_AUDITED',False),('TIKTOK_VERIFIED_MEDIA_PREFIX','https://other.example/')]:
             old=self.provider.config[key];self.provider.config[key]=value

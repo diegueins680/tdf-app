@@ -14174,7 +14174,7 @@
     "services/campaign-platform/monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
     "services/campaign-platform/notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
     "services/campaign-platform/planning.py": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
-    "services/campaign-platform/providers.py": "0341fdda3db354c373451803ae1eae7373f7b4748a9334d09a288bd75e9f22d1",
+    "services/campaign-platform/providers.py": "a580c67bbd071434e0cbd9ad3d6d22016b162106bd3c5166b2e06489adfdb21f",
     "services/campaign-platform/qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
     "services/campaign-platform/requirements.txt": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
     "services/campaign-platform/schema.sql": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
@@ -14189,10 +14189,10 @@
     "services/campaign-platform/tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
     "services/campaign-platform/tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
     "services/campaign-platform/tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
-    "services/campaign-platform/tests/test_domain.py": "0648f1b3e3c52a5288e0daad7e72a8d757ccbfea081d2e6fab461fc398512e4d",
+    "services/campaign-platform/tests/test_domain.py": "b7f065e5304d1d6b3227f4d02a6bccce8150ad17f6b1c7473ba17d41f6dd59f1",
     "services/campaign-platform/tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
     "services/campaign-platform/tests/test_http.py": "0b0df9d992a48f30d37f045c96ab0a764aea096e17c08c453cda977baa78bd6a",
-    "services/campaign-platform/tests/test_tiktok.py": "17a24c16b2a5e9195f6ca20c641795390af10e2e357bc719b2fb97461f101a17",
+    "services/campaign-platform/tests/test_tiktok.py": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
     "services/campaign-platform/tiktok.py": "102978cd2f110c205f06b59f83e252d2aafc9e57290ce15a39c14faeceda9c6d",
     "services/campaign-platform/tiktok_token.py": "7fdc81f84cf5577ccba3c62e434821bc9b062fb3b6e0517ba3331ac958734e3c",
     "services/campaign-platform/ui/app.js": "859f877be53e813f0f78f475a2f909e99199c2752f1ad98c53ddf8c683576e94",
@@ -33594,7 +33594,7 @@
     {
       "id": "SURFACE-dd915c4b36f5a11e",
       "path": "services/campaign-platform/providers.py",
-      "sha256": "0341fdda3db354c373451803ae1eae7373f7b4748a9334d09a288bd75e9f22d1",
+      "sha256": "a580c67bbd071434e0cbd9ad3d6d22016b162106bd3c5166b2e06489adfdb21f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33774,7 +33774,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "0648f1b3e3c52a5288e0daad7e72a8d757ccbfea081d2e6fab461fc398512e4d",
+      "sha256": "b7f065e5304d1d6b3227f4d02a6bccce8150ad17f6b1c7473ba17d41f6dd59f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33810,7 +33810,7 @@
     {
       "id": "SURFACE-bfa885cfbaf8b851",
       "path": "services/campaign-platform/tests/test_tiktok.py",
-      "sha256": "17a24c16b2a5e9195f6ca20c641795390af10e2e357bc719b2fb97461f101a17",
+      "sha256": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

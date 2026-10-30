@@ -40,7 +40,7 @@ class Providers:
   if scope=='tdf' and not actor['admin']:raise Denied('Solo un administrador puede conectar canales de TDF.',403)
   if scope not in ('own','tdf'):raise Denied('Ámbito inválido.')
   state=uid()+uid();verifier=base64.urlsafe_b64encode(os.urandom(48)).decode().rstrip('=');redirect=self.config['PUBLIC_BASE']+'/oauth/callback/'+platform
-  conf={'youtube':('https://accounts.google.com/o/oauth2/v2/auth','GOOGLE_CLIENT_ID','https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/yt-analytics.readonly'),'drive':('https://accounts.google.com/o/oauth2/v2/auth','GOOGLE_CLIENT_ID','https://www.googleapis.com/auth/drive.file'),'instagram':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights'),'facebook':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,pages_manage_posts'),'tiktok':('https://www.tiktok.com/v2/auth/authorize/','TIKTOK_CLIENT_KEY','user.info.basic,video.publish,video.list')}
+  conf={'youtube':('https://accounts.google.com/o/oauth2/v2/auth','GOOGLE_CLIENT_ID','https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/yt-analytics.readonly'),'drive':('https://accounts.google.com/o/oauth2/v2/auth','GOOGLE_CLIENT_ID','https://www.googleapis.com/auth/drive.file'),'instagram':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights'),'facebook':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,pages_manage_posts'),'tiktok':('https://www.tiktok.com/v2/auth/authorize/','TIKTOK_CLIENT_KEY','user.info.basic,video.publish')}
   base,key,scopes=conf[platform]
   if not self.config.get(key):raise Denied('Falta configurar la aplicación de '+platform+' en el servidor.',409)
   with self.store.db(True) as d:d.execute('INSERT INTO oauth_states VALUES(?,?,?,?,?,?,0)',(state,actor['id'],platform,scope,self.vault.seal({'verifier':verifier}),time.time()+600))
@@ -157,7 +157,11 @@ class Providers:
   if not data.get('items'):return {'status':'unavailable','reason':'Video no disponible para esta consulta.','metrics':None}
   item=data['items'][0];result={'status':'partial','public_statistics':item.get('statistics',{}),'retention':None,'watch_time':None,'attributed_subscribers':None,'reason':'Falta autorización YouTube Analytics o datos todavía no disponibles.','qa_views_may_be_included':True,'thumbnail_impressions':None,'thumbnail_ctr':None,'reach_status':'Revisar/exportar desde Studio o integrar Reporting API; no se confunden con impresiones publicitarias.','report_errors':{}}
   if a:
-   today=datetime_date();start=item.get('snippet',{}).get('publishedAt','')[:10] or datetime_date(-28);base={'ids':'channel==MINE','startDate':start,'endDate':today,'filters':'video=='+video}
+   try:start,today=youtube_report_dates(item.get('snippet',{}).get('publishedAt'))
+   except ProviderError as error:
+    result['report_errors']['date_range']=str(error);return result
+   result['analytics_date_range']={'start':start,'end':today,'timezone':'America/Los_Angeles','granularity':'calendar_day','note':'Provider calendar dates; collection checkpoint does not imply all metrics cover the complete interval.'}
+   base={'ids':'channel==MINE','startDate':start,'endDate':today,'filters':'video=='+video}
    queries={'analytics':{'metrics':'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost'},'traffic_sources':{'dimensions':'insightTrafficSourceType','metrics':'views,estimatedMinutesWatched'},'retention':{'dimensions':'elapsedVideoTimeRatio','metrics':'audienceWatchRatio,relativeRetentionPerformance'}}
    for name,query in queries.items():
     try:
@@ -173,3 +177,16 @@ class Providers:
 def datetime_date(offset=0):
  import datetime
  return (datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(days=offset)).date().isoformat()
+
+def youtube_report_dates(published_at,now=None):
+ import datetime
+ from zoneinfo import ZoneInfo
+ try:
+  published=datetime.datetime.fromisoformat(published_at.replace('Z','+00:00'))
+  if published.tzinfo is None:raise ValueError('timezone required')
+  current=now or datetime.datetime.fromtimestamp(time.time(),datetime.timezone.utc)
+  if current.tzinfo is None:raise ValueError('timezone required')
+  zone=ZoneInfo('America/Los_Angeles');start=published.astimezone(zone).date();end=current.astimezone(zone).date()
+  if start>end:raise ValueError('future publication')
+  return start.isoformat(),end.isoformat()
+ except (AttributeError,TypeError,ValueError,OverflowError):raise ProviderError('youtube_publication_time_unavailable_for_analytics') from None

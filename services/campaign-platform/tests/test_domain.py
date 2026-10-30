@@ -157,4 +157,27 @@ class CampaignTests(unittest.TestCase):
   with patch.object(adapter,'token',return_value='test-only'),patch('providers.request',side_effect=[(public,{}),(report,{}),({'rows':[]},{}),({'rows':[]},{})]):
    result=adapter.metrics({'platform':'youtube','external_id':'video','account':self.account})
   self.assertEqual(result['watch_time'],17.5);self.assertEqual(result['attributed_subscribers'],2);self.assertEqual(result['retention']['status'],'pending');self.assertIsNone(result['thumbnail_ctr'])
+ def test_youtube_analytics_dates_use_pacific_calendar_in_summer_and_winter(self):
+  import datetime
+  from providers import youtube_report_dates,ProviderError
+  cases=[('2026-10-29T00:34:10.599Z','2026-10-30T00:34:10Z',('2026-10-28','2026-10-29')),('2026-01-29T07:30:00Z','2026-01-30T07:30:00Z',('2026-01-28','2026-01-29')),('2026-03-08T09:30:00Z','2026-03-09T06:30:00Z',('2026-03-08','2026-03-08'))]
+  for published,now,expected in cases:
+   with self.subTest(published=published):self.assertEqual(youtube_report_dates(published,datetime.datetime.fromisoformat(now.replace('Z','+00:00'))),expected)
+  for invalid in [None,'invalid','2026-10-28']:
+   with self.assertRaises(ProviderError):youtube_report_dates(invalid)
+
+ def test_analytics_all_reports_include_publication_day_in_provider_timezone(self):
+  import datetime,urllib.parse
+  from unittest.mock import patch
+  adapter=Providers(self.store,Vault(Fernet.generate_key()),{})
+  public={'items':[{'statistics':{'viewCount':'8'},'snippet':{'publishedAt':'2026-10-29T00:34:10.599Z'}}]}
+  now=datetime.datetime.fromisoformat('2026-10-30T00:34:10+00:00').timestamp()
+  with patch.object(adapter,'token',return_value='test-only'),patch('providers.time.time',return_value=now),patch('providers.request',side_effect=[(public,{}),({'rows':[]},{}),({'rows':[]},{}),({'rows':[]},{})]) as network:
+   result=adapter.metrics({'platform':'youtube','external_id':'video','account':self.account})
+  self.assertEqual(result['analytics_date_range']['timezone'],'America/Los_Angeles')
+  for call in network.call_args_list[1:]:
+   query=urllib.parse.parse_qs(urllib.parse.urlsplit(call.args[0]).query)
+   self.assertEqual(query['startDate'],['2026-10-28']);self.assertEqual(query['endDate'],['2026-10-29'])
+  self.assertIsNone(result['watch_time']);self.assertIsNone(result['attributed_subscribers'])
+
 if __name__=='__main__':unittest.main()

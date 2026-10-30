@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-30T00:41:02.008497+00:00",
+  "parent_source": "e668b5444fefbcd1f66ec4deddc19c3ed1d72b05",
+  "changes": [
+    "TikTok requests only identity and publish scopes used by actual code",
+    "YouTube Analytics dates use provider Pacific calendar, including DST",
+    "Original metrics_24 capture preserved; separately timestamped read-only correction recorded"
+  ],
+  "tests": {
+    "python": {
+      "passed": 83,
+      "log_sha256": "420011ffba1765105e10ae45865b599aa5ddbca8dcd0e74d4ca4739d554c9aa1"
+    },
+    "previous_web_and_actual_form_tests": "Earlier combined source retains its identity; web/form code unchanged, not rerun for this provider-only extension"
+  },
+  "deployment": {
+    "release": "49032779d0c53f0fdca5",
+    "previous_release": "/opt/tdf-campaign-platform/releases/2a7614b3805fbb92e8d5",
+    "api_url": "https://api.tdfrecords.net/campaign-platform/",
+    "source_tests": "passed on server",
+    "new_units": [
+      "tdf-campaign-api.service",
+      "tdf-campaign-worker.service",
+      "tdf-campaign-backup.timer",
+      "tdf-campaign-monitor.timer",
+      "tdf-campaign-backup-request.timer"
+    ],
+    "note": "New sidecar writer; stop campaign API, worker, both backup services, monitor service and all three campaign timers before future coordinated production writer fencing. Pinned host admission policy was not weakened.",
+    "at": 1793320553.7268317,
+    "manifest_matches_local": true,
+    "host_python_tests": 83,
+    "scope": "Three provider/test files changed; other service, web and Mobile source and prior qualification identities preserved"
+  },
+  "source_manifest": {
+    "backup.py": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
+    "backup_control.py": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
+    "backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
+    "deploy.py": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
+    "domain.py": "fcbc5b19bce6fdcaa61dfcb08ab983c3471f3eb26e3b3a163955cec8240fbbcf",
+    "drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
+    "facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
+    "graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+    "import_rojo.py": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+    "media.py": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+    "model_check.py": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+    "monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+    "notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
+    "planning.py": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
+    "providers.py": "a580c67bbd071434e0cbd9ad3d6d22016b162106bd3c5166b2e06489adfdb21f",
+    "qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+    "requirements.txt": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
+    "schema.sql": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
+    "server.py": "df1c7b8902c72d05fbcc3afae0bc593f7422c9cda56bb227321643e92562f188",
+    "stream_backup_object.py": "4c12c6d15fb8a656e350a341c3840ab08fad59525f277b0f55a4b863c4ed611c",
+    "tdf-campaign-api.service": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
+    "tdf-campaign-backup-request.service": "c7de57347a940bce347d2b09b57af48ce86f9dcd1a77da01fe8baa828b75ea71",
+    "tdf-campaign-backup-request.timer": "c0b20d73362c8138c3b217b2c5d99347b3f19441b0c67c3d76424c86bb8c65e6",
+    "tdf-campaign-backup.service": "467d499ec9c0091c612ec1448dca9c39d5eaffbde3b213fb28d853e3cb0a0ae6",
+    "tdf-campaign-backup.timer": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
+    "tdf-campaign-monitor.service": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
+    "tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
+    "tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
+    "tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
+    "tests/test_domain.py": "b7f065e5304d1d6b3227f4d02a6bccce8150ad17f6b1c7473ba17d41f6dd59f1",
+    "tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
+    "tests/test_http.py": "0b0df9d992a48f30d37f045c96ab0a764aea096e17c08c453cda977baa78bd6a",
+    "tests/test_tiktok.py": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
+    "tiktok.py": "102978cd2f110c205f06b59f83e252d2aafc9e57290ce15a39c14faeceda9c6d",
+    "tiktok_token.py": "7fdc81f84cf5577ccba3c62e434821bc9b062fb3b6e0517ba3331ac958734e3c",
+    "ui/app.js": "859f877be53e813f0f78f475a2f909e99199c2752f1ad98c53ddf8c683576e94",
+    "ui/index.html": "6a8832b2c47a8752e94990578477727d5c570b87fcc1ed38b2fa8901ed9f57dc",
+    "ui/style.css": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
+    "ui/tdf-logo.png": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
+    "ui/tdf-logo.svg": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+    "ui/tiktok.js": "86618007e3b34fb024388898caa35dde6e94891ee14a7caad14a5a39c4df05e6",
+    "verify_drive_backup.py": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
+    "worker.py": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
+    "youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f"
+  },
+  "cl01": {
+    "result": "PASS",
+    "piece": "CL01",
+    "piece_id": "05ae991b76191250522f22e8eec9c77f",
+    "external_id": "17890289085476454",
+    "url": "https://www.instagram.com/reel/DfGMOaVDhJ9/",
+    "published_at_quito": "2026-10-29T18:30:55.358835-05:00",
+    "attempts": 1,
+    "source_sha256": "79cc2b5b2407faf74641474a11a0d9e7982a51885801a88816de576f342a8720",
+    "public_playback": {
+      "at": "2026-10-30T00:12:11.793Z",
+      "url": "https://www.instagram.com/reel/DfGMOaVDhJ9/",
+      "account": "tdf.records.label",
+      "first": {
+        "duration": 24,
+        "width": 720,
+        "height": 1280,
+        "readyState": 4,
+        "error": null,
+        "audio": 526336,
+        "video": 6503412
+      },
+      "second": {
+        "time": 11.306158,
+        "duration": 24,
+        "width": 720,
+        "height": 1280,
+        "readyState": 4,
+        "error": null,
+        "audio": 536248,
+        "video": 6625946
+      },
+      "logo_manually_visible": true,
+      "caption_preview_matches": true,
+      "public_post_in_authenticated_session": true,
+      "anonymous_access_not_tested": true,
+      "result": "PASS",
+      "metrics_may_include_qa_playback": true
+    },
+    "caption_exact_match": true,
+    "official_logo_visually_verified": true,
+    "independent_verification_scope": "Native authenticated TDF session on public Instagram permalink; anonymous playback not tested; no audio listening/sync conclusion from byte counters",
+    "qa_views_may_be_in_metrics": true,
+    "proof_sha256": {
+      "cl01-public-caption.json": "33162b782e0ada9b61536df04ec06a0039206a884a983686f7b3839679081a48",
+      "cl01-playback-verification.json": "260b4687f904713154f85a302cab289ae45cc65abad9e57e00b18325b5028642",
+      "cl01-public-page.png": "5759c10550ed059a48cac658654454a08b9dfa501341d361ed660ee16cb88fec"
+    }
+  },
+  "private_receipt_asset": {
+    "state": "registered",
+    "id": "e3b81664be4b4826acfcf86be34e4d02",
+    "sha256": "574a552fd1a9a4afecdaeba083c4c3039bdcea278dcf71e38d89638d2a45f47d",
+    "size": 1744,
+    "at": "2026-10-30T00:19:00.893Z"
+  },
+  "metrics_24_original": {
+    "at": 1793320455.3572314,
+    "job_id": "2d202d0de91b4ad0912d5bfec0dcdaf4",
+    "state": "completed",
+    "attempts": 1,
+    "public_statistics": {
+      "viewCount": "206",
+      "likeCount": "20",
+      "dislikeCount": "0",
+      "favoriteCount": "0",
+      "commentCount": "10"
+    },
+    "analytics_status": "pending",
+    "source_sha256": "80ed7c0b3ead53feb94e3c8d73fd6596faa0c3aed8ac593fcb9f2958d8673aa1"
+  },
+  "metrics_24_reconciliation": {
+    "id": "18ba3a227cd8397fa9b28a85bd024f60",
+    "at": 1793320695.8796158,
+    "runtime": "49032779d0c53f0fdca5",
+    "data": {
+      "status": "pending",
+      "public_statistics": {
+        "viewCount": "208",
+        "likeCount": "20",
+        "dislikeCount": "0",
+        "favoriteCount": "0",
+        "commentCount": "10"
+      },
+      "retention": {
+        "status": "pending",
+        "report": {
+          "kind": "youtubeAnalytics#resultTable",
+          "columnHeaders": [
+            {
+              "name": "elapsedVideoTimeRatio",
+              "columnType": "DIMENSION",
+              "dataType": "FLOAT"
+            },
+            {
+              "name": "audienceWatchRatio",
+              "columnType": "METRIC",
+              "dataType": "FLOAT"
+            },
+            {
+              "name": "relativeRetentionPerformance",
+              "columnType": "METRIC",
+              "dataType": "FLOAT"
+            }
+          ],
+          "rows": []
+        }
+      },
+      "watch_time": null,
+      "attributed_subscribers": null,
+      "reason": "Datos de API con posible retraso. Suscriptores del video corresponden a su página de reproducción; no implican atribución causal a piezas promocionales.",
+      "qa_views_may_be_included": true,
+      "thumbnail_impressions": null,
+      "thumbnail_ctr": null,
+      "reach_status": "Revisar/exportar desde Studio o integrar Reporting API; no se confunden con impresiones publicitarias.",
+      "report_errors": {},
+      "analytics_date_range": {
+        "start": "2026-10-28",
+        "end": "2026-10-29",
+        "timezone": "America/Los_Angeles",
+        "granularity": "calendar_day",
+        "note": "Provider calendar dates; collection checkpoint does not imply all metrics cover the complete interval."
+      },
+      "analytics": {
+        "status": "pending",
+        "report": {
+          "kind": "youtubeAnalytics#resultTable",
+          "columnHeaders": [
+            {
+              "name": "views",
+              "columnType": "METRIC",
+              "dataType": "INTEGER"
+            },
+            {
+              "name": "estimatedMinutesWatched",
+              "columnType": "METRIC",
+              "dataType": "INTEGER"
+            },
+            {
+              "name": "averageViewDuration",
+              "columnType": "METRIC",
+              "dataType": "INTEGER"
+            },
+            {
+              "name": "averageViewPercentage",
+              "columnType": "METRIC",
+              "dataType": "FLOAT"
+            },
+            {
+              "name": "subscribersGained",
+              "columnType": "METRIC",
+              "dataType": "INTEGER"
+            },
+            {
+              "name": "subscribersLost",
+              "columnType": "METRIC",
+              "dataType": "INTEGER"
+            }
+          ],
+          "rows": []
+        }
+      },
+      "traffic_sources": {
+        "status": "pending",
+        "report": {
+          "kind": "youtubeAnalytics#resultTable",
+          "columnHeaders": [
+            {
+              "name": "insightTrafficSourceType",
+              "columnType": "DIMENSION",
+              "dataType": "STRING"
+            },
+            {
+              "name": "views",
+              "columnType": "METRIC",
+              "dataType": "INTEGER"
+            },
+            {
+              "name": "estimatedMinutesWatched",
+              "columnType": "METRIC",
+              "dataType": "INTEGER"
+            }
+          ],
+          "rows": []
+        }
+      },
+      "collection_context": {
+        "type": "manual_date_range_reconciliation",
+        "original_checkpoint": "metrics_24",
+        "original_job_id": "2d202d0de91b4ad0912d5bfec0dcdaf4",
+        "original_capture_preserved": true,
+        "runtime": "49032779d0c53f0fdca5",
+        "collected_at": 1793320695.8796158,
+        "reason": "Original UTC-date query excluded the Pacific publication day; this additional read-only observation uses provider calendar dates, not a replacement or replay of the original checkpoint."
+      }
+    }
+  },
+  "tiktok_registration": {
+    "organization": "TDF Records",
+    "organization_id": "7702232227085632530",
+    "app": "TDF Records Campaigns",
+    "app_id": "7702226159635253266",
+    "owner_account_verified": "TDF account shown as organization owner in native app",
+    "status": "Draft",
+    "basic_fields": "Prepared in native form, Save blocked by missing verified URLs and genuine demo",
+    "review_submitted": false,
+    "client_credentials_obtained": false,
+    "public_posting_enabled": false
+  },
+  "limitations": [
+    "No live TikTok publication or sandbox demonstration qualification",
+    "DNS verification panel access still requested from user",
+    "Facebook Page identity choice still pending",
+    "No protected-main merge, self-approval or paid provisioning",
+    "Missing Analytics rows are not zero; public counters and daily reports do not prove causal attribution"
+  ],
+  "source_root": "services/campaign-platform"
+}
