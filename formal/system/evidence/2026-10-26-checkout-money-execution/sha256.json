@@ -1,0 +1,17 @@
+{
+  "README.md": "0ed5ef2ced599f5f608760f6943a0366c702eb18f82feecde2877397f909955d",
+  "assurance-report.tar.gz": "8ed908951237a95b99672795e4ccdc1c889de678145d9aa95e22b0c9f82e6e84",
+  "catalog-audit.json.gz": "853c26210d7dafd0c2e458c65581b85cc55195994c5203ea07d1054ea9bc4edb",
+  "counterexample.json": "9b6855681d1da8d5ceddbbdf0f9e3a77cf43ebd0a0aaad05ca0e86b9d27bc288",
+  "fixed-reduced-control.json": "cf749b78e8a2fe2c9bc799334fdf58932ee28460e9273ded6d3b0e7ee25200c5",
+  "fixed-reduced-control.stderr.gz": "0461527fe7c6a6b432c076ba621f253c50a27ce132d1dc9bb631f4932bb197e0",
+  "fixed-reduced-control.stdout.gz": "dcdbb5cbd60f5599817a20a5f300920c3ce714147165fce4bf8386c2254aed92",
+  "harness-controls.tar.gz": "3fe4fcee67d5b569f597cd7a4568969642b39efbabcbb2c4ebf1f84e96824d69",
+  "main626-artifacts.tar.gz": "857aed456fd5beb539fc5457ed7bc5517664c2a1098961e2e9993401b7a0cd16",
+  "main626-integration.json": "736a03a52d6422b0efa42ea3650c3d980404495d407deba04b3569a500ce280f",
+  "old-verifier.stdout.gz": "511298255bce5e25643019b374db5b8411c80fd77ac320fa8a51c0b5ac6e3c0d",
+  "qualification.json": "bdbd3ec75a8354537fd156a28de2cc4f801c7ae5ad2644b7a9b5f8dbaf00f0a6",
+  "qualified-native.json.gz": "aaff6320bbb6046224657722c2b907dbc6f1baebe0072086bb313b65b8219f58",
+  "repository-quality.log.gz": "a6f72de339ea5c3d7c9a585b32514ce9c2cb47f739559f568ea8cbd31e31953a",
+  "source-admission.json": "db2547510bc2b7d87241012f206741be7b152ef828a8b2696f56286a079f41c7"
+}
