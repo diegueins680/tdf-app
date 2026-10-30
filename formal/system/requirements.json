@@ -13383,6 +13383,7 @@
         "services/campaign-platform/backup_control.py",
         "services/campaign-platform/backup_crypto.py",
         "services/campaign-platform/deploy.py",
+        "services/campaign-platform/deploy_sandbox.py",
         "services/campaign-platform/domain.py",
         "services/campaign-platform/drive_backup.py",
         "services/campaign-platform/facebook.py",
@@ -13477,7 +13478,7 @@
       "effects": [
         "Private uploads, derived real media, approved supported publications, explicit assisted tasks, durable notifications and measurement checkpoints"
       ],
-      "authorization": "Canonical TDF session; owner and per-campaign roles; independent TDF and private-message approvals. Admin alone does not grant blanket private-campaign access.",
+      "authorization": "Canonical TDF session; owner and per-campaign roles; independent TDF and private-message approvals. Admin alone does not grant blanket private-campaign access. The isolated TikTok sandbox restricts entry to its designated administrator, verifies its configured creator username and account scope, and preserves personal ownership for a private test account.",
       "privacy": "Provider credentials stay encrypted on server; export and logs omit credentials; media capabilities expire. Private Drive backup is restricted to its admin custodian, encrypted before upload, with separately held recovery key and owner-only folder.",
       "concurrency": "SQLite immediate transactions serialize local claims/reservations. No distributed exactly-once guarantee across provider boundaries.",
       "idempotency": "Imported existing publications never create new publication jobs. Unique piece/kind jobs preserve identity. Unknown provider effects cannot auto-retry.",

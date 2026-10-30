@@ -16,6 +16,9 @@ def mode(config):
             or config.get('TIKTOK_CLIENT_AUDITED') is True
             or type(config.get('TIKTOK_SANDBOX_ADMIN_ID')) is not int
             or config['TIKTOK_SANDBOX_ADMIN_ID'] <= 0
+            or config.get('TIKTOK_SANDBOX_SCOPE', 'tdf') not in ('tdf', 'own')
+            or (config.get('TIKTOK_SANDBOX_SCOPE', 'tdf') == 'own'
+                and config.get('TIKTOK_SANDBOX_USERNAME') == 'tdf.records.label')
             or not re.fullmatch(r'[A-Za-z0-9_.]{1,24}', config.get('TIKTOK_SANDBOX_USERNAME', ''))):
         raise Denied('El sandbox necesita su propio espacio, aplicación sin auditoría y cuenta de prueba autorizada.', 409)
     return value
@@ -28,12 +31,14 @@ def actor(config, user):
 
 def connection(config, user, platform, scope):
     actor(config, user)
-    if mode(config) == 'sandbox' and (platform != 'tiktok' or scope != 'tdf'):
-        raise Denied('El sandbox admite únicamente la cuenta de TikTok de TDF autorizada para la prueba.', 403)
+    if mode(config) == 'sandbox' and (platform != 'tiktok' or scope != config.get('TIKTOK_SANDBOX_SCOPE', 'tdf')):
+        raise Denied('El sandbox admite únicamente la cuenta y ámbito autorizados para la prueba.', 403)
 
 
 def binding(config):
     value = [mode(config), config.get('TIKTOK_CLIENT_KEY'), config.get('PUBLIC_BASE')]
+    if mode(config) == 'sandbox':
+        value += [config['TIKTOK_SANDBOX_USERNAME'], config.get('TIKTOK_SANDBOX_SCOPE', 'tdf')]
     return hashlib.sha256(json.dumps(value, separators=(',', ':')).encode()).hexdigest()
 
 

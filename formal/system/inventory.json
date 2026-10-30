@@ -634,6 +634,7 @@
       "services/campaign-platform/backup_control.py",
       "services/campaign-platform/backup_crypto.py",
       "services/campaign-platform/deploy.py",
+      "services/campaign-platform/deploy_sandbox.py",
       "services/campaign-platform/domain.py",
       "services/campaign-platform/drive_backup.py",
       "services/campaign-platform/facebook.py",
@@ -3398,7 +3399,7 @@
     {
       "id": "SURFACE-f351982a52e6f37a",
       "path": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "sha256": "d306aff194ca4a6a6e4c8475d7cc6a9074cc140fb3f3e564d94f1b260ece8f30",
+      "sha256": "cecd739fd225cd148b4eca7ed0c725b8a52fa3eafccefb53ca8fa0f5b2493eee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6480,6 +6481,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2f4e2a6c9efb2ce4",
+      "path": "services/campaign-platform/deploy_sandbox.py",
+      "sha256": "5df04f820eb7c868703359feec18848063ddb9183f4c4a57fb50f5f091d299f2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4d817f76014e9965",
       "path": "services/campaign-platform/domain.py",
       "sha256": "fcbc5b19bce6fdcaa61dfcb08ab983c3471f3eb26e3b3a163955cec8240fbbcf",
@@ -6542,7 +6549,7 @@
     {
       "id": "SURFACE-dd915c4b36f5a11e",
       "path": "services/campaign-platform/providers.py",
-      "sha256": "8a573e1a1d38acce1cc43271c2cb0bd0f4621329c2b406bacb0c23c6f00eaa20",
+      "sha256": "d1ad2e1e217950dd696fcfb644b405e95b31dbd03837c72ba9fbb09d41b29fc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6656,7 +6663,7 @@
     {
       "id": "SURFACE-72f554acbb1033be",
       "path": "services/campaign-platform/tests/test_tiktok_sandbox.py",
-      "sha256": "254a538f696625f9a6a9b8f1cf442b763c52243347f08a41e6b390314fd3e71d",
+      "sha256": "ade2a1116695b18b0b5baa687977ba2ec8114561498f64a6e9aa8f19f8be9cf6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6668,7 +6675,7 @@
     {
       "id": "SURFACE-84fa59a6dd1219e2",
       "path": "services/campaign-platform/tiktok_environment.py",
-      "sha256": "db040535b85b198a4bb4153d95ca4c6336bbc83f127e61dcc93a7ed34b83a4c3",
+      "sha256": "100ddc29190a7d964b5a905958834b89908ce430e9aee7452fd50ab7d1b0e572",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6680,7 +6687,7 @@
     {
       "id": "SURFACE-39b88f2b72e34e12",
       "path": "services/campaign-platform/ui/app.js",
-      "sha256": "209b9bb08f0a2d67d2fa9b3e46494780716091257af1d802178ebf228937e2e0",
+      "sha256": "411586abd00bc33734bd40be64c47bc7568fbc68864189ce80ab2a1aa2e7214d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20131,7 +20138,7 @@
     },
     {
       "path": "docs/campaign-platform/operations.md",
-      "sha256": "46876f048b7b1cdb74720f44af1430468d40a69c038654cacce6e6d1686018e5",
+      "sha256": "c9978251ba9cc929a0ea912dedb5d6613b36a1af16c9d91ec5d8a81d888a2552",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27656,7 +27663,7 @@
     },
     {
       "path": "formal/system/campaign-server.md",
-      "sha256": "4e23c712e21d99e58ebd90192b9ccdc4a2fc6753064baec45ace30b44f7c77aa",
+      "sha256": "f6ed51a413b80766930fcd5c553e2c4ea5ec2dcd794d9f890bb391ac7e7573b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28251,7 +28258,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "60e62a3fc9d2b5c0e8e731fb37c516a28ecdb119a953d3ed9156293965652e8e",
+      "sha256": "540992768de6617253585db2a4f9fbbf920dda5153bc2dcda4e9e8b81dfa3f72",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

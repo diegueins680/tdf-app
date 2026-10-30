@@ -9,7 +9,7 @@ const require=createRequire(import.meta.url),{JSDOM}=require('jsdom');
 const root=resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const dir=resolve(root,'services/campaign-platform/ui');
 const account='a'.repeat(32),asset='b'.repeat(32),image='c'.repeat(32);
-async function setup({blocked=false,sandbox=false}={}){
+async function setup({blocked=false,sandbox=false,scope='tdf'}={}){
  const prefix=sandbox?'/campaign-platform-sandbox':'/campaign-platform';
  const dom=new JSDOM(readFileSync(resolve(dir,'index.html'),'utf8'),{url:'https://api.tdfrecords.net'+prefix+'/',runScripts:'outside-only'}),calls=[];
  dom.window.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
@@ -17,7 +17,7 @@ async function setup({blocked=false,sandbox=false}={}){
  dom.window.fetch=async(url,options={})=>{
   const path=String(url).replace(prefix,'');calls.push({path,body:options.body?JSON.parse(options.body):null});
   let value;
-  if(path==='/session')value={user:{name:'Artista',admin:false},usage:{used_bytes:0,limit_bytes:5e9,plans:{},notices:[]},accounts:[{id:account,platform:'tiktok',handle:'Artista',scope:'own'}],capabilities:{youtube:{},instagram:{},facebook:{},tiktok:{}}};
+  if(path==='/session')value={user:{name:'Artista',admin:false},usage:{used_bytes:0,limit_bytes:5e9,plans:{},notices:[]},accounts:[{id:account,platform:'tiktok',handle:'Artista',scope:'own'}],capabilities:{youtube:{},instagram:{},facebook:{},tiktok:{},tiktok_sandbox_scope:scope}};
   else if(path==='/campaigns')value=[];
   else if(path.endsWith('/tiktok-creator')){
    if(blocked)return {ok:false,status:409,json:async()=>({error:'Aplicación pendiente de configurar'})};
@@ -44,6 +44,15 @@ test('TikTok sandbox labels private testing and keeps requests and previews in i
   assert.equal(d.querySelector('#tt-preview video').getAttribute('src'),'/campaign-platform-sandbox/assets/'+asset);
   assert.deepEqual([...d.querySelector('#piece-form').elements.platform.options].map(x=>x.value),['tiktok']);
   assert.equal(d.querySelector('#connect').textContent,'Conectar tiktok');
+ }finally{page.close();}
+});
+
+test('TikTok personal sandbox account is connected as its owner instead of a shared TDF destination',async()=>{
+ const page=await setup({sandbox:true,scope:'own'});try{
+  const input=page.document.querySelector('#tdf-channel');
+  assert.equal(input.checked,false);
+  assert.equal(input.disabled,true);
+  assert.match(page.document.querySelector('.intro').textContent,/SANDBOX/);
  }finally{page.close();}
 });
 

@@ -103,7 +103,7 @@ class TikTokSandboxTests(unittest.TestCase):
     def test_callback_checks_real_provider_username_before_connecting_shared_account(self):
         for username in ['otro', 'artista']:
             params = urllib.parse.parse_qs(urllib.parse.urlsplit(self.provider.start(self.actor, 'tiktok', 'tdf')).query)
-            replies = [({'access_token': 'test-token', 'scope': 'user.info.basic,video.publish'}, {}),
+            replies = [({'access_token': 'test-token', 'refresh_token': 'test-refresh', 'expires_in': 3600, 'scope': 'user.info.basic,video.publish'}, {}),
                        ({'data': {'user': {'open_id': 'creator1', 'display_name': 'Artista'}}}, {}),
                        ({'error': {'code': 'ok'}, 'data': {'creator_username': username}}, {})]
             with patch('providers.request', side_effect=replies) as network:
@@ -155,3 +155,40 @@ class TikTokSandboxTests(unittest.TestCase):
             with self.assertRaises(Denied):
                 self.provider.publish({'platform': 'youtube'}, {})
             network.assert_not_called()
+
+    def test_personal_test_account_keeps_own_scope_after_exact_username_check(self):
+        self.provider.config['TIKTOK_SANDBOX_SCOPE'] = 'own'
+        with self.store.db(True) as db:
+            db.execute('UPDATE accounts SET scope="own" WHERE id=?', (self.aid,))
+        with self.assertRaises(Denied):
+            self.provider.start(self.actor, 'tiktok', 'tdf')
+        url = self.provider.start(self.actor, 'tiktok', 'own')
+        state = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['state'][0]
+        replies = [({'access_token': 'test-token', 'refresh_token': 'test-refresh', 'expires_in': 3600, 'scope': 'user.info.basic,video.publish'}, {}),
+                   ({'data': {'user': {'open_id': 'creator1', 'display_name': 'Artista'}}}, {}),
+                   ({'error': {'code': 'ok'}, 'data': {'creator_username': 'artista'}}, {})]
+        with patch('providers.request', side_effect=replies):
+            self.provider.callback('tiktok', state, 'code', self.actor)
+        self.assertEqual(self.account()['scope'], 'own')
+        self.assertFalse(self.provider.known_tdf_identity('tiktok', 'creator1'))
+        piece = self.prepared()
+        with patch('tiktok.creator', return_value=self.info), patch('tiktok.check_media'), \
+                patch('tiktok.call', return_value={'publish_id': 'personal-private-test'}):
+            self.assertEqual(self.provider.publish(piece, self.account())['state'], 'processing')
+
+    def test_changing_target_or_scope_invalidates_context_and_tdf_cannot_be_personal(self):
+        data = self.private_data()
+        with patch('tiktok.creator', return_value=self.info):
+            context = tiktok.review_context(self.provider, self.actor, self.cid, self.aid)
+        for key, value in [('TIKTOK_SANDBOX_USERNAME', 'otra'), ('TIKTOK_SANDBOX_SCOPE', 'own')]:
+            previous = self.provider.config.get(key)
+            self.provider.config[key] = value
+            with self.assertRaises(Denied):
+                tiktok.consent(self.provider, self.actor, self.cid, {
+                    **data, 'context': context['context'], 'music_agreed': True,
+                    'preview_confirmed': True, 'original_content_confirmed': True})
+            if previous is None:self.provider.config.pop(key)
+            else:self.provider.config[key] = previous
+        self.provider.config.update(TIKTOK_SANDBOX_USERNAME='tdf.records.label', TIKTOK_SANDBOX_SCOPE='own')
+        with self.assertRaises(Denied):
+            environment.mode(self.provider.config)
