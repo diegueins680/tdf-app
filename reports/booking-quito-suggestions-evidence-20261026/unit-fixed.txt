@@ -1,0 +1,34 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runTestsByPath src/__tests__/PublicBookingPage.test.tsx --json --outputFile=/private/tmp/tdf-booking-quito-suggestions-20261026/unit-fixed.json
+
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+(node:86664) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/__tests__/PublicBookingPage.test.tsx (13.548 s)
+  PublicBookingPage
+    ✓ keeps the physical studio in Quito when the general display preference is UTC (795 ms)
+    ✓ stacks the service reviews below the booking card in a column so phones never squeeze the card (592 ms)
+    ✓ hides the rooms field from the public form (432 ms)
+    ✓ lets visitors pick any published service from the contact step (731 ms)
+    ✓ clears the old service quote while its replacement is pending and ignores a late old response (673 ms)
+    ✓ preserves booking acquisition context through optional login and signup (370 ms)
+    ✓ keeps the chosen Quito date when repeatedly selecting quick suggestions (1092 ms)
+    ✓ computes quick schedule shortcuts using studio-timezone opening hours (4 ms)
+    ✓ submits the canonical offering ID and lets the backend assign persisted default resources (1047 ms)
+    ✓ creates an idempotent deposit checkout only from an authoritative server quote (1234 ms)
+    ✓ can preselect DJ Booth from the public service query parameter (579 ms)
+    ✓ lets the backend resolve persisted default resources when legacy room UUIDs are ambiguous (894 ms)
+    ✓ prevents moving to schedule step with invalid email (443 ms)
+    ✓ does not overwrite in-progress contact edits after services load (444 ms)
+    ✓ advances by step on form submit before sending booking (855 ms)
+    ✓ does not auto-bind an ambiguous engineer id when duplicate names exist (1044 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       16 passed, 16 total
+Snapshots:   0 total
+Time:        14.648 s
+Ran all test suites within paths "src/__tests__/PublicBookingPage.test.tsx".
+Test results written to: ../../tdf-booking-quito-suggestions-20261026/unit-fixed.json
