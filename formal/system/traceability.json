@@ -13653,7 +13653,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "d77611df46eacc8332e2f64b3358448fc5d480ccdd0929838398497d4449e541",
+    "docs/catalog-persistence/catalog-list-decisions.json": "ecef5be46d75d5eecd9b1a1365e32f98e7074a1a69ad3a4deed8d00b032dcaa8",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14545,7 +14545,7 @@
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "0901b25a70b3300639a65942ba1fafb22d543b08632e442fbbd583e47ae5210b",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "89031662f7657f36b5379a462172f1c3b1018865325baf3ed8cee37c813ccba7",
-    "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "499c61e7997a810c656b3828142418dcc5b6bc665d99bb38143644a09a285372",
+    "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "bfe6aef82458457fde2aa134e909a77086523db312b3c8dabe7dd89926cfbb4c",
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
     "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "2819d1faed38a5727f09f8b7085553ad10e00954da29e4c149ceded3fb339232",
@@ -39806,7 +39806,7 @@
     {
       "id": "SURFACE-cc037b60c52e8931",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
-      "sha256": "499c61e7997a810c656b3828142418dcc5b6bc665d99bb38143644a09a285372",
+      "sha256": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

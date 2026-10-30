@@ -3,7 +3,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { SocialEventDTO } from '../api/socialEvents';
 
-type ListState = { data?: unknown[]; error?: Error | null; isLoading?: boolean };
+interface ListState { data?: unknown[]; error?: Error | null; isLoading?: boolean }
 let budget: ListState;
 let entries: ListState;
 const event: SocialEventDTO = { eventId: '7', eventOrganizerPartyId: '42', eventTitle: 'Synthetic finance', eventStart: '2030-01-01T12:00:00Z', eventCurrency: 'USD', eventArtists: [] };
@@ -54,32 +54,32 @@ describe('actual event finance export button', () => {
     const state = { error: new Error('precisión') };
     if (field === 'budget') budget = state; else entries = state;
     render(<MemoryRouter><SocialEventsPage /></MemoryRouter>);
-    const button = screen.getByRole('button', { name: 'Exportar CSV' });
-    expect((button as HTMLButtonElement).disabled).toBe(true);
+    const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Exportar CSV' });
+    expect(button.disabled).toBe(true);
     fireEvent.click(button);
     expect(createObjectURL).not.toHaveBeenCalled(); expect(download).not.toHaveBeenCalled();
   });
   it.each(['budget', 'entries'])('blocks a pending %s query', field => {
     if (field === 'budget') budget = { isLoading: true }; else entries = { isLoading: true };
     render(<MemoryRouter><SocialEventsPage /></MemoryRouter>);
-    expect((screen.getByRole('button', { name: 'Exportar CSV' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Exportar CSV' }).disabled).toBe(true);
   });
   it.each(['budget', 'entries'])('blocks stale data after a failed %s refetch', field => {
     if (field === 'budget') budget.error = new Error('precisión'); else entries.error = new Error('precisión');
     render(<MemoryRouter><SocialEventsPage /></MemoryRouter>);
-    expect((screen.getByRole('button', { name: 'Exportar CSV' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Exportar CSV' }).disabled).toBe(true);
   });
   it('shows a precision error and never downloads unsafe cached finance data', () => {
     summary = { ...summary, efsNetCents: 9007199254740992 };
     render(<MemoryRouter><SocialEventsPage /></MemoryRouter>);
-    fireEvent.click(screen.getByRole('button', { name: 'Exportar CSV' }));
+    fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'Exportar CSV' }));
     expect(screen.getByText(/excede la precisión/)).toBeTruthy();
     expect(createObjectURL).not.toHaveBeenCalled(); expect(download).not.toHaveBeenCalled();
   });
   it('exports when both lists successfully contain zero rows', () => {
     render(<MemoryRouter><SocialEventsPage /></MemoryRouter>);
-    const button = screen.getByRole('button', { name: 'Exportar CSV' });
-    expect((button as HTMLButtonElement).disabled).toBe(false);
+    const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Exportar CSV' });
+    expect(button.disabled).toBe(false);
     fireEvent.click(button);
     expect(createObjectURL).toHaveBeenCalledTimes(1); expect(download).toHaveBeenCalledTimes(1);
   });
