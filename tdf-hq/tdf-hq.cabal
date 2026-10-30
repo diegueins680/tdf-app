@@ -364,6 +364,7 @@ test-suite tdf-hq-test
     TDF.TicketPaymentGateSpec
     TDF.TrialIdentitySpec
     TDF.MarketplaceIdentitySpec
+    TDF.Contracts.DeliverySpec
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec

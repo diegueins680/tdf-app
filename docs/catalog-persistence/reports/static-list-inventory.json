@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-29T22:23:58.444Z",
+  "generatedAt": "2026-10-30T04:39:03.811Z",
   "repositoryRoot": ".",
   "filesScanned": 2459,
   "candidateCount": 1354,
@@ -153583,7 +153583,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 749,
+      "line": 750,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -153595,7 +153595,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        749
+        750
       ],
       "consumerCount": 3,
       "backendConsumers": [
