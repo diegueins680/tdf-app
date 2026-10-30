@@ -13562,6 +13562,83 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001",
+      "title": "Exact browser event-finance cents or explicit refusal",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Event-finance summary, budget and entry reads and CSV exports refuse non-null monetary values that are not JavaScript safe-integer cents. Safe signed cents display without a floating-point division by100 while preserving locale and default ISO currency fraction rounding.",
+      "authority": "Owner financial-integrity mandate; existing cents DTO contracts, signed finance balances, locale formatter and CSV raw-cent columns. Existing UI authoring already requires safe integer inputs.",
+      "source": "formal/system/event-finance-browser-precision.md",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "property": "For every admitted non-null Cents field x, Number.isSafeInteger(x). For signed safe cents c, display is locale currency formatting of the exact rational c/100 rounded to the currency default fraction digits. No lossy monetary value reaches a successful finance read or CSV row. CSV requires successful independent list data; failed/pending lists cannot silently become empty report inputs.",
+      "actors": [
+        "Authorized event manager",
+        "Browser finance report reader"
+      ],
+      "preconditions": [
+        "Existing event API authorization and integer-cent backend contract",
+        "Modern supported browsers provide Intl.NumberFormat BigInt formatToParts",
+        "Finance DTO monetary fields retain their Cents suffix; optional null/undefined retain existing meanings"
+      ],
+      "inputs": [
+        "Decoded summary, budget and finance-entry DTO monetary fields",
+        "Signed safe integer cents, optional values, configured locale and ISO currency"
+      ],
+      "state": {
+        "read": "Decoded transport or cached finance data",
+        "terminal": [
+          "Validated finance data / exact display / CSV rows",
+          "Query failure, unavailable amount or export error"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate each finance read before exposing it",
+        "Validate cached monetary data before building CSV rows",
+        "Separate integer whole and fraction units before locale presentation"
+      ],
+      "forbiddenTransitions": [
+        "Display or export rounded unsafe decoded cents as valid monetary evidence",
+        "Divide safe cent magnitudes by100 in binary floating point before display",
+        "Export a partial CSV after monetary precision refusal"
+      ],
+      "effects": [
+        "Read-only report presentation and CSV export; no backend financial restriction or monetary wire migration"
+      ],
+      "authorization": "Existing event authorization unchanged; validation grants no additional access.",
+      "privacy": "Synthetic fixtures only; no provider or customer data in receipts.",
+      "concurrency": "Validate each returned/cached object independently; no serializable multi-query financial snapshot claim.",
+      "idempotency": "No provider calls or automatic mutation retries. Equal values and locale/currency inputs produce equal report formatting.",
+      "failure": "Unsafe finance data rejects the query or export; existing query warnings and explicit export feedback remain. Unrepresentable displayed prices show Monto no disponible. Missing prices retain Gratis.",
+      "recovery": "Correct source values through authorized workflows or implement an independently reviewed exact monetary wire/client migration. Never clamp or rewrite financial records to make the UI accept them.",
+      "observability": "Retain baseline assertion failures, targeted/full UI logs, independent source faults, source fingerprints and exact-commit evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven Jest tests of actual API getters, extracted unchanged CSV builder and formatter; finite locale/currency differential checks, actual source-fault controls, UI type/lint/build and CI. TESTED, no complete refinement proof.",
+      "evidence": "formal/system/event-finance-browser-precision.md; exact-source execution reports remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped executable evidence; no complete implementation proof or deployed acceptance claim.",
+      "ambiguity": [
+        "Foreign currency attribution and backend aggregation/transaction consistency are independent obligations.",
+        "Safe values already rounded by an upstream producer cannot be detected without a wire migration.",
+        "Production exposure of extreme amounts and all browser/locale combinations remain unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite implementation tests; complete refinement and deployed browser/API correspondence remain unproven."
+      }
     }
   ]
 }

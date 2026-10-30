@@ -13563,6 +13563,83 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001",
+      "title": "Exact browser event-finance cents or explicit refusal",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Event-finance summary, budget and entry reads and CSV exports refuse non-null monetary values that are not JavaScript safe-integer cents. Safe signed cents display without a floating-point division by100 while preserving locale and default ISO currency fraction rounding.",
+      "authority": "Owner financial-integrity mandate; existing cents DTO contracts, signed finance balances, locale formatter and CSV raw-cent columns. Existing UI authoring already requires safe integer inputs.",
+      "source": "formal/system/event-finance-browser-precision.md",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "property": "For every admitted non-null Cents field x, Number.isSafeInteger(x). For signed safe cents c, display is locale currency formatting of the exact rational c/100 rounded to the currency default fraction digits. No lossy monetary value reaches a successful finance read or CSV row. CSV requires successful independent list data; failed/pending lists cannot silently become empty report inputs.",
+      "actors": [
+        "Authorized event manager",
+        "Browser finance report reader"
+      ],
+      "preconditions": [
+        "Existing event API authorization and integer-cent backend contract",
+        "Modern supported browsers provide Intl.NumberFormat BigInt formatToParts",
+        "Finance DTO monetary fields retain their Cents suffix; optional null/undefined retain existing meanings"
+      ],
+      "inputs": [
+        "Decoded summary, budget and finance-entry DTO monetary fields",
+        "Signed safe integer cents, optional values, configured locale and ISO currency"
+      ],
+      "state": {
+        "read": "Decoded transport or cached finance data",
+        "terminal": [
+          "Validated finance data / exact display / CSV rows",
+          "Query failure, unavailable amount or export error"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate each finance read before exposing it",
+        "Validate cached monetary data before building CSV rows",
+        "Separate integer whole and fraction units before locale presentation"
+      ],
+      "forbiddenTransitions": [
+        "Display or export rounded unsafe decoded cents as valid monetary evidence",
+        "Divide safe cent magnitudes by100 in binary floating point before display",
+        "Export a partial CSV after monetary precision refusal"
+      ],
+      "effects": [
+        "Read-only report presentation and CSV export; no backend financial restriction or monetary wire migration"
+      ],
+      "authorization": "Existing event authorization unchanged; validation grants no additional access.",
+      "privacy": "Synthetic fixtures only; no provider or customer data in receipts.",
+      "concurrency": "Validate each returned/cached object independently; no serializable multi-query financial snapshot claim.",
+      "idempotency": "No provider calls or automatic mutation retries. Equal values and locale/currency inputs produce equal report formatting.",
+      "failure": "Unsafe finance data rejects the query or export; existing query warnings and explicit export feedback remain. Unrepresentable displayed prices show Monto no disponible. Missing prices retain Gratis.",
+      "recovery": "Correct source values through authorized workflows or implement an independently reviewed exact monetary wire/client migration. Never clamp or rewrite financial records to make the UI accept them.",
+      "observability": "Retain baseline assertion failures, targeted/full UI logs, independent source faults, source fingerprints and exact-commit evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven Jest tests of actual API getters, extracted unchanged CSV builder and formatter; finite locale/currency differential checks, actual source-fault controls, UI type/lint/build and CI. TESTED, no complete refinement proof.",
+      "evidence": "formal/system/event-finance-browser-precision.md; exact-source execution reports remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped executable evidence; no complete implementation proof or deployed acceptance claim.",
+      "ambiguity": [
+        "Foreign currency attribution and backend aggregation/transaction consistency are independent obligations.",
+        "Safe values already rounded by an upstream producer cannot be detected without a wire migration.",
+        "Production exposure of extreme amounts and all browser/locale combinations remain unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite implementation tests; complete refinement and deployed browser/API correspondence remain unproven."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13578,7 +13655,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "d77611df46eacc8332e2f64b3358448fc5d480ccdd0929838398497d4449e541",
+    "docs/catalog-persistence/catalog-list-decisions.json": "ecef5be46d75d5eecd9b1a1365e32f98e7074a1a69ad3a4deed8d00b032dcaa8",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14291,8 +14368,8 @@
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
-    "tdf-hq-ui/src/api/socialEvents.test.ts": "7ff622e0574058fa5b19fd0b2379371d95c93204ca02c6a111ed1cb4b460a8bf",
-    "tdf-hq-ui/src/api/socialEvents.ts": "a071a745cbaa496c2a9172fedc9556f5f1bda5f5a14ec3c400f622e9ece84414",
+    "tdf-hq-ui/src/api/socialEvents.test.ts": "d306604d54bc95a83026d8b170dd4bb59ab941b4f4edc66094fe8dd778074274",
+    "tdf-hq-ui/src/api/socialEvents.ts": "40dfc3c37ebb11f0cb8135042524ae4059b4507cf16b5345add14ea22349575c",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/api/whatsappConsentPublic.ts": "5c41328394ff76400c1fbcd32b95555bec11455ad923acd96e922b5aadbccfda",
@@ -14471,7 +14548,8 @@
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "0901b25a70b3300639a65942ba1fafb22d543b08632e442fbbd583e47ae5210b",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "89031662f7657f36b5379a462172f1c3b1018865325baf3ed8cee37c813ccba7",
-    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
+    "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "bfe6aef82458457fde2aa134e909a77086523db312b3c8dabe7dd89926cfbb4c",
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
     "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "2819d1faed38a5727f09f8b7085553ad10e00954da29e4c149ceded3fb339232",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
@@ -14532,6 +14610,10 @@
     "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts": "b4a6a6e54eef828d5795ca8ffd8d30db2599429eaf6ecdfafa3bfbff2894763b",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": "e1363bf4bc181a089249899b5ab81cdcaae74ff61fcefa1c9d1b1bcfcc86e7dc",
     "tdf-hq-ui/src/utils/directoryPreviewImage.ts": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
+    "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts": "9cb84e248c7926a530b61da8a3afb76320b793f03b996c00a1507ca5b460335e",
+    "tdf-hq-ui/src/utils/eventFinanceCsv.ts": "bea9cf70026317f9a0dfccdb975d261f41761197c79254a366d3d17fb219a163",
+    "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts": "06ceabc3ed6366b3320f0019d9f9a766d6c0113b34aec21f9e7f23cc034459d9",
+    "tdf-hq-ui/src/utils/eventFinanceMoney.ts": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
     "tdf-hq-ui/src/utils/incrementalSha256.ts": "a7964918e4d6c577458a488a35f6f938b3584857ea40b2169c27b56c3435f899",
     "tdf-hq-ui/src/utils/lazyWithReload.ts": "b5dea0e45bcf0dd99fd9f9b31bd79323881fae0f588cc3145eee6454e1857aed",
@@ -21642,6 +21724,10 @@
       {
         "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/analytics/ticketFunnel.test.ts": [
@@ -21725,6 +21811,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-SESSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
         "relationship": "implementation"
       }
     ],
@@ -25932,6 +26022,10 @@
       {
         "requirement": "SOCIAL-EVENT-SESSION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+        "relationship": "tests"
       }
     ],
     "tdf-mobile/__tests__/eventMomentWirePayload.test.ts": [
@@ -26331,6 +26425,36 @@
     "e2e/web/booking-timezone.spec.mjs": [
       {
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/eventFinanceMoney.ts": [
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/eventFinanceCsv.ts": [
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts": [
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts": [
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": [
+      {
+        "requirement": "UI-EVENT-FINANCE-PRECISION-001",
         "relationship": "tests"
       }
     ]
@@ -35047,7 +35171,7 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "7ff622e0574058fa5b19fd0b2379371d95c93204ca02c6a111ed1cb4b460a8bf",
+      "sha256": "d306604d54bc95a83026d8b170dd4bb59ab941b4f4edc66094fe8dd778074274",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35057,13 +35181,17 @@
         {
           "requirement": "SOCIAL-EVENT-SESSION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "a071a745cbaa496c2a9172fedc9556f5f1bda5f5a14ec3c400f622e9ece84414",
+      "sha256": "40dfc3c37ebb11f0cb8135042524ae4059b4507cf16b5345add14ea22349575c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35084,6 +35212,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-SESSION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
           "relationship": "implementation"
         }
       ]
@@ -39701,9 +39833,21 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-cc037b60c52e8931",
+      "path": "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
+      "sha256": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
+      "sha256": "bfe6aef82458457fde2aa134e909a77086523db312b3c8dabe7dd89926cfbb4c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39716,6 +39860,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
           "relationship": "implementation"
         }
       ]
@@ -40997,6 +41145,54 @@
       "sha256": "c6268e703c65f0bbb07f3765878316ce8cda9867db14328eb17be3feecfde719",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-ff56e80d7cd555eb",
+      "path": "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+      "sha256": "9cb84e248c7926a530b61da8a3afb76320b793f03b996c00a1507ca5b460335e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a43bc2151acd2e54",
+      "path": "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+      "sha256": "bea9cf70026317f9a0dfccdb975d261f41761197c79254a366d3d17fb219a163",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ff6fc88d51316dbf",
+      "path": "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+      "sha256": "06ceabc3ed6366b3320f0019d9f9a766d6c0113b34aec21f9e7f23cc034459d9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-92990a3989bb72d1",
+      "path": "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+      "sha256": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8f26f91431e28702",
@@ -55409,7 +55605,8 @@
     "SOCIAL-EVENT-MODERATION-001",
     "SOCIAL-EVENT-SESSION-001",
     "MEDIA-MUSIC-PRIVACY-001",
-    "SYS-CI-SELECTED-001"
+    "SYS-CI-SELECTED-001",
+    "UI-EVENT-FINANCE-PRECISION-001"
   ],
   "stateMachines": [
     {
@@ -56528,7 +56725,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56556,7 +56753,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
       "definition": {
         "states": [
           "absent",
@@ -56586,7 +56783,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
       "definition": {
         "export": [
           "queued",
@@ -79073,7 +79270,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -19767,6 +19767,22 @@
       },
       "reviewBatch": "music-track-search-2026-10-26",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "caafb621f3c699640707",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing fixture fields could weaken mounted event-finance export admission and precision regression coverage.",
+      "justification": "Single synthetic SocialEventDTO fixture fields for mounted page tests, matching existing reviewed ticket-sharing fixture be74b101363c9d782b7d. The keys describe a test object shape, not selectable business options or an editable event/currency registry. Production event/currency authority remains unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
+        "line": 9
+      },
+      "reviewBatch": "event-finance-browser-precision-2026-10-30",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }

@@ -1,3 +1,5 @@
+import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
+import { buildEventFinanceCsvRows } from '../utils/eventFinanceCsv';
 import { useEffect, useMemo, useState } from 'react';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
@@ -60,7 +62,7 @@ import {
 import { StripeCheckoutModal } from '../components/StripeCheckoutModal';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
-import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
+import { formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import { hasStrictAdminAccess } from '../utils/accessControl';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
@@ -205,11 +207,6 @@ const formatDate = (iso: string) => formatDateForUser(iso, {
   minute: '2-digit',
 });
 
-const formatMoney = (amountCents?: number | null, currency?: string | null) => {
-  if (typeof amountCents !== 'number') return 'Gratis';
-  const code = (currency ?? resolveRuntimeCurrency()).toUpperCase();
-  return formatCurrencyForUser(amountCents / 100, code);
-};
 
 const ticketCheckoutTotal = (faceValueCents: number) => {
   const platformFee = Math.max(0, Math.floor((faceValueCents * 400) / 10000));
@@ -258,157 +255,6 @@ const downloadCsvFile = (filename: string, rows: (string | number | boolean | nu
   URL.revokeObjectURL(url);
 };
 
-const buildEventFinanceCsvRows = (
-  event: SocialEventDTO,
-  budgetLines: SocialEventBudgetLineDTO[],
-  financeEntries: SocialEventFinanceEntryDTO[],
-  financeSummary: SocialEventFinanceSummaryDTO | null,
-) => {
-  const rows: (string | number | boolean | null | undefined)[][] = [];
-  rows.push([
-    'record_type',
-    'event_id',
-    'event_title',
-    'event_start',
-    'event_end',
-    'currency',
-    'metric_name',
-    'metric_value',
-    'line_id',
-    'line_code',
-    'line_name',
-    'line_type',
-    'line_category',
-    'line_planned_cents',
-    'line_actual_cents',
-    'entry_id',
-    'entry_direction',
-    'entry_source',
-    'entry_category',
-    'entry_status',
-    'entry_concept',
-    'entry_amount_cents',
-    'entry_external_ref',
-    'entry_occurred_at',
-  ]);
-
-  const eventId = event.eventId ?? '';
-  const eventTitle = event.eventTitle;
-  const eventStart = event.eventStart;
-  const eventEnd = event.eventEnd;
-  const eventCurrency = (financeSummary?.efsCurrency ?? event.eventCurrency ?? resolveRuntimeCurrency()).toUpperCase();
-
-  const summaryMetrics: [string, number | string | null | undefined][] = [
-    ['budget_cents', financeSummary?.efsBudgetCents],
-    ['planned_income_cents', financeSummary?.efsPlannedIncomeCents],
-    ['planned_expense_cents', financeSummary?.efsPlannedExpenseCents],
-    ['actual_income_cents', financeSummary?.efsActualIncomeCents],
-    ['actual_expense_cents', financeSummary?.efsActualExpenseCents],
-    ['net_cents', financeSummary?.efsNetCents],
-    ['ticket_paid_revenue_cents', financeSummary?.efsTicketPaidRevenueCents],
-    ['ticket_refunded_revenue_cents', financeSummary?.efsTicketRefundedRevenueCents],
-    ['ticket_pending_revenue_cents', financeSummary?.efsTicketPendingRevenueCents],
-    ['accounts_payable_cents', financeSummary?.efsAccountsPayableCents],
-    ['accounts_receivable_cents', financeSummary?.efsAccountsReceivableCents],
-    ['contract_committed_cents', financeSummary?.efsContractCommittedCents],
-    ['contract_paid_cents', financeSummary?.efsContractPaidCents],
-    ['procurement_committed_cents', financeSummary?.efsProcurementCommittedCents],
-    ['procurement_paid_cents', financeSummary?.efsProcurementPaidCents],
-    ['asset_investment_cents', financeSummary?.efsAssetInvestmentCents],
-    ['liability_balance_cents', financeSummary?.efsLiabilityBalanceCents],
-    ['budget_variance_cents', financeSummary?.efsBudgetVarianceCents],
-    ['budget_utilization_pct', financeSummary?.efsBudgetUtilizationPct],
-  ];
-
-  summaryMetrics.forEach(([metricName, metricValue]) => {
-    rows.push([
-      'summary',
-      eventId,
-      eventTitle,
-      eventStart,
-      eventEnd,
-      eventCurrency,
-      metricName,
-      metricValue,
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-    ]);
-  });
-
-  budgetLines.forEach((line) => {
-    rows.push([
-      'budget_line',
-      eventId,
-      eventTitle,
-      eventStart,
-      eventEnd,
-      eventCurrency,
-      '',
-      '',
-      line.eblId ?? '',
-      line.eblCode,
-      line.eblName,
-      line.eblType,
-      line.eblCategory,
-      line.eblPlannedCents,
-      line.eblActualCents ?? '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-    ]);
-  });
-
-  financeEntries.forEach((entry) => {
-    rows.push([
-      'finance_entry',
-      eventId,
-      eventTitle,
-      eventStart,
-      eventEnd,
-      eventCurrency,
-      '',
-      '',
-      entry.efeBudgetLineId ?? '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      entry.efeId ?? '',
-      entry.efeDirection,
-      entry.efeSource,
-      entry.efeCategory,
-      entry.efeStatus,
-      entry.efeConcept,
-      entry.efeAmountCents,
-      entry.efeExternalRef ?? '',
-      entry.efeOccurredAt,
-    ]);
-  });
-
-  return rows;
-};
 
 export default function SocialEventsPage() {
   const trackFunnel = useTicketFunnel();
@@ -1009,11 +855,15 @@ export default function SocialEventsPage() {
   }) => {
     const eventId = event.eventId ? String(event.eventId) : '';
     if (!eventId) return;
-    const rows = buildEventFinanceCsvRows(event, budgetLines, financeEntries, financeSummary);
-    const safeTitle = event.eventTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const filename = `reporte-financiero-${safeTitle || 'evento'}-${eventId}-${Date.now()}.csv`;
-    downloadCsvFile(filename, rows);
-    setFeedback({ kind: 'success', message: `Reporte CSV exportado para ${event.eventTitle}.` });
+    try {
+      const rows = buildEventFinanceCsvRows(event, budgetLines, financeEntries, financeSummary);
+      const safeTitle = event.eventTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const filename = `reporte-financiero-${safeTitle || 'evento'}-${eventId}-${Date.now()}.csv`;
+      downloadCsvFile(filename, rows);
+      setFeedback({ kind: 'success', message: `Reporte CSV exportado para ${event.eventTitle}.` });
+    } catch (error) {
+      setFeedback({ kind: 'error', message: error instanceof Error ? error.message : 'No se pudo exportar el reporte financiero.' });
+    }
   };
 
   const renderOrders = (orders: SocialTicketOrderDTO[], eventId: string, isOrganizer: boolean) => {
@@ -1807,6 +1657,12 @@ export default function SocialEventsPage() {
                                   <Button
                                     size="small"
                                     variant="outlined"
+                                    disabled={
+                                      budgetLineQueries[index]?.data == null ||
+                                      financeEntryQueries[index]?.data == null ||
+                                      Boolean(budgetLineQueries[index]?.error) ||
+                                      Boolean(financeEntryQueries[index]?.error)
+                                    }
                                     onClick={() =>
                                       exportEventFinanceCsv({
                                         event: ev,

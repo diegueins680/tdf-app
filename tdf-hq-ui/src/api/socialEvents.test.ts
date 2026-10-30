@@ -280,3 +280,23 @@ describe('SocialEventsAPI', () => {
   });
 
 });
+
+describe('event finance read precision', () => {
+  it.each(['efsBudgetCents', 'efsPlannedIncomeCents', 'efsPlannedExpenseCents', 'efsActualIncomeCents', 'efsActualExpenseCents', 'efsNetCents', 'efsTicketPaidRevenueCents', 'efsTicketRefundedRevenueCents', 'efsTicketPendingRevenueCents', 'efsAccountsPayableCents', 'efsAccountsReceivableCents', 'efsContractCommittedCents', 'efsContractPaidCents', 'efsProcurementCommittedCents', 'efsProcurementPaidCents', 'efsAssetInvestmentCents', 'efsLiabilityBalanceCents', 'efsBudgetVarianceCents'])('refuses rounded JSON summary %s', async field => {
+    getMock.mockResolvedValue(JSON.parse(`{"${field}":9007199254740993}`));
+    await expect(SocialEventsAPI.getFinanceSummary('7')).rejects.toThrow('precisión');
+  });
+  it.each(['eblPlannedCents', 'eblActualCents'])('refuses unsafe independent budget field %s', async field => {
+    getMock.mockResolvedValue([{ [field]: -9007199254740992 }]);
+    await expect(SocialEventsAPI.listBudgetLines('7')).rejects.toThrow('precisión');
+  });
+  it('refuses unsafe independent finance entries', async () => {
+    getMock.mockResolvedValue([{ efeAmountCents: 9007199254740992 }]);
+    await expect(SocialEventsAPI.listFinanceEntries('7')).rejects.toThrow('precisión');
+  });
+  it('preserves exact signed cents, optional values and non-monetary percentages', async () => {
+    const report = { efsNetCents: -9007199254740991, efsBudgetCents: null, efsBudgetUtilizationPct: 1.25 };
+    getMock.mockResolvedValue(report);
+    await expect(SocialEventsAPI.getFinanceSummary('7')).resolves.toBe(report);
+  });
+});

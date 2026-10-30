@@ -1274,6 +1274,7 @@
       "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
       "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventWorkspacePage.tsx",
+      "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
       "tdf-hq-ui/src/pages/SocialInboxPage.test.tsx",
       "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
@@ -1404,6 +1405,10 @@
       "tdf-hq-ui/src/utils/domoQuoteAccess.ts",
       "tdf-hq-ui/src/utils/env.test.ts",
       "tdf-hq-ui/src/utils/env.ts",
+      "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+      "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+      "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+      "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.test.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.ts",
       "tdf-hq-ui/src/utils/eventSharing.test.ts",
@@ -7485,13 +7490,13 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "7ff622e0574058fa5b19fd0b2379371d95c93204ca02c6a111ed1cb4b460a8bf",
+      "sha256": "d306604d54bc95a83026d8b170dd4bb59ab941b4f4edc66094fe8dd778074274",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "a071a745cbaa496c2a9172fedc9556f5f1bda5f5a14ec3c400f622e9ece84414",
+      "sha256": "40dfc3c37ebb11f0cb8135042524ae4059b4507cf16b5345add14ea22349575c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10267,9 +10272,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cc037b60c52e8931",
+      "path": "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
+      "sha256": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
+      "sha256": "bfe6aef82458457fde2aa134e909a77086523db312b3c8dabe7dd89926cfbb4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11044,6 +11055,30 @@
       "id": "SURFACE-41c47851dd3fbbc1",
       "path": "tdf-hq-ui/src/utils/env.ts",
       "sha256": "c6268e703c65f0bbb07f3765878316ce8cda9867db14328eb17be3feecfde719",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ff56e80d7cd555eb",
+      "path": "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+      "sha256": "9cb84e248c7926a530b61da8a3afb76320b793f03b996c00a1507ca5b460335e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a43bc2151acd2e54",
+      "path": "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+      "sha256": "bea9cf70026317f9a0dfccdb975d261f41761197c79254a366d3d17fb219a163",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ff6fc88d51316dbf",
+      "path": "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+      "sha256": "06ceabc3ed6366b3320f0019d9f9a766d6c0113b34aec21f9e7f23cc034459d9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-92990a3989bb72d1",
+      "path": "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+      "sha256": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27478,6 +27513,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-finance-browser-precision.md",
+      "sha256": "1fb729d2150589ce5074884f77f9747b5b79ca6ad717ba7e6c72c733e24a65c5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-memories.md",
       "sha256": "a2aee45f6ad159d06c3dbd2883060dcc56b4cc1429afead1115e3d10fd6c7a4f",
       "authority": "inferred",
@@ -27983,7 +28025,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sha256": "33ca8b55e1b3f2e76da2e9dd4098e4505ed832953a1e68fb07184e4840927f7b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
