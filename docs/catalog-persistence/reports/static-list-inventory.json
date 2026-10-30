@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-30T05:14:49.043Z",
+  "generatedAt": "2026-10-30T16:39:48.205Z",
   "repositoryRoot": ".",
   "filesScanned": 2460,
   "candidateCount": 1354,
@@ -66583,7 +66583,7 @@
       "domain": "studio-services-booking",
       "kind": "array",
       "name": "BOOKING_STEPS",
-      "line": 99,
+      "line": 102,
       "values": [
         "Contacto",
         "Horario",
@@ -66592,7 +66592,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        99
+        102
       ],
       "consumerCount": 12,
       "backendConsumers": [],
@@ -66630,7 +66630,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "bookingPayload",
-      "line": 767,
+      "line": 768,
       "values": [
         "pbFullName",
         "pbEmail",
@@ -66646,7 +66646,7 @@
       "valueCount": 10,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        767
+        768
       ],
       "consumerCount": 1,
       "backendConsumers": [

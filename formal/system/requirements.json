@@ -3625,7 +3625,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7669,7 +7669,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7769,7 +7769,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7781,7 +7781,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9526,7 +9526,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -10529,7 +10529,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
       },
-      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure \u2026', 'operations worker \u2026', 'operations retried \u2026', 'operations migration \u2026'; formal/event-operations/OperationsFailureReplay.tla",
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
       "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
@@ -10875,7 +10875,7 @@
     {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
-      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image\u2019s temporary initialization socket server is insufficient.",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
       "domain": "SYS",
       "actors": [
         "CI fixture runner",
@@ -11025,7 +11025,7 @@
       "domain": "PAY",
       "critical": true,
       "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
-      "authority": "User audit sections 14\u201315 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
       "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
       "contract": "formal/system/music-purchase-replay.md",
       "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
@@ -11114,7 +11114,7 @@
       "critical": true,
       "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
       "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
-      "source": "User audit sections9\u201315 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
       "contract": "formal/system/music-money-wire.md",
       "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
       "actors": [
@@ -11228,7 +11228,7 @@
       "critical": false,
       "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
       "authority": "User audit validation and traceability requirements",
-      "source": "User audit sections9,24\u201325; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
       "contract": "formal/system/music-test-entrypoint.md",
       "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
       "actors": [
@@ -13489,6 +13489,77 @@
         "PARTIAL",
         "UNVERIFIED"
       ]
+    },
+    {
+      "id": "BOOK-STUDIO-TIMEZONE-001",
+      "title": "Public studio hours use Quito time independently of visitor preferences",
+      "domain": "BOOK",
+      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
+      "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
+      "contract": "formal/system/public-booking-timezone.md",
+      "actors": [
+        "Visitor",
+        "Signed-in customer"
+      ],
+      "preconditions": [
+        "Active canonical offering available; existing backend booking admission applies."
+      ],
+      "inputs": [
+        "Visitor timezone",
+        "Selected local start and duration",
+        "General display timezone preference"
+      ],
+      "state": {
+        "schedule": [
+          "contact",
+          "schedule",
+          "confirmation",
+          "submitted or recoverable failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Contact -> schedule -> confirmation for an interval within the Quito opening window",
+        "Confirmation -> recoverable booking error without false success",
+        "Schedule -> suggested time within the same selected Quito calendar date"
+      ],
+      "forbiddenTransitions": [
+        "General display timezone changes the physical studio zone",
+        "Start before 08:00 or end after 22:00 Quito admitted by the public form",
+        "Reinterpret persisted UTC booking timestamps",
+        "A quick-suggestion click moves the booking to the previous Quito calendar date"
+      ],
+      "effects": [
+        "Studio opening hours remain in Quito; selected visitor-local instants are serialized in UTC."
+      ],
+      "authorization": "Existing public and authenticated booking authorization is unchanged; frontend validation grants no backend authority.",
+      "privacy": "Regression traffic uses synthetic identities and intercepted API responses; no real reservations or payments.",
+      "concurrency": "Existing cancellation and stale availability response guards remain unchanged.",
+      "idempotency": "Existing booking idempotency semantics are unchanged; no automatic write replay.",
+      "failure": "Out-of-hours selection remains on schedule with actionable feedback; refused booking is never shown as successful.",
+      "recovery": "User can select another valid schedule while retaining contact details.",
+      "observability": "Source-bound unit and browser results; no new analytics events.",
+      "property": "QuitoOpeningWindowAndUtcInstantPreserved",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "e2e/web/booking-timezone.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Rendered component regression with general UTC preference; browser boundary and refused synthetic submission tests for UTC and summer Europe/Madrid visitors. Not a proof of backend hours enforcement. Rendered-form regression reproduces original75 shifting January15 toJanuary14; corrected form preserves the date through repeated clicks. Browser UTC/Madrid scenarios now click suggestions repeatedly before and after a visitor-local midnight crossing.",
+      "evidence": "reports/booking-quito-timezone-2026-10-26.json",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Owner-confirmed business rule; current source execution recorded separately.",
+      "ambiguity": [
+        "Backend schedule-policy authority is outside this frontend correction. No production deployment or existing booking migration is implied."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
+      }
     },
     {
       "id": "MSG-CONTRACT-DELIVERY-001",

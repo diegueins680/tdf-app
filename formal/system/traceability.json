@@ -13492,6 +13492,77 @@
       ]
     },
     {
+      "id": "BOOK-STUDIO-TIMEZONE-001",
+      "title": "Public studio hours use Quito time independently of visitor preferences",
+      "domain": "BOOK",
+      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
+      "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
+      "contract": "formal/system/public-booking-timezone.md",
+      "actors": [
+        "Visitor",
+        "Signed-in customer"
+      ],
+      "preconditions": [
+        "Active canonical offering available; existing backend booking admission applies."
+      ],
+      "inputs": [
+        "Visitor timezone",
+        "Selected local start and duration",
+        "General display timezone preference"
+      ],
+      "state": {
+        "schedule": [
+          "contact",
+          "schedule",
+          "confirmation",
+          "submitted or recoverable failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Contact -> schedule -> confirmation for an interval within the Quito opening window",
+        "Confirmation -> recoverable booking error without false success",
+        "Schedule -> suggested time within the same selected Quito calendar date"
+      ],
+      "forbiddenTransitions": [
+        "General display timezone changes the physical studio zone",
+        "Start before 08:00 or end after 22:00 Quito admitted by the public form",
+        "Reinterpret persisted UTC booking timestamps",
+        "A quick-suggestion click moves the booking to the previous Quito calendar date"
+      ],
+      "effects": [
+        "Studio opening hours remain in Quito; selected visitor-local instants are serialized in UTC."
+      ],
+      "authorization": "Existing public and authenticated booking authorization is unchanged; frontend validation grants no backend authority.",
+      "privacy": "Regression traffic uses synthetic identities and intercepted API responses; no real reservations or payments.",
+      "concurrency": "Existing cancellation and stale availability response guards remain unchanged.",
+      "idempotency": "Existing booking idempotency semantics are unchanged; no automatic write replay.",
+      "failure": "Out-of-hours selection remains on schedule with actionable feedback; refused booking is never shown as successful.",
+      "recovery": "User can select another valid schedule while retaining contact details.",
+      "observability": "Source-bound unit and browser results; no new analytics events.",
+      "property": "QuitoOpeningWindowAndUtcInstantPreserved",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "e2e/web/booking-timezone.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Rendered component regression with general UTC preference; browser boundary and refused synthetic submission tests for UTC and summer Europe/Madrid visitors. Not a proof of backend hours enforcement. Rendered-form regression reproduces original75 shifting January15 toJanuary14; corrected form preserves the date through repeated clicks. Browser UTC/Madrid scenarios now click suggestions repeatedly before and after a visitor-local midnight crossing.",
+      "evidence": "reports/booking-quito-timezone-2026-10-26.json",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Owner-confirmed business rule; current source execution recorded separately.",
+      "ambiguity": [
+        "Backend schedule-policy authority is outside this frontend correction. No production deployment or existing booking migration is implied."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
+      }
+    },
+    {
       "id": "MSG-CONTRACT-DELIVERY-001",
       "title": "Do not report unsupported contract email as sent",
       "statement": "The file-backed contract send route must refuse unsupported delivery with501 after preserving existing input and stored-file validation; it must never claim sent/queued without an implementation.",
@@ -13567,10 +13638,10 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
+    ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
-    ".github/workflows/event-raci-browser.yml": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+    ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
@@ -13585,6 +13656,7 @@
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
     "e2e/web/booking-catalog-recovery.spec.mjs": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+    "e2e/web/booking-timezone.spec.mjs": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
@@ -14159,7 +14231,7 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
-    "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+    "scripts/test-persistent-uploads-container.py": "6d1b200600fb4d95b56e3f14401f7aee12adcdb478a3949349b1a05f829d3c3e",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
@@ -14235,7 +14307,7 @@
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
-    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
@@ -14456,7 +14528,7 @@
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "aec2259be898d0b415f4e1a4f46fb7ecd229abca07b08b5295653c65f145e951",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "2aa258dc66bffa06a09bc3581cc0d1c1342b512504cbd6f897854c79c0caeece",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
@@ -24021,6 +24093,10 @@
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-STUDIO-TIMEZONE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": [
@@ -24064,6 +24140,10 @@
       },
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "BOOK-STUDIO-TIMEZONE-001",
         "relationship": "tests"
       }
     ],
@@ -26311,6 +26391,12 @@
         "relationship": "formalModels"
       }
     ],
+    "e2e/web/booking-timezone.spec.mjs": [
+      {
+        "requirement": "BOOK-STUDIO-TIMEZONE-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Contracts/Server.hs": [
       {
         "requirement": "MSG-CONTRACT-DELIVERY-001",
@@ -26390,7 +26476,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
+      "sha256": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26522,7 +26608,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+      "sha256": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26698,6 +26784,18 @@
       "requirements": [
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a58a6650faecc2e6",
+      "path": "e2e/web/booking-timezone.spec.mjs",
+      "sha256": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "BOOK-STUDIO-TIMEZONE-001",
           "relationship": "tests"
         }
       ]
@@ -32265,7 +32363,7 @@
     {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+      "sha256": "6d1b200600fb4d95b56e3f14401f7aee12adcdb478a3949349b1a05f829d3c3e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33617,7 +33715,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
+      "sha256": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33626,6 +33724,10 @@
         },
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "BOOK-STUDIO-TIMEZONE-001",
           "relationship": "tests"
         }
       ]
@@ -39309,7 +39411,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+      "sha256": "aec2259be898d0b415f4e1a4f46fb7ecd229abca07b08b5295653c65f145e951",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39318,6 +39420,10 @@
         },
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-STUDIO-TIMEZONE-001",
           "relationship": "implementation"
         }
       ]
@@ -56502,7 +56608,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1300cd930846309167cc0c3cb72efd85f35be28d963150348205f7c64fc23316",
+      "sourceSha256": "fb3ac673098bb4f8649c91317be87ec4f89d1acdce50772b3722ab6d944545e2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56530,7 +56636,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1300cd930846309167cc0c3cb72efd85f35be28d963150348205f7c64fc23316",
+      "sourceSha256": "fb3ac673098bb4f8649c91317be87ec4f89d1acdce50772b3722ab6d944545e2",
       "definition": {
         "states": [
           "absent",
@@ -56560,7 +56666,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1300cd930846309167cc0c3cb72efd85f35be28d963150348205f7c64fc23316",
+      "sourceSha256": "fb3ac673098bb4f8649c91317be87ec4f89d1acdce50772b3722ab6d944545e2",
       "definition": {
         "export": [
           "queued",
@@ -79047,7 +79153,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
