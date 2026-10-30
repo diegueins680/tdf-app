@@ -136,7 +136,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(canonicalHash(manifest.slice(0, 220)), protectedFinancialPrefixHash);
   assert.equal(financial.protectedMainManifestCanonicalSha256, protectedFinancialPrefixHash);
   assert.equal(financial.sourceMain, '5114fe95ac8e328b58162a8dcae5c9015a47ce09');
-  assert.equal(manifest.length, 227);
+  assert.equal(manifest.slice(0, 227).length, 227);
   assert.equal(canonicalHash(manifest.slice(0, 222)),
     '3de55b856b5d3d21671a9449be31f6169c93f004946a0e0752b784b4d5a0922f',
     'Preserve the full222-entry protected main78fa351b prefix');
@@ -148,7 +148,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(canonicalHash(manifest.slice(0, 221)),
     '1413652c0d640dbb2241fb5c004eaa212245a62dfcb031109f54226d3af31fd9',
     'Preserve every object of protected main1c9c833, including its directory successor');
-  assert.equal(canonicalHash(manifest.slice(223)),
+  assert.equal(canonicalHash(manifest.slice(223, 227)),
     '683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b',
     'Append only the four unchanged memory entries from reviewed candidate31c16bffe');
   assert.deepEqual(manifest[220], {
@@ -172,8 +172,8 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(decision214.evidence.valueCount, 214);
   assert.equal(decision220.evidence.valueCount, 220);
   const pointer = successors.find(entry => entry.name === 'migrations');
-  const finalCurrent = active.find(entry => entry.id === pointer.currentId);
-  assert.equal(finalCurrent?.reviewed, true);
+  const activeCurrent = active.find(entry => entry.id === pointer.currentId);
+  assert.equal(activeCurrent?.reviewed, true);
   const history = []; const seen = new Set();
   const visit = value => {
     if (!value) return;
@@ -181,7 +181,9 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
     visit(value.previousDecision);
     for (const branch of value.concurrentReviewHistory ?? []) visit(branch);
   };
-  visit(finalCurrent);
+  visit(activeCurrent);
+  const finalCurrent = history.find(entry => entry.id === 'a2bb0e828d5b94c1cb31');
+  assert.equal(finalCurrent?.reviewed, true, 'Retain the exact reviewed227 predecessor');
   const current = history.find(entry => entry.id === financial.currentDecisionId);
   assert.equal(current?.id, '8229b8202552298c955e');
   assert.equal(canonicalHash(current),
@@ -235,7 +237,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(canonicalHash(manifest.slice(0, 223)),
     '3123446d4ae490b41d13beb6ca62f17da39fbc90539791c9b5373709c05b1703');
   assert.equal(aggregate.preservedPrefixCanonicalSha256, canonicalHash(manifest.slice(0, 223)));
-  assert.equal(aggregate.memorySuffixCanonicalSha256, canonicalHash(manifest.slice(223)));
+  assert.equal(aggregate.memorySuffixCanonicalSha256, canonicalHash(manifest.slice(223, 227)));
   assert.deepEqual(manifest[222], {
     id: '2026-10-16_provider_domain_payment_binding',
     path: 'tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql',
@@ -257,7 +259,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
     assert.ok(!active.some(entry => entry.id === parent.id));
   }
   const retiredParents = [...historical, current, memoryParent, memory225, header222,
-    combined.headerManifestDecision, memory226, provider223, provider.providerManifestDecision];
+    combined.headerManifestDecision, memory226, provider223, provider.providerManifestDecision, finalCurrent];
   assert.equal(current.classification, decision220.classification);
   assert.equal(current.disposition, decision220.disposition);
   assert.deepEqual(current.sourceReviewReferences.slice(0, decision220.sourceReviewReferences.length),
@@ -265,14 +267,14 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewed, true);
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
-  assert.equal(pointer.currentId, finalCurrent.id);
-  assert.equal(pointer.valueCount, 227);
-  assert.equal(pointer.change, finalCurrent.justification);
+  assert.equal(pointer.currentId, activeCurrent.id);
+  assert.equal(pointer.valueCount, manifest.length);
+  assert.equal(pointer.change, activeCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
-  assert.equal(retirement.replacementId, finalCurrent.id);
-  assert.equal(retirement.currentResolution.id, finalCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 227);
-  assert.equal(retirement.reason, finalCurrent.justification);
+  assert.equal(retirement.replacementId, activeCurrent.id);
+  assert.equal(retirement.currentResolution.id, activeCurrent.id);
+  assert.equal(retirement.currentResolution.valueCount, manifest.length);
+  assert.equal(retirement.reason, activeCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
     assert.ok(retirement.previousReplacementIds.includes(decision.id));
@@ -287,7 +289,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
     await execFileAsync('git', ['add', '--', 'scripts/production-migrations.json'], { cwd: repoDir });
     const decisionsPath = path.join(tempRoot, 'decisions.json');
     const args = [auditScriptPath, '--root', repoDir, '--decisions', decisionsPath, '--fail-on-unreviewed'];
-    await fs.writeFile(decisionsPath, JSON.stringify([finalCurrent]));
+    await fs.writeFile(decisionsPath, JSON.stringify([activeCurrent]));
     await execFileAsync(process.execPath, args, { cwd: repoDir });
     for (const decision of retiredParents) {
       await fs.writeFile(decisionsPath, JSON.stringify([decision]));
@@ -298,6 +300,60 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('featured-track228 preserves the exact227 review and admits only the reviewed SQL append', async () => {
+  const document = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+  const proof = document.reconciliation.artistFeaturedTrackManifest;
+  const { active, successors, integration } = await readReconciliation();
+  const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
+    (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
+  // Independent hashes of the immutable catalog parent3c99531. Changing the
+  // new ledger and its evidence together cannot approve a changed predecessor.
+  const previousHash = '2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e';
+  const prefixHash = '3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e';
+  const pointerHash = '3615b7db8cc3361d0051634591a1c77c71209cbf60cd4bd816cb6c2cb61dd6f6';
+  const resolutionHash = 'd3c0d99e0500730623fc73c63af9ada7d12c18c4f6591208796804bee4b1cefa';
+  const sqlHash = '6b6944bde11a9db5c0da39af290f813a07ba4da68dcfeff55ebc161468d4a8a2';
+  const appended = {
+    id: '2026-10-30_artist_featured_track',
+    path: 'tdf-hq/sql/2026-10-30_artist_featured_track.sql',
+    introducedBy: '1f1b5a48555500144996bd2d51d1f4f660421f2f',
+  };
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'scripts/production-migrations.json'), 'utf8')).migrations;
+  assert.equal(manifest.length, 228);
+  assert.equal(canonicalHash(manifest.slice(0, 227)), prefixHash);
+  assert.deepEqual(manifest[227], appended);
+  assert.equal(proof.sourceParent, '3c99531049394b2ee7e80241e627375fd54b8279');
+  assert.equal(proof.protectedPrefixLength, 227);
+  assert.equal(proof.protectedPrefixCanonicalSha256, prefixHash);
+  assert.deepEqual(proof.appendedMigration, appended);
+  assert.equal(proof.appendedSqlSha256, sqlHash);
+  assert.equal(createHash('sha256').update(await fs.readFile(path.join(workspaceRoot,
+    appended.path))).digest('hex'), sqlHash);
+  const pointer = successors.find(entry => entry.name === 'migrations');
+  const current = active.find(entry => entry.id === pointer.currentId);
+  assert.equal(current.id, 'b5fee19b207fbd7653cc');
+  assert.equal(proof.successorDecisionId, current.id);
+  assert.equal(current.reviewed, true);
+  assert.equal(current.evidence.valueCount, 228);
+  assert.equal(current.previousDecision.id, 'a2bb0e828d5b94c1cb31');
+  assert.equal(proof.previousDecisionId, current.previousDecision.id);
+  assert.equal(canonicalHash(current.previousDecision), previousHash);
+  assert.equal(proof.previousDecisionCanonicalSha256, previousHash);
+  assert.deepEqual(current.sourceReviewReferences.slice(0, current.previousDecision.sourceReviewReferences.length),
+    current.previousDecision.sourceReviewReferences);
+  assert.equal(canonicalHash(pointer.previousResolution), pointerHash);
+  assert.equal(proof.previousPointerCanonicalSha256, pointerHash);
+  const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
+  assert.equal(canonicalHash(retirement.previousCurrentResolution), resolutionHash);
+  assert.equal(proof.previousResolutionCanonicalSha256, resolutionHash);
+  assert.equal(retirement.replacementId, current.id);
+  assert.equal(retirement.currentResolution.valueCount, 228);
+  assert.equal(pointer.valueCount, 228);
 });
 
 test('event catalog retirement ledger preserves evidence and distinct reviewed successors', async () => {

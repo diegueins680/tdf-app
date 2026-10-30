@@ -688,6 +688,23 @@
         "c7ebc0f215501d998ad0"
       ],
       "note": "The exact inherited API-dispatch decision remains in append-only history. All other1340 inherited active decision objects are unchanged."
+    },
+    "artistFeaturedTrackManifest": {
+      "sourceParent": "3c99531049394b2ee7e80241e627375fd54b8279",
+      "previousDecisionId": "a2bb0e828d5b94c1cb31",
+      "previousDecisionCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
+      "protectedPrefixLength": 227,
+      "protectedPrefixCanonicalSha256": "3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e",
+      "appendedMigration": {
+        "id": "2026-10-30_artist_featured_track",
+        "path": "tdf-hq/sql/2026-10-30_artist_featured_track.sql",
+        "introducedBy": "1f1b5a48555500144996bd2d51d1f4f660421f2f"
+      },
+      "appendedSqlSha256": "6b6944bde11a9db5c0da39af290f813a07ba4da68dcfeff55ebc161468d4a8a2",
+      "successorDecisionId": "b5fee19b207fbd7653cc",
+      "previousPointerCanonicalSha256": "3615b7db8cc3361d0051634591a1c77c71209cbf60cd4bd816cb6c2cb61dd6f6",
+      "previousResolutionCanonicalSha256": "d3c0d99e0500730623fc73c63af9ada7d12c18c4f6591208796804bee4b1cefa",
+      "scope": "Technical manifest provenance only; no production or release authorization."
     }
   },
   "decisions": [
@@ -19053,13 +19070,16 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "Preserve all 227 reviewed migration entries, their order, paths and introduction SHAs. Append only artist-owned featured-track preference storage/functions from introduction 1f1b5a48555500144996bd2d51d1f4f660421f2f. Runtime rollback preserves preference rows; no previously applied SQL is changed. Retain the complete inherited review graph as history.",
+      "justification": "Preserve all 227 reviewed migration entries, their order, paths and introduction SHAs. Append only artist-owned featured-track preference storage/functions from introduction 1f1b5a48555500144996bd2d51d1f4f660421f2f. Runtime rollback preserves preference rows; no previously applied SQL is changed. Retain the complete inherited review graph as history. This technical successor does not authorize production execution, feature activation, account access, provider actions or a review waiver; current-source CI and independent protected review remain required.",
       "reviewed": true,
-      "reviewMethod": "manual-source-review",
+      "reviewMethod": "successor-of-reviewed-decisions",
       "reviewBatch": "artist-featured-track-2026-10-30",
       "evidence": {
         "file": "scripts/production-migrations.json",
-        "line": 3
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 228
       },
       "previousDecision": {
         "id": "a2bb0e828d5b94c1cb31",
@@ -19811,6 +19831,16 @@
             "id": "2634b239375f2ad309ba"
           },
           "sourceEntryCanonicalSha256": "6bcc3d19c2aea1adb0ce6ede68d59ec60b025b953a083bc5be6090f4be90ed1a",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "3c99531049394b2ee7e80241e627375fd54b8279",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "024bd459583d1951dc9a432ec9141244073a43147aa037633c86af4abd382855",
+          "sourceEntry": {
+            "id": "a2bb0e828d5b94c1cb31"
+          },
+          "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

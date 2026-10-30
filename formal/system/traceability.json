@@ -13887,7 +13887,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "cfc20e3731dffad5b15eca7933ddfc2c55debaab9bbfb003b97d7478b25984cc",
+    "docs/catalog-persistence/catalog-list-decisions.json": "6b4a8c3e917427c6d906a13f565364767b281c1757921751b14da689d860c869",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14258,7 +14258,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "dd196cf7f801e882c92ff8a69f519afc2e1a3ac1d6d11031fd4c8adf0e5ff46a",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "91549b10ba840aae75743b8954498f4e2d05be31beeb56deb51b7d9fbfa33143",
@@ -28153,7 +28153,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
+      "sha256": "dd196cf7f801e882c92ff8a69f519afc2e1a3ac1d6d11031fd4c8adf0e5ff46a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

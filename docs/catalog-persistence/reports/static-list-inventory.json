@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-30T11:47:47.237Z",
+  "generatedAt": "2026-10-30T12:12:10.260Z",
   "repositoryRoot": ".",
   "filesScanned": 2479,
   "candidateCount": 1355,
@@ -14771,7 +14771,7 @@
       "specializedModel": "production migration manifest and applied migration ledger",
       "priority": "",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "Preserve all 227 reviewed migration entries, their order, paths and introduction SHAs. Append only artist-owned featured-track preference storage/functions from introduction 1f1b5a48555500144996bd2d51d1f4f660421f2f. Runtime rollback preserves preference rows; no previously applied SQL is changed. Retain the complete inherited review graph as history.",
+      "justification": "Preserve all 227 reviewed migration entries, their order, paths and introduction SHAs. Append only artist-owned featured-track preference storage/functions from introduction 1f1b5a48555500144996bd2d51d1f4f660421f2f. Runtime rollback preserves preference rows; no previously applied SQL is changed. Retain the complete inherited review graph as history. This technical successor does not authorize production execution, feature activation, account access, provider actions or a review waiver; current-source CI and independent protected review remain required.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
