@@ -13535,7 +13535,7 @@
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "fdef41e789e2df22b64a134bcfe5f91ca1a39780dfd8252aa6da756110e395a6",
-    "e2e/web/public-welcome.spec.mjs": "5102a2614b4f1ba3f9f94a8f65666e1610cfdb7172513ee8edf938028142c494",
+    "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -26945,7 +26945,7 @@
     {
       "id": "SURFACE-a2826b2994431e77",
       "path": "e2e/web/public-welcome.spec.mjs",
-      "sha256": "5102a2614b4f1ba3f9f94a8f65666e1610cfdb7172513ee8edf938028142c494",
+      "sha256": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
