@@ -82,7 +82,7 @@ esac
                         raise RuntimeError('Refusing cleanup of a foreign container')
                     require(invoke(['rm', '-f', row['Id']]))
                 elif 'No such' not in found.stderr:
-                    raise RuntimeError('Could not confirm synthetic container cleanup')
+                    raise RuntimeError(f'Could not confirm synthetic container cleanup: inspect exit {found.returncode}: {found.stderr[:2000]}')
         print(json.dumps({'sourceRevision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                           'image': IMAGE, 'checks': results,
                           'sourceSha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in
