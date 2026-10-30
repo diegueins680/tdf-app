@@ -380,6 +380,16 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       return;
     }
     autoplayRef.current = true;
+    // A user retry starts a fresh bounded source attempt after exhaustion.
+    // Automatic rendition/track recovery never enters with a failed current ID.
+    if (failedTracksRef.current.delete(currentTrack.id)) {
+      failedSourcesRef.current.clear();
+      setUnavailableTrackIds([...failedTracksRef.current]);
+      retryRef.current = 0;
+      setStatus('loading');
+      setSourceRefresh((value) => value + 1);
+      return;
+    }
     if (pendingPositionRef.current?.generation === sourceGenerationRef.current) {
       setStatus('loading');
       return;

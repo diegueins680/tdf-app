@@ -46,10 +46,13 @@ audio element and verifies that radio cannot reclaim a later artist context.
 The UI production build and changed-source ESLint pass. These are executable
 checks, not mathematical proofs or evidence of deployed behavior.
 
-Local integration verification initially passed 330 suites / 3,808 tests before
-adding rendition fallback and its regressions. TypeScript, production build and
-changed-source ESLint passed at that intermediate source tree. Final candidate
-checks are recorded in the PR; these counts do not establish a pass for later edits.
+Local integration verification passed 331 suites / 3,817 tests after merging the
+concurrent profile-link fixes. A later explicit-retry regression checks that an
+exhausted selection can start another bounded attempt. The final count and source
+identity are recorded in the PR. TypeScript, production build, changed-source
+ESLint, catalogue authority and immutable specification admission passed; the
+repository formal audit found no error-level findings. These checks do not prove
+server-side media health or deployed behavior.
 
 Hosted native CI on the earlier 8de15e02ee179de5990019764829eb939deba976
 candidate passed 50 real AAC/FLAC browser journeys. Its five remaining failures

@@ -662,3 +662,21 @@ it('advances after an unsupported play rejection even before a native error even
   expect(player.status).toBe('playing');
   expect(player.unavailableTrackIds).toEqual(['one']);
 });
+
+
+it('can explicitly retry a recording after every rendition was exhausted', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => player.playTrack(track('one')));
+  const audio = view.container.querySelector('audio')!;
+  Object.defineProperty(audio, 'error', { configurable: true, value: { code: 3 } });
+  await act(async () => { audio.dispatchEvent(new Event('error')); });
+  expect(player.status).toBe('unavailable');
+  expect(player.unavailableTrackIds).toEqual(['one']);
+  jest.mocked(audio.load).mockImplementation(() => {
+    Object.defineProperty(audio, 'error', { configurable: true, value: null });
+  });
+  await act(async () => player.play());
+  expect(player.currentTrack?.id).toBe('one');
+  expect(player.status).toBe('playing');
+  expect(player.unavailableTrackIds).toEqual([]);
+});
