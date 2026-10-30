@@ -13500,7 +13500,7 @@
     ".github/workflows/ci.yml": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
-    ".github/workflows/event-raci-browser.yml": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+    ".github/workflows/event-raci-browser.yml": "275b72e62bb51fb4035a4c431b591f077b075a327d6aabff68c2fa22ae782fa4",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
@@ -26434,7 +26434,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+      "sha256": "275b72e62bb51fb4035a4c431b591f077b075a327d6aabff68c2fa22ae782fa4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
