@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-29T23:10:05.948Z",
+  "generatedAt": "2026-10-30T19:33:49.455Z",
   "repositoryRoot": ".",
   "filesScanned": 2459,
   "candidateCount": 1354,
@@ -9377,7 +9377,7 @@
       "lines": [
         101
       ],
-      "consumerCount": 91,
+      "consumerCount": 90,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -9446,7 +9446,6 @@
         "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
         "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
         "tdf-hq-ui/src/utils/formatters.test.ts",
@@ -19862,7 +19861,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 39,
+      "consumerCount": 38,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/src/TDF/API.hs",
@@ -19889,7 +19888,6 @@
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.tsx"
       ],
@@ -20654,7 +20652,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 77,
+      "consumerCount": 76,
       "backendConsumers": [
         "tdf-hq/docs/openapi/interactions.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
@@ -20708,8 +20706,7 @@
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
         "tdf-hq-ui/src/hooks/useMetaTags.ts",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
-        "tdf-hq-ui/src/pages/InteractionPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/InteractionPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/social.tsx",
@@ -23537,7 +23534,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "SocialRsvpStatus",
-      "line": 136,
+      "line": 137,
       "values": [
         "accepted",
         "maybe",
@@ -23546,7 +23543,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        136
+        137
       ],
       "consumerCount": 74,
       "backendConsumers": [
@@ -23661,7 +23658,7 @@
       "domain": "security-authorization",
       "kind": "literal-union",
       "name": "LogisticsAccessRole",
-      "line": 295,
+      "line": 296,
       "values": [
         "owner",
         "editor",
@@ -23670,7 +23667,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        295
+        296
       ],
       "consumerCount": 32,
       "backendConsumers": [
@@ -23735,7 +23732,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "LogisticsActivityType",
-      "line": 296,
+      "line": 297,
       "values": [
         "task",
         "milestone",
@@ -23745,7 +23742,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        296
+        297
       ],
       "consumerCount": 6,
       "backendConsumers": [
@@ -23783,7 +23780,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "LogisticsTravelMode",
-      "line": 297,
+      "line": 298,
       "values": [
         "drive",
         "walk",
@@ -23794,7 +23791,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        297
+        298
       ],
       "consumerCount": 9,
       "backendConsumers": [
@@ -23837,7 +23834,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "SocialEventsAPI",
-      "line": 597,
+      "line": 598,
       "values": [
         "listPublicUpcomingEvents",
         "listEvents",
@@ -23918,7 +23915,7 @@
       "valueCount": 75,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        597
+        598
       ],
       "consumerCount": 37,
       "backendConsumers": [
@@ -27283,7 +27280,7 @@
       "lines": [
         2
       ],
-      "consumerCount": 24,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/src/TDF/Server.hs",
@@ -27300,8 +27297,7 @@
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
         "tdf-hq-ui/src/hooks/useMetaTags.ts",
-        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/social.tsx",
@@ -69036,7 +69032,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "BUDGET_CATEGORY_OPTIONS",
-      "line": 131,
+      "line": 133,
       "values": [
         "tickets",
         "sponsorship",
@@ -69057,7 +69053,7 @@
       "valueCount": 15,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        131
+        133
       ],
       "consumerCount": 144,
       "backendConsumers": [
@@ -69206,7 +69202,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "FINANCE_SOURCE_OPTIONS",
-      "line": 154,
+      "line": 156,
       "values": [
         "{value=ticket_sale, label=Venta de tickets, direction=income, category=tickets}",
         "{value=ticket_refund, label=Reembolso de tickets, direction=expense, category=tickets}",
@@ -69229,7 +69225,7 @@
       "valueCount": 17,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        154
+        156
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -69254,7 +69250,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "FINANCE_STATUS_OPTIONS",
-      "line": 177,
+      "line": 179,
       "values": [
         "{value=posted, label=Publicado}",
         "{value=pending, label=Pendiente}",
@@ -69264,7 +69260,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        177
+        179
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -69289,7 +69285,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "PROJECT_BUDGET_TEMPLATE",
-      "line": 189,
+      "line": 191,
       "values": [
         "{code=INC-TICKETS, name=Venta de tickets, type=income, category=tickets}",
         "{code=INC-SPONSORS, name=Patrocinios, type=income, category=sponsorship}",
@@ -69303,7 +69299,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        189
+        191
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -69328,7 +69324,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 1112,
+      "line": 962,
       "values": [
         "expense",
         "income",
@@ -69339,7 +69335,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1112
+        962
       ],
       "consumerCount": 21,
       "backendConsumers": [
@@ -150529,7 +150525,7 @@
       "lines": [
         1715
       ],
-      "consumerCount": 85,
+      "consumerCount": 84,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -150592,7 +150588,6 @@
         "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
         "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
         "tdf-hq-ui/src/utils/formatters.ts",
@@ -156836,7 +156831,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 77,
+      "consumerCount": 76,
       "backendConsumers": [
         "tdf-hq/docs/openapi/interactions.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
@@ -156891,8 +156886,7 @@
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
         "tdf-hq-ui/src/hooks/useMetaTags.ts",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
-        "tdf-hq-ui/src/pages/InteractionPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/InteractionPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/social.tsx",
