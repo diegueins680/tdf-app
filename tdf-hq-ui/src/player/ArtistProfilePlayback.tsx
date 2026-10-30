@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Stack } from '@mui/material';
 import { musicReleases, type MusicPublicRelease, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import { useOptionalPlayer } from './PlayerProvider';
-import { musicSourceQuality } from './sourceMetadata';
+import { publicMusicTrack } from './publicMusicTrack';
+import type { ArtistReleaseDTO } from '../api/types';
+import { resolveReleasePlaybackAction } from '../features/releases/ReleasePlayerActions';
 import type { PlayerTrack } from './types';
 
 /** Public detail responses supply membership; asset access is reauthorized by the engine. */
@@ -11,19 +13,24 @@ export function artistTracks(releases: MusicPublicRelease[], artistId: number): 
   return releases.filter((release) => release.artistPartyId === artistId).flatMap((release) =>
     [...release.tracks].sort((a, b) => a.discNumber - b.discNumber || a.trackNumber - b.trackNumber)
       .filter((track) => track.sources.length > 0 && !seen.has(track.recordingId) && Boolean(seen.add(track.recordingId)))
-      .map((track) => ({
-        id: track.trackId, recordingId: track.recordingId, releaseId: release.id,
-        releaseVersionId: release.versionId, title: track.title, artist: track.displayArtist,
-        durationMs: track.durationMs, previewEndMs: 30000,
-        sources: track.sources.map((source) => ({ url: '', assetId: source.assetId,
-          quality: musicSourceQuality(source.technicalMetadata, source.mediaType),
-          mediaType: source.mediaType, preview: source.role === 'preview_audio' })),
-      })));
+      .map((track) => publicMusicTrack({ ...track, releaseId: release.id, releaseVersionId: release.versionId })));
+
 }
 
-export default function ArtistProfilePlayback({ profileKey, artistId, artistName, releases, loading, failed, retryCatalog }: {
+export function legacyArtistTracks(releases: ArtistReleaseDTO[], artistId: number, artistName: string): PlayerTrack[] {
+  return releases.flatMap((release): PlayerTrack[] => {
+    if (release.arArtistId !== artistId) return [];
+    const action = resolveReleasePlaybackAction(release, {});
+    if (action?.kind !== 'native') return [];
+    return [{ id: `legacy-release-${release.arReleaseId}`, releaseId: `legacy-release-${release.arReleaseId}`,
+      title: release.arTitle, artist: artistName, artworkUrl: release.arCoverImageUrl,
+      sources: [{ url: action.url, quality: 'high', mediaType: 'audio/mpeg' }] }];
+  });
+}
+
+export default function ArtistProfilePlayback({ profileKey, artistId, artistName, releases, legacyReleases = [], loading, failed, retryCatalog }: {
   profileKey: string; artistId: number | null; artistName: string;
-  releases: MusicPublicReleaseSummary[] | undefined; loading: boolean; failed: boolean; retryCatalog?: () => void;
+  releases: MusicPublicReleaseSummary[] | undefined; legacyReleases?: ArtistReleaseDTO[]; loading: boolean; failed: boolean; retryCatalog?: () => void;
 }) {
   const player = useOptionalPlayer();
   const beginArtist = player?.beginArtist;
@@ -39,29 +46,30 @@ export default function ArtistProfilePlayback({ profileKey, artistId, artistName
 
   useEffect(() => {
     if (!loadArtist || !artistId || loading || loadedKey.current === profileKey) return;
-    if (failed) { setState('error'); return; }
-    if (!releases) return;
+    const fallbackTracks = legacyArtistTracks(legacyReleases, artistId, artistName);
+    if (failed && !fallbackTracks.length) { setState('error'); return; }
+    if (!releases && !failed) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => { controller.abort(); setState('error'); }, 15000);
     void (async () => {
       const details: MusicPublicRelease[] = [];
-      let errors = false;
+      let errors = failed;
       try {
         // Sequential reads bound concurrency; every response is scoped to this profile lifetime.
-        for (const release of releases) {
+        for (const release of releases ?? []) {
           if (controller.signal.aborted) return;
           try { details.push(await musicReleases.getPublic(release.slug, controller.signal)); }
           catch { errors = true; }
         }
         if (controller.signal.aborted) { setState('error'); return; }
-        const tracks = artistTracks(details, artistId);
+        const tracks = [...artistTracks(details, artistId), ...fallbackTracks];
         loadArtist(profileKey, tracks);
         loadedKey.current = profileKey;
         setState(tracks.length ? 'loaded' : errors ? 'error' : 'empty');
       } finally { window.clearTimeout(timer); }
     })();
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [artistId, attempt, failed, loadArtist, loading, profileKey, releases]);
+  }, [artistId, artistName, attempt, failed, legacyReleases, loadArtist, loading, profileKey, releases]);
 
   if (!player) return null;
   const exhausted = state === 'empty' || (state === 'loaded' && player.status === 'unavailable');

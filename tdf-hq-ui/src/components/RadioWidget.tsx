@@ -308,10 +308,10 @@ export default function RadioWidget() {
   const player = usePlayer();
   const playerRef = useRef(player);
   playerRef.current = player;
-  const [radioCommand, setRadioCommand] = useState({ play: false, sequence: 0 });
+  const [radioCommand, setRadioCommand] = useState({ play: false, select: false, sequence: 0 });
   const setIsPlaying = useCallback((play: boolean) => {
     if (!play) playerRef.current.pause();
-    setRadioCommand((current) => ({ play, sequence: current.sequence + 1 }));
+    setRadioCommand((current) => ({ play, select: false, sequence: current.sequence + 1 }));
   }, []);
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(() => {
@@ -719,7 +719,7 @@ export default function RadioWidget() {
     ? `Quitar ${activeStation.name || 'esta estación'} de favoritos`
     : `Agregar ${activeStation.name || 'esta estación'} a favoritos`;
   const canSkipStations = sortedVisibleStations.length > 1;
-  const nowPlayingStatus = isActiveTorrent && torrentStatus === 'loading'
+  const nowPlayingStatus = radioOwnsPlayer && player.status === 'loading'
     ? 'Preparando'
     : isPlaying
       ? 'Reproduciendo'
@@ -926,16 +926,17 @@ export default function RadioWidget() {
     const station = stationRef.current;
     const requested = lastCommandRef.current !== radioCommand.sequence;
     lastCommandRef.current = radioCommand.sequence;
-    if (!station.streamUrl || !radioCommand.play) return;
+    if (!station.streamUrl || (!radioCommand.play && !radioCommand.select)) return;
     // Only an explicit radio command can take music away from another context.
     if (!requested && !engine.currentTrack?.id.startsWith('radio:')) return;
     const track = stationToTrack(station);
     if (engine.currentTrack?.id === track.id) {
-      if (requested) void engine.play();
+      if (requested && radioCommand.play) void engine.play();
+      else if (requested) engine.pause();
       return;
     }
     const queue = [station, ...stationsRef.current.filter((item) => item.id !== station.id)].map(stationToTrack);
-    engine.playTrack(track, queue, true);
+    engine.playTrack(track, queue, radioCommand.play);
   }, [activeStation.id, radioCommand]);
 
   useEffect(() => {
@@ -950,7 +951,7 @@ export default function RadioWidget() {
 
   useEffect(() => {
     if (!radioEnabled) return undefined;
-    if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
+    if (!radioOwnsPlayer || player.status !== 'playing' || !activeStation.streamUrl || isActiveTorrent) {
       void RadioAPI.clearPresence().catch(() => undefined);
       return undefined;
     }
@@ -966,7 +967,7 @@ export default function RadioWidget() {
     return () => {
       clearTimeout(timer);
     };
-  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isActiveTorrent, isPlaying, radioEnabled]);
+  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isActiveTorrent, player.status, radioOwnsPlayer, radioEnabled]);
 
   const fetchNowPlaying = useCallback(async () => {
     if (!activeStation.streamUrl || isActiveTorrent) {
@@ -990,7 +991,7 @@ export default function RadioWidget() {
       setNowPlayingTitle(null);
       return;
     }
-    if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
+    if (!radioOwnsPlayer || player.status !== 'playing' || !activeStation.streamUrl || isActiveTorrent) {
       setNowPlayingTitle(null);
       return;
     }
@@ -1000,7 +1001,7 @@ export default function RadioWidget() {
       void fetchNowPlaying();
     }, 30000);
     return () => window.clearInterval(interval);
-  }, [activeStation.streamUrl, fetchNowPlaying, isActiveTorrent, isPlaying, radioEnabled]);
+  }, [activeStation.streamUrl, fetchNowPlaying, isActiveTorrent, player.status, radioOwnsPlayer, radioEnabled]);
 
   useEffect(() => {
     const handleLoadStream = (event: Event) => {
@@ -1029,7 +1030,7 @@ export default function RadioWidget() {
       }
       setExpanded(true);
       setMuted(muteOnLoad);
-      setIsPlaying(!muteOnLoad);
+      setRadioCommand((current) => ({ play: !muteOnLoad, select: true, sequence: current.sequence + 1 }));
     };
     window.addEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
     return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
@@ -1650,7 +1651,7 @@ export default function RadioWidget() {
   );
 
   const shouldInlineMiniBar = false; // always docked at bottom, even on login
-  const dockedBarVisible = !hideRadioForRoute && !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
+  const dockedBarVisible = !hideRadioForRoute && !player.currentTrack && !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
 
   // Publish the docked bar's height (and reserve it on <body>) so the last
   // form fields and submit buttons can scroll above it instead of under it.
@@ -1990,8 +1991,7 @@ export default function RadioWidget() {
                       size="small"
                       onClick={() => {
                         setActiveId(s.id);
-                        setIsPlaying(false);
-                        setMuted(muteOnLoad);
+                        setRadioCommand((current) => ({ play: false, select: true, sequence: current.sequence + 1 }));
                       }}
                       variant="outlined"
                     />
@@ -3045,7 +3045,11 @@ export default function RadioWidget() {
       </Card>
     </Box>
       )}
-      {!miniBarDismissed && miniBarVisible && miniBarContent}
+      {!player.currentTrack && !miniBarDismissed && miniBarVisible && miniBarContent}
+      {player.currentTrack && !expanded && <Button variant="outlined" size="small" onClick={() => setExpanded(true)}
+        aria-label="Abrir catálogo de radio" sx={{ position: 'fixed', right: 16, bottom: ABOVE_GLOBAL_PLAYER, zIndex: (theme) => theme.zIndex.appBar }}>
+        Catálogo de radio
+      </Button>}
     </>
   );
 }

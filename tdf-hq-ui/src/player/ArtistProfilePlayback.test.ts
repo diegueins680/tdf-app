@@ -1,5 +1,6 @@
+import type { ArtistReleaseDTO } from '../api/types';
 import type { MusicPublicRelease } from '../api/musicReleases';
-import { artistTracks } from './ArtistProfilePlayback';
+import { artistTracks, legacyArtistTracks } from './ArtistProfilePlayback';
 
 const release = (artistPartyId: number, recordingId: string, trackNumber: number) => ({
   id: `release-${artistPartyId}`, versionId: 'version', artistPartyId,
@@ -20,4 +21,17 @@ it('orders disc/track numbers and excludes tracks without sources', () => {
   value.tracks.push(release(1, 'a', 1).tracks[0]!);
   value.tracks.push({ ...release(1, 'empty', 0).tracks[0]!, sources: [] });
   expect(artistTracks([value], 1).map((track) => track.recordingId)).toEqual(['a', 'b']);
+});
+
+
+it('uses only direct public legacy media from the linked artist, preserving its source identity', () => {
+  const legacy = (id: number, artist: number, url: string) => ({ arReleaseId: id, arArtistId: artist,
+    arTitle: 'Legacy', arSpotifyUrl: url }) as ArtistReleaseDTO;
+  const tracks = legacyArtistTracks([
+    legacy(1, 17, 'https://media.invalid/song.mp3'), legacy(2, 18, 'https://media.invalid/other.mp3'),
+    legacy(3, 17, 'https://open.spotify.com/track/reference'), legacy(4, 17, 'javascript:alert(1)'),
+  ], 17, 'Linked artist');
+  expect(tracks).toHaveLength(1);
+  expect(tracks[0]).toMatchObject({ id: 'legacy-release-1', artist: 'Linked artist',
+    sources: [{ url: 'https://media.invalid/song.mp3' }] });
 });

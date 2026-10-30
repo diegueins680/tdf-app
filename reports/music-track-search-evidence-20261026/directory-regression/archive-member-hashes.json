@@ -1,0 +1,34 @@
+{
+  "available-original-artifact-manifest.json": {
+    "bytes": 2834,
+    "sha256": "5390ca3f1e6efabaf57bc15f9f81754bafcdf2c04f0e4d6fd0279cdea0a6d06f"
+  },
+  "playwright.config.mjs": {
+    "bytes": 1174,
+    "sha256": "7d38c53ab710c8f56efc957215e0e74b4c21c3d0c73c6b3707f9c1fcea4c2639"
+  },
+  "receipt.json": {
+    "bytes": 11368,
+    "sha256": "ac2f0c5952786ad204d81812bfff8b173c5d6b5f894af507400882237fdb7e9e"
+  },
+  "results.json": {
+    "bytes": 20555,
+    "sha256": "bb7b96c01f76e4d3c507169a179b52e64a329c4edf5fcadc336cac3d5fad02d4"
+  },
+  "run.exit": {
+    "bytes": 2,
+    "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+  },
+  "run.log": {
+    "bytes": 7224,
+    "sha256": "2815a0ce86d2dc8b2dd21f3e4879246e82cff782deabb105ef4ccb7265f97484"
+  },
+  "source-after.json": {
+    "bytes": 1070,
+    "sha256": "9b12a9cb05dedfb14dcd21a1107d8881268b508df612150efcc4f8ee77e42e12"
+  },
+  "source-before.json": {
+    "bytes": 886,
+    "sha256": "1d47b95627793197c960589e927d0ad35b088d819ccb756c142a902631c1aa88"
+  }
+}

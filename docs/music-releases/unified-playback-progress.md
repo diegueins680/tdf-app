@@ -8,24 +8,34 @@ controls and playback state belong to the shared engine. Torrent resolution is
 also owned and disposed by the engine, using its single audio element. Local
 microphone capture/broadcast tools remain separate from listening transport.
 
-Artist profile entry clears the previous context immediately. Public canonical
-release details build a recording-deduplicated, disc/track-ordered queue. Asset
+Artist profile entry clears the previous context immediately. The shared artist
+catalogue reads canonical pages with a hard 10,000-row bound and combines public
+legacy releases. Canonical details build a recording-deduplicated, disc/track-ordered
+queue, followed by legacy direct HTTP(S) media from the same Party. Known provider
+pages retain their external-platform action. A canonical catalogue outage can
+still prepare available public legacy media. Asset
 access is still resolved by the existing server authorization endpoint. Explicit
 pause survives automatic artist changes; stale profile fetches are aborted.
 There is no automatic artist-to-radio fallback.
 
-Terminal source failure advances forward through the current queue, ignoring
-repeat/shuffle while recovering. A failed-ID set prevents recovery cycles. Two
-existing network retries precede terminal recovery. Source loading and stalls
+Terminal source failure tries the remaining authorized renditions of the current
+recording, then advances forward through the current queue, ignoring repeat/shuffle
+while recovering. Failed-source and failed-track sets prevent recovery cycles. Two
+network retries per rendition precede terminal recovery. Source loading and stalls
 have a 15-second watchdog. Offline failures stop without classifying media as
 invalid. Autoplay denial retains the selection and never skips it. Native
 `playing` events, rather than play-promise resolution, own the visible playing
-state. Failed radio entries are omitted from the current session's public list;
+state. Loading does not advertise an active radio presence. Failed radio entries are omitted from the current session's public list;
 this is **not authoritative global quarantine**.
 
 Next-artist-track asset authorization can be warmed with a five-second bound
 unless data saving is enabled. It does not download media or establish decoding
 health; selection still obtains a fresh grant.
+
+The global player is the only dock after any track is selected. The radio panel
+remains a catalogue, station-management and broadcasting view of the same engine;
+a compact catalogue launcher replaces its redundant transport dock. A silent
+radio selection still loads the chosen source without calling play.
 
 ## Verification scope
 
@@ -36,10 +46,18 @@ audio element and verifies that radio cannot reclaim a later artist context.
 The UI production build and changed-source ESLint pass. These are executable
 checks, not mathematical proofs or evidence of deployed behavior.
 
-Native fixtures were generated successfully through the real AAC/FLAC pipeline.
-Native browser tests could not launch because Chromium is absent; the standard
-Playwright installation failed with truncated/non-ZIP downloads. No browser
-playback pass is claimed.
+Local integration verification initially passed 330 suites / 3,808 tests before
+adding rendition fallback and its regressions. TypeScript, production build and
+changed-source ESLint passed at that intermediate source tree. Final candidate
+checks are recorded in the PR; these counts do not establish a pass for later edits.
+
+Hosted native CI on the earlier 8de15e02ee179de5990019764829eb939deba976
+candidate passed 50 real AAC/FLAC browser journeys. Its five remaining failures
+were in the deterministic media fixture, which emitted playing without reflecting
+currentSrc. That fixture now models currentSrc as well. The native terminal case
+now exhausts every rendition before expecting a track change. Current-head native
+verification remains required. Local browsers are absent and the attempted
+Playwright installation returned truncated ZIPs; no new local native pass is claimed.
 
 ## Required before this request is complete
 
@@ -50,13 +68,13 @@ playback pass is claimed.
   failures must not write global invalidity; live/offline streams need a policy
   distinct from missing stored files.
 - Artist-owned persisted featured-track selection and validation.
-- Reconciliation of legacy ArtistRelease uploads/links with the canonical
-  MusicRelease catalog. This candidate selects canonical public releases only.
-- Full artist catalogs beyond the current list endpoint's default page.
+- Physical reconciliation/provenance mapping of legacy ArtistRelease uploads
+  with canonical MusicRelease records. Read-time composition preserves source
+  identity and does not infer equivalent recordings or rights.
+- Explicit handling of artist catalogues beyond the shared adapter's 10,000-row
+  limit; a bounded read must not be reported as a complete physical migration.
 - Broader component/state-model coverage and native browser verification,
   including torrents, pause/autoplay and artist/radio transitions.
-- Consolidated docked presentation: both control surfaces currently use the same
-  engine, but the legacy radio dock remains as a second view of that state.
 - Hosted required checks/review, then the established release procedure and
   post-deployment smoke verification.
 

@@ -1,3 +1,6 @@
+import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
+import { buildArtistPublicPath } from '../utils/artistIdentity';
+import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
@@ -13,7 +16,6 @@ import {
   Box,
   Button,
   Card,
-  CardActionArea,
   CardContent,
   CardMedia,
   Chip,
@@ -77,7 +79,7 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { firstNonEmptyString } from '../utils/stringValues';
-import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
+import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { useTranslation } from 'react-i18next';
 import { RADIO_TAKEOVER_EVENT } from '../player/types';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
@@ -108,22 +110,6 @@ function StatPill({ label, value }: { label: string; value: number }) {
       <Typography variant="h6" fontWeight={800}>
         {value}
       </Typography>
-    </Box>
-  );
-}
-
-function CanonicalMusicReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
-  return (
-    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-      <CardActionArea component={RouterLink} to={`/musica/${release.slug}`} sx={{ p: 1.5 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={800} noWrap>{release.title}</Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>{release.displayArtist}</Typography>
-          </Box>
-          <Chip label={release.kind.toUpperCase()} size="small" />
-        </Stack>
-      </CardActionArea>
     </Box>
   );
 }
@@ -405,12 +391,22 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
       return Fans.updateMyArtistProfile(request.payload);
     },
-    onSuccess: (_profile, request) => {
-      void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+    onSuccess: (profile, request) => {
+      // A successful write is not permission to share a draft slug or another Party's identity.
+      if (profile?.apArtistId !== request.payload.apuArtistId) {
+        void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+        if (!request.isCurrentOwner()) return;
+        setArtistToast('No pudimos confirmar el perfil guardado. Actualiza la página antes de compartirlo.');
+        return;
+      }
+      void qc.invalidateQueries({ queryKey: ['artist-profile', profile.apArtistId] });
       void qc.invalidateQueries({ queryKey: ['directory', 'search'] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist'] });
+      // The public write still invalidates public projections after an account
+      // switch; only its current owner can hydrate a draft or see a save receipt.
       if (!request.isCurrentOwner()) return;
+      qc.setQueryData(['artist-profile', profile.apArtistId], profile);
       request.acknowledgeSave(request.submittedDraft);
       setArtistToast('Perfil de artista actualizado.');
     },
@@ -447,11 +443,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const followMutation = useMutation({
     mutationFn: (request: FollowReadScope) => {
       if (!request.ownsSession()) throw new Error('Follow context changed');
-      return Fans.follow(request.artistId);
+      return setArtistFollowing(request, true);
     },
     onSuccess: (_result, request) => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', request.viewerId] });
-      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      void invalidateArtistAudience(qc, request.viewerId, request.artistId);
       if (request.ownsSession()) {
         void captureFirstValueOnce(getAnalyticsClient(), request.viewerId, 'artist_followed', undefined, request.ownsSession)
           .catch(() => undefined);
@@ -464,11 +459,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const unfollowMutation = useMutation({
     mutationFn: (request: FollowReadScope) => {
       if (!request.ownsSession()) throw new Error('Follow context changed');
-      return Fans.unfollow(request.artistId);
+      return setArtistFollowing(request, false);
     },
     onSuccess: (_result, request) => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', request.viewerId] });
-      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      void invalidateArtistAudience(qc, request.viewerId, request.artistId);
     },
     onError: (_error, request) => reconcileFailedFollow(request, false),
     onSettled: () => { followActionPending.current = false; },
@@ -509,25 +503,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     return [];
   }, [isFan, hasFollows, follows, canManageReleases, artists]);
-  const targetArtistIds = useMemo(
-    () => targetArtists.map((artist) => artist.id).sort((left, right) => left - right),
-    [targetArtists],
-  );
-  const canonicalReleaseFeedQuery = useQuery({
-    queryKey: ['canonical-music-release-feed', targetArtistIds],
-    enabled: canSeeReleaseFeed && targetArtistIds.length > 0,
-    retry: false,
-    queryFn: async () => {
-      const releases = (await Promise.all(
-        targetArtistIds.map((artistId) => musicReleases.listPublic('', artistId)),
-      )).flat();
-      const unique = new Map<string, MusicPublicReleaseSummary>();
-      releases.forEach((release) => unique.set(release.id, release));
-      return [...unique.values()].sort(
-        (left, right) => Date.parse(right.publishedAt) - Date.parse(left.publishedAt),
-      );
-    },
-  });
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
@@ -540,7 +515,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return map;
   }, [targetArtists]);
 
-  const { hasReleaseTargets, releaseFeed, releaseFeedQuery } = useReleaseFeed({
+  const { hasReleaseTargets, releaseFeed, releaseFeedQuery, canonicalReleaseFeed = [], partialCatalog = false } = useReleaseFeed({
     enabled: canSeeReleaseFeed,
     targetArtists,
   });
@@ -601,7 +576,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const persistReleaseStream = async (release: ReleaseFeedItem, streamUrl: string) => {
     const streamUpdatePayload = buildReleaseStreamUpdatePayload(release, streamUrl);
     await Admin.updateArtistRelease(release.arReleaseId, streamUpdatePayload);
-    void releaseFeedQuery.refetch();
+    void invalidateArtistCatalog(qc, release.arArtistId);
     setReleaseUploadToast('Stream actualizado.');
   };
 
@@ -751,10 +726,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const artistPublicPath = useMemo(() => {
-    if (!session?.partyId) return null;
-    const slug = slugify(artistDraft.apuSlug ?? '');
-    return slug ? `/a/${slug}` : `/a/${session.partyId}`;
-  }, [artistDraft.apuSlug, session?.partyId]);
+    const published = artistProfileQuery.data;
+    if (sessionLoading || !canEditArtist || !artistProfileQuery.isSuccess
+        || published?.apArtistId !== viewerId) return null;
+    // Never expose an unsaved or cross-account draft as a public, shareable URL.
+    return buildArtistPublicPath(published.apArtistId, published.apSlug);
+  }, [artistProfileQuery.data, artistProfileQuery.isSuccess, canEditArtist, sessionLoading, viewerId]);
 
   const artistPublicUrl = useMemo(() => {
     if (!artistPublicPath) return null;
@@ -1107,7 +1084,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
             <Stack spacing={2}>
-              {canSeeReleaseFeed && canonicalReleaseFeedQuery.data && canonicalReleaseFeedQuery.data.length > 0 && (
+              {canSeeReleaseFeed && canonicalReleaseFeed.length > 0 && (
                 <Card sx={{ p: 3 }} component="section" aria-labelledby="canonical-music-feed-title">
                   <Stack spacing={1.5}>
                     <Box>
@@ -1118,8 +1095,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         Música disponible ahora de los artistas de este feed.
                       </Typography>
                     </Box>
-                    {canonicalReleaseFeedQuery.data.slice(0, 8).map((release) => (
-                      <CanonicalMusicReleaseCard key={release.id} release={release} />
+                    {canonicalReleaseFeed.slice(0, 8).map((release) => (
+                      <PublishedReleaseCard compact key={release.id} release={release} />
                     ))}
                     <Button component={RouterLink} to="/musica" sx={{ alignSelf: 'flex-start' }}>
                       Ver catálogo musical
@@ -1127,7 +1104,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   </Stack>
                 </Card>
               )}
-              <ReleaseFeed
+              {canSeeReleaseFeed && (partialCatalog || releaseFeedQuery.isError) && <Alert severity="warning">No pudimos cargar todo el catálogo. <Button onClick={() => { void releaseFeedQuery.refetch(); }}>Reintentar</Button></Alert>}
+              {(!canSeeReleaseFeed || (!partialCatalog && !releaseFeedQuery.isError) || releaseFeed.length > 0) && <ReleaseFeed
                 audioFileInputRef={audioFileInputRef}
                 canManageReleases={canManageReleases}
                 canSeeReleaseFeed={canSeeReleaseFeed}
@@ -1158,7 +1136,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 onShowLess={() => setFeedLimit(4)}
                 onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
                 onUploadTrigger={handleUploadTrigger}
-              />
+              />}
             </Stack>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -1683,7 +1661,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             setArtistDraft((prev) => ({ ...prev, apuSlug: cleaned }));
                           }}
                           placeholder="mi-proyecto"
-                          helperText={artistPublicPath ? `URL pública: ${artistPublicPath}` : ' '}
+                          helperText={artistPublicPath ? `URL pública guardada: ${artistPublicPath}` : 'Guarda tu perfil para obtener un enlace público.'}
                           fullWidth
                         />
                       </Stack>
@@ -2034,7 +2012,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               artist.apFeaturedVideoUrl ??
               artist.apYoutubeUrl ??
               (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
-            const artistProfilePath = artist.apSlug ? `/a/${artist.apSlug}` : `/a/${artist.apArtistId}`;
+            const artistProfilePath = buildArtistPublicPath(artist.apArtistId, artist.apSlug);
             const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
@@ -2077,7 +2055,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       outlineOffset: 2,
                     },
                   }}
-                  onClick={() => navigate(artistProfilePath)}
+                  onClick={() => { if (artistProfilePath) navigate(artistProfilePath); }}
                 >
                   {displayHeroImage && (
                     <CardMedia component="img" height="220" image={displayHeroImage} alt={artist.apDisplayName} />
@@ -2095,7 +2073,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           <Typography
                             variant="h5"
                             component={RouterLink}
-                            to={artistProfilePath}
+                            to={artistProfilePath ?? '/fans'}
                             sx={{ overflowWrap: 'anywhere', minWidth: 0, color: 'inherit' }}
                           >
                             {artist.apDisplayName}
@@ -2294,7 +2272,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             onClick={() => {
               setLoginPromptOpen(false);
               const artist = artists.find((candidate) => candidate.apArtistId === pendingFollowArtistId);
-              const profilePath = artist ? `/a/${artist.apSlug?.trim() ? artist.apSlug : artist.apArtistId}` : null;
+              const profilePath = artist ? buildArtistPublicPath(artist.apArtistId, artist.apSlug) : null;
               navigate(buildArtistFollowAuthPath(profilePath, artist?.apArtistId ?? null));
             }}
           >

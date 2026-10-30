@@ -1,0 +1,19 @@
+{
+  "result": "PASS-real-compiled-track-search-http-synthetic-metadata-only",
+  "source": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "schemaEntries": 222,
+  "assertions": 105,
+  "steps": 66,
+  "resultsSha256": "82d74e2e5df61e25814b610d680abbc32eacc018e741384b2eab104e8a00fa05",
+  "binarySha256": "b10f2a0ab3ec8a0c5f42ede90e5bc8bacb80cceafd2cd95042ce9cb7e68cbd8b",
+  "cleanup": {
+    "backendStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "frontendMetadataChangedDuringRun": false,
+  "backendSourceFiles": 973,
+  "wholeCheckoutCleanClaimed": false,
+  "boundary": "Actual compiled GET/HEAD search on owned PostgreSQL16/full222schema and synthetic publication fixtures. No signup/login, HTTP mutation, S3/signing/media/object/browser/production/SLO claim.",
+  "rootExecutionSession": 77655
+}

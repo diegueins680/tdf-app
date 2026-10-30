@@ -1,0 +1,8 @@
+{
+  "initialActualExit": 1,
+  "actualProductAssertionsBeforeHarnessFailure": "All desktop-valid functional and viewport assertions passed; no page errors.",
+  "invalidHarnessAssumption": "Full App navigation produces no writes; observed three automatic global request intents. All requests were aborted before transmission.",
+  "correction": "Keep every nonGET aborted and recorded; permit only exact three global method/path pairs; reject any other intent including artist writes. No product/assertion changes.",
+  "originalReceiptsPreserved": true,
+  "safety": "No real API/provider request was sent."
+}

@@ -485,21 +485,23 @@ test('@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real med
     authorizations, deniedDeliveries, limitation: 'Controlled HTTP403 during a playing quality change; not a live CDN/network-switch measurement.' }), contentType: 'application/json' });
 });
 
-test('@critical PW-MUSIC-NATIVE-07 permanently expired delivery skips after two automatic retries', async ({ page }) => {
+test('@critical PW-MUSIC-NATIVE-07 exhausts expired renditions with bounded retries before selecting the next track', async ({ page }) => {
   const { player, audio, fixture } = await prepare(page);
-  let authorizations = 0;
-  await page.route(`**/music/assets/${assetId(1, 0)}/access`, (route) => {
-    authorizations += 1;
-    return route.fulfill({ json: { ...fixture.files.low,
-      url: `${fixture.endpoint}/media/first/low?grant=permanently-expired&attempt=${authorizations}`,
-      expiresAt: new Date(Date.now() + 600000).toISOString(), acceptRanges: true } });
-  });
+  const authorizations = [0, 0, 0];
+  for (const [q, quality] of qualities.entries()) {
+    await page.route(`**/music/assets/${assetId(1, q)}/access`, (route) => {
+      authorizations[q] += 1;
+      return route.fulfill({ json: { ...fixture.files[quality],
+        url: `${fixture.endpoint}/media/first/low?grant=permanently-expired&rendition=${q}&attempt=${authorizations[q]}`,
+        expiresAt: new Date(Date.now() + 600000).toISOString(), acceptRanges: true } });
+    });
+  }
   await page.route(`${fixture.endpoint}/media/first/low?grant=permanently-expired*`, (route) => route.fulfill({ status: 403,
     headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' }, body: 'expired fixture grant' }));
   const options = await openOptions(page, player);
   await options.getByRole('combobox', { name: 'Calidad de audio' }).click();
   await page.getByRole('option', { name: 'Baja', exact: true }).click();
-  await expect.poll(() => authorizations, { timeout: 15000 }).toBe(3);
+  await expect.poll(() => authorizations, { timeout: 30000 }).toEqual([3, 3, 3]);
   await options.getByRole('button', { name: 'Cerrar opciones' }).click();
   await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
   await expect.poll(() => audio.evaluate((a) => !a.paused && a.currentTime > 0)).toBe(true);
@@ -507,10 +509,10 @@ test('@critical PW-MUSIC-NATIVE-07 permanently expired delivery skips after two 
   // detects an unintended fourth attempt without replacing browser timers.
   const terminalAt = Date.now();
   await expect.poll(() => {
-    expect(authorizations).toBe(3);
+    expect(authorizations).toEqual([3, 3, 3]);
     return Date.now() - terminalAt;
   }, { timeout: 7000, intervals: [250, 500, 1000] }).toBeGreaterThan(4500);
-  expect(authorizations).toBe(3);
+  expect(authorizations).toEqual([3, 3, 3]);
   await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
   expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && !a.paused)).toBe(true);
 });

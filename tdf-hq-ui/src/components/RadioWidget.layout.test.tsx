@@ -160,6 +160,7 @@ it('loads radio into the single global engine and cannot reclaim an artist selec
     });
     expect(container.querySelectorAll('audio')).toHaveLength(1);
     expect(engine.currentTrack?.id).toBe('radio:synthetic');
+    expect(container.querySelector('[data-testid="radio-docked-bar"]')).toBeNull();
     await act(async () => { engine.pause(); });
     act(() => engine.beginArtist('artist'));
     await act(async () => engine.loadArtist('artist', [{ id: 'artist-track', title: 'Artist', artist: 'Artist',
@@ -170,5 +171,25 @@ it('loads radio into the single global engine and cannot reclaim an artist selec
   } finally {
     await unmount();
     jest.mocked(HTMLMediaElement.prototype.play).mockRestore();
+  }
+});
+
+it('loads an explicitly selected station silently when mute-on-load is enabled', async () => {
+  localStorage.setItem('radio-mute-on-load', '1');
+  const playMock = jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  const { container, unmount } = await renderWidget();
+  try {
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('tdf-radio-load-stream', { detail: {
+        streamUrl: 'https://media.invalid/silent.mp3', stationName: 'Silent selection', stationId: 'silent',
+      } }));
+    });
+    expect(engine.currentTrack?.id).toBe('radio:silent');
+    expect(container.querySelector('audio')?.src).toBe('https://media.invalid/silent.mp3');
+    expect(container.querySelector('[data-testid="radio-docked-bar"]')).toBeNull();
+    expect(playMock).not.toHaveBeenCalled();
+  } finally {
+    await unmount();
+    playMock.mockRestore();
   }
 });

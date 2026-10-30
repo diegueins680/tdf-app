@@ -657,6 +657,37 @@
       },
       "supersededDecisionId": "dfec3f046ad1157e0f0c",
       "successorDecisionId": "5ed33d9cd50e8f195d05"
+    },
+    "musicTrackSearchDispatchSuccessor": {
+      "baseline": "52aa82ea70ed1e2b3dc26180977d9a0b838dea59",
+      "review": {
+        "date": "2026-10-26",
+        "method": "manual-source-review",
+        "classification": "genuine-technical-constant",
+        "reason": "Protocol method dispatch and finite-model event traces are developer mechanics/test controls, not persisted business choices. No runtime catalog allowlist is introduced."
+      },
+      "previousDecision": {
+        "id": "56e2b5d3ce52bde290e8",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "Typed API-client method names for the music release endpoints are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/musicReleases.ts",
+          "line": 504
+        },
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "manual-source-review"
+      },
+      "successorId": "a54bc30988f056e6d713",
+      "additionalModelFixtureIds": [
+        "2f954948d7719fb87a37",
+        "c7ebc0f215501d998ad0"
+      ],
+      "note": "The exact inherited API-dispatch decision remains in append-only history. All other1340 inherited active decision objects are unchanged."
     }
   },
   "decisions": [
@@ -1964,22 +1995,6 @@
       "evidence": {
         "file": "tdf-hq-ui/src/api/musicReleases.ts",
         "line": 7
-      },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
-      "reviewMethod": "manual-source-review"
-    },
-    {
-      "id": "56e2b5d3ce52bde290e8",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client method names for the music release endpoints are implementation mechanics; they are not selectable or reportable domain values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 504
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
@@ -19703,6 +19718,76 @@
         "kind": "object-registry",
         "name": "plans",
         "valueCount": 3
+      }
+    },
+    {
+      "id": "a54bc30988f056e6d713",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 518
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "2f954948d7719fb87a37",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the event sequence could remove an adversarial interleaving or invalidate a model replay.",
+      "justification": "Finite-design regression event sequence with abstract queries/recordings and network/navigation events. It is test protocol data, not a production business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/music-track-search-model.test.mjs",
+        "line": 106
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "c7ebc0f215501d998ad0",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the event sequence could remove an adversarial interleaving or invalidate a model replay.",
+      "justification": "Finite-design regression event sequence with abstract queries/recordings and network/navigation events. It is test protocol data, not a production business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/music-track-search-model.test.mjs",
+        "line": 80
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "44a129d61d3814253c76",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
+      "justification": "Individually reviewed discriminants for two existing API response shapes. These are internal source-provenance tags, not artist-selectable business values, editable release kinds, persisted genre values or streaming grants.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "artist-catalog-unification-2026-10-29",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/artistCatalog.ts",
+        "line": 5,
+        "kind": "literal-union",
+        "name": "CatalogSource",
+        "valueCount": 2,
+        "consumerCount": 30,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
       }
     }
   ]

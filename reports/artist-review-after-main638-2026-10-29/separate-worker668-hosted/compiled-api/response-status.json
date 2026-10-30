@@ -1,0 +1,14 @@
+{
+  "unavailableOperations": [
+    "GET /ddex/exports/{}/download",
+    "PATCH /ddex/import-plans/{}",
+    "POST /ddex/documents/{}/import-plans",
+    "POST /ddex/exports",
+    "POST /ddex/import-plans/{}/commit",
+    "POST /marketplace/cart/{}/stripe/payment-intent",
+    "POST /radio/transmissions",
+    "POST /social-events/events/{}/live-broadcasts"
+  ],
+  "unexpectedStatusDifferences": [],
+  "limitations": "Declared status correspondence only. Current handler/error, DTO codec and authorization evidence remains required."
+}
