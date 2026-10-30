@@ -83,6 +83,63 @@ Playwright installation returned truncated ZIPs; no new local native pass is cla
 - Hosted required checks/review, then the established release procedure and
   post-deployment smoke verification.
 
-No SQL migration, backend health worker, production change or deployment is
-included. Keep the PR in draft until the remaining implementation and validation
-obligations are completed.
+The featured-track preference includes additive SQL as described in
+`artist-featured-track.md`; it is not a media-health worker. No production
+migration, production change or deployment has run. Keep the PR in draft until
+the remaining implementation and validation obligations are completed.
+
+## Discover → listen → follow delivery checkpoint, 30 October
+
+`play_start` now requires the current, unpaused native source's `playing` event.
+A fulfilled `play()` promise alone does not count a listen. Repeated `playing`
+events after buffering do not duplicate a start within one play attempt; a new
+explicit resume can record its own confirmed start. Existing account/source,
+authorization, pending-position and explicit-pause fences remain in place.
+Three new actual-provider component tests cover this boundary. The original
+implementation fails the promise-only and native-before-promise controls.
+
+The missing featured-track compiled snapshot is regenerated from the actual
+TypeRep artifact12960059760 of CI41014941561 (merge checkout
+`8e370e3b6fdc15cfa85af2582770c64c6ae92406`, tree
+`d514a90e6c70ccb497f72b474b70d71063e71736`). Its ZIP SHA256 matches the GitHub
+artifact digest `d9d9f49782cd945224a15cdff68ba89a8999ec29933707f721500aada08250c1`.
+Review of the decoded artifact finds exactly three added featured-track routes,
+no removed routes, and no change to any prior operation except its ordinal.
+The public read is registered as public-read; both owner operations retain
+their compiled authentication. Availability, status and public-route admission
+checks pass. Replaying the retained TypeRep reproduces the snapshot exactly;
+the previous snapshot fails the existing declaration and availability checks.
+This is reuse of identified compiler evidence, not a new local backend build.
+
+The Mobile companion patch now includes normal context. Ordinary `git apply`
+on the former zero-context patch could place additions differently from the
+canonical generator; the replacement applies to the exact published pin and
+reproduces the generated web/Mobile bytes. Its generated types also type-check
+in isolation. Publishing Mobile remains blocked by an actual integration403,
+including when using the repository's canonical `TDF-mobile` capitalization.
+The root pin and generated-client drift gate remain unchanged.
+
+Local validation: 332 UI suites / 3,831 tests pass, as do the focused68,
+TypeScript, changed-source lint, production build (339397gzip initial bytes),
+twelve compiled-surface controls, public-route admission and catalogue audit.
+An initial full suite was launched from the root instead of the UI workspace;
+two relative-path fixtures failed. The complete workspace invocation above
+supersedes that harness mistake without source/test weakening. Local Chromium
+installation failed, so no new local native-browser pass is claimed.
+
+Read-only production observation: anonymous `/inicio` discovery opens
+`/artista/115`; its saved `/a/verde70` URL preserves the Verde70 profile. The
+follow link retains the same artist and an explicit post-login follow intent.
+That profile has no published TDF releases; its external Spotify embed is not
+proof of global-player playback. Backend `/health` returned200; `/version`
+reported `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0` and the sampled
+`/music/releases?limit=1` returned404. The404 alone does not identify a flag or
+its cause. No authenticated follow, account creation or production mutation ran.
+
+The Docker cleanup defect is corrected separately in existing PR679 using its
+captured actual response, with twelve runner simulations and two shell/Compose
+checks. Protected integration currently waits for PR642; PR676's current
+workflows are successful but admission is still pending. Required media-health
+implementation, Mobile publication, current-head hosted checks/review and the
+guarded deployment/recovery prerequisites above remain incomplete. This
+checkpoint does not accept the full discovery/listening/follow delivery request.

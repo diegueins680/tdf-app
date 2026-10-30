@@ -10628,13 +10628,13 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "b87639cf13cef27d29d66dbc90e01ff797e1b24e7b95a7c1bf579f7fa0ccc7b6",
+      "sha256": "da57b6caaf5bcecc8427dadf68f5c2107905b032653679ef5d879bffccf522e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "8bf549e504f9e49b25bbd2bc769b4bd0335408496fae25d31edc27a6aa346784",
+      "sha256": "cd5f418eb89804c0d2b67dd8f876d74bc50c99f51fabd846290c138024108df9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21648,7 +21648,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "fd279dcf7520230c84ce2eb7f34fd358d512dae915ad42075c1df3e3eeb829c3",
+      "sha256": "be311b7d00fd35acdba75aa58ba46abb990b69ad90472ed480a280d6c21c3f84",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

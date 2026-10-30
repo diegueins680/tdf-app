@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import type { PlayerTrack, RepeatMode } from './types';
+import { PLAYER_ANALYTICS_EVENT } from './types';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -29,6 +30,67 @@ beforeEach(() => {
   });
 });
 afterEach(() => { cleanup(); jest.restoreAllMocks(); localStorage.clear(); });
+
+describe('confirmed playback analytics', () => {
+  const starts = () => {
+    const events: Record<string, unknown>[] = [];
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<Record<string, unknown>>).detail;
+      if (detail['eventType'] === 'play_start') events.push(detail);
+    };
+    window.addEventListener(PLAYER_ANALYTICS_EVENT, listener);
+    return { events, stop: () => window.removeEventListener(PLAYER_ANALYTICS_EVENT, listener) };
+  };
+
+  it('does not count a fulfilled play promise until the current source actually plays', async () => {
+    jest.mocked(HTMLMediaElement.prototype.play).mockResolvedValue(undefined);
+    const observed = starts();
+    try {
+      const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+      await act(async () => { player.playTrack(track('one')); });
+      expect(observed.events).toHaveLength(0);
+      const audio = view.container.querySelector('audio')!;
+      act(() => { audio.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(1);
+      expect(observed.events[0]).toMatchObject({ recordingId: 'one', quality: 'high' });
+    } finally { observed.stop(); }
+  });
+
+  it('counts the native playing event even if the play promise is still pending, once per attempt', async () => {
+    let settle: () => void = () => undefined;
+    jest.mocked(HTMLMediaElement.prototype.play).mockImplementationOnce(() => new Promise<void>((resolve) => { settle = resolve; }));
+    const observed = starts();
+    try {
+      const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+      await act(async () => { player.playTrack(track('one')); });
+      const audio = view.container.querySelector('audio')!;
+      act(() => { audio.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(1);
+      act(() => { audio.dispatchEvent(new Event('waiting')); audio.dispatchEvent(new Event('playing')); });
+      await act(async () => { settle(); });
+      expect(observed.events).toHaveLength(1);
+      act(() => { player.pause(); audio.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(1);
+      await act(async () => { await player.play(); });
+      expect(observed.events).toHaveLength(2);
+    } finally { observed.stop(); }
+  });
+
+  it('does not count rejected autoplay or a stale source while the next authorization is pending', async () => {
+    jest.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException('Gesture required', 'NotAllowedError'));
+    const observed = starts();
+    try {
+      const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+      await act(async () => { player.playTrack(track('blocked')); });
+      act(() => { view.container.querySelector('audio')!.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(0);
+      jest.mocked(authorizePlayerAsset).mockImplementationOnce(() => new Promise(() => undefined));
+      await act(async () => { player.playTrack({ ...track('pending'), sources: [{ ...track('pending').sources[0]!, assetId: 'pending' }] }); });
+      act(() => { view.container.querySelector('audio')!.dispatchEvent(new Event('playing')); });
+      expect(observed.events).toHaveLength(0);
+    } finally { observed.stop(); }
+  });
+});
 
 it('does not replace authorized full audio with a same-quality preview', async () => {
   const view = render(<PlayerProvider><Probe /></PlayerProvider>);

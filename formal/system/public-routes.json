@@ -560,6 +560,11 @@
   },
   {
    "method": "GET",
+   "path": "/music/artists/{artistPartyId}/featured-track",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
    "path": "/music/assets/{assetId}/access",
    "boundary": "public-read"
   },

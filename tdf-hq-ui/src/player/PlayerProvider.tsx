@@ -274,6 +274,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const [resolvedQuality, setResolvedQuality] = useState<PlayerQuality | null>(null);
   const sourceGenerationRef = useRef(0);
   const playAttemptRef = useRef(0);
+  const startedPlayAttemptRef = useRef<number | null>(null);
   const loadedSourceRef = useRef<{ trackId: string; url: string; preview?: boolean; quality: PlayerQuality; candidate: PlayerSource } | null>(null);
   const pendingPositionRef = useRef<{ generation: number; trackId: string; url: string; position: number } | null>(null);
   const lastContinuousPositionRef = useRef(0);
@@ -410,7 +411,6 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       // Native 'playing' owns the visible playback state. A fulfilled promise
       // alone is insufficient, especially when a pause races its settlement.
       setError(null);
-      emitPlayerEvent('play_start', currentTrack, audio.currentTime, { quality: loadedSourceRef.current?.quality ?? source.quality });
     } catch (caught) {
       if (generation !== sourceGenerationRef.current || attempt !== playAttemptRef.current) return;
       // Browsers may reject play() before dispatching their native error
@@ -535,6 +535,12 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       if (!ownsNativeSource() || pendingPositionRef.current || !autoplayRef.current || audio.paused) return;
       lastContinuousPositionRef.current = audio.currentTime;
       setStatus('playing');
+      // A resolved play() promise is not evidence that media is playing.
+      // Buffer recovery can emit 'playing' repeatedly for the same attempt.
+      if (currentTrack && startedPlayAttemptRef.current !== playAttemptRef.current) {
+        startedPlayAttemptRef.current = playAttemptRef.current;
+        emitPlayerEvent('play_start', currentTrack, audio.currentTime, { quality: loadedSourceRef.current?.quality });
+      }
     };
     const handleWaiting = () => {
       if (!ownsNativeSource() || pendingPositionRef.current || !autoplayRef.current || audio.paused) return;
