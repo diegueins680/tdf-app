@@ -132,7 +132,9 @@ try {
   await owner.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(card(owner)).toBeVisible({ timeout: 30000 });
   await participant.reload(); await expect(card(participant)).toBeVisible();
-  await card(participant).scrollIntoViewIfNeeded();
+  // Locator.click scrolls and re-resolves a detached target. A separate scroll
+  // can fail when the real session/feed refresh replaces the card after the
+  // visibility assertion, before the report action even reaches the backend.
   await card(participant).getByRole('button', { name: 'Denunciar recuerdo' }).click();
   await participant.getByRole('textbox', { name: 'Motivo' }).fill('Revisión sintética del consentimiento de imagen');
   await participant.getByRole('button', { name: 'Confirmar', exact: true }).click();

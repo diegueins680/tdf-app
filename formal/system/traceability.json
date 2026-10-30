@@ -14218,7 +14218,7 @@
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
-    "scripts/test-event-memory-source-browser.mjs": "99584c7466da353a297908f8b1fb856d60850f18dba24afd219d60be22a1ca6e",
+    "scripts/test-event-memory-source-browser.mjs": "6b3ee91ce5ca5b4180f2f655cf88bb3f875c8a942197ee4bf5b3f8d1490b1d2c",
     "scripts/test-event-memory-source-moderation.sh": "3d25115a7c4767df9537e4c4112ccad2ab88eada159a577925c8665206f0be29",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
@@ -31729,7 +31729,7 @@
     {
       "id": "SURFACE-f6d09097c41b38d4",
       "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "99584c7466da353a297908f8b1fb856d60850f18dba24afd219d60be22a1ca6e",
+      "sha256": "6b3ee91ce5ca5b4180f2f655cf88bb3f875c8a942197ee4bf5b3f8d1490b1d2c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

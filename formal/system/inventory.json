@@ -5526,7 +5526,7 @@
     {
       "id": "SURFACE-f6d09097c41b38d4",
       "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "99584c7466da353a297908f8b1fb856d60850f18dba24afd219d60be22a1ca6e",
+      "sha256": "6b3ee91ce5ca5b4180f2f655cf88bb3f875c8a942197ee4bf5b3f8d1490b1d2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27556,7 +27556,7 @@
     },
     {
       "path": "formal/system/event-memories.md",
-      "sha256": "a2aee45f6ad159d06c3dbd2883060dcc56b4cc1429afead1115e3d10fd6c7a4f",
+      "sha256": "ad47e4247e88776571162e8dfebd7c25a054c8b478dfaa09c4c652114b05c645",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
