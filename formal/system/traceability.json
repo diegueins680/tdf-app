@@ -56425,7 +56425,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sourceSha256": "571c66f1c29aae599f88527673c3520e81b09e2c90226b1d92bce63f7d4b3f06",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56453,7 +56453,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sourceSha256": "571c66f1c29aae599f88527673c3520e81b09e2c90226b1d92bce63f7d4b3f06",
       "definition": {
         "states": [
           "absent",
@@ -56483,7 +56483,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sourceSha256": "571c66f1c29aae599f88527673c3520e81b09e2c90226b1d92bce63f7d4b3f06",
       "definition": {
         "export": [
           "queued",
