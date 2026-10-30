@@ -13230,7 +13230,7 @@
       },
       "observability": "Record exact source, tool versions, cases and control exits; inspect current-head hosted checks.",
       "recovery": "Repair the failed validation/selection contract and rerun; never relax selected validation to skip.",
-      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls.",
+      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls. The selected experiment HTTP fixture finalizer is executed with real child processes covering normal, already-signalled and concurrent exits, descriptor closure, original assertion preservation and an exact historical exit-13 control. Functional HTTP/database assertions remain unchanged; full hosted rerun remains separate.",
       "id": "SYS-CI-SELECTED-001",
       "title": "Selected validation cannot be admitted as skipped",
       "domain": "SYS",
@@ -13283,19 +13283,21 @@
         ".github/workflows/ci.yml",
         "scripts/ci-job-admission.mjs",
         "package.json",
-        "scripts/ci-change-scope.mjs"
+        "scripts/ci-change-scope.mjs",
+        "scripts/__tests__/experiment-http-runtime.mjs"
       ],
       "tests": [
         "scripts/__tests__/ci-job-admission.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        "scripts/__tests__/experiment-http-cleanup.test.mjs"
       ],
       "formalModels": [],
       "ambiguity": [
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
-      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven. reports/campaign-platform-ci-cleanup-2026-10-30.json"
     },
     {
       "id": "ART-ENRICH-REVIEW-001",

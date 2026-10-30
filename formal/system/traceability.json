@@ -13231,7 +13231,7 @@
       },
       "observability": "Record exact source, tool versions, cases and control exits; inspect current-head hosted checks.",
       "recovery": "Repair the failed validation/selection contract and rerun; never relax selected validation to skip.",
-      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls.",
+      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls. The selected experiment HTTP fixture finalizer is executed with real child processes covering normal, already-signalled and concurrent exits, descriptor closure, original assertion preservation and an exact historical exit-13 control. Functional HTTP/database assertions remain unchanged; full hosted rerun remains separate.",
       "id": "SYS-CI-SELECTED-001",
       "title": "Selected validation cannot be admitted as skipped",
       "domain": "SYS",
@@ -13284,19 +13284,21 @@
         ".github/workflows/ci.yml",
         "scripts/ci-job-admission.mjs",
         "package.json",
-        "scripts/ci-change-scope.mjs"
+        "scripts/ci-change-scope.mjs",
+        "scripts/__tests__/experiment-http-runtime.mjs"
       ],
       "tests": [
         "scripts/__tests__/ci-job-admission.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        "scripts/__tests__/experiment-http-cleanup.test.mjs"
       ],
       "formalModels": [],
       "ambiguity": [
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
-      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven. reports/campaign-platform-ci-cleanup-2026-10-30.json"
     },
     {
       "id": "ART-ENRICH-REVIEW-001",
@@ -14109,6 +14111,8 @@
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
     "scripts/__tests__/event-raci-browser-runner.test.mjs": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
+    "scripts/__tests__/experiment-http-cleanup.test.mjs": "2f41b3eb6a220db965e96b65f81bb57bc3009862a77f5d702d69777451cf56c1",
+    "scripts/__tests__/experiment-http-runtime.mjs": "886cfb653ebd0a545af85954868e33ae2a9c0bf67bbac1387b945bc59af58659",
     "scripts/__tests__/fixtures/ci-selected-job-admission-before.json": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
     "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
@@ -14224,7 +14228,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "32c850813500a4446e67b4ffe415c04ce16828ac4b3a2177bfc4fcefb303270a",
+    "scripts/quality-repo.sh": "7feff9f60286c1bbdd32dd0c6a1a24d5e5e7c9c740b5ee440a79f4eb4f17f2fb",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -26424,6 +26428,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/__tests__/experiment-http-runtime.mjs": [
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/ci-job-admission.test.mjs": [
       {
         "requirement": "SYS-CI-SELECTED-001",
@@ -26431,6 +26441,12 @@
       }
     ],
     "scripts/__tests__/fixtures/ci-selected-job-admission-before.json": [
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/experiment-http-cleanup.test.mjs": [
       {
         "requirement": "SYS-CI-SELECTED-001",
         "relationship": "tests"
@@ -28464,11 +28480,28 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-f7856cacfae2c515",
+      "path": "scripts/__tests__/experiment-http-cleanup.test.mjs",
+      "sha256": "2f41b3eb6a220db965e96b65f81bb57bc3009862a77f5d702d69777451cf56c1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-73c3a6d820b99df5",
       "path": "scripts/__tests__/experiment-http-runtime.mjs",
-      "sha256": "0d103b159d28a3930b52a12534d380bb7289a4e6db84e03f7faa674ab3fc4fa8",
+      "sha256": "886cfb653ebd0a545af85954868e33ae2a9c0bf67bbac1387b945bc59af58659",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1b144472ba588c64",
@@ -30840,7 +30873,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "32c850813500a4446e67b4ffe415c04ce16828ac4b3a2177bfc4fcefb303270a",
+      "sha256": "7feff9f60286c1bbdd32dd0c6a1a24d5e5e7c9c740b5ee440a79f4eb4f17f2fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54888,7 +54921,6 @@
     "SURFACE-8a6b56181df3564a",
     "SURFACE-146c057a72021520",
     "SURFACE-e9e15217e1dc7906",
-    "SURFACE-73c3a6d820b99df5",
     "SURFACE-1b144472ba588c64",
     "SURFACE-46aeee723adfa6c5",
     "SURFACE-ee1bb502b120babb",
@@ -57662,7 +57694,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "991fa265e9adfc64065df4375063b5da1b92531c4f43d0e0ac73ad54a236afb9",
+      "sourceSha256": "94bf98e37344b49295eba5879826e902a3dd44fa22dae8745b98eb2ef3743c54",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57690,7 +57722,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "991fa265e9adfc64065df4375063b5da1b92531c4f43d0e0ac73ad54a236afb9",
+      "sourceSha256": "94bf98e37344b49295eba5879826e902a3dd44fa22dae8745b98eb2ef3743c54",
       "definition": {
         "states": [
           "absent",
@@ -57720,7 +57752,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "991fa265e9adfc64065df4375063b5da1b92531c4f43d0e0ac73ad54a236afb9",
+      "sourceSha256": "94bf98e37344b49295eba5879826e902a3dd44fa22dae8745b98eb2ef3743c54",
       "definition": {
         "export": [
           "queued",
