@@ -13773,14 +13773,16 @@
         "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.tsx",
         "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
         ".github/workflows/ci.yml",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/test-artist-featured-track.mjs",
         "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
         "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.test.tsx",
         "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
-        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx"
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
+        "scripts/__tests__/production-release.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -13810,7 +13812,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "d4584bebd83454073a704492a561d706f456838c3386d01d527d1eb26d5c9439",
+    "docs/catalog-persistence/catalog-list-decisions.json": "cfc20e3731dffad5b15eca7933ddfc2c55debaab9bbfb003b97d7478b25984cc",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14292,7 +14294,7 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+    "scripts/lib/production-release.mjs": "b391bf831bf54e1713068149cf79523ed161cae8f4a98ec7958f6959189e52b7",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -14309,7 +14311,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "b539ff28bf69e67be52ce3dae3f1a204414db81a9cd2eaad9940ec44b427be55",
+    "scripts/production-migrations.json": "ac5a3f0e574083426feb054df985cffaba1d4eb67025a7eb5e0c3b748df83793",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
@@ -15770,6 +15772,10 @@
       },
       {
         "requirement": "PAY-LEDGER-HEADER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-ARTIST-FEATURED-001",
         "relationship": "implementation"
       }
     ],
@@ -17838,6 +17844,10 @@
       },
       {
         "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-ARTIST-FEATURED-001",
         "relationship": "tests"
       }
     ],
@@ -29053,6 +29063,10 @@
         {
           "requirement": "DEPLOY-STARTUP-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -30276,7 +30290,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+      "sha256": "b391bf831bf54e1713068149cf79523ed161cae8f4a98ec7958f6959189e52b7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30325,6 +30339,10 @@
         },
         {
           "requirement": "PAY-LEDGER-HEADER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-ARTIST-FEATURED-001",
           "relationship": "implementation"
         }
       ]
@@ -30630,7 +30648,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "b539ff28bf69e67be52ce3dae3f1a204414db81a9cd2eaad9940ec44b427be55",
+      "sha256": "ac5a3f0e574083426feb054df985cffaba1d4eb67025a7eb5e0c3b748df83793",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57345,7 +57363,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a6f0adb299294bc764dab92f1b90a0d02ff3ab5233c5e3036ddadaff3db99eca",
+      "sourceSha256": "f038b91483a25d97facaeba9c547f47d4b0943101e0a7b8015e80d4e6773f2b1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57373,7 +57391,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a6f0adb299294bc764dab92f1b90a0d02ff3ab5233c5e3036ddadaff3db99eca",
+      "sourceSha256": "f038b91483a25d97facaeba9c547f47d4b0943101e0a7b8015e80d4e6773f2b1",
       "definition": {
         "states": [
           "absent",
@@ -57403,7 +57421,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a6f0adb299294bc764dab92f1b90a0d02ff3ab5233c5e3036ddadaff3db99eca",
+      "sourceSha256": "f038b91483a25d97facaeba9c547f47d4b0943101e0a7b8015e80d4e6773f2b1",
       "definition": {
         "export": [
           "queued",

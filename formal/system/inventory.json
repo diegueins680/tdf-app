@@ -4586,7 +4586,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+      "sha256": "b391bf831bf54e1713068149cf79523ed161cae8f4a98ec7958f6959189e52b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4772,7 +4772,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "b539ff28bf69e67be52ce3dae3f1a204414db81a9cd2eaad9940ec44b427be55",
+      "sha256": "ac5a3f0e574083426feb054df985cffaba1d4eb67025a7eb5e0c3b748df83793",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28116,7 +28116,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a6f0adb299294bc764dab92f1b90a0d02ff3ab5233c5e3036ddadaff3db99eca",
+      "sha256": "f038b91483a25d97facaeba9c547f47d4b0943101e0a7b8015e80d4e6773f2b1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

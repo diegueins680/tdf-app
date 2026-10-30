@@ -13772,14 +13772,16 @@
         "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.tsx",
         "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
         ".github/workflows/ci.yml",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/test-artist-featured-track.mjs",
         "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
         "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.test.tsx",
         "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
-        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx"
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
+        "scripts/__tests__/production-release.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
