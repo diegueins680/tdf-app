@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useSession } from '../session/SessionContext';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useSession();
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fallbackPath = '/inicio';
 
