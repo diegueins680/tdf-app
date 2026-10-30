@@ -13490,6 +13490,80 @@
         "PARTIAL",
         "UNVERIFIED"
       ]
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+      "title": "Retain unexpected synthetic container cleanup responses",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context while retaining its existing failure, absence and foreign-container cleanup semantics.",
+      "domain": "SYS",
+      "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
+      "source": "formal/system/container-cleanup-evidence.md",
+      "contract": "formal/system/container-cleanup-evidence.md",
+      "property": "Unexpected nonzero inspect responses not classified as absent remain failures and retain operation, synthetic name, exit status, bounded stdout/stderr with truncation flags and completed cases. Prior exceptions remain displayed; no new success/absence classification or foreign deletion.",
+      "actors": [
+        "Hosted CI upload verifier",
+        "Maintainer diagnosing a failed gate"
+      ],
+      "preconditions": [
+        "Existing isolated GitHub-hosted guard",
+        "Existing nonce ownership boundary",
+        "subprocess capture_output/text contract"
+      ],
+      "inputs": [
+        "Owned synthetic inspect CompletedProcess",
+        "Actually completed synthetic-case records"
+      ],
+      "state": {
+        "initial": "Cleanup inspect response",
+        "terminal": [
+          "Existing confirmed cleanup path",
+          "Existing absence classification",
+          "Failure retaining bounded diagnostic context"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain unexpected response while refusing success",
+        "Preserve prior Python exception chain",
+        "Remove only verified owned container ID under the existing guard"
+      ],
+      "forbiddenTransitions": [
+        "Discard unexpected response into a constant error",
+        "Accept unknown inspect errors as absence",
+        "Remove a foreign container",
+        "Suppress an existing primary exception chain"
+      ],
+      "effects": [
+        "Bounded failure diagnostic only; existing synthetic Docker operations unchanged"
+      ],
+      "authorization": "Existing hosted runner gate, local socket and nonce/ownership refusal unchanged.",
+      "privacy": "Only synthetic command status/streams/name/case records; no environment, host-wide inventory or private upload-content dump.",
+      "concurrency": "Existing sequential synthetic runner unchanged; no daemon/process synchronization claim.",
+      "idempotency": "No retry or new cleanup operation; existing cleanup behavior retained.",
+      "failure": "Unexpected cleanup still fails; malformed JSON, removal errors and timeouts retain existing behavior outside new structured path.",
+      "recovery": "Use new response evidence to diagnose a future failure; do not infer the missing old response or rerun an unchanged failure into a repair claim.",
+      "observability": "Structured error context with each stream limited to2000characters before JSONserialization and explicit truncation flags.",
+      "implementation": [
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-persistent-uploads-container-diagnostics.py"
+      ],
+      "formalModels": [],
+      "verification": "10 mocked actual-main-path cases,4 controlled single-test source faults, independent rerun and unchanged-flow source comparison; normal repository-quality registration.",
+      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Confirmed hosted diagnostic loss and finite simulated regressions; no actual localDocker or original-cause repair claim.",
+      "ambiguity": [
+        "Original Docker response/cause and old primary-case outcomes remainUNKNOWN.",
+        "Existing absence classifier is preserved, not proved universally correct.",
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Simulated diagnostics and source preservation tested; actual hosted Docker run and complete implementation/refinement remain separate."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -14009,7 +14083,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+    "scripts/quality-repo.sh": "ab872beca4a6208d69ca737b7d12af1e925dae38fde6b9b1ba919f29c6331ba7",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14089,7 +14163,8 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
-    "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+    "scripts/test-persistent-uploads-container-diagnostics.py": "72a038a1e00995d71c034522fcf8b93488e12b35b2b4d2e49f973f13660061ef",
+    "scripts/test-persistent-uploads-container.py": "664dd6667f43c2b9949721c0b076d3b709a1d64a67abf619a58f51d5075afe6e",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
@@ -15218,6 +15293,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
         "relationship": "implementation"
       }
     ],
@@ -18211,6 +18290,10 @@
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/app/Main.hs": [
@@ -26234,6 +26317,12 @@
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
         "relationship": "formalModels"
       }
+    ],
+    "scripts/test-persistent-uploads-container-diagnostics.py": [
+      {
+        "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -30179,7 +30268,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+      "sha256": "ab872beca4a6208d69ca737b7d12af1e925dae38fde6b9b1ba919f29c6331ba7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30232,6 +30321,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
           "relationship": "implementation"
         }
       ]
@@ -32175,14 +32268,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-5c0faab232af0d35",
+      "path": "scripts/test-persistent-uploads-container-diagnostics.py",
+      "sha256": "72a038a1e00995d71c034522fcf8b93488e12b35b2b4d2e49f973f13660061ef",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+      "sha256": "664dd6667f43c2b9949721c0b076d3b709a1d64a67abf619a58f51d5075afe6e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-PERSIST-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -56393,7 +56502,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sourceSha256": "b1896f66b91afcf049dbd37ea5111ef3f29093d520d916f15d7c23b3641b26f8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56421,7 +56530,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sourceSha256": "b1896f66b91afcf049dbd37ea5111ef3f29093d520d916f15d7c23b3641b26f8",
       "definition": {
         "states": [
           "absent",
@@ -56451,7 +56560,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sourceSha256": "b1896f66b91afcf049dbd37ea5111ef3f29093d520d916f15d7c23b3641b26f8",
       "definition": {
         "export": [
           "queued",
@@ -78938,7 +79047,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 158,
+    "PARTIAL": 159,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

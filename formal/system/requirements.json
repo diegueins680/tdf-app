@@ -13489,6 +13489,80 @@
         "PARTIAL",
         "UNVERIFIED"
       ]
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+      "title": "Retain unexpected synthetic container cleanup responses",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context while retaining its existing failure, absence and foreign-container cleanup semantics.",
+      "domain": "SYS",
+      "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
+      "source": "formal/system/container-cleanup-evidence.md",
+      "contract": "formal/system/container-cleanup-evidence.md",
+      "property": "Unexpected nonzero inspect responses not classified as absent remain failures and retain operation, synthetic name, exit status, bounded stdout/stderr with truncation flags and completed cases. Prior exceptions remain displayed; no new success/absence classification or foreign deletion.",
+      "actors": [
+        "Hosted CI upload verifier",
+        "Maintainer diagnosing a failed gate"
+      ],
+      "preconditions": [
+        "Existing isolated GitHub-hosted guard",
+        "Existing nonce ownership boundary",
+        "subprocess capture_output/text contract"
+      ],
+      "inputs": [
+        "Owned synthetic inspect CompletedProcess",
+        "Actually completed synthetic-case records"
+      ],
+      "state": {
+        "initial": "Cleanup inspect response",
+        "terminal": [
+          "Existing confirmed cleanup path",
+          "Existing absence classification",
+          "Failure retaining bounded diagnostic context"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain unexpected response while refusing success",
+        "Preserve prior Python exception chain",
+        "Remove only verified owned container ID under the existing guard"
+      ],
+      "forbiddenTransitions": [
+        "Discard unexpected response into a constant error",
+        "Accept unknown inspect errors as absence",
+        "Remove a foreign container",
+        "Suppress an existing primary exception chain"
+      ],
+      "effects": [
+        "Bounded failure diagnostic only; existing synthetic Docker operations unchanged"
+      ],
+      "authorization": "Existing hosted runner gate, local socket and nonce/ownership refusal unchanged.",
+      "privacy": "Only synthetic command status/streams/name/case records; no environment, host-wide inventory or private upload-content dump.",
+      "concurrency": "Existing sequential synthetic runner unchanged; no daemon/process synchronization claim.",
+      "idempotency": "No retry or new cleanup operation; existing cleanup behavior retained.",
+      "failure": "Unexpected cleanup still fails; malformed JSON, removal errors and timeouts retain existing behavior outside new structured path.",
+      "recovery": "Use new response evidence to diagnose a future failure; do not infer the missing old response or rerun an unchanged failure into a repair claim.",
+      "observability": "Structured error context with each stream limited to2000characters before JSONserialization and explicit truncation flags.",
+      "implementation": [
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-persistent-uploads-container-diagnostics.py"
+      ],
+      "formalModels": [],
+      "verification": "10 mocked actual-main-path cases,4 controlled single-test source faults, independent rerun and unchanged-flow source comparison; normal repository-quality registration.",
+      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Confirmed hosted diagnostic loss and finite simulated regressions; no actual localDocker or original-cause repair claim.",
+      "ambiguity": [
+        "Original Docker response/cause and old primary-case outcomes remainUNKNOWN.",
+        "Existing absence classifier is preserved, not proved universally correct.",
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Simulated diagnostics and source preservation tested; actual hosted Docker run and complete implementation/refinement remain separate."
+      }
     }
   ]
 }

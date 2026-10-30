@@ -10,6 +10,27 @@ import uuid
 
 ROOT = Path(__file__).resolve().parent.parent
 IMAGE = 'debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251'
+DIAGNOSTIC_OUTPUT_LIMIT = 2000
+
+
+class ContainerCleanupError(RuntimeError):
+    """Retain the unexpected response from this synthetic check, without retrying it."""
+
+    def __init__(self, name, result, completed):
+        def bounded(value):
+            return {'text': value[:DIAGNOSTIC_OUTPUT_LIMIT],
+                    'truncated': len(value) > DIAGNOSTIC_OUTPUT_LIMIT}
+
+        self.diagnostic = {
+            'operation': 'inspect',
+            'containerName': name,
+            'returncode': result.returncode,
+            'stdout': bounded(result.stdout),
+            'stderr': bounded(result.stderr),
+            'completedCases': [dict(row) for row in completed],
+        }
+        super().__init__('Could not confirm synthetic container cleanup: '
+                         + json.dumps(self.diagnostic, sort_keys=True))
 
 
 def main():
@@ -82,7 +103,7 @@ esac
                         raise RuntimeError('Refusing cleanup of a foreign container')
                     require(invoke(['rm', '-f', row['Id']]))
                 elif 'No such' not in found.stderr:
-                    raise RuntimeError('Could not confirm synthetic container cleanup')
+                    raise ContainerCleanupError(name, found, results)
         print(json.dumps({'sourceRevision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                           'image': IMAGE, 'checks': results,
                           'sourceSha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in

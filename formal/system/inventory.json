@@ -547,6 +547,7 @@
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
       "scripts/test-payment-audit-runtime.sh",
+      "scripts/test-persistent-uploads-container-diagnostics.py",
       "scripts/test-persistent-uploads-container.py",
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
@@ -4789,7 +4790,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+      "sha256": "ab872beca4a6208d69ca737b7d12af1e925dae38fde6b9b1ba919f29c6331ba7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5927,9 +5928,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5c0faab232af0d35",
+      "path": "scripts/test-persistent-uploads-container-diagnostics.py",
+      "sha256": "72a038a1e00995d71c034522fcf8b93488e12b35b2b4d2e49f973f13660061ef",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+      "sha256": "664dd6667f43c2b9949721c0b076d3b709a1d64a67abf619a58f51d5075afe6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27408,6 +27415,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/container-cleanup-evidence.md",
+      "sha256": "1c2d969a5917d554c58dbb96ca080306536167f82d4cdab3349a7eac50a9469c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/cors-boundary.md",
       "sha256": "d426b708f015c87949a58f254dbbad3dbdc39aea26e92a2131e5808123a9c019",
       "authority": "inferred",
@@ -27962,7 +27976,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sha256": "b1896f66b91afcf049dbd37ea5111ef3f29093d520d916f15d7c23b3641b26f8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

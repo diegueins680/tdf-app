@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-29T22:23:58.444Z",
+  "generatedAt": "2026-10-30T06:15:17.311Z",
   "repositoryRoot": ".",
   "filesScanned": 2459,
   "candidateCount": 1354,
@@ -62452,7 +62452,7 @@
       "lines": [
         1056
       ],
-      "consumerCount": 331,
+      "consumerCount": 332,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/interactions.yaml",
