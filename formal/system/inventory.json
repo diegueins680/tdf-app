@@ -15950,7 +15950,7 @@
     {
       "id": "SURFACE-8a3bcf7db1bd362a",
       "path": "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
-      "sha256": "abb74a85cc6ae016cfc23b29cb9c5ecdea20d12119b7c8f0c9e7eae96c57ee65",
+      "sha256": "cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27416,7 +27416,7 @@
     },
     {
       "path": "formal/system/contract-send-truthfulness.md",
-      "sha256": "87dea6264a504c9e3d9040e54da8e4ff2e21bf619aaba5efc2ffa18e63818b14",
+      "sha256": "4ed5649f01c9b7bc8845c950f23511b875dcfc6c4ba07a2c9a8dba20cca6f213",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -14803,7 +14803,7 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
-    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": "abb74a85cc6ae016cfc23b29cb9c5ecdea20d12119b7c8f0c9e7eae96c57ee65",
+    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": "cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
     "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
@@ -48877,7 +48877,7 @@
     {
       "id": "SURFACE-8a3bcf7db1bd362a",
       "path": "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
-      "sha256": "abb74a85cc6ae016cfc23b29cb9c5ecdea20d12119b7c8f0c9e7eae96c57ee65",
+      "sha256": "cd3c9dfc81d323a38590e4042beedac866e898e9e0488862bb5b150fc6a6835f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

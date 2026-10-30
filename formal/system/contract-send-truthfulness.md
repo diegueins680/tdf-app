@@ -31,3 +31,10 @@ The fixture has no SMTP or database configuration; missing/corrupt PDF tests sto
 before a PDF renderer. No successful PDF rendering, authenticated HTTP transport,
 provider delivery, production filesystem/concurrency or complete refinement proof
 follows from these finite tests. Scoped evidence is TESTED only.
+
+Snapshot fidelity: take strict byte snapshots that close read handles before
+the send operation. A verified lazy-read probe kept a file lock and blocked an
+intervening write; it did not establish an application failure or an accepted
+write. A mutate-store-then-refuse fault must fail the actual byte comparison,
+not a fixture-induced lock exception. Initial pre-suite builds stopped for
+reviewed-binding and snapshot corrections remain explicitly unqualified.

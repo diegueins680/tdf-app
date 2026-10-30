@@ -5,6 +5,7 @@ module TDF.Contracts.DeliverySpec (spec) where
 import qualified Data.Aeson as A
 import Data.Aeson ((.=))
 import qualified Data.Aeson.KeyMap as KM
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -19,11 +20,11 @@ spec :: Spec
 spec = sequential $ describe "contract delivery reporting" $ around sandbox $ do
   it "refuses unsupported delivery instead of claiming an existing contract was sent" $ \() -> do
     cid <- createFixture
-    before <- BL.readFile (contractPath cid)
+    before <- BS.readFile (contractPath cid)
     files <- listDirectory "contracts/store"
     result <- send cid (email "recipient@example.test")
     assertStatus 501 result
-    BL.readFile (contractPath cid) `shouldReturn` before
+    BS.readFile (contractPath cid) `shouldReturn` before
     listDirectory "contracts/store" `shouldReturn` files
 
   it "preserves successful contract creation and canonical storage" $ \() -> do
