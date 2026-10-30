@@ -1,0 +1,41 @@
+{
+  "status": "PASS_AST_PURE_GUARDS_AND_READ_ONLY_FULL973_SOURCE_ADMISSION",
+  "pythonAst": "PASS",
+  "isolatedDefinitions": [
+    "sha",
+    "git",
+    "validate_request",
+    "NoRedirect",
+    "validate_backend_paths",
+    "verify_backend"
+  ],
+  "httpAllowedCases": 3,
+  "httpDeniedCases": 9,
+  "redirectRefused": true,
+  "additionalDocAllowedStates": 2,
+  "invalidBackendPathSetsDeniedCases": 6,
+  "startupMonotonicFakeTransportCases": [
+    {
+      "available": true,
+      "elapsedSyntheticSeconds": 1,
+      "maxTimeout": 10,
+      "passed": true
+    },
+    {
+      "available": false,
+      "elapsedSyntheticSeconds": 90.0,
+      "maxTimeout": 10,
+      "passed": true
+    }
+  ],
+  "actualReadOnlySourceAdmission": {
+    "files": 973,
+    "allGitPathsRawBlobsModesAndManifestHashesExact": true,
+    "unicodeTemplateIncluded": true,
+    "onlyKnownNonruntimeOpenApiDocExcepted": true,
+    "fullDriverExecuted": false
+  },
+  "runSha256": "e074113c7e06780178c2786cde0e240e31672e4ecb00245c8cce3affe1c00a85",
+  "backendManifestSha256": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e",
+  "fullDriverFixtureSqlAppPgApiBrowserNetworkExecuted": false
+}

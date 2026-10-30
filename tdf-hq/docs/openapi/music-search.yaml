@@ -1,0 +1,81 @@
+openapi: 3.0.0
+info: { title: TDF Authorized Music Track Search, version: 1.0.0 }
+paths:
+  /music/search:
+    get:
+      operationId: searchPublicMusicTracks
+      summary: Find a currently discoverable recording with its exact playback context
+      security: []
+      description: |
+        Requires the existing music_releases.public feature. Text matches current
+        public release/track contexts inside the database. Every returned context
+        must have an eligible stream or matching preview under the existing public
+        delivery policy and trusted edge territory. Contexts without eligible audio
+        are excluded before recording deduplication, pagination and JSON projection.
+        Results contain deferred asset IDs, never delivery URLs or storage keys.
+        The player reauthorizes the selected asset. This is canonical release audio
+        search, not indexing of all historical, social, podcast or event sources.
+      parameters:
+        - name: q
+          in: query
+          description: Trimmed query; absent or blank returns an empty array. Accent/case and literal non-Latin substring matching; no typo-tolerance guarantee.
+          schema: { type: string, maxLength: 200 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 13 }
+        - name: offset
+          in: query
+          schema: { type: integer, format: int64, minimum: 0, default: 0 }
+        - name: CF-IPCountry
+          in: header
+          description: Accepted only through the existing trusted-edge configuration. Absent, ignored or invalid values use the existing unknown-territory policy; the browser does not choose this value.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Stable authorized recording hits, deduplicated before pagination. Readiness and rights may change before selection.
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: ['private, no-store'] }
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items: { $ref: '#/components/schemas/MusicTrackSearchHit' }
+        '400': { description: Invalid query length or pagination. Handler denials use private/no-store; parameter-parser errors precede the handler. }
+        '404': { description: Existing public music feature disabled; no catalog existence inferred. }
+        '500': { description: Explicit service failure; not an empty catalog. }
+components:
+  schemas:
+    MusicTrackSearchSource:
+      type: object
+      additionalProperties: false
+      required: [assetId, role, mediaType, technicalMetadata]
+      properties:
+        assetId: { type: string, format: uuid }
+        role: { type: string, enum: [stream_audio, preview_audio] }
+        mediaType: { type: string }
+        technicalMetadata:
+          type: object
+          additionalProperties: false
+          properties:
+            bitrate_kbps: { type: number }
+            loudness_lufs: { type: number }
+    MusicTrackSearchHit:
+      type: object
+      additionalProperties: false
+      required: [trackId, recordingId, releaseId, releaseVersionId, releaseSlug, releaseTitle, title, displayArtist, durationMs, sources]
+      properties:
+        trackId: { type: string, format: uuid }
+        recordingId: { type: string, format: uuid }
+        releaseId: { type: string, format: uuid }
+        releaseVersionId: { type: string, format: uuid }
+        releaseSlug: { type: string }
+        releaseTitle: { type: string }
+        title: { type: string }
+        displayArtist: { type: string }
+        durationMs: { type: integer, format: int64, nullable: true }
+        sources:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/MusicTrackSearchSource' }

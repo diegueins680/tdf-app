@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "status": "PREPARED_NOT_EXECUTED_REQUIRES_ROOT_REVIEW_AND_ACTUAL_BUILD_EXIT0",
+  "expectedBackendCommit": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "root": "/private/tmp/tdf-universal-music-search-20261026",
+  "qualifiedBaseHarness": {
+    "path": "/private/tmp/tdf-music-credential-cache-http-20261026/run-v4.py",
+    "sha256": "0231299a3306f26f88145374275864fc5a2b8adffb221ade8c3cecea31e58959",
+    "scope": "Reuse hardened NoRedirect,explicit loopback/cleanenv,sandbox+positivecontrol,bindinterposer,fullschema,actualVersion,cleanup-finalization boundaries; previous45/54 qualification is historical43b and is not this new endpoint evidence."
+  },
+  "ownedPorts": {
+    "postgres": 55585,
+    "api": 18835
+  },
+  "requestPolicy": {
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "paths": [
+      "/health",
+      "/version",
+      "/music/search"
+    ],
+    "redirects": "forbidden",
+    "credentials": "none;no signup/login/session/mutatingHTTP/signing/storage calls"
+  },
+  "sourceAdmission": {
+    "correctedBackendManifest": "backend-committed-inputs.json",
+    "sourceManifest": "/private/tmp/tdf-track-search-build-20261026/backend-committed-inputs.json",
+    "backendGitTree": "e23afff1748cb635104b8f56a740f02a1a4bed7b",
+    "files": 973,
+    "modeAndRawGitBlobIdentityCheckedBeforeAfter": true,
+    "initialEmptyCaptureRetained": {
+      "path": "/private/tmp/tdf-track-search-build-20261026/initial-empty-input-capture.json",
+      "sha256": "67fb52be3eb105d8af12c9cf67c5b34a80b8a7a565718ab46030b380fac93fd4",
+      "admittedAsBackendInputs": false
+    },
+    "buildExitMarker": "/private/tmp/tdf-track-search-build-20261026/stack-build.exit",
+    "actualExit0Required": true,
+    "binaryMtimeAfterCorrectedCaptureRequired": true,
+    "actualVersionCommitRequired": true,
+    "noRuntimeRevisionEnvironmentOverride": true,
+    "frontendMetadataDirty": "Explicitly permitted;separate before/after hashes recorded,not whole-checkout-clean or frontend qualification.",
+    "completeManifestSha256": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e",
+    "captureTiming": "Full973 committed-path capture during active canonical build, using NUL-delimited Git paths. Original972 capture remains retained; it omitted a non-code Unicode TeX template because ordinary git ls-files quoted its name. No before-build snapshot claim.",
+    "original972Retained": {
+      "path": "backend-committed-inputs-original972.json",
+      "sha256": "84faa0c11f28849754e480323a43de3aca508a3d1a3094550b2dbb0f558ad731",
+      "limitation": "Original972 exact subset omitted one nonruntime Unicode TeX path due non-NUL Git quoting; not a full backend-tree capture."
+    },
+    "independentSupplementalReviewSha256": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4",
+    "unicodeTemplateRequired": "tdf-hq/contracts/templates/04_Ense\u00f1anza_TDF_Academy.tex"
+  },
+  "fixtureGenerator": {
+    "source": "scripts/test-music-track-search.mjs",
+    "exactChunkSha256": "fc9adb8048ebe9e3457b7dc2cfac2802bdcc7bc4e41da48cf57b79749fabf949",
+    "start": "  const fixtureSource =",
+    "end": "  const make =",
+    "substitutions": 0,
+    "outputs": "Exclusive fixture.sql in unique owned700temporary resultdirectory",
+    "storageProviderOverride": false
+  },
+  "frozenRuntimeHelperInputs": {
+    "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
+    "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+    "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
+    "reports/welcome-club-integration-evidence-20261026/loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "files": {
+    "run.py": "e074113c7e06780178c2786cde0e240e31672e4ecb00245c8cce3affe1c00a85",
+    "fixture.mjs": "e151f6b975fd11027f638fa6bdefdb28e27fac4039290fb3654ac8dbbb5faaa1",
+    "backend-committed-inputs.json": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e",
+    "syntax-and-pure-safety.json": "feb8e81ccc7b3731e252dd7087f6bcbbaa0ccbcb2053bd74f338f0467b6a2df2"
+  },
+  "plannedCases": [
+    "Disabledpublic404withprivate-no-store;blank[];lengthandrange400;integerparser400withoutcachepromise;HEADnoBody",
+    "ExactBidentitiesandtitle/artist/releasematch;accent/case/trim/partial",
+    "TrustedEC/USheader;unknowninvalidterritory;untrustedterritoryquerycannotoverride",
+    "Private/withdrawn/denied/missingrenditions;actualpublicationguardwithoutbypass",
+    "Previewonly/currentfullsources;nomaster/pending/stalepreview;whitelistednumericmetadataandexactassetcontext",
+    "Canonicaldedupnewestmatchingcontextbeforestable13request/12displaypaging;26+uniquefixturetracks",
+    "NonLatin/literalwildcards/SQLinjectiontext;withdrawSQLthenfreshnondisclosure"
+  ],
+  "networkSafety": [
+    "Twoportsmustbefree,noserverreuse;freshownedPGcluster/database identitycheck",
+    "Backendloopbackbindinterposer+allowPGonlyoutboundsandbox+LANpositive/negativecontrols",
+    "HTTPclientfixedloopbacktarget,proxyoff,noredirect,GETHEADexactpathallowlist",
+    "Noactualobjects,provider APIs,productionflags/roles/rows or original masters touched"
+  ],
+  "cleanup": "PASS only after backendStopped,databaseRemoved,clusterStopped alltrue;failures retained separately inunique output,neveroverwritten",
+  "limitations": [
+    "Preparation/syntaxonly:noSQL/API/Stack/PG/browser/proof/CIexecutionbythisagent.",
+    "Plannedownedfull222rehearsal andSQLfixturepublication are synthetic;notactual upload-to-playback/media/rights/CDN/SLO proof.",
+    "Parser errors precede handler and do not promise new no-store policy."
+  ],
+  "syntaxAndPureSafety": {
+    "httpPositive": 3,
+    "httpNegative": 9,
+    "redirectRefused": true,
+    "allowedDocumentationStates": 2,
+    "invalidBackendPathSetsRejected": 6,
+    "nodeFixtureSyntax": "PASS node22 --check; no fixture execution",
+    "startupFakeTransportCases": 2,
+    "readOnlyFullBackendAdmission": "PASS973 exact committed raw paths/blobs/modes,including UnicodeTeX;only capturedOpenAPIdoc additional"
+  },
+  "revision": 4,
+  "allowedAdditionalBackendDocumentation": {
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "additionalDocumentationBoundary": "Only exact root-authored OpenAPI YAML with captured hash is permitted outside original973Git blobs, whether untracked or staged. Every original path/raw blob/Git mode still exact; all unknown staged/untracked source/build additions rejected. This is an explicit nonruntime documentation exception, not a claim no new backend-tree files exist.",
+  "historicalPreparedRevision": {
+    "status": "NEVER_EXECUTED_PREPARE_ONLY",
+    "run-v1.py": "a4891193a635bff5ee238ba753b132c82c0a59b95232e3b5a4049efe0d4d57bd",
+    "review-manifest-v1.json": "ecd9a453ad82a846d3dadc654236ed445aec7cea1e2be02fab405839b5d9f871",
+    "syntax-and-pure-safety-v1.json": "1d6e3899898bc39cc0ff3436689dfef5a57f97670c710f3755ad6bf3c87ba273"
+  },
+  "historicalPreparedRevisions": [
+    {
+      "status": "NEVER_EXECUTED_PREPARE_ONLY",
+      "run-v2.py": "ba65952b90d29c31085c09579bdffbf9bdd9f870ff1f86bf33fd64d0d7e914a2",
+      "review-manifest-v2.json": "473dcf608d3d961376c9d3da12545b76ed569ebee0f7bb958339e1e862def59f",
+      "syntax-and-pure-safety-v2.json": "d93cfcc4972d815a90b43c01688d34bad2bd06eb5c66c8b4e0c98b2b5651f319"
+    },
+    {
+      "status": "NEVER_EXECUTED_PREPARE_ONLY",
+      "run-v3.py": "f0583c2c9b85705650e1f34027494a08e04f544ac869dda7822d399bec42f340",
+      "review-manifest-v3.json": "2cbffcf33765359f3788ba58d419b67703b8c3f853731b683a5dddec09cdb09b",
+      "syntax-and-pure-safety-v3.json": "966b3a8181162178a0f96bd5387ff31e6b004faf07438baaf8365b40661e5266"
+    }
+  ],
+  "startupBounds": {
+    "monotonicBudgetSeconds": 90,
+    "maxRequestTimeoutSeconds": 10,
+    "timeoutCappedToRemainingBudget": true,
+    "overrunAllowanceSeconds": 10,
+    "processExitCheckedEachAttempt": true,
+    "readyRequiredEvenWhenDeadlineCrossedBetweenChecks": true
+  },
+  "addedCoverage": "Four exact-title unavailable sentinels(private,withdrawn,listening-none,missing),in addition to original broad artist checks; no HTTP mutations."
+}
