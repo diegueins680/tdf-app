@@ -26,20 +26,25 @@ The original #665 head is left unchanged until its dependency can be published.
   bytes match the web client exactly. All existing music-search and scoped
   event-memory contract fields remain. No mobile runtime code changes.
 
-## Dependency requiring authorization
+## Authorized dependency blocked by GitHub repository access
 
 The root-declared submodule destination is
 `https://github.com/diegueins680/tdf-mobile.git`.
-Automatic approval review rejected publishing the local mobile commit to branch
-`integrate/markdown-profile-contract-20261030`, treating that separate-repository
-write as outside the authorization for #665, including after destination,
-changed-path, exact nine-line scope and generated-byte checks. No mobile write
-succeeded. Do not retry via another tool, repository or indirect mechanism.
+The user explicitly authorized publication of the nine-line mobile contract update
+and instructed continuation. That authorization is satisfied; it is not pending.
 
-`mobile-api-contract.patch` is the exact reviewable change. Publishing it requires
-explicit user authorization. Until then, the local composition's gitlink cannot
-be fetched by hosted CI; do not update #665 to this incomplete remote dependency
-or describe its old checks/approvals as qualifying this composition.
+Publication through the connected GitHub API now returns HTTP403,
+`Resource not accessible by integration`, for the canonical mobile repository.
+The terminal has no GitHub writing credential. Installation74714092 selects only
+`diegueins680/tdf-app` and `diegueins680/trader`; `TDF-mobile` is absent. Add only
+`TDF-mobile` in https://github.com/settings/installations/74714092 to enable this
+already-authorized dependency publication. No mobile write succeeded.
+
+`mobile-api-contract.patch` remains the exact reviewable change. Until the mobile
+repository is available to the connection, its local commit cannot be fetched by
+hosted CI. #665 remains unchanged; its earlier checks and approvals do not qualify
+this composition. The earlier automatic-review rejection is historical and has
+been superseded by the user's express authorization.
 
 ## Protected integration and deployment
 

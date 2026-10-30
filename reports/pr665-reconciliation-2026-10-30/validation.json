@@ -58,11 +58,13 @@
     "mobileRuntime": "NOT_RUN"
   },
   "unresolved": [
-    "Explicit authorization for separate mobile-repository publication",
+    "Add TDF-mobile to the connected GitHub installation to enable publication",
     "Fresh final-head hosted CI, including 320px WebKit booking and Markdown/profile/accessibility/privacy checks",
     "Unresolved full-suite PromoCodeField timing assertion; isolated pass alone does not repair it",
     "Current independent approval and current review/conversation inspection",
     "FIFO protected-main admission",
     "Post-merge authorized deployment and production verification"
-  ]
+  ],
+  "userAuthorization": "GRANTED",
+  "technicalAccess": "GitHub installation 74714092 does not include TDF-mobile; mobile Git Data write returns 403."
 }
