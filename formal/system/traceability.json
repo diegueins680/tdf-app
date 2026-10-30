@@ -14546,7 +14546,7 @@
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
-    "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx": "c3c99bb34261bf15d9821eaa82a651edb6784a30ba39a8b0f353b43351028e8f",
+    "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx": "f726d9868c9ea92d3f2ddb20b8617e7d715583f4be0f1d7348c38d0dacf05609",
     "tdf-hq-ui/src/pages/LabelReleasesPage.tsx": "0909ed3c7a5f74349500d06a8fb731e0967986c56b9ae7c0cfc9a80006dc67ec",
     "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
@@ -39073,7 +39073,7 @@
     {
       "id": "SURFACE-a389065dd74d77e4",
       "path": "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
-      "sha256": "c3c99bb34261bf15d9821eaa82a651edb6784a30ba39a8b0f353b43351028e8f",
+      "sha256": "f726d9868c9ea92d3f2ddb20b8617e7d715583f4be0f1d7348c38d0dacf05609",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

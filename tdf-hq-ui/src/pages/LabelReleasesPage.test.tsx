@@ -20,7 +20,7 @@ jest.unstable_mockModule('../api/records', () => ({ Records: { getFeed: jest.fn(
 jest.unstable_mockModule('../components/SessionGate', () => ({ SessionGate: ({ children }: { children: ReactNode }) => children }));
 jest.unstable_mockModule('../components/StreamingPlayer', () => ({ default: () => null }));
 const { default: LabelReleasesPage } = await import('./LabelReleasesPage');
-afterEach(cleanup);
+afterEach(() => { cleanup(); jest.restoreAllMocks(); });
 it('shows published and legacy releases through the same label catalog without converting legacy identity', async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><MemoryRouter><LabelReleasesPage /></MemoryRouter></QueryClientProvider>);
@@ -65,3 +65,59 @@ it('counts distinct Party IDs even when their display names match across sources
   expect(screen.getByText('Últimos 30 días: 1')).toBeTruthy();
   client.clear();
 });
+
+it.each(['canonical', 'legacy', 'mixed'] as const)(
+  'preserves %s catalog totals across date boundaries, pagination and filters', async (source) => {
+    const now = Date.parse('2026-10-30T12:00:00Z');
+    jest.spyOn(Date, 'now').mockReturnValue(now);
+    const threshold = now - 30 * 24 * 60 * 60 * 1000;
+    const dates = [now - 1, threshold, threshold - 1, now + 86400000, 'invalid', null,
+      ...Array<number>(7).fill(threshold - 86400000)];
+    const canonical: MusicPublicReleaseSummary[] = [];
+    const legacy: ArtistReleaseDTO[] = [];
+    dates.forEach((date, index) => {
+      const artistId = index === 12 ? 18 : 17;
+      const value = typeof date === 'number' ? new Date(date).toISOString() : date;
+      if (source === 'canonical' || (source === 'mixed' && index % 2 === 0)) {
+        canonical.push({ id: `canonical-${index}`, artistPartyId: artistId, title: `Publication ${index}`,
+          slug: `publication-${index}`, kind: 'single', displayArtist: 'Same name', coverAssetId: null,
+          // Exercise the publishedAt fallback as well as releaseAtUtc taking precedence.
+          publishedAt: index === 0 ? value : '2020-01-01T00:00:00Z',
+          releaseAtUtc: index === 0 ? null : value ?? '' } as MusicPublicReleaseSummary);
+      } else {
+        legacy.push({ arArtistId: artistId, arReleaseId: index + 1, arTitle: `Publication ${index}`,
+          arReleaseDate: value } as ArtistReleaseDTO);
+      }
+    });
+    listArtists.mockResolvedValueOnce([17, 18].map((apArtistId) => ({ apArtistId, apDisplayName: 'Same name' })) as ArtistProfileDTO[]);
+    listPublic.mockImplementation(async (_query, artistId) => canonical.filter((release) => release.artistPartyId === artistId));
+    getReleases.mockImplementation(async (artistId) => legacy.filter((release) => release.arArtistId === artistId));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      render(<QueryClientProvider client={client}><MemoryRouter><LabelReleasesPage /></MemoryRouter></QueryClientProvider>);
+      await screen.findByText('Releases: 13');
+      const expectTotals = () => {
+        expect(screen.getByText('Releases: 13')).toBeTruthy();
+        expect(screen.getByText('Artistas: 2')).toBeTruthy();
+        // The existing rule includes future releases, the exact threshold, and excludes invalid dates.
+        expect(screen.getByText('Últimos 30 días: 3')).toBeTruthy();
+      };
+      expectTotals();
+      const nextPage = await screen.findByRole('button', { name: 'Ir a la página siguiente' });
+      expect(screen.queryByText('Publication 4')).toBeNull();
+      fireEvent.click(nextPage);
+      await screen.findByText('Publication 4');
+      expectTotals();
+      fireEvent.change(screen.getAllByRole('textbox', { name: 'Buscar' })[0]!, { target: { value: 'Publication 0' } });
+      await waitFor(() => expect(screen.queryByText('Publication 4')).toBeNull());
+      await screen.findByText('Publication 0');
+      expectTotals();
+      expect(screen.queryByRole('button', { name: 'Ir a la página siguiente' })).toBeNull();
+    } finally {
+      client.clear();
+      // Keep the original fixture defaults independent of this table-driven matrix.
+      listPublic.mockReset().mockResolvedValue([]);
+      getReleases.mockReset().mockResolvedValue([]);
+    }
+  },
+);
