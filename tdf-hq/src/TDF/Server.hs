@@ -10841,7 +10841,7 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
   when (sbpcCheckoutStatus context == "paid") $
     throwError err409 { errBody = "This booking deposit is already paid" }
   ensureNoSubmittedServiceBookingManualEvidence context
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireServiceBookingProvider
     context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   attempt <- beginServiceBookingPaymentAttempt
@@ -16973,7 +16973,7 @@ isMarketplaceActiveStripeOrderConflict exception =
 createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
 createDatafastCheckout rawId mIdempotency payload = do
   context <- prepareMarketplaceSaleCheckout "datafast" rawId mIdempotency payload
-  dfEnv <- loadDatafastEnv
+  dfEnv <- loadDatafastCheckoutEnv
   unless (dfEnvironment dfEnv == msccEnvironment context) $
     throwError err500
       { errBody = "DATAFAST_ENV must match COMMERCE_CHECKOUT_ENV for marketplace checkout"
@@ -17497,7 +17497,7 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
 
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
-  dfEnv <- loadDatafastEnv
+  dfEnv <- loadDatafastCheckoutEnv
   let manager = sharedProviderManager
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
@@ -19839,6 +19839,20 @@ instance Show DatafastEnv where
       <> ", dfTestMode = " <> show (dfTestMode environment)
       <> ", dfExtraParams = <redacted>, dfEnvironment = "
       <> show (dfEnvironment environment) <> "}"
+
+-- Use the same required merchant metadata as every shared checkout path.
+-- Existing status lookup retains its credential-only configuration below.
+loadDatafastCheckoutEnv :: AppM DatafastEnv
+loadDatafastCheckoutEnv = do
+  (configured, parameters) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
+  pure DatafastEnv
+    { dfEntityId = ServiceStorefront.sdfEntityId configured
+    , dfBearerToken = ServiceStorefront.sdfBearerToken configured
+    , dfBaseUrl = ServiceStorefront.sdfBaseUrl configured
+    , dfTestMode = ServiceStorefront.sdfTestMode configured
+    , dfExtraParams = parameters
+    , dfEnvironment = ServiceStorefront.sdfEnvironment configured
+    }
 
 loadDatafastEnv :: AppM DatafastEnv
 loadDatafastEnv = do

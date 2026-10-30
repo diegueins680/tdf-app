@@ -1106,7 +1106,7 @@ createPublicDomoDatafastCheckout rawQuoteId mLookupToken = do
   when (dpcCheckoutStatus context == "paid") $
     throwError (conflict "This Domo deposit is already paid")
   ensureNoOtherActiveAttempt context Checkout.ProviderDatafast
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireDomoProvider context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   attempt <- beginDomoPaymentAttempt context Checkout.ProviderDatafast
     Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"

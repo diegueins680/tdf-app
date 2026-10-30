@@ -107,6 +107,8 @@ executable tdf-hq-exe
     TDF.Commerce.ProviderExecutionStore
     TDF.Commerce.ProviderReconciliation
     TDF.Commerce.ProviderRuntimeConfig
+    TDF.Commerce.DatafastConfig
+    TDF.Commerce.TicketBuyerContact
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
@@ -367,6 +369,7 @@ test-suite tdf-hq-test
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
+    TDF.Commerce.DatafastConfigSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
@@ -478,6 +481,8 @@ test-suite tdf-hq-test
     TDF.Commerce.ProviderExecutionStore
     TDF.Commerce.ProviderReconciliation
     TDF.Commerce.ProviderRuntimeConfig
+    TDF.Commerce.DatafastConfig
+    TDF.Commerce.TicketBuyerContact
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay

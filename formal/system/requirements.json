@@ -13489,6 +13489,87 @@
         "PARTIAL",
         "UNVERIFIED"
       ]
+    },
+    {
+      "id": "PAY-DATAFAST-001",
+      "title": "Shared Dataweb merchant metadata and saved ticket contact",
+      "statement": "New Datafast checkout creation requires configured merchant MID, TID, PSERV and USER_DATA2, sends the same validated protocol metadata in every domain, preserves UTF-8 form values and does not make existing payment status configuration depend on creation metadata. Ticket payment creation retains the validated optional phone saved at order creation; absent or invalid stored phones stay absent.",
+      "domain": "PAY",
+      "authority": "User request to finish Datafast payments and prepare onboarding; published Datafast Dataweb field requirements.",
+      "source": "User request 2026-10-29; https://developers.datafast.com.ec/Index.aspx",
+      "property": "Incomplete merchant metadata denies a fresh checkout before provider attempt allocation or gateway creation; existing status configuration remains usable. Stored ticket phone input survives the payment context and uses the initial order validation boundary.",
+      "contract": "formal/system/datafast-merchant-metadata.md",
+      "actors": [
+        "Checkout customer",
+        "Configured Dataweb merchant",
+        "Payment reconciliation operator"
+      ],
+      "preconditions": [
+        "Existing checkout authorization, immutable money/provider binding and capability gates remain authoritative.",
+        "Merchant credentials and environment are independently validated."
+      ],
+      "inputs": [
+        "Required merchant configuration, optional protocol version, UTF-8 checkout form fields"
+      ],
+      "state": {
+        "boundary": "Pure metadata admission and create-versus-status configuration; no additional lifecycle states."
+      },
+      "allowedTransitions": [
+        "Valid configured creation metadata may reach existing checkout admission.",
+        "Missing or malformed creation metadata denies new checkout availability."
+      ],
+      "forbiddenTransitions": [
+        "API credentials alone imply certified merchant readiness.",
+        "Missing creation metadata disables the base configuration used for existing status queries.",
+        "A buyer value changes the HTTP form parameter structure."
+      ],
+      "invariants": [
+        "Metadata field names and environment checks remain consistent across creation handlers.",
+        "Validation diagnostics do not echo configured values."
+      ],
+      "authorization": "Existing customer, merchant, capability and payment-attempt authorization is unchanged; this contract grants no provider activation.",
+      "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only.",
+      "concurrency": "No cross-process environment rotation or payment state-machine guarantee is introduced.",
+      "idempotency": "Existing operation identities, attempt locks and replay behavior remain unchanged.",
+      "failure": "Reject invalid metadata before creating a provider attempt or contacting the gateway.",
+      "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization.",
+      "observability": "Retain actual regression, fixed test outputs, source identity and explicit external blockers.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/config/default.env.example",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification.",
+      "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped local contract only; actual merchant sandbox and all-domain request qualification remain unverified.",
+      "ambiguity": [
+        "Buyer identity, address/IP, cart and tax fields still require applicable provider certification and implementation review.",
+        "No production activation, credentialed sandbox transaction, 3DS result or charge is established."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local configuration and form transport boundary only; onboarding, merchant credentials and provider certification are external blockers."
+      },
+      "effects": [
+        "Validate merchant metadata before a new provider attempt or checkout request; keep existing status configuration independent of creation metadata.",
+        "Project the optional stored ticket buyer_phone to the Datafast payment request without fallback or new collection."
+      ]
     }
   ]
 }

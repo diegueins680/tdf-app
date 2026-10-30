@@ -51,6 +51,7 @@ import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
+import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
@@ -892,6 +893,7 @@ main = hspec $ do
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
+    DatafastConfigSpec.spec
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
@@ -2763,10 +2765,23 @@ main = hspec $ do
                       , ("DATAFAST_BASE_URL", Just "https://eu-test.oppwa.com")
                       , ("DATAFAST_ENV", Just "sandbox")
                       , ("DATAFAST_TEST_MODE", Nothing)
+                      , ("DATAFAST_MID", Just "1234567890")
+                      , ("DATAFAST_TID", Just "PD123456")
+                      , ("DATAFAST_PSERV", Just "12345678")
+                      , ("DATAFAST_USER_DATA2", Just "Synthetic Merchant")
+                      , ("DATAFAST_VERSIONDF", Just "2")
                       ]
                 -- Only local environment parsing and SQLite queries; no provider requests.
                 withEnvOverrides (fixture "merchant-A") $
                   checkBoth [CheckoutStore.ProviderPayPal] [CheckoutStore.ProviderDatafast]
+                -- API credentials alone do not make a certifiable Dataweb request.
+                forM_ ["DATAFAST_MID", "DATAFAST_TID", "DATAFAST_PSERV", "DATAFAST_USER_DATA2"] $ \field ->
+                  withEnvOverrides (fixture "merchant-A") $
+                    withEnvOverrides [(field, Nothing)] $ do
+                      checkBoth [CheckoutStore.ProviderPayPal] []
+                      statusConfig <- runHandler $ runReaderT ServiceStorefront.loadServiceDatafastEnv
+                        (error "Status configuration must not read unrelated application configuration")
+                      fmap ServiceStorefront.sdfEntityId statusConfig `shouldBe` Right "merchant-A"
                 withEnvOverrides (fixture "merchant-B") $ checkBoth [] []
                 withEnvOverrides (fixture "") $ checkBoth [] []
                 withEnvOverrides (fixture "merchant-A") $
