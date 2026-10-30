@@ -1,0 +1,68 @@
+{
+  "sourceCheckpoint": "7df06d95df036376a8ce9baf72195696d8bac86b",
+  "protectedMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "originalPRHead": "944f821409a3a6d445164adc5403649457008ec3",
+  "mobilePin": "88d583f32bd6ac398dc0c2d7d36ac310568acf3b",
+  "mobilePublished": false,
+  "hostedFinalCI": "NOT_RUN_DEPENDENCY_UNAVAILABLE",
+  "merge": "BLOCKED",
+  "deployment": "NOT_RUN",
+  "checks": {
+    "focusedComponents": {
+      "status": "PASS",
+      "tests": 36,
+      "suites": 5
+    },
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "productionWebBuild": "PASS",
+    "generatedAPIBytes": "PASS",
+    "specificationInventory": "PASS",
+    "specificationTraceability": "PASS",
+    "changedSourceAdmission": "PASS",
+    "catalogAudit": {
+      "status": "PASS",
+      "candidates": 1354,
+      "unreviewed": 0
+    },
+    "catalogRegressions": {
+      "status": "PASS",
+      "tests": 8
+    },
+    "repositoryQuality": {
+      "status": "PASS",
+      "environment": "System Python 3.12 with real Linux fcntl seals; age/age-keygen match repository SHA256 pins. Earlier missing-tool/primary-Python errors preserved as environment failures."
+    },
+    "fullUI": {
+      "status": "FAIL",
+      "passed": 3778,
+      "failed": 1,
+      "pending": 0,
+      "suitesPassed": 326,
+      "suitesFailed": 1,
+      "failedCases": [
+        {
+          "file": "tdf-hq-ui/src/components/__tests__/PromoCodeField.test.tsx",
+          "name": "PromoCodeField clears validation when input is emptied"
+        }
+      ],
+      "execution": "Same assertions, no retries; Node heap raised to 6144 MiB after earlier 2 GiB OOM. No repository test/runtime setting changed."
+    },
+    "isolatedPromoCodeField": {
+      "status": "PASS",
+      "tests": 6,
+      "limitation": "Separate execution, not a replacement for the failed full run. Both product and test match protected main. Root cause not established."
+    },
+    "webkitAndBrowser": "NOT_EXECUTED_BROWSER_ARCHIVES_UNAVAILABLE",
+    "sqlPrivacyRuntime": "NOT_EXECUTED_NO_LOCAL_POSTGRES",
+    "mobileRuntime": "NOT_RUN"
+  },
+  "unresolved": [
+    "Explicit authorization for separate mobile-repository publication",
+    "Fresh final-head hosted CI, including 320px WebKit booking and Markdown/profile/accessibility/privacy checks",
+    "Unresolved full-suite PromoCodeField timing assertion; isolated pass alone does not repair it",
+    "Current independent approval and current review/conversation inspection",
+    "FIFO protected-main admission",
+    "Post-merge authorized deployment and production verification"
+  ]
+}
