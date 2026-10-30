@@ -2803,7 +2803,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
+      "sha256": "dcadb9a3c3a0e459709ca592c2fddec83cff8fd58fedfb328f7e1f5f64790785",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2821,7 +2821,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
+      "sha256": "275b72e62bb51fb4035a4c431b591f077b075a327d6aabff68c2fa22ae782fa4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
