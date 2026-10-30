@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "source": "3f5367f9cef92e59ac0f204a231ab5a28b7fbca7",
+  "protectedMain": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+  "priorPrivateQualifiedSource": "fac9b5c753d4bce139f76fc8729a3081ebcf7af1",
+  "qualifiedAt": "2026-10-29T23:01:13.912269+00:00",
+  "scope": "Normal source composition after artist PR639; retains all157 incoming normative objects and current booking viewport repair, adds existing reviewed track-search requirement. No release or provider activation.",
+  "currentQualification": {
+    "ui": {
+      "numPassedTests": 3759,
+      "numFailedTests": 0,
+      "numPassedTestSuites": 324,
+      "numPendingTests": 0
+    },
+    "types": "PASS",
+    "lint": "PASS",
+    "build": {
+      "initialGzipBytes": 338337,
+      "preloads": 5
+    },
+    "repositoryQuality": "PASS; original platform skips retained",
+    "scopeCiAdmissionModelCatalogUnit": {
+      "passed": 74,
+      "failed": 0
+    },
+    "generatedClients": {
+      "count": 2,
+      "mobileRevision": "7586be92f447faaf05d1f7d7073af6321ad1496a"
+    },
+    "strictCatalog": {
+      "candidates": 1354,
+      "unreviewed": 0,
+      "historyAndReviewFileExactPriorQualifiedSource": true
+    },
+    "normativeObjects": {
+      "incomingPreserved": 157,
+      "current": 158
+    }
+  },
+  "materialCorrespondence": {
+    "wholeBackendExactPriorQualifiedSource": true,
+    "mobilePinExactPriorQualifiedSource": true,
+    "playerSubtreeExactPriorQualifiedSource": true,
+    "incomingBookingPageAndBrowserRepairRetained": true
+  },
+  "priorQualificationNotRelabelled": {
+    "compiledApi": "914 typed operations /2 Raw mounts; existing396 undocumented/25 deferred/8 status gaps; binary da8bae87bc242b375d4f747ed7e3779adc07cb63166118d4b151bf89b677a2d3. Prior build and source identity remain separate; no fresh compilation claimed here.",
+    "native": "39 local cases:36 actual AAC/FLAC decoder cases and3 explicit mocks, across Chrome desktop/phone emulation and Firefox; no WebKit or physical device claim.",
+    "nativeInitialFailure": "26pass/13Firefox navigation failures with zero requests on port4190; independent sentinel probes passed on4186, same39 cases then passed with only local port/artifact destination changed.",
+    "uiInitialFailure": "3758pass/1 saved-position waitFor failure at prior source, cause unproven; retained. One unchanged-source full repeat passed3759. Current composition independently passes3759.",
+    "selectedSql": "Prior track/catalog/source-projection migration SQL checks passed on owned PostgreSQL; no new SQL/HTTP execution claimed here.",
+    "mobile": "Exact published7586 Node20.19.4,653tests/98suites/release-check/Metro status passed on28Oct;175 remains draft and its dependency base is retained."
+  },
+  "localReceiptSha256": {
+    "tdf-report-640-current-main-full-ui-20261029.json": "ce26a8dfd4870e157d6b3251283292d3a224b53d588e656cd66461527b682d23",
+    "tdf-report-640-current-repo-quality-20261029.log": "007fb0af985ec97f6c955aa5a431300667e8dfbb8f5661ee400b50ff63bd0bbc",
+    "tdf-report-640-current-build-20261029.log": "d0bdad3af9e689e1f9027f8f023cd263c55da578b83815dbf461ccfb2b04aa64",
+    "tdf-report-640-current-controls-20261029.log": "400044cd2da9d8e989200e7ddb93c78dbf79893c039c6dd7fc8772c6b32c0845",
+    "tdf-report-640-current-generated-20261029.log": "7d2a142a5c777c72337418aee73ccb90d8ed1133ab33a974013a935f9b81ba2d"
+  },
+  "remainingGates": [
+    "fresh exact-head hosted CI",
+    "independent current-head review",
+    "strict up-to-date base and FIFO admission",
+    "normal protected integration",
+    "separate deployment and runtime verification"
+  ],
+  "wholeRequirementAndRefinement": "UNPROVEN; inherited conditional SMT claims are not full system proof",
+  "productionDeploymentClaimed": false
+}

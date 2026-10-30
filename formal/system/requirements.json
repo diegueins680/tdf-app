@@ -13367,6 +13367,128 @@
         "classification": "PARTIAL",
         "reason": "Bounded worker/UI correction; approval policy, external image rights and source publication remain separate obligations."
       }
+    },
+    {
+      "id": "MEDIA-MUSIC-TRACK-SEARCH-001",
+      "title": "Authorized exact-recording search and synchronous universal selection",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Canonical public track search returns only currently discoverable recording/release/version contexts with eligible same-context assets. The /buscar music region selects that exact recording synchronously through the existing global engine, hides obsolete query actions, distinguishes service failure from empty results, and never substitutes a release first track or starts playback on result arrival.",
+      "authority": "Explicit universal audio implementation directive sections9,13,14,17 and P1; normal protected integration of source-authorization dependency626 and current-head review remain required.",
+      "source": "docs/music-releases/track-search-delivery-2026-10-26.md; tdf-hq/docs/openapi/music-search.yaml",
+      "contract": "formal/system/music-track-search.md",
+      "property": "Every projected track has an eligible same-recording/version public delivery asset at retrieval. Deduplication precedes pagination. Only current-query explicit controls emit a selection, and that command names the rendered recording; stale results, navigation and denial cannot select a different recording.",
+      "actors": [
+        "Public listener",
+        "Existing public music authorization policy",
+        "Global playback engine"
+      ],
+      "preconditions": [
+        "Existing published views, directory normalizer, public feature gate and trusted territory policy are deployed.",
+        "The existing single engine reauthorizes selected sources and rejects obsolete playback generations.",
+        "Finite model assumes ordinary actions on current rendered controls; no source-extracted refinement theorem.",
+        "Stable offset page coverage assumes no concurrent catalog mutation."
+      ],
+      "inputs": [
+        "Trimmed query up to200 Unicode characters; limit1-100/default13; nonnegative offset; trusted edge country",
+        "Draft/committed queries, independent music page, explicit hit Play and release-link navigation",
+        "Nondeterministic request/source responses, failures and authorization revocation"
+      ],
+      "state": {
+        "database": "Current public release/track/recording contexts and authorized same-context source aggregates",
+        "client": "Draft versus committed query, query/page cache key, pending/result/error and exact selected context",
+        "engine": "Existing authoritative player session and source generation; no new audio element or persistence"
+      },
+      "allowedTransitions": [
+        "Match public contexts internally -> retain only authorized nonempty source contexts -> deduplicate recordings -> paginate minimal metadata",
+        "Draft edit -> hide old actions -> request committed query/page with cancellation; stale results remain outside current view",
+        "Explicit Play -> synchronous exact-hit deferred-descriptor command -> current engine source authorization",
+        "Search failure -> independent retry; result arrival/pagination/navigation preserve selected engine session",
+        "Revoked selected source -> selected-recording failure without unrelated fallback",
+        "Malformed or out-of-contract music wire response -> independent music error; directory results and legacy empty-state title remain usable.",
+        "Nonzero source position -> await matching-source metadata under current generation -> restore latest requested seek -> honor current explicit play/pause intent."
+      ],
+      "forbiddenTransitions": [
+        "Project a hidden recording/source through an artist or release-title match without eligible same-context audio.",
+        "Guess the first track of a release or fetch/sign every search result before selection.",
+        "Expose actionable previous-query rows during draft transition or accept obsolete results as current.",
+        "Autoplay on mount/results or introduce a second player/session.",
+        "Treat unavailable service as an observed empty catalog or apply directory geography/profession filters silently to music."
+      ],
+      "effects": [
+        "Read-only private/no-store authorized track metadata; fresh delivery authorization remains separate",
+        "Twelve visible music hits plus one lookahead, independent ES/EN accessible status/retry/navigation controls",
+        "Retain the legacy directory empty-state title, adding scope clarification for active music queries; closed wire-schema field checks reject unexpected keys and malformed hits."
+      ],
+      "authorization": "Reuse requirePublicFeature, trustedEdgeTerritory, published view and music_public_asset_accessible per same recording/version source before JSON projection. Every returned hit must have eligible audio regardless of text match. Selection reauthorizes through the existing engine.",
+      "privacy": "Return only exact context/display metadata and eligible deferred source IDs; technical metadata is numeric bitrate/loudness only. No URL, storage location, master/uploader/rights blob, private index or new listening persistence. Internal database text matching is not a timing noninterference proof.",
+      "concurrency": "AbortSignal plus query/page identity and immediate draft-action hiding. Existing engine generations protect delivery; offset pages have no snapshot guarantee under concurrent catalog mutation. Nonzero rendition restoration waits for matching source metadata, rejects superseded generations, preserves a newer queued seek and never overrides explicit pause.",
+      "idempotency": "GET is read-only; stable catalog requests preserve stable recording/context ordering. Explicit commands use existing engine ownership and do not create media or server jobs.",
+      "failure": "Disabled or failed service stays a recoverable independent music error. Invalid query/pagination fails400; late results do not acquire current actions. Denied selected delivery does not substitute another recording. Malformed music wire data fails closed as a music-only error without crashing directory rendering.",
+      "recovery": "Retry the current search or previous music page without resetting playback. Application-source rollback needs no schema or master changes; coordinate frontend/backend order.",
+      "observability": "Source-bound actual SQL/binding controls, finite design exploration/mutants, component and native-decoder fixtures, actual compiled HTTP qualification and exact-head CI recorded separately. No operational p95 or production acceptance claim.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "formal/system/public-routes.json",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs",
+        "scripts/quality-repo.sh",
+        "playwright.config.mjs",
+        "playwright.music-native.config.mjs",
+        "tdf-hq/docs/openapi/music-search.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-SOURCES-001",
+        "MEDIA-MUSIC-DISCOVERY-001",
+        "MEDIA-MUSIC-PLAYER-001",
+        "AUTH-PUBLIC-001"
+      ],
+      "tests": [
+        "scripts/test-music-track-search.mjs",
+        "scripts/__tests__/music-track-search-model.test.mjs",
+        "tdf-hq-ui/src/api/musicReleases.search.test.ts",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
+        "tdf-hq-ui/src/player/publicMusicTrack.test.ts",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "e2e/web/music-search-native.spec.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [
+        "formal/system/music-track-search-model.mjs"
+      ],
+      "verification": "Finite design model explores two queries/recordings/pages with bounded generations/events and counterexample mutants; not extracted implementation or a refinement theorem. Real SQL/binding, React and native fixtures test implementation boundaries separately. Compiled HTTP/current CI/production obligations remain explicitly scoped.",
+      "evidence": "docs/music-releases/track-search-delivery-2026-10-26.md; original setup/test failures and exact-source qualification archives remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation tests and bounded design exploration; no whole-platform catalog, production delivery or complete formal refinement claim.",
+      "ambiguity": [
+        "Only canonical release audio is covered; non-release sources, historical import, credits/genre/alias and typo-tolerant ranking remain incomplete.",
+        "Bounded model trusts backend authorization/current engine guards; liveness remains conditional and implementation refinement unproven.",
+        "Offset pages can miss/repeat rows as catalog changes.",
+        "Representative SLOs, actual object delivery/revocation, physical devices, fullAA and deployed acceptance remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Exact authorized track discovery and synchronous selection implemented; scoped SQL/component/native evidence and bounded design model do not establish full production catalog completeness or mathematical implementation proof. Compiled HTTP/current-head CI/review/release remain separately recorded."
+      },
+      "allowedVerification": [
+        "TESTED",
+        "MODEL_CHECKED_WITH_BOUNDS",
+        "PARTIAL",
+        "UNVERIFIED"
+      ]
     }
   ]
 }

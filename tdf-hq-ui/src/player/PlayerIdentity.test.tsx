@@ -53,8 +53,8 @@ const choose = async (id: 'A' | 'B', seconds: number) => {
   await waitFor(() => expect(player.status).toBe('playing'));
   act(() => { player.seek(seconds); document.querySelector('audio')!.dispatchEvent(new Event('timeupdate')); });
 };
-const native = new WeakMap<HTMLMediaElement, { paused: boolean }>();
-const nativeState = (audio: HTMLMediaElement) => { const state = native.get(audio) ?? { paused: true }; native.set(audio, state); return state; };
+const native = new WeakMap<HTMLMediaElement, { paused: boolean; readyState: number }>();
+const nativeState = (audio: HTMLMediaElement) => { const state = native.get(audio) ?? { paused: true, readyState: HTMLMediaElement.HAVE_NOTHING }; native.set(audio, state); return state; };
 const originalFetch = globalThis.fetch;
 beforeEach(() => {
   localStorage.clear(); sessionStorage.clear(); snapshot = async () => null; unexpectedNetwork.mockClear(); globalThis.fetch = unexpectedNetwork;
@@ -62,8 +62,17 @@ beforeEach(() => {
   Object.defineProperty(globalThis, 'ResizeObserver', { configurable: true, value: class { observe() {} unobserve() {} disconnect() {} } });
   jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockImplementation(function (this: HTMLMediaElement) { return this.src; });
   jest.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockImplementation(function (this: HTMLMediaElement) { return nativeState(this).paused; });
+  jest.spyOn(HTMLMediaElement.prototype, 'readyState', 'get').mockImplementation(function (this: HTMLMediaElement) { return nativeState(this).readyState; });
   jest.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(function (this: HTMLMediaElement) {
-    this.currentTime = 0; queueMicrotask(() => { this.dispatchEvent(new Event('loadedmetadata')); this.dispatchEvent(new Event('timeupdate')); });
+    nativeState(this).readyState = HTMLMediaElement.HAVE_NOTHING;
+    this.currentTime = 0;
+    const source = this.getAttribute('src');
+    queueMicrotask(() => {
+      if (!source || this.getAttribute('src') !== source) return;
+      nativeState(this).readyState = HTMLMediaElement.HAVE_METADATA;
+      this.dispatchEvent(new Event('loadedmetadata'));
+      this.dispatchEvent(new Event('timeupdate'));
+    });
   });
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(function (this: HTMLMediaElement) { nativeState(this).paused = true; this.dispatchEvent(new Event('pause')); });
   jest.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(function (this: HTMLMediaElement) { nativeState(this).paused = false; this.dispatchEvent(new Event('playing')); return Promise.resolve(); });

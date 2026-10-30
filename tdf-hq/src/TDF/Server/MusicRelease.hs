@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -8,10 +9,11 @@ module TDF.Server.MusicRelease
 
 import Control.Exception (throwIO, try)
 import Control.Monad (unless, when)
+import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Crypto.Hash (Digest, SHA256, hash)
-import Data.Aeson (ToJSON, Value, encode, object, (.=))
+import Data.Aeson (Result(..), ToJSON, Value, encode, fromJSON, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -47,6 +49,7 @@ musicReleasePublicServer =
   :<|> getPublicRelease
   :<|> Assets.getPublicMusicAssetAccess
   :<|> recordAnonymousPlaybackEvent
+  :<|> searchPublicTracks
 
 musicReleaseProtectedServer :: AuthedUser -> ServerT MusicReleaseProtectedAPI AppM
 musicReleaseProtectedServer user =
@@ -925,3 +928,76 @@ allStates =
   , "changes_requested","approved","scheduled","published","suspended","cancelled"
   , "replacement_pending","takedown_scheduled","withdrawn"
   ]
+
+-- | Keep this endpoint after the established handlers: its authorized metadata
+-- projection does not change release-detail or library visibility semantics.
+searchPublicTracks :: Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> AppM (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
+searchPublicTracks edgeCountry query requestedLimit requestedOffset =
+  search `catchError` \failure -> throwError failure
+    { errHeaders = ("Cache-Control", "private, no-store")
+        : filter ((/= "Cache-Control") . fst) (errHeaders failure)
+    }
+  where
+    search :: AppM (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
+    search = do
+      requirePublicFeature
+      territory <- Assets.trustedEdgeTerritory edgeCountry
+      let rawQuery = T.strip (fromMaybe "" query)
+          limit = fromMaybe 13 requestedLimit
+          offset = fromMaybe 0 requestedOffset
+      when (T.length rawQuery > 200) $
+        throwError (badRequest "q is limited to 200 characters")
+      unless (limit >= 1 && limit <= 100 && offset >= 0) $
+        throwError (badRequest "limit must be 1-100 and offset must be nonnegative")
+      values <- if T.null rawQuery then pure [] else jsonRows
+        "WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query)\
+        \, matching AS MATERIALIZED (\
+        \ SELECT track.id track_id,recording.id recording_id,public.id release_id,\
+        \   public.release_version_id,public.canonical_slug release_slug,public.title release_title,\
+        \   recording.canonical_title title,\
+        \   COALESCE(NULLIF(track.display_artist,''),public.display_artist) display_artist,\
+        \   recording.duration_ms,public.published_at,track.disc_number,track.track_number\
+        \ FROM music_public_release public\
+        \ JOIN music_release_track track ON track.release_version_id=public.release_version_id\
+        \ JOIN music_recording recording ON recording.id=track.recording_id CROSS JOIN input\
+        \ WHERE strpos(lower(recording.canonical_title),lower(input.raw_query))>0\
+        \   OR strpos(lower(track.display_artist),lower(input.raw_query))>0\
+        \   OR strpos(lower(public.title),lower(input.raw_query))>0\
+        \   OR strpos(lower(public.display_artist),lower(input.raw_query))>0\
+        \   OR (input.query<>'' AND (\
+        \     strpos(directory_normalize_text(recording.canonical_title),input.query)>0\
+        \     OR strpos(directory_normalize_text(track.display_artist),input.query)>0\
+        \     OR strpos(directory_normalize_text(public.title),input.query)>0\
+        \     OR strpos(directory_normalize_text(public.display_artist),input.query)>0)))\
+        \, authorized AS MATERIALIZED (SELECT context.*,delivery.sources FROM matching context\
+        \ JOIN LATERAL (SELECT jsonb_agg(jsonb_build_object(\
+        \   'assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,\
+        \   'technicalMetadata',jsonb_strip_nulls(jsonb_build_object(\
+        \     'bitrate_kbps',CASE WHEN jsonb_typeof(asset.technical_metadata->'bitrate_kbps')='number'\
+        \       THEN asset.technical_metadata->'bitrate_kbps' END,\
+        \     'loudness_lufs',CASE WHEN jsonb_typeof(asset.technical_metadata->'loudness_lufs')='number'\
+        \       THEN asset.technical_metadata->'loudness_lufs' END)))\
+        \   ORDER BY asset.asset_role,asset.created_at,asset.id) sources\
+        \   FROM music_asset asset WHERE asset.release_version_id=context.release_version_id\
+        \     AND asset.recording_id=context.recording_id\
+        \     AND asset.asset_role IN ('stream_audio','preview_audio')\
+        \     AND music_public_asset_accessible(asset.id,?::text)\
+        \   HAVING count(*)>0) delivery ON TRUE)\
+        \, chosen AS (SELECT DISTINCT ON (recording_id) * FROM authorized\
+        \ ORDER BY recording_id,published_at DESC,release_id,disc_number,track_number,track_id)\
+        \ SELECT jsonb_build_object('trackId',track_id,'recordingId',recording_id,\
+        \   'releaseId',release_id,'releaseVersionId',release_version_id,\
+        \   'releaseSlug',release_slug,'releaseTitle',release_title,'title',title,\
+        \   'displayArtist',display_artist,'durationMs',duration_ms,'sources',sources)\
+        \ FROM chosen ORDER BY published_at DESC,release_id,disc_number,track_number,track_id\
+        \ LIMIT ? OFFSET ?"
+        [ PersistText rawQuery, PersistText rawQuery, optionalText territory
+        , PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)
+        ]
+      hits <- mapM decodeHit values
+      pure (addHeader ("private, no-store" :: Text) hits)
+    decodeHit :: Value -> AppM MusicPublicTrackSearchHit
+    decodeHit value = case fromJSON value of
+      Success hit -> pure hit
+      Error _ -> throwError err500
