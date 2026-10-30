@@ -1,0 +1,45 @@
+Independent bounded final review of current-main event-finance RANGE composition, 2026-10-30.
+
+Qualified source: ea9565ec8be30f250cef8828927d054759329256.
+Protected main baseline: 0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5.
+Previous published PR671 head: a7ae597f7c111d6858561280cdf080d4e62b0d70.
+
+Finding: zero blocking defects found in the reviewed ROOT-authored qualification/seal/publication harnesses and the supplied completed evidence. This is a scoped local engineering review, not current-head GitHub approval, integration permission, whole-system proof or an independently repeated test run. I authored the isolated source reconciliation; ROOT independently reviewed that source preparation. My independent peer-review scope here is ROOT's qualification machinery, raw receipts and source/artifact correspondence.
+
+I independently checked the normal two merge parents [previous671, main0bd], clean current HEAD, both owned backend files byte-exact previous671, and that only those two backend paths differ from main. The four legitimate incoming MusicRelease/OpenAPI files are retained rather than overwritten. UI, workflows, scripts, ops, dependencies and pinned Mobile correspond to main. All 159 incoming main requirement objects and the unchanged RANGE requirement produce 160 total. Eight historical report/archive/review/manifest blobs are byte-exact previous671. Original671 campaign contrast failure remains unrepaired with root cause UNKNOWN; this merge is not a contrast correction. Currency child673 and unmerged contract/cleanup work were not imported.
+
+Completed empirical qualification supplied by ROOT: canonical Stack --force-dirty build actual exit0; raw targeted log15 examples/0 failures/0 pending; raw full log4060 examples/0 failures/21 inherited pending. I read the raw result suffixes, checked native receipts, and rehashed the actual test binary (4b2dfac7766dffbcd3734c5c1853a4b6f9e3415c752e7d23020a72bc05fc4554) and actual test-target Version.o (c3786051e5bcf06502f9a25e6d82aaed18fd8b8094f4c84d89e27596e8799db5). Both contain the current EA source literal; the build log explicitly compiles TDF.Version. No serving executable, deployment or provider identity is established.
+
+Independent mechanical read-only checks rehashed 1,429 registered filesystem/Git/Mobile source bindings, the complete 987-file tracked backend input set, and all 52 assurance evidence artifacts. Formal provenance matches current sources, revision, Mobile pin, digest and clean flag. Assurance execution is actual0, but all 160 whole requirements and all 320 implementation/refinement obligations remain UNPROVEN. The 11 inherited source-derived SMT results retain their translation assumptions; formal release remains BLOCKED and executionAllowed false. No new complete theorem is established.
+
+The seal's nine isolated in-memory evidence corruptions each produce the intended assertion rejection, with valid evidence accepted before/after and disk artifacts unchanged. I reviewed the actual extracted binding function and controls; these are evidence-binding fault checks, not production source mutants or proof of the whole verifier. The pre-use UTF-8 ls-tree quoting mismatch and corrected NUL path enumeration control are retained honestly as harness diagnostics. I independently used NUL enumeration for the 987-path comparison. Seal actual exit0 is separately recorded in seal-execution.json, with script and output hashes matching reviewed bytes.
+
+ROOT's publish/verify-committed scripts keep a new report-only child, require exactly four report paths, check current Git/source parity, and verify unique safe regular archive members against their manifest and owned evidence bytes. Final containing commit/archive verification and fresh hosted CI are future actions at this review time. A supplemental browser precision counterexample is a separate open cross-layer limitation: unsafe JSON numbers change exported cents and safe large cents can display a one-cent error. It does not alter the source-native qualification or repair that defect, and cannot be presented as a mounted browser or production incident.
+
+Historical assurance limits are preserved: original15-case red12/3 and two source fault variants/three actual assertion failures remain historical; they were not rerun on this composition. Exact owned handler/test bytes support reuse of their scoped evidence, while the fresh native suite separately qualifies the real four-file incoming backend context. Direct typed Handler/owned SQLite tests do not prove authenticated HTTP policy, production PostgreSQL extreme-value reachability, currency consistency or serializable snapshots. Native SIGTERM cleanup entry was inspected, but interruption/process-tree behavior is not fault-tested; no universal cancellation guarantee is claimed. The old3900-second outer orchestrator is not reused. Current protected-head review, required CI, FIFO, main freshness and later child673 reconciliation remain required before integration.
+
+No test, build, server, database, Docker, provider, remote mutation or source edit was executed during this final review. Independent rehash checks completed successfully. Detailed check receipt: /private/tmp/tdf-event-finance-range-main642-independent-checks-20261030.json, SHA256 35356d3bc6b05bc8b9f55f49f0859b0afa8ccb57366a65f270a554673379cfe4.
+
+Exact evidence hashes (SHA256):
+- source-correspondence.json: 6ba68659dc715ce0bac114ab570d388e17e932f9e5410904b343bbc8742d6458
+- native-quality.json: 9bbb7003ced7cb67740e6a412fb7f25e65a5e237e165ca3cada31cf7f6103dfe
+- native-force-dirty-confirmed.json: b548dbc1dcc7c73e4038c3d50beaf83da49f7351993d768f23884a4ff01e804f
+- native-qualified-inputs.json: a16ff539f3dc73dbe637b91f93e7342626dd7d4b8dcfe739b1fcbb016237cfb1
+- root-quality-result.json: c04218f3e45cf4de477e80b7bd5d05b0a7c856944f2f9ee6ad67a6e114282856
+- assurance-execution.json: 8e91359df1333fe6640dfcca1c8f7fa9fa3a17105e76a2e044b21c3a5c13321c
+- assurance-committed/sources.json: 6a7d7306ac27d15aa69329a5973e104c45bb5572df15566ce3e42028a4d830c8
+- assurance-committed/report.json: a1cce7f7bcfbbac360f07348afdf39f325af219f99c7e91016a3741ed9760376
+- qualified-build.log: ec148734bed695bd7b1e39879c0713b52cadd6cf4c1fde67a0b47a6cf6071c9f
+- qualified-targeted.log: 54bd83e8060597b9a8c454af15c22804324ac9c0d2f69e9de6600bda481eb683
+- qualified-full.log: 9d3350fe41d81a358d359b4e9044623d41a25f59febf301901eb360c006a78f6
+- seal-binding-controls.json: 095c74600afe95f8185319cf211576b0b1e15847cea5ac28b1911ab4e796eead
+- seal-path-enumeration-control.json: 8373a872a3d86b924fd6e4708817c801e490b97d2f1d12e13cb43e3d0a3086a0
+- seal-execution.json: c66b1a6ab913ff73842b08fbc75f07cfae840f92b8c51fcbefd18dd6e75340a4
+- tdf-event-finance-range-main642-root-quality-20261030.py: 3bcf402b3dc93318d1a091b3e34383884f8d558a95a803bc87202e106c44252c
+- tdf-event-finance-range-main642-qualify-native-20261030.py: c37daee216379a1db6c8731478b6c943f99a93c0a283fd43162e408d68c3769f
+- tdf-event-finance-range-main642-seal-20261030.py: 1f0d6ab2fc0e3bb852bbd9d7fad3a3089c52f95543570ac92b8f026b0edf07a8
+- tdf-event-finance-range-main642-seal-controls-20261030.py: 7567870b2c3ca502c72284a57ba7208540bd9f90af72a0884ca575a4769af008
+- tdf-event-finance-range-main642-verify-committed-20261030.py: 0f8ee63e0a5f5071108935b6556b4feecbaa632257cc25296ad6cdc040994fe6
+
+Publisher-only scope addendum, 2026-10-30.
+Reviewed the updated report design and all five curated precision artifacts, which are byte-exact the independent source-only Node VM probe artifacts. Current publisher SHA256: 4374e24de9baa9fd5c1f7ea8465505b531a06e5a54e4f98e664251906f11d5f2. The new openCrossLayerDefect UI-EVENT-FINANCE-PRECISION-001 is explicitly FAILED, separate and unfixed, and not a refutation of the bounded server host-Int range requirement or a newly registered catalog theorem. The report records very large amounts, stubbed transport/locale, no mounted browser/HTTP/database execution, production exposure UNKNOWN and correction NOT_IMPLEMENTED; remainingRisks retains that distinction. Its P2/low ordinary exposure label is prioritization based on the large-value counterexamples, not measured production prevalence. No blocker found in these additions. Source/native/assurance/seal conclusions above are unchanged. This addendum reviews publication scope only and grants no current-head GitHub approval or precision repair claim.

@@ -13562,6 +13562,77 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "PAY-EVENT-REPORT-RANGE-001",
+      "title": "Exact bounded event finance and budget reports",
+      "statement": "Every successfully reported event-finance and budget actual amount equals its exact mathematical aggregate and fits host Int. Reject an unreportable amount instead of wrapping, and reject a budget-line edit with an unreportable actual before its first write.",
+      "domain": "PAY",
+      "authority": "Inferred from owner financial-integrity mandate, existing event DTO/model bounds and existing canonical ticket-revenue range refusal.",
+      "source": "formal/system/event-finance-report-range.md",
+      "contract": "formal/system/event-finance-report-range.md",
+      "property": "Integer arithmetic precedes signed Int checks on all16 mandatory and2 optional summary monetary fields and budget actuals; existing supported negative balances, filters and budget fallback behavior remain.",
+      "actors": [
+        "Authorized event manager",
+        "Event budget/finance report reader"
+      ],
+      "preconditions": [
+        "Existing authorization and stored dimension/metadata validation",
+        "Rows selected by the existing read/filter boundaries"
+      ],
+      "inputs": [
+        "Host Int planned/manual/legacy ticket amounts",
+        "Int64 captured ticket revenue",
+        "Optional event budget"
+      ],
+      "state": {
+        "initial": "Selected persisted report inputs",
+        "terminal": [
+          "Exact representable response",
+          "HTTP500 range refusal before budget edit writes"
+        ]
+      },
+      "allowedTransitions": [
+        "Accumulate and subtract exact Integer amounts before narrowing",
+        "Return supported negative net, liability and variance amounts",
+        "Precheck budget actual before updating its row"
+      ],
+      "forbiddenTransitions": [
+        "Return a wrapped aggregate as successful monetary evidence",
+        "Narrow canonical subtotal before combining with legacy revenue",
+        "Commit budget fields before refusing an unreportable actual"
+      ],
+      "effects": [
+        "Read-only monetary reporting",
+        "Existing authorized budget update only after its observed actual fits"
+      ],
+      "authorization": "No change to event management, strict-admin, provider or settlement authority.",
+      "privacy": "Synthetic native handler fixtures contain no real customer/provider data.",
+      "concurrency": "Existing separate reads remain; the prewrite check concerns observed rows and does not establish a serializable financial snapshot.",
+      "idempotency": "The same selected rows give the same exact amounts; no new provider calls or retry authority.",
+      "failure": "HTTP500 supported-reporting-range refusal; no clamping or silently discarded rows. Range-refused budget updates do not begin their existing write.",
+      "recovery": "Use authorized source correction; retain original records and evidence rather than modifying financial data to hide a mismatch.",
+      "observability": "Source-bound native handler logs, baseline assertion counterexamples, mutation controls and CI source selection.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "15 native real-handler regression cases cover12 overflowing scenarios and3 compatibility cases; actual per-source execution receipts are separate. No full refinement proof.",
+      "evidence": "formal/system/event-finance-report-range.md; reports/event-finance-report-range-2026-10-29.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Source-bounded correction; runtime qualification recorded against exact commits.",
+      "ambiguity": [
+        "Production PostgreSQL reachability of every type-extreme fixture is not established.",
+        "Browser53-bit integer precision, historical currency consistency, provider finality and snapshot serialization are separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite native handler regression scope; complete implementation/refinement and production PostgreSQL/provider/deployment correspondence remain unproven."
+      }
     }
   ]
 }
