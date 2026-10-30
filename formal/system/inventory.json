@@ -1,12 +1,11 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "f7d2e5a3eb599adeb16b096c60649116f495bb31",
+  "mobileRevision": "7586be92f447faaf05d1f7d7073af6321ad1496a",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
       ".github/workflows/build.yml",
-      ".github/workflows/campaign-platform.yml",
       ".github/workflows/catalog-list-audit.yml",
       ".github/workflows/check-messaging-token.yml",
       ".github/workflows/check-mobile-distribution.yml",
@@ -58,6 +57,7 @@
       "e2e/web/music-player-integration.spec.mjs",
       "e2e/web/music-player-native.spec.mjs",
       "e2e/web/music-player.spec.mjs",
+      "e2e/web/music-search-native.spec.mjs",
       "e2e/web/notification-navigation.spec.mjs",
       "e2e/web/persona-public.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
@@ -99,8 +99,6 @@
       "ops/hetzner/recovery-tools.json",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/hetzner/release-journal.py",
-      "ops/hetzner/tdf-postgres-backup.service",
-      "ops/hetzner/tdf-postgres-backup.timer",
       "ops/privacy/request-workflow.json"
     ],
     "package-lock.json": [
@@ -118,7 +116,6 @@
       "scripts/__tests__/artist-import-idempotency.test.mjs",
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
-      "scripts/__tests__/campaign-tiktok-ui.test.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
@@ -185,6 +182,7 @@
       "scripts/__tests__/music-preview-pipeline.test.mjs",
       "scripts/__tests__/music-s3-test-xml.test.mjs",
       "scripts/__tests__/music-test-database.test.mjs",
+      "scripts/__tests__/music-track-search-model.test.mjs",
       "scripts/__tests__/music-worker-build.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
@@ -540,6 +538,7 @@
       "scripts/test-music-release-worker-runtime.mjs",
       "scripts/test-music-s3-local.mjs",
       "scripts/test-music-source-projection.mjs",
+      "scripts/test-music-track-search.mjs",
       "scripts/test-music-worker-image.mjs",
       "scripts/test-new-specification-surfaces.py",
       "scripts/test-notification-alert-context.mjs",
@@ -628,55 +627,6 @@
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
       "scripts/wrap-catalog-canonical-schema.mjs"
-    ],
-    "services": [
-      "services/campaign-platform/backup.py",
-      "services/campaign-platform/backup_control.py",
-      "services/campaign-platform/backup_crypto.py",
-      "services/campaign-platform/deploy.py",
-      "services/campaign-platform/deploy_sandbox.py",
-      "services/campaign-platform/domain.py",
-      "services/campaign-platform/drive_backup.py",
-      "services/campaign-platform/facebook.py",
-      "services/campaign-platform/graphics.py",
-      "services/campaign-platform/import_rojo.py",
-      "services/campaign-platform/media.py",
-      "services/campaign-platform/model_check.py",
-      "services/campaign-platform/monitor.py",
-      "services/campaign-platform/notifications.py",
-      "services/campaign-platform/planning.py",
-      "services/campaign-platform/providers.py",
-      "services/campaign-platform/qualify_media.py",
-      "services/campaign-platform/requirements.txt",
-      "services/campaign-platform/schema.sql",
-      "services/campaign-platform/server.py",
-      "services/campaign-platform/stream_backup_object.py",
-      "services/campaign-platform/tdf-campaign-api.service",
-      "services/campaign-platform/tdf-campaign-backup-request.service",
-      "services/campaign-platform/tdf-campaign-backup-request.timer",
-      "services/campaign-platform/tdf-campaign-backup.service",
-      "services/campaign-platform/tdf-campaign-backup.timer",
-      "services/campaign-platform/tdf-campaign-monitor.service",
-      "services/campaign-platform/tdf-campaign-monitor.timer",
-      "services/campaign-platform/tdf-campaign-worker.service",
-      "services/campaign-platform/tests/test_backups.py",
-      "services/campaign-platform/tests/test_domain.py",
-      "services/campaign-platform/tests/test_facebook.py",
-      "services/campaign-platform/tests/test_http.py",
-      "services/campaign-platform/tests/test_tiktok.py",
-      "services/campaign-platform/tests/test_tiktok_sandbox.py",
-      "services/campaign-platform/tiktok.py",
-      "services/campaign-platform/tiktok_environment.py",
-      "services/campaign-platform/tiktok_token.py",
-      "services/campaign-platform/ui/app.js",
-      "services/campaign-platform/ui/index.html",
-      "services/campaign-platform/ui/style.css",
-      "services/campaign-platform/ui/tdf-logo.png",
-      "services/campaign-platform/ui/tdf-logo.svg",
-      "services/campaign-platform/ui/tiktok.js",
-      "services/campaign-platform/verify_drive_backup.py",
-      "services/campaign-platform/worker.py",
-      "services/campaign-platform/youtube_upload.py"
     ],
     "streaming": [
       "streaming/docker-compose.streaming.yml",
@@ -816,6 +766,7 @@
       "tdf-hq-ui/src/api/meta.ts",
       "tdf-hq-ui/src/api/musicReleases.money.test.ts",
       "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+      "tdf-hq-ui/src/api/musicReleases.search.test.ts",
       "tdf-hq-ui/src/api/musicReleases.ts",
       "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
@@ -1019,6 +970,8 @@
       "tdf-hq-ui/src/features/ddex/PartnerManagementPage.tsx",
       "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
       "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+      "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
+      "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
       "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts",
       "tdf-hq-ui/src/features/fanclubs/FanClubPreview.test.tsx",
       "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
@@ -1172,6 +1125,7 @@
       "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
       "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
       "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+      "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx",
       "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
       "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
       "tdf-hq-ui/src/pages/DistributionLandingPage.test.tsx",
@@ -1258,7 +1212,6 @@
       "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
       "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
       "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
       "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
       "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
       "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
@@ -1370,6 +1323,8 @@
       "tdf-hq-ui/src/player/analytics.test.ts",
       "tdf-hq-ui/src/player/analytics.ts",
       "tdf-hq-ui/src/player/assetAccess.ts",
+      "tdf-hq-ui/src/player/publicMusicTrack.test.ts",
+      "tdf-hq-ui/src/player/publicMusicTrack.ts",
       "tdf-hq-ui/src/player/queue.test.ts",
       "tdf-hq-ui/src/player/queue.ts",
       "tdf-hq-ui/src/player/sourceMetadata.test.ts",
@@ -1545,6 +1500,7 @@
       "tdf-hq/docs/openapi/directory.yaml",
       "tdf-hq/docs/openapi/interactions.yaml",
       "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
+      "tdf-hq/docs/openapi/music-search.yaml",
       "tdf-hq/docs/openapi/reviews.yaml",
       "tdf-hq/docs/openapi/social-v2.yaml",
       "tdf-hq/docs/openapi/trials-identity.yaml",
@@ -2821,12 +2777,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-1b60139feb4d9fb0",
-      "path": ".github/workflows/campaign-platform.yml",
-      "sha256": "ee39e82787a587a79eccd8f69cb74cbd5d389430674c2930d571eaee08b2e008",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-e322a9d58d6bbd4b",
       "path": ".github/workflows/catalog-list-audit.yml",
       "sha256": "041b23f7325b9960d0f8158e15a154cd205b02ae742c64dc37f65cd7b52e20f5",
@@ -2853,7 +2803,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "de8329e17a8315a54f65864b1ef0f28302ecde59a70428b6456808a4f30ab1ab",
+      "sha256": "79e787c976357325b37ebadf8f902858a235f59b57a21f2cf5ca11005456b8dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3109,6 +3059,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8ecacd2bef771673",
+      "path": "e2e/web/music-search-native.spec.mjs",
+      "sha256": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
       "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
@@ -3129,7 +3085,7 @@
     {
       "id": "SURFACE-a2826b2994431e77",
       "path": "e2e/web/public-welcome.spec.mjs",
-      "sha256": "5102a2614b4f1ba3f9f94a8f65666e1610cfdb7172513ee8edf938028142c494",
+      "sha256": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3319,18 +3275,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-8b539014a90ca8b5",
-      "path": "ops/hetzner/tdf-postgres-backup.service",
-      "sha256": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-98b8d3b883a561d9",
-      "path": "ops/hetzner/tdf-postgres-backup.timer",
-      "sha256": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-9c4c4880c3a2f1b4",
       "path": "ops/privacy/request-workflow.json",
       "sha256": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -3397,12 +3341,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-f351982a52e6f37a",
-      "path": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "sha256": "cecd739fd225cd148b4eca7ed0c725b8a52fa3eafccefb53ca8fa0f5b2493eee",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
       "sha256": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
@@ -3423,7 +3361,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "79b6186e102713934dfba527d7ce5c69ed9bcfad75db9e771622bdcd7886a8b0",
+      "sha256": "91549b10ba840aae75743b8954498f4e2d05be31beeb56deb51b7d9fbfa33143",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3799,6 +3737,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3312c4a6a58e0c08",
+      "path": "scripts/__tests__/music-track-search-model.test.mjs",
+      "sha256": "2e61f61fdd8dac32222ed6d9e650b960646f7dbc87ac62237004902e17957b28",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-523809a7dcf5c848",
       "path": "scripts/__tests__/music-worker-build.test.mjs",
       "sha256": "48ed0c6d1a7308dae7e8d1c6370d2ce14243bd7a1caf80f6b07b1bf5a6e62dcf",
@@ -4155,7 +4099,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "c89aaa9963b6cb6aa80e224724bda30972f2a1f4d23dae5f3bdeaec8c40c0ab0",
+      "sha256": "cbc5ee9e7ce0e57797b5f35ee8e384349be44c07be4c0c3ed2481c0fdd652ea1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4845,7 +4789,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "85f1846038dd659ed99ac85058ecb0d1f0707fd95f819cadb397e2e39b437f68",
+      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5319,7 +5263,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "717ca96ab62100ea5bd349ad0365a0906461ea1d55e170c1b9e605b72c3404ab",
+      "sha256": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5929,6 +5873,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ec814236e4eab95f",
+      "path": "scripts/test-music-track-search.mjs",
+      "sha256": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-de9702047ae5b45f",
       "path": "scripts/test-music-worker-image.mjs",
       "sha256": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
@@ -6171,7 +6121,7 @@
     {
       "id": "SURFACE-0d2014021bc7262a",
       "path": "scripts/test-specification-inventory.py",
-      "sha256": "803f1a3ba0e54e29c3f7ea8fcc2c7e263a0b1c450c0e358912091bd745332369",
+      "sha256": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6454,288 +6404,6 @@
       "id": "SURFACE-531960a153f9c90c",
       "path": "scripts/wrap-catalog-canonical-schema.mjs",
       "sha256": "ed89532f6e41753b0b766025eb962809bca9908e45fd4c3d6d1746bb06747b9b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-9063cab573083a3b",
-      "path": "services/campaign-platform/backup.py",
-      "sha256": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-b8887d3370b10421",
-      "path": "services/campaign-platform/backup_control.py",
-      "sha256": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-18debf63a647c391",
-      "path": "services/campaign-platform/backup_crypto.py",
-      "sha256": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-bf7873f7b8d0b162",
-      "path": "services/campaign-platform/deploy.py",
-      "sha256": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-2f4e2a6c9efb2ce4",
-      "path": "services/campaign-platform/deploy_sandbox.py",
-      "sha256": "5df04f820eb7c868703359feec18848063ddb9183f4c4a57fb50f5f091d299f2",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-4d817f76014e9965",
-      "path": "services/campaign-platform/domain.py",
-      "sha256": "fcbc5b19bce6fdcaa61dfcb08ab983c3471f3eb26e3b3a163955cec8240fbbcf",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-26928743f6259303",
-      "path": "services/campaign-platform/drive_backup.py",
-      "sha256": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-876aa897d40f19b7",
-      "path": "services/campaign-platform/facebook.py",
-      "sha256": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-111d11475a9b877e",
-      "path": "services/campaign-platform/graphics.py",
-      "sha256": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-3989ae6c13229e72",
-      "path": "services/campaign-platform/import_rojo.py",
-      "sha256": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-00d53256ed14388b",
-      "path": "services/campaign-platform/media.py",
-      "sha256": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-c882a5d167f0f60d",
-      "path": "services/campaign-platform/model_check.py",
-      "sha256": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a282a0c72e09f7fd",
-      "path": "services/campaign-platform/monitor.py",
-      "sha256": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-03f680412847c2c7",
-      "path": "services/campaign-platform/notifications.py",
-      "sha256": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-9bb212c5068f9498",
-      "path": "services/campaign-platform/planning.py",
-      "sha256": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-dd915c4b36f5a11e",
-      "path": "services/campaign-platform/providers.py",
-      "sha256": "d1ad2e1e217950dd696fcfb644b405e95b31dbd03837c72ba9fbb09d41b29fc9",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-15fcf4a4a5ebcfd1",
-      "path": "services/campaign-platform/qualify_media.py",
-      "sha256": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-9797e32784d6619e",
-      "path": "services/campaign-platform/requirements.txt",
-      "sha256": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a81a32947bfdf9ef",
-      "path": "services/campaign-platform/schema.sql",
-      "sha256": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-046f5b5bc5783c06",
-      "path": "services/campaign-platform/server.py",
-      "sha256": "c1f18b484bad0da2e8d7a1296b6d4c94c1e5af2f5499cc30a6c0c4a95b042e65",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-f0b93350834777ea",
-      "path": "services/campaign-platform/stream_backup_object.py",
-      "sha256": "4c12c6d15fb8a656e350a341c3840ab08fad59525f277b0f55a4b863c4ed611c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-66651f2b3df90bd7",
-      "path": "services/campaign-platform/tdf-campaign-api.service",
-      "sha256": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a50ac0975f1b039f",
-      "path": "services/campaign-platform/tdf-campaign-backup-request.service",
-      "sha256": "c7de57347a940bce347d2b09b57af48ce86f9dcd1a77da01fe8baa828b75ea71",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-18bb8ba5386eb726",
-      "path": "services/campaign-platform/tdf-campaign-backup-request.timer",
-      "sha256": "c0b20d73362c8138c3b217b2c5d99347b3f19441b0c67c3d76424c86bb8c65e6",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-7bb29e6f7830138a",
-      "path": "services/campaign-platform/tdf-campaign-backup.service",
-      "sha256": "467d499ec9c0091c612ec1448dca9c39d5eaffbde3b213fb28d853e3cb0a0ae6",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-5f0fe5c5ea932bb1",
-      "path": "services/campaign-platform/tdf-campaign-backup.timer",
-      "sha256": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-c1cfa7121a40fc4e",
-      "path": "services/campaign-platform/tdf-campaign-monitor.service",
-      "sha256": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-83ba6d77e61aa929",
-      "path": "services/campaign-platform/tdf-campaign-monitor.timer",
-      "sha256": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-c5b1752afe7e5770",
-      "path": "services/campaign-platform/tdf-campaign-worker.service",
-      "sha256": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ecde5cc0775d2f56",
-      "path": "services/campaign-platform/tests/test_backups.py",
-      "sha256": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-1d9e726769e9e1db",
-      "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "b7f065e5304d1d6b3227f4d02a6bccce8150ad17f6b1c7473ba17d41f6dd59f1",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-e9f572da30bc74b8",
-      "path": "services/campaign-platform/tests/test_facebook.py",
-      "sha256": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-682ec32ac659d8cb",
-      "path": "services/campaign-platform/tests/test_http.py",
-      "sha256": "3048528c17bf1ca8b467e8b75695d8a913be178f9bd9fa0e734990f389b26bda",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-bfa885cfbaf8b851",
-      "path": "services/campaign-platform/tests/test_tiktok.py",
-      "sha256": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-72f554acbb1033be",
-      "path": "services/campaign-platform/tests/test_tiktok_sandbox.py",
-      "sha256": "ade2a1116695b18b0b5baa687977ba2ec8114561498f64a6e9aa8f19f8be9cf6",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-9a16e9f2b660bf49",
-      "path": "services/campaign-platform/tiktok.py",
-      "sha256": "b66fa94ec5e2c2fb7d6887cc0a1971bad6b9f51ea399fe6e80e2151c4cd39ead",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-84fa59a6dd1219e2",
-      "path": "services/campaign-platform/tiktok_environment.py",
-      "sha256": "100ddc29190a7d964b5a905958834b89908ce430e9aee7452fd50ab7d1b0e572",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-dbce437071d03bba",
-      "path": "services/campaign-platform/tiktok_token.py",
-      "sha256": "58d634247f9e327db9333ca61b6f2df6ca7bc74eac894b2ff500901dc89b6a35",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-39b88f2b72e34e12",
-      "path": "services/campaign-platform/ui/app.js",
-      "sha256": "411586abd00bc33734bd40be64c47bc7568fbc68864189ce80ab2a1aa2e7214d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-3921e200531965a2",
-      "path": "services/campaign-platform/ui/index.html",
-      "sha256": "6a8832b2c47a8752e94990578477727d5c570b87fcc1ed38b2fa8901ed9f57dc",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-28072cb5d8ec61ba",
-      "path": "services/campaign-platform/ui/style.css",
-      "sha256": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-3219b339bd433408",
-      "path": "services/campaign-platform/ui/tdf-logo.png",
-      "sha256": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-d483edd735c01f0f",
-      "path": "services/campaign-platform/ui/tdf-logo.svg",
-      "sha256": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-0988cfc5d5669fc0",
-      "path": "services/campaign-platform/ui/tiktok.js",
-      "sha256": "2f810ccb4c4d8723a1e81aa0f86da761ce11291c5e58987c4ee779b75814f26d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-cec7709e0bd0d7c4",
-      "path": "services/campaign-platform/verify_drive_backup.py",
-      "sha256": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-eabde3f755919b20",
-      "path": "services/campaign-platform/worker.py",
-      "sha256": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-4a81d91536277a61",
-      "path": "services/campaign-platform/youtube_upload.py",
-      "sha256": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7419,7 +7087,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "a028b668fbfbe77fa9d1e49b207fb5e92cf5265c3c4c3dd10fa97a106e07d72d",
+      "sha256": "58d557a129f756848a4a76010491f8decdb777b7a77449ec5de4f1057a23ce63",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7549,9 +7217,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-bac49c510103fded",
+      "path": "tdf-hq-ui/src/api/musicReleases.search.test.ts",
+      "sha256": "669c73a1f2882d218c8b1054f19512fbc1c9dd1aaed3cd9568b20597db2c9eda",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
+      "sha256": "07776593433c18bda040520d9416d4c4606bdf65802d50101af77c06eb87e9b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8767,6 +8441,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-28aafc8b91504b78",
+      "path": "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
+      "sha256": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8ff1ea8b0672718c",
+      "path": "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
+      "sha256": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9782d2ed42bec2a0",
       "path": "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts",
       "sha256": "0f4409994400c7190c601c87d8306189974bada850687b4b25bb21459313ecd4",
@@ -8859,7 +8545,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
+      "sha256": "7f091bdd2722c7eeea2a7003f098a6a265c6f2d1f8f6b7fc15288d009cebec33",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9213,13 +8899,13 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "62b867e770f329763c7d0f6b81fa7998a9b7b48737351010f67cb673ab418628",
+      "sha256": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "98a49a2cf613aa9aa44b99253f39e81f1a9c54298b932fb21982cfda67a6b962",
+      "sha256": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9685,15 +9371,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-dbda481e0eca6c81",
+      "path": "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx",
+      "sha256": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "c3dc63053f7a1e5d75781797b96bb414c63b20755f368ed2e11ab0819b47d743",
+      "sha256": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "7d4854a1f390af0e9c03356297c2340e174992fe7435040cf8d169d83dd7381f",
+      "sha256": "2f1964225b52251c974ef0b42992d3c1c11748c143c9986b685ad29ea09907c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10201,12 +9893,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-b372c70ee4eae69c",
-      "path": "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
-      "sha256": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-eb82e4705c1d2848",
       "path": "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
       "sha256": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
@@ -10245,7 +9931,7 @@
     {
       "id": "SURFACE-474a81a2327740d9",
       "path": "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-      "sha256": "3f9928ccb9c7691f0415c16c2294fedad13aee3d2e19d4a9e3cdf0d6d7c2918a",
+      "sha256": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10833,19 +10519,19 @@
     {
       "id": "SURFACE-4fcbb0b9c41b6de4",
       "path": "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
-      "sha256": "16227bfeb8b8858ead6aa79ecc75f24f24b657dcc63d484a5292ab54f6ab3c8a",
+      "sha256": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "0cf881b0228da9a69f8699e618deb53cbdd73af28e2242750fb75a47833dccc4",
+      "sha256": "1817116d31aaccdfe90c6603a68b7f79ec4de53231ec8dc4827801cc5ac978b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "5b28707df52612a9376fe2cb5bec1f62d8831065a5df07e5b71a56a07957420e",
+      "sha256": "445adef24fefb118ba1c86ad94e77fd28a4435610bf0f5d5a32057567a2d046b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10870,6 +10556,18 @@
       "id": "SURFACE-d6d70a73f7318a52",
       "path": "tdf-hq-ui/src/player/assetAccess.ts",
       "sha256": "a0da01ca4f664e57db6f1efcbcf5f6cb601c181679bd7d4c4d92b7c5c07c74d1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fdb37c72a18a786b",
+      "path": "tdf-hq-ui/src/player/publicMusicTrack.test.ts",
+      "sha256": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-49cd1d35f573ccdd",
+      "path": "tdf-hq-ui/src/player/publicMusicTrack.ts",
+      "sha256": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10965,7 +10663,7 @@
     {
       "id": "SURFACE-f0dfc7a18e8b49c7",
       "path": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
-      "sha256": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
+      "sha256": "7841629427f2d73e5732da6c16cb8be991bbbb624c5e51d3e963c247520b71fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11829,7 +11527,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "6adc9fd306b794efa0e2f853484404f60d2768422c834d1e3cb151ea871e61b3",
+      "sha256": "0930159122e545da4166de525b05449b4b22f5207f0bf645ae90d0bb7eee1e92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11889,7 +11587,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e362d43e39ba716beb11ef3250c3c43b3783109b267a9013aa35b2e10c97d240",
+      "sha256": "fba1c9ce678b966bf36754e5325f12cf3f75438a62d8e9e51dcfd4b35be1400d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11908,6 +11606,12 @@
       "id": "SURFACE-8a3e77e3810443f4",
       "path": "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
       "sha256": "03bc7ffd250a525fbf9f02ecbf18f9ad775cedc20521fcb6af1d2469729d3a60",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f6d50389e4c36039",
+      "path": "tdf-hq/docs/openapi/music-search.yaml",
+      "sha256": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14727,7 +14431,7 @@
     {
       "id": "SURFACE-a9f24603e446fa85",
       "path": "tdf-hq/src/TDF/API/MusicRelease.hs",
-      "sha256": "fdf3cf3710f04a251d71092cf4da21dbb1ff23541553936b24fbf2157f3b949d",
+      "sha256": "3cb60fb17c91e6d8c5ac46e02c637f88456f047fb34ce6ea3137120881e37072",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15675,7 +15379,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
+      "sha256": "ef9e613714411c9f7388714b7b80d49e4a0001d440472fa74fbbd83047ced199",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18477,7 +18181,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "a028b668fbfbe77fa9d1e49b207fb5e92cf5265c3c4c3dd10fa97a106e07d72d",
+      "sha256": "58d557a129f756848a4a76010491f8decdb777b7a77449ec5de4f1057a23ce63",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18825,7 +18529,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "103bb6eaf591be0c427e961e94e72d4418eb3cbc9b82696a8f6ef94810a054c2",
+      "sha256": "f9bd8a81e1e95afb53af970c6e3b165b1777ef709183528cac7126c3f08f72fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20132,13 +19836,6 @@
     {
       "path": "docs/campaign-automation.md",
       "sha256": "ce072923638a314b0820af65f3cf1e4c48fd8ac9b1137cdba9989c4de63d1ef5",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "docs/campaign-platform/operations.md",
-      "sha256": "c9978251ba9cc929a0ea912dedb5d6613b36a1af16c9d91ec5d8a81d888a2552",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21791,6 +21488,13 @@
     {
       "path": "docs/music-releases/threat-model.md",
       "sha256": "88e3fdd67574ab9dae08575a61dc465f39116150e0a88d7e57cf915ebafaa4e2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/track-search-delivery-2026-10-26.md",
+      "sha256": "6487399e88d7a5001fca907e10cb36578eafd555544dbe5eb057ea6cd381a0c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27579,7 +27283,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "800a18496c340fc74f3fbe1bd348bceff471bf246439e054e55a672013674a5f",
+      "sha256": "3bc84f42151c341af9bbbeb0d83a55a3d1f0a530712b5d19687678fc98260de0",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -27657,13 +27361,6 @@
     {
       "path": "formal/system/build-trust.md",
       "sha256": "a151c33756459b9de9133382fa93d32dec616abf063c5ac6401f6954c89aef4f",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "formal/system/campaign-server.md",
-      "sha256": "f6ed51a413b80766930fcd5c553e2c4ea5ec2dcd794d9f890bb391ac7e7573b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28068,6 +27765,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-track-search.md",
+      "sha256": "1fee59bc9de8d3811f8f57e9b964bde12d95e347cdfc4b43d1dcd124f29b76c5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/music-upload-rebind.md",
       "sha256": "7a36035a1c5a63dc4043c3766c4dae37e635456a66a56d9b8042cb88e5e7c13f",
       "authority": "inferred",
@@ -28258,7 +27962,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "540992768de6617253585db2a4f9fbbf920dda5153bc2dcda4e9e8b81dfa3f72",
+      "sha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28629,7 +28333,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e362d43e39ba716beb11ef3250c3c43b3783109b267a9013aa35b2e10c97d240",
+      "sha256": "fba1c9ce678b966bf36754e5325f12cf3f75438a62d8e9e51dcfd4b35be1400d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -28651,6 +28355,13 @@
     {
       "path": "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
       "sha256": "03bc7ffd250a525fbf9f02ecbf18f9ad775cedc20521fcb6af1d2469729d3a60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/music-search.yaml",
+      "sha256": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

@@ -19,6 +19,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-requirement-declarations.p
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-new-specification-surfaces.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-public-route-denial.py"
 node --test "$ROOT/scripts/__tests__/compiled-api-surface.test.mjs"
+node --test "$ROOT/scripts/__tests__/music-track-search-model.test.mjs"
 node "$ROOT/scripts/check-api-availability.mjs"
 node "$ROOT/scripts/check-dependency-security.mjs"
 node --test "$ROOT/scripts/__tests__/dependency-security.test.mjs"
