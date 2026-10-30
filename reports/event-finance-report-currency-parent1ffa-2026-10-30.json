@@ -1,0 +1,423 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+  "baselineMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+  "previousPublishedHead": "c3a73b9400f7bd9c27b68105bcb462d4ea7fdaf5",
+  "qualifiedParent": "1ffa7818204e46f9aa92e1657a12efe4a5ebd2c6",
+  "evidenceCommit": "Report-only child; every other tree and each safe unique regular archive member must verify from committed Git.",
+  "problem": {
+    "classification": "Confirmed cross-layer financial reporting defect",
+    "authority": "Explicit owner decision: Refuse totals until contributing amounts match the event currency. Foreign-currency authoring remains intentional.",
+    "counterexample": "A USD event can persist a EUR100 entry and originally report100 asUSD without conversion/rate data. Budget actuals and legacy ticket contributors have analogous unit boundaries.",
+    "productionExposure": "UNKNOWN; actual synthetic typed Handler/SQLite evidence, no production incident assertion."
+  },
+  "correction": "Resolve existing event/default reporting currency; refuse500 when a nonzero contributing amount has a different normalized currency. Preserve explicit foreign entry authoring/listing, existing contributor/status/direction filters, zero/noncontributing exceptions and signed range semantics. Refuse an unreportable budget edit before its first write. No conversion, omission, clamp, schema/provider/production-data change.",
+  "composition": {
+    "normalParents": [
+      "c3a73b9400f7bd9c27b68105bcb462d4ea7fdaf5",
+      "1ffa7818204e46f9aa92e1657a12efe4a5ebd2c6"
+    ],
+    "all160ParentNormativeObjectsExact": true,
+    "unchangedCurrencyRequirementAdded": true,
+    "totalRequirements": 161,
+    "ownedHandlerAndTestExactC3": true,
+    "allOtherBackendAndFunctionalParentTreesExact": true,
+    "incomingMainBackendFiles": [
+      "tdf-hq/docs/openapi/api.yaml",
+      "tdf-hq/docs/openapi/music-search.yaml",
+      "tdf-hq/src/TDF/API/MusicRelease.hs",
+      "tdf-hq/src/TDF/Server/MusicRelease.hs"
+    ],
+    "wholeBackendExactC3Claimed": false,
+    "historicalBlobs": 16,
+    "scope": "Normal composition of current range parent1ffa plus existing currencyC3; no668/677/679/682 or browser-precision repair imported. All16 historical report/archive/review/manifest blobs preserve both parent bindings."
+  },
+  "properties": [
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001/UNITS",
+      "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
+      "contract": "formal/system/event-finance-report-currency.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+      "status": "TESTED",
+      "statement": "Each nonzero observed contributor to a successful summary/budget actual matches the resolved event currency; no financial unit relabeling or invented conversion.",
+      "assumptions": [
+        "Existing stored metadata/dimension validation and canonical captured-revenue checks are trusted.",
+        "Finite native typed Handler/SQLite fixtures; production PostgreSQL reachability and all concurrency interleavings not established."
+      ]
+    },
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001/PREWRITE",
+      "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
+      "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+      "status": "TESTED",
+      "statement": "A currency-refused budget edit does not begin its existing write; explicit foreign individual authoring/listing and noncontributing cases retain their semantics.",
+      "assumptions": [
+        "Check concerns observed rows; no new serializable financial snapshot or provider finality guarantee."
+      ]
+    },
+    {
+      "id": "PAY-EVENT-REPORT-RANGE-001",
+      "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+      "status": "TESTED",
+      "statement": "Existing exact Integer aggregation, bounded narrowing and observed prewrite range refusal remain supported by fresh15range cases within29targeted examples.",
+      "contract": "formal/system/event-finance-report-range.md"
+    }
+  ],
+  "historicalEvidence": {
+    "currencyBaselineCases": 13,
+    "actualAssertionFailures": 8,
+    "compatibilityPasses": 5,
+    "currencyCorrectedComponentCases": 14,
+    "currencySourceFaults": 2,
+    "currencyFaultAssertions": [
+      8,
+      1
+    ],
+    "rangeBaseline": "15 cases/12 genuine failures/3 compatibility;2 faults/3 intended assertions",
+    "scope": "Original source faults and counterexamples remain immutable historical evidence, not rerun or relabeled current. Owned handler/test bytes exactC3; four other backend API files legitimately retain main versions. Fresh current build context re-executed below.",
+    "gitSha256": {
+      "reports/event-finance-report-currency-2026-10-29.json": "96701f069731e9f39d6fec49dcb9f6c55c90453fed554b98ddc004b0f6d22901",
+      "reports/event-finance-report-currency-2026-10-29/evidence.tar.gz": "27e8633f1d76938db34b33d9c7f2fa4f90791c67dcd22fbf62f190c04a22cc12",
+      "reports/event-finance-report-currency-2026-10-29/independent-review.txt": "504e1c715c7356567c91e99428e5aaf5e684ebaffc7e8474f10773061b7b1508",
+      "reports/event-finance-report-currency-2026-10-29/manifest.json": "af593d7874a73da11230f0f7e34a3b5dd8ea1c239c4ee60ea95ae741222b8cf9",
+      "reports/event-finance-report-range-2026-10-29.json": "68e413636c4bc586eaed5bc27a57eb06f9d7436c2b22564bac2e389ca767ebb5",
+      "reports/event-finance-report-range-2026-10-29/evidence.tar.gz": "bf9a40d64572dc995e371ad2df16848f8a80b5adde10b658d379b71f501397c9",
+      "reports/event-finance-report-range-2026-10-29/independent-review.txt": "ec2fbc2f52cb1f7fb714aa8e8a5f29140a08331e7c6a706b58761a7457b16f24",
+      "reports/event-finance-report-range-2026-10-29/manifest.json": "add8ab5a0dce68bad31ed58c95dba3d981b4ffefa83aaf563d654b3c25978e48",
+      "reports/event-finance-report-range-after-639-2026-10-29.json": "b2a373a1c16d389bdb0f674a2d4a878d8a3e3b58072d597d8368fe324176e31a",
+      "reports/event-finance-report-range-after-639-2026-10-29/evidence.tar.gz": "8a0744143ab1f50c5fd733f82198b75e53edfee7eaef999f95358cf857c85cfe",
+      "reports/event-finance-report-range-after-639-2026-10-29/independent-review.txt": "c24753e110cac0552512c6c3e3f2aa7aa2765f28d1f68c9b551b0bb7e7195c98",
+      "reports/event-finance-report-range-after-639-2026-10-29/manifest.json": "fbe3555e22154bba6175233259d733df4607bea8434e27e15c1c1492c08dd37a",
+      "reports/event-finance-report-range-main642-2026-10-30.json": "79c81457fca213f44fa602f2a1f74be18afff4af3ef33f0f1c0392e344dbb93c",
+      "reports/event-finance-report-range-main642-2026-10-30/evidence.tar.gz": "d4d5835a7741cdb95a68d02b0f46ed0c225b4f08f1659b621d5ced6146e0b2aa",
+      "reports/event-finance-report-range-main642-2026-10-30/independent-review.txt": "504f600aea24c0121153843626dfcf1c94128401fab68609c863d467056a53c2",
+      "reports/event-finance-report-range-main642-2026-10-30/manifest.json": "6016a1c89f722c13ca9eab2bf6805014c57de5f7c3007c5f893ed40b318e6d30"
+    }
+  },
+  "verification": {
+    "native": {
+      "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+      "phase": "QUALIFIED_TARGETED_AND_FULL",
+      "startedAt": "2026-10-30T19:23:51.642921+00:00",
+      "actualExits": {
+        "build": 0,
+        "targeted": 0,
+        "full": 0
+      },
+      "buildPID": 63302,
+      "binary": "/private/tmp/tdf-event-finance-currency-parent1ffa-20261030/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "binarySha256": "50e678f429c516f76631166619ff6b69ade439c88d2f50d01bc5650dfd9a893e",
+      "forceDirtyIdentity": {
+        "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "50e678f429c516f76631166619ff6b69ade439c88d2f50d01bc5650dfd9a893e",
+        "versionObjectSha256": "251c8807db05a0ba40bead46c8fed339d3134c21125ddf695dd65ffd2e1449ad",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "targetedPID": 69671,
+      "targeted": {
+        "examples": 29,
+        "failures": 0,
+        "pending": 0
+      },
+      "fullPID": 69672,
+      "full": {
+        "examples": 4074,
+        "failures": 0,
+        "pending": 21
+      },
+      "allBackendInputsUnchangedAndGitExact": true,
+      "sourceCleanAfter": true,
+      "finishedAt": "2026-10-30T19:35:33.040108+00:00"
+    },
+    "repository": {
+      "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "sourceSeal": {
+      "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+      "baselineMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+      "qualifiedParent": "1ffa7818204e46f9aa92e1657a12efe4a5ebd2c6",
+      "previousPublishedHead": "c3a73b9400f7bd9c27b68105bcb462d4ea7fdaf5",
+      "normalMergeParents": [
+        "c3a73b9400f7bd9c27b68105bcb462d4ea7fdaf5",
+        "1ffa7818204e46f9aa92e1657a12efe4a5ebd2c6"
+      ],
+      "sourceDigest": "9638d480f84d803c1d2a6e3cfc125b10361d754da2123fd9e703d8d860249ed5",
+      "registeredHashesVerified": 1429,
+      "allBackendInputCount": 987,
+      "assuranceArtifactHashesVerified": 52,
+      "ownedHandlerAndTestExactPreviousQualifiedHead": true,
+      "allNonOwnedBackendExactMain": true,
+      "incomingMainBackendFilesPreserved": [
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/music-search.yaml",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs"
+      ],
+      "workflowUiMobileScriptDependencyTreesExactMain": true,
+      "allMainNormativeRequirementsPreserved": 159,
+      "allParentNormativeRequirementsPreserved": 160,
+      "currencyRequirementExactPrevious": true,
+      "totalRequirements": 161,
+      "historicalEvidenceGitSha256": {
+        "reports/event-finance-report-currency-2026-10-29.json": "96701f069731e9f39d6fec49dcb9f6c55c90453fed554b98ddc004b0f6d22901",
+        "reports/event-finance-report-currency-2026-10-29/evidence.tar.gz": "27e8633f1d76938db34b33d9c7f2fa4f90791c67dcd22fbf62f190c04a22cc12",
+        "reports/event-finance-report-currency-2026-10-29/independent-review.txt": "504e1c715c7356567c91e99428e5aaf5e684ebaffc7e8474f10773061b7b1508",
+        "reports/event-finance-report-currency-2026-10-29/manifest.json": "af593d7874a73da11230f0f7e34a3b5dd8ea1c239c4ee60ea95ae741222b8cf9",
+        "reports/event-finance-report-range-2026-10-29.json": "68e413636c4bc586eaed5bc27a57eb06f9d7436c2b22564bac2e389ca767ebb5",
+        "reports/event-finance-report-range-2026-10-29/evidence.tar.gz": "bf9a40d64572dc995e371ad2df16848f8a80b5adde10b658d379b71f501397c9",
+        "reports/event-finance-report-range-2026-10-29/independent-review.txt": "ec2fbc2f52cb1f7fb714aa8e8a5f29140a08331e7c6a706b58761a7457b16f24",
+        "reports/event-finance-report-range-2026-10-29/manifest.json": "add8ab5a0dce68bad31ed58c95dba3d981b4ffefa83aaf563d654b3c25978e48",
+        "reports/event-finance-report-range-after-639-2026-10-29.json": "b2a373a1c16d389bdb0f674a2d4a878d8a3e3b58072d597d8368fe324176e31a",
+        "reports/event-finance-report-range-after-639-2026-10-29/evidence.tar.gz": "8a0744143ab1f50c5fd733f82198b75e53edfee7eaef999f95358cf857c85cfe",
+        "reports/event-finance-report-range-after-639-2026-10-29/independent-review.txt": "c24753e110cac0552512c6c3e3f2aa7aa2765f28d1f68c9b551b0bb7e7195c98",
+        "reports/event-finance-report-range-after-639-2026-10-29/manifest.json": "fbe3555e22154bba6175233259d733df4607bea8434e27e15c1c1492c08dd37a",
+        "reports/event-finance-report-range-main642-2026-10-30.json": "79c81457fca213f44fa602f2a1f74be18afff4af3ef33f0f1c0392e344dbb93c",
+        "reports/event-finance-report-range-main642-2026-10-30/evidence.tar.gz": "d4d5835a7741cdb95a68d02b0f46ed0c225b4f08f1659b621d5ced6146e0b2aa",
+        "reports/event-finance-report-range-main642-2026-10-30/independent-review.txt": "504f600aea24c0121153843626dfcf1c94128401fab68609c863d467056a53c2",
+        "reports/event-finance-report-range-main642-2026-10-30/manifest.json": "6016a1c89f722c13ca9eab2bf6805014c57de5f7c3007c5f893ed40b318e6d30"
+      },
+      "historicalEvidenceScope": "Original currency baseline13/8 failures/5 compatibility and two source faults8+1 assertions, plus original range controls, remain historical. Owned handler/test exactC3; four other backend files retain current-main/parent versions. Fresh current-source native suite re-executed; historical controls not relabeled current.",
+      "nativeTargeted": {
+        "examples": 29,
+        "failures": 0,
+        "pending": 0
+      },
+      "nativeFull": {
+        "examples": 4074,
+        "failures": 0,
+        "pending": 21
+      },
+      "nativeForceDirtyIdentity": {
+        "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "50e678f429c516f76631166619ff6b69ade439c88d2f50d01bc5650dfd9a893e",
+        "versionObjectSha256": "251c8807db05a0ba40bead46c8fed339d3134c21125ddf695dd65ffd2e1449ad",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 145,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "recheckedVersionObjectAndAssuranceProvenance": true,
+      "limitations": [
+        "Finite direct typed Handler/owned SQLite fixtures; no authenticatedHTTP, production PostgreSQL extreme reachability, production foreign-currency exposure or serializable-snapshot guarantee; no serving executable/deployment qualification.",
+        "No new actual Docker or PostgreSQL runtime; required hosted lanes must execute on published current head.",
+        "Currency673 is the only child imported. No unmerged668/677/679/682 or browser-precision repair is included. Historical accessibility/worker failures remain separate unknown causes.",
+        "Protected current-head review/checks/FIFO and later main advances must be re-evaluated before integration.",
+        "New native driver installs SIGTERM cleanup entry; interrupted-run/process-tree cleanup remains untested and no universal interruption guarantee is claimed. The old3900s outer orchestrator is not reused; native and assurance execute directly in separate owned sessions."
+      ],
+      "createdAtUTC": "2026-10-30T19:39:54.959440+00:00"
+    },
+    "evidenceBindingControls": {
+      "sourceCommit": "340be46ca3dda5a8376edbbeca2ed59528b02d47",
+      "sealScriptSha256": "db559caaafa87d69279ba57741ff28ef8b261582bc64c14eef5efb1ca40cf61a",
+      "method": "AST-extract actual seal binding function; valid actual receipts/artifacts accepted, one in-memory evidence corruption per negative case; do not mutate bound disk artifacts or source.",
+      "validBefore": true,
+      "negativeControls": [
+        {
+          "label": "VersionObjectBytesCorrupted",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceProvenanceDigestMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceProvenanceFileTableMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceDirtyFlagMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedWholeRequirementProofPromotion",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedRefinementProofPromotion",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedExtraSMTClaim",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnexpectedReleasePermission",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "MissingCurrentGitLiteralDespiteConsistentRewrittenObjectHash",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        }
+      ],
+      "intendedAssertionRejections": 9,
+      "restoredValidAfter": true,
+      "diskArtifactsUnchanged": true,
+      "scope": "Temporary evidence seal controls, not production source mutants or complete proof of the verification pipeline",
+      "atUTC": "2026-10-30T19:40:04.832549+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 161,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 145,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteImplementationProofs": 0,
+    "independentReview": "reports/event-finance-report-currency-parent1ffa-2026-10-30/independent-review.txt",
+    "scope": "Current-source local canonical native/repository/assurance qualification; hosted current-head CI and independent GitHub approval remain required."
+  },
+  "regressionProtection": {
+    "freshCurrencyCases": 14,
+    "freshRangeCases": 15,
+    "freshTargeted": 29,
+    "freshFull": 4074,
+    "failures": 0,
+    "inheritedPending": 21,
+    "canonicalSpecRegistration": true,
+    "evidenceCorruptionControlsRejected": 9,
+    "newDependencies": false
+  },
+  "limitations": [
+    "TESTED, not a complete implementation/refinement proof.161 whole requirements and322 implementation/refinement obligations remain UNPROVEN;11 inherited conditional SMT claims retain assumptions; formal release BLOCKED.",
+    "No authenticatedHTTP, production PostgreSQL concurrency, historical-data remediation, provider settlement, serving-binary or deployment guarantee.",
+    "Browser numerical precision has its own confirmed defect and separate unmerged correction cycle; individual foreign-entry CSV currency attribution is a separate investigation.",
+    "Historical worker completion and campaign contrast failures remain separate UNKNOWN/unrepaired causes. Passing samples do not establish their repair.",
+    "Interruption/process-tree cleanup is not fault-tested; direct native/assurance sessions avoid the old3900s outer orchestrator, no universal cleanup claim."
+  ],
+  "integration": {
+    "pullRequest": 673,
+    "draft": true,
+    "autoMerge": false,
+    "merged": false,
+    "protectedFIFO": "Current review/checks/admission/latestmain required; no protected bypass. Parent671 must integrate through normal dependency order.",
+    "productionWrites": false,
+    "deployment": false
+  },
+  "nextHighestValueTask": "Inspect current-head673 CI/review and complete separately source-bound browser precision correction; preserve queue and unknown reliability/accessibility causes.",
+  "archive": {
+    "path": "reports/event-finance-report-currency-parent1ffa-2026-10-30/evidence.tar.gz",
+    "sha256": "02a18a20fdbebb0e4f64b0d4ac3c951c0524e57e3ba5fe42a7ecf1a6b83e21c1",
+    "bytes": 1688679,
+    "innerFiles": 129,
+    "manifest": "reports/event-finance-report-currency-parent1ffa-2026-10-30/manifest.json"
+  },
+  "createdAtUTC": "2026-10-30T19:43:36.656061+00:00"
+}
