@@ -30,7 +30,7 @@ import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, t
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { ApiError } from '../api/client';
-import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { buildEventSignupPath, buildLoginRedirectPath } from '../utils/loginRouting';
 import {
   buildDirectoryContactLoginPath,
   shouldResumeDirectoryContact,
@@ -174,6 +174,13 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const requestedMoment = new URLSearchParams(location.search).get('moment');
   if (kind === 'event' && requestedMoment && /^[1-9][0-9]{0,17}$/.test(requestedMoment)) {
     return <Navigate replace to={`/social/eventos/${encodeURIComponent(identifier)}?moment=${requestedMoment}`} />;
+  }
+
+  // A shareable invitation link (`/eventos/:id?signup=1`) sends a visitor
+  // without a session straight to account creation and back to this event.
+  // Signed-in visitors just see the event.
+  if (kind === 'event' && !session && new URLSearchParams(location.search).get('signup') === '1') {
+    return <Navigate replace to={buildEventSignupPath(identifier)} />;
   }
 
   const composeSearch = new URLSearchParams(location.search);
