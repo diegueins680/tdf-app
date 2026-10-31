@@ -1,0 +1,68 @@
+ACCEPT — final local qualified-source review, with the scope below
+
+Source M: 0fbea9f229056a4f72796863d2966259576d891a. Parent 646: 0bda432f7339a86d0206e5f7abbb2763161c0c2a. Protected-main baseline: 234ff6f7faf1aecf347c8e92a374228f4ec07aaa. M is a normal child of 6b85177c6076ce9b563088e86bff515aeb1bf210, which is a normal child of the parent646 head. This accepts the reviewed local correction and completed local evidence; it is not a GitHub approval, protected-integration authorization, or claim that future packaging/current-head hosted CI has run.
+
+Independent review performed
+I reviewed ROOT-authored application/config/checker/test/CI changes, contracts, producers and selected raw receipts. I independently rehashed all 1,444 registered Git/worktree/Mobile source bindings and all 52 assurance artifacts, checked their provenance/digest, rechecked all 159 parent requirement objects unchanged plus the new160th requirement, and verified unchanged backend tree, service worker and historical report/evidence paths. The exact browser bytes equal the official supplied tar artifact. The parent lock has145 fewer package records with no added record and no surviving version/integrity/resolved change. I decoded both real Playwright attachment bodies directly from browser-results.json and checked their result status/retry and lifecycle fields. No tests, compiler, browser, torrent, provider, native package code or production operation was independently executed by me. My own authorship of the upstream license/source inventory is excluded from the independent-review claim; ROOT's separate64-archive verification provides the independent source/license review.
+
+Observed empirical qualification
+The eight selected current-M execution records are actual0: vendor unit, live vendor advisory scan, unchanged production npm audit, full UI Jest, production UI build, root quality, inventory check and conformance check. Raw UI logs contain324 suites/3761 tests passed with no skip/failure summary; vendor unit raw output is19/19 with zero failure/cancelled/skipped/todo. Root-quality output retains11 inherited platform/tool skips and is not a claim that every platform lane ran locally. The successful current production build includes fresh tsc --noEmit. Lint completed at initial6b before its Jest failure; all src TS/TSX lint inputs are unchanged at M. This is honest component evidence reuse, not a fresh full quality-ui invocation at M.
+
+Actual Chromium and Firefox browser runs each have one passed result, retry0, no errors and no skips/flakiness. Both decoded attachments show moduleType=function, independent nativeWebRTC=true, library webRTC=true, zero torrents, activated worker, exact /torrent-stream/ scope, server=true and destroyed=true. The actual test additionally checks unregistration, served notice bytes and intercepted external attempts. It executes the real compiled module/SW lifecycle without peers or torrent payloads. It does not execute application media playback, HTTP business flows, actual WebKit/physical-device behavior or universal network isolation.
+
+Four semantic source-fault variants were tested in independent temporary copies, each with a valid-before actual0 and assertion-based actual1. Raw outputs show unpin-inventory causes two assertions; ignore-affected-advisory, discard-notice-preservation and query-only Jest mapping each cause one. Therefore the exact count is four variants/five failed assertions, not four single-assertion failures. No compiler/setup failure was counted as fault detection. Source checker/config/test hashes in the control receipt equal current Git blobs.
+
+Findings and resolution
+My earlier coherent inventory/manifest narrowing finding was corrected by the independent literal inventory hash pin and its exact regression before this qualification. The native-WebRTC applicability classification now independently checks the browser API against the library flag. The own query-only Jest mapper failure at6b is preserved as a genuine zero-test configuration counterexample; the current optional-query exact-relative mapper and actual-config regression repair it without a broad JS mock or production behavior change. I found no remaining confirmed blocking defect in the corrected source.
+
+Harness review
+I flagged the initial sealer's weak raw test-summary predicate. The reviewed current sealer now requires exact324/3761 UI and19-unit summaries with zero failure/skip/cancel/todo, rejects FAIL/not-ok markers and cross-binds raw browser stats with the execution record. My direct raw-result and attachment checks independently confirm the actual completed results are valid. ROOT is preparing additional isolated seal-evidence corruption controls; those controls and report/archive packaging are FUTURE at this receipt time and are not included in the completed qualification claim. The sealer remains a trusted local producer under its recorded normal Python invocation, not a universal verifier proof or complete transcript-authenticity guarantee.
+
+Native resolver qualification limitation
+The clean Mac install inherited a missing platform optional lock entry. The first resolver fallback/preset startup failure is retained separately from the later mapper failure. I independently rehashed the official @unrs/resolver-binding-darwin-x64 1.11.1 tar against its published SHA512 and compared its sole native binary with the actual installed bytes (SHA2567ded65303b790ed738c923a93fc87f2611d07884cb15c79dca3532222b1345a5). The qualification drivers disable further fallback with SKIP_UNRS_RESOLVER_FALLBACK=1; I confirmed this is the switch the installed resolver reads. This verifies the declared local tool component but does not repair the inherited lock reproducibility gap, claim an offline-clean-install guarantee or relax hosted CI.
+
+Proof and release limits
+The assurance report executes successfully at clean M but keeps all160 whole requirements and320 implementation/refinement obligations UNPROVEN. Eleven inherited source-derived SMT results retain their extraction/coherence/arithmetic assumptions; no new complete theorem or refinement proof is claimed. Formal release remains BLOCKED with executionAllowed=false. Matching-source candidate versions are not uniquely identified upstream build versions; source maps are publisher evidence, webpack compiler resolution remains unknown, and nine matching package archives lack standalone license files. Supplied MIT/ISC/Apache notices and known declarations are preserved without legal-completeness certification. The live59-identity advisory result is time/feed bounded and does not certify the browser code vulnerability-free. No local Haskell/Mobile or serving/deployment qualification was executed. Fresh required parent/current-head CI and reviews remain necessary.
+
+Exact receipt bindings (SHA256)
+source-correspondence.json: 648a1f114075bafab4e7f9c5f934c1fd799b9341f4ead2609421734f836834e8
+source-state.json: e0a7f0fd0a4b19899a7bad26d401157f0b60bee9524543e09dbc39fc28d62641
+qualification-progress.json: 58dbc8da9888e79bf106dd8ba6f71f2f617b50e3860e313708b00460663d60b4
+mutation-controls.json: 2b61197c24f9bba37ff2b884121f2756a324ce29438800cbf8c8d3720a38febe
+browser-results.json: 45f418d2ac6654cdaad3c38ebe29ef97706c207b27a23d840d20f2517514abb7
+browser-runtime-execution.json: 19410aab3ca6b05faec67965b458f8bed796b5689321d5b62faf8f5ee78340e7
+browser-lifecycle-observations.json: 9868f34f4280898986ac9821ab160cb01ab96058cc2b58e81513ad17f1978b0a
+ui-tests.log: 2f8e5bc672a2534d6481094087a255eb0edf5e16d18edb57141dbc239f85ac0c
+ui-build.log: a9edc7540e70e0e8da2f9ca4fdc2ae8e372a62fcbed1b50e7a382e92dacbb5db
+root-quality.log: 6aee16c26082edae4d95794b17a69e215d2b87a6fc84d6f96ce116c16c4e07ab
+browser-vendor-unit.log: 726130436e1c1293a9f81713281ffcdab78ff0ebd00e3e88deca43ac649d9eed
+browser-vendor-live.log: f3f6f1c7f9c8952e8df8c08d20e3a369615c52d05fe73a4d66e4e5bbb326acea
+unchanged-production-audit.log: 718d48be0757ba298663624b2c9396a6b25330d9a785cda3f525d6b910dbdbc7
+resolver-native-provenance.json: 2eadc6566a7a3b6ff0e1b7fca9aec016e80322a05a9be13b9d5dd68915ddea6d
+qualification-failure-and-repair.json: 6743397386f178e49681ce547404d1d1e9cce37a825e7c0cf69b538662ab2189
+root-independent-license-verification.json: 7c07a09474ad6c50205ae8520e399160968937875b5ba4be2e0a434fbfc7da8e
+independent-final-binding-check.json: 3b5bb07f32232b7c8269720a162ade6cd69ab28ee001ce9889ed2c29ee7c3c6c
+current ROOT seal script: ccc56ffdce4cba15fe48a41cbc01a7b0fc43737c13e1e7a96b6bd01193318d01
+
+
+ACCEPT — completed evidence-control supplement
+
+Source M 0fbea9f229056a4f72796863d2966259576d891a, parent646 0bda432f7339a86d0206e5f7abbb2763161c0c2a, baseline main234ff6f7faf1aecf347c8e92a374228f4ec07aaa. The original final review is retained byte-exact and remains a historical local qualified-source review. This supplement rebinds the enriched current correspondence and the newly completed seal-corruption phase; it does not rewrite the earlier receipt's pending-state statement.
+
+I read the actual control driver, hardened seal predicates, all12 finite failure logs, valid-before/restored-valid-after logs and updated source-correspondence.json. I verified the current seal script equals its declared CCC56 hash, all12 cases exited1 with AssertionError (not missing files/tools, syntax or module errors), and valid-before/restored-valid-after both produced successful source-M reports. Corruptions cover wrong qualification/proof source, failed UI execution, changed registered hash, reduced/skipped/hidden-failure UI summary, skipped vendor unit, inconsistent raw browser stats, decoded destroyed=false lifecycle, false semantic-control success and unverified native binding. The controls use independent artifact copies; current source and original receipts are not mutated. I independently rechecked every changed-source Git/worktree hash from the enriched correspondence and current source remains clean. I did not independently execute any test, control or seal.
+
+The hardened sealer requires exact324/3761 UI and19-unit totals, zero skipped/failure/cancel/todo vendor summaries, matches raw browser stats, requires the actual Chromium/Firefox passed results and exact decoded lifecycle fields, and reparses all four source-fault logs. Updated correspondence accurately counts four semantic fault variants/five failed assertions and includes both raw lifecycle objects. These close the earlier raw-summary acceptance gap in the reviewed normal invocation. They establish finite tested detection, not universal transcript authenticity, complete corruption coverage, mathematical proof or arbitrary-environment robustness.
+
+No remaining confirmed blocker was found in this bounded completed phase. No source implementation changed; no new native/backend/serving/production execution, WebKit result, GitHub approval, hosted CI success, integration or deployment is claimed. All original limitations remain: upstream version/compiler uncertainty, authored-inventory review separation, nine missing standalone notices, inherited optional-platform-lock reproducibility limitation, time-bounded advisory feed,160 whole requirements/320 implementation-refinement UNPROVEN,11 conditional SMT results under retained assumptions and formal release BLOCKED. Packaging, committed archive/member verification and new published-head required CI/reviews are still future at this supplement time.
+
+SHA256 bindings
+sourceCommit: 0fbea9f229056a4f72796863d2966259576d891a
+parent646: 0bda432f7339a86d0206e5f7abbb2763161c0c2a
+baselineMain: 234ff6f7faf1aecf347c8e92a374228f4ec07aaa
+originalFinalReviewSha256: c38a93e9f84ce8dd8b1b3644f20672e276768c3a8a1990510772c6aab4cd1c4a
+sealScriptSha256: ccc56ffdce4cba15fe48a41cbc01a7b0fc43737c13e1e7a96b6bd01193318d01
+sealControlScriptSha256: cc09f9d42986ed74be1fe9fb3d1b1aac88a317ff68229c9f10c4bad255232ebc
+sealBindingControlsSha256: 6b4006138dcc00d50f2b741cd116195c8d92861cec1d9f92f51b4ea7c89df03e
+currentSourceCorrespondenceSha256: 648a1f114075bafab4e7f9c5f934c1fd799b9341f4ead2609421734f836834e8
+individual control log hashes: independent-evidence-controls-supplement.json
+companion JSON SHA256: 601f899f5ba6a0014a29b53156f46351cbfaeb9743ff01f7967f8c36cb0000b0
