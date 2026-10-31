@@ -70,6 +70,8 @@ function affectsLedgerRuntime(file) {
     || file === 'scripts/test-ledger-posting.sh'
     || file === 'scripts/test-provider-retry-runtime.sh'
     || file === 'scripts/verify-payment-intent-expiry.py'
+    || file === 'scripts/verify-checkout-money.py'
+    || file === 'scripts/test-checkout-money-verifier.py'
     || file === 'scripts/verify-google-account-name.py'
     || file.startsWith('scripts/__tests__/ledger-');
 }
