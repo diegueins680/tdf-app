@@ -14422,8 +14422,8 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "4faca98825a44ea0db53f41d5cbe0ade76d8762b78b217d72343dc4481f9fa90",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "10fec38f28a13275f31d9ea60b6d95a8a500e92a7ed3a9e45a746beaa5812d6c",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "7410a667df56a7130b2c1ecd522b32a29c1b923468f93754bc4cce2ce9396801",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "25e0875c9fdf63c974d89215b87687b3d624e15dd47517f53ca18593511ac3b7",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "9b0f3e887fc773f3626f425c40e1f3f4ef654af224beaa6a21e03d4ac5629e4f",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "2f1964225b52251c974ef0b42992d3c1c11748c143c9986b685ad29ea09907c2",
@@ -14535,8 +14535,8 @@
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
     "tdf-hq-ui/src/utils/incrementalSha256.ts": "a7964918e4d6c577458a488a35f6f938b3584857ea40b2169c27b56c3435f899",
     "tdf-hq-ui/src/utils/lazyWithReload.ts": "b5dea0e45bcf0dd99fd9f9b31bd79323881fae0f588cc3145eee6454e1857aed",
-    "tdf-hq-ui/src/utils/loginRouting.test.ts": "56165bbe1cc06b179403af52cdd1ca6a1ffca655d6394f68dc5d4d6fbb9a9ea9",
-    "tdf-hq-ui/src/utils/loginRouting.ts": "8b3a0d840447645830d58ac497690cc6a6289ebfe37acb4fd640e35956d5d38a",
+    "tdf-hq-ui/src/utils/loginRouting.test.ts": "8fabb75d7f986e9d7bf8f24b2a6a71f786e08fcae9718b8d22ede42eaf89f617",
+    "tdf-hq-ui/src/utils/loginRouting.ts": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
     "tdf-hq-ui/src/utils/musicMoney.test.ts": "de331c2360c09762bc1a2db6782135efd75a2995f84db6991409d825c4281c00",
     "tdf-hq-ui/src/utils/musicMoney.ts": "c64997fe823f1aa0b583d73ca115482b8c9593802c69b9c1b1ecccb846f6230c",
     "tdf-hq-ui/src/utils/musicPreviewRange.test.ts": "90c8840b4c1e8bdf2c9641efa7e5e75ba8182bbfc511c002f336361d065e4a7f",
@@ -38207,7 +38207,7 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "10fec38f28a13275f31d9ea60b6d95a8a500e92a7ed3a9e45a746beaa5812d6c",
+      "sha256": "25e0875c9fdf63c974d89215b87687b3d624e15dd47517f53ca18593511ac3b7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38223,7 +38223,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "7410a667df56a7130b2c1ecd522b32a29c1b923468f93754bc4cce2ce9396801",
+      "sha256": "9b0f3e887fc773f3626f425c40e1f3f4ef654af224beaa6a21e03d4ac5629e4f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41170,7 +41170,7 @@
     {
       "id": "SURFACE-f57ff394c49a306f",
       "path": "tdf-hq-ui/src/utils/loginRouting.test.ts",
-      "sha256": "56165bbe1cc06b179403af52cdd1ca6a1ffca655d6394f68dc5d4d6fbb9a9ea9",
+      "sha256": "8fabb75d7f986e9d7bf8f24b2a6a71f786e08fcae9718b8d22ede42eaf89f617",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41190,7 +41190,7 @@
     {
       "id": "SURFACE-2c5199a5b87938cc",
       "path": "tdf-hq-ui/src/utils/loginRouting.ts",
-      "sha256": "8b3a0d840447645830d58ac497690cc6a6289ebfe37acb4fd640e35956d5d38a",
+      "sha256": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
