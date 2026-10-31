@@ -13713,7 +13713,8 @@
         "scripts/__tests__/torrent-worker-routing.test.mjs",
         "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
         "e2e/torrent-audio/streaming.spec.mjs",
-        "e2e/web/webtorrent-browser.spec.mjs"
+        "e2e/web/webtorrent-browser.spec.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",

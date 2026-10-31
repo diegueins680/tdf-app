@@ -13714,7 +13714,8 @@
         "scripts/__tests__/torrent-worker-routing.test.mjs",
         "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
         "e2e/torrent-audio/streaming.spec.mjs",
-        "e2e/web/webtorrent-browser.spec.mjs"
+        "e2e/web/webtorrent-browser.spec.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -14131,7 +14132,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "17f42acb48e86cd7b6fff5d52977fbba1f7d6986306cdd82df6b9fd712bb0a23",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
-    "scripts/__tests__/ci-pipeline.test.mjs": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
+    "scripts/__tests__/ci-pipeline.test.mjs": "e7cc178daa1f553d6f71672f67ed29687bc49606024924f4ea53f58123349dcc",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -14509,7 +14510,7 @@
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "f6908307c3ee9e6120fd9f28d702e0f053de847a7f3c0242a994c5ea70eb9d05",
-    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "fc58e06828af223b5bb382b87d7fb26f76240d058af7e699cf3cc1dbc3487af3",
+    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48",
     "tdf-hq-ui/src/components/StudioGallery.tsx": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/TopBar.tsx": "3103c4693585b90c462206149c79af0e45107a8ff9203afecaf70ebe7fee1fb5",
@@ -16384,6 +16385,10 @@
       },
       {
         "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
         "relationship": "tests"
       }
     ],
@@ -28098,7 +28103,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
+      "sha256": "e7cc178daa1f553d6f71672f67ed29687bc49606024924f4ea53f58123349dcc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28131,6 +28136,10 @@
         },
         {
           "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
           "relationship": "tests"
         }
       ]
@@ -36386,7 +36395,7 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "fc58e06828af223b5bb382b87d7fb26f76240d058af7e699cf3cc1dbc3487af3",
+      "sha256": "4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57115,7 +57124,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "09901bd9a68cca55f8644b713afa9b08ef9462cfb70f1bddf0cb47c8ebf3a0fd",
+      "sourceSha256": "c05c9ccb77bf158b1c9bcd8cd375335e37da8987005f41e595b99b7f593b1001",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57143,7 +57152,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "09901bd9a68cca55f8644b713afa9b08ef9462cfb70f1bddf0cb47c8ebf3a0fd",
+      "sourceSha256": "c05c9ccb77bf158b1c9bcd8cd375335e37da8987005f41e595b99b7f593b1001",
       "definition": {
         "states": [
           "absent",
@@ -57173,7 +57182,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "09901bd9a68cca55f8644b713afa9b08ef9462cfb70f1bddf0cb47c8ebf3a0fd",
+      "sourceSha256": "c05c9ccb77bf158b1c9bcd8cd375335e37da8987005f41e595b99b7f593b1001",
       "definition": {
         "export": [
           "queued",

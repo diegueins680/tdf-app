@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-31T09:34:21.632Z",
+  "generatedAt": "2026-10-31T09:56:58.716Z",
   "repositoryRoot": ".",
   "filesScanned": 2470,
   "candidateCount": 1367,
@@ -6200,7 +6200,7 @@
       "lines": [
         119
       ],
-      "consumerCount": 338,
+      "consumerCount": 339,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -155729,7 +155729,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 568,
+      "consumerCount": 569,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
