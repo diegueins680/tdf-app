@@ -346,6 +346,7 @@ test-suite tdf-hq-test
   main-is:           Spec.hs
   other-modules:
     TDF.Auth.AccountNameSpec
+    TDF.Auth.GoogleProfileNameSpec
     TDF.MetaRedeliverySpec
     TDF.RagIndexPrivacySpec
     TDF.CoursePublicMetadataSpec

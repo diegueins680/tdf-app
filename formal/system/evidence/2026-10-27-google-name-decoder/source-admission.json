@@ -1,0 +1,18 @@
+{
+  "base": "67cd04d502c880348ebfca8c1be37aa96f598e91",
+  "head": "eb0d3a2ad1cf78d217373915a427ef74e90fa65e",
+  "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mappedChangedSurfaces": [
+    "scripts/__tests__/ci-change-scope.test.mjs",
+    "scripts/ci-change-scope.mjs",
+    "scripts/quality-backend.sh",
+    "scripts/verify-google-account-name.py",
+    "tdf-hq/src/TDF/ServerAuth.hs",
+    "tdf-hq/tdf-hq.cabal",
+    "tdf-hq/test/Spec.hs",
+    "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+    "tdf-hq/test/TDF/ServerAuthSpec.hs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}
