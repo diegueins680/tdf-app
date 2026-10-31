@@ -1,4 +1,5 @@
 import {
+  buildEventSignupPath,
   buildLoginRedirectPath,
   COMMUNITY_LANDING_PATH,
   normalizeOnboardingIntent,
@@ -216,6 +217,12 @@ describe('redirect helpers', () => {
       '/login?redirect=%2Ffans%3Ftab%3Dartists%23radio',
     );
     expect(buildLoginRedirectPath('/login')).toBe('/login');
+  });
+
+  it('builds event invitation signup links that return to the public event', () => {
+    expect(buildEventSignupPath(211)).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F211');
+    expect(buildEventSignupPath('42')).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F42');
+    expect(buildEventSignupPath('42?token=secret')).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F42');
   });
 });
 
