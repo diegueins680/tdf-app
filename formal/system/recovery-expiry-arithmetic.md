@@ -213,3 +213,19 @@ and recovery SQL are unchanged. Earlier context reviews above retain their
 original baselines; the JSON records the current manifest hashes and review.
 Fresh scoped solver/replay/mutation and independent certificate checks are
 required. This review does not promote full refinement or release readiness.
+
+## Interactive session expiry context review — 2026-10-31
+
+Against protected main `234ff6f7faf1aecf347c8e92a374228f4ec07aaa`, candidate
+`feat/session-token-expiry-20261031` (ID-SESSION-004) changes three pinned
+recovery inputs. `ServerAuth.hs` keeps `recoveryWindowValid` and the single
+`issued+900` challenge insert byte-identical; the same sampled `issued` is now
+also written to the token row as its validity window, and every interactive
+session issuer takes a leading `SessionTokenTtl` parameter. The Cabal manifest
+moves `src` into a `library` that the executables and test suite depend on,
+with module registrations, dependency bounds, GHC options, Stack resolver and
+lock unchanged. `identity-lifecycle.md` appends one ID-SESSION-004 section. The
+recovery migration is byte-identical. The three hashes are refreshed after
+reviewing those complete diffs; claims, translation and controls are unchanged
+and every obligation requires fresh execution. The candidate was authored
+without a local GHC, so compilation evidence comes only from the hosted build.

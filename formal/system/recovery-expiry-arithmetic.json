@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
+    "tdf-hq/src/TDF/ServerAuth.hs": "6fa9f4475e4da6d08fe8f90fd57089cec5fe72b6b4db4d4e0aa42be544a77cca",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
-    "formal/system/identity-lifecycle.md": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31"
+    "tdf-hq/tdf-hq.cabal": "ce670990ab2b43addb5ee2410d70a71529f443b82b321d5a78380387ab5b9917",
+    "formal/system/identity-lifecycle.md": "966ef1caafb0d26a7ff79324f27c2fab49b124617021a8d7bd55f8cd28a56fb2"
   },
   "obligations": [
     {
@@ -144,6 +144,30 @@
       "change": "Automatic account public-name privacy: register TDF.Auth.AccountName in the executable and tests, register AccountNameSpec, and replace the missing Google-name email fallback with initialAccountName gpName.",
       "semanticReview": "Removing exactly three new Cabal module registrations reproduces protected main byte for byte: dependencies, source paths, GHC/CPP options and existing registrations are unchanged. Reverting only the new ServerAuth import and Google-name call reproduces protected main byte for byte. Authorization predicates, RoleEnum, RecordsIngestion, recoveryWindowValid, reset-token issuance, recovery SQL, identity contract and Stack/lock remain unchanged. The helper accepts only Maybe Text and returns a public label; it does not import or redefine authorization/recovery predicates. Obligation claims, assumptions, translations and limitations are preserved.",
       "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required. Prior 6a09737 hosted failure and approval are historical; no waiver."
+    },
+    {
+      "reviewedAgainst": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "candidateImplementation": "bee50521d92c8f1136f960dea8061aab29c4c971",
+      "changes": [
+        {
+          "source": "tdf-hq/src/TDF/ServerAuth.hs",
+          "previousSha256": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
+          "currentSha256": "6fa9f4475e4da6d08fe8f90fd57089cec5fe72b6b4db4d4e0aa42be544a77cca"
+        },
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+          "currentSha256": "ce670990ab2b43addb5ee2410d70a71529f443b82b321d5a78380387ab5b9917"
+        },
+        {
+          "source": "formal/system/identity-lifecycle.md",
+          "previousSha256": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31",
+          "currentSha256": "966ef1caafb0d26a7ff79324f27c2fab49b124617021a8d7bd55f8cd28a56fb2"
+        }
+      ],
+      "change": "Server-side interactive session expiry (ID-SESSION-004): ApiToken gains nullable issuedAtEpoch/expiresAtEpoch; login, Google login, signup, password change and recovery confirmation mint password-login:/google-login: tokens with a SESSION_TOKEN_TTL_SECONDS window; authentication denies elapsed or absent windows on interactive labels.",
+      "semanticReview": "ServerAuth.hs: `recoveryWindowValid` is byte-identical and still the single definition matched by the recognizer. The block between `createPasswordResetToken ::` and `createReusableSessionToken ::` still contains exactly one `auth_recovery_challenge` insert whose fourth value is `issued+900`; the same `issued` value, sampled once by `recoveryClockEpoch`, is now also written to the token row through the new `Maybe (Int64, Int64)` window argument of `createTokenWithLabel`, so the row window equals the challenge window by construction. `recoveryClockEpoch` is unchanged. New code: `SessionTokenTtl` newtype, `sessionTokenTtlFromConfig`, `sessionValidityWindow` (issued + max 1 ttl on the same clock) and a leading `SessionTokenTtl` parameter on `completeGoogleLogin`, `runLogin`, `runSignupDb`, `runChangePassword`, `runPasswordResetConfirm`, `createSessionToken`, `createReusableSessionToken`; the five AppM handlers pass `sessionTokenTtlFromConfig cfg`. Only `Data.Int (Int64)` is newly imported in Auth.hs; ServerAuth.hs imports are unchanged. Recovery consumption, binding checks, lock order and transaction boundaries are untouched. Cabal: The Cabal manifest now declares a `library` holding every former `src` module as exposed-modules, with `Paths_tdf_hq` as its autogen module; `tdf-hq-exe`, `tdf-ddex-render` and `tdf-hq-test` drop `src` from hs-source-dirs and depend on `tdf-hq` instead. The library's build-depends are the former executable list with duplicate `servant-multipart`/`directory` entries removed; the test suite keeps its former dependency list plus `tdf-hq`. The 250 module registrations are carried over unchanged (TDF.Catalog.DB remains unregistered, as before). GHC options are unchanged per component, and `-Werror=missing-fields` now applies to the library so `src` keeps the executable's strictness. No CPP flags, default extensions, dependency version bounds, Stack resolver or lock changes. identity-lifecycle.md appends one `## Interactive session expiry — ID-SESSION-004` section after the existing text; the ID-SESSION-003 section and everything before it are byte-identical. The recovery migration, Stack resolver and lock are unchanged. Obligation claims, assumptions, translations and limitations are preserved.",
+      "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required. The candidate was authored without a local GHC; compilation is established only by the hosted stack build."
     }
   ]
 }
