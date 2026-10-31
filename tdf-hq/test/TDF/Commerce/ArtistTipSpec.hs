@@ -23,9 +23,9 @@ spec = describe "TDF.Commerce.ArtistTip (PAY-TIP-001)" $ do
       artistPubliclyListed (artistDirectoryVisibilityFromCounts 1 2) `shouldBe` False
       artistPubliclyListed (artistDirectoryVisibilityFromCounts 1 (-1)) `shouldBe` False
     it "is listed exactly when there is no identity or a public one exists" $
-      property $ \(NonNegative total) (NonNegative public) ->
-        artistPubliclyListed (artistDirectoryVisibilityFromCounts total public)
-          === (total == 0 || (public > 0 && public <= total))
+      property $ \(NonNegative totalIds) (NonNegative publicIds) ->
+        artistPubliclyListed (artistDirectoryVisibilityFromCounts totalIds publicIds)
+          === (totalIds == 0 || (publicIds > 0 && publicIds <= totalIds))
 
   describe "admitArtistTip" $ do
     it "rejects a party without an artist profile" $
@@ -39,8 +39,8 @@ spec = describe "TDF.Commerce.ArtistTip (PAY-TIP-001)" $ do
     it "routes an admitted tip to the addressed artist's own account" $
       admitArtistTip (Just (Just " acct_9 ")) (DirectoryIdentity 1) `shouldBe` Right "acct_9"
     it "never admits a hidden artist and never invents a destination" $
-      property $ \(NonNegative total) (NonNegative public) mAccount ->
-        let visibility = artistDirectoryVisibilityFromCounts total public
+      property $ \(NonNegative totalIds) (NonNegative publicIds) mAccount ->
+        let visibility = artistDirectoryVisibilityFromCounts totalIds publicIds
             stored = fmap T.pack mAccount
         in case admitArtistTip (Just stored) visibility of
              Right account ->
