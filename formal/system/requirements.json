@@ -7477,7 +7477,7 @@
       "id": "EVT-FUNNEL-001",
       "title": "Observe the public ticket funnel without exporting private ticket data",
       "domain": "EVT",
-      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority. Every backend-created hosted payment session counts as initiation, including prepared, failed and confirmed-no-charge outcomes; initiation deduplicates per order/provider. Direct event and checkout landing UTMs replace stale campaign attribution before observation, without persisting private order paths or lookup parameters; disabled analytics stores no attribution.",
+      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority. Every backend-created hosted payment session counts as initiation, including prepared, failed and confirmed-no-charge outcomes; initiation deduplicates per order/provider. Direct event and checkout landing UTMs replace stale campaign attribution before observation, without persisting private order paths or lookup parameters; disabled analytics stores no attribution. When the TDF storefront is closed for an event (no approved price policy, no tiers, sold out), public surfaces never render an empty order form: they localise the server reason and, for imported events, link to the external ticket vendor recovered from the published description.",
       "authority": "User-approved event ticketing scope sections 9, 17, 28 and 39; existing privacy analytics boundary",
       "source": "docs/events/ticket-funnel-observations.md",
       "contract": "docs/events/ticket-funnel-observations.md",
@@ -7530,13 +7530,15 @@
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/utils/externalTicketing.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/utils/externalTicketing.test.ts"
       ],
       "formalModels": [],
       "verification": "React component tests exercise actual route boundaries; helper tests cover privacy, disabled client, storage errors and local deduplication.",

@@ -381,6 +381,25 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(metadata).not.toHaveProperty('structuredData');
   });
 
+  it('replaces the empty checkout form with the external ticket vendor when TDF does not sell the event', async () => {
+    getStorefrontMock.mockResolvedValue({
+      ...storefrontFixture,
+      description: 'Concierto en Miami.\nEntradas y detalles: https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325',
+      policy: null,
+      tiers: [],
+      checkoutAvailable: false,
+      unavailableReason: 'This event has no approved active ticket price and fee policy',
+    });
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.textContent).toContain('Este evento todavía no vende entradas a través de TDF.'));
+    expect(container.textContent).not.toContain('This event has no approved active ticket price');
+    expect(container.textContent).not.toContain('Elige tus entradas');
+    expect(container.querySelector('form')).toBeNull();
+    const vendorLink = container.querySelector('a[href="https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325"]');
+    expect(vendorLink?.textContent).toContain('Comprar entradas en Eventbrite');
+    expect(vendorLink?.getAttribute('target')).toBe('_blank');
+  });
+
   it('reports a bank transfer as pending staff verification, never as paid', async () => {
     const bankTransfer = {
       instructions: 'Banco Internacional ahorros 440781141',
