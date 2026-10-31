@@ -22004,6 +22004,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/prompts/formal-validation.md",
+      "sha256": "482f7bca4f55c6d4512d3fee923fcdd921d068f85266bed6bb813a141b53b4f6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/records-ingestion/2026-09-18-thumbnail-evidence.md",
       "sha256": "f1c1fe108a0baac79997871b0c2733b14338dbaf39542afc775ffdddf485bca9",
       "authority": "inferred",
@@ -27297,7 +27304,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "3bc84f42151c341af9bbbeb0d83a55a3d1f0a530712b5d19687678fc98260de0",
+      "sha256": "4a905860f664535b6cd406382c8ed8ff36941f8571574e9174db5bb29ca2ab8f",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -27319,6 +27326,13 @@
     {
       "path": "formal/system/assurance-report.md",
       "sha256": "4349c7c347ca316e62a8068867c9d63390834b8360702f45c80200a9fb865ee1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/audit-2026-10-31-phase1.md",
+      "sha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -33701,6 +33715,347 @@
             "Model property/actions": "Progress, weak fairness of Read",
             "Mechanism": "Available atomic read or terminal HTTP error",
             "Test": "TLC temporal check; database/network availability assumed"
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-01-A8D218EC",
+      "declaredId": "F-01",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 118,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-01",
+        "Sev.": "error",
+        "Dominio": "P1 contratos",
+        "Hallazgo": "El gitlink de `tdf-app` fija el móvil en `7586be9`, que solo existe en `feat/music-search-contract-20261026` (y `feat/campaign-feature-registry-20261029`). `main` del móvil (`80d57fd`, 2026-10-21) es ancestro pero le faltan 12 commits, entre ellos los contratos de importes exactos de música (`ec17381`), el recibo de transferencia de tickets (`d832bb3`) y la moderación de memorias de eventos. No hay ramas `release/tdf-shipped-*`. La verificación de clientes generados valida contra una revisión que no está en `main` del móvil; si la rama se borra, el gitlink deja de poder obtenerse."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 118,
+          "statement": "error",
+          "columns": {
+            "ID": "F-01",
+            "Sev.": "error",
+            "Dominio": "P1 contratos",
+            "Hallazgo": "El gitlink de `tdf-app` fija el móvil en `7586be9`, que solo existe en `feat/music-search-contract-20261026` (y `feat/campaign-feature-registry-20261029`). `main` del móvil (`80d57fd`, 2026-10-21) es ancestro pero le faltan 12 commits, entre ellos los contratos de importes exactos de música (`ec17381`), el recibo de transferencia de tickets (`d832bb3`) y la moderación de memorias de eventos. No hay ramas `release/tdf-shipped-*`. La verificación de clientes generados valida contra una revisión que no está en `main` del móvil; si la rama se borra, el gitlink deja de poder obtenerse."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-02-A8D218EC",
+      "declaredId": "F-02",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 119,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-02",
+        "Sev.": "error",
+        "Dominio": "Garantía",
+        "Hallazgo": "Ningún requisito está demostrado (0/159). Los 124 modelos TLA+ solo tienen chequeo acotado de TLC; no hay invariantes inductivos ni TLAPS. Lo único demostrado son 11 obligaciones SMT."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 119,
+          "statement": "error",
+          "columns": {
+            "ID": "F-02",
+            "Sev.": "error",
+            "Dominio": "Garantía",
+            "Hallazgo": "Ningún requisito está demostrado (0/159). Los 124 modelos TLA+ solo tienen chequeo acotado de TLC; no hay invariantes inductivos ni TLAPS. Lo único demostrado son 11 obligaciones SMT."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-03-A8D218EC",
+      "declaredId": "F-03",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 120,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-03",
+        "Sev.": "error",
+        "Dominio": "P0",
+        "Hallazgo": "Hay módulos de cobro y seguridad activos sin requisito ni modelo (§5), en especial `DomoQuoteCheckout` (1 407 líneas), `Invoice/SRI`, los adaptadores PlaceToPay/PayPhone, `ProviderEventWorker`, `API/Admin` y `ServerInstagramOAuth`."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 120,
+          "statement": "error",
+          "columns": {
+            "ID": "F-03",
+            "Sev.": "error",
+            "Dominio": "P0",
+            "Hallazgo": "Hay módulos de cobro y seguridad activos sin requisito ni modelo (§5), en especial `DomoQuoteCheckout` (1 407 líneas), `Invoice/SRI`, los adaptadores PlaceToPay/PayPhone, `ProviderEventWorker`, `API/Admin` y `ServerInstagramOAuth`."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-04-A8D218EC",
+      "declaredId": "F-04",
+      "statement": "warning",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 121,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-04",
+        "Sev.": "warning",
+        "Dominio": "P0/P1",
+        "Hallazgo": "54 requisitos críticos sin modelo, entre ellos `PAY-CHECKOUT-001/003`, `PAY-DOMAIN-BINDING-001`, `SYS-ESCROW-001..003`, `AUTH-WEBHOOK-001`, `AUTH-CORS-001`, `AUTH-REGISTRY-001`, `AUTH-LOGOUT-001`, `AUTH-ENTRY-002` y `PRIV-WEBHOOK-001`."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 121,
+          "statement": "warning",
+          "columns": {
+            "ID": "F-04",
+            "Sev.": "warning",
+            "Dominio": "P0/P1",
+            "Hallazgo": "54 requisitos críticos sin modelo, entre ellos `PAY-CHECKOUT-001/003`, `PAY-DOMAIN-BINDING-001`, `SYS-ESCROW-001..003`, `AUTH-WEBHOOK-001`, `AUTH-CORS-001`, `AUTH-REGISTRY-001`, `AUTH-LOGOUT-001`, `AUTH-ENTRY-002` y `PRIV-WEBHOOK-001`."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-05-A8D218EC",
+      "declaredId": "F-05",
+      "statement": "warning",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 122,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-05",
+        "Sev.": "warning",
+        "Dominio": "Todos",
+        "Hallazgo": "407 de 508 rutas mutantes servidas no aparecen en ningún requisito (heurística; el número exacto se fija en la fase 2 con mapeo por manejador)."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 122,
+          "statement": "warning",
+          "columns": {
+            "ID": "F-05",
+            "Sev.": "warning",
+            "Dominio": "Todos",
+            "Hallazgo": "407 de 508 rutas mutantes servidas no aparecen en ningún requisito (heurística; el número exacto se fija en la fase 2 con mapeo por manejador)."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-06-A8D218EC",
+      "declaredId": "F-06",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 123,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-06",
+        "Sev.": "error",
+        "Dominio": "P0 dinero",
+        "Hallazgo": "`createArtistTip` (`tdf-hq/src/TDF/Server.hs:1214`), `POST /fans/artists/{id}/tips`, ruta pública: (a) no hay requisito ni modelo; (b) no hay clave de idempotencia: cada reintento crea una fila nueva y un PaymentIntent nuevo de Stripe; (c) inserta la fila `pending` **antes** de comprobar que Stripe está configurado, dejando filas huérfanas con un 500; (d) devuelve al cliente el texto de error del proveedor (`\"Stripe tip error: \" <> err`), lo que probablemente contradice `PRIV-ERROR-001`; (e) acepta propinas para cualquier perfil con cuenta Stripe, sin mirar su estado (Q2)."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 123,
+          "statement": "error",
+          "columns": {
+            "ID": "F-06",
+            "Sev.": "error",
+            "Dominio": "P0 dinero",
+            "Hallazgo": "`createArtistTip` (`tdf-hq/src/TDF/Server.hs:1214`), `POST /fans/artists/{id}/tips`, ruta pública: (a) no hay requisito ni modelo; (b) no hay clave de idempotencia: cada reintento crea una fila nueva y un PaymentIntent nuevo de Stripe; (c) inserta la fila `pending` **antes** de comprobar que Stripe está configurado, dejando filas huérfanas con un 500; (d) devuelve al cliente el texto de error del proveedor (`\"Stripe tip error: \" <> err`), lo que probablemente contradice `PRIV-ERROR-001`; (e) acepta propinas para cualquier perfil con cuenta Stripe, sin mirar su estado (Q2)."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-07-A8D218EC",
+      "declaredId": "F-07",
+      "statement": "warning",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 124,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-07",
+        "Sev.": "warning",
+        "Dominio": "P0 dinero",
+        "Hallazgo": "Webhook de Stripe (`SocialEventsHandlers.hs:829`): la deduplicación lee (`getBy`) antes de despachar e inserta (`insertUnique`) después, en transacciones separadas, así que dos entregas concurrentes del mismo evento despachan las dos. Las guardas de `markCourseRegistrationStatus`, `markArtistTipStatus` y la primera rama de `markMarketplaceOrderStatus` leen y luego actualizan sin `WHERE` condicional, a diferencia de la rama de recuperación, que sí usa `updateWhere`. El efecto observable parece acotado (los estados destino son coherentes), pero no hay modelo que lo garantice."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 124,
+          "statement": "warning",
+          "columns": {
+            "ID": "F-07",
+            "Sev.": "warning",
+            "Dominio": "P0 dinero",
+            "Hallazgo": "Webhook de Stripe (`SocialEventsHandlers.hs:829`): la deduplicación lee (`getBy`) antes de despachar e inserta (`insertUnique`) después, en transacciones separadas, así que dos entregas concurrentes del mismo evento despachan las dos. Las guardas de `markCourseRegistrationStatus`, `markArtistTipStatus` y la primera rama de `markMarketplaceOrderStatus` leen y luego actualizan sin `WHERE` condicional, a diferencia de la rama de recuperación, que sí usa `updateWhere`. El efecto observable parece acotado (los estados destino son coherentes), pero no hay modelo que lo garantice."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-08-A8D218EC",
+      "declaredId": "F-08",
+      "statement": "warning",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 125,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-08",
+        "Sev.": "warning",
+        "Dominio": "Registro",
+        "Hallazgo": "Calidad del registro: 3 requisitos con `critical: null` (`DISCOVERY-NAV-001`, `NAV-MENU-COVERAGE-001`, `ART-ENRICH-REVIEW-001`); dominio no canónico `\"Artist enrichment\"`; 12 IDs cuyo prefijo no coincide con su dominio (`SYS-MONEY-*` y `SYS-ESCROW-*` → `PAY`)."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 125,
+          "statement": "warning",
+          "columns": {
+            "ID": "F-08",
+            "Sev.": "warning",
+            "Dominio": "Registro",
+            "Hallazgo": "Calidad del registro: 3 requisitos con `critical: null` (`DISCOVERY-NAV-001`, `NAV-MENU-COVERAGE-001`, `ART-ENRICH-REVIEW-001`); dominio no canónico `\"Artist enrichment\"`; 12 IDs cuyo prefijo no coincide con su dominio (`SYS-MONEY-*` y `SYS-ESCROW-*` → `PAY`)."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-09-A8D218EC",
+      "declaredId": "F-09",
+      "statement": "warning",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 126,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-09",
+        "Sev.": "warning",
+        "Dominio": "P2",
+        "Hallazgo": "`review`: el estado `pending` es inalcanzable (ver §6). O el inicial debe incluir `pending`, o sobra el estado."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 126,
+          "statement": "warning",
+          "columns": {
+            "ID": "F-09",
+            "Sev.": "warning",
+            "Dominio": "P2",
+            "Hallazgo": "`review`: el estado `pending` es inalcanzable (ver §6). O el inicial debe incluir `pending`, o sobra el estado."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-10-A8D218EC",
+      "declaredId": "F-10",
+      "statement": "info",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 127,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-10",
+        "Sev.": "info",
+        "Dominio": "P0 seguridad",
+        "Hallazgo": "`requireSeedToken` (`Server.hs:1062`) compara el token con `/=`, en tiempo no constante, mientras el resto del código usa `constEq`. El riesgo es bajo porque la configuración rechaza el token en entornos hosted o de producción."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 127,
+          "statement": "info",
+          "columns": {
+            "ID": "F-10",
+            "Sev.": "info",
+            "Dominio": "P0 seguridad",
+            "Hallazgo": "`requireSeedToken` (`Server.hs:1062`) compara el token con `/=`, en tiempo no constante, mientras el resto del código usa `constEq`. El riesgo es bajo porque la configuración rechaza el token en entornos hosted o de producción."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-11-A8D218EC",
+      "declaredId": "F-11",
+      "statement": "info",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 128,
+      "sourceSha256": "b5d27f1ef705d3ffd04c7f0eee7aa4e6635ea960f4d03f01e383daaf332d854f",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-11",
+        "Sev.": "info",
+        "Dominio": "Herramientas",
+        "Hallazgo": "`audit:formal` produce 12 568 hallazgos (544 warnings). Con tanto ruido pierde valor como señal; conviene separar las reglas de estilo de las semánticas."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 128,
+          "statement": "info",
+          "columns": {
+            "ID": "F-11",
+            "Sev.": "info",
+            "Dominio": "Herramientas",
+            "Hallazgo": "`audit:formal` produce 12 568 hallazgos (544 warnings). Con tanto ruido pierde valor como señal; conviene separar las reglas de estilo de las semánticas."
           }
         }
       ],

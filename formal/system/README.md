@@ -5,6 +5,8 @@ conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
 
+- [audit-2026-10-31-phase1.md](audit-2026-10-31-phase1.md): phase-1 inventory of the system-wide formal audit (docs/prompts/formal-validation.md): measured baseline, P0 money/security coverage gaps, state-machine structure checks, preliminary findings and open owner questions. Measurement only; no conformance claim.
+
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
 - [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence and explicit blocked release decision.
