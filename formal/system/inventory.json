@@ -845,6 +845,7 @@
       "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
+      "tdf-hq-ui/src/components/InAppBrowserNotice.tsx",
       "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
       "tdf-hq-ui/src/components/KeyboardShortcutsDialog.tsx",
       "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx",
@@ -1417,6 +1418,8 @@
       "tdf-hq-ui/src/utils/googleIdToken.ts",
       "tdf-hq-ui/src/utils/ids.test.ts",
       "tdf-hq-ui/src/utils/ids.ts",
+      "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+      "tdf-hq-ui/src/utils/inAppBrowser.ts",
       "tdf-hq-ui/src/utils/incrementalSha256.test.ts",
       "tdf-hq-ui/src/utils/incrementalSha256.ts",
       "tdf-hq-ui/src/utils/instagramTraffic.test.ts",
@@ -7693,6 +7696,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a584422b5e9c02af",
+      "path": "tdf-hq-ui/src/components/InAppBrowserNotice.tsx",
+      "sha256": "ee2e97283f584ae5028f15da77b1b9783b8dcc7c03a4b6678feeede6a887775b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-19cebc297ff26373",
       "path": "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
       "sha256": "b0f7c70bc37e4178d5a33e4104ad4083402da01262505a13d424f3299664fbfa",
@@ -8895,13 +8904,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "31583e47dca59d77c2e7e74b50ff4672ac2ebbdaae21240669a8a46408b78868",
+      "sha256": "db8231f6f28f7b0827e057e9d9b150b5678de60b2ef4e55486443708023fd7f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "78299818099457a78e8e76f5aa63d06e416aa16a59bf470c88d3390296bff21a",
+      "sha256": "b918d1907be49f093999c63c94b79fd42dec140a67727c77c8c2753581ec84d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9759,13 +9768,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "424eb5cbb64ff0bdfe6bd7b42a5a675485d04c36d9fa5486789d2b404f3aa5a2",
+      "sha256": "67c05020a242489d5edd2617caa0469ae10b86dcd655349c70358740bd82f388",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "9cccc4c45c2497fbf70418f149871d0682166252954bad338361de2532d8a252",
+      "sha256": "58e1f9a2962556913c7540cf9db152866b824323007a5ba7b2eb3b49cf907a8b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11122,6 +11131,18 @@
       "id": "SURFACE-516f5dcef1b03f0a",
       "path": "tdf-hq-ui/src/utils/ids.ts",
       "sha256": "3a8eba76d9745d714b0f80c48268f8ea23837657983d93a2e40488424b4de9e3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-65a6b6a33e93f554",
+      "path": "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+      "sha256": "1bc37ad8648797a57854e8c8e7d1ddb65e071c483b28aead5b2571545b24dcd2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4e949bac98e59738",
+      "path": "tdf-hq-ui/src/utils/inAppBrowser.ts",
+      "sha256": "e8cf3a4277519ec11f07f2533ff28a113595a2156406bd95d08162edbc793924",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27983,7 +28004,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sha256": "54ae574c5552aeaf496d421353ecffdb9d7217b0655a31f02ad0d237cc1ee0d5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
