@@ -14279,7 +14279,7 @@
     {
       "id": "SURFACE-eb7033ac652ca165",
       "path": "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
-      "sha256": "639417bef9d0c21901f4587b99f1dd8396679f7bc28e0917a21a93141c78490f",
+      "sha256": "9ccf9c628a161f706d6392984c66cfe722e06de5e4cca10ab2d89ee3453aece4",
       "semanticConformance": "not-established-by-discovery"
     },
     {

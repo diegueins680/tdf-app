@@ -15,9 +15,13 @@ DO $guard$ BEGIN
     SELECT 1 FROM pg_constraint
     WHERE conname='api_token_validity_window' AND conrelid='public.api_token'::regclass
   ) THEN
+    -- Both columns NULL (unbounded) or both set to a well-formed window. The
+    -- explicit NOT NULL terms matter: a half window would otherwise evaluate
+    -- the comparison to NULL and slip past the CHECK.
     ALTER TABLE api_token ADD CONSTRAINT api_token_validity_window CHECK (
       (issued_at_epoch IS NULL AND expires_at_epoch IS NULL)
-      OR (issued_at_epoch >= 0 AND expires_at_epoch > issued_at_epoch)
+      OR (issued_at_epoch IS NOT NULL AND expires_at_epoch IS NOT NULL
+          AND issued_at_epoch >= 0 AND expires_at_epoch > issued_at_epoch)
     );
   END IF;
 END $guard$;
