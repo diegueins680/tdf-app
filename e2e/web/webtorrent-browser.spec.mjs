@@ -29,7 +29,7 @@ test('@critical official WebTorrent browser module imports and releases its serv
     const { default: WebTorrent } = await import(asset);
     const nativeWebRTC = Boolean(globalThis.RTCPeerConnection || globalThis.mozRTCPeerConnection || globalThis.webkitRTCPeerConnection);
     if (Boolean(WebTorrent.WEBRTC_SUPPORT) !== nativeWebRTC) throw new Error('Browser WebRTC capability and library support disagree');
-    const registration = await navigator.serviceWorker.register('/webtorrent-sw.min.js', { scope: '/torrent-stream/' });
+    const registration = await navigator.serviceWorker.register('/webtorrent-sw.min.js', { scope: '/' });
     let client;
     try {
       if (registration.active?.state !== 'activated') {
@@ -45,6 +45,13 @@ test('@critical official WebTorrent browser module imports and releases its serv
         });
       }
       if (!WebTorrent.WEBRTC_SUPPORT) return { moduleType: typeof WebTorrent, nativeWebRTC, webRTC: false, workerState: registration.active.state, scope: new URL(registration.scope).pathname, constructorLifecycle: 'NOT_APPLICABLE_NATIVE_WEBRTC_UNAVAILABLE' };
+      if (navigator.serviceWorker.controller !== registration.active) {
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => { navigator.serviceWorker.removeEventListener('controllerchange', check); reject(new Error('Page control timed out')); }, 10_000);
+          const check = () => { if (navigator.serviceWorker.controller === registration.active) { clearTimeout(timer); navigator.serviceWorker.removeEventListener('controllerchange', check); resolve(); } };
+          navigator.serviceWorker.addEventListener('controllerchange', check); check();
+        });
+      }
       client = new WebTorrent({ tracker: false, dht: false, lsd: false });
       const server = client.createServer({ controller: registration }, 'browser');
       const before = { moduleType: typeof WebTorrent, nativeWebRTC, webRTC: WebTorrent.WEBRTC_SUPPORT, torrents: client.torrents.length, workerState: registration.active.state, scope: new URL(registration.scope).pathname, server: Boolean(server) };
@@ -58,11 +65,11 @@ test('@critical official WebTorrent browser module imports and releases its serv
   await testInfo.attach('browser-component-lifecycle', { body: JSON.stringify(result), contentType: 'application/json' });
   if (browserName === 'chromium' || browserName === 'firefox') expect(result.webRTC).toBe(true);
   if (result.webRTC) {
-    expect(result).toEqual({ moduleType: 'function', nativeWebRTC: true, webRTC: true, torrents: 0, workerState: 'activated', scope: '/torrent-stream/', server: true, destroyed: true });
+    expect(result).toEqual({ moduleType: 'function', nativeWebRTC: true, webRTC: true, torrents: 0, workerState: 'activated', scope: '/', server: true, destroyed: true });
   } else {
     // Production explicitly refuses torrent playback without native WebRTC.
     // Module import and worker lifecycle still execute; constructor is not claimed.
-    expect(result).toEqual({ moduleType: 'function', nativeWebRTC: false, webRTC: false, workerState: 'activated', scope: '/torrent-stream/', constructorLifecycle: 'NOT_APPLICABLE_NATIVE_WEBRTC_UNAVAILABLE' });
+    expect(result).toEqual({ moduleType: 'function', nativeWebRTC: false, webRTC: false, workerState: 'activated', scope: '/', constructorLifecycle: 'NOT_APPLICABLE_NATIVE_WEBRTC_UNAVAILABLE' });
   }
   expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
   expect(external).toEqual([]);

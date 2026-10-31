@@ -12,7 +12,8 @@ This establishes an audit/dependency defect, not a demonstrated TDF attack path.
 The corrected boundary must satisfy these acceptance criteria:
 
 - Load exactly the original official browser ES module, with its reviewed hash,
-  through Vite. Preserve the worker URL, scope, session lifecycle and API calls.
+  through Vite. Preserve the worker URL and client API. Worker control and routing
+  follow the separately specified `MUSIC-TORRENT-CONTROL-001` contract.
 - Do not install the unused Node WebTorrent/discovery/tracker/ip packages,
   including npm aliases, in the root workspace lock.
 - Preserve the existing production audit threshold. Remove the obsolete expired
@@ -39,3 +40,9 @@ reachability, vulnerability-free or legal-completeness claim follows. Real peers
 trackers, paid services, provider state and production playback are outside the
 isolated browser lifecycle check. Fresh evidence must bind to the candidate
 commit; advisory results expire as the external feed changes.
+
+The original scope-preservation condition was a specification defect: actual
+app documents outside `/torrent-stream/` were uncontrolled and returned HTML
+instead of audio. The new control contract corrects scope and worker dispatch;
+the reviewed browser module, dependency, notice and audit obligations stay intact.
+Historical qualification reports describe their original immutable commits.

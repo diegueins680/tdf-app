@@ -1,8 +1,14 @@
+import { jest } from '@jest/globals';
+import { createTheme } from '@mui/material/styles';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import StudioGallery from './StudioGallery';
 
+const leavingScreen = createTheme().transitions.duration.leavingScreen;
+
 describe('StudioGallery', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => { jest.clearAllTimers(); jest.useRealTimers(); });
   it('opens a complete local photo and restores keyboard focus after Escape', async () => {
     render(<StudioGallery />);
     const gallery = screen.getByRole('group', { name: 'Fotos del estudio TDF' });
@@ -17,7 +23,8 @@ describe('StudioGallery', () => {
     fireEvent.load(photo);
     expect(within(dialog).queryByRole('status')).not.toBeInTheDocument();
     fireEvent.keyDown(dialog, { key: 'Escape' });
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await act(async () => { await jest.advanceTimersByTimeAsync(leavingScreen); });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
   });
 
@@ -43,6 +50,7 @@ describe('StudioGallery', () => {
     fireEvent.load(retry);
     expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cerrar foto' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await act(async () => { await jest.advanceTimersByTimeAsync(leavingScreen); });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

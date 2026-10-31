@@ -13568,7 +13568,7 @@
     {
       "id": "SYS-WEBTORRENT-BROWSER-001",
       "title": "Preserve browser playback while removing unused Node torrent dependencies",
-      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and worker URL and client API, with page control and dispatch governed by MUSIC-TORRENT-CONTROL-001, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
       "domain": "SYS",
       "critical": false,
       "actors": [
@@ -13643,6 +13643,94 @@
       "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
       "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
       "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
+    },
+    {
+      "id": "MUSIC-TORRENT-CONTROL-001",
+      "title": "Control app pages before torrent playback and route requests to their originating tab",
+      "statement": "Before creating a torrent server or attaching audio, the activated owned root worker must be the exact document controller. Only actual stream-prefix URLs are intercepted; nonempty-client-ID streams dispatch solely to their originating document with bounded reply/resource lifetime.",
+      "domain": "MUSIC",
+      "critical": false,
+      "actors": [
+        "Music listener",
+        "Browser document",
+        "Torrent service worker",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Trusted browser service-worker scope/identity semantics and same-origin application scripts; no arbitrary concurrent foreign registrar.",
+        "One active WebTorrent server per document; controlled playback requests carry a nonempty initiating client ID.",
+        "Official reviewed WebTorrent 2.8.5 browser module; native WebRTC is required by existing product behavior."
+      ],
+      "inputs": [
+        "Root service-worker registration and controller/state events",
+        "FetchEvent.clientId and exact request URL",
+        "Synthetic torrent metadata and loopback audio in verification"
+      ],
+      "state": {
+        "boundary": "formal/system/torrent-worker-control.md"
+      },
+      "allowedTransitions": [
+        "No root owner -> register own known URL; own root -> reuse and revalidate.",
+        "Own activating worker -> observe activation AND actual control before server construction.",
+        "Own activated uncontrolled worker -> request eligible-client claim once and await real controller change.",
+        "Controlled stream request -> only initiating document -> bounded reply -> response/stream -> close ports."
+      ],
+      "forbiddenTransitions": [
+        "Overwrite an observed foreign root worker or foreign document controller.",
+        "Treat worker activation or a cached promise alone as current page control.",
+        "Broadcast a request with nonempty clientId to unrelated documents.",
+        "Intercept an unrelated app URL because a query embeds a stream/control URL.",
+        "Treat passing finite tests or absence of local WebKit execution as a universal proof."
+      ],
+      "effects": [
+        "Audio can stream through the controlling worker without unrelated tabs answering first.",
+        "Owned observers and message channels are released on completion/refusal/timeout."
+      ],
+      "authorization": "No change to backend authorization, provider state, real external peers or production deployment is authorized by this repair.",
+      "privacy": "Verification uses synthetic loopback-only content; no artist data or credentials. Same-origin ownership checks do not attest worker bytes at runtime.",
+      "concurrency": "Observe registration updates, worker state and controller changes together; use originating-client selection for controlled requests. Arbitrary concurrent foreign registration and multiple servers in one document remain outside assumptions.",
+      "idempotency": "Every ensure call revalidates browser state; owned registration is reused and explicit claim sent at most once per observed worker per wait.",
+      "failure": "Foreign workers refuse untouched; unavailable native WebRTC refuses; missing/nonresponding request owner returns404; unachieved page control refuses after15seconds with listener/timer cleanup.",
+      "recovery": "Retry a later session against current browser state. Preserve old narrow registrations rather than automatically deleting them.",
+      "observability": "Source-bound raw command exits, exact synthetic full/range bytes, controller identity, negative controls and explicit browser/protocol bounds.",
+      "source": "Existing torrentAudio and RadioWidget playback contracts; actual Chromium/Firefox narrow-scope HTML counterexample and Chromium two-document404; browser Clients.claim/controller semantics.",
+      "contract": "formal/system/torrent-worker-control.md",
+      "implementation": [
+        "tdf-hq-ui/src/utils/torrentWorker.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "tdf-hq-ui/public/webtorrent-sw.min.js",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci.yml",
+        "scripts/build-torrent-audio-fixture.mjs",
+        "playwright.torrent-audio.config.mjs",
+        "e2e/torrent-audio/setup.mjs",
+        "e2e/torrent-audio/fixture-server.mjs",
+        "tdf-hq-ui/browser-test/torrent-audio.html"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/torrentWorker.test.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "scripts/__tests__/torrent-worker-routing.test.mjs",
+        "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
+        "e2e/torrent-audio/streaming.spec.mjs",
+        "e2e/web/webtorrent-browser.spec.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite executable API-transition, actual worker-protocol, real HTTP resource and actual Vite/browser stream cases; no exhaustive liveness or refinement proof.",
+      "ambiguity": [
+        "Browser-specific null-controller reuse cause was not established; explicit claim handles the observed state.",
+        "Empty-client-ID legacy broadcast retains its first-response limitation; more-specific legacy pages may refuse until normal browser lifecycle/navigation resolves control."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite unit/protocol/browser controls are TESTED; arbitrary concurrent foreign registration, legacy empty-client ownership and universal browser liveness remain unproven."
+      },
+      "authority": "approved",
+      "property": "Server construction follows exact activated root control; controlled nonempty-client-ID requests reach only their initiating document; unrelated URLs pass through and owned resource waits are bounded.",
+      "verification": "Jest API-transition controls, Node actual worker VM/MessageChannel and real HTTP lifecycle controls; actual compiled helper in Chromium/Firefox locally and three browser projects enforced in pinned CI, with explicit unsupported-capability evidence and deliberate semantic faults.",
+      "evidence": "Candidate-commit qualification reports and raw execution receipts published separately; no universal proof."
     }
   ]
 }
