@@ -6,7 +6,7 @@
   "sourceCommit": "b94c353569c6219e9ef70b0feeddd7d32abe223c",
   "browserExecutionCommit": "c9b2c63e45b96ff89668a3077c06357c8cfc7df2",
   "fullUIExecutionCommit": "b94c353569c6219e9ef70b0feeddd7d32abe223c",
-  "evidenceCommit": "Containing normal report-only child; verifier checks its parent, four newly added Git blobs and all unique safe archive members.",
+  "evidenceCommit": "Initial bundle report-only child f28089e794da4e4fbb19c9d23673e46a0c225302 has parent qualified source b94c353569c6219e9ef70b0feeddd7d32abe223c. One normal report-only wording followup corrects native-WebRTC terminology and this lineage description. Final source-to-head diff remains exactly the four newly added report blobs; all214 safe archive members remain unchanged.",
   "scope": "Correct torrent playback page control and originating-tab dispatch; preserve official browser bytes, client API, dependency/advisory policy, backend and financial behavior. Independently improve two verification harnesses without changing their observable assertions.",
   "highestPriorityInvestigated": [
     "Parent685 removed an unused vulnerable Node graph blocking all protected repair integrations; all7 hosted workflows success, required human review missing.",
@@ -38,7 +38,7 @@
     "Known worker URL at root scope; revalidate owned registration/current controller, refuse observed foreign scripts untouched, await exact active activated controller via unified observer and bounded cleanup, explicitly request own eligible-client claim.",
     "Readable MIT worker derivative uses strict URL prefix, nonempty-clientId owner-only dispatch, bounded initial reply and channel cleanup; keep existing stream/keepalive/cancellation support protocol.",
     "Actual helper checks constructor/native WebRTC before installing worker, awaits current page control immediately before client creation, and retains abort/selection/progress/destroy behavior.",
-    "Actual Vite helper/browser synthetic WAV fixture, full/range/media and two-tab checks are enforced in pinned CI; default-off WebRTC remains explicit NOT_APPLICABLE where unsupported.",
+    "Actual Vite helper/browser synthetic WAV fixture, full/range/media and two-tab checks are enforced in pinned CI; native WebRTC unavailability remains explicit NOT_APPLICABLE in unsupported test branches.",
     "Separate gallery test-only commit uses actual MUI default exit duration under fake clock with original dismissal/focus assertions; actual close and focus mutants still fail. Production gallery unchanged. Exact cause of initial full-run timing failure remains UNKNOWN."
   ],
   "properties": [
