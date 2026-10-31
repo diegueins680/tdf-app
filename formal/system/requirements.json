@@ -1662,6 +1662,93 @@
       ]
     },
     {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "ambiguity": [
+        "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
+        "Production release sequencing after the additive migration is not yet verified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+      },
+      "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
+      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
+      "observability": "No token in production receipts; retain migration identity and exact tested source.",
+      "formalModels": [],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-hq/test/integration/event_operations_http_fixture.sql",
+        "scripts/test-api-token-session-expiry-migration.sh",
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/social/test-http.sh",
+        "tdf-hq/test/integration/event_raci_browser_fixture.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "id": "ID-SESSION-004",
+      "title": "Interactive sessions expire on the server",
+      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
+      "actors": [
+        "session holder",
+        "expired or legacy session holder",
+        "service token holder"
+      ],
+      "preconditions": [
+        "Token row is active with an authenticatable label"
+      ],
+      "inputs": [
+        "Opaque bearer or cookie session token",
+        "SESSION_TOKEN_TTL_SECONDS",
+        "Database UTC clock"
+      ],
+      "state": {
+        "window": "api_token.issued_at_epoch, api_token.expires_at_epoch",
+        "time": "UTC epoch seconds; interactive expires=issued+ttl, half-open"
+      },
+      "allowedTransitions": [
+        "Login/signup/password change/recovery -> interactive token issued with window",
+        "Active token with now < expires -> authenticated",
+        "Service token without window -> authenticated"
+      ],
+      "forbiddenTransitions": [
+        "now >= expires -> authenticated",
+        "Interactive label without window -> authenticated",
+        "Expired bearer -> credential identification for password change",
+        "TTL > cookie Max-Age -> configuration accepted"
+      ],
+      "effects": [
+        "Issuance writes the window in the issuing transaction; denial has no side effects"
+      ],
+      "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
+      "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
+      "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
+      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
+      "implementation": [
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
+        "tdf-hq/sql/init_schema.sql",
+        "scripts/production-migrations.json",
+        "scripts/production-release.mjs",
+        "tdf-hq/src/TDF/Social/Session.hs"
+      ]
+    },
+    {
       "id": "SYS-BUILD-001",
       "title": "Single backend package authority",
       "statement": "Build and test the backend with the Stack-selected toolchain and hand-maintained Cabal package; the retired Hpack description must remain outside the active package.",

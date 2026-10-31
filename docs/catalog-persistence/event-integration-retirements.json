@@ -678,19 +678,20 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "a2bb0e828d5b94c1cb31",
-      "reason": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
-      "previousReplacementId": "79a6def1e91baee6e937",
+      "replacementId": "040c32c5b44ceadb2dde",
+      "reason": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
+      "previousReplacementId": "a2bb0e828d5b94c1cb31",
       "currentResolution": {
-        "id": "a2bb0e828d5b94c1cb31",
-        "valueCount": 227,
+        "id": "040c32c5b44ceadb2dde",
+        "valueCount": 228,
         "sourceParents": [
           "5875e60701465f9512fad1628b64c0d59a53f049",
-          "4b81ab4ab92416aa31dc816057fb8e6a736596d1"
+          "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+          "234ff6f7faf1aecf347c8e92a374228f4ec07aaa"
         ],
-        "justification": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
+        "justification": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
       },
-      "change": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+      "change": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -944,6 +945,16 @@
           },
           "sourceEntryCanonicalSha256": "8ff563904a9e76472408bc186849b6ab056c3fbebcfa336fb2f0b59063ae77f1",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d77611df46eacc8332e2f64b3358448fc5d480ccdd0929838398497d4449e541",
+          "sourceEntry": {
+            "id": "a2bb0e828d5b94c1cb31"
+          },
+          "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousReplacementIds": [
@@ -966,9 +977,10 @@
         "6ff395b6131079017c9d",
         "a70a9a4dd05ce44e950b",
         "f48c34252ff8930b3d74",
-        "2634b239375f2ad309ba"
+        "2634b239375f2ad309ba",
+        "a2bb0e828d5b94c1cb31"
       ],
-      "previousReason": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision."
+      "previousReason": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
     }
   ]
 }

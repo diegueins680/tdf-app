@@ -152,9 +152,11 @@ try {
     body: JSON.stringify({ username, password }), signal: AbortSignal.timeout(30000) });
   const addTokens = suffix => {
     const google = `synthetic-google-${suffix}`, service = `synthetic-service-${suffix}`;
-    sql(`INSERT INTO api_token(token,party_id,label,active) VALUES
-      ('${google}',${independent.partyId},'google-login:claimant@example.test',true),
-      ('${service}',${independent.partyId},'Synthetic service scope',true);`);
+    // Interactive sessions must carry a validity window (ID-SESSION-004); service tokens stay unbounded.
+    sql(`INSERT INTO api_token(token,party_id,label,active,issued_at_epoch,expires_at_epoch) VALUES
+      ('${google}',${independent.partyId},'google-login:claimant@example.test',true,
+        floor(extract(epoch FROM clock_timestamp()))::bigint,floor(extract(epoch FROM clock_timestamp()))::bigint+3600),
+      ('${service}',${independent.partyId},'Synthetic service scope',true,NULL,NULL);`);
     return { google, service };
   };
   const forbiddenAdmin = await fetch(`${base}/admin/users/${credentialId}`, {

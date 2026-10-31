@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
-    "tdf-hq/src/TDF/Models.hs": "92315ba9a595e5d6a106c5430371433927c3923535e2aebfc939f00442c9b45e",
+    "tdf-hq/src/TDF/Auth.hs": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+    "tdf-hq/src/TDF/Models.hs": "598a3e13578e6269e599bc218b3a25900033ca82aa0e610dbfeba8f12b358b2a",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27"
+    "tdf-hq/tdf-hq.cabal": "ce670990ab2b43addb5ee2410d70a71529f443b82b321d5a78380387ab5b9917"
   },
   "obligations": [
     {
@@ -125,6 +125,30 @@
       "change": "Automatic account public-name privacy: register TDF.Auth.AccountName in the executable and tests, register AccountNameSpec, and replace the missing Google-name email fallback with initialAccountName gpName.",
       "semanticReview": "Removing exactly three new Cabal module registrations reproduces protected main byte for byte: dependencies, source paths, GHC/CPP options and existing registrations are unchanged. Reverting only the new ServerAuth import and Google-name call reproduces protected main byte for byte. Authorization predicates, RoleEnum, RecordsIngestion, recoveryWindowValid, reset-token issuance, recovery SQL, identity contract and Stack/lock remain unchanged. The helper accepts only Maybe Text and returns a public label; it does not import or redefine authorization/recovery predicates. Obligation claims, assumptions, translations and limitations are preserved.",
       "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required. Prior 6a09737 hosted failure and approval are historical; no waiver."
+    },
+    {
+      "reviewedAgainst": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "candidateImplementation": "bee50521d92c8f1136f960dea8061aab29c4c971",
+      "changes": [
+        {
+          "source": "tdf-hq/src/TDF/Auth.hs",
+          "previousSha256": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+          "currentSha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7"
+        },
+        {
+          "source": "tdf-hq/src/TDF/Models.hs",
+          "previousSha256": "92315ba9a595e5d6a106c5430371433927c3923535e2aebfc939f00442c9b45e",
+          "currentSha256": "598a3e13578e6269e599bc218b3a25900033ca82aa0e610dbfeba8f12b358b2a"
+        },
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+          "currentSha256": "ce670990ab2b43addb5ee2410d70a71529f443b82b321d5a78380387ab5b9917"
+        }
+      ],
+      "change": "Server-side interactive session expiry (ID-SESSION-004): ApiToken gains nullable issuedAtEpoch/expiresAtEpoch and authentication denies elapsed or absent windows on password-login:/google-login: labels.",
+      "semanticReview": "Auth.hs: the six translated definitions `rolesAreUnique`, `hasValidAuthPartyId`, `hasCoherentRoleGrants`, `isStrictAdminRoleScope`, `hasStrictAdminAccess` and `hasModuleAccess` are byte-identical including signatures and argument patterns, and each remains the single definition the recognizer consumes. Added: `isInteractiveSessionLabel`, `apiTokenWithinValidity :: Int64 -> ApiToken -> Bool` (now < expiresAt when a window exists; otherwise false exactly for interactive labels) and `sessionClockEpoch` (the same clock_timestamp()/strftime query as `recoveryClockEpoch`), exported alongside the existing names. `loadAuthedUser`, the FOR SHARE re-read in `withCurrentAuthSession` and `lookupUsernameFromToken` gain one additional denying guard; no guard is removed or weakened, and role/module loading is unchanged. The only new import is `Data.Int (Int64)`. Models.hs: `RoleEnum` constructors and deriving clause are byte-identical; the sole change is two nullable `Int64 Maybe` fields appended to `ApiToken` before its uniqueness constraint, plus an explanatory comment outside the quasiquote. RecordsIngestion.hs and its `requireAdmin` guard are byte-identical. Cabal: The Cabal manifest now declares a `library` holding every former `src` module as exposed-modules, with `Paths_tdf_hq` as its autogen module; `tdf-hq-exe`, `tdf-ddex-render` and `tdf-hq-test` drop `src` from hs-source-dirs and depend on `tdf-hq` instead. The library's build-depends are the former executable list with duplicate `servant-multipart`/`directory` entries removed; the test suite keeps its former dependency list plus `tdf-hq`. The 250 module registrations are carried over unchanged (TDF.Catalog.DB remains unregistered, as before). GHC options are unchanged per component, and `-Werror=missing-fields` now applies to the library so `src` keeps the executable's strictness. No CPP flags, default extensions, dependency version bounds, Stack resolver or lock changes. Claims, assumptions, translations and negative controls are unchanged.",
+      "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required. The candidate was authored without a local GHC; compilation is established only by the hosted stack build."
     }
   ]
 }

@@ -6,7 +6,10 @@ ALTER TABLE party
  ADD COLUMN instagram TEXT, ADD COLUMN emergency_contact TEXT, ADD COLUMN notes TEXT,
  ADD COLUMN stripe_customer_id TEXT, ADD COLUMN country_code TEXT, ADD COLUMN country_id UUID,
  ADD COLUMN created_at TIMESTAMPTZ NOT NULL DEFAULT now();
-UPDATE api_token SET label='password-login:browser-party-' || party_id::TEXT
+-- Interactive labels require a server-side validity window (ID-SESSION-004).
+UPDATE api_token SET label='password-login:browser-party-' || party_id::TEXT,
+ issued_at_epoch=floor(extract(epoch FROM clock_timestamp()))::bigint,
+ expires_at_epoch=floor(extract(epoch FROM clock_timestamp()))::bigint+3600
  WHERE label IS NULL;
 CREATE TABLE locale_reference (
  id UUID PRIMARY KEY, code TEXT NOT NULL, language_id UUID NOT NULL, country_id UUID,

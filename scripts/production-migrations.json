@@ -1155,6 +1155,11 @@
       "id": "2026-10-25_event_memory_source_permission_locks",
       "path": "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql",
       "introducedBy": "baab857f085b74f333c9f5d29e31306072fbc496"
+    },
+    {
+      "id": "2026-10-31_api_token_session_expiry",
+      "path": "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
+      "introducedBy": "8187065f81fad94677c8ba27760ab2cb74f58f79"
     }
   ]
 }
