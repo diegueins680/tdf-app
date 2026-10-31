@@ -424,7 +424,8 @@ import qualified TDF.ServerRadio as Radio
 import qualified TDF.Server.SocialSync as SocialSync
 import qualified TDF.WhatsApp.Types as WA
 import TDF.ServerAuth
-    ( findReusableActiveToken
+    ( SessionTokenTtl (..)
+    , findReusableActiveToken
     , normalizeAuthEmailAddress
     , parsePasswordChangeAuthToken
     , resolvePasswordResetDelivery
@@ -4932,7 +4933,58 @@ spec = describe "TDF.Server helpers" $ do
                             <> show value
                         )
 
-    describe "loadAuthedUser" $
+    describe "loadAuthedUser" $ do
+        it "enforces the server-side validity window and fails closed on legacy interactive sessions" $ do
+            results <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Session Window User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "window@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
+                    , partyCreatedAt = now
+                    }
+                let token value label window = insert_ ApiToken
+                        { apiTokenToken = value
+                        , apiTokenPartyId = partyId
+                        , apiTokenLabel = label
+                        , apiTokenActive = True
+                        , apiTokenIssuedAtEpoch = fst <$> window
+                        , apiTokenExpiresAtEpoch = snd <$> window
+                        }
+                token "live-login-token" (Just "password-login:window@example.com") (Just (0, farFutureEpoch))
+                token "expired-login-token" (Just "password-login:window@example.com") (Just (0, 1))
+                token "legacy-login-token" (Just "password-login:window@example.com") Nothing
+                token "legacy-google-token" (Just "google-login:window@example.com") Nothing
+                token "unbounded-service-token" Nothing Nothing
+                token "expired-service-token" (Just "service:synthetic") (Just (0, 1))
+                rawExecute
+                    "INSERT INTO party_security_role (party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) SELECT ?,id,NULL,NULL,'bootstrap',NULL,NULL,NULL,TRUE,CURRENT_TIMESTAMP,NULL,1 FROM security_role WHERE code IN ('fan','customer')"
+                    [toPersistValue partyId]
+                live <- loadAuthedUser "live-login-token"
+                expiredLogin <- loadAuthedUser "expired-login-token"
+                legacyLogin <- loadAuthedUser "legacy-login-token"
+                legacyGoogle <- loadAuthedUser "legacy-google-token"
+                unboundedService <- loadAuthedUser "unbounded-service-token"
+                expiredService <- loadAuthedUser "expired-service-token"
+                pure (partyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService)
+            let (expectedPartyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService) = results
+            fmap auPartyId live `shouldBe` Just expectedPartyId
+            fmap auPartyId unboundedService `shouldBe` Just expectedPartyId
+            expiredLogin `shouldBe` Nothing
+            legacyLogin `shouldBe` Nothing
+            legacyGoogle `shouldBe` Nothing
+            expiredService `shouldBe` Nothing
+
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
@@ -4957,18 +5009,24 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "reset-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "mixed-reset-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "Password-Reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 insert_
                     UserCredential
@@ -5051,6 +5109,8 @@ spec = describe "TDF.Server helpers" $ do
                             , apiTokenPartyId = partyId
                             , apiTokenLabel = Nothing
                             , apiTokenActive = True
+                            , apiTokenIssuedAtEpoch = Nothing
+                            , apiTokenExpiresAtEpoch = Nothing
                             }
                 singlePartyId <- insertTestParty "Single Login User" "single@example.com"
                 _ <- insertCredential singlePartyId "single@example.com"
@@ -5096,8 +5156,8 @@ spec = describe "TDF.Server helpers" $ do
                                     , partyCreatedAt = now
                                     }
                         (,)
-                            <$> insert (ApiToken "authorization-token" partyId (Just "password-login:logout@example.com") True)
-                            <*> insert (ApiToken "cookie-token" partyId (Just "password-login:logout@example.com") True)
+                            <$> insert (ApiToken "authorization-token" partyId (Just "password-login:logout@example.com") True (Just 0) (Just farFutureEpoch))
+                            <*> insert (ApiToken "cookie-token" partyId (Just "password-login:logout@example.com") True (Just 0) (Just farFutureEpoch))
                     let env =
                             Env
                                 { envPool = pool
@@ -5987,7 +6047,7 @@ spec = describe "TDF.Server helpers" $ do
                                 , M.partyCountryId = Nothing
                                 , M.partyCreatedAt = now
                                 }
-                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True)
+                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True Nothing Nothing)
                         pure partyIdValue
                     let signupAt = addUTCTime (-3600) now
                         insertProgress partyIdValue signupAtValue =
@@ -9235,11 +9295,13 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 rawExecute
                     "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
                     [toPersistValue tokenId, toPersistValue credId]
-                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                result <- runPasswordResetConfirm testSessionTokenTtl "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
                 pure
@@ -9285,11 +9347,13 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 rawExecute
                     "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
                     [toPersistValue tokenId, toPersistValue credId]
-                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                result <- runPasswordResetConfirm testSessionTokenTtl "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
                 pure
@@ -9331,12 +9395,16 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Nothing
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "different-login-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:old-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 findReusableActiveToken partyId (Just "password-login:login@example.com")
 
@@ -9366,12 +9434,16 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:duplicate-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "second-login-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:duplicate-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 findReusableActiveToken partyId (Just "password-login:duplicate-login@example.com")
 
@@ -15739,6 +15811,7 @@ marketplaceTestConfig seedFlag =
         , sessionCookieSecure = False
         , sessionCookieSameSite = "Lax"
         , sessionCookieMaxAgeSeconds = Nothing
+        , sessionTokenTtlSeconds = 3600
         , stripeSecretKey = Nothing
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
@@ -15919,6 +15992,14 @@ runResourceSqlite action =
         backend <- ask
         liftIO $ runReaderT initializeResourceSchema backend
         liftIO $ runReaderT action backend
+
+-- Interactive session fixtures need a validity window that cannot elapse
+-- during a test run; service-token fixtures stay unbounded (Nothing).
+farFutureEpoch :: Int64
+farFutureEpoch = 4102444800 -- 2100-01-01T00:00:00Z
+
+testSessionTokenTtl :: SessionTokenTtl
+testSessionTokenTtl = SessionTokenTtl 3600
 
 initializeAuthSchema :: SqlPersistT IO ()
 initializeAuthSchema = do
@@ -16170,6 +16251,8 @@ initializeAuthSchema = do
         \\"party_id\" INTEGER NOT NULL,\
         \\"label\" VARCHAR NULL,\
         \\"active\" BOOLEAN NOT NULL,\
+        \\"issued_at_epoch\" INTEGER NULL,\
+        \\"expires_at_epoch\" INTEGER NULL,\
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"

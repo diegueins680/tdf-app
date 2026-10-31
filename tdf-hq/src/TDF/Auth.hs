@@ -22,6 +22,9 @@ module TDF.Auth
   , lockCredentialForSession
   , revokeInteractiveSessions
   , isAuthenticatableApiTokenLabel
+  , isInteractiveSessionLabel
+  , apiTokenWithinValidity
+  , sessionClockEpoch
   , withCurrentAuthSession
   , withCurrentModuleAccess
   , withCurrentAuthorization
@@ -46,6 +49,7 @@ import           Data.Char
   , isControl
   , isSpace
   )
+import           Data.Int                   (Int64)
 import           Data.Maybe                 (maybeToList)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
@@ -142,11 +146,13 @@ withCurrentAuthSession user action = case auSessionWitness user of
     | auPartyId user /= capturedParty -> pure Nothing
     | otherwise -> do
         rows <- rawSql "SELECT ?? FROM api_token WHERE id=? FOR SHARE" [toPersistValue tokenId]
+        now <- sessionClockEpoch
         case rows of
           [Entity _ tok]
             | apiTokenActive tok
             , apiTokenPartyId tok == capturedParty
             , isAuthenticatableApiTokenLabel (apiTokenLabel tok)
+            , apiTokenWithinValidity now tok
             , (hash (TE.encodeUtf8 (apiTokenToken tok)) :: Digest SHA256)
                 `constEq` fingerprint -> Just <$> action
           _ -> pure Nothing
@@ -309,33 +315,75 @@ loadAuthedUser token = do
       | not (apiTokenActive tok) -> pure Nothing
       | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
       | otherwise -> do
-          canonicalRoles <- loadCanonicalRoles (apiTokenPartyId tok)
-          canonicalModules <- loadCanonicalModules (apiTokenPartyId tok)
-          pure $ do
-            roleList <- canonicalRoles
-            modules <- canonicalModules
-            guard (rolesAreUnique roleList)
-            pure AuthedUser
-              { auPartyId = apiTokenPartyId tok
-              , auRoles = roleList
-              , auModules = modules
-              , auApiTokenId = Just tokenId
-              , auSessionWitness = Just (AuthSessionWitness tokenId (apiTokenPartyId tok)
-                  (hash (TE.encodeUtf8 (apiTokenToken tok))))
-              }
+          now <- sessionClockEpoch
+          if not (apiTokenWithinValidity now tok)
+            then pure Nothing
+            else do
+              canonicalRoles <- loadCanonicalRoles (apiTokenPartyId tok)
+              canonicalModules <- loadCanonicalModules (apiTokenPartyId tok)
+              pure $ do
+                roleList <- canonicalRoles
+                modules <- canonicalModules
+                guard (rolesAreUnique roleList)
+                pure AuthedUser
+                  { auPartyId = apiTokenPartyId tok
+                  , auRoles = roleList
+                  , auModules = modules
+                  , auApiTokenId = Just tokenId
+                  , auSessionWitness = Just (AuthSessionWitness tokenId (apiTokenPartyId tok)
+                      (hash (TE.encodeUtf8 (apiTokenToken tok))))
+                  }
 
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool
 isAuthenticatableApiTokenLabel Nothing = True
 isAuthenticatableApiTokenLabel (Just rawLabel) =
   not ("password-reset:" `T.isPrefixOf` T.toLower (T.strip rawLabel))
 
+-- | Interactive sessions are the tokens minted by password or Google login.
+-- They are the only tokens that must carry a server-side expiry; service and
+-- custom-label tokens are managed explicitly and may be unbounded.
+isInteractiveSessionLabel :: Maybe Text -> Bool
+isInteractiveSessionLabel Nothing = False
+isInteractiveSessionLabel (Just rawLabel) =
+  any (`T.isPrefixOf` normalized) ["password-login:", "google-login:"]
+  where
+    normalized = T.toLower (T.strip rawLabel)
+
+-- | Fail-closed validity check against the database clock (UTC Unix seconds).
+-- The window is half-open: a token expiring at @t@ is rejected at @t@.
+-- An interactive session without an expiry is rejected: it predates this
+-- enforcement and must be re-issued by a fresh login rather than backfilled.
+apiTokenWithinValidity :: Int64 -> ApiToken -> Bool
+apiTokenWithinValidity now tok =
+  case apiTokenExpiresAtEpoch tok of
+    Just expiresAt -> now < expiresAt
+    Nothing -> not (isInteractiveSessionLabel (apiTokenLabel tok))
+
+-- | Current UTC Unix seconds from the database clock, so every replica and
+-- the recovery window in "TDF.ServerAuth" share one time source.
+sessionClockEpoch :: SqlPersistT IO Int64
+sessionClockEpoch = do
+  backend <- getRDBMS
+  query <- case backend of
+    "postgresql" -> pure "SELECT floor(extract(epoch FROM clock_timestamp()))::bigint"
+    "sqlite" -> pure "SELECT CAST(strftime('%s','now') AS INTEGER)"
+    _ -> liftIO (fail "Unsupported session clock database")
+  rows <- rawSql query [] :: SqlPersistT IO [Single Int64]
+  case rows of
+    [Single value] -> pure value
+    _ -> liftIO (fail "Session database clock unavailable")
+
 lookupUsernameFromToken :: Text -> SqlPersistT IO (Maybe Text)
 lookupUsernameFromToken token = do
   mToken <- getBy (UniqueApiToken token)
+  now <- sessionClockEpoch
   case mToken of
     Just (Entity _ tok)
       | not (apiTokenActive tok) -> pure Nothing
       | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
+      -- An expired session must not identify an account either, e.g. for a
+      -- password change authorized by a stale bearer token.
+      | not (apiTokenWithinValidity now tok) -> pure Nothing
       | otherwise -> do
           case apiTokenLabel tok >>= resolveUsernameFromLabel of
             Just username -> pure (Just username)

@@ -52,7 +52,12 @@ CREATE TABLE IF NOT EXISTS api_token (
     token    TEXT NOT NULL UNIQUE,
     party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
     label    TEXT,
-    active   BOOLEAN NOT NULL DEFAULT TRUE
+    active   BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Server-side validity window (UTC Unix seconds, [issued, expires)).
+    -- Required for interactive login sessions; NULL for service tokens.
+    -- Existing databases receive these via 2026-10-31_api_token_session_expiry.sql.
+    issued_at_epoch  BIGINT,
+    expires_at_epoch BIGINT
 );
 
 CREATE INDEX idx_api_token_party ON api_token(party_id);

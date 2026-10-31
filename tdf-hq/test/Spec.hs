@@ -611,6 +611,7 @@ import TDF.Config
       sessionCookiePath,
       sessionCookieSameSite,
       sessionCookieSecure,
+      sessionTokenTtlSeconds,
       smtpPort,
       smtpUseTLS,
       supportedCurrencies )
@@ -5013,6 +5014,36 @@ main = hspec $ do
             assertInvalid "0"
             assertInvalid "-1"
             assertInvalid "thirty-days"
+
+        it "derives the server-side session lifetime from the cookie max-age unless overridden" $ do
+            withEnvOverrides
+                [ ("SESSION_COOKIE_MAX_AGE", Just "3600")
+                , ("SESSION_TOKEN_TTL_SECONDS", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sessionTokenTtlSeconds cfg `shouldBe` 3600
+            withEnvOverrides
+                [ ("SESSION_COOKIE_MAX_AGE", Just "3600")
+                , ("SESSION_TOKEN_TTL_SECONDS", Just " 900 ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sessionTokenTtlSeconds cfg `shouldBe` 900
+
+            let assertInvalid rawTtl expected =
+                    withEnvOverrides
+                        [ ("SESSION_COOKIE_MAX_AGE", Just "3600")
+                        , ("SESSION_TOKEN_TTL_SECONDS", Just rawTtl)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expected `isInfixOf` show (err :: IOException)
+            assertInvalid "0" "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+            assertInvalid "-1" "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+            assertInvalid "one-hour" "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+            -- A server window longer than the cookie would keep tokens usable after
+            -- the browser has forgotten them: the unbounded-session problem again.
+            assertInvalid "3601" "SESSION_TOKEN_TTL_SECONDS must not exceed SESSION_COOKIE_MAX_AGE"
 
         it "defaults generated public links to the canonical web and asset hosts" $
             withEnvOverrides

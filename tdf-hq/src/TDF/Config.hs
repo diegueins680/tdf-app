@@ -98,6 +98,10 @@ data AppConfig = AppConfig
   , sessionCookieSecure :: Bool
   , sessionCookieSameSite :: Text
   , sessionCookieMaxAgeSeconds :: Maybe Int
+  -- Server-side lifetime of interactive login sessions. Independent of the
+  -- cookie Max-Age: the cookie only tells the browser when to forget the
+  -- token; this is what the API enforces.
+  , sessionTokenTtlSeconds :: Int
   , stripeSecretKey :: Maybe Text
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
@@ -793,6 +797,7 @@ loadConfig = do
   sessionCookieSecureEnv <- lookupEnv "SESSION_COOKIE_SECURE"
   sessionCookieSameSiteEnv <- lookupEnv "SESSION_COOKIE_SAMESITE"
   sessionCookieMaxAgeEnv <- lookupEnv "SESSION_COOKIE_MAX_AGE"
+  sessionTokenTtlEnv <- lookupEnv "SESSION_TOKEN_TTL_SECONDS"
   stripeSecretKeyEnv <- lookupEnv "STRIPE_SECRET_KEY"
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
@@ -1024,6 +1029,7 @@ loadConfig = do
       sessionCookieSecureEnv
   cookieSameSite <- validateSessionCookieSameSite cookieSecure sessionCookieSameSiteEnv
   cookieMaxAge <- validateSessionCookieMaxAge sessionCookieMaxAgeEnv
+  tokenTtl <- validateSessionTokenTtl cookieMaxAge sessionTokenTtlEnv
   validateSessionCookiePolicy cookieSecure cookieSameSite
   seedToken <- validateSeedTriggerToken seedRuntimeEnv seedEnv
   pure AppConfig
@@ -1078,6 +1084,7 @@ loadConfig = do
     , sessionCookieSecure = cookieSecure
     , sessionCookieSameSite = cookieSameSite
     , sessionCookieMaxAgeSeconds = cookieMaxAge
+    , sessionTokenTtlSeconds = tokenTtl
     , stripeSecretKey = fmap T.pack stripeSecretKeyEnv
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
@@ -1373,6 +1380,28 @@ validateSessionCookieMaxAge (Just rawMaxAge)
 
 defaultSessionCookieMaxAgeSeconds :: Int
 defaultSessionCookieMaxAgeSeconds = 60 * 60 * 24 * 30
+
+-- | SESSION_TOKEN_TTL_SECONDS: how long a password/Google login session stays
+-- valid on the server. Defaults to the cookie Max-Age so both expire together.
+-- It must not exceed the cookie Max-Age: a server window longer than the
+-- cookie's would keep a token usable after the browser has forgotten it,
+-- which is exactly the unbounded-session problem this setting closes.
+validateSessionTokenTtl :: Maybe Int -> Maybe String -> IO Int
+validateSessionTokenTtl cookieMaxAge rawTtl =
+  case fmap (T.strip . T.pack) rawTtl of
+    Nothing -> pure defaultTtl
+    Just trimmed
+      | T.null trimmed -> pure defaultTtl
+      | otherwise ->
+          case readMaybe (T.unpack trimmed) of
+            Just ttl
+              | ttl <= 0 -> fail "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+              | maybe False (ttl >) cookieMaxAge ->
+                  fail "SESSION_TOKEN_TTL_SECONDS must not exceed SESSION_COOKIE_MAX_AGE"
+              | otherwise -> pure ttl
+            Nothing -> fail "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+  where
+    defaultTtl = fromMaybe defaultSessionCookieMaxAgeSeconds cookieMaxAge
 
 validateStartupBooleanFlag :: String -> Bool -> Maybe String -> IO Bool
 validateStartupBooleanFlag _ defaultValue Nothing = pure defaultValue
