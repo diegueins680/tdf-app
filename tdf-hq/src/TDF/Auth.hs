@@ -350,14 +350,17 @@ isInteractiveSessionLabel (Just rawLabel) =
     normalized = T.toLower (T.strip rawLabel)
 
 -- | Fail-closed validity check against the database clock (UTC Unix seconds).
--- The window is half-open: a token expiring at @t@ is rejected at @t@.
--- An interactive session without an expiry is rejected: it predates this
+-- A bounded window requires @0 <= issued <= now < expires@. Comparing endpoints
+-- directly also rejects incomplete or malformed windows without epoch arithmetic.
+-- An interactive session without a window is rejected: it predates this
 -- enforcement and must be re-issued by a fresh login rather than backfilled.
 apiTokenWithinValidity :: Int64 -> ApiToken -> Bool
 apiTokenWithinValidity now tok =
-  case apiTokenExpiresAtEpoch tok of
-    Just expiresAt -> now < expiresAt
-    Nothing -> not (isInteractiveSessionLabel (apiTokenLabel tok))
+  case (apiTokenIssuedAtEpoch tok, apiTokenExpiresAtEpoch tok) of
+    (Just issuedAt, Just expiresAt) ->
+      issuedAt >= 0 && issuedAt <= now && now < expiresAt
+    (Nothing, Nothing) -> not (isInteractiveSessionLabel (apiTokenLabel tok))
+    _ -> False
 
 -- | Current UTC Unix seconds from the database clock, so every replica and
 -- the recovery window in "TDF.ServerAuth" share one time source.

@@ -14621,7 +14621,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+      "sha256": "451b71331aeeb7cf27ac85fe05c6f8b829835e8ca5eae0db2438a451ac137878",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16259,7 +16259,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "52af1109defde1681688bddcf081891f872e4cce4c43d3f8188cf89d15337990",
+      "sha256": "08b4f7fde8678663fe9dea36647d08a081ea21f5aa403d7e51dff92865590dec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27556,7 +27556,7 @@
     },
     {
       "path": "formal/system/identity-lifecycle.md",
-      "sha256": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440",
+      "sha256": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27997,7 +27997,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0bd0328fe98066116909d82f33dadad91c4290e72502b6cbf7ccfd73174b45e6",
+      "sha256": "ddf545c5c9b8fb3019f6b11ffdd984c3f5af96a8bc955350740260efed595c1f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
