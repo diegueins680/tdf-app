@@ -19,7 +19,7 @@ module.exports = {
     '^react-dom$': require.resolve('react-dom'),
     '^react/jsx-runtime$': require.resolve('react/jsx-runtime'),
     '^react/jsx-dev-runtime$': require.resolve('react/jsx-dev-runtime'),
-    "^\\.\\./vendor/webtorrent/webtorrent\\.min\\.js\\?url$": '<rootDir>/src/__mocks__/assetUrlMock.ts',
+    "^\\.\\./vendor/webtorrent/webtorrent\\.min\\.js(?:\\?url)?$": '<rootDir>/src/__mocks__/assetUrlMock.ts',
     '\\.(svg|png|jpe?g|gif|webp)$': '<rootDir>/src/__mocks__/assetUrlMock.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },

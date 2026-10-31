@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { verifyBrowserVendor, evaluateAdvisories, auditBrowserPackages, validateAdvisoryPackages } from '../check-browser-vendor.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -34,6 +35,15 @@ function rehash(directory, key, file) {
 const packages = [{ name: 'example', versions: ['1.0.0', '2.0.0'] }];
 const advisory = { id: 123, title: 'Controlled advisory', url: 'https://github.com/advisories/test', severity: 'low', vulnerable_versions: '<2.0.0' };
 const response = report => ({ ok: true, text: async () => JSON.stringify(report) });
+
+test('Jest maps the actual browser URL import before and after its ESM query normalization', () => {
+  const require = createRequire(import.meta.url);
+  const config = require(path.join(root, 'tdf-hq-ui/jest.config.cjs'));
+  for (const specifier of ['../vendor/webtorrent/webtorrent.min.js?url', '../vendor/webtorrent/webtorrent.min.js']) {
+    const match = Object.entries(config.moduleNameMapper).find(([pattern]) => new RegExp(pattern).test(specifier));
+    assert.equal(match?.[1], '<rootDir>/src/__mocks__/assetUrlMock.ts');
+  }
+});
 
 test('the shipped browser artifact, notices and conservative inventory pass', () => {
   const result = verifyBrowserVendor(root);

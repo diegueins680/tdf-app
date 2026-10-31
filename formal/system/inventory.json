@@ -3351,7 +3351,7 @@
     {
       "id": "SURFACE-3bda27b3da891bd5",
       "path": "scripts/__tests__/browser-vendor.test.mjs",
-      "sha256": "c152a0051030b6b296409eee10f7528ef42e2eda43489aa955178444386fc07b",
+      "sha256": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6477,7 +6477,7 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "ec13ef5ffe1d32f35162e21d017443bf9255388d98b1523956442d5db08b583b",
+      "sha256": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
