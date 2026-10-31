@@ -13569,7 +13569,7 @@
     {
       "id": "SYS-WEBTORRENT-BROWSER-001",
       "title": "Preserve browser playback while removing unused Node torrent dependencies",
-      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and worker URL and client API, with page control and dispatch governed by MUSIC-TORRENT-CONTROL-001, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
       "domain": "SYS",
       "critical": false,
       "actors": [
@@ -13644,6 +13644,93 @@
       "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
       "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
       "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
+    },
+    {
+      "id": "MUSIC-TORRENT-CONTROL-001",
+      "title": "Control app pages before torrent playback and route requests to their originating tab",
+      "statement": "Before creating a torrent server or attaching audio, the activated owned root worker must be the exact document controller. Only actual stream-prefix URLs are intercepted; nonempty-client-ID streams dispatch solely to their originating document with bounded reply/resource lifetime.",
+      "domain": "MUSIC",
+      "critical": false,
+      "actors": [
+        "Music listener",
+        "Browser document",
+        "Torrent service worker",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Trusted browser service-worker scope/identity semantics and same-origin application scripts; no arbitrary concurrent foreign registrar.",
+        "One active WebTorrent server per document; controlled playback requests carry a nonempty initiating client ID.",
+        "Official reviewed WebTorrent 2.8.5 browser module; native WebRTC is required by existing product behavior."
+      ],
+      "inputs": [
+        "Root service-worker registration and controller/state events",
+        "FetchEvent.clientId and exact request URL",
+        "Synthetic torrent metadata and loopback audio in verification"
+      ],
+      "state": {
+        "boundary": "formal/system/torrent-worker-control.md"
+      },
+      "allowedTransitions": [
+        "No root owner -> register own known URL; own root -> reuse and revalidate.",
+        "Own activating worker -> observe activation AND actual control before server construction.",
+        "Own activated uncontrolled worker -> request eligible-client claim once and await real controller change.",
+        "Controlled stream request -> only initiating document -> bounded reply -> response/stream -> close ports."
+      ],
+      "forbiddenTransitions": [
+        "Overwrite an observed foreign root worker or foreign document controller.",
+        "Treat worker activation or a cached promise alone as current page control.",
+        "Broadcast a request with nonempty clientId to unrelated documents.",
+        "Intercept an unrelated app URL because a query embeds a stream/control URL.",
+        "Treat passing finite tests or absence of local WebKit execution as a universal proof."
+      ],
+      "effects": [
+        "Audio can stream through the controlling worker without unrelated tabs answering first.",
+        "Owned observers and message channels are released on completion/refusal/timeout."
+      ],
+      "authorization": "No change to backend authorization, provider state, real external peers or production deployment is authorized by this repair.",
+      "privacy": "Verification uses synthetic loopback-only content; no artist data or credentials. Same-origin ownership checks do not attest worker bytes at runtime.",
+      "concurrency": "Observe registration updates, worker state and controller changes together; use originating-client selection for controlled requests. Arbitrary concurrent foreign registration and multiple servers in one document remain outside assumptions.",
+      "idempotency": "Every ensure call revalidates browser state; owned registration is reused and explicit claim sent at most once per observed worker per wait.",
+      "failure": "Foreign workers refuse untouched; unavailable native WebRTC refuses; missing/nonresponding request owner returns404; unachieved page control refuses after15seconds with listener/timer cleanup.",
+      "recovery": "Retry a later session against current browser state. Preserve old narrow registrations rather than automatically deleting them.",
+      "observability": "Source-bound raw command exits, exact synthetic full/range bytes, controller identity, negative controls and explicit browser/protocol bounds.",
+      "source": "Existing torrentAudio and RadioWidget playback contracts; actual Chromium/Firefox narrow-scope HTML counterexample and Chromium two-document404; browser Clients.claim/controller semantics.",
+      "contract": "formal/system/torrent-worker-control.md",
+      "implementation": [
+        "tdf-hq-ui/src/utils/torrentWorker.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "tdf-hq-ui/public/webtorrent-sw.min.js",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci.yml",
+        "scripts/build-torrent-audio-fixture.mjs",
+        "playwright.torrent-audio.config.mjs",
+        "e2e/torrent-audio/setup.mjs",
+        "e2e/torrent-audio/fixture-server.mjs",
+        "tdf-hq-ui/browser-test/torrent-audio.html"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/torrentWorker.test.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "scripts/__tests__/torrent-worker-routing.test.mjs",
+        "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
+        "e2e/torrent-audio/streaming.spec.mjs",
+        "e2e/web/webtorrent-browser.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite executable API-transition, actual worker-protocol, real HTTP resource and actual Vite/browser stream cases; no exhaustive liveness or refinement proof.",
+      "ambiguity": [
+        "Browser-specific null-controller reuse cause was not established; explicit claim handles the observed state.",
+        "Empty-client-ID legacy broadcast retains its first-response limitation; more-specific legacy pages may refuse until normal browser lifecycle/navigation resolves control."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite unit/protocol/browser controls are TESTED; arbitrary concurrent foreign registration, legacy empty-client ownership and universal browser liveness remain unproven."
+      },
+      "authority": "approved",
+      "property": "Server construction follows exact activated root control; controlled nonempty-client-ID requests reach only their initiating document; unrelated URLs pass through and owned resource waits are bounded.",
+      "verification": "Jest API-transition controls, Node actual worker VM/MessageChannel and real HTTP lifecycle controls; actual compiled helper in Chromium/Firefox locally and three browser projects enforced in pinned CI, with explicit unsupported-capability evidence and deliberate semantic faults.",
+      "evidence": "Candidate-commit qualification reports and raw execution receipts published separately; no universal proof."
     }
   ],
   "sourceFingerprints": {
@@ -13652,7 +13739,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
-    ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
+    ".github/workflows/ci.yml": "7eb38dd84125ac0757fc24d2d0e2af5972628ec4d5e09d6d37667433ac3fcd20",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -13664,6 +13751,9 @@
     "docs/catalog-persistence/catalog-list-decisions.json": "41793f1003d8272b50a4c818f054dc2ecc494c7e1e113ff69a108e538f2a29de",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
+    "e2e/torrent-audio/fixture-server.mjs": "c97be99807b4ac3839329a7fe3d59c8444283f56875d294c6e22156fa572d201",
+    "e2e/torrent-audio/setup.mjs": "1e98a7c10e5e77d267cf8baa303675c0a240812e53adb3ad079e2fc1ef1d1875",
+    "e2e/torrent-audio/streaming.spec.mjs": "dc3a888ffef647471bc5eca9df69920369702710551cda427b65f2ad9b59be7d",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/analytics-privacy.spec.mjs": "7919f29fba68e18b86e9bb32b3ad4bd66236e926c664b3158229934960332b06",
@@ -13696,7 +13786,7 @@
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
-    "e2e/web/webtorrent-browser.spec.mjs": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+    "e2e/web/webtorrent-browser.spec.mjs": "6610f089d7b7c82b5c6460ed623cbc5413e250741162b48cf4e2de7ae14305d0",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -14027,6 +14117,7 @@
     "playwright.config.mjs": "dd221d9df87a88b7644c19ccf6e714ea07452a056cb63537d7d4f0c8a47ae4b5",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+    "playwright.torrent-audio.config.mjs": "1ee4d97fa640cc439eedd07660dd242774c9adad9de8ac614d40a26ea63f202b",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
@@ -14098,11 +14189,14 @@
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
+    "scripts/__tests__/torrent-fixture-lifecycle.test.mjs": "fd7a2afdb437fe48c4b91da21a53494c804efcf4692c8c326f0c8a1b7689a5e0",
+    "scripts/__tests__/torrent-worker-routing.test.mjs": "39cf49236f79edeb7a9599dc07c37965cfe824725cb452a71c32ff7890fef784",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
+    "scripts/build-torrent-audio-fixture.mjs": "cdd56ca13a42d0c1a35b9a6e5db53e93ac7de5093385b8cccbcd3629e19aa104",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
     "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
@@ -14169,7 +14263,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "891c7514337481283e9ab38fd54bbd5660b5f79a09fd790a00295f83299a7636",
+    "scripts/quality-repo.sh": "6b6573cbe2930f02cb8c354f1b82a3b02e8fcb959ea1666856da42ab43a3b5b2",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14310,6 +14404,7 @@
     "scripts/verify-system-evidence.mjs": "01928fc197382c5a4a0e0e4107ed5311771d276217715b8bc88d42bb9f85ac17",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
+    "tdf-hq-ui/browser-test/torrent-audio.html": "71327a943be3e23e4895beaceaa2ccfe1c8aff9cf89cb40da7dcd2b89ba6aca0",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
     "tdf-hq-ui/jest.config.cjs": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
     "tdf-hq-ui/package.json": "6e48d627640bfe135ab7a745a923782127cd324e8fd11dfd43c1f31ab2fa31ee",
@@ -14327,6 +14422,7 @@
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
+    "tdf-hq-ui/public/webtorrent-sw.min.js": "3ec29705ef26b6011113f31ca60d1b0726d2b58de1385277634345b70edeb024",
     "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
@@ -14641,7 +14737,9 @@
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
     "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
     "tdf-hq-ui/src/utils/torrentAudio.test.ts": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
-    "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+    "tdf-hq-ui/src/utils/torrentAudio.ts": "ba3680f2a1b9d4dd35c2c1f3d7e34aa133c57a579f6055ce04f857437eb1c893",
+    "tdf-hq-ui/src/utils/torrentWorker.test.ts": "f69e605ea3ccd42b61c794f23636f0d92dff7fa566840a5ab92e8c2770d06b2b",
+    "tdf-hq-ui/src/utils/torrentWorker.ts": "191d976579abb09a50a49859d9531babc82ff845eff3ba24c200ae2ab79053bd",
     "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
@@ -15392,6 +15490,10 @@
       },
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
         "relationship": "implementation"
       }
     ],
@@ -16174,6 +16276,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
         "relationship": "implementation"
       }
     ],
@@ -26489,6 +26595,10 @@
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
       }
     ],
     "audit-ci.jsonc": [
@@ -26513,11 +26623,85 @@
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "tests"
       }
     ],
     "e2e/web/webtorrent-browser.spec.mjs": [
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/torrentWorker.ts": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/webtorrent-sw.min.js": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/build-torrent-audio-fixture.mjs": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "playwright.torrent-audio.config.mjs": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/torrent-audio/setup.mjs": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/torrent-audio/fixture-server.mjs": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/browser-test/torrent-audio.html": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/torrentWorker.test.ts": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/torrent-worker-routing.test.mjs": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/torrent-fixture-lifecycle.test.mjs": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/torrent-audio/streaming.spec.mjs": [
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
         "relationship": "tests"
       }
     ]
@@ -26593,7 +26777,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
+      "sha256": "7eb38dd84125ac0757fc24d2d0e2af5972628ec4d5e09d6d37667433ac3fcd20",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26670,6 +26854,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
           "relationship": "implementation"
         }
       ]
@@ -26812,6 +27000,42 @@
       "sha256": "d3208c1857133ebf963798cfd25daaf733ef4b0d4d84e2d3075cfd18fd9bfab5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-9529732e6a086200",
+      "path": "e2e/torrent-audio/fixture-server.mjs",
+      "sha256": "c97be99807b4ac3839329a7fe3d59c8444283f56875d294c6e22156fa572d201",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0fd84fd3fa162ef2",
+      "path": "e2e/torrent-audio/setup.mjs",
+      "sha256": "1e98a7c10e5e77d267cf8baa303675c0a240812e53adb3ad079e2fc1ef1d1875",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-69571580d9033bea",
+      "path": "e2e/torrent-audio/streaming.spec.mjs",
+      "sha256": "dc3a888ffef647471bc5eca9df69920369702710551cda427b65f2ad9b59be7d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ed82a4ad1ffc2408",
@@ -27303,11 +27527,15 @@
     {
       "id": "SURFACE-014b25a6dd6c1298",
       "path": "e2e/web/webtorrent-browser.spec.mjs",
-      "sha256": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+      "sha256": "6610f089d7b7c82b5c6460ed623cbc5413e250741162b48cf4e2de7ae14305d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
           "relationship": "tests"
         }
       ]
@@ -28902,6 +29130,30 @@
       ]
     },
     {
+      "id": "SURFACE-3caa203929eb68d3",
+      "path": "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
+      "sha256": "fd7a2afdb437fe48c4b91da21a53494c804efcf4692c8c326f0c8a1b7689a5e0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-07a85d4e48f23552",
+      "path": "scripts/__tests__/torrent-worker-routing.test.mjs",
+      "sha256": "39cf49236f79edeb7a9599dc07c37965cfe824725cb452a71c32ff7890fef784",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d6cb46e6ca8e56e0",
       "path": "scripts/__tests__/ui-validation-bundle.test.mjs",
       "sha256": "952e9c7fae5dc7697bc2b65c455db2545e59f6c99509cd74e57e422ff49e8e4e",
@@ -29070,6 +29322,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-55794f66f248094a",
+      "path": "scripts/build-torrent-audio-fixture.mjs",
+      "sha256": "cdd56ca13a42d0c1a35b9a6e5db53e93ac7de5093385b8cccbcd3629e19aa104",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
           "relationship": "implementation"
         }
       ]
@@ -30522,7 +30786,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "891c7514337481283e9ab38fd54bbd5660b5f79a09fd790a00295f83299a7636",
+      "sha256": "6b6573cbe2930f02cb8c354f1b82a3b02e8fcb959ea1666856da42ab43a3b5b2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30579,6 +30843,10 @@
         },
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
           "relationship": "implementation"
         }
       ]
@@ -33810,9 +34078,14 @@
     {
       "id": "SURFACE-e5cf91b3e384faae",
       "path": "tdf-hq-ui/public/webtorrent-sw.min.js",
-      "sha256": "a2ac94c313e7c710c871d0bd89a1cb098970298d7019930db9776857523e1c74",
+      "sha256": "3ec29705ef26b6011113f31ca60d1b0726d2b58de1385277634345b70edeb024",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1585a9050a6bc1d3",
@@ -41784,17 +42057,49 @@
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-8b33a680532e58df",
       "path": "tdf-hq-ui/src/utils/torrentAudio.ts",
-      "sha256": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+      "sha256": "ba3680f2a1b9d4dd35c2c1f3d7e34aa133c57a579f6055ce04f857437eb1c893",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ef656ea87001a97e",
+      "path": "tdf-hq-ui/src/utils/torrentWorker.test.ts",
+      "sha256": "f69e605ea3ccd42b61c794f23636f0d92dff7fa566840a5ab92e8c2770d06b2b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-75e645bc807e76c0",
+      "path": "tdf-hq-ui/src/utils/torrentWorker.ts",
+      "sha256": "191d976579abb09a50a49859d9531babc82ff845eff3ba24c200ae2ab79053bd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MUSIC-TORRENT-CONTROL-001",
           "relationship": "implementation"
         }
       ]
@@ -54278,7 +54583,6 @@
     "SURFACE-a2ada5ea1a6d219a",
     "SURFACE-c13a12d2ea792bdf",
     "SURFACE-092f602711fabb68",
-    "SURFACE-e5cf91b3e384faae",
     "SURFACE-1585a9050a6bc1d3",
     "SURFACE-ebb7d25970fd6836",
     "SURFACE-e4c619e35bdffee3",
@@ -56811,7 +57115,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0416b5b8feaa1e82c57b7d78c4d08354e18767fba072e7c17291a7f635e77e39",
+      "sourceSha256": "09901bd9a68cca55f8644b713afa9b08ef9462cfb70f1bddf0cb47c8ebf3a0fd",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56839,7 +57143,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0416b5b8feaa1e82c57b7d78c4d08354e18767fba072e7c17291a7f635e77e39",
+      "sourceSha256": "09901bd9a68cca55f8644b713afa9b08ef9462cfb70f1bddf0cb47c8ebf3a0fd",
       "definition": {
         "states": [
           "absent",
@@ -56869,7 +57173,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0416b5b8feaa1e82c57b7d78c4d08354e18767fba072e7c17291a7f635e77e39",
+      "sourceSha256": "09901bd9a68cca55f8644b713afa9b08ef9462cfb70f1bddf0cb47c8ebf3a0fd",
       "definition": {
         "export": [
           "queued",
@@ -79356,7 +79660,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 160,
+    "PARTIAL": 161,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
