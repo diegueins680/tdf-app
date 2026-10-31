@@ -221,3 +221,33 @@ Controlled barriers exercise disable-before-login and issuance-before-disable;
 the first must deny login and the second must revoke the issued Google session.
 This boundary does not exercise provider signature verification or contact Google.
 The runner fails on an empty selected suite; its execution remains required.
+
+## Interactive session expiry — ID-SESSION-004
+
+Every `api_token` row carries an optional validity window `issued_at_epoch`,
+`expires_at_epoch` in UTC Unix seconds, half-open
+`[issued_at_epoch, expires_at_epoch)`, sampled from the same database clock as
+the recovery challenge window. Interactive sessions — labels in the
+`password-login:` and `google-login:` namespaces — are issued with a window
+whose length is `SESSION_TOKEN_TTL_SECONDS` and must carry one: an interactive
+token without a window is a pre-enforcement session and is denied. Service and
+custom-label tokens may remain unbounded; a window on such a token is enforced
+when present. Legacy interactive sessions are not backfilled; users sign in again.
+
+Authentication denies an active, authenticatable token whose window has elapsed
+or is absent for an interactive label, in the request-time lookup, in the locked
+re-read inside the transactional session witness and when a bearer token is used
+only to identify a credential for password change. Issuance samples the clock in
+the same transaction as the insert; a read-only database cannot issue a session.
+`SESSION_TOKEN_TTL_SECONDS` defaults to `SESSION_COOKIE_MAX_AGE` and must not
+exceed it, so the server never honours a token the browser has already dropped.
+Password-reset tokens carry their 900-second window on the row as well as in
+`auth_recovery_challenge`; the challenge row remains the recovery authority.
+
+The migration is additive (nullable columns, a validity check constraint and a
+partial expiry index) with no down migration; earlier binaries ignore the
+columns. The enforcing binary requires the migration first. Rolling the binary
+back re-enables unbounded sessions, so the migration's introduction commit is the
+identity rollback floor. Hashed token storage and a sliding last-use refresh
+remain open obligations; the SQLite adapter establishes expiry arithmetic, not
+PostgreSQL concurrency. No formal model is claimed for this requirement.
