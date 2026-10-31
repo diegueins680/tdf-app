@@ -153,12 +153,21 @@ jobs:
           curl --fail --location --retry 3 \
             https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar \
             --output "${RUNNER_TEMP}/tdf-formal-tools/alloy-6.2.0.jar"
+          curl --fail --location --retry 3 \
+            https://github.com/apalache-mc/apalache/releases/download/v0.62.4/apalache.tgz \
+            --output "${RUNNER_TEMP}/tdf-formal-tools/apalache-0.62.4.tgz"
 
       - name: Check event operations models
         env:
           TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
           ALLOY_JAR: ${{ runner.temp }}/tdf-formal-tools/alloy-6.2.0.jar
         run: node scripts/verify-system-evidence.mjs --output "${{ runner.temp }}/formal-evidence"
+
+      - name: Prove payment outcome invariants inductively (Apalache)
+        env:
+          TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
+          APALACHE_TGZ: ${{ runner.temp }}/tdf-formal-tools/apalache-0.62.4.tgz
+        run: bash scripts/verify-inductive-proofs.sh
 
       - name: Preserve verification evidence, including failed executions
         if: always()
