@@ -13565,6 +13565,85 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "SYS-WEBTORRENT-BROWSER-001",
+      "title": "Preserve browser playback while removing unused Node torrent dependencies",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker",
+        "Music listener"
+      ],
+      "preconditions": [
+        "Use the reviewed WebTorrent 2.8.5 official browser artifact and committed npm v3 workspace lock.",
+        "Trust official npm archive integrity metadata and the publisher-supplied source map; exact upstream build resolution and compiler version remain unknown."
+      ],
+      "inputs": [
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "package-lock.json",
+        "audit-ci.jsonc"
+      ],
+      "state": {
+        "boundary": "formal/system/webtorrent-browser.md"
+      },
+      "allowedTransitions": [
+        "Reviewed official artifact update with matching provenance, preserved notices, finite compatibility checks and fresh advisory evidence."
+      ],
+      "forbiddenTransitions": [
+        "Reintroduce unused Node WebTorrent/discovery/tracker/ip packages or npm aliases.",
+        "Extend the expired ip exception or lower the production audit threshold.",
+        "Omit mapped package candidate versions or supplied license notices.",
+        "Treat candidate-version advisory results as complete binary provenance or vulnerability clearance."
+      ],
+      "effects": [
+        "Reject invalid browser artifact, missing source/notice/advisory coverage or applicable low-or-higher browser advisories before integration."
+      ],
+      "authorization": "This dependency repair does not authorize real torrent/peer traffic, provider operations or deployment.",
+      "privacy": "Advisory requests contain public package names and candidate versions only; do not send registry credentials or application data.",
+      "concurrency": "Check immutable committed candidate files; do not run installers during source-bound qualification.",
+      "idempotency": "Static checks are deterministic; live advisory checks depend on the registry feed at execution time.",
+      "failure": "Reject integrity, policy, inventory and live scan failures without renewing audit exemptions.",
+      "recovery": "Restore the reviewed browser artifact and complete evidence; preserve review and required CI controls.",
+      "observability": "Record candidate commit, bundle and lock hashes, commands, actual exits and explicit provenance limitations.",
+      "source": "Existing torrentAudio browser-only entry; failed Safe Install after 2026-10-31 exception expiry; GHSA-2p57-rm9w-gvfp; user security and verification requirements.",
+      "contract": "formal/system/webtorrent-browser.md",
+      "implementation": [
+        "scripts/check-browser-vendor.mjs",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci-safe-install.yml",
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "package-lock.json",
+        "audit-ci.jsonc",
+        "tdf-hq-ui/jest.config.cjs"
+      ],
+      "tests": [
+        "scripts/__tests__/browser-vendor.test.mjs",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "e2e/web/webtorrent-browser.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite deterministic rejection and browser compatibility tests; partial upstream build identity and advisory coverage.",
+      "ambiguity": [
+        "Source-map presence does not prove executed statements or unique package versions.",
+        "Nine matching archives lack standalone notice files; exact webpack compiler version is unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite regression controls implemented; source-bound UI/browser/CI evidence is separate and exact upstream build identity remains qualified."
+      },
+      "authority": "approved",
+      "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
+      "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
+      "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
     }
   ],
   "sourceFingerprints": {
@@ -13572,6 +13651,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+    ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
@@ -13579,8 +13659,9 @@
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
+    "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "d77611df46eacc8332e2f64b3358448fc5d480ccdd0929838398497d4449e541",
+    "docs/catalog-persistence/catalog-list-decisions.json": "41793f1003d8272b50a4c818f054dc2ecc494c7e1e113ff69a108e538f2a29de",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -13615,6 +13696,7 @@
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
+    "e2e/web/webtorrent-browser.spec.mjs": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -13940,8 +14022,8 @@
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
-    "package.json": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+    "package-lock.json": "8d91a0e78d010cea8248104f499bd2565f3707184675b69492ec321fc7a4ceee",
+    "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
     "playwright.config.mjs": "dd221d9df87a88b7644c19ccf6e714ea07452a056cb63537d7d4f0c8a47ae4b5",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
@@ -13951,6 +14033,7 @@
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
     "scripts/__tests__/artist-enrichment.test.mjs": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
+    "scripts/__tests__/browser-vendor.test.mjs": "c152a0051030b6b296409eee10f7528ef42e2eda43489aa955178444386fc07b",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
@@ -14021,6 +14104,7 @@
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
+    "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
@@ -14085,7 +14169,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
+    "scripts/quality-repo.sh": "891c7514337481283e9ab38fd54bbd5660b5f79a09fd790a00295f83299a7636",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14227,7 +14311,8 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
-    "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
+    "tdf-hq-ui/jest.config.cjs": "ec13ef5ffe1d32f35162e21d017443bf9255388d98b1523956442d5db08b583b",
+    "tdf-hq-ui/package.json": "6e48d627640bfe135ab7a745a923782127cd324e8fd11dfd43c1f31ab2fa31ee",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
@@ -14241,6 +14326,7 @@
     "tdf-hq-ui/public/mobile-distribution.json": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
+    "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
     "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
@@ -14554,6 +14640,9 @@
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
     "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
+    "tdf-hq-ui/src/utils/torrentAudio.test.ts": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
+    "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+    "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
@@ -14987,7 +15076,9 @@
     "test/fixtures/music-worker/curl.mjs": "1b816316017ca5081325de224176d3f48deb3d60d6ae46db230f052df8c3bb46",
     "test/fixtures/music-worker/ddex-package.mjs": "438d5f66b36297be5ba4bc77d275625ec8c6e228ddb18e22988060af609660a4",
     "test/fixtures/music-worker/ddex-render.mjs": "529eb232ca7550638a0d88d8f64cfcff8ca1fbdec46b338b02e121d887596bc2",
-    "test/fixtures/music-worker/upload-curl.mjs": "2af421e7b5ce9d281bde6205774c628521d1cc3fba78a4cac61ba20d2ed8cf16"
+    "test/fixtures/music-worker/upload-curl.mjs": "2af421e7b5ce9d281bde6205774c628521d1cc3fba78a4cac61ba20d2ed8cf16",
+    "third_party/webtorrent/browser.json": "aaedd205fc6b19e8c850245e6a55fdeb7792bbac89d309a0b3a2e69fcea58dc6",
+    "third_party/webtorrent/bundled-provenance.json": "82971c29f4d319e78318ff66b933ddbfdbf30bc8d8ba83739a804a488722bede"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -15297,6 +15388,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
       }
     ],
@@ -17807,6 +17902,10 @@
     "package-lock.json": [
       {
         "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
       }
     ],
@@ -26349,6 +26448,78 @@
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/check-browser-vendor.mjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/ci-safe-install.yml": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "third_party/webtorrent/browser.json": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "third_party/webtorrent/bundled-provenance.json": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/torrentAudio.ts": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "audit-ci.jsonc": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/jest.config.cjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/browser-vendor.test.mjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/torrentAudio.test.ts": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/webtorrent-browser.spec.mjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -26410,9 +26581,14 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "ece2be17e5f353890f78bb06c10d649a5280f6c0dbfb7e173083c36ba6c48891",
+      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b803fcb7f17ed923",
@@ -27125,6 +27301,18 @@
       ]
     },
     {
+      "id": "SURFACE-014b25a6dd6c1298",
+      "path": "e2e/web/webtorrent-browser.spec.mjs",
+      "sha256": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-660f7078dc0b381a",
       "path": "fly.toml",
       "sha256": "3d64e80552e75e29e68d012d579456a353ff17b104afd3839b5d554c83f6318e",
@@ -27465,11 +27653,15 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+      "sha256": "8d91a0e78d010cea8248104f499bd2565f3707184675b69492ec321fc7a4ceee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -27477,7 +27669,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+      "sha256": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27552,6 +27744,18 @@
       "requirements": [
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3bda27b3da891bd5",
+      "path": "scripts/__tests__/browser-vendor.test.mjs",
+      "sha256": "c152a0051030b6b296409eee10f7528ef42e2eda43489aa955178444386fc07b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "tests"
         }
       ]
@@ -28906,6 +29110,18 @@
       "requirements": [
         {
           "requirement": "MKT-REPUTATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1e909f329835b442",
+      "path": "scripts/check-browser-vendor.mjs",
+      "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -30306,7 +30522,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
+      "sha256": "891c7514337481283e9ab38fd54bbd5660b5f79a09fd790a00295f83299a7636",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30359,6 +30575,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -33399,9 +33619,14 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "6ac4e96dceddad2701acbf190327668b4f5b6d60ddbe407bd0042ff03de2f8a3",
+      "sha256": "ec13ef5ffe1d32f35162e21d017443bf9255388d98b1523956442d5db08b583b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-dfe8096f81b40bd5",
@@ -33413,7 +33638,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
+      "sha256": "6e48d627640bfe135ab7a745a923782127cd324e8fd11dfd43c1f31ab2fa31ee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41555,14 +41780,24 @@
       "path": "tdf-hq-ui/src/utils/torrentAudio.test.ts",
       "sha256": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8b33a680532e58df",
       "path": "tdf-hq-ui/src/utils/torrentAudio.ts",
-      "sha256": "e99fc7b1922238bc4f8b1f2dbfc9c5abc0898e34608f32216b6ef25e11a5e604",
+      "sha256": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2b4be0aef756e7bf",
@@ -41577,6 +41812,18 @@
       "sha256": "04eea6981d1563e975359f94e9dce5c7556254cf03c98f36284d66fd3fd04c05",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-79f181c24f4d078b",
+      "path": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+      "sha256": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2f83dbcb131f448c",
@@ -53760,7 +54007,6 @@
   ],
   "unmappedSurfaces": [
     "SURFACE-e322a9d58d6bbd4b",
-    "SURFACE-87abe6b969342c3c",
     "SURFACE-f9eb7b8efd30e406",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
@@ -54027,7 +54273,6 @@
     "SURFACE-531960a153f9c90c",
     "SURFACE-e678e87f09e1d641",
     "SURFACE-4d91a2ae6d7c7367",
-    "SURFACE-4573385494ace809",
     "SURFACE-dfe8096f81b40bd5",
     "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
@@ -54529,8 +54774,6 @@
     "SURFACE-131656bc7b0c9088",
     "SURFACE-0ac75bd9c2678a24",
     "SURFACE-b4e27fc326828984",
-    "SURFACE-816e1b48f3a6c1c0",
-    "SURFACE-8b33a680532e58df",
     "SURFACE-2b4be0aef756e7bf",
     "SURFACE-6caada1aa8461942",
     "SURFACE-c6c52118ad7a43dd",
@@ -56568,7 +56811,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "520e8542db70b5a8e86b18773b34f1f49ce432ed7be3a564920d8b5d396cccb0",
+      "sourceSha256": "0416b5b8feaa1e82c57b7d78c4d08354e18767fba072e7c17291a7f635e77e39",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56596,7 +56839,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "520e8542db70b5a8e86b18773b34f1f49ce432ed7be3a564920d8b5d396cccb0",
+      "sourceSha256": "0416b5b8feaa1e82c57b7d78c4d08354e18767fba072e7c17291a7f635e77e39",
       "definition": {
         "states": [
           "absent",
@@ -56626,7 +56869,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "520e8542db70b5a8e86b18773b34f1f49ce432ed7be3a564920d8b5d396cccb0",
+      "sourceSha256": "0416b5b8feaa1e82c57b7d78c4d08354e18767fba072e7c17291a7f635e77e39",
       "definition": {
         "export": [
           "queued",
@@ -79113,7 +79356,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
