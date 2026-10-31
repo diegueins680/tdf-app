@@ -229,3 +229,7 @@ recovery migration is byte-identical. The three hashes are refreshed after
 reviewing those complete diffs; claims, translation and controls are unchanged
 and every obligation requires fresh execution. The candidate was authored
 without a local GHC, so compilation evidence comes only from the hosted build.
+
+The identity contract pin was refreshed once more on the same candidate after
+its ID-SESSION-004 section was extended to name the social transactional
+re-read; no other pinned input changed.

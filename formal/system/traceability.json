@@ -1745,7 +1745,8 @@
         "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
         "tdf-hq/sql/init_schema.sql",
         "scripts/production-migrations.json",
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "tdf-hq/src/TDF/Social/Session.hs"
       ]
     },
     {
@@ -13998,7 +13999,7 @@
     "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "6c29ef970a7bf66f2b5e0c202463b1e3662c6a168c021cc84ed9d08bfc49951e",
+    "formal/system/recovery-expiry-arithmetic.json": "6a90b380505b7938c93166a76ea9423f040b7e159f6f5f3265b0197172ee3ae3",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -14870,7 +14871,7 @@
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
-    "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
+    "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
@@ -17021,6 +17022,16 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Social/Session.hs": [
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/Spec.hs": [
       {
         "requirement": "ID-SESSION-004",
@@ -17884,12 +17895,6 @@
       },
       {
         "requirement": "MSG-ATOMIC-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Social/Session.hs": [
-      {
-        "requirement": "MSG-ACCESS-001",
         "relationship": "implementation"
       }
     ],
@@ -48558,9 +48563,13 @@
     {
       "id": "SURFACE-c3ca2a020c86adc2",
       "path": "tdf-hq/src/TDF/Social/Session.hs",
-      "sha256": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
+      "sha256": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "ID-SESSION-004",
+          "relationship": "implementation"
+        },
         {
           "requirement": "MSG-ACCESS-001",
           "relationship": "implementation"
@@ -56818,7 +56827,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
+      "sourceSha256": "0bd0328fe98066116909d82f33dadad91c4290e72502b6cbf7ccfd73174b45e6",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56846,7 +56855,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
+      "sourceSha256": "0bd0328fe98066116909d82f33dadad91c4290e72502b6cbf7ccfd73174b45e6",
       "definition": {
         "states": [
           "absent",
@@ -56876,7 +56885,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
+      "sourceSha256": "0bd0328fe98066116909d82f33dadad91c4290e72502b6cbf7ccfd73174b45e6",
       "definition": {
         "export": [
           "queued",

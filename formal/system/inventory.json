@@ -15695,7 +15695,7 @@
     {
       "id": "SURFACE-c3ca2a020c86adc2",
       "path": "tdf-hq/src/TDF/Social/Session.hs",
-      "sha256": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
+      "sha256": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27556,7 +27556,7 @@
     },
     {
       "path": "formal/system/identity-lifecycle.md",
-      "sha256": "966ef1caafb0d26a7ff79324f27c2fab49b124617021a8d7bd55f8cd28a56fb2",
+      "sha256": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27969,7 +27969,7 @@
     },
     {
       "path": "formal/system/recovery-expiry-arithmetic.md",
-      "sha256": "b3d24220d94cb069b3b542de3fe93e34ba6b929f42f926b68b60cc2beffc811b",
+      "sha256": "69aefe4d6ce765a0d2e41874f6070f7ca0bedc14cd0a00a0eb1491a88fb53f7e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27997,7 +27997,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
+      "sha256": "0bd0328fe98066116909d82f33dadad91c4290e72502b6cbf7ccfd73174b45e6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

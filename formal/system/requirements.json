@@ -1744,7 +1744,8 @@
         "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
         "tdf-hq/sql/init_schema.sql",
         "scripts/production-migrations.json",
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "tdf-hq/src/TDF/Social/Session.hs"
       ]
     },
     {

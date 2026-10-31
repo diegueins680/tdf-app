@@ -235,9 +235,10 @@ custom-label tokens may remain unbounded; a window on such a token is enforced
 when present. Legacy interactive sessions are not backfilled; users sign in again.
 
 Authentication denies an active, authenticatable token whose window has elapsed
-or is absent for an interactive label, in the request-time lookup, in the locked
-re-read inside the transactional session witness and when a bearer token is used
-only to identify a credential for password change. Issuance samples the clock in
+or is absent for an interactive label, in the request-time lookup, in both locked
+re-reads inside a transaction (`withCurrentAuthSession` and the social
+`withCurrentSession`, each sampling the clock after its lock waits) and when a
+bearer token is used only to identify a credential for password change. Issuance samples the clock in
 the same transaction as the insert; a read-only database cannot issue a session.
 `SESSION_TOKEN_TTL_SECONDS` defaults to `SESSION_COOKIE_MAX_AGE` and must not
 exceed it, so the server never honours a token the browser has already dropped.
