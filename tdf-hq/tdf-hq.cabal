@@ -7,10 +7,14 @@ author:             TDF Records (Diego Saá)
 maintainer:         tdf@example.com
 build-type:         Simple
 
-executable tdf-hq-exe
-  main-is:          Main.hs
-  hs-source-dirs:   app, src
-  other-modules:
+
+-- All application code lives in this library. The executables and the test
+-- suite depend on it, so src/ is compiled once per build instead of once per
+-- stanza. TDF.Catalog.DB is intentionally not exposed: no stanza compiled it
+-- before this change and it has no importers.
+library
+  hs-source-dirs:   src
+  exposed-modules:
     TDF.App.Boot
     TDF.App.StartupResponse
     TDF.App.FailureBoundary
@@ -232,11 +236,11 @@ executable tdf-hq-exe
     TDF.Trials.Server
     TDF.Calendar.Models
     TDF.CMS.Models
-      TDF.Catalog.Models
-      TDF.Catalog.CountryReferenceSeed
-      TDF.Catalog.Integrity
-      TDF.Catalog.Security
-      TDF.Catalog.Seed
+    TDF.Catalog.Models
+    TDF.Catalog.CountryReferenceSeed
+    TDF.Catalog.Integrity
+    TDF.Catalog.Security
+    TDF.Catalog.Seed
     TDF.Catalog.Types
     TDF.Directory.Policy
     TDF.DDEX.Types
@@ -261,9 +265,12 @@ executable tdf-hq-exe
     TDF.WhatsApp.Transport
     TDF.WhatsApp.Service
     TDF.Profiles.Artist
+  other-modules:
+    Paths_tdf_hq
+  autogen-modules:
     Paths_tdf_hq
   default-language: Haskell2010
-  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -Werror=missing-fields -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -Werror=missing-fields
   build-depends:
       base                 >=4.14 && <5
     , aeson                >=2.0
@@ -287,7 +294,6 @@ executable tdf-hq-exe
     , servant              >=0.19
     , servant-server       >=0.19
     , servant-multipart
-    , servant-multipart
     , postgresql-simple
     , http-types
     , http-media
@@ -308,7 +314,6 @@ executable tdf-hq-exe
     , safe-exceptions
     , base64-bytestring
     , base16-bytestring
-    , directory
     , process
     , temporary
     , bcrypt
@@ -323,26 +328,35 @@ executable tdf-hq-exe
     , memory
     , JuicyPixels
 
+
+executable tdf-hq-exe
+  main-is:          Main.hs
+  hs-source-dirs:   app
+  default-language: Haskell2010
+  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -Werror=missing-fields -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base                 >=4.14 && <5
+    , tdf-hq
+    , aeson                >=2.0
+    , bytestring
+
 executable tdf-ddex-render
   main-is:          MusicDdexRenderMain.hs
-  hs-source-dirs:   app, src
-  other-modules:
-    TDF.MusicRelease.Domain
-    TDF.MusicRelease.DDEX.ERN432
+  hs-source-dirs:   app
   default-language: Haskell2010
   ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
   build-depends:
       base                 >=4.14 && <5
+    , tdf-hq
     , aeson
     , bytestring
     , postgresql-simple
     , text
     , time
-    , xml
 
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
-  hs-source-dirs:    test, src
+  hs-source-dirs:    test
   main-is:           Spec.hs
   other-modules:
     TDF.Auth.AccountNameSpec
@@ -380,235 +394,28 @@ test-suite tdf-hq-test
     TDF.Test.DisposablePostgres
     TDF.IndexDeclarationSpec
     TDF.InvoiceWorkerSpec
-    Paths_tdf_hq
-    TDF.API
-    TDF.API.Admin
-    TDF.API.Catalog
-    TDF.API.DDEX
-    TDF.API.Reviews
-    TDF.API.ServiceStorefront
-    TDF.API.ServiceStorefrontTypes
-    TDF.App.Boot
-    TDF.App.StartupResponse
-    TDF.App.FailureBoundary
-    TDF.App.Readiness
-    TDF.API.Bands
-    TDF.API.Facebook
-    TDF.API.Future
-    TDF.API.Payments
-    TDF.API.PaymentCapabilities
-    TDF.API.ProviderExecution
-    TDF.API.Feedback
-    TDF.API.Inventory
-    TDF.API.Instagram
-    TDF.API.InstagramOAuth
-    TDF.API.Internships
-    TDF.API.InternAudit
-    TDF.API.SocialDiscoveryAPI
-    TDF.API.SocialSyncAPI
-    TDF.Interactions.API
-    TDF.Interactions.Server
-    TDF.Interactions.Legacy
-    TDF.Interactions.Notifications
-    TDF.Social.API
-    TDF.Social.Server
-    TDF.API.Chat
-    TDF.API.SocialProfiles
-    TDF.Social.Profiles
-    TDF.API.SocialRelationships
-    TDF.Social.FanEffects
-    TDF.API.FanFollowing
-    TDF.Social.RelationshipWrites
-    TDF.Social.RelationshipReads
-    TDF.Social.Chat
-    TDF.Social.Session
-    TDF.API.Calendar
-    TDF.API.CommerceOperations
-    TDF.API.Label
-    TDF.API.Services
-    TDF.Contracts.API
-    TDF.Contracts.Server
-    TDF.Contracts.Types
-    TDF.API.Marketplace
-    TDF.API.Merch
-    TDF.API.LiveSessions
-    TDF.API.Radio
-    TDF.API.Drive
-    TDF.Calendar.Models
-    TDF.API.Pipelines
-    TDF.API.Proposals
-    TDF.API.Rooms
-    TDF.API.Sessions
-    TDF.API.SocialEventsAPI
-    TDF.API.EventResearchAPI
-    TDF.API.Types
-    TDF.API.WhatsApp
-    TDF.API.Directory
-    TDF.API.MerchReputation
     TDF.APITypesSpec
-    TDF.Artists.Promotion
     TDF.Artists.PromotionSpec
-    TDF.Artists.Enrichment
     TDF.Artists.EnrichmentSpec
-    TDF.Auth
-    TDF.Auth.AccountName
-    TDF.CampaignAutomation
-    TDF.Commerce.Money
-    TDF.Commerce.CheckoutStore
-    TDF.Commerce.CourseCheckout
-    TDF.Commerce.DomoQuotes
-    TDF.Commerce.EventTickets
-    TDF.Ticketing.Admission
-    TDF.Ticketing.Refund
-    TDF.Ticketing.Confirmation
-    TDF.Ticketing.Inventory
-    TDF.Ticketing.Transfer
-    TDF.Commerce.MarketplaceSales
-    TDF.Commerce.MarketplaceRentals
-    TDF.Commerce.MarketplaceOperations
-    TDF.Commerce.Merch
-    TDF.Commerce.MerchReservationWorker
-    TDF.Commerce.ServiceBookings
-    TDF.Commerce.PaymentIntentStore
-    TDF.Commerce.PaymentRuntimeStore
-    TDF.Commerce.ProviderEventStore
-    TDF.Commerce.ProviderEventWorker
-    TDF.Commerce.ProviderCapabilities
-    TDF.Commerce.ProviderCapabilityStore
-    TDF.Commerce.ProviderExecutionStore
-    TDF.Commerce.ProviderReconciliation
-    TDF.Commerce.ProviderRuntimeConfig
-    TDF.Commerce.ProviderAdapter
-    TDF.Commerce.ProviderAdapter.Http
-    TDF.Commerce.ProviderAdapter.PlaceToPay
-    TDF.Commerce.ProviderAdapter.PayPhone
-    TDF.Commerce.ProviderAdapter.PayPalRefund
-    TDF.Commerce.RefundReconciliation
-    TDF.Commerce.RefundStore
-    TDF.Commerce.StateMachine
-    TDF.Config
-    TDF.Cors
-    TDF.Cron
-    TDF.Courses.Production
-    TDF.Courses.PublicMetadata
-    TDF.PublicUrl
-    TDF.DB
-    TDF.DB.ReputationConsent
-    TDF.DTO
-    TDF.DTO.ReputationConsent
-    TDF.DTO.SocialEventsDTO
-    TDF.DTO.EventResearchDTO
-    TDF.DTO.SocialDiscoveryDTO
-    TDF.DTO.SocialSyncDTO
-    TDF.Distribution.StateMachine
-    TDF.DDEX.Detect
-    TDF.DDEX.Security
-    TDF.DDEX.Storage
-    TDF.Email
-    TDF.Email.Headers
-    TDF.Email.Service
-    TDF.Handlers.InputList
-    TDF.Invoice.Receipt
-    TDF.Invoice.AccessKey
-    TDF.Invoice.BuyerIdentity
-    TDF.Invoice.Datil
-    TDF.Invoice.SRI
-    TDF.Internationalization
-    TDF.Leads.Model
-    TDF.Meta
-    TDF.Merch.Reputation
-    TDF.Models
-    TDF.ModelsExtra
-    TDF.MusicRelease.Domain
-    TDF.MusicRelease.ContentValidation
-    TDF.MusicRelease.Money
-    TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.DDEX.ERN432Spec
     TDF.MusicRelease.ContentSpec
-    TDF.MusicRelease.Storage.S3
     TDF.MusicRelease.Storage.S3Spec
-    TDF.API.MusicRelease
-    TDF.Server.MusicRelease
-    TDF.Server.MusicReleaseAssets
-    TDF.Server.MusicReleaseCommerce
-    TDF.Server.MusicReleaseCatalog
-    TDF.Server.MusicReleaseDDEX
-    TDF.Server.MusicReleaseUpload
     TDF.MusicRelease.DomainSpec
-    TDF.Models.SocialEventsModels
-    TDF.EventOperations.API
-    TDF.EventOperations.DatabaseBoundary
     TDF.EventOperations.DatabaseBoundarySpec
-    TDF.EventOperations.Server
-    TDF.EventOperations.Types
     TDF.EventOperations.TypesSpec
-    TDF.CMS.Models
-      TDF.Catalog.Models
-      TDF.Catalog.CountryReferenceSeed
-      TDF.Catalog.Integrity
-      TDF.Catalog.Security
-      TDF.Catalog.Seed
     TDF.Catalog.SecuritySpec
     TDF.Catalog.RecordsSpec
     TDF.Catalog.PipelineSpec
-    TDF.Catalog.Types
-    TDF.Directory.Policy
     TDF.Directory.PolicySpec
-    TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
-    TDF.RagStore
-    TDF.Reputation
-    TDF.Reputation.Worker
-    TDF.Routes.Academy
-    TDF.Routes.Courses
-    TDF.Routes.DomoQuotes
-    TDF.Routes.EventTickets
-    TDF.Seed
-    TDF.Server
-    TDF.Server.Catalog
-    TDF.Server.CommerceOperations
-    TDF.Server.PaymentCapabilities
-    TDF.Server.PaymentAvailability
-    TDF.Server.ProviderExecution
-    TDF.Server.CourseCheckout
-    TDF.CoursePhone
-    TDF.Server.DomoQuoteCheckout
-    TDF.Server.EventTicketCheckout
-    TDF.Server.DDEX
-    TDF.Server.Directory
-    TDF.Server.MerchReputation
-    TDF.Server.Merch
     TDF.Server.MerchRuntimeSpec
     TDF.Commerce.ProviderRetrySpec
     TDF.Commerce.RefundSafetySpec
     TDF.Commerce.RefundRecoverySpec
     TDF.Server.PaymentAuditSpec
-    TDF.Server.ServiceStorefront
-    TDF.Server.ProviderTransport
-    TDF.Server.TicketManualPayments
-    TDF.Server.TicketPaymentReceipt
-    TDF.Server.TicketTaxDocuments
-    TDF.Server.TicketRefunds
-    TDF.ServerAuth
     TDF.ServerAuthSpec
-    TDF.ServerAdmin
-    TDF.ServerExtra
     TDF.ServerExtraSpec
-    TDF.ServerInstagramOAuth
-    TDF.ServerInternships
-    TDF.ServerInternAudit
-    TDF.ServerProposals
-    TDF.Server.SocialDiscovery
-    TDF.Server.SocialSync
-    TDF.Server.SocialEventsHandlers
-    TDF.Server.EventResearch
-    TDF.SocialEventLifecycle
-    TDF.ServerFuture
-    TDF.ServerLiveSessions
-    TDF.ServerFeedback
-    TDF.ServerRadio
-    TDF.ServerFanClub
     TDF.ServerFanClubSpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
@@ -617,62 +424,23 @@ test-suite tdf-hq-test
     TDF.Social.FollowHandlerSpec
     TDF.Server.EventRelationsSpec
     TDF.Social.FollowSpec
-    TDF.Services
-    TDF.Services.InstagramMessaging
-    TDF.Services.FacebookMessaging
-    TDF.Services.EventDiscovery
-    TDF.Services.YouTube
-    TDF.Services.RecordsIngestion
-    TDF.Server.RecordsIngestion
-    TDF.API.RecordsIngestion
-    TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
     TDF.Services.YouTubeSpec
     TDF.Services.RecordsIngestionSpec
     TDF.Server.EventResearchSpec
-    TDF.Services.InstagramSync
-    TDF.Services.Stripe
-    TDF.Trials.API
-    TDF.Trials.DTO
-    TDF.Trials.Models
-    TDF.Trials.Server
     TDF.Trials.PublicLeadSpec
     TDF.DDEX.ERN.V432.ParseSpec
     TDF.DDEX.ERN.V432.BusinessRulesSpec
-    TDF.DDEX.DB
-    TDF.DDEX.Models
-    TDF.DDEX.Types
-    TDF.DDEX.ERN.V432.BusinessRules
-    TDF.DDEX.ERN.V432.Convert
-    TDF.DDEX.ERN.V432.Normalize
-    TDF.DDEX.ERN.V432.Parse
-    TDF.DDEX.ERN.V432.Types
-    TDF.FeatureRegistry
-    TDF.Operations.API
-    TDF.Operations.Model
     TDF.Operations.ModelSpec
-    TDF.Operations.Server
-    TDF.Operations.Types
-    TDF.Operations.Worker
-    TDF.Server.Reviews
-    TDF.UUIDInstances
-    TDF.UserActivity
-    TDF.Version
-    TDF.LogBuffer
-    TDF.WhatsApp.Types
-    TDF.WhatsApp.Client
-    TDF.WhatsApp.History
     TDF.WhatsApp.HistorySpec
-    TDF.WhatsApp.Service
-    TDF.WhatsApp.Transport
   ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N2
   default-language:  Haskell2010
   build-depends:
-    async,
       base                 >=4.14 && <5
+    , tdf-hq
+    , async
     , aeson                >=2.0
     , bytestring
-    , case-insensitive
     , case-insensitive
     , text
     , time
