@@ -1,0 +1,431 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-31",
+  "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+  "previousPublishedHead": "39b9c78d7fa41b58e468e987914388be6acdf76c",
+  "sourceCommit": "de3eac60b74411cfb9f43b0c42bc9abbeed55d31",
+  "evidenceCommit": "Containing normal report-only child; four new Git blobs and every unique safe manifest-bound archive member verified from committed Git.",
+  "scope": "Reconcile existing PR646 with protected checkout-verification main, retain privacy correction and both CI selectors, execute fresh actual-module/native/source-fragment verification.",
+  "problem": {
+    "classification": "Confirmed privacy/implementation defect, introduced and repaired before this continuation",
+    "authority": [
+      "AUTH-ENTRY-002 andformal/system/mobile-entry-ux.md",
+      "Existing initialAccountName absent-name privacy fallback and GoogleProfileNameSpec actualdecoder expectations"
+    ],
+    "counterexample": "Missing/null/sanitized-away Google name was replaced by normalized verified privateemail before initialAccountName, causing automaticpublic contact disclosure. Restoring only the validator fallback produces eight actual source-fragment assertion failures.",
+    "productionExposure": "UNKNOWN; synthetic fixtures and historical/currentcounterexamples are not a productionincident.",
+    "existingAccountRemediation": "Not changed; no databasebackfill."
+  },
+  "correction": "Preserve gpName=normalizedName without an automatic privateemail substitution. Existing initialAccountName selects Cuenta TDF for absent usable names; explicit valid provider names and all authentication rejection checks remain.",
+  "composition": {
+    "normalParents": [
+      "39b9c78d7fa41b58e468e987914388be6acdf76c",
+      "234ff6f7faf1aecf347c8e92a374228f4ec07aaa"
+    ],
+    "wholeBackendByteExactOld39": true,
+    "productionSourceDiffFromMain": "Exactly one gpName assignment; reversing it reproducesmainServerAuth bytes.",
+    "dependencyChange": "No dependency, source-directory, compiler/CPP orStack changes; onlyone test module registration versusmainCabal.",
+    "normativeObjects": 159,
+    "all158NonownedMainObjectsExact": true,
+    "ownedAuthEntry002ExactOld": true,
+    "mainPayCheckout001003AmendmentsPreserved": true,
+    "ciSelection": "Classifier+test byteexactmain plusGoogleverifier path; preserveCheckoutverifier anditsregressionpath, rootQA gate andGooglebackendmodule/fragmentinvocations.",
+    "uiSqlMobileWorkflowsOpsExactMain": true,
+    "historicalParentReportsAndEvidencePreserved": true
+  },
+  "properties": [
+    {
+      "id": "AUTH-ENTRY-002/GOOGLE-DEFAULT-PUBLIC-NAME",
+      "requirement": "AUTH-ENTRY-002",
+      "contract": "formal/system/mobile-entry-ux.md",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Auth/AccountName.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "scripts/verify-google-account-name.py"
+      ],
+      "sourceCommit": "de3eac60b74411cfb9f43b0c42bc9abbeed55d31",
+      "status": "TESTED",
+      "statement": "Synthetic decoded missing/null/sanitized-away provider names preserveabsence and resultinCuentaTDF ratherthanprivatecontactemail; explicitvalidprovidername is preserved. Issuer/audience/email/subject/expiry rejection remains.",
+      "method": "FreshactualServerAuthnative15 examples, full4060/0/21pending, source-fragmentintended19/0 plusrestoredfallback19/8; exactcurrentGit/compiledVersion/object/binary/inputbindings.",
+      "assumptions": [
+        "Finite synthetic tokeninfo/clock values, trustedAeson/Text/compiler semantics.",
+        "Source-fragment extraction/caller-shape correspondence is trusted andseparatelybounded; actualnative15 importfullServerAuth.",
+        "No liveGoogleHTTP/tokenfetch/accountSQLpersistence or existingaccountrepair execution."
+      ]
+    }
+  ],
+  "verification": {
+    "native": {
+      "sourceCommit": "de3eac60b74411cfb9f43b0c42bc9abbeed55d31",
+      "phase": "QUALIFIED_TARGETED_AND_FULL",
+      "startedAt": "2026-10-31T00:51:48.045238+00:00",
+      "actualExits": {
+        "build": 0,
+        "targeted": 0,
+        "full": 0
+      },
+      "buildPID": 54934,
+      "binary": "/private/tmp/tdf-google-name-main643-20261031T0039/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "binarySha256": "6e1a5054075bbbefd9387ac0ceb19bbb6f05ef965958603f6cbcc85f38d63c34",
+      "forceDirtyIdentity": {
+        "sourceCommit": "de3eac60b74411cfb9f43b0c42bc9abbeed55d31",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "6e1a5054075bbbefd9387ac0ceb19bbb6f05ef965958603f6cbcc85f38d63c34",
+        "versionObjectSha256": "06f65bb6054e5eab3fa5ec6a9aedbf53f6bfbe9fa52adb467a5debc4b61f7b51",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "targetedPID": 57690,
+      "targeted": {
+        "examples": 15,
+        "failures": 0,
+        "pending": 0
+      },
+      "fullPID": 57710,
+      "full": {
+        "examples": 4060,
+        "failures": 0,
+        "pending": 21
+      },
+      "allBackendInputsUnchangedAndGitExact": true,
+      "sourceCleanAfter": true,
+      "finishedAt": "2026-10-31T01:03:27.409452+00:00"
+    },
+    "sourceSeal": {
+      "sourceCommit": "de3eac60b74411cfb9f43b0c42bc9abbeed55d31",
+      "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "previousPublishedHead": "39b9c78d7fa41b58e468e987914388be6acdf76c",
+      "normalParents": [
+        "39b9c78d7fa41b58e468e987914388be6acdf76c",
+        "234ff6f7faf1aecf347c8e92a374228f4ec07aaa"
+      ],
+      "sourceDigest": "6ad696d6ea8070bc991a38f9f3534133a425c010e4d35ef274f57c6247f4db70",
+      "wholeBackendExactOld39": true,
+      "onlyProductionSourceDifferenceFromMain": "Remove exactly gpName automaticprivateemail fallback; reversingthe oneassignment reproducesmainServerAuth byteexact.",
+      "all158NonownedMainNormsExact": true,
+      "authEntry002ExactPrevious": true,
+      "totalRequirements": 159,
+      "bothCheckoutMainAmendmentsPreserved": true,
+      "ciScopeUnionByteExactMainPlusGoogle": true,
+      "allParentHistoricalEvidencePreserved": {
+        "39b9c78d7fa41b58e468e987914388be6acdf76c": 1678,
+        "234ff6f7faf1aecf347c8e92a374228f4ec07aaa": 1686
+      },
+      "registeredHashesVerified": 1432,
+      "allBackendInputCount": 988,
+      "assuranceArtifactHashesVerified": 52,
+      "fragmentSourceInputs": {
+        "tdf-hq/src/TDF/ServerAuth.hs": "48686841bfe8bb363c2652390574e0de1ae99807e344b9f2f9623ac249158613",
+        "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
+        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
+        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
+        "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
+        "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+        "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+        "tdf-hq/tdf-hq.cabal": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a"
+      },
+      "fragmentRuns": [
+        {
+          "variant": "intended",
+          "actualExit": 0,
+          "expectedFailures": 0,
+          "expectedObserved": true
+        },
+        {
+          "variant": "restore-email-fallback",
+          "actualExit": 1,
+          "expectedFailures": 8,
+          "expectedObserved": true
+        }
+      ],
+      "nativeTargeted": {
+        "examples": 15,
+        "failures": 0,
+        "pending": 0
+      },
+      "nativeFull": {
+        "examples": 4060,
+        "failures": 0,
+        "pending": 21
+      },
+      "forceDirtyIdentity": {
+        "sourceCommit": "de3eac60b74411cfb9f43b0c42bc9abbeed55d31",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "6e1a5054075bbbefd9387ac0ceb19bbb6f05ef965958603f6cbcc85f38d63c34",
+        "versionObjectSha256": "06f65bb6054e5eab3fa5ec6a9aedbf53f6bfbe9fa52adb467a5debc4b61f7b51",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 143,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 159,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 159,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "limitations": [
+        "TESTED finiteactualServerAuthmodule+syntheticdecoder/sourcefragment; no GoogleHTTP/providercredentialvalidation, accountSQLpersistence, existingaccountbackfill or completeimplementation/refinement theorem.",
+        "Explicit validprovidername values arepreserved evenifuser/providerchoseanemail-lookingname; property concerns automatic substitution only.",
+        "Source-fragment verifier trusts extraction/caller correspondence andsingle-programHspec reporting underdocumented shapes; itmatchesone19-example summaryratherthanrejectingeverypossiblemixedtranscript. Actualnative15 importServerAuth separately; no currentbadtranscriptobserved.",
+        "Native64bitmacOS/GHC9.10.3 only; no fresh servingexecutable/productionPostgreSQL/Docker/physicaldevice qualification; newpublished-headhostedCI/reviewrequired.",
+        "Authorization/recovery sourcecontextreview andeleven inheritedconditionalSMTclaims keepassumptions; whole159/318 obligations UNPROVEN, releaseBLOCKED.",
+        "Historicalgallery/campaign/workerfailures remainunknowncauses/unrepaired, successfulsamples not repairproof.",
+        "Runner cleanup not interruptionfault-tested; no universalcleanup guarantee."
+      ],
+      "atUTC": "2026-10-31T01:03:51.299522+00:00"
+    },
+    "fragmentRuns": [
+      {
+        "variant": "intended",
+        "actualExit": 0,
+        "expectedFailures": 0,
+        "expectedObserved": true
+      },
+      {
+        "variant": "restore-email-fallback",
+        "actualExit": 1,
+        "expectedFailures": 8,
+        "expectedObserved": true
+      }
+    ],
+    "bindingControls": {
+      "sourceCommit": "de3eac60b74411cfb9f43b0c42bc9abbeed55d31",
+      "sealScriptSha256": "402703142fdfc4b3da4a724f6c95d05d82932b7faf5e96c71340df344c4738b4",
+      "method": "ASTextractactualbindingfunction, actualvalidbefore/after, onein-memoryevidencecorruptionpernegativecase. No bounddisk/sourceartifactmutation.",
+      "validBefore": true,
+      "negativeControls": [
+        {
+          "label": "MissingNativeExits",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "MissingFullExit",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "IncompleteNativePhase",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "MissingRootQualityExit",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "CorruptedVersionBytes",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "AssuranceDigestMismatch",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "AssuranceFilesMismatch",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "AssuranceDirtyFlag",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "UnsupportedWholeProof",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "UnsupportedRefinementProof",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "UnsupportedExtraSmtClaim",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "UnsupportedReleasePermission",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "MissingGitLiteralDespiteConsistentObjectHash",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "MissingActualFragmentMutation",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "WrongMutationFailureCount",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "WrongFragmentCommit",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "DirtyFragmentSource",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        },
+        {
+          "label": "OmittedFragmentInputDespiteConsistentRemainingTable",
+          "actual": "ASSERTION_REJECTED",
+          "expectedRejection": true
+        }
+      ],
+      "intendedAssertionRejections": 18,
+      "restoredValidAfter": true,
+      "diskArtifactsUnchanged": true,
+      "scope": "Temporaryevidenceadmissioncontrols, not18productdefects orproof ofentireverificationpipeline.",
+      "atUTC": "2026-10-31T01:04:01.925036+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "reports/google-public-name-main643-2026-10-31/independent-review.txt"
+  },
+  "regressionProtection": {
+    "registeredActualModuleCases": 15,
+    "compiledFragmentCases": 19,
+    "restoredDefectAssertionFailures": 8,
+    "evidenceCorruptionsRejected": 18,
+    "existingCiDiscoveryAndExplicitBackendCommands": true,
+    "criticalSelectorUnionPreserved": true
+  },
+  "historicalEvidence": "Original source-fragment/main608 artifacts retain theirsource andlimits underformal/system/evidence/2026-10-27-google-name-decoder; separatelypublished hostedreceipts remainreferenced inPR646comments withtheirownsourceidentities. No historicalcount/resultrelabeledcurrent. Earlierbrowser timingfailure remainsunresolved; no newbrowserclaim.",
+  "limitations": [
+    "TESTED finiteactualServerAuthmodule+syntheticdecoder/sourcefragment; no GoogleHTTP/providercredentialvalidation, accountSQLpersistence, existingaccountbackfill or completeimplementation/refinement theorem.",
+    "Explicit validprovidername values arepreserved evenifuser/providerchoseanemail-lookingname; property concerns automatic substitution only.",
+    "Source-fragment verifier trusts extraction/caller correspondence andsingle-programHspec reporting underdocumented shapes; itmatchesone19-example summaryratherthanrejectingeverypossiblemixedtranscript. Actualnative15 importServerAuth separately; no currentbadtranscriptobserved.",
+    "Native64bitmacOS/GHC9.10.3 only; no fresh servingexecutable/productionPostgreSQL/Docker/physicaldevice qualification; newpublished-headhostedCI/reviewrequired.",
+    "Authorization/recovery sourcecontextreview andeleven inheritedconditionalSMTclaims keepassumptions; whole159/318 obligations UNPROVEN, releaseBLOCKED.",
+    "Historicalgallery/campaign/workerfailures remainunknowncauses/unrepaired, successfulsamples not repairproof.",
+    "Runner cleanup not interruptionfault-tested; no universalcleanup guarantee."
+  ],
+  "integration": {
+    "pr": 646,
+    "merged": false,
+    "readyStatePreserved": true,
+    "autoMerge": false,
+    "freshPublishedHeadCiAndExactApprovalRequired": true,
+    "normalStrictProtectionAndFifoRequired": true,
+    "manualDeployment": false,
+    "productionProviderOrFinancialWrites": false
+  },
+  "nextHighestValueTask": "Qualify publishedhead CI andnewindependentreview, thennormalprotectedleadingFIFOintegration ifall20requiredcontexts pass; re-evaluate financialparent/child branches aftermainadvance.",
+  "archive": {
+    "path": "reports/google-public-name-main643-2026-10-31/evidence.tar.gz",
+    "sha256": "db76b6671cb9041cd1c4eee14806d1ba91c9dd63a155076b13d4fad9ae7acf4b",
+    "bytes": 1684328,
+    "innerFiles": 121,
+    "manifest": "reports/google-public-name-main643-2026-10-31/manifest.json"
+  },
+  "createdAtUTC": "2026-10-31T01:07:23.760060+00:00"
+}
