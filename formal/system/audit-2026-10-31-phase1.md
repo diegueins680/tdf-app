@@ -25,7 +25,7 @@ de esta fase son preliminares: se confirman con modelo o prueba en las fases 2�
 | `scripts/check-generated-api.mjs` | PASS (2 clientes, revisión móvil del gitlink) |
 | `npm run verify:formal` | PASS — `audit:formal`: 0 critical, 0 error, 544 warning, 12 024 info |
 | `npm run test:formal` | PASS (4/4) |
-| `npm run verify:event-operations:formal` | ver §9 |
+| `npm run verify:event-operations:formal` | PASS dentro de los límites finitos documentados (§9) |
 | `scripts/verification-report.py` | Ejecución correcta; **release BLOCKED**; 11 obligaciones SMT demostradas |
 | Tests Haskell, `check-state-machines.py` (PG17), inspección de API compilada | **No ejecutados** (sin GHC/PostgreSQL aquí); quedan para la fase 5 |
 
@@ -136,9 +136,11 @@ pendiente de modelo o prueba.
 
 ## 9. Chequeo de modelos de event-operations
 
-El resultado lo registra `scripts/verify-event-operations-formal.sh` (ver el log del commit
-que acompaña este informe). Las violaciones que aparecen en el log son de los controles
-negativos y son las esperadas.
+`npm run verify:event-operations:formal`: **PASS dentro de los límites finitos documentados.**
+TLC ejecutó 486 configuraciones: 123 positivas sin violaciones y 363 controles negativos, que
+produjeron el contraejemplo esperado. Alloy ejecutó 30 comprobaciones: 13 aserciones sin
+contraejemplo dentro del alcance, 2 escenarios satisfacibles y 15 controles negativos
+satisfacibles. Es evidencia **acotada** (`verificado-acotado`), no una prueba (ver F-02).
 
 ## 10. Plan priorizado para las fases 2–5
 
