@@ -1692,7 +1692,9 @@
         "tdf-hq/test/integration/event_operations_http_fixture.sql",
         "scripts/test-api-token-session-expiry-migration.sh",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/social/test-http.sh"
+        "scripts/social/test-http.sh",
+        "tdf-hq/test/integration/event_raci_browser_fixture.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
       ],
       "id": "ID-SESSION-004",
       "title": "Interactive sessions expire on the server",
@@ -14061,7 +14063,7 @@
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
-    "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
+    "scripts/__tests__/identity-http-runtime.mjs": "2717d3aae37f0f2aafb92e64f69fe5a856e6dd90baf4e4260767ff33c8829868",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
     "scripts/__tests__/ledger-event-identity.mjs": "65e6578d15bba078f5e48d36a9a8ad2c240d1f34d89b7f015f43a9f9ca23a526",
     "scripts/__tests__/ledger-posting-namespace.py": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
@@ -14929,7 +14931,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
-    "tdf-hq/test/TDF/ServerSpec.hs": "af3ebcd65c6be77bee6902ba0e912445ff386b5d636c6f3f1f5fb619d2934508",
+    "tdf-hq/test/TDF/ServerSpec.hs": "52af1109defde1681688bddcf081891f872e4cce4c43d3f8188cf89d15337990",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -14956,6 +14958,7 @@
     "tdf-hq/test/integration/event_memory_source_moderation.sql": "3c86d2ad1c40f006501a8fcabe31cd904f2b9e5046fcd336749dd0346de67e07",
     "tdf-hq/test/integration/event_memory_source_null_organizer.sql": "9d59809e51ef3f5eb62ca95861051fb991ee1a53b3bb102dc9b6d5366baccc94",
     "tdf-hq/test/integration/event_operations_http_fixture.sql": "165a81d67416a9461e35cb65afeb36b2c91f369cd432689e9dd0c4f8b27ced62",
+    "tdf-hq/test/integration/event_raci_browser_fixture.sql": "f0e500d4ffecc8adb3628ad6106c396be0a847798e22e3d6b34b19f5b390a2b7",
     "tdf-hq/test/integration/interactions/notification-properties.sql": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "bfca6e8574bf541195a3ea583eebe9b44205d7299ab96e71fd8276eb194d169e",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
@@ -16804,6 +16807,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "ID-SESSION-004",
+        "relationship": "tests"
+      },
+      {
         "requirement": "PAY-CHECKOUT-001",
         "relationship": "tests"
       }
@@ -17105,6 +17112,12 @@
       }
     ],
     "scripts/social/test-http.sh": [
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/integration/event_raci_browser_fixture.sql": [
       {
         "requirement": "ID-SESSION-004",
         "relationship": "tests"
@@ -28266,7 +28279,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
+      "sha256": "2717d3aae37f0f2aafb92e64f69fe5a856e6dd90baf4e4260767ff33c8829868",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28287,6 +28300,10 @@
         },
         {
           "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ID-SESSION-004",
           "relationship": "tests"
         },
         {
@@ -49720,7 +49737,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "af3ebcd65c6be77bee6902ba0e912445ff386b5d636c6f3f1f5fb619d2934508",
+      "sha256": "52af1109defde1681688bddcf081891f872e4cce4c43d3f8188cf89d15337990",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50312,9 +50329,14 @@
     {
       "id": "SURFACE-12d0a9530d87bf0e",
       "path": "tdf-hq/test/integration/event_raci_browser_fixture.sql",
-      "sha256": "9cd0457b51d8db9998380e364a4830960296339eacf90d15715fe8383d894abc",
+      "sha256": "f0e500d4ffecc8adb3628ad6106c396be0a847798e22e3d6b34b19f5b390a2b7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-004",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d31eaecf5ffd9d63",
@@ -55308,7 +55330,6 @@
     "SURFACE-19de3720278969d8",
     "SURFACE-51ba007a60dd54a1",
     "SURFACE-05fc3571abc30e94",
-    "SURFACE-12d0a9530d87bf0e",
     "SURFACE-d31eaecf5ffd9d63",
     "SURFACE-6a0944d1cf1baea4",
     "SURFACE-c751a43725f37f23",
@@ -56797,7 +56818,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4ac70e4955d78098a00a3fd30b46ff7084a3352b5a3e2cfae6b00c964d1af6e",
+      "sourceSha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56825,7 +56846,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4ac70e4955d78098a00a3fd30b46ff7084a3352b5a3e2cfae6b00c964d1af6e",
+      "sourceSha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
       "definition": {
         "states": [
           "absent",
@@ -56855,7 +56876,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4ac70e4955d78098a00a3fd30b46ff7084a3352b5a3e2cfae6b00c964d1af6e",
+      "sourceSha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
       "definition": {
         "export": [
           "queued",

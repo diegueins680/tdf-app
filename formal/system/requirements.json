@@ -1691,7 +1691,9 @@
         "tdf-hq/test/integration/event_operations_http_fixture.sql",
         "scripts/test-api-token-session-expiry-migration.sh",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/social/test-http.sh"
+        "scripts/social/test-http.sh",
+        "tdf-hq/test/integration/event_raci_browser_fixture.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
       ],
       "id": "ID-SESSION-004",
       "title": "Interactive sessions expire on the server",

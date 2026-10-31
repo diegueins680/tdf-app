@@ -3611,7 +3611,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
+      "sha256": "2717d3aae37f0f2aafb92e64f69fe5a856e6dd90baf4e4260767ff33c8829868",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16259,7 +16259,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "af3ebcd65c6be77bee6902ba0e912445ff386b5d636c6f3f1f5fb619d2934508",
+      "sha256": "52af1109defde1681688bddcf081891f872e4cce4c43d3f8188cf89d15337990",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16589,7 +16589,7 @@
     {
       "id": "SURFACE-12d0a9530d87bf0e",
       "path": "tdf-hq/test/integration/event_raci_browser_fixture.sql",
-      "sha256": "9cd0457b51d8db9998380e364a4830960296339eacf90d15715fe8383d894abc",
+      "sha256": "f0e500d4ffecc8adb3628ad6106c396be0a847798e22e3d6b34b19f5b390a2b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27997,7 +27997,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b4ac70e4955d78098a00a3fd30b46ff7084a3352b5a3e2cfae6b00c964d1af6e",
+      "sha256": "d6df0c66be0d074d535ff2f89e400d790d800b024fcca324ecd1a0d7b5000bb6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

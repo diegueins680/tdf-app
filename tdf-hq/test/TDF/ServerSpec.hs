@@ -15959,6 +15959,7 @@ seedSessionUsernameFallbackRows = do
                     , userCredentialPasswordHash = "hash"
                     , userCredentialActive = True
                     }
+        -- Interactive labels need a validity window; unlabeled tokens stay unbounded.
         insertToken partyId tokenValue labelValue =
             insert_
                 ApiToken
@@ -15966,6 +15967,8 @@ seedSessionUsernameFallbackRows = do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = labelValue
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0 <* labelValue
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch <* labelValue
                     }
     ambiguousPartyId <- insertParty "Ambiguous Session User" "ambiguous-session@example.com"
     insertCredential ambiguousPartyId "first-session@example.com"
