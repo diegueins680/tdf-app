@@ -1039,6 +1039,29 @@
       "conflict": "PAY-CHECKOUT-002 and the 2026-10-04 migration describe a nonempty immutable line snapshot, while the rules only froze existing lines and checked the sum: a zero-total line could be appended to a committed checkout by a later transaction. The 2026-10-04 note treats zero appends as preserving the invariant.",
       "authority": "The requirement statement and the migration's own comment (an immutable line snapshot); both current writers create header and lines in one transaction, and refund allocation and receipts read the lines, so a line nobody paid for must not join a paid checkout.",
       "resolution": "Lines are created only in the transaction that creates their checkout: tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql records each actually inserted checkout id (AFTER ROW trigger; an upsert that inserts nothing registers nothing) in a transaction-local setting and refuses a line whose checkout id is not recorded there (an xmin-age design was rejected in review: header updates re-stamp xmin and xid order is not commit order). The sum check, the frozen lines and terms of 2026-10-04 stay. The requirement statement, property and transitions say so; CheckoutSnapshot.tla with three controls checks the guard implies the invariants, and the extended PostgreSQL test exercises the mechanism. Haskell is unchanged. The registry is forgeable by any SQL writer and is a guard against mistaken writers, not a privilege boundary; a header and its line in one statement is no longer accepted."
+    },
+    {
+      "id": "AUTHORITY-090",
+      "sources": [
+        "formal/system/audit-2026-10-31-phase1.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs"
+      ],
+      "conflict": "The tip route converted artistId to an artist_profile key while its sibling /fans/artists routes and ArtistProfileDTO.apArtistId use the artist PartyId, so a client using the public id would pay another artist's connected account. The route also admitted any artist with a payout account, regardless of directory visibility.",
+      "authority": "Product owner decision 2026-10-31: tips only for active or published artists; no business minimum or maximum. Sibling route semantics fix the identifier.",
+      "resolution": "artistId is the PartyId. Admission uses the discovery projection's public-listing predicate (directory identity wins; legacy profile without identity is listed). No clients, OpenAPI operation or tests used the old identifier, so no compatibility shim is kept. PAY-TIP-001 records the contract."
+    },
+    {
+      "id": "AUTHORITY-091",
+      "sources": [
+        "docs/prompts/formal-validation.md",
+        "formal/system/audit-2026-10-31-phase1.md",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "conflict": "Bounded TLC/Alloy results were the strongest evidence for state-machine requirements; the audit mandate asks for proofs.",
+      "authority": "Owner asked for a recommendation (2026-10-31); recommendation adopted for this audit.",
+      "resolution": "Adopt Apalache v0.62.4 (archive sha256 8ac8488422c30d552735bae11b92a2d014d8e02e8608702acc08f9a2d8a9abb2), downloaded and checksum-verified like the TLA+ and Alloy pins, for inductive-invariant proofs (initiation, consecution, implication) with mandatory negative controls. A proof claim names its constant bounds. TLAPS is reserved for money invariants that need unbounded parameters."
     }
   ]
 }

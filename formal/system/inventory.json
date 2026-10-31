@@ -616,6 +616,7 @@
       "scripts/verify-event-operations-formal.sh",
       "scripts/verify-event-operations-pluscal.mjs",
       "scripts/verify-improvement-loop.mjs",
+      "scripts/verify-inductive-proofs.sh",
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
       "scripts/verify-music-money-wire.py",
@@ -2011,6 +2012,7 @@
       "tdf-hq/src/TDF/Catalog/Security.hs",
       "tdf-hq/src/TDF/Catalog/Seed.hs",
       "tdf-hq/src/TDF/Catalog/Types.hs",
+      "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
       "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
       "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
       "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
@@ -2219,6 +2221,7 @@
       "tdf-hq/test/TDF/Catalog/PipelineSpec.hs",
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+      "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
       "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
@@ -2817,7 +2820,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+      "sha256": "cf83ac919f15571467b1e5f69437f568ce5d0f3adb8ee82670a547082131117f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3297,7 +3300,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+      "sha256": "5b8526a56e59c0addb40b540c71d75b3508b2c29a8e34b50ff24333589ca3217",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6340,6 +6343,12 @@
       "id": "SURFACE-7ade12b1e0a8aa7b",
       "path": "scripts/verify-improvement-loop.mjs",
       "sha256": "a618bf924cda53bf9365502f58ec43ab7fb7a53bbf958b1164fc3ebf60ec656f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6df6b3721bdf6587",
+      "path": "scripts/verify-inductive-proofs.sh",
+      "sha256": "99372c40f2ced0f245b527894d2986b0603168c68abcea1de3d503a286716bab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14677,6 +14686,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f423f120377b48f6",
+      "path": "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+      "sha256": "16a57779666f74019ee3c5c61dc8cd04ca48190a6b175d233e40fe9241d819a5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
       "sha256": "ea2f1106a8efc7214e1296cfb1239ab2361d932ae4cbae3713d1b8acd776086a",
@@ -15327,7 +15342,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+      "sha256": "edbc275f4071b598a45d5a459e903d6d758edc5fbd0078a121762f9cadfc149b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15477,7 +15492,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "bd2e6b817c0a96ad2320b8047fa53cddde10d06ff0d071dfa378c152bf5410be",
+      "sha256": "9f65feb02951330dc232cb0eb446c7f812c5dabf718be33c21c2e59f7dbe882b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15807,7 +15822,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+      "sha256": "f42f589e5d71b11e6540f42f09270db471dd744670278e98c0172ec174139bea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15879,7 +15894,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+      "sha256": "7dd71c70195728c264fc9c6ea11d18873fcf2251245cdd7557a722a58e6823b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15922,6 +15937,12 @@
       "id": "SURFACE-65f05df89af717ae",
       "path": "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "sha256": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4ef1e9594dedfc53",
+      "path": "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
+      "sha256": "e67f548554fe59a2cea5ee9c8ee0af98a0c5da9d689c7a5499d47b80bec62a6c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26890,6 +26911,41 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/payments/README.md",
+      "sha256": "31160c4c92c758aa0c7010e787afe8564844a16609205cad860452a7e1556f10",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/payments/StripeIntentOutcome.cfg",
+      "sha256": "08ab691b2e45f5c419be1188c66733c35df2c51bcadad26a5389d4e45ce65180",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/payments/StripeIntentOutcome.tla",
+      "sha256": "f90c50f337b57734f1fa10e0ed782b29288eafabeb0cf5b1b82a31a89d4da55d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg",
+      "sha256": "4ee4910e438960debc6a0ea55f4e4fb080b8a0bc07bd34bd226d0ae0be95abb4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg",
+      "sha256": "0318b9637e5ccb2bf641b0e7816ee64e3b944e7662a9870e6ec8a477871d2dbf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/social/ConsentTraces.cfg",
       "sha256": "877abff564403e4e64fdb1823551971b68d34813f49c75c02f00b0b0b996f716",
       "authority": "inferred",
@@ -27332,7 +27388,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27346,7 +27402,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "977f8fdc56a39e5d3fa803fe50661cd950bdfba0ddea2a0dff3b45ed0022aa59",
+      "sha256": "d227c663a217dfe443931b235c24320b23a4f22a148ab628e464caf208b624fb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27997,7 +28053,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33726,7 +33782,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -33757,7 +33813,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -33788,7 +33844,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -33819,7 +33875,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -33850,7 +33906,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -33881,7 +33937,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -33912,7 +33968,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -33943,7 +33999,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -33974,7 +34030,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -34005,7 +34061,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -34036,7 +34092,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "78adf522d8129687c672ff683dc48b5e5c1cfc7de593a9216165dcf491984eff",
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -34056,6 +34112,64 @@
             "Sev.": "info",
             "Dominio": "Herramientas",
             "Hallazgo": "`audit:formal` produce 12 568 hallazgos (544 warnings). Con tanto ruido pierde valor como señal; conviene separar las reglas de estilo de las semánticas."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-12-A8D218EC",
+      "declaredId": "F-12",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 162,
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-12",
+        "Sev.": "error",
+        "Hallazgo": "La ruta de propinas convertía `artistId` en una clave de `artist_profile`, mientras sus rutas hermanas y `apArtistId` usan el **PartyId**. Un cliente que usara el id público enviaría el dinero a la cuenta Stripe de otro artista. No había clientes, operación OpenAPI ni tests que la usaran, así que el defecto era latente. **Corregido.**"
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 162,
+          "statement": "error",
+          "columns": {
+            "ID": "F-12",
+            "Sev.": "error",
+            "Hallazgo": "La ruta de propinas convertía `artistId` en una clave de `artist_profile`, mientras sus rutas hermanas y `apArtistId` usan el **PartyId**. Un cliente que usara el id público enviaría el dinero a la cuenta Stripe de otro artista. No había clientes, operación OpenAPI ni tests que la usaran, así que el defecto era latente. **Corregido.**"
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-13-A8D218EC",
+      "declaredId": "F-13",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 163,
+      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-13",
+        "Sev.": "error",
+        "Hallazgo": "`/fans/artists` y `/fans/artists/{id}` muestran **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). Contradice la regla de visibilidad del directorio y la decisión sobre propinas. **Pendiente**: requiere decidir si se aplica el mismo predicado (recomendado)."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 163,
+          "statement": "error",
+          "columns": {
+            "ID": "F-13",
+            "Sev.": "error",
+            "Hallazgo": "`/fans/artists` y `/fans/artists/{id}` muestran **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). Contradice la regla de visibilidad del directorio y la decisión sobre propinas. **Pendiente**: requiere decidir si se aplica el mismo predicado (recomendado)."
           }
         }
       ],
@@ -43363,6 +43477,51 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "INVARIANT SuccessfulReturnHasEvidence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/StripeIntentOutcome.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  ConditionalUpdate = TRUE",
+        "  SingleTerminal = FALSE",
+        "  Deliveries = {1, 2, 3}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  ConditionalUpdate = FALSE",
+        "  SingleTerminal = TRUE",
+        "  Deliveries = {1, 2, 3}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  ConditionalUpdate = FALSE",
+        "  SingleTerminal = FALSE",
+        "  Deliveries = {1, 2}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

@@ -127,12 +127,15 @@ pendiente de modelo o prueba.
 | F-10 | info | P0 seguridad | `requireSeedToken` (`Server.hs:1062`) compara el token con `/=`, en tiempo no constante, mientras el resto del código usa `constEq`. El riesgo es bajo porque la configuración rechaza el token en entornos hosted o de producción. |
 | F-11 | info | Herramientas | `audit:formal` produce 12 568 hallazgos (544 warnings). Con tanto ruido pierde valor como señal; conviene separar las reglas de estilo de las semánticas. |
 
-## 8. Preguntas abiertas para el responsable
+## 8. Preguntas al responsable y decisiones (actualizado 2026-10-31)
 
-- **Q1 (F-01):** ¿qué revisión del móvil está publicada en las tiendas? ¿Se fusiona la rama fijada en `main` del móvil, o se cambia el gitlink a `main`?
-- **Q2 (F-06):** ¿solo se puede dar propina a artistas publicados o activos? ¿Hay importe mínimo o máximo de negocio, aparte del límite de Stripe?
-- **Q3 (§6):** ¿debe poder revocarse una reclamación de directorio ya aprobada?
-- **Q4 (§6):** ¿los royalties están en el alcance actual o siguen siendo diseño sin implementación?
+| Pregunta | Respuesta o recomendación adoptada |
+|---|---|
+| **Q1** ¿Qué revisión del móvil está publicada? | Los últimos builds de release firmados son iOS #18 y Android #14 del 2026-10-05, ambos sobre `main` del móvil en `6ebe6c5` (PR #135). Desde entonces no hay builds firmados, así que lo instalado por usuarios es como mucho `6ebe6c5`; el envío a tiendas no es observable desde el repo. El gitlink de `tdf-app` (`7586be9`) es `main` del móvil + 12 commits: diferencia de 6 archivos (tipos generados y publicación de memorias de eventos). En esa revisión pasan typecheck, lint y 653/653 tests. **Recomendación:** (1) avanzar `main` del móvil por fast-forward a `7586be9`; la rama `claude/prompt-formal-validation-b2jmz3` del móvil ya apunta ahí, lista para un PR. (2) Añadir un gate que exija que el gitlink sea alcanzable desde `main` del móvil. (3) Registrar `6ebe6c5` como base instalada y verificar la compatibilidad del backend también contra ese cliente. |
+| **Q2** Propinas | Respondida: solo artistas activos o publicados; sin mínimo ni máximo de negocio. Implementada (AUTHORITY-090, PAY-TIP-001). |
+| **Q3** ¿Revocar una reclamación aprobada? | **Recomendación:** sí. Añadir `approved → revoked`, solo para administradores estrictos, con motivo obligatorio y auditoría, que retire en la misma transacción los permisos de gestión concedidos por la reclamación. Una reclamación revocada es terminal; quien la hizo puede presentar otra. Requiere migración del CHECK de `directory_claim.status`; pendiente de implementar. |
+| **Q4** Royalties | Respuesta: "no lo sé". Evidencia: ningún código del backend lee ni escribe `royalty_statement` ni las tablas de distribución, y la máquina declarada contradice el CHECK de la base (decisión de autoridad existente). **Recomendación:** fuera del alcance actual; clasificarlo como diseño no implementado (`NOT IMPLEMENTED`) y no exigirle conformidad hasta que exista código. Antes de implementarlo hay que añadir un estado terminal de liquidación y un invariante de ajuste que impida volver a pagar un estado ya pagado. |
+| Apalache | **Recomendación adoptada** (AUTHORITY-091): v0.62.4, fijado por checksum, con controles negativos obligatorios. |
 
 ## 9. Chequeo de modelos de event-operations
 
@@ -149,3 +152,33 @@ satisfacibles. Es evidencia **acotada** (`verificado-acotado`), no una prueba (v
 3. **Garantía (F-02):** incorporar Apalache con un pin fijado y empezar con invariantes inductivos de los modelos P0 que ya existen (reembolsos, ledger, admisión de tickets). TLAPS solo para los invariantes de dinero.
 4. **P1 contratos:** resolver F-01 según Q1.
 5. **Registro:** corregir F-08 y F-09, y sustituir la heurística de F-05 por un mapeo de cada ruta a su manejador.
+
+## 11. Avance de la fase 2 — dinero P0 (2026-10-31)
+
+### Hallazgo nuevo
+
+| ID | Sev. | Hallazgo |
+|---|---|---|
+| F-12 | error | La ruta de propinas convertía `artistId` en una clave de `artist_profile`, mientras sus rutas hermanas y `apArtistId` usan el **PartyId**. Un cliente que usara el id público enviaría el dinero a la cuenta Stripe de otro artista. No había clientes, operación OpenAPI ni tests que la usaran, así que el defecto era latente. **Corregido.** |
+| F-13 | error | `/fans/artists` y `/fans/artists/{id}` muestran **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). Contradice la regla de visibilidad del directorio y la decisión sobre propinas. **Pendiente**: requiere decidir si se aplica el mismo predicado (recomendado). |
+
+### Cambios
+
+- `PAY-TIP-001` y `formal/payments/`: requisito, modelo y pruebas.
+- `TDF.Commerce.ArtistTip`, módulo puro: admisión por listado público, cuenta de destino y comisión.
+- `createArtistTip`:
+  - `artistId` pasa a ser el PartyId.
+  - Responde 503 antes de escribir nada si Stripe no está configurado.
+  - Un artista oculto responde 404, igual que uno inexistente.
+  - Sin onboarding de cobros responde 409.
+  - El texto de error del proveedor solo se registra en el log; el cliente recibe un 502 fijo.
+- Webhook de Stripe: las tres guardas leer-y-actualizar pasan a `UPDATE … WHERE` condicional (F-07).
+- `scripts/verify-inductive-proofs.sh`, `npm run verify:inductive-proofs` y un paso de CI con Apalache fijado.
+
+### Evidencia
+
+- Apalache demuestra inductivamente `Safe` (ningún resultado terminal se sobrescribe) para el código nuevo, **sin supuestos sobre Stripe**, con hasta 6 entregas concurrentes y ejecuciones de cualquier longitud.
+- El código anterior era seguro solo bajo el supuesto de que Stripe nunca emite dos resultados terminales distintos; sin ese supuesto, TLC y Apalache encuentran el contraejemplo.
+- Propiedades QuickCheck: la admisión nunca acepta a un artista oculto ni inventa un destino, y la comisión es exactamente el piso de la división y siempre menor que el importe.
+- **Primera obligación del sistema demostrada de forma no acotada fuera de SMT.**
+

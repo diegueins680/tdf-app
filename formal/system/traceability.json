@@ -13563,6 +13563,91 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "PAY-TIP-001",
+      "title": "Public artist tips: addressed artist, listing admission and recorded outcome",
+      "statement": "POST /fans/artists/{artistId}/tips addresses the artist by PartyId, as every sibling /fans/artists route and the public apArtistId do. A tip is admitted only for an artist the public directory currently lists (its directory identity is published, public, allowed and not merged, or it has no directory identity) and whose payout account is complete; funds are routed only to that artist's own connected account with a 10% platform fee rounded down. An unavailable provider stores nothing. Provider error text is never returned to the caller. A recorded tip outcome changes only from pending, by a conditional update, so duplicated, reordered or concurrent webhook deliveries never replace it.",
+      "domain": "PAY",
+      "authority": "Product owner decision 2026-10-31 (AUTHORITY-090): tips only for listed artists; no business minimum or maximum beyond the provider limit. Sibling route semantics and ArtistProfileDTO.apArtistId fix the identifier. PRIV-ERROR-001 forbids rendering provider payloads.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-06, F-07); formal/payments/README.md; AUTHORITY-090",
+      "property": "Destination account = stored payout account of the addressed party's artist profile; admitted => publicly listed; 0 <= fee < amount and fee = floor(amount*1000/10000); a terminal outcome is never overwritten (inductively proved for the conditional update without provider assumptions).",
+      "contract": "formal/payments/README.md",
+      "actors": [
+        "Anonymous tipper",
+        "Stripe webhook",
+        "Artist (payout recipient)"
+      ],
+      "preconditions": [
+        "Validated ArtistTipRequest (amount 1..99,999,999 minor units, lowercase ISO currency).",
+        "Stripe secret and webhook secret configured."
+      ],
+      "inputs": [
+        "artistId (PartyId)",
+        "amountCents",
+        "currency",
+        "optional tipper name, email and message",
+        "Stripe payment_intent events"
+      ],
+      "state": {
+        "artistTip.status": [
+          "pending",
+          "paid",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "(none) -> pending when admitted and the provider is configured",
+        "pending -> paid on payment_intent.succeeded",
+        "pending -> failed on payment_intent.canceled or a provider creation error"
+      ],
+      "forbiddenTransitions": [
+        "paid -> failed",
+        "failed -> paid",
+        "any row for an unlisted, absent or unonboarded artist",
+        "any row when the provider is unavailable"
+      ],
+      "effects": [
+        "Insert one pending artist_tip row and create one Stripe destination-charge PaymentIntent per admitted request."
+      ],
+      "authorization": "Public intake (AUTH-PUBLIC-001 boundary public-intake); a hidden artist answers exactly like an absent one (404).",
+      "privacy": "Provider error text is logged server-side only; the caller receives a fixed 502 message.",
+      "concurrency": "Webhook outcome writes are conditional UPDATE ... WHERE status='pending'; formal/payments/StripeIntentOutcome.tla proves Safe inductively for up to six concurrent deliveries with Apalache.",
+      "idempotency": "Webhook events are deduplicated by event id and outcome writes are idempotent. Request-level idempotency is not provided: a retried request creates another pending row and PaymentIntent, which charges nothing unless the client confirms it.",
+      "failure": "Unconfigured provider: 503 before any write. Provider creation error: row marked failed, fixed 502. Unparseable provider response: row stays pending without intent id.",
+      "recovery": "Pending rows without an intent id or never confirmed remain auditable; no automatic charge.",
+      "observability": "Tip id, artist party id and artist profile id in PaymentIntent metadata; provider errors logged with the tip id.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "verification": "Pure admission and fee rules by Hspec/QuickCheck properties; outcome model by bounded TLC with a negative control and unbounded Apalache inductive proofs (initiation, consecution, implication).",
+      "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test ArtistTipSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "formalModels": [
+        "formal/payments/StripeIntentOutcome.tla",
+        "formal/payments/StripeIntentOutcome.cfg",
+        "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg",
+        "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg"
+      ],
+      "confidence": "High for the pure admission/fee rules and for the outcome-write protocol as modelled; the SQL visibility query and the handler-to-model correspondence are established by review, not by a database-backed test.",
+      "ambiguity": [
+        "Request-level idempotency (Idempotency-Key) needs a schema change and remains open.",
+        "The model abstracts each delivery to one read and one write; the event-id dedupe insert is not modelled because it does not guard dispatch.",
+        "Database-backed handler tests for the visibility query are pending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Unbounded model proof and pure-rule properties exist; database-backed handler tests and request-level idempotency remain."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13572,7 +13657,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+    ".github/workflows/event-operations-formal.yml": "cf83ac919f15571467b1e5f69437f568ce5d0f3adb8ee82670a547082131117f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -13899,6 +13984,10 @@
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
     "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
+    "formal/payments/StripeIntentOutcome.cfg": "08ab691b2e45f5c419be1188c66733c35df2c51bcadad26a5389d4e45ce65180",
+    "formal/payments/StripeIntentOutcome.tla": "f90c50f337b57734f1fa10e0ed782b29288eafabeb0cf5b1b82a31a89d4da55d",
+    "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg": "4ee4910e438960debc6a0ea55f4e4fb080b8a0bc07bd34bd226d0ae0be95abb4",
+    "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg": "0318b9637e5ccb2bf641b0e7816ee64e3b944e7662a9870e6ec8a477871d2dbf",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -13939,7 +14028,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
-    "package.json": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+    "package.json": "5b8526a56e59c0addb40b540c71d75b3508b2c29a8e34b50ff24333589ca3217",
     "playwright.config.mjs": "dd221d9df87a88b7644c19ccf6e714ea07452a056cb63537d7d4f0c8a47ae4b5",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
@@ -14210,6 +14299,7 @@
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
+    "scripts/verify-inductive-proofs.sh": "99372c40f2ced0f245b527894d2986b0603168c68abcea1de3d503a286716bab",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -14694,6 +14784,7 @@
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
+    "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "16a57779666f74019ee3c5c61dc8cd04ca48190a6b175d233e40fe9241d819a5",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "ea2f1106a8efc7214e1296cfb1239ab2361d932ae4cbae3713d1b8acd776086a",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
@@ -14747,7 +14838,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
-    "tdf-hq/src/TDF/Server.hs": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+    "tdf-hq/src/TDF/Server.hs": "edbc275f4071b598a45d5a459e903d6d758edc5fbd0078a121762f9cadfc149b",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
@@ -14766,7 +14857,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "bd2e6b817c0a96ad2320b8047fa53cddde10d06ff0d071dfa378c152bf5410be",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "9f65feb02951330dc232cb0eb446c7f812c5dabf718be33c21c2e59f7dbe882b",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -14791,16 +14882,17 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+    "tdf-hq/tdf-hq.cabal": "f42f589e5d71b11e6540f42f09270db471dd744670278e98c0172ec174139bea",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+    "tdf-hq/test/Spec.hs": "7dd71c70195728c264fc9c6ea11d18873fcf2251245cdd7557a722a58e6823b9",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
+    "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "e67f548554fe59a2cea5ee9c8ee0af98a0c5da9d689c7a5499d47b80bec62a6c",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
@@ -15839,6 +15931,10 @@
       },
       {
         "requirement": "PRIV-RAG-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-TIP-001",
         "relationship": "implementation"
       }
     ],
@@ -17399,6 +17495,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-TIP-001",
         "relationship": "tests"
       }
     ],
@@ -19117,6 +19217,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MODERATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-TIP-001",
         "relationship": "implementation"
       }
     ],
@@ -26333,6 +26437,48 @@
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/Commerce/ArtistTip.hs": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-inductive-proofs.sh": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/payments/StripeIntentOutcome.tla": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/payments/StripeIntentOutcome.cfg": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -26497,7 +26643,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+      "sha256": "cf83ac919f15571467b1e5f69437f568ce5d0f3adb8ee82670a547082131117f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27461,7 +27607,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+      "sha256": "5b8526a56e59c0addb40b540c71d75b3508b2c29a8e34b50ff24333589ca3217",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33175,6 +33321,18 @@
       "sha256": "a618bf924cda53bf9365502f58ec43ab7fb7a53bbf958b1164fc3ebf60ec656f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-6df6b3721bdf6587",
+      "path": "scripts/verify-inductive-proofs.sh",
+      "sha256": "99372c40f2ced0f245b527894d2986b0603168c68abcea1de3d503a286716bab",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-TIP-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c62b0ba550ffb3e8",
@@ -46246,6 +46404,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-f423f120377b48f6",
+      "path": "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+      "sha256": "16a57779666f74019ee3c5c61dc8cd04ca48190a6b175d233e40fe9241d819a5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-TIP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
       "sha256": "ea2f1106a8efc7214e1296cfb1239ab2361d932ae4cbae3713d1b8acd776086a",
@@ -47461,7 +47631,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+      "sha256": "edbc275f4071b598a45d5a459e903d6d758edc5fbd0078a121762f9cadfc149b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47542,6 +47712,10 @@
         },
         {
           "requirement": "PRIV-RAG-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-TIP-001",
           "relationship": "implementation"
         }
       ]
@@ -47899,7 +48073,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "bd2e6b817c0a96ad2320b8047fa53cddde10d06ff0d071dfa378c152bf5410be",
+      "sha256": "9f65feb02951330dc232cb0eb446c7f812c5dabf718be33c21c2e59f7dbe882b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47944,6 +48118,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MODERATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-TIP-001",
           "relationship": "implementation"
         }
       ]
@@ -48513,7 +48691,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+      "sha256": "f42f589e5d71b11e6540f42f09270db471dd744670278e98c0172ec174139bea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48659,7 +48837,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+      "sha256": "7dd71c70195728c264fc9c6ea11d18873fcf2251245cdd7557a722a58e6823b9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48720,6 +48898,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-TIP-001",
           "relationship": "tests"
         }
       ]
@@ -48800,6 +48982,18 @@
         },
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4ef1e9594dedfc53",
+      "path": "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
+      "sha256": "e67f548554fe59a2cea5ee9c8ee0af98a0c5da9d689c7a5499d47b80bec62a6c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-TIP-001",
           "relationship": "tests"
         }
       ]
@@ -56528,7 +56722,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56556,7 +56750,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
       "definition": {
         "states": [
           "absent",
@@ -56586,7 +56780,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
       "definition": {
         "export": [
           "queued",
@@ -79073,7 +79267,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 160,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

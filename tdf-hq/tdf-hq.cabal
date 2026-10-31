@@ -83,6 +83,7 @@ executable tdf-hq-exe
     TDF.Auth.AccountName
     TDF.CampaignAutomation
     TDF.Commerce.Money
+    TDF.Commerce.ArtistTip
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes
@@ -454,6 +455,8 @@ test-suite tdf-hq-test
     TDF.Auth.AccountName
     TDF.CampaignAutomation
     TDF.Commerce.Money
+    TDF.Commerce.ArtistTip
+    TDF.Commerce.ArtistTipSpec
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes

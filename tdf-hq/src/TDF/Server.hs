@@ -203,6 +203,7 @@ import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.Money as CommerceMoney
+import qualified TDF.Commerce.ArtistTip as ArtistTip
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
@@ -1199,18 +1200,21 @@ parseArtistPublicRef ref
   | otherwise =
       ArtistPublicRefSlug (T.toLower ref)
 
--- | Platform's cut of every artist tip, in basis points. 1000 = 10%.
--- Centralized so the rate is a one-line change when negotiated terms shift.
-artistTipPlatformFeeBps :: Int
-artistTipPlatformFeeBps = 1000
-
--- | POST /artists/:artistId/tips
+-- | POST /fans/artists/:artistId/tips (PAY-TIP-001)
 --
--- Public destination charge that routes funds from the tipper to the artist's
--- connected Stripe account, keeping 'artistTipPlatformFeeBps' for the platform.
--- The tip row is persisted in @pending@ status BEFORE the Stripe call so we
--- always have an audit trail even if Stripe returns a transient error; the
--- @payment_intent.succeeded@ webhook flips it to @paid@.
+-- Public destination charge that routes funds from the tipper to the
+-- addressed artist's connected Stripe account, keeping
+-- 'ArtistTip.artistTipPlatformFeeBps' for the platform.
+--
+-- @artistId@ is the artist's 'PartyId', exactly as in every sibling
+-- @/fans/artists/{artistId}@ route and in the public 'apArtistId'. Admission
+-- requires an artist the public directory currently lists and a completed
+-- payout account ('ArtistTip.admitArtistTip'). Provider availability is
+-- checked before anything is stored, so an unavailable provider leaves no
+-- row behind. The tip row is persisted in @pending@ status before the Stripe
+-- call so a transient provider error still leaves an audit trail; the
+-- @payment_intent.succeeded@ webhook flips it to @paid@. Provider error text
+-- is logged, never returned to the caller (PRIV-ERROR-001).
 createArtistTip
   :: Int64
   -> APITypes.ArtistTipRequest
@@ -1218,22 +1222,40 @@ createArtistTip
 createArtistTip artistIdRaw req = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
+  artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistIdRaw)
   when (APITypes.atrAmountCents req <= 0) $
     throwError err400 { errBody = "Tip amount must be greater than zero" }
   when (T.null (T.strip (APITypes.atrCurrency req))) $
     throwError err400 { errBody = "Tip currency is required" }
-  let artistProfileKey = toSqlKey artistIdRaw :: ArtistProfileId
-  mProfile <- runDB $ get artistProfileKey
-  profile <- maybe (throwNotFound "Artista no encontrado") pure mProfile
-  destinationAccountId <- case artistProfileStripeAccountId profile of
-    Nothing -> throwError err400
-      { errBody = "This artist has not finished payout onboarding" }
-    Just acct -> pure acct
+  stripeCfg <- case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+    (Just secretKey, Just webhookSecret) ->
+      pure Stripe.StripeConfig
+        { Stripe.stripeSecretKey = secretKey
+        , Stripe.stripeWebhookSecret = webhookSecret
+        , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+        }
+    _ -> throwError err503 { errBody = "Tips are not available right now" }
+  let artistPartyKey = toSqlKey artistIdValid :: PartyId
+  (mProfile, visibility) <- runDB $ do
+    mEntity <- getBy (UniqueArtistProfile artistPartyKey)
+    vis <- case mEntity of
+      Nothing -> pure ArtistTip.NoDirectoryIdentity
+      Just (Entity profileKey _) -> loadArtistDirectoryVisibility artistPartyKey profileKey
+    pure (mEntity, vis)
+  destinationAccountId <-
+    case ArtistTip.admitArtistTip (artistProfileStripeAccountId . entityVal <$> mProfile) visibility of
+      Right account -> pure account
+      Left ArtistTip.TipArtistNotFound -> throwNotFound "Artista no encontrado"
+      -- A hidden artist is indistinguishable from an absent one.
+      Left ArtistTip.TipArtistNotListed -> throwNotFound "Artista no encontrado"
+      Left ArtistTip.TipPayoutNotReady -> throwError err409
+        { errBody = "This artist has not finished payout onboarding" }
+  profileKey <- maybe (throwNotFound "Artista no encontrado") (pure . entityKey) mProfile
   let amountCents = APITypes.atrAmountCents req
       currency = T.toLower (T.strip (APITypes.atrCurrency req))
-      platformFeeCents = (amountCents * artistTipPlatformFeeBps) `div` 10000
+      platformFeeCents = ArtistTip.artistTipPlatformFeeCents amountCents
       tipRow = ME.ArtistTip
-        { ME.artistTipArtistProfileId = artistProfileKey
+        { ME.artistTipArtistProfileId = profileKey
         , ME.artistTipTipperPartyId = Nothing
         , ME.artistTipTipperEmail = APITypes.atrTipperEmail req
         , ME.artistTipTipperName = APITypes.atrTipperName req
@@ -1247,54 +1269,74 @@ createArtistTip artistIdRaw req = do
         , ME.artistTipUpdatedAt = now
         }
   tipKey <- runDB $ insert tipRow
-  case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
-    (Just secretKey, Just webhookSecret) -> do
-      let stripeCfg = Stripe.StripeConfig
-            { Stripe.stripeSecretKey = secretKey
-            , Stripe.stripeWebhookSecret = webhookSecret
-            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
-            }
-          tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
-          description = "Tip to artist " <> T.pack (show artistIdRaw) <> " from " <> tipperLabel
-          metadata = object
-            [ "purpose" .= ("artist_tip" :: Text)
-            , "artist_tip_id" .= fromSqlKey tipKey
-            , "artist_profile_id" .= artistIdRaw
-            ]
-          metadataJson =
-            Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
-      result <- liftIO $
-        Stripe.createPaymentIntentForTip
-          stripeCfg
-          destinationAccountId
-          amountCents
-          platformFeeCents
-          currency
-          description
-          metadataJson
-      case result of
-        Left err -> do
-          runDB $ update tipKey
-            [ ME.ArtistTipStatus =. "failed"
-            , ME.ArtistTipUpdatedAt =. now
-            ]
-          throwError err500
-            { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe tip error: " <> err))
-            }
-        Right paymentIntent -> do
-          (piId, clientSecret) <- eitherStripeServerError $
-            parseStripePaymentIntentResponse paymentIntent
-          runDB $ update tipKey
-            [ ME.ArtistTipStripePaymentIntentId =. Just piId
-            , ME.ArtistTipUpdatedAt =. now
-            ]
-          pure APITypes.ArtistTipResponse
-            { APITypes.atrespTipId = fromSqlKey tipKey
-            , APITypes.atrespClientSecret = clientSecret
-            , APITypes.atrespAmountCents = amountCents
-            , APITypes.atrespCurrency = currency
-            }
-    _ -> throwError err500 { errBody = "Stripe is not configured" }
+  let tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
+      description = "Tip to artist " <> T.pack (show artistIdValid) <> " from " <> tipperLabel
+      metadata = object
+        [ "purpose" .= ("artist_tip" :: Text)
+        , "artist_tip_id" .= fromSqlKey tipKey
+        , "artist_party_id" .= artistIdValid
+        , "artist_profile_id" .= fromSqlKey profileKey
+        ]
+      metadataJson =
+        Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
+  result <- liftIO $
+    Stripe.createPaymentIntentForTip
+      stripeCfg
+      destinationAccountId
+      amountCents
+      platformFeeCents
+      currency
+      description
+      metadataJson
+  case result of
+    Left err -> do
+      runDB $ update tipKey
+        [ ME.ArtistTipStatus =. "failed"
+        , ME.ArtistTipUpdatedAt =. now
+        ]
+      liftIO $ hPutStrLn stderr $
+        "artist tip " <> show (fromSqlKey tipKey) <> " Stripe error: " <> T.unpack err
+      throwError err502 { errBody = "The payment provider could not start this tip" }
+    Right paymentIntent -> do
+      (piId, clientSecret) <- eitherStripeServerError $
+        parseStripePaymentIntentResponse paymentIntent
+      runDB $ update tipKey
+        [ ME.ArtistTipStripePaymentIntentId =. Just piId
+        , ME.ArtistTipUpdatedAt =. now
+        ]
+      pure APITypes.ArtistTipResponse
+        { APITypes.atrespTipId = fromSqlKey tipKey
+        , APITypes.atrespClientSecret = clientSecret
+        , APITypes.atrespAmountCents = amountCents
+        , APITypes.atrespCurrency = currency
+        }
+
+-- | Public-directory visibility of one artist (see 'ArtistTip.ArtistDirectoryVisibility').
+-- Counts every directory identity of the artist party (by subject or by the
+-- legacy @artist_profile@ link) and the ones the directory publicly lists, with
+-- the predicate used by the discovery projection.
+loadArtistDirectoryVisibility
+  :: MonadIO m
+  => PartyId
+  -> ArtistProfileId
+  -> SqlPersistT m ArtistTip.ArtistDirectoryVisibility
+loadArtistDirectoryVisibility partyKey profileKey = do
+  rows <- rawSql
+    "SELECT count(*)::bigint, \
+    \count(*) FILTER (WHERE profile.profile_status='published' AND profile.visibility='public' \
+    \AND profile.moderation_status='allowed' AND profile.canonical_profile_id IS NULL)::bigint \
+    \FROM directory_profile profile \
+    \WHERE profile.subject_party_id = ? \
+    \OR profile.id IN (SELECT link.profile_id FROM directory_legacy_link link \
+    \WHERE link.legacy_kind='artist_profile' AND link.legacy_id = ?)"
+    [ PersistInt64 (fromSqlKey partyKey)
+    , PersistText (T.pack (show (fromSqlKey profileKey)))
+    ]
+  pure $ case rows of
+    [(Single total, Single public)] ->
+      ArtistTip.artistDirectoryVisibilityFromCounts (fromIntegral (total :: Int64)) (fromIntegral (public :: Int64))
+    -- No aggregate row is impossible evidence: fail closed.
+    _ -> ArtistTip.DirectoryIdentity 0
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =

@@ -13562,6 +13562,91 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "PAY-TIP-001",
+      "title": "Public artist tips: addressed artist, listing admission and recorded outcome",
+      "statement": "POST /fans/artists/{artistId}/tips addresses the artist by PartyId, as every sibling /fans/artists route and the public apArtistId do. A tip is admitted only for an artist the public directory currently lists (its directory identity is published, public, allowed and not merged, or it has no directory identity) and whose payout account is complete; funds are routed only to that artist's own connected account with a 10% platform fee rounded down. An unavailable provider stores nothing. Provider error text is never returned to the caller. A recorded tip outcome changes only from pending, by a conditional update, so duplicated, reordered or concurrent webhook deliveries never replace it.",
+      "domain": "PAY",
+      "authority": "Product owner decision 2026-10-31 (AUTHORITY-090): tips only for listed artists; no business minimum or maximum beyond the provider limit. Sibling route semantics and ArtistProfileDTO.apArtistId fix the identifier. PRIV-ERROR-001 forbids rendering provider payloads.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-06, F-07); formal/payments/README.md; AUTHORITY-090",
+      "property": "Destination account = stored payout account of the addressed party's artist profile; admitted => publicly listed; 0 <= fee < amount and fee = floor(amount*1000/10000); a terminal outcome is never overwritten (inductively proved for the conditional update without provider assumptions).",
+      "contract": "formal/payments/README.md",
+      "actors": [
+        "Anonymous tipper",
+        "Stripe webhook",
+        "Artist (payout recipient)"
+      ],
+      "preconditions": [
+        "Validated ArtistTipRequest (amount 1..99,999,999 minor units, lowercase ISO currency).",
+        "Stripe secret and webhook secret configured."
+      ],
+      "inputs": [
+        "artistId (PartyId)",
+        "amountCents",
+        "currency",
+        "optional tipper name, email and message",
+        "Stripe payment_intent events"
+      ],
+      "state": {
+        "artistTip.status": [
+          "pending",
+          "paid",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "(none) -> pending when admitted and the provider is configured",
+        "pending -> paid on payment_intent.succeeded",
+        "pending -> failed on payment_intent.canceled or a provider creation error"
+      ],
+      "forbiddenTransitions": [
+        "paid -> failed",
+        "failed -> paid",
+        "any row for an unlisted, absent or unonboarded artist",
+        "any row when the provider is unavailable"
+      ],
+      "effects": [
+        "Insert one pending artist_tip row and create one Stripe destination-charge PaymentIntent per admitted request."
+      ],
+      "authorization": "Public intake (AUTH-PUBLIC-001 boundary public-intake); a hidden artist answers exactly like an absent one (404).",
+      "privacy": "Provider error text is logged server-side only; the caller receives a fixed 502 message.",
+      "concurrency": "Webhook outcome writes are conditional UPDATE ... WHERE status='pending'; formal/payments/StripeIntentOutcome.tla proves Safe inductively for up to six concurrent deliveries with Apalache.",
+      "idempotency": "Webhook events are deduplicated by event id and outcome writes are idempotent. Request-level idempotency is not provided: a retried request creates another pending row and PaymentIntent, which charges nothing unless the client confirms it.",
+      "failure": "Unconfigured provider: 503 before any write. Provider creation error: row marked failed, fixed 502. Unparseable provider response: row stays pending without intent id.",
+      "recovery": "Pending rows without an intent id or never confirmed remain auditable; no automatic charge.",
+      "observability": "Tip id, artist party id and artist profile id in PaymentIntent metadata; provider errors logged with the tip id.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "verification": "Pure admission and fee rules by Hspec/QuickCheck properties; outcome model by bounded TLC with a negative control and unbounded Apalache inductive proofs (initiation, consecution, implication).",
+      "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test ArtistTipSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "formalModels": [
+        "formal/payments/StripeIntentOutcome.tla",
+        "formal/payments/StripeIntentOutcome.cfg",
+        "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg",
+        "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg"
+      ],
+      "confidence": "High for the pure admission/fee rules and for the outcome-write protocol as modelled; the SQL visibility query and the handler-to-model correspondence are established by review, not by a database-backed test.",
+      "ambiguity": [
+        "Request-level idempotency (Idempotency-Key) needs a schema change and remains open.",
+        "The model abstracts each delivery to one read and one write; the event-id dedupe insert is not modelled because it does not guard dispatch.",
+        "Database-backed handler tests for the visibility query are pending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Unbounded model proof and pure-rule properties exist; database-backed handler tests and request-level idempotency remain."
+      }
     }
   ]
 }
