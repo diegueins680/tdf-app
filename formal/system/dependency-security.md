@@ -66,3 +66,11 @@ compatible client update; they do not prove the version-floor checker or
 unrestricted collection/input safety. The existing deterministic floor policy
 and production-only audit configuration are unchanged. The pinned Mobile
 dependency tree and the older full-scan findings retain their separate scope.
+
+
+The 31 October browser-boundary correction removes the unused Node WebTorrent
+production graph and its now-expired `ip` exception. The older dated reports
+above retain their original scope; the exception is no longer current policy.
+The browser artifact remains byte-exact and receives separate conservative
+component advisory checks. See [webtorrent-browser.md](webtorrent-browser.md)
+for the acceptance criteria, regression controls and explicit provenance limits.

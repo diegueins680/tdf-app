@@ -19767,6 +19767,214 @@
       },
       "reviewBatch": "music-track-search-2026-10-26",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "77f7e83fc0e2ad27d33d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "HTML escape character codes for quotation marks, ampersand and angle brackets. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "9f6d5ea7f8d6cd8e9c33",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "JavaScript value-type tags used by binary encoding dispatch. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "0dde4c89c8a43b6e1bee",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "Bencode dictionary/list/integer byte markers (d/l/i). These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "3151162cac6fcad02503",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "JavaScript container and scalar type tags in bencode serialization. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "d55c17fcf35e56da09b9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "Canonical binary/string text encodings in the upstream decoder. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "8a5bcd1aa0708e4634c3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "Accepted aliases for technical text and binary encodings. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "0ad4392653925471e2da",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "Seconds/minutes/hours/day duration parser tokens. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "33a7463ad2877abfe251",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "BitTorrent wire protocol message opcodes. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "d9cc94dbbdd13c4fd2eb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "Duration unit spellings and abbreviations in upstream ms parsing. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "5f54ddfe99bd76b5fe55",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "Event-emitter argument arity dispatch for a once wrapper. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b51bd44b16f9447ddb09",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "Event-emitter argument arity dispatch. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "ab1ed66370226fe286df",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "File System Access stream operation protocol tags. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "3f2caf15765513203a5a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this upstream protocol/encoding dispatch would invalidate the reviewed byte-exact browser artifact.",
+      "justification": "BitTorrent extension metadata message type codes. These are fixed upstream implementation/protocol constants, not administrator-maintained TDF business values. The official browser artifact is independently hash-pinned.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "line": 1
+      },
+      "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }

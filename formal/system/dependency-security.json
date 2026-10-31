@@ -62,11 +62,6 @@
       "status": "Unpatched upstream3.0.3; developer glob input, no known TDF runtime use. Restrict untrusted patterns; build availability remains open."
     },
     {
-      "package": "ip",
-      "advisory": "GHSA-2p57-rm9w-gvfp",
-      "status": "Existing dated production audit exception for browser-only WebTorrent path; not a server allowlist."
-    },
-    {
       "package": "stream-json",
       "advisory": "GHSA-528h-pc64-c93x",
       "status": "Detox/Bunyamin development dependency; observed Detox uses JSONL Parser, affected filters not proven unreachable across all tooling."

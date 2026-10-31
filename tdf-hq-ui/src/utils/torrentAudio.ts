@@ -1,5 +1,5 @@
 import type WebTorrent from 'webtorrent';
-import webTorrentBundleUrl from 'webtorrent/dist/webtorrent.min.js?url';
+import webTorrentBundleUrl from '../vendor/webtorrent/webtorrent.min.js?url';
 
 const TORRENT_WORKER_URL = '/webtorrent-sw.min.js';
 const TORRENT_WORKER_SCOPE = '/torrent-stream/';

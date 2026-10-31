@@ -13564,6 +13564,85 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "SYS-WEBTORRENT-BROWSER-001",
+      "title": "Preserve browser playback while removing unused Node torrent dependencies",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker",
+        "Music listener"
+      ],
+      "preconditions": [
+        "Use the reviewed WebTorrent 2.8.5 official browser artifact and committed npm v3 workspace lock.",
+        "Trust official npm archive integrity metadata and the publisher-supplied source map; exact upstream build resolution and compiler version remain unknown."
+      ],
+      "inputs": [
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "package-lock.json",
+        "audit-ci.jsonc"
+      ],
+      "state": {
+        "boundary": "formal/system/webtorrent-browser.md"
+      },
+      "allowedTransitions": [
+        "Reviewed official artifact update with matching provenance, preserved notices, finite compatibility checks and fresh advisory evidence."
+      ],
+      "forbiddenTransitions": [
+        "Reintroduce unused Node WebTorrent/discovery/tracker/ip packages or npm aliases.",
+        "Extend the expired ip exception or lower the production audit threshold.",
+        "Omit mapped package candidate versions or supplied license notices.",
+        "Treat candidate-version advisory results as complete binary provenance or vulnerability clearance."
+      ],
+      "effects": [
+        "Reject invalid browser artifact, missing source/notice/advisory coverage or applicable low-or-higher browser advisories before integration."
+      ],
+      "authorization": "This dependency repair does not authorize real torrent/peer traffic, provider operations or deployment.",
+      "privacy": "Advisory requests contain public package names and candidate versions only; do not send registry credentials or application data.",
+      "concurrency": "Check immutable committed candidate files; do not run installers during source-bound qualification.",
+      "idempotency": "Static checks are deterministic; live advisory checks depend on the registry feed at execution time.",
+      "failure": "Reject integrity, policy, inventory and live scan failures without renewing audit exemptions.",
+      "recovery": "Restore the reviewed browser artifact and complete evidence; preserve review and required CI controls.",
+      "observability": "Record candidate commit, bundle and lock hashes, commands, actual exits and explicit provenance limitations.",
+      "source": "Existing torrentAudio browser-only entry; failed Safe Install after 2026-10-31 exception expiry; GHSA-2p57-rm9w-gvfp; user security and verification requirements.",
+      "contract": "formal/system/webtorrent-browser.md",
+      "implementation": [
+        "scripts/check-browser-vendor.mjs",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci-safe-install.yml",
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "package-lock.json",
+        "audit-ci.jsonc",
+        "tdf-hq-ui/jest.config.cjs"
+      ],
+      "tests": [
+        "scripts/__tests__/browser-vendor.test.mjs",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "e2e/web/webtorrent-browser.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite deterministic rejection and browser compatibility tests; partial upstream build identity and advisory coverage.",
+      "ambiguity": [
+        "Source-map presence does not prove executed statements or unique package versions.",
+        "Nine matching archives lack standalone notice files; exact webpack compiler version is unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite regression controls implemented; source-bound UI/browser/CI evidence is separate and exact upstream build identity remains qualified."
+      },
+      "authority": "approved",
+      "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
+      "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
+      "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
     }
   ]
 }
