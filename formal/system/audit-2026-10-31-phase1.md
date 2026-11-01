@@ -236,3 +236,14 @@ Estado de verificación tras esta fase: 22 obligaciones de modelo (TLC positivos
 - Suite completa de Haskell: 4 077 ejemplos, 0 fallos (21 pendientes por base de datos).
 - `main` avanzó hasta `be87455` (PR #646, privacidad del nombre de Google). Integrado por merge normal; inventario y trazabilidad regenerados; los recibos SMT de autorización y recuperación toman los pines de `main` y añaden la revisión del Cabal de esta rama (siete registros de módulos, sin otros cambios).
 
+## 18. Seguridad P0 — webhooks de Meta (2026-11-01)
+
+`AUTH-WEBHOOK-001` pasa de "sin modelo" a evidencia ejecutable:
+- Propiedades QuickCheck sobre `verifyMetaWebhookSignature`: acepta exactamente el HMAC-SHA256 del cuerpo exacto bajo el secreto configurado (hex en cualquier caja); 503 sin secreto o con secreto en blanco, diga lo que diga la cabecera; 401 si falta la cabecera, está mal formada, o cambia cualquier byte del cuerpo, del secreto o del digest; solo son posibles éxito, 401 o 503.
+- Gate estructural `scripts/check-webhook-signatures.py`: las cuatro rutas POST firmadas por Meta (`/webhooks/whatsapp`, `/hooks/whatsapp`, `/instagram/webhook`, `/facebook/webhook`) las sirve una función que llama al verificador antes de decodificar el cuerpo; control de mutación (quitar la llamada en Facebook) lo detecta. En CI.
+- Sin hallazgos de corrección: el código ya cumplía. Queda abierta la ejecución de denegación a nivel HTTP por alias.
+
+## 19. Seguridad P0 — frontera CORS (2026-11-01)
+
+`AUTH-CORS-001`: propiedades QuickCheck sobre los predicados puros de `TDF.Cors` con orígenes generados. `isTrustedPreviewOrigin` acepta exactamente las dos raíces de Pages y una etiqueta de vista previa bajo ellas, solo por https y en cualquier caja; rechaza http, puertos, rutas, etiquetas más profundas, parecidos sin punto (`evil-tdfui.pages.dev`), sufijos añadidos y otros proyectos de Pages. La prueba de origen del borrado de cuenta exige la cabecera, rechaza el origen `null` y nunca se satisface a través del comodín. La derivación del origen desde `HQ_APP_URL` devuelve solo esquema y host y es idempotente. Sin hallazgos de corrección. La construcción del middleware (producción rechaza comodín y allow-all) sigue cubierta por `CorsSpec` y los controles de mutación de `verify-cors-boundary.py`.
+

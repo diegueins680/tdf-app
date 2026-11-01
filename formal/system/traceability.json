@@ -1163,7 +1163,8 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/CorsSpec.hs",
-        "scripts/verify-cors-boundary.py"
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq/test/TDF/CorsPropertiesSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1179,7 +1180,7 @@
       "authority": "Safety correction authorized by the current audit; explicit origin contract with observed production counterexample",
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
-      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
+      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins. Property tests over generated origins for the pure predicates: isTrustedPreviewOrigin accepts exactly the two Pages roots and one preview label under them over https and rejects http, ports, paths, deeper labels, missing-dot lookalikes and foreign hosts; the account-deletion origin proof requires the header, rejects the null origin and is never satisfied through the wildcard; the HQ_APP_URL origin derivation yields scheme and host only and is idempotent.",
       "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
     },
     {
@@ -4196,12 +4197,14 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
+        "scripts/check-webhook-signatures.py"
       ],
       "formalModels": [],
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "medium",
+      "confidence": "High for the verifier function (properties) and for the structural presence of the verifier in all four Meta aliases (gate); HTTP-level denial execution per alias remains open.",
       "ambiguity": [
         "Provider replay, key rotation, downstream idempotency and all-error-path privacy remain separate obligations."
       ],
@@ -4212,7 +4215,7 @@
       "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
       "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
       "contract": "formal/system/meta-webhook-admission.md",
-      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
+      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body.",
       "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
     },
     {
@@ -14159,6 +14162,75 @@
         "classification": "PARTIAL",
         "reason": "Structural gate in place; per-handler HTTP denial execution remains open (AUTH-REGISTRY-001)."
       }
+    },
+    {
+      "id": "AUTH-SOCIAL-OAUTH-001",
+      "title": "Instagram OAuth exchange binds connected accounts to the connecting user",
+      "statement": "POST /instagram/oauth/exchange requires social-inbox module access, a configured Facebook app, and a redirect URI equal to the configured callback. It exchanges the code, resolves the user's pages and Instagram accounts, and upserts one social_sync_account row per Instagram account (unique by platform and external id) bound to the connecting user's party with the page access token. Open policy (Q6): whether a user may rebind an account another party connected, and whether user-connected accounts may serve as the platform's delivery or backfill channel.",
+      "domain": "AUTH",
+      "authority": "Current implementation (tdf-hq/src/TDF/ServerInstagramOAuth.hs) recorded as observed behavior; product policy pending owner decision Q6 (audit F-19).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-19, Q6)",
+      "property": "exchange(user) succeeds => hasSocialInboxAccess(user) /\\ redirectUri = configuredCallback; every written row has party_id = user. Rebind and delivery-channel policy: unspecified.",
+      "contract": "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+      "actors": [
+        "Staff with social-inbox access",
+        "Facebook Graph API"
+      ],
+      "preconditions": [
+        "FACEBOOK_APP_ID and FACEBOOK_APP_SECRET configured."
+      ],
+      "inputs": [
+        "OAuth code",
+        "optional redirectUri"
+      ],
+      "state": {
+        "social_sync_account.status": [
+          "pending",
+          "connected"
+        ]
+      },
+      "allowedTransitions": [
+        "absent -> connected bound to the connecting user",
+        "connected (any party) -> connected bound to the connecting user (observed; policy pending)"
+      ],
+      "forbiddenTransitions": [
+        "exchange without social-inbox access",
+        "redirect URI other than the configured callback"
+      ],
+      "effects": [
+        "Upsert social_sync_account rows with page tokens."
+      ],
+      "authorization": "hasSocialInboxAccess: Admin, Manager, StudioManager, Reception, LiveSessionsProducer with CRM module.",
+      "privacy": "Page access tokens are stored in social_sync_account.access_token.",
+      "concurrency": "Upsert by unique (platform, external id).",
+      "idempotency": "Repeated exchange by the same user is idempotent per account.",
+      "failure": "503 without app credentials; 400 for a mismatching redirect URI; provider errors sanitized.",
+      "recovery": "Not applicable.",
+      "observability": "None specific.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "verification": "Observed behavior by source review; the silent rebind and the delivery-channel selection are recorded as F-19 pending Q6. No new test until the policy is decided.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md §14",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "Low for policy: behavior documented, not approved.",
+      "ambiguity": [
+        "Q6: which accounts may serve as platform delivery/backfill channels.",
+        "Q6: whether a user may rebind an Instagram account another party connected, and with what audit.",
+        "No test exercises the exchange handler end to end."
+      ],
+      "conformance": {
+        "classification": "SPECIFICATION AMBIGUITY",
+        "reason": "Implementation observed; product policy on account rebinding and delivery-channel selection is undecided (Q6)."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -14168,7 +14240,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "b7f021500b253a38e81396dc8532fc6f63e50a7350c62e9de8cccb8524515ae1",
+    ".github/workflows/event-operations-formal.yml": "9d85ce01c7eda2a66bbcfc417d8e93bf2835a661867b64b34f3d8bfae420d2b8",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -14519,7 +14591,7 @@
     "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "e9f17326e4be70b0263e07ca5d21437e5b65b2f43e3be991f39993cd402b4a70",
+    "formal/system/recovery-expiry-arithmetic.json": "d38451be78216fb190819e9aa6ccec713e00be86adac0e11c9606b39d4049623",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -14634,6 +14706,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
+    "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
     "scripts/ci-change-scope.mjs": "0698082c68fdc4824f9262f8ee12df8be4c22cc9a6dc1aa86ed19d79b8ace962",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
@@ -15397,6 +15470,7 @@
     "tdf-hq/src/TDF/ServerExtra.hs": "ba415c384195ae77200926d96d85257e8654986ff64455b32ede127bc7bc42b9",
     "tdf-hq/src/TDF/ServerFanClub.hs": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
+    "tdf-hq/src/TDF/ServerInstagramOAuth.hs": "7f837620b27a07498dc76e4980b9f53bd7b47fad0e668d4829a610c41d5043c3",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
@@ -15413,13 +15487,13 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "12e7ef369b1b86f5b6845c7b6b876197bbe34eaa4d0beef7ca9f660204f206b4",
+    "tdf-hq/tdf-hq.cabal": "07cdf1b3f89930c8a8bc02e545dc8ab814d6e3589b24b6b6424b82431a444a45",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "1395cc813a5d36e64807fec65da85dc331743ccfc99049d0eac1d23d5e853e70",
+    "tdf-hq/test/Spec.hs": "893bac0980f3dba6f176d038ad439b91861a7ae42ece458a2b1fc72ee1c07b80",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
@@ -15433,6 +15507,7 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+    "tdf-hq/test/TDF/CorsPropertiesSpec.hs": "d997804039a342ac7ab4146f84c2f17b9acefad7925258b59586c7576c7af8dd",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
     "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
@@ -15450,6 +15525,7 @@
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
     "tdf-hq/test/TDF/LedgerPostingSpec.hs": "b709ea453c050a6af2df6c14f61c3d490a5923cc2d90e6935f9d6a3b91b1d28e",
     "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "e1e1dcf22068ce44f41ea985d546235c844e468cdfe35a23ff297d6d0b8782b4",
+    "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs": "88e6b4fc291228d4ab7e99ac8f2c5e1030e437a8273741f44a6058a242fd2b55",
     "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
     "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "dd6fa335332f1f475089b6b9b389a81124822c08d8a6d9c5b39e458a8b2d74e2",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
@@ -16482,6 +16558,10 @@
       {
         "requirement": "PAY-CAPTURE-RECON-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -17027,6 +17107,12 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/CorsPropertiesSpec.hs": [
+      {
+        "requirement": "AUTH-CORS-001",
         "relationship": "tests"
       }
     ],
@@ -19042,6 +19128,10 @@
       {
         "requirement": "LEGAL-CONSENT-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/compiled-api-surface.test.mjs": [
@@ -19504,6 +19594,10 @@
       {
         "requirement": "MSG-META-REDELIVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API/Types.hs": [
@@ -19530,6 +19624,18 @@
       {
         "requirement": "AUTH-WEBHOOK-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs": [
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/check-webhook-signatures.py": [
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/src/TDF/API/Drive.hs": [
@@ -27243,6 +27349,12 @@
         "requirement": "AUTH-ADMIN-GUARD-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/ServerInstagramOAuth.hs": [
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -27407,7 +27519,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "b7f021500b253a38e81396dc8532fc6f63e50a7350c62e9de8cccb8524515ae1",
+      "sha256": "9d85ce01c7eda2a66bbcfc417d8e93bf2835a661867b64b34f3d8bfae420d2b8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29912,6 +30024,18 @@
         {
           "requirement": "SYS-STATE-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-139950aeabaacc7f",
+      "path": "scripts/check-webhook-signatures.py",
+      "sha256": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -48611,6 +48735,10 @@
         {
           "requirement": "PAY-CAPTURE-RECON-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -49173,6 +49301,10 @@
         {
           "requirement": "MSG-META-REDELIVERY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -49216,7 +49348,12 @@
       "path": "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
       "sha256": "7f837620b27a07498dc76e4980b9f53bd7b47fad0e668d4829a610c41d5043c3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-48a864e76f6a2ed9",
@@ -49619,7 +49756,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "12e7ef369b1b86f5b6845c7b6b876197bbe34eaa4d0beef7ca9f660204f206b4",
+      "sha256": "07cdf1b3f89930c8a8bc02e545dc8ab814d6e3589b24b6b6424b82431a444a45",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49765,7 +49902,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1395cc813a5d36e64807fec65da85dc331743ccfc99049d0eac1d23d5e853e70",
+      "sha256": "893bac0980f3dba6f176d038ad439b91861a7ae42ece458a2b1fc72ee1c07b80",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49862,6 +49999,10 @@
         },
         {
           "requirement": "LEGAL-CONSENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
           "relationship": "tests"
         }
       ]
@@ -50090,6 +50231,18 @@
       "requirements": [
         {
           "requirement": "OPS-WORKER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ea1e16f4dcd7f542",
+      "path": "tdf-hq/test/TDF/CorsPropertiesSpec.hs",
+      "sha256": "d997804039a342ac7ab4146f84c2f17b9acefad7925258b59586c7576c7af8dd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-CORS-001",
           "relationship": "tests"
         }
       ]
@@ -50362,6 +50515,18 @@
       "requirements": [
         {
           "requirement": "MSG-META-REDELIVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6bdd1107c7329e40",
+      "path": "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
+      "sha256": "88e6b4fc291228d4ab7e99ac8f2c5e1030e437a8273741f44a6058a242fd2b55",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-WEBHOOK-001",
           "relationship": "tests"
         }
       ]
@@ -56132,7 +56297,6 @@
     "SURFACE-e4ab6ea991643db1",
     "SURFACE-cb2c54ef31474aee",
     "SURFACE-81312ef85a6b405a",
-    "SURFACE-b0f11c67be4fa672",
     "SURFACE-48a864e76f6a2ed9",
     "SURFACE-c44b09e0d89d05c3",
     "SURFACE-063a8df8dc4a2bba",
@@ -56588,7 +56752,8 @@
     "PAY-DOMO-QUOTE-001",
     "PAY-ADAPTER-BINDING-001",
     "PAY-COURSE-PRICE-001",
-    "AUTH-ADMIN-GUARD-001"
+    "AUTH-ADMIN-GUARD-001",
+    "AUTH-SOCIAL-OAUTH-001"
   ],
   "stateMachines": [
     {
@@ -57707,7 +57872,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bee6058de36792a162de8edac286d98e087b2d69e661e8307ee1d67c923634e0",
+      "sourceSha256": "8d9bd12d2ff33cae18751fe13739b8218f2c3c4162cc53edf6a80674df29a71b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57735,7 +57900,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bee6058de36792a162de8edac286d98e087b2d69e661e8307ee1d67c923634e0",
+      "sourceSha256": "8d9bd12d2ff33cae18751fe13739b8218f2c3c4162cc53edf6a80674df29a71b",
       "definition": {
         "states": [
           "absent",
@@ -57765,7 +57930,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bee6058de36792a162de8edac286d98e087b2d69e661e8307ee1d67c923634e0",
+      "sourceSha256": "8d9bd12d2ff33cae18751fe13739b8218f2c3c4162cc53edf6a80674df29a71b",
       "definition": {
         "export": [
           "queued",
@@ -80254,7 +80419,7 @@
     "NOT IMPLEMENTED": 0,
     "PARTIAL": 167,
     "PASS": 0,
-    "SPECIFICATION AMBIGUITY": 0
+    "SPECIFICATION AMBIGUITY": 1
   },
   "limitations": [
     "Role predicates are preserved, not flattened into unconditional grants.",

@@ -1162,7 +1162,8 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/CorsSpec.hs",
-        "scripts/verify-cors-boundary.py"
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq/test/TDF/CorsPropertiesSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1178,7 +1179,7 @@
       "authority": "Safety correction authorized by the current audit; explicit origin contract with observed production counterexample",
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
-      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
+      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins. Property tests over generated origins for the pure predicates: isTrustedPreviewOrigin accepts exactly the two Pages roots and one preview label under them over https and rejects http, ports, paths, deeper labels, missing-dot lookalikes and foreign hosts; the account-deletion origin proof requires the header, rejects the null origin and is never satisfied through the wildcard; the HQ_APP_URL origin derivation yields scheme and host only and is idempotent.",
       "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
     },
     {
@@ -4195,12 +4196,14 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
+        "scripts/check-webhook-signatures.py"
       ],
       "formalModels": [],
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "medium",
+      "confidence": "High for the verifier function (properties) and for the structural presence of the verifier in all four Meta aliases (gate); HTTP-level denial execution per alias remains open.",
       "ambiguity": [
         "Provider replay, key rotation, downstream idempotency and all-error-path privacy remain separate obligations."
       ],
@@ -4211,7 +4214,7 @@
       "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
       "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
       "contract": "formal/system/meta-webhook-admission.md",
-      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
+      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body.",
       "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
     },
     {
@@ -14157,6 +14160,75 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Structural gate in place; per-handler HTTP denial execution remains open (AUTH-REGISTRY-001)."
+      }
+    },
+    {
+      "id": "AUTH-SOCIAL-OAUTH-001",
+      "title": "Instagram OAuth exchange binds connected accounts to the connecting user",
+      "statement": "POST /instagram/oauth/exchange requires social-inbox module access, a configured Facebook app, and a redirect URI equal to the configured callback. It exchanges the code, resolves the user's pages and Instagram accounts, and upserts one social_sync_account row per Instagram account (unique by platform and external id) bound to the connecting user's party with the page access token. Open policy (Q6): whether a user may rebind an account another party connected, and whether user-connected accounts may serve as the platform's delivery or backfill channel.",
+      "domain": "AUTH",
+      "authority": "Current implementation (tdf-hq/src/TDF/ServerInstagramOAuth.hs) recorded as observed behavior; product policy pending owner decision Q6 (audit F-19).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-19, Q6)",
+      "property": "exchange(user) succeeds => hasSocialInboxAccess(user) /\\ redirectUri = configuredCallback; every written row has party_id = user. Rebind and delivery-channel policy: unspecified.",
+      "contract": "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+      "actors": [
+        "Staff with social-inbox access",
+        "Facebook Graph API"
+      ],
+      "preconditions": [
+        "FACEBOOK_APP_ID and FACEBOOK_APP_SECRET configured."
+      ],
+      "inputs": [
+        "OAuth code",
+        "optional redirectUri"
+      ],
+      "state": {
+        "social_sync_account.status": [
+          "pending",
+          "connected"
+        ]
+      },
+      "allowedTransitions": [
+        "absent -> connected bound to the connecting user",
+        "connected (any party) -> connected bound to the connecting user (observed; policy pending)"
+      ],
+      "forbiddenTransitions": [
+        "exchange without social-inbox access",
+        "redirect URI other than the configured callback"
+      ],
+      "effects": [
+        "Upsert social_sync_account rows with page tokens."
+      ],
+      "authorization": "hasSocialInboxAccess: Admin, Manager, StudioManager, Reception, LiveSessionsProducer with CRM module.",
+      "privacy": "Page access tokens are stored in social_sync_account.access_token.",
+      "concurrency": "Upsert by unique (platform, external id).",
+      "idempotency": "Repeated exchange by the same user is idempotent per account.",
+      "failure": "503 without app credentials; 400 for a mismatching redirect URI; provider errors sanitized.",
+      "recovery": "Not applicable.",
+      "observability": "None specific.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "verification": "Observed behavior by source review; the silent rebind and the delivery-channel selection are recorded as F-19 pending Q6. No new test until the policy is decided.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md §14",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "Low for policy: behavior documented, not approved.",
+      "ambiguity": [
+        "Q6: which accounts may serve as platform delivery/backfill channels.",
+        "Q6: whether a user may rebind an Instagram account another party connected, and with what audit.",
+        "No test exercises the exchange handler end to end."
+      ],
+      "conformance": {
+        "classification": "SPECIFICATION AMBIGUITY",
+        "reason": "Implementation observed; product policy on account rebinding and delivery-channel selection is undecided (Q6)."
       }
     }
   ]
