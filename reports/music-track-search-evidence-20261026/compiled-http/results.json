@@ -1,0 +1,557 @@
+{
+  "status": "PASS-real-compiled-track-search-http-synthetic-metadata-only",
+  "source": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "backendGitTree": "e23afff1748cb635104b8f56a740f02a1a4bed7b",
+  "backendManifestSha256": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e",
+  "backendFilesVerified": 973,
+  "additionalNonruntimeDocumentation": {
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "reviewManifestSha256": "a39e99237387f74bf45ea740f0300581eb95c3d690c84fde47c0db4659e4bc31",
+  "binarySha256": "b10f2a0ab3ec8a0c5f42ede90e5bc8bacb80cceafd2cd95042ce9cb7e68cbd8b",
+  "wholeCheckoutCleanClaimed": false,
+  "frontendMetadataContextBefore": {
+    "docs/catalog-persistence/catalog-list-decisions.json": "fcadf76243f44ca679e350aafcfe3ce517411301bb5d3b2c8e42f9a458414257",
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv": "03146025520bd6c827052ffb96725912735cfed24ba2211382a6e8163b29138b",
+    "docs/catalog-persistence/reports/static-list-inventory.json": "dd5327c8d4cc53cb96f7f4df16e5410e9df2a877cdbec03f36f4ad1e1789c40a",
+    "docs/music-releases/track-search-delivery-2026-10-26.md": "a3d2a5ad6d6283b60aa2c830df1c05fb20e681a296bb9be5c7371ac7b0227c9b",
+    "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
+    "formal/system/music-track-search.md": "b95f2818c47b4f01a9e6ea6b3d1f5af1702cf7669e6ab9a48c1b49fd9a454a81",
+    "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
+    "formal/system/requirements.json": "70413a329b005b84ac7fa851ea63b69b200b414309a56c8bcd5e73f374614660",
+    "reports/music-track-search-2026-10-26.json": "05fd60c22e7ef0e7bd67b2bbd8ae76a2079c8049712ba4826827f5d54753c1ee",
+    "reports/music-track-search-evidence-20261026/README.md": "33d3e4cd0c72426e4952df14f42ae68d83d831b437d2cd77010cbd40811e1645",
+    "reports/music-track-search-evidence-20261026/archive-member-hashes.json": "20522e2ae3373b142252d24cea32be1cf947d9bab1e1145dc4f4928542f81012",
+    "reports/music-track-search-evidence-20261026/artifact-hashes.json": "8696448e1ded6677a55bc37f2293bcd5b90da207890dc9c534170a82bdefd85a",
+    "reports/music-track-search-evidence-20261026/backend-source-review.json": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4",
+    "reports/music-track-search-evidence-20261026/catalog-source-review.json": "eff39526cb8fb87767135afb7403355efdb488c2a98efbd66cee1ed97439cbfa",
+    "reports/music-track-search-evidence-20261026/frontend-qualification.json": "0c79dba1a214fd3841386dfcf08b730c1d6508f1419052592c5b6d7911a11e4e",
+    "reports/music-track-search-evidence-20261026/local-execution-evidence.tar.gz": "5fc5d4f01a82476cccb608a1f6bc55784d4169909a89c50bc68c56e5e5d77d0a",
+    "reports/music-track-search-evidence-20261026/model-design-report.json": "dca3d6c478e0426d3626bc73b278626ac6aa90a2accb47c32b9d47d9c0c76712",
+    "reports/music-track-search-evidence-20261026/model-qualification.json": "b9c9d16495a03c6be621f87b3728a46790f13ce3e68b9b6f581ea4eec14997d4",
+    "reports/music-track-search-evidence-20261026/native-qualification.json": "9ff3fcc717f8448776c6597103c27edf17e71e1f8fea06a2de3e01dd9419d385",
+    "reports/music-track-search-evidence-20261026/qualification-summary.json": "561ac3f5fa335758eab3064484cdfc99dfb352ae0cfe600c78838b2ceed7e895",
+    "reports/music-track-search-evidence-20261026/qualified-source-inputs.json": "7c93548b7f7ac4435da10b6c78623e39ee4480a12a9496370793cf1601c05032",
+    "reports/music-track-search-evidence-20261026/sql-qualification.json": "c2a092318e9cfd4b1f43db692ad519ffc213c21e1f5b0e2346c71da3ac87c313",
+    "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+    "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+    "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+    "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+    "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "sourceHelperSha256": {
+    "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
+    "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+    "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
+    "reports/welcome-club-integration-evidence-20261026/loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "startedAt": "2026-10-26T23:18:08.972647+00:00",
+  "steps": [
+    {
+      "label": "node-version",
+      "exitCode": 0
+    },
+    {
+      "label": "compile-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "label": "egress-denied-positive-control",
+      "exitCode": 0
+    },
+    {
+      "label": "initdb",
+      "exitCode": 0
+    },
+    {
+      "label": "start-pg",
+      "exitCode": 0
+    },
+    {
+      "label": "create-owned-db",
+      "exitCode": 0
+    },
+    {
+      "label": "full222-production-schema",
+      "exitCode": 0
+    },
+    {
+      "label": "generate-exact-authoritative-fixture",
+      "exitCode": 0
+    },
+    {
+      "label": "GET /health",
+      "status": 200,
+      "durationMs": 2.94
+    },
+    {
+      "label": "GET /version",
+      "status": 200,
+      "durationMs": 1.32
+    },
+    {
+      "label": "GET /music/search",
+      "status": 404,
+      "durationMs": 2.92
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 3.31
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 2.71
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 15.06
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 9.4
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.62
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.23
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.62
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 9.14
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 7.49
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 17.63
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.87
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 2.45
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 2.75
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 1.93
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 2.63
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 0.83
+    },
+    {
+      "label": "HEAD /music/search",
+      "status": 200,
+      "durationMs": 7.73
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 45.31
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 42.78
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 43.92
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 42.71
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 41.26
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.7
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.72
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.46
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.27
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 14.98
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 15.54
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 42.11
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 16.3
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 16.08
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.96
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.73
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.75
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.24
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.59
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 16.11
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 15.43
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 28.06
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 24.17
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 20.54
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 20.79
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.09
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 4.83
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 16.79
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.48
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 279.01
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 271.84
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 266.5
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 267.08
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 268.04
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 9.58
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 7.02
+    },
+    {
+      "label": "drop-owned-db",
+      "exitCode": 0
+    },
+    {
+      "label": "stop-owned-pg",
+      "exitCode": 0
+    }
+  ],
+  "assertions": [
+    "Exact fresh owned PostgreSQL identity",
+    "Full222 ledger verified",
+    "Actual compiled version matches c88 without environment revision override",
+    "Exactly one private/no-store GET status404",
+    "Disabled public feature returns handler404/private-no-store",
+    "Exactly one private/no-store GET status200",
+    "Blank query returns empty array",
+    "Exactly one private/no-store GET status200",
+    "Blank query returns empty array",
+    "Exactly one private/no-store GET status200",
+    "Specific B identity returned; never first track A",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: Canción",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: CANCION",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: nocturna",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: B Canción",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B:   canción noct  ",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: Guest Artist",
+    "Exactly one private/no-store GET status200",
+    "Release match returns both authorized album tracks",
+    "Exactly one private/no-store GET status200",
+    "200-character boundary accepted",
+    "Exactly one private/no-store GET status400",
+    "Exactly one private/no-store GET status400",
+    "Exactly one private/no-store GET status400",
+    "Exactly one private/no-store GET status400",
+    "Invalid integer parser rejects400; no handler-cache promise for parser failure",
+    "Exactly one private/no-store HEAD status200",
+    "Actual HEAD resolves search with private-no-store and no body",
+    "Real publication check rejects missing ready rendition; no trigger bypass",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording f16b4b6e-462e-4895-a9a1-55784c1459dc",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording 6bb9aa53-5945-41c1-b231-4c6bacf412f0",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording 698db48a-53a4-43bc-9d5f-2f3a5ec71a11",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording 276136d1-80b4-4509-ad10-946755d9fac3",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording ca9fa978-0340-44b6-84c9-af9d27754d00",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Private sentinel",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Withdrawn sentinel",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Listening denied sentinel",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Missing rendition sentinel",
+    "Exactly one private/no-store GET status200",
+    "Mixed hidden track remains absent even on broad context match: US hidden sentinel",
+    "Exactly one private/no-store GET status200",
+    "Mixed hidden track remains absent even on broad context match: Spec mixed",
+    "Exactly one private/no-store GET status200",
+    "Mixed hidden track remains absent even on broad context match: Spec Artist",
+    "Exactly one private/no-store GET status200",
+    "Actual trusted US header authorizes US-only track",
+    "Exactly one private/no-store GET status200",
+    "US-only release positive control",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: None",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: XX",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: T1",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: invalid",
+    "Exactly one private/no-store GET status200",
+    "Untrusted territory query parameter cannot override trusted EC header",
+    "Exactly one private/no-store GET status200",
+    "Preview-only listening never yields full rendition",
+    "Exactly one private/no-store GET status200",
+    "Only full/current preview renditions returned; no master/pending/stale preview",
+    "Quality variants do not duplicate source identities",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Deduplicate canonical recording before pagination; newest matching context",
+    "Exactly one private/no-store GET status200",
+    "Context matching precedes canonical deduplication",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Non-Latin literal query never becomes match-all",
+    "Exactly one private/no-store GET status200",
+    "Wildcards remain literal before matching fixture exists",
+    "Exactly one private/no-store GET status200",
+    "Literal wildcard-containing title matches without broadening",
+    "Exactly one private/no-store GET status200",
+    "Actual parameter binding rejects SQL injection text as a match",
+    "Exactly one private/no-store GET status200",
+    "Enough unique authorized canonical recordings for13/12 lookahead pages",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Actual limit/offset bindings preserve13-request12-display ordering",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Terminal offset empty and repeated ordering stable",
+    "All HTTP hits/source DTOs whitelist metadata and exact authorized context; no keys/URLs/owners/failure text",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "SQL withdrawal immediately removes fresh exact/context search disclosure",
+    "Compiled binary unchanged throughout qualification"
+  ],
+  "cleanup": {
+    "backendStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "scope": "Actual compiled GET/HEAD search on owned PostgreSQL16/full222schema and synthetic publication fixtures. No signup/login, HTTP mutation, S3/signing/media/object/browser/production/SLO claim.",
+  "nodeVersion": "v22.14.0",
+  "postgresVersion": "pg_ctl (PostgreSQL) 16.13 (Homebrew)",
+  "bindAdapterSha256": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101",
+  "fixtureSqlSha256": "cb2cdfd46728b80f7e98d687434847b1ce04e92b09df2da045ebb266536b706b",
+  "startupBounds": {
+    "monotonicDeadlineSeconds": 90,
+    "maximumRequestTimeoutSeconds": 10,
+    "requestTimeoutAlsoCappedToRemainingBudget": true,
+    "maximumPollingOverrunAllowanceSeconds": 10
+  },
+  "startupElapsedSeconds": 1.015,
+  "networkIsolation": {
+    "listenersLoopback": true,
+    "lanDenied": true,
+    "nonLoopbackEgressDeniedPositiveControl": true,
+    "credentialsInherited": false
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T23:17:40Z",
+    "commit": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "frontendMetadataContextAfter": {
+    "docs/catalog-persistence/catalog-list-decisions.json": "fcadf76243f44ca679e350aafcfe3ce517411301bb5d3b2c8e42f9a458414257",
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv": "03146025520bd6c827052ffb96725912735cfed24ba2211382a6e8163b29138b",
+    "docs/catalog-persistence/reports/static-list-inventory.json": "dd5327c8d4cc53cb96f7f4df16e5410e9df2a877cdbec03f36f4ad1e1789c40a",
+    "docs/music-releases/track-search-delivery-2026-10-26.md": "a3d2a5ad6d6283b60aa2c830df1c05fb20e681a296bb9be5c7371ac7b0227c9b",
+    "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
+    "formal/system/music-track-search.md": "b95f2818c47b4f01a9e6ea6b3d1f5af1702cf7669e6ab9a48c1b49fd9a454a81",
+    "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
+    "formal/system/requirements.json": "70413a329b005b84ac7fa851ea63b69b200b414309a56c8bcd5e73f374614660",
+    "reports/music-track-search-2026-10-26.json": "05fd60c22e7ef0e7bd67b2bbd8ae76a2079c8049712ba4826827f5d54753c1ee",
+    "reports/music-track-search-evidence-20261026/README.md": "33d3e4cd0c72426e4952df14f42ae68d83d831b437d2cd77010cbd40811e1645",
+    "reports/music-track-search-evidence-20261026/archive-member-hashes.json": "20522e2ae3373b142252d24cea32be1cf947d9bab1e1145dc4f4928542f81012",
+    "reports/music-track-search-evidence-20261026/artifact-hashes.json": "8696448e1ded6677a55bc37f2293bcd5b90da207890dc9c534170a82bdefd85a",
+    "reports/music-track-search-evidence-20261026/backend-source-review.json": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4",
+    "reports/music-track-search-evidence-20261026/catalog-source-review.json": "eff39526cb8fb87767135afb7403355efdb488c2a98efbd66cee1ed97439cbfa",
+    "reports/music-track-search-evidence-20261026/frontend-qualification.json": "0c79dba1a214fd3841386dfcf08b730c1d6508f1419052592c5b6d7911a11e4e",
+    "reports/music-track-search-evidence-20261026/local-execution-evidence.tar.gz": "5fc5d4f01a82476cccb608a1f6bc55784d4169909a89c50bc68c56e5e5d77d0a",
+    "reports/music-track-search-evidence-20261026/model-design-report.json": "dca3d6c478e0426d3626bc73b278626ac6aa90a2accb47c32b9d47d9c0c76712",
+    "reports/music-track-search-evidence-20261026/model-qualification.json": "b9c9d16495a03c6be621f87b3728a46790f13ce3e68b9b6f581ea4eec14997d4",
+    "reports/music-track-search-evidence-20261026/native-qualification.json": "9ff3fcc717f8448776c6597103c27edf17e71e1f8fea06a2de3e01dd9419d385",
+    "reports/music-track-search-evidence-20261026/qualification-summary.json": "561ac3f5fa335758eab3064484cdfc99dfb352ae0cfe600c78838b2ceed7e895",
+    "reports/music-track-search-evidence-20261026/qualified-source-inputs.json": "7c93548b7f7ac4435da10b6c78623e39ee4480a12a9496370793cf1601c05032",
+    "reports/music-track-search-evidence-20261026/sql-qualification.json": "c2a092318e9cfd4b1f43db692ad519ffc213c21e1f5b0e2346c71da3ac87c313",
+    "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+    "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+    "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+    "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+    "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "frontendMetadataChangedDuringRun": false,
+  "finishedAt": "2026-10-26T23:18:49.407209+00:00"
+}

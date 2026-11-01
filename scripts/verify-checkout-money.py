@@ -13,6 +13,32 @@ SOURCE = ROOT / 'tdf-hq/src/TDF/Commerce/Money.hs'
 MERCH_SOURCE = ROOT / 'tdf-hq/src/TDF/Commerce/Merch.hs'
 TEST = ROOT / 'tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs'
 MAIN = 'import Test.Hspec\nimport qualified TDF.Commerce.CheckoutMoneySpec as Money\nmain = hspec Money.spec\n'
+EXPECTED_EXAMPLES = 61
+EXPECTED_PROPERTY_RUNS = [1000, 1000, 1000]
+
+
+def execution_summary(output):
+    """Require one complete Hspec report; exit zero alone permits pending work."""
+    summaries = re.findall(
+        r'^\s*(\d+) examples?, (\d+) failures?(?:, (\d+) pending)?\s*$',
+        output, re.M)
+    if len(summaries) != 1:
+        raise ValueError('Missing or ambiguous Hspec execution summary')
+    examples, failures, pending = summaries[0]
+    return {'examples': int(examples), 'failures': int(failures),
+            'pending': int(pending or 0),
+            'propertyPassCounts': [int(count) for count in re.findall(
+                r'^\s*\+\+\+ OK, passed (\d+) tests?\.', output, re.M)]}
+
+
+def expected_execution(exit_code, summary, *, intended):
+    complete = summary['examples'] == EXPECTED_EXAMPLES and summary['pending'] == 0
+    if intended:
+        return (complete and exit_code == 0 and summary['failures'] == 0
+                and summary['propertyPassCounts'] == EXPECTED_PROPERTY_RUNS)
+    # A compile error, missing selection or pending example is not a detected
+    # arithmetic mutation. Mutated properties may fail before 1000 successes.
+    return complete and exit_code != 0 and summary['failures'] > 0
 
 
 def run():
@@ -54,14 +80,19 @@ def run():
                 target_module.write_text(target_source.replace(old, new))
             command = ['stack', '--stack-yaml', str(ROOT/'tdf-hq/stack.yaml'),
                        'exec', '--', 'runghc', '-i'+str(variant),
-                       '-i'+str(ROOT/'tdf-hq/test'), str(main), '--seed=20261004']
+                       '-i'+str(ROOT/'tdf-hq/test'), str(main), '--seed=20261004',
+                       '--format=specdoc', '--no-color', '--fail-on=empty']
             result = subprocess.run(command, cwd=ROOT, env=os.environ,
                                     text=True, capture_output=True, timeout=120)
             output = result.stdout + result.stderr
-            passed = result.returncode == 0 if replacement is None else (
-                result.returncode != 0 and
-                re.search(r'[1-9][0-9]* examples, [1-9][0-9]* failures?', output) is not None)
+            summary, summary_error = None, None
+            try:
+                summary = execution_summary(output)
+                passed = expected_execution(result.returncode, summary, intended=replacement is None)
+            except ValueError as error:
+                summary_error, passed = str(error), False
             records.append({'variant': name, 'exit': result.returncode,
+                            'executionSummary': summary, 'summaryError': summary_error,
                             'expectedResultObserved': bool(passed), 'output': output})
             if not passed:
                 print(json.dumps({'runs': records}, indent=2))

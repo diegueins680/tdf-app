@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "status": "IMPLEMENTED_UNIT_STATIC_TESTED_BROWSER_LEGACY_REGRESSION_PENDING",
+  "observedAt": "2026-10-27T01:12:09.592598+00:00",
+  "actualHead": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+  "ownedSourceSha256": {
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "2f1964225b52251c974ef0b42992d3c1c11748c143c9986b685ad29ea09907c2",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
+    "tdf-hq-ui/src/api/musicReleases.ts": "07776593433c18bda040520d9416d4c4606bdf65802d50101af77c06eb87e9b0",
+    "tdf-hq-ui/src/api/musicReleases.search.test.ts": "669c73a1f2882d218c8b1054f19512fbc1c9dd1aaed3cd9568b20597db2c9eda"
+  },
+  "scope": "OnlyDirectoryemptycopyandsearchTracksresponsevalidation; no unrelatedendpoint/player/native/legacyE2E/locale/runtimecomponentchanges.",
+  "originalCI": {
+    "run": 40423799149,
+    "job": 121925970481,
+    "source": "b8a13e66fb40613250c047df92b6775a04eebf67",
+    "testedMerge": "c5e44c0af9a321d7c0c8d5dae3450d2842a060eb",
+    "passed": 570,
+    "skipped": 22,
+    "failed": 10,
+    "breakdown": "7 missinglegacyemptytitle +3 missingdirectorydetail-link aftermusicSPAHTMLrendercrash",
+    "artifactId": 12701041459,
+    "artifactZipSha256": "b2c32baad965639510710078b5d9d589ac4e355073d2569508032a4bdf1804f4",
+    "trace": {
+      "path": "/private/tmp/tdf-640-b8a-ci-failures-20261027/persona-discovery-desktop-trace.zip",
+      "sha256": "3b370d5280fef7829de1aa1cd884eca6e2effad80023e5ebcade79e3e10891fd",
+      "readOnlyObserved": "0-trace.network /music/search200text/html;0-trace.trace map isnotafunction; parentreportsAppBoundarycontext"
+    }
+  },
+  "baseline": {
+    "log": "/private/tmp/tdf-music-search-response-guard-20261027/baseline.log",
+    "sha256": "a971444e09d4f16d538d8e742a80f933049b10e825ec7948b0fed407754414f6",
+    "result": "2 expectedfailuresbeforevalidator;60notselectedbytestNamePattern",
+    "client": "Actualclient resolvesSPAHTML insteadrejecting",
+    "integratedPage": "Actualclient forwardedthroughcomponentfixture; actualPage crashes/hidesdirectoryratherthanshowingmusicerror"
+  },
+  "implementation": {
+    "title": "ExistingdirectoryemptyTitlepreserved;existingtranslatedscopeparagraph whenmusicquerypresent",
+    "wireGuard": "get<unknown>().then(privatevalidator), preservingoriginalgetargumentsandsynchronousparameterRangeErrors;genericerrorrejectsentiremalformedresponse",
+    "closedRequiredHitFields": 10,
+    "closedRequiredSourceFields": 4,
+    "ids": "UUIDformatwithoutversionrestriction",
+    "context": "Nonblanktitle/artist/releasecontext/slug",
+    "duration": "nullorfinite,safe,nonnegativeinteger",
+    "sources": "Nonemptyarray;everymemberUUID,full/previewrole,nonblankmediaTypestring,numericfinitebitrate/loudness-onlymetadata",
+    "mediaTypeBoundary": "Nonblankstringcontractvalidation;nodecoder/codeccompatibilityorbackendauthorizationproof",
+    "limits": "Max100hits;valid[]preserved;noresponseURL/storageextraattributesreturned",
+    "malformedTypes": "HTML/object/null/primitive/missingfields/invalidUUIDs/text/duration/source/role/media/metadata/extrafields/bound100",
+    "noBodyLeak": "GenericInvalidmusicsearchresponseerror;HTMLdebugsentinelnotrendered",
+    "tests": "Realclientnegative/positivewirecases+actualPagewithvaliddirectorydetailandrealclientHTMLrejection"
+  },
+  "verification": {
+    "result": "PASS100/100infiveaffectedJestsuites,0skip;four-filelint;canonicaltsconfig.app noEmittypecheck;scopeddiffcheck",
+    "commands": [
+      {
+        "name": "unit",
+        "command": [
+          "node",
+          "../node_modules/jest/bin/jest.js",
+          "--runInBand",
+          "--runTestsByPath",
+          "src/api/musicReleases.search.test.ts",
+          "src/pages/DirectorySearchPage.music.test.tsx",
+          "src/pages/DirectorySearchPage.test.tsx",
+          "src/features/discovery/MusicSearchResults.test.tsx",
+          "src/player/publicMusicTrack.test.ts"
+        ],
+        "exit": 0,
+        "tail": "(node:62667) ExperimentalWarning: VM Modules is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n[TESTOMATIO] Testomatio Reporter v2.12.0\n[TESTOMATIO] Pipes: No pipes enabled\n[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable\nPASS src/pages/DirectorySearchPage.test.tsx (13.67 s)\nPASS src/pages/DirectorySearchPage.music.test.tsx (6.915 s)\nPASS src/features/discovery/MusicSearchResults.test.tsx\nPASS src/api/musicReleases.search.test.ts\nPASS src/player/publicMusicTrack.test.ts\n\nTest Suites: 5 passed, 5 total\nTests:       100 passed, 100 total\nSnapshots:   0 total\nTime:        24.483 s\nRan all test suites within paths \"src/api/musicReleases.search.test.ts\", \"src/pages/DirectorySearchPage.music.test.tsx\", \"src/pages/DirectorySearchPage.test.tsx\", \"src/features/discovery/MusicSearchResults.test.tsx\", \"src/player/publicMusicTrack.test.ts\".\n",
+        "log": "/private/tmp/tdf-music-search-response-guard-20261027/unit.log",
+        "logSha256": "a83e6292ac3553018cce51a7ce5fa97defd87fac8fbdb34f4a29d93fdbbb77fe"
+      },
+      {
+        "name": "lint",
+        "command": [
+          "node",
+          "../node_modules/eslint/bin/eslint.js",
+          "src/pages/DirectorySearchPage.tsx",
+          "src/pages/DirectorySearchPage.music.test.tsx",
+          "src/api/musicReleases.ts",
+          "src/api/musicReleases.search.test.ts",
+          "--max-warnings=0"
+        ],
+        "exit": 0,
+        "tail": "",
+        "log": "/private/tmp/tdf-music-search-response-guard-20261027/lint.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "typecheck",
+        "command": [
+          "node",
+          "../node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.app.json"
+        ],
+        "exit": 0,
+        "tail": "",
+        "log": "/private/tmp/tdf-music-search-response-guard-20261027/typecheck.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "node": "22.14.0",
+    "limits": "ActualReact/JSDOMwithdeclaredAPI/sessionfixtures;notbrowserdecoder/backend/production/formalproof.",
+    "iterationsPreserved": [
+      "initial-unit.log",
+      "initial-lint.log",
+      "initial-typecheck.log",
+      "initial-static-checks.json",
+      "intermediate-unit.log",
+      "intermediate-lint.log",
+      "intermediate-typecheck.log",
+      "intermediate-final-checks.json"
+    ],
+    "compileCorrections": "TypedkeypredicateandES2020-compatibleown-propertycall;notcompilerrelaxation"
+  },
+  "browserPlan": {
+    "config": "/private/tmp/tdf-directory-legacy-fixed-plan-20261027/playwright.config.mjs",
+    "configSha256": "92c89da60d8f0f79c010399a5b9797050119059b525155c39cb723b59929808d",
+    "sourceBefore": "/private/tmp/tdf-directory-legacy-fixed-plan-20261027/source-before-final.json",
+    "sourceBeforeSha256": "bac12c02736bb67ace1b0c1b7dbb0bea6c21713caa6fe2c74ec26af24f46e07e",
+    "fullSelection": 10,
+    "originalDiscoveryProjects": [
+      "chromium-desktop",
+      "chromium-phone",
+      "chromium-tablet"
+    ],
+    "originalWelcomeProjects": "All7baseprojects",
+    "localInstalledSubset": 8,
+    "ownedPort": 4189,
+    "reuseExistingServer": false,
+    "serviceWorkers": "block",
+    "sameOriginAPI": "ViteHTMLproxyresponsecounterexampleremainsunmocked;oldtestsandbudgetspreserved",
+    "status": "PREPARED_NOT_EXECUTED_BY_CHILD"
+  },
+  "unchangedLegacyE2ESha256": {
+    "e2e/web/persona-public.spec.mjs": "52621b77b14d7d15e4081493a4b92e39aaa3996f9247cc5f2ab2f1285108236c",
+    "e2e/web/public-welcome.spec.mjs": "b26513be86bde272bec3711ef408aac4d742a9fc13ddff8bf7a4f872fb528044"
+  },
+  "childBrowserServices": 0,
+  "childGitWrites": 0,
+  "historicalTitleOnlyReceipt": {
+    "path": "/private/tmp/tdf-directory-emptytitle-fix-20261027/receipt.json",
+    "scope": "Prior63-testtwofiletitle-onlyqualification;newcombinedfourfilequalificationabove"
+  },
+  "production": "NOT_MERGED_DEPLOYED_OR_PRODUCTION_VERIFIED"
+}
