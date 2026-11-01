@@ -487,7 +487,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                 case binding of
                   Left message -> pure (Left message)
                   Right () -> do
-                    verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+                    verified <- Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
                       { Checkout.vpAttempt = attempt
                       , Checkout.vpCheckout = checkout
                       , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -710,7 +710,7 @@ capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
                 case binding of
                   Left message -> pure (Left message)
                   Right () -> do
-                    verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+                    verified <- Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
                       { Checkout.vpAttempt = attempt
                       , Checkout.vpCheckout = checkout
                       , Checkout.vpProvider = Checkout.ProviderPayPal

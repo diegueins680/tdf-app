@@ -2226,6 +2226,7 @@
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+      "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
       "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
       "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
       "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
@@ -2823,7 +2824,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "efe46cbabb4707064793ddacec033a93f91ffbd27a69d05c9092dbb232257cfd",
+      "sha256": "28717ec1b73d9bd8f2da065ba97577e9195d1215ecb79c88edd60d5e97bb1195",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6363,7 +6364,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "99372c40f2ced0f245b527894d2986b0603168c68abcea1de3d503a286716bab",
+      "sha256": "d904cf0328730ce5f1c8d38856d4c8356bd793fe0a5c3ac6b6f647fcaec38fbc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14709,7 +14710,7 @@
     {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "sha256": "ea2f1106a8efc7214e1296cfb1239ab2361d932ae4cbae3713d1b8acd776086a",
+      "sha256": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15363,7 +15364,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "1b7f8efb3dad0e65c54ecde353809a27875a95d06155969af80883d45b348d68",
+      "sha256": "b254cd157bd804af458faafb0bf0a94f812c00174b57db1a5646597dd959f26c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15381,7 +15382,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
+      "sha256": "05f9737bd13ddeb8dcc1272d3aab3a71409e40944f8fe0653e85b39376a25b92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15399,7 +15400,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "4ef64ec9d5551e186476039a31b2113c27032e72d14805604c1199c240ecc0ed",
+      "sha256": "be648aa0aa8bd4d73fdf64bb208c9235ad2d50af345733579af1dd9cc88436b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15411,7 +15412,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf",
+      "sha256": "bfb6201b750b256d8247ef84551ff44076137fc97cff54d59b22b3a575c083ea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15501,7 +15502,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
+      "sha256": "206eb6d9815e739f855c7f09407eef0ed43934356446420611984117ea47a414",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15843,7 +15844,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "462f80a3e740b2da49cdf40ac00dd8a02311fee5c343a3fc00d6022e43e6786c",
+      "sha256": "4105a289e04ef277e6f298e9755457f3780cdddf036a2643b6993d5d3d0da239",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15915,7 +15916,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "7dd71c70195728c264fc9c6ea11d18873fcf2251245cdd7557a722a58e6823b9",
+      "sha256": "1f9af8a8777ee6f49a99847b3d973c3954e88b5d7bd67b7207fe27fc51f788e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15970,6 +15971,12 @@
       "id": "SURFACE-841860cc12b9ab42",
       "path": "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "sha256": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8764885fa15a0fd8",
+      "path": "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+      "sha256": "bf03722e18c0a2dfd37b143127c5bbfa03422b2550734ebabd6d0fb773b74054",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26932,8 +26939,29 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/payments/CaptureAccounting.cfg",
+      "sha256": "1c3cfc664c1a702b0f7db89a5aa631f94670e5297fd3ce38b1329f7f2aad743c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/payments/CaptureAccounting.tla",
+      "sha256": "78c86aa59ebfd73c24fda852348978875a5f60f8925d5f4fbc8e0e7ebb104172",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/payments/CaptureAccountingLegacy.cfg",
+      "sha256": "eaba43f7267541499daabeb5e4e512679b2ab36b34154c28dbfaaa1b1f078c30",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/payments/README.md",
-      "sha256": "31160c4c92c758aa0c7010e787afe8564844a16609205cad860452a7e1556f10",
+      "sha256": "2a3a2add1c6c5ebf1188b279f60997f279af3ba657e7b83670b86d326c57ab1a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27409,7 +27437,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28074,7 +28102,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d3a0609d6cf95e1dea10d4739162ea595b489e111e954d3ff0f68a0a4cac673b",
+      "sha256": "7c641e5143273ac19ecfbf371b834d265f36674944e7bd5a37c5bcda712c66e7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33803,7 +33831,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -33834,7 +33862,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -33865,7 +33893,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -33896,7 +33924,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -33927,7 +33955,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -33958,7 +33986,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -33989,7 +34017,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -34020,7 +34048,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -34051,7 +34079,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -34082,7 +34110,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -34113,7 +34141,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -34144,7 +34172,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -34173,7 +34201,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -34191,6 +34219,93 @@
             "ID": "F-13",
             "Sev.": "error",
             "Hallazgo": "`/fans/artists` y `/fans/artists/{id}` (y también `/artists`, la búsqueda, el perfil público por id o referencia y `/fans/clubs`) mostraban **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). **Corregido** por decisión del responsable (AUTHORITY-092, `ART-PUBLIC-VISIBILITY-001`): una sola regla en `TDF.Profiles.ArtistVisibility`, compartida con las propinas; un artista oculto responde como uno inexistente. Las lecturas admin y del propio dueño no cambian."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-14-A8D218EC",
+      "declaredId": "F-14",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 195,
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-14",
+        "Sev.": "error",
+        "Hallazgo": "En Domo, cursos, tickets, marketplace y service storefront, el handler de captura comprueba la expiración del hold con el reloj de la aplicación y **después**, en otra transacción, admite el pago bajo bloqueo. Si otro request expira el hold entre ambos pasos (con relojes perfectos; el desfase entre instancias lo agrava), la admisión rechaza el pago y el dinero queda capturado sin pago verificado ni excepción de reconciliación: el cliente solo ve un 409. **Corregido** con `recordVerifiedPaymentOrReconcile` (`PAY-CAPTURE-RECON-001`). El contraejemplo lo reproducen TLC y Apalache, y la corrección está demostrada de forma inductiva."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 195,
+          "statement": "error",
+          "columns": {
+            "ID": "F-14",
+            "Sev.": "error",
+            "Hallazgo": "En Domo, cursos, tickets, marketplace y service storefront, el handler de captura comprueba la expiración del hold con el reloj de la aplicación y **después**, en otra transacción, admite el pago bajo bloqueo. Si otro request expira el hold entre ambos pasos (con relojes perfectos; el desfase entre instancias lo agrava), la admisión rechaza el pago y el dinero queda capturado sin pago verificado ni excepción de reconciliación: el cliente solo ve un 409. **Corregido** con `recordVerifiedPaymentOrReconcile` (`PAY-CAPTURE-RECON-001`). El contraejemplo lo reproducen TLC y Apalache, y la corrección está demostrada de forma inductiva."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-15-A8D218EC",
+      "declaredId": "F-15",
+      "statement": "warning",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 196,
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-15",
+        "Sev.": "warning",
+        "Hallazgo": "La máquina de estados de Domo permite `deposit_paid → cancelled`, `in_progress → cancelled` y `balance_due → cancelled` con dinero ya cobrado, pero no especifica qué pasa con ese dinero (reembolso total o parcial, retención). **Pregunta Q5 para el responsable.**"
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 196,
+          "statement": "warning",
+          "columns": {
+            "ID": "F-15",
+            "Sev.": "warning",
+            "Hallazgo": "La máquina de estados de Domo permite `deposit_paid → cancelled`, `in_progress → cancelled` y `balance_due → cancelled` con dinero ya cobrado, pero no especifica qué pasa con ese dinero (reembolso total o parcial, retención). **Pregunta Q5 para el responsable.**"
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-16-A8D218EC",
+      "declaredId": "F-16",
+      "statement": "info",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 197,
+      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-16",
+        "Sev.": "info",
+        "Hallazgo": "Con un total pequeño y una tasa de depósito baja, el depósito redondeado puede ser 0 y la cotización se rechaza. Es seguro, pero conviene confirmar que es la intención de negocio."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 197,
+          "statement": "info",
+          "columns": {
+            "ID": "F-16",
+            "Sev.": "info",
+            "Hallazgo": "Con un total pequeño y una tasa de depósito baja, el depósito redondeado puede ser 0 y la cotización se rechaza. Es seguro, pero conviene confirmar que es la intención de negocio."
           }
         }
       ],
@@ -43498,6 +43613,32 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "INVARIANT SuccessfulReturnHasEvidence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/CaptureAccounting.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Reconcile = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/CaptureAccountingLegacy.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Reconcile = FALSE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

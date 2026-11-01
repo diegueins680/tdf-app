@@ -13718,6 +13718,155 @@
         "classification": "PARTIAL",
         "reason": "Rule, SQL and handlers implemented and tested at unit and SQL level; HTTP-level checks on the migrated schema remain."
       }
+    },
+    {
+      "id": "PAY-CAPTURE-RECON-001",
+      "title": "Captured provider money is always verified or reconciled",
+      "statement": "When a provider reports authoritative captured money (server-to-server or signature-verified evidence, positive amount) for a Domo quote, course registration, event ticket order, marketplace order or service storefront order, the payment is either admitted as a verified checkout payment or an open reconciliation exception is recorded in the same transaction. A rejected admission is never only an error response.",
+      "domain": "PAY",
+      "authority": "Audit finding F-14 (formal/system/audit-2026-10-31-phase1.md); existing payment_after_*_hold_expiry reconciliation intent in each handler; owner mandate 2026-10-31 (money first).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-14); formal/payments/README.md",
+      "property": "captured => verified \\/ exception, and verified => checkout paid; proved inductively for the handler/expiry interleaving.",
+      "contract": "formal/payments/README.md",
+      "actors": [
+        "Customer",
+        "Payment provider",
+        "Hold expiry (request or worker)"
+      ],
+      "preconditions": [
+        "Provider binding recorded for the attempt before admission."
+      ],
+      "inputs": [
+        "VerifiedPayment evidence"
+      ],
+      "state": {
+        "checkout": [
+          "open",
+          "expired",
+          "paid"
+        ],
+        "reconciliation": [
+          "none",
+          "open"
+        ]
+      },
+      "allowedTransitions": [
+        "open -> paid with a verified payment",
+        "captured on expired or mismatched checkout -> open reconciliation exception"
+      ],
+      "forbiddenTransitions": [
+        "captured money with neither a verified payment nor an open exception"
+      ],
+      "effects": [
+        "Insert commerce_reconciliation_exception (verified_payment_not_admitted), deduplicated by the open-exception fingerprint."
+      ],
+      "authorization": "Provider evidence only; customers cannot create exceptions with non-authoritative evidence.",
+      "privacy": "No customer data beyond existing references.",
+      "concurrency": "Admission and exception insert share one transaction; the hold-expiry race between the handler's time check and the locked admission is closed (formal/payments/CaptureAccounting.tla).",
+      "idempotency": "Open exceptions are unique per provider, environment, merchant, type, internal and provider reference.",
+      "failure": "Admission rejection still returns the existing conflict response to the caller.",
+      "recovery": "Operators resolve the open exception (refund or manual reservation).",
+      "observability": "Open reconciliation exception rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision.",
+      "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "formalModels": [
+        "formal/payments/CaptureAccounting.tla",
+        "formal/payments/CaptureAccounting.cfg",
+        "formal/payments/CaptureAccountingLegacy.cfg"
+      ],
+      "confidence": "High for the protocol as modelled and the pure decision; handler correspondence by review of the twelve call sites. The provider reconciliation worker, music commerce and the PayPal webhook keep their own reconciliation paths.",
+      "ambiguity": [
+        "No PostgreSQL test drives a capture into an expired checkout end to end.",
+        "The model has one capture handler per checkout; concurrent captures of one checkout are covered by attempt locking (PAY-RETRY-001), not by this model."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Inductive proof and unit evidence exist; database-backed end-to-end check remains."
+      }
+    },
+    {
+      "id": "PAY-DOMO-QUOTE-001",
+      "title": "Domo quote arithmetic is exact, bounded and internally consistent",
+      "statement": "calculateDomoQuote prices an approved rate card in exact integers: line subtotals equal quantity times unit, the subtotal is their sum, tax and deposit round half up in basis points, total = subtotal + tax, deposit + balance = total, 0 < deposit <= total, balance >= 0, and any amount beyond Int64 is rejected instead of wrapped.",
+      "domain": "PAY",
+      "authority": "Existing rate-card validation in tdf-hq/src/TDF/Commerce/DomoQuotes.hs and the immutable quote snapshot triggers (tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime.sql).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-03); formal/payments/README.md",
+      "property": "See statement; the rounding lemmas are proved over unbounded integers.",
+      "contract": "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+      "actors": [
+        "Public quote requester",
+        "Rate card approver"
+      ],
+      "preconditions": [
+        "Approved active Domo rate card."
+      ],
+      "inputs": [
+        "DomoRateCard",
+        "DomoQuoteInput"
+      ],
+      "state": {
+        "quoteComputation": [
+          "priced",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "(rate card, input) -> priced breakdown when every rate-card and input guard holds and all amounts fit Int64",
+        "(rate card, input) -> rejected with an explicit reason otherwise"
+      ],
+      "forbiddenTransitions": [
+        "priced with a wrapped Int64 amount",
+        "priced with deposit > total or a negative balance",
+        "priced with a non-positive total or deposit"
+      ],
+      "effects": [
+        "None: pure computation of quote lines and totals."
+      ],
+      "authorization": "Not applicable.",
+      "privacy": "Not applicable.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Deterministic.",
+      "failure": "Invalid rate cards, out-of-range inputs, overflow and non-positive deposits are rejected with explicit messages.",
+      "recovery": "Not applicable.",
+      "observability": "Not applicable.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/DomoQuotes.hs"
+      ],
+      "verification": "Z3 4.13.3 proofs of the rounding and bound lemmas with witnesses and mutation controls; QuickCheck properties on the real function, including the overflow guard.",
+      "evidence": "formal/payments/domo_quote_arithmetic.py output; tdf-hq-test DomoQuotePropertiesSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
+      "formalModels": [],
+      "confidence": "High: lemmas proved unbounded; the composition into calculateDomoQuote is checked by properties, not mechanically refined.",
+      "ambiguity": [
+        "The Domo quote lifecycle (DomoQuoteState) and its refund policy after deposit_paid -> cancelled are not specified here.",
+        "A small total with a small deposit rate yields a zero deposit, which the function rejects; whether such quotes should exist is a business decision."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Arithmetic proved and property-tested; lifecycle and checkout boundaries remain separate obligations."
+      }
     }
   ]
 }

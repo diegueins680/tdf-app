@@ -1204,7 +1204,7 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
               [PersistUTCTime now, PersistText (dpcQuoteId context)] :: SqlPersistT IO [Single Int])
           throwError (conflict
             "Datafast reports payment after this Domo hold expired; reconciliation is required and the date was not reserved")
-        verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+        verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
           { Checkout.vpAttempt = attempt
           , Checkout.vpCheckout = dpcCheckout context
           , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -1335,7 +1335,7 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
                 [PersistUTCTime now, PersistText (dpcQuoteId context)] :: SqlPersistT IO [Single Int])
             throwError (conflict
               "PayPal captured after this Domo hold expired; reconciliation is required and the date was not reserved")
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = dpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal

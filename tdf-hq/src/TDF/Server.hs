@@ -11018,7 +11018,7 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
             context attempt Checkout.ProviderDatafast (sbpcEnvironment context)
             (ServiceStorefront.sdfEntityId datafast) "payment" paymentId
             (Just resourcePath) Checkout.AttemptProcessing "status"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = sbpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -11159,7 +11159,7 @@ capturePublicBookingPaypalOrder
             "capture" captureId
             (Just ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture"))
             Checkout.AttemptProcessing "capture"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = sbpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal
@@ -17174,7 +17174,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
       if success
         then do
           verified <- liftIO $ flip runSqlPool envPool $
-            Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
               { Checkout.vpAttempt = attempt
               , Checkout.vpCheckout = checkout
               , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -17428,7 +17428,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
         case binding of
           Left message -> pure (Left message)
           Right () -> do
-            verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            verified <- Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
               { Checkout.vpAttempt = attempt
               , Checkout.vpCheckout = checkout
               , Checkout.vpProvider = Checkout.ProviderPayPal

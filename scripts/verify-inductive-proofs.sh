@@ -121,4 +121,14 @@ done
 # a reachable state violates Safe.
 apalache_expect "${M}" CInitLegacyUnassumed Init Safe 4 Error "CInitLegacyUnassumed-reachable-violation"
 
+C=CaptureAccounting.tla
+
+# PAY-CAPTURE-RECON-001: captured money is always verified or reconciled.
+tlc_expect "${C}" CaptureAccounting.cfg pass
+tlc_expect "${C}" CaptureAccountingLegacy.cfg violation
+apalache_expect "${C}" CInitReconcile Init IndInv 0 NoError "CaptureAccounting-initiation"
+apalache_expect "${C}" CInitReconcile IndInv IndInv 1 NoError "CaptureAccounting-consecution"
+apalache_expect "${C}" CInitReconcile IndInv Safe 0 NoError "CaptureAccounting-implication"
+apalache_expect "${C}" CInitLegacy Init Safe 6 Error "CaptureAccountingLegacy-reachable-violation"
+
 echo "Inductive proofs and controls passed."

@@ -1162,7 +1162,7 @@ confirmPublicCourseDatafastStatus rawSlug rawRegistrationId mLookupToken rawReso
           bindCourseProviderResource context attempt Checkout.ProviderDatafast
             (cpcEnvironment context) (ServiceStorefront.sdfEntityId datafast)
             "payment" paymentId (Just resourcePath) Checkout.AttemptProcessing "status"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = cpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -1303,7 +1303,7 @@ capturePublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken request = 
             merchantRef "capture" captureId
             (Just ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture"))
             Checkout.AttemptProcessing "capture"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = cpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal

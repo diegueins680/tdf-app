@@ -188,3 +188,13 @@ satisfacibles. Es evidencia **acotada** (`verificado-acotado`), no una prueba (v
 - **F-13:** aplicado; ver la tabla de hallazgos.
 - **Evidencia SQL:** la consulta de visibilidad se extrae del código Haskell y se ejecuta en PostgreSQL (`scripts/test-artist-visibility-postgres.sh`, imagen fijada por digest y paso en CI) contra 8 escenarios: sin identidad, pública por sujeto, borrador, pública por enlace legado, privada más pública, fusionada, suspendida alcanzada por los dos caminos y enlace de otro tipo. Un control negativo, que quita la condición de no fusionado, hace fallar el test.
 
+## 12. Fase 2 — cobros con proveedor y Domo (2026-11-01)
+
+| ID | Sev. | Hallazgo |
+|---|---|---|
+| F-14 | error | En Domo, cursos, tickets, marketplace y service storefront, el handler de captura comprueba la expiración del hold con el reloj de la aplicación y **después**, en otra transacción, admite el pago bajo bloqueo. Si otro request expira el hold entre ambos pasos (con relojes perfectos; el desfase entre instancias lo agrava), la admisión rechaza el pago y el dinero queda capturado sin pago verificado ni excepción de reconciliación: el cliente solo ve un 409. **Corregido** con `recordVerifiedPaymentOrReconcile` (`PAY-CAPTURE-RECON-001`). El contraejemplo lo reproducen TLC y Apalache, y la corrección está demostrada de forma inductiva. |
+| F-15 | warning | La máquina de estados de Domo permite `deposit_paid → cancelled`, `in_progress → cancelled` y `balance_due → cancelled` con dinero ya cobrado, pero no especifica qué pasa con ese dinero (reembolso total o parcial, retención). **Pregunta Q5 para el responsable.** |
+| F-16 | info | Con un total pequeño y una tasa de depósito baja, el depósito redondeado puede ser 0 y la cotización se rechaza. Es seguro, pero conviene confirmar que es la intención de negocio. |
+
+Evidencia: `PAY-DOMO-QUOTE-001` tiene 4 lemas demostrados en Z3 (sin cota) con testigos y controles de mutación, más propiedades QuickCheck sobre la función real.
+

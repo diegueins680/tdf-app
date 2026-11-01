@@ -73,6 +73,8 @@ jobs:
           python scripts/verify-music-money-wire.py > "${{ runner.temp }}/payment-proof/music-money-wire-output.json"
           mv "${{ runner.temp }}/payment-proof/music-money-wire-output.json" "${{ runner.temp }}/payment-proof/music-money-wire.json"
           python scripts/test-music-money-wire-verifier.py
+      - name: Prove Domo quote arithmetic lemmas and negative controls
+        run: python formal/payments/domo_quote_arithmetic.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

@@ -1,4 +1,4 @@
-# Payment outcome proofs (PAY-TIP-001)
+# Payment proofs (PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001)
 
 ## Contract
 
@@ -48,4 +48,38 @@ conditional write per delivery. It is not mechanically refined.
 
 - Request-level idempotency of `POST /fans/artists/{artistId}/tips`. A retry creates another pending row and PaymentIntent, which charges nothing unless the client confirms it.
 - Ticket orders, which have their own path (`EVT-TICKET-001`).
-- The SQL public-listing query used for tip admission, which has no database-backed test yet.
+- A fully migrated database for the public-listing query, which is tested on a minimal PostgreSQL fixture with the migrated column types (`scripts/test-artist-visibility-postgres.sh`).
+
+## Captured money is always verified or reconciled (PAY-CAPTURE-RECON-001)
+
+`CaptureAccounting.tla` models one capture handler (Domo, course, event ticket,
+marketplace, service storefront) racing a concurrent hold expiry. The handler
+loads its context, captures remotely, checks the hold time and admits the payment
+under the checkout lock (`recordVerifiedPayment`). Clocks are modelled as perfect.
+
+Before 2026-11-01, a rejected admission only returned an error. TLC finds the race
+even with perfect clocks: the time check passes, another request expires the hold,
+and the locked admission rejects the payment. The money stays captured with neither
+a verified payment nor a reconciliation exception.
+`Checkout.recordVerifiedPaymentOrReconcile` now records an open
+`verified_payment_not_admitted` exception in the same transaction. Apalache proves
+`NoSilentCapture /\ VerifiedIsPaid` inductively for the new code, and finds the
+violation for the old one. Twelve handler call sites use the new function. The
+provider reconciliation worker, music commerce and the PayPal webhook keep their
+own reconciliation paths.
+
+## Domo quote arithmetic (PAY-DOMO-QUOTE-001)
+
+`domo_quote_arithmetic.py` (Z3 4.13.3, pinned) proves over unbounded integers that:
+
+- the half-up basis-point deposit lies within `0..total` for any rate in `1..10000`;
+- the balance is never negative;
+- tax lies within `0..subtotal`;
+- the Int64 guard on line amounts also bounds unit amounts.
+
+Witnesses show the hypotheses are satisfiable. Mutation controls (a rate of 10001
+basis points, a negative total) show the bounds are necessary. QuickCheck
+properties in `tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs` check the real
+`calculateDomoQuote`: line sums, `total = subtotal + tax`,
+`deposit + balance = total`, and rejection instead of wrapping beyond Int64.
+
