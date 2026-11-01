@@ -688,6 +688,22 @@
         "c7ebc0f215501d998ad0"
       ],
       "note": "The exact inherited API-dispatch decision remains in append-only history. All other1340 inherited active decision objects are unchanged."
+    },
+    "completionEvidenceSourceReview": {
+      "addedDecision": "9abc4f655fdb20e98b03",
+      "method": "source-review-2026-10-28",
+      "preservedParentNormativeDecisions": 1351,
+      "note": "One newly discovered finite verification domain was source-reviewed after canonical policy generation; prior review records and register order are preserved."
+    },
+    "refundCompletionMain329Composition": {
+      "sourceMain": "3293403e3f3df823b5bc2261dc788ecb465b40da",
+      "selectedHead": "d0301b96e2dfc2106758013b33b60058ea98856b",
+      "preservedMainDecisionCount": 1354,
+      "importedReviewedIds": [
+        "9abc4f655fdb20e98b03"
+      ],
+      "selectedHistoricalPreservedCount": 1206,
+      "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87\u219288 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
     }
   },
   "decisions": [
@@ -6151,7 +6167,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -7777,7 +7793,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -15055,7 +15071,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
@@ -15070,7 +15086,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -15085,7 +15101,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -19770,6 +19786,28 @@
       },
       "reviewBatch": "music-track-search-2026-10-26",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "9abc4f655fdb20e98b03",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Removing an outcome or malformed-status control from this finite model can conceal an invalid refund-completion predicate. This does not configure production business states or security grants.",
+      "justification": "The bounded completion-evidence model enumerates five documented Stripe refund outcomes plus unknown and null controls. These values are a fixed verification domain, not an editable production catalog or an authorization registry.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-28",
+      "reviewBatch": "legacy-stripe-refund-completion-2026-10-28",
+      "evidence": {
+        "file": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "line": 277,
+        "kind": "array",
+        "name": "statuses",
+        "valueCount": 7,
+        "consumerCount": 189,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
     }
   ]
 }
