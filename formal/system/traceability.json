@@ -13637,7 +13637,8 @@
         "tdf-hq/src/TDF/ModelsExtra.hs",
         "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/2026-11-01_artist_tip_idempotency_rollback.sql"
       ],
       "verification": "Pure admission and fee rules by Hspec/QuickCheck properties; outcome model by bounded TLC with a negative control and unbounded Apalache inductive proofs (initiation, consecution, implication).",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test ArtistTipSpec run.",
@@ -14222,7 +14223,10 @@
       "implementation": [
         "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Social/AccountOwnership.hs",
+        "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql",
+        "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql"
       ],
       "verification": "Observed behavior by source review; the silent rebind and the delivery-channel selection are recorded as F-19 pending Q6. No new test until the policy is decided.",
       "evidence": "formal/system/audit-2026-10-31-phase1.md §14",
@@ -14230,14 +14234,14 @@
       "historicalStatus": null,
       "critical": true,
       "tests": [
-        "tdf-hq/test/TDF/APITypesSpec.hs"
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs"
       ],
       "formalModels": [],
       "confidence": "Low for policy: behavior documented, not approved.",
       "ambiguity": [
-        "Q6: which accounts may serve as platform delivery/backfill channels.",
-        "Q6: whether a user may rebind an Instagram account another party connected, and with what audit.",
-        "No test exercises the exchange handler end to end."
+        "No test exercises the exchange handler end to end.",
+        "AUTHORITY-094 decided the policy; the migration and pure rules exist, handler wiring (OAuth rebind rule, delivery selection, admin designation route) is in progress."
       ],
       "conformance": {
         "classification": "SPECIFICATION AMBIGUITY",
@@ -14300,7 +14304,8 @@
       "failure": "Invalid policy values are rejected by validateDomoCancellationPolicy and by table CHECKs.",
       "implementation": [
         "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
-        "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql"
+        "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql",
+        "tdf-hq/sql/2026-11-01_domo_cancellation_policy_rollback.sql"
       ],
       "verification": "Z3 lemmas (refund within collected, conservation, monotonicity, full/zero retention) with witnesses and controls; QuickCheck properties on the real function; PostgreSQL probes of the policy table invariants (single approved version, immutability, retirement).",
       "evidence": "formal/payments/domo_cancellation_refund.py output; tdf-hq-test DomoCancellationSpec run.",
@@ -15516,7 +15521,11 @@
     "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql": "f12c7a3de7c62ec9cce3bd4a21969de40b7993b39889ee3d1704a1b56ac86d1f",
     "tdf-hq/sql/2026-10-25_ledger_posted_header.sql": "63e84df8458ee3bf522fc4ce0c8bfa355d9e2b1236ccd2bee31437af23a3ad70",
     "tdf-hq/sql/2026-11-01_artist_tip_idempotency.sql": "8848035b0c1a791affe0f35b7434e3a487b93d53fa46b00f285811e1915dd690",
+    "tdf-hq/sql/2026-11-01_artist_tip_idempotency_rollback.sql": "982337147d79dc60ec4170e4693d6091a3db41190cf108af2a540575ee35355f",
     "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql": "52d85add9107d60f6dfec5b5a4bc8147937e22cc5321879668f67dfcd8461a2c",
+    "tdf-hq/sql/2026-11-01_domo_cancellation_policy_rollback.sql": "e6642106fd0eea7b1ce4e81a0396921897fbaba6e32750792095bff48f8f3a77",
+    "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql": "570dfd71631186315aebf171a9114731e08776cdc99a2250d236b71affc17fed",
+    "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql": "8b93cc6bc4ad99b3c2b66ea269a5918949f81c3def8809d8d09848d9fec40700",
     "tdf-hq/src/TDF/API.hs": "21206a27a841d24759917b0ad59d402971bcf45f15ef7e3537804b8e92f191f2",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "edb5bfd1fb3d4dab6a9d635e1de23d02c323df9e9d1047c231e2220dfd01f238",
@@ -15635,6 +15644,7 @@
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
+    "tdf-hq/src/TDF/Social/AccountOwnership.hs": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
@@ -15705,6 +15715,7 @@
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+    "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -27391,6 +27402,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-01_artist_tip_idempotency_rollback.sql": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": [
       {
         "requirement": "PAY-TIP-001",
@@ -27571,6 +27588,30 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Social/AccountOwnership.hs": [
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql": [
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql": [
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": [
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Commerce/DomoCancellation.hs": [
       {
         "requirement": "PAY-DOMO-CANCEL-001",
@@ -27578,6 +27619,12 @@
       }
     ],
     "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql": [
+      {
+        "requirement": "PAY-DOMO-CANCEL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-01_domo_cancellation_policy_rollback.sql": [
       {
         "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "implementation"
@@ -46990,7 +47037,12 @@
       "path": "tdf-hq/sql/2026-11-01_artist_tip_idempotency_rollback.sql",
       "sha256": "982337147d79dc60ec4170e4693d6091a3db41190cf108af2a540575ee35355f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-TIP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9e3f72afc6eccc10",
@@ -47009,21 +47061,36 @@
       "path": "tdf-hq/sql/2026-11-01_domo_cancellation_policy_rollback.sql",
       "sha256": "e6642106fd0eea7b1ce4e81a0396921897fbaba6e32750792095bff48f8f3a77",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-DOMO-CANCEL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a0658a6ff42b00f4",
       "path": "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql",
       "sha256": "570dfd71631186315aebf171a9114731e08776cdc99a2250d236b71affc17fed",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ea1e89d2f976b5be",
       "path": "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql",
       "sha256": "8b93cc6bc4ad99b3c2b66ea269a5918949f81c3def8809d8d09848d9fec40700",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c4cd603babd8c4c",
@@ -49855,7 +49922,12 @@
       "path": "tdf-hq/src/TDF/Social/AccountOwnership.hs",
       "sha256": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a87713bbc4cb9f7f",
@@ -51268,7 +51340,12 @@
       "path": "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs",
       "sha256": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0874fb5da2116211",
@@ -56599,10 +56676,6 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
-    "SURFACE-c676046cd7c9c044",
-    "SURFACE-48dce26be7f62efa",
-    "SURFACE-a0658a6ff42b00f4",
-    "SURFACE-ea1e89d2f976b5be",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-b4cc3e91d4f2bb58",
     "SURFACE-87ed7351125c499c",
@@ -56718,7 +56791,6 @@
     "SURFACE-9aa25107f33c9fd3",
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
-    "SURFACE-6bc6c4636ebad8cf",
     "SURFACE-b16b93ab1b670275",
     "SURFACE-85aae9756eda5339",
     "SURFACE-5f3c565954968d6a",
@@ -56761,7 +56833,6 @@
     "SURFACE-916f8955abd0c6a2",
     "SURFACE-b84bbb40486fa4d8",
     "SURFACE-eef0c0019f0d35ca",
-    "SURFACE-475a60a9e0a3b633",
     "SURFACE-3871c8d09b71bf61",
     "SURFACE-6e0e63efd78f6dcd",
     "SURFACE-6a608596a0a41e90",
@@ -58284,7 +58355,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "06898742e674416fffa1a29917cd2bc0b338557d4ebfd6b0434eeaba9b824864",
+      "sourceSha256": "a1ce8294c08db18d236f8f65cd294224339f34676778284776c457d03ee1ca14",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -58312,7 +58383,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "06898742e674416fffa1a29917cd2bc0b338557d4ebfd6b0434eeaba9b824864",
+      "sourceSha256": "a1ce8294c08db18d236f8f65cd294224339f34676778284776c457d03ee1ca14",
       "definition": {
         "states": [
           "absent",
@@ -58342,7 +58413,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "06898742e674416fffa1a29917cd2bc0b338557d4ebfd6b0434eeaba9b824864",
+      "sourceSha256": "a1ce8294c08db18d236f8f65cd294224339f34676778284776c457d03ee1ca14",
       "definition": {
         "export": [
           "queued",
