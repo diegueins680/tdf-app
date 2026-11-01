@@ -9070,7 +9070,9 @@
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
         "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
-        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs"
+        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
+        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+        "scripts/verify-google-account-name.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -9086,8 +9088,8 @@
       "critical": true,
       "property": "MinimalSignup, NoSecondGoogleForm and SafeReturnPath",
       "contract": "formal/system/mobile-entry-ux.md",
-      "verification": "LoginPage component tests with mocked auth APIs, routing unit tests with hostile return paths, and browser signup/login journeys.",
-      "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing.",
+      "verification": "LoginPage component tests with mocked auth APIs, routing unit tests with hostile return paths, and browser signup/login journeys. Google default-name privacy: compile the actual JSON decoder, validation functions and name selector; execute 19 cases and reject a restored-email-fallback mutation with eight failures. The registered backend spec also imports the full ServerAuth module.",
+      "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing. Google decoder counterexample and correction are source-fragment TESTED, not a provider, HTTP, SQL or implementation/refinement proof; current evidence records source hashes and tool versions.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
@@ -13912,7 +13914,7 @@
     "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "ef15fb5c615f577bf11c4158d8032a04714318f1033b68ffdb3f00e5f040c43f",
+    "formal/system/recovery-expiry-arithmetic.json": "29b390dd902815042bcdc297be71cc4886a375f5ce77735c86eca195b8422387",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -13953,7 +13955,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "54c909b7ed7a25c77ad113338b988199520dbc3bb7a3dc1778b99d1e588bcbb2",
+    "scripts/__tests__/ci-change-scope.test.mjs": "17f42acb48e86cd7b6fff5d52977fbba1f7d6986306cdd82df6b9fd712bb0a23",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
     "scripts/__tests__/ci-pipeline.test.mjs": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
@@ -14026,7 +14028,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "b7b8a01efd976ac9938452fac60ff6f00864a407550fe5e09c0f660e1427d8c6",
+    "scripts/ci-change-scope.mjs": "0698082c68fdc4824f9262f8ee12df8be4c22cc9a6dc1aa86ed19d79b8ace962",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -14081,7 +14083,7 @@
     "scripts/production-migrations.json": "b539ff28bf69e67be52ce3dae3f1a204414db81a9cd2eaad9940ec44b427be55",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
+    "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
@@ -14210,6 +14212,7 @@
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
+    "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -14772,7 +14775,7 @@
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
-    "tdf-hq/src/TDF/ServerAuth.hs": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
+    "tdf-hq/src/TDF/ServerAuth.hs": "48686841bfe8bb363c2652390574e0de1ae99807e344b9f2f9623ac249158613",
     "tdf-hq/src/TDF/ServerExtra.hs": "ba415c384195ae77200926d96d85257e8654986ff64455b32ede127bc7bc42b9",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
@@ -14791,15 +14794,16 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+    "tdf-hq/tdf-hq.cabal": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+    "tdf-hq/test/Spec.hs": "2a69c956ec51eda654c9af1dd6604f2bf6f86eb76a8fe5b48bfe2570efdf4875",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
+    "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -14837,7 +14841,7 @@
     "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
-    "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
+    "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
@@ -23896,6 +23900,18 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-google-account-name.py": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": [
       {
         "requirement": "MKT-CART-001",
@@ -27602,7 +27618,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "54c909b7ed7a25c77ad113338b988199520dbc3bb7a3dc1778b99d1e588bcbb2",
+      "sha256": "17f42acb48e86cd7b6fff5d52977fbba1f7d6986306cdd82df6b9fd712bb0a23",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28992,7 +29008,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "b7b8a01efd976ac9938452fac60ff6f00864a407550fe5e09c0f660e1427d8c6",
+      "sha256": "0698082c68fdc4824f9262f8ee12df8be4c22cc9a6dc1aa86ed19d79b8ace962",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30235,7 +30251,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
+      "sha256": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33166,6 +33182,18 @@
         {
           "requirement": "SYS-VERIFY-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0c79563c67a4f75d",
+      "path": "scripts/verify-google-account-name.py",
+      "sha256": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
         }
       ]
     },
@@ -48022,7 +48050,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
+      "sha256": "48686841bfe8bb363c2652390574e0de1ae99807e344b9f2f9623ac249158613",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48513,7 +48541,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+      "sha256": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48659,7 +48687,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "2b87385b511983c7d6948d37e3934632bb9ad4f486a55f51b5e9694590c84f71",
+      "sha256": "2a69c956ec51eda654c9af1dd6604f2bf6f86eb76a8fe5b48bfe2570efdf4875",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48766,6 +48794,18 @@
       "id": "SURFACE-72e82ca292de1c33",
       "path": "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
       "sha256": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f8421d762d19db99",
+      "path": "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+      "sha256": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49414,7 +49454,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
+      "sha256": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56528,7 +56568,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "520e8542db70b5a8e86b18773b34f1f49ce432ed7be3a564920d8b5d396cccb0",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56556,7 +56596,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "520e8542db70b5a8e86b18773b34f1f49ce432ed7be3a564920d8b5d396cccb0",
       "definition": {
         "states": [
           "absent",
@@ -56586,7 +56626,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
+      "sourceSha256": "520e8542db70b5a8e86b18773b34f1f49ce432ed7be3a564920d8b5d396cccb0",
       "definition": {
         "export": [
           "queued",
