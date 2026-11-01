@@ -14772,7 +14772,7 @@
     {
       "id": "SURFACE-7c1a166cb87f734e",
       "path": "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
-      "sha256": "4cd9e643f76fddc456075832cafdfd067dfa3dda1306c3b84c6c7d241111cc6d",
+      "sha256": "a708439f9fc84fe89ce099f9bbc3078c17afaa274767e636fcaddc7a9bd2e564",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15420,7 +15420,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "d055c19fb164e61f11839999eed59ad77bcae19e5f5c077b4dc5388e3e3d716e",
+      "sha256": "9bffce7699444d2cec88c9077756540ab202cb72e7f0dc6f118c14fcb77d922b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15558,7 +15558,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "ccaf4cb7f184b6068ba3aa6935b53915b9fc39626e174fc8d5b9d5214c522ddd",
+      "sha256": "b271d8ebe2ab6e560242da1802e3d589183ff9eb61c0b2a6d9526c7e4a98f564",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16032,7 +16032,7 @@
     {
       "id": "SURFACE-5d41f627dd70058b",
       "path": "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
-      "sha256": "a07142d5edb453da28190a74710a773d727f05a76eb82ef17cbbce2e5e41a6ed",
+      "sha256": "24df855e975e3512b11056f3513864c31a3451ad98c0a615b89d5a2c5222a473",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27542,7 +27542,7 @@
     },
     {
       "path": "formal/system/datafast-merchant-metadata.md",
-      "sha256": "27719f1a3665e5a753c0d446672896215f410e100a6d197810ac40160fbc9739",
+      "sha256": "fba22e8741f2d272a0c806cd7ec60b3859021d09035e47384a22ce7ce0f8ed73",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28109,7 +28109,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c460e503050986dd3ddbdc13b5d34e904ed211efe65369b6b328f8c958bdb223",
+      "sha256": "281a56dc36b3b961c28b78cb22eb99871c47063ef4655805679b677cd15c483c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

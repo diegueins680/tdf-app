@@ -6,6 +6,7 @@ module TDF.Commerce.DatafastConfig
   ( loadDatafastMerchantParameters
   , validateDatafastMerchantParameters
   , encodeDatafastForm
+  , splitDatafastBuyerName
   ) where
 
 import Control.Monad (unless)
@@ -22,6 +23,15 @@ import Network.HTTP.Types.URI (renderSimpleQuery)
 -- HTTP form encoding works on UTF-8 bytes, never Unicode code points.
 encodeDatafastForm :: [(ByteString, ByteString)] -> ByteString
 encodeDatafastForm = renderSimpleQuery False
+
+-- | Project only supplied name components; never invent a missing surname.
+-- This preserves the existing free-text projection, not a verified identity.
+splitDatafastBuyerName :: Text -> (Text, Text)
+splitDatafastBuyerName raw =
+  case T.words raw of
+    [] -> ("", "")
+    [name] -> (name, "")
+    (givenName:rest) -> (givenName, T.unwords rest)
 
 loadDatafastMerchantParameters :: IO (Either Text [(ByteString, ByteString)])
 loadDatafastMerchantParameters = do

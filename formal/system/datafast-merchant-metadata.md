@@ -26,6 +26,16 @@ character validation as initial ticket input. Missing, null, malformed or invali
 stored phones remain absent; another metadata field never supplies a fallback.
 No phone is invented and no new collection or availability requirement is added.
 
+The marketplace and shared service Datafast builders project the same supplied
+free-text buyer name. Empty input stays empty; a single name does not become a
+fabricated surname, and multiple components retain their existing first/rest
+projection. Splitting and rejoining must preserve the original name tokens,
+apart from whitespace normalization. This removes the marketplace's former
+Cliente/TDF fallback and duplicated mononym. It does not validate legal identity,
+decide provider acceptance of mononyms, impose a new naming rule, or complete the
+pending structured buyer profile. Existing status/replay/attempt behavior is
+unchanged; provider validation and certification remain outstanding.
+
 Creation metadata is not required to query an existing payment. A removed MID,
 TID, PSERV or USER_DATA2 must hide fresh checkout availability while preserving
 the existing credential-based status query configuration. This does not permit

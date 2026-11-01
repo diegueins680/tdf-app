@@ -13652,7 +13652,7 @@
     {
       "id": "PAY-DATAFAST-001",
       "title": "Shared Dataweb merchant metadata and saved ticket contact",
-      "statement": "New Datafast checkout creation requires configured merchant MID, TID, PSERV and USER_DATA2, sends the same validated protocol metadata in every domain, preserves UTF-8 form values and does not make existing payment status configuration depend on creation metadata. Ticket payment creation retains the validated optional phone saved at order creation; absent or invalid stored phones stay absent.",
+      "statement": "New Datafast checkout creation requires configured merchant MID, TID, PSERV and USER_DATA2, sends the same validated protocol metadata in every domain, preserves UTF-8 form values and does not make existing payment status configuration depend on creation metadata. Ticket payment creation retains the validated optional phone saved at order creation; absent or invalid stored phones stay absent. Both Datafast request builders preserve supplied buyer name tokens without placeholder names or duplicated single-name surnames.",
       "domain": "PAY",
       "authority": "User request to finish Datafast payments and prepare onboarding; published Datafast Dataweb field requirements.",
       "source": "User request 2026-10-29; https://developers.datafast.com.ec/Index.aspx",
@@ -13684,7 +13684,8 @@
       ],
       "invariants": [
         "Metadata field names and environment checks remain consistent across creation handlers.",
-        "Validation diagnostics do not echo configured values."
+        "Validation diagnostics do not echo configured values.",
+        "Free-text buyer name projection never adds or removes a supplied name token; absent name components stay empty without a fictitious fallback."
       ],
       "authorization": "Existing customer, merchant, capability and payment-attempt authorization is unchanged; this contract grants no provider activation.",
       "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only.",
@@ -13719,7 +13720,8 @@
       "confidence": "Scoped local contract only; actual merchant sandbox and all-domain request qualification remain unverified.",
       "ambiguity": [
         "Buyer identity, address/IP, cart and tax fields still require applicable provider certification and implementation review.",
-        "No production activation, credentialed sandbox transaction, 3DS result or charge is established."
+        "No production activation, credentialed sandbox transaction, 3DS result or charge is established.",
+        "Free-text first/rest name projection is not structured or verified legal identity; provider handling of incomplete or single-name profiles remains unqualified."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -13727,7 +13729,8 @@
       },
       "effects": [
         "Validate merchant metadata before a new provider attempt or checkout request; keep existing status configuration independent of creation metadata.",
-        "Project the optional stored ticket buyer_phone to the Datafast payment request without fallback or new collection."
+        "Project the optional stored ticket buyer_phone to the Datafast payment request without fallback or new collection.",
+        "Use one supplied-name projection in shared service and marketplace Datafast request builders, preserving existing multi-component behavior without invented data."
       ]
     }
   ],
@@ -14872,7 +14875,7 @@
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "ea2f1106a8efc7214e1296cfb1239ab2361d932ae4cbae3713d1b8acd776086a",
-    "tdf-hq/src/TDF/Commerce/DatafastConfig.hs": "4cd9e643f76fddc456075832cafdfd067dfa3dda1306c3b84c6c7d241111cc6d",
+    "tdf-hq/src/TDF/Commerce/DatafastConfig.hs": "a708439f9fc84fe89ce099f9bbc3078c17afaa274767e636fcaddc7a9bd2e564",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
@@ -14926,7 +14929,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
-    "tdf-hq/src/TDF/Server.hs": "d055c19fb164e61f11839999eed59ad77bcae19e5f5c077b4dc5388e3e3d716e",
+    "tdf-hq/src/TDF/Server.hs": "9bffce7699444d2cec88c9077756540ab202cb72e7f0dc6f118c14fcb77d922b",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "3f222c708e076338f04c8483cdf7b5d3b48811a7a96c1eb974d2a2440c00c268",
@@ -14946,7 +14949,7 @@
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "14ff9f888212e5a78d41708c1e61a68c3983bbfb794a9a57f837cf59bc57a56e",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "ccaf4cb7f184b6068ba3aa6935b53915b9fc39626e174fc8d5b9d5214c522ddd",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "b271d8ebe2ab6e560242da1802e3d589183ff9eb61c0b2a6d9526c7e4a98f564",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "fcf586e355eb603f3109afec08d4d5fbfee8a74ca5d414d9fc0b4c2a1c6f9f73",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
@@ -14984,7 +14987,7 @@
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
-    "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs": "a07142d5edb453da28190a74710a773d727f05a76eb82ef17cbbce2e5e41a6ed",
+    "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs": "24df855e975e3512b11056f3513864c31a3451ad98c0a615b89d5a2c5222a473",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "13036dd6066ce7d68535f7f7e6046a2550c9b2c2a4df3db2aedc13c8f4d355ba",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
@@ -46772,7 +46775,7 @@
     {
       "id": "SURFACE-7c1a166cb87f734e",
       "path": "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
-      "sha256": "4cd9e643f76fddc456075832cafdfd067dfa3dda1306c3b84c6c7d241111cc6d",
+      "sha256": "a708439f9fc84fe89ce099f9bbc3078c17afaa274767e636fcaddc7a9bd2e564",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47970,7 +47973,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "d055c19fb164e61f11839999eed59ad77bcae19e5f5c077b4dc5388e3e3d716e",
+      "sha256": "9bffce7699444d2cec88c9077756540ab202cb72e7f0dc6f118c14fcb77d922b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48407,7 +48410,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "ccaf4cb7f184b6068ba3aa6935b53915b9fc39626e174fc8d5b9d5214c522ddd",
+      "sha256": "b271d8ebe2ab6e560242da1802e3d589183ff9eb61c0b2a6d9526c7e4a98f564",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49386,7 +49389,7 @@
     {
       "id": "SURFACE-5d41f627dd70058b",
       "path": "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
-      "sha256": "a07142d5edb453da28190a74710a773d727f05a76eb82ef17cbbce2e5e41a6ed",
+      "sha256": "24df855e975e3512b11056f3513864c31a3451ad98c0a615b89d5a2c5222a473",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57111,7 +57114,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c460e503050986dd3ddbdc13b5d34e904ed211efe65369b6b328f8c958bdb223",
+      "sourceSha256": "281a56dc36b3b961c28b78cb22eb99871c47063ef4655805679b677cd15c483c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57139,7 +57142,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c460e503050986dd3ddbdc13b5d34e904ed211efe65369b6b328f8c958bdb223",
+      "sourceSha256": "281a56dc36b3b961c28b78cb22eb99871c47063ef4655805679b677cd15c483c",
       "definition": {
         "states": [
           "absent",
@@ -57169,7 +57172,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c460e503050986dd3ddbdc13b5d34e904ed211efe65369b6b328f8c958bdb223",
+      "sourceSha256": "281a56dc36b3b961c28b78cb22eb99871c47063ef4655805679b677cd15c483c",
       "definition": {
         "export": [
           "queued",

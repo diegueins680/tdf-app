@@ -2284,7 +2284,7 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
   let manager = ProviderHttp.sharedProviderManager
   let amountTxt = T.pack $ show (totalCents `div` 100) <> "." <> pad2 (totalCents `mod` 100)
       currencyTxt = T.toUpper (T.strip currency)
-      (givenName, surname) = splitBuyerName name
+      (givenName, surname) = DatafastConfig.splitDatafastBuyerName name
       -- Build form body
       baseParams =
         [ ("entityId", TE.encodeUtf8 (sdfEntityId dfEnv))
@@ -2425,15 +2425,6 @@ parseDatafastCents raw =
           in if cents > 0 && cents <= fromIntegral (maxBound :: Int)
                then Right (fromIntegral cents)
                else Left "Datafast amount is invalid"
-
--- | Split a buyer name into (givenName, surname).
-splitBuyerName :: Text -> (Text, Text)
-splitBuyerName name =
-  let parts = T.words name
-  in case parts of
-    [] -> ("", "")
-    [x] -> (x, "")
-    (x:xs) -> (x, T.unwords xs)
 
 -- | Render form parameters as URL-encoded body (strict ByteString).
 renderFormBody :: [(ByteString, ByteString)] -> ByteString

@@ -10,12 +10,35 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Network.HTTP.Types.URI (parseQuery)
 import Test.Hspec
+import Test.QuickCheck (property)
 
-import TDF.Commerce.DatafastConfig (validateDatafastMerchantParameters, encodeDatafastForm)
+import TDF.Commerce.DatafastConfig
+  (validateDatafastMerchantParameters, encodeDatafastForm, splitDatafastBuyerName)
 import TDF.Commerce.TicketBuyerContact (ticketPaymentBuyerPhone, normalizeTicketBuyerPhone)
 
 spec :: Spec
 spec = describe "Dataweb merchant metadata" $ do
+  it "does not fabricate a buyer name when the stored value is empty" $
+    forM_ ["", " ", "\t\n"] $ \name ->
+      splitDatafastBuyerName name `shouldBe` ("", "")
+
+  it "does not duplicate a mononym into a surname" $
+    forM_ ["Prince", "  José  ", "李"] $ \name ->
+      splitDatafastBuyerName name `shouldBe` (T.strip name, "")
+
+  it "retains supplied compound name components and UTF-8 form values" $ do
+    let (givenName, surname) = splitDatafastBuyerName "  José  María  Muñoz & López  "
+        fields = [("customer.givenName", TE.encodeUtf8 givenName)
+                 ,("customer.surname", TE.encodeUtf8 surname)]
+    parseQuery (encodeDatafastForm fields) `shouldBe`
+      [("customer.givenName", Just (TE.encodeUtf8 "José"))
+      ,("customer.surname", Just (TE.encodeUtf8 "María Muñoz & López"))]
+
+  it "never adds or removes a supplied name token" $ property $ \raw ->
+    let name = T.pack raw
+        (givenName, surname) = splitDatafastBuyerName name
+    in T.words givenName <> T.words surname == T.words name
+
   it "preserves the phone saved when the ticket order was created" $ do
     let saved = Just "{\"runtime\":\"canonical_public_checkout\",\"buyer_phone\":\"+593 99 123 4567\",\"buyer_fee_minor\":20}"
     ticketPaymentBuyerPhone saved `shouldBe` Just "+593 99 123 4567"

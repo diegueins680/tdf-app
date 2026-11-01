@@ -202,6 +202,7 @@ import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, se
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.DatafastConfig as DatafastConfig
 import qualified TDF.Commerce.Money as CommerceMoney
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
@@ -17502,7 +17503,7 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
       currencyTxt = T.toUpper (T.strip currency)
-      (givenName, surname) = splitName name
+      (givenName, surname) = DatafastConfig.splitDatafastBuyerName name
       baseParams =
         [ ("entityId", TE.encodeUtf8 (dfEntityId dfEnv))
         , ("amount", TE.encodeUtf8 amountTxt)
@@ -17707,14 +17708,6 @@ invalidDatafastResourcePath =
     { errBody =
         "resourcePath must be a Datafast relative checkout payment path"
     }
-
-splitName :: Text -> (Text, Text)
-splitName raw =
-  let parts = T.words raw
-  in case parts of
-    []       -> ("Cliente", "TDF")
-    [x]      -> (x, x)
-    (x:rest) -> (x, T.unwords rest)
 
 normalizeBaseUrl :: String -> String
 normalizeBaseUrl url =
