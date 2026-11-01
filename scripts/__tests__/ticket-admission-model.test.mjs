@@ -131,3 +131,134 @@ test('late-refund negative controls detect discarded evidence and missed capture
   assert.deepEqual(exploreLateRefund({ discardOnExhaustion: true }).violations, ['refunded-before-admission']);
   assert.deepEqual(exploreLateRefund({ ignoreLateFence: true }).violations, ['refunded-before-admission']);
 });
+
+// One legacy refund request, two approval processes and one rejection process.
+// Reads can be stale; claim and rejection CAS steps each inspect the current
+// durable row atomically. The claim commits before the provider POST. Success,
+// lost responses and process crashes are modeled independently; restarting a
+// process loses its local permit but never resets the durable request status.
+// Assumptions: stable request identity, no administrative status reset, atomic
+// committed row updates, one POST per granted local permit. No fairness/liveness,
+// provider authenticity, distinct-refund bounds, SQL or Haskell refinement claim.
+function exploreLegacyRefundClaims({ deferClaimUntilResponse = false, staleUnconditionalReject = false } = {}) {
+  const initial = {
+    status: 'pending', approvals: ['start', 'start'], rejection: 'start',
+    intentIssued: false, rejectedAfterIntent: false, executions: 0,
+  };
+  const queue = [{ state: initial, trace: [] }];
+  const seen = new Set();
+  const witnesses = {};
+  const coverage = new Set();
+  let transitions = 0;
+  for (let cursor = 0; cursor < queue.length; cursor++) {
+    const { state, trace } = queue[cursor];
+    const key = JSON.stringify(state);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (state.executions > 1) witnesses.NoDuplicateExecution ??= trace;
+    if (state.rejectedAfterIntent) witnesses.NoRejectionAfterIntent ??= trace;
+    // Two POSTs already refute safety; a third adds no useful bounded evidence.
+    if (state.executions > 1) continue;
+    const push = (label, change) => {
+      const next = structuredClone(state);
+      change(next);
+      transitions++;
+      coverage.add(label);
+      queue.push({ state: next, trace: [...trace, label] });
+    };
+    for (let actor = 0; actor < 2; actor++) {
+      const name = actor === 0 ? 'A' : 'B';
+      const phase = state.approvals[actor];
+      if (phase === 'start') {
+        push(`${name}:read-${state.status}`, next => {
+          next.approvals[actor] = state.status === 'pending' ? 'read-pending' : 'done';
+        });
+      }
+      if (phase === 'read-pending') {
+        push(`${name}:claim-${state.status === 'pending' ? 'won' : 'denied'}`, next => {
+          if (state.status === 'pending') {
+            next.intentIssued = true;
+            if (!deferClaimUntilResponse) next.status = 'processing';
+            next.approvals[actor] = 'claimed';
+          } else next.approvals[actor] = 'done';
+        });
+      }
+      if (phase === 'claimed') {
+        push(`${name}:POST`, next => {
+          next.executions++;
+          next.approvals[actor] = 'waiting';
+        });
+      }
+      if (phase === 'waiting') {
+        push(`${name}:response-succeeded`, next => {
+          next.status = 'approved';
+          next.approvals[actor] = 'done';
+        });
+        push(`${name}:response-lost`, next => { next.approvals[actor] = 'done'; });
+      }
+      if (['read-pending', 'claimed', 'waiting'].includes(phase)) {
+        push(`${name}:crash-${phase}`, next => { next.approvals[actor] = 'crashed'; });
+      }
+      if (['crashed', 'done'].includes(phase)) {
+        push(`${name}:retry`, next => { next.approvals[actor] = 'start'; });
+      }
+    }
+    if (state.rejection === 'start') {
+      push(`reject:read-${state.status}`, next => {
+        next.rejection = state.status === 'pending' ? 'read-pending' : 'done';
+      });
+    }
+    if (state.rejection === 'read-pending') {
+      const allowed = state.status === 'pending' || staleUnconditionalReject;
+      push(`reject:${allowed ? 'committed' : 'denied'}`, next => {
+        if (allowed) {
+          next.status = 'rejected';
+          next.rejectedAfterIntent ||= state.intentIssued;
+        }
+        next.rejection = 'done';
+      });
+    }
+  }
+  return {
+    states: seen.size, transitions, violations: Object.keys(witnesses).sort(),
+    witnesses, coverage: [...coverage].sort(),
+  };
+}
+
+test('bounded legacy refund claims survive races, response loss and process restarts', t => {
+  const result = exploreLegacyRefundClaims();
+  assert.equal(result.states, 208);
+  assert.equal(result.transitions, 702);
+  assert.deepEqual(result.violations, []);
+  for (const label of ['A:POST', 'B:POST', 'A:response-succeeded', 'A:response-lost',
+    'A:crash-claimed', 'A:crash-waiting', 'A:retry', 'reject:committed', 'reject:denied']) {
+    assert.ok(result.coverage.includes(label), `Missing modeled scenario: ${label}`);
+  }
+  t.diagnostic(JSON.stringify({ model: 'legacy-refund-claim', states: result.states, transitions: result.transitions }));
+});
+
+test('legacy refund control exposes duplicate POSTs when the durable claim follows the response', t => {
+  const result = exploreLegacyRefundClaims({ deferClaimUntilResponse: true });
+  assert.equal(result.states, 303);
+  assert.equal(result.transitions, 882);
+  assert.ok(result.violations.includes('NoDuplicateExecution'));
+  const trace = result.witnesses.NoDuplicateExecution;
+  assert.equal(trace.filter(step => step.endsWith(':POST')).length, 2);
+  t.diagnostic(JSON.stringify({ control: 'deferred-claim', states: result.states,
+    transitions: result.transitions, counterexample: trace }));
+});
+
+test('legacy refund control exposes stale rejection after a committed execution intent', t => {
+  const result = exploreLegacyRefundClaims({ staleUnconditionalReject: true });
+  assert.equal(result.states, 266);
+  assert.equal(result.transitions, 862);
+  assert.deepEqual(result.violations, ['NoRejectionAfterIntent']);
+  const trace = result.witnesses.NoRejectionAfterIntent;
+  assert.ok(trace.includes('reject:read-pending'));
+  assert.ok(trace.includes('A:claim-won') || trace.includes('B:claim-won'));
+  assert.equal(trace.at(-1), 'reject:committed');
+  // Rejected is not Pending: this mutant corrupts the execution boundary but
+  // cannot by itself grant a second pending-only CAS permit.
+  t.diagnostic(JSON.stringify({ control: 'stale-rejection', states: result.states,
+    transitions: result.transitions, counterexample: trace }));
+});

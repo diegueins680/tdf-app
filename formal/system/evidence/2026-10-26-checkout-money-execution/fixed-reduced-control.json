@@ -1,0 +1,19 @@
+{
+  "source": "fe6d2eb768137c3fe8b274a98c5e53d2dd2cc8c1",
+  "observedAt": "2026-10-27T01:20:54.741622+00:00",
+  "exit": 1,
+  "result": "expected-rejection",
+  "control": "All three property case limits reduced from1000 to1",
+  "mutationTestSha256": "7ca678eeef11de6f1a16189d9acdc3907e8cce1b927fa398bf6062b57109d0f5",
+  "executionSummary": {
+    "examples": 61,
+    "failures": 0,
+    "pending": 0,
+    "propertyPassCounts": [
+      1,
+      1,
+      1
+    ]
+  },
+  "testRestored": true
+}

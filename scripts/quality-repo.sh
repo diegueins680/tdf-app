@@ -14,6 +14,7 @@ run_npm() {
 
 echo "▶ Verifying repository-wide invariants"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-merge-admission.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-checkout-money-verifier.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-privacy-request-ledger.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-requirement-declarations.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-new-specification-surfaces.py"
@@ -56,7 +57,7 @@ git -C "$ROOT" diff --exit-code -- \
   test/internships/studio-audit/test-cases.json
 node --test "$ROOT/scripts/__tests__/studio-internship-audit.test.mjs"
 node --test "$ROOT/scripts/__tests__/local-api-fixture.test.mjs"
-node --test "$ROOT/scripts/__tests__/event-preview.test.mjs" "$ROOT/scripts/__tests__/ticket-page-preview.test.mjs"
+node --test "$ROOT/scripts/__tests__/event-report-crypto.test.mjs" "$ROOT/scripts/__tests__/event-preview.test.mjs" "$ROOT/scripts/__tests__/ticket-page-preview.test.mjs"
 node --test "$ROOT/scripts/__tests__/app-smart-link.test.mjs"
 run_npm run verify:formal --prefix "$ROOT"
 run_npm run test:auto-loop --prefix "$ROOT"

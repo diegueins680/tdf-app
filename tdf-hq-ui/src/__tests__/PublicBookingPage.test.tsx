@@ -352,6 +352,22 @@ describe('PublicBookingPage', () => {
     ) as unknown as typeof fetch;
   });
 
+  it('keeps the physical studio in Quito when the general display preference is UTC', async () => {
+    const runtime = window as Window & { __ENV__?: Record<string, string> };
+    const previous = runtime.__ENV__;
+    runtime.__ENV__ = { ...previous, VITE_DEFAULT_TIMEZONE: 'UTC' };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      expect(container.textContent).toContain('08:00–22:00, Quito (GMT-5)');
+    } finally {
+      await cleanup();
+      container.remove();
+      runtime.__ENV__ = previous;
+    }
+  });
+
   it.each(['error', 'empty'])('retries an %s catalog without losing contact edits or creating a booking', async (failure) => {
     let finishCatalog!: (services: PublicServiceCatalogItem[]) => void;
     let failCatalog!: (error: Error) => void;
@@ -548,6 +564,41 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
+  it('keeps the chosen Quito date when repeatedly selecting quick suggestions', async () => {
+    const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+    const opening = DateTime.fromISO('2030-01-15T08:00', { zone: 'America/Guayaquil' }).setZone(userZone);
+    const selectedStart = opening.toFormat("yyyy-MM-dd'T'HH:mm");
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, { route: '/reservar?service=dj-booth-practice' });
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Persona Sintética');
+        setInputValue(getInputByLabel(container, 'Correo'), 'synthetic@example.invalid');
+        clickButtonByText(container, 'Continuar');
+        await flushPromises();
+      });
+      const date = getInputByLabel(container, 'Fecha y hora');
+      await act(async () => {
+        setInputValue(date, selectedStart);
+        await flushPromises();
+      });
+      for (let click = 0; click < 2; click += 1) {
+        await act(async () => {
+          const suggestion = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'))
+            .find((button) => button.textContent?.trim() === opening.toFormat('HH:mm'));
+          expect(suggestion).toBeDefined();
+          suggestion!.click();
+          await flushPromises();
+        });
+        expect(date.value).toBe(selectedStart);
+      }
+    } finally {
+      await cleanup();
+      container.remove();
+    }
+  });
+
   it('computes quick schedule shortcuts using studio-timezone opening hours', () => {
     const now = DateTime.fromISO('2030-01-01T06:30:00.000Z');
 
@@ -618,6 +669,7 @@ describe('PublicBookingPage', () => {
     const idempotencyKey = createPublicMock.mock.calls[0]?.[1];
     expect(payload).toMatchObject({
       pbServiceOfferingId: BAND_RECORDING_ID,
+      pbStartsAt: '2030-01-01T17:00:00.000Z',
       pbResourceIds: null,
     });
     expect(idempotencyKey).toMatch(/^service-booking-/);

@@ -116,7 +116,8 @@ jobs:
   repo-quality:
     needs: changes
     if: needs.changes.outputs.repo == 'true'
-    runs-on: ubuntu-latest
+    # Keep the actual Docker recovery checks on the qualified Noble environment.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
