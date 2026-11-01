@@ -126,6 +126,7 @@ import TDF.DTO.SocialEventsDTO (
 type PublicUpcomingEventsAPI =
     "social-events" :> "upcoming"
         :> QueryParam "city" Text
+        :> QueryParam "artistPartyId" Text
         :> QueryParam "startAfter" UTCTime
         :> QueryParam "limit" Int
         :> Get '[JSON] [PublicUpcomingEventDTO]

@@ -331,16 +331,20 @@ import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
 
-publicUpcomingEventsServer :: Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
-publicUpcomingEventsServer mCity mStartAfter mLimit = do
+publicUpcomingEventsServer :: Maybe T.Text -> Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
+publicUpcomingEventsServer mCity mArtistPartyId mStartAfter mLimit = do
     Env{..} <- ask
     now <- liftIO getCurrentTime
+    -- Artist profile carousels read through this public projection so every
+    -- anonymous-listing predicate (public-listable state, public metadata and
+    -- no suppressed external reference) applies to them as well.
+    artistPartyFilter <- either throwError pure (validateArtistPartyIdFilter mArtistPartyId)
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
     liftIO $
         runSqlPool
             ( do
-                rows <- selectPublicUpcomingSocialEvents mCity startAfter limit
+                rows <- selectPublicUpcomingSocialEvents mCity artistPartyFilter startAfter limit
                 catMaybes
                     <$> mapM
                         (\(eventEntity, Single canonicalCity) ->
@@ -355,17 +359,34 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
 -- complete future-event table when a city has few or no matches.
 selectPublicUpcomingSocialEvents ::
     Maybe T.Text ->
+    Maybe T.Text ->
     UTCTime ->
     Int ->
     SqlPersistT IO [(Entity SocialEvent, Single (Maybe T.Text))]
-selectPublicUpcomingSocialEvents mCity startAfter limit = do
+selectPublicUpcomingSocialEvents mCity mArtistPartyId startAfter limit = do
     eventTable <- getEscapedRawName "social_event"
     eventIdField <- getEscapedRawName "id"
     eventStartField <- getEscapedRawName "start_time"
     eventMetadataField <- getEscapedRawName "metadata"
     publicEventView <- getEscapedRawName "directory_public_event"
+    eventArtistTable <- getEscapedRawName "event_artist"
+    artistProfileTable <- getEscapedRawName "social_artist_profile"
     backendName <- T.toCaseFold <$> getRDBMS
     let eventIdColumn = eventTable <> "." <> eventIdField
+        -- Exact Party equality through the event/artist link; the view above
+        -- already restricts the candidate events, so this only narrows them.
+        (artistClause, artistValues) = case mArtistPartyId of
+            Nothing -> ("", [])
+            Just partyIdText ->
+                ( " AND EXISTS (SELECT 1 FROM "
+                    <> eventArtistTable
+                    <> " AS artist_link INNER JOIN "
+                    <> artistProfileTable
+                    <> " AS artist_profile ON artist_profile.id=artist_link.artist_id WHERE artist_link.event_id="
+                    <> eventIdColumn
+                    <> " AND artist_profile.party_id=?)"
+                , [PersistText partyIdText]
+                )
         eventStartColumn = eventTable <> "." <> eventStartField
         eventMetadataColumn = eventTable <> "." <> eventMetadataField
         metadataClause = visibleImportedMetadataClause backendName eventMetadataColumn
@@ -393,13 +414,14 @@ selectPublicUpcomingSocialEvents mCity startAfter limit = do
                 <> ">=? AND "
                 <> metadataClause
                 <> cityClause
+                <> artistClause
                 <> " ORDER BY "
                 <> eventStartColumn
                 <> " ASC,"
                 <> eventIdColumn
                 <> " ASC"
     query <- getConnLimitOffset (limit, 0) orderedQuery
-    rawSql query (toPersistValue startAfter : cityValues)
+    rawSql query (toPersistValue startAfter : cityValues ++ artistValues)
 
 collectMatchingRows ::
     Monad m =>

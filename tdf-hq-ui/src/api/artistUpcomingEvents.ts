@@ -1,62 +1,33 @@
 import { get } from './client';
-import type { PublicUpcomingEventDTO, SocialArtistDTO, SocialEventDTO, SocialVenueDTO } from './socialEvents';
+import type { PublicUpcomingEventDTO } from './socialEvents';
 
-const PAGE_SIZE = 500;
+// The public upcoming projection caps a single page at 200 rows; an artist with
+// more than 200 future public dates is not a case the carousel needs to show.
+const PUBLIC_UPCOMING_LIMIT = 200;
 
-async function readPages<T>(path: string, signal?: AbortSignal): Promise<T[]> {
-  const rows: T[] = [];
-  for (let offset = 0; ; offset += PAGE_SIZE) {
-    const page = await get<T[]>(`${path}${path.includes('?') ? '&' : '?'}limit=${PAGE_SIZE}&offset=${offset}`, { signal });
-    if (!Array.isArray(page)) throw new Error('Expected an event catalog page');
-    rows.push(...page);
-    if (page.length < PAGE_SIZE) return rows;
-  }
-}
-
-// Profile URLs identify a Party; event filters identify a separate social Artist.
-// Resolve that relationship explicitly, without matching names or assuming equal IDs.
+// Profile URLs identify a Party. The server resolves that Party to its social
+// artist profiles and applies every anonymous-listing predicate (public-listable
+// state, public metadata, no suppressed external reference) before returning,
+// so a signed-in viewer never sees more here than the public listing shows.
 export async function listArtistUpcomingEvents(
   artistPartyId: number,
   startAfter: string,
   signal?: AbortSignal,
 ): Promise<PublicUpcomingEventDTO[]> {
-  const partyId = String(artistPartyId);
-  // Ask the server for this Party's profiles instead of paging the whole catalog:
-  // the catalog list caps offset at 10000, so a full scan stops working once the
-  // catalog grows past it. The server still returns pages, so keep reading them.
-  const artists = await readPages<SocialArtistDTO>(`/social-events/artists?partyId=${encodeURIComponent(partyId)}`, signal);
-  // The server filter is authoritative; re-check defensively so a lenient or
-  // older server never lets another Party's artist through.
-  const matches = artists.filter((artist) => artist.artistId && artist.artistPartyId === partyId);
-  if (!matches.length) return [];
-  const pages = await Promise.all(matches.map((artist) => readPages<SocialEventDTO>(
-    `/social-events/events?artistId=${encodeURIComponent(artist.artistId!)}&start_after=${encodeURIComponent(startAfter)}`,
-    signal,
-  )));
-  // Admin reads may contain drafts: only project events eligible for public listing.
-  const events = Array.from(new Map(pages.flat()
-    .filter((event) => event.eventId && event.eventIsPublic !== false && event.eventPublicListable === true
-      && Date.parse(event.eventStart) >= Date.parse(startAfter)
-      && event.eventArtists.some((artist) => artist.artistPartyId === partyId))
-    .map((event) => [event.eventId!, event])).values())
-    .sort((a, b) => Date.parse(a.eventStart) - Date.parse(b.eventStart) || a.eventId!.localeCompare(b.eventId!));
-  const venueIds = [...new Set(events.flatMap((event) => event.eventVenueId ? [event.eventVenueId] : []))];
-  const venues = new Map(await Promise.all(venueIds.map(async (id) => [
-    id, await get<SocialVenueDTO>(`/social-events/venues/${encodeURIComponent(id)}`, { signal }),
-  ] as const)));
-  return events.map((event) => ({
-    publicUpcomingEventId: event.eventId!,
-    publicUpcomingEventTitle: event.eventTitle,
-    publicUpcomingEventDescription: event.eventDescription,
-    publicUpcomingEventStart: event.eventStart,
-    publicUpcomingEventEnd: event.eventEnd,
-    publicUpcomingEventTimezone: event.eventTimezone,
-    publicUpcomingEventVenueName: event.eventVenueId ? venues.get(event.eventVenueId)?.venueName : null,
-    publicUpcomingEventCity: event.eventVenueId ? venues.get(event.eventVenueId)?.venueCity : null,
-    publicUpcomingEventPriceCents: event.eventPriceCents,
-    publicUpcomingEventCurrency: event.eventCurrency,
-    publicUpcomingEventTicketUrl: event.eventTicketUrl,
-    publicUpcomingEventImageUrl: event.eventImageUrl,
-    publicUpcomingEventWorkflowStateCode: event.eventWorkflowStateCode!,
-  }));
+  const query = new URLSearchParams({
+    artistPartyId: String(artistPartyId),
+    startAfter,
+    limit: String(PUBLIC_UPCOMING_LIMIT),
+  });
+  const rows = await get<PublicUpcomingEventDTO[]>(`/social-events/upcoming?${query.toString()}`, { signal });
+  if (!Array.isArray(rows)) throw new Error('Expected a public upcoming events page');
+  const startAfterMs = Date.parse(startAfter);
+  // The server already orders and filters; re-check the window defensively and
+  // drop anything a lenient server might still return without an id or start.
+  return Array.from(new Map(rows
+    .filter((event) => event.publicUpcomingEventId && Number.isFinite(Date.parse(event.publicUpcomingEventStart))
+      && Date.parse(event.publicUpcomingEventStart) >= startAfterMs)
+    .map((event) => [event.publicUpcomingEventId, event] as const)).values())
+    .sort((a, b) => Date.parse(a.publicUpcomingEventStart) - Date.parse(b.publicUpcomingEventStart)
+      || a.publicUpcomingEventId.localeCompare(b.publicUpcomingEventId));
 }

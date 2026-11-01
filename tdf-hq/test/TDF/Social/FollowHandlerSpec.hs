@@ -57,6 +57,7 @@ import TDF.DTO.SocialEventsDTO
     , InvitationDTO (..)
     , InvitationUpdateDTO (..)
     , NullableFieldUpdate (..)
+    , PublicUpcomingEventDTO (..)
     , RefundDTO (..)
     , RefundRequestDTO (..)
     , RejectionReasonDTO (..)
@@ -77,6 +78,7 @@ import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
     ( assignMissingEventOrganizer
     , postgresVisibleImportedMetadataClause
+    , publicUpcomingEventsServer
     , decodeStoredPromoCodeTierIds
     , followArtistDb
     , removeSocialEventAssets
@@ -533,6 +535,69 @@ spec = describe "social event handler helpers" $ do
         assertInvalid
             "offset must be 10000 or fewer"
             (validateSocialEventsListOffset (Just 10001))
+
+    it "lists an artist's upcoming dates only through the public projection" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let profile key partyIdValue =
+                insertKey
+                    (toSqlKey key :: ArtistProfileId)
+                    ArtistProfile
+                        { artistProfilePartyId = partyIdValue
+                        , artistProfileName = "Artist " <> T.pack (show key)
+                        , artistProfileBio = Nothing
+                        , artistProfileAvatarUrl = Nothing
+                        , artistProfileGenres = Nothing
+                        , artistProfileSocialLinks = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
+                        , artistProfileCreatedAt = now
+                        , artistProfileUpdatedAt = now
+                        }
+            publicEvent key title =
+                insertKey
+                    (toSqlKey key :: SocialEventId)
+                    ((seedSocialEvent "1" title now)
+                        { socialEventMetadata = Just "{\"isPublic\":true}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        })
+            link eventKey artistKey =
+                rawExecute
+                    "INSERT INTO event_artist(event_id,artist_id,role) VALUES (?,?,NULL)"
+                    [toPersistValue (eventKey :: Int), toPersistValue (artistKey :: Int)]
+            listed eventKey =
+                rawExecute "INSERT INTO directory_public_event(id,city_name) VALUES (?,'Quito')" [toPersistValue (eventKey :: Int)]
+        runSqlPool
+            ( do
+                rawExecute
+                    "INSERT INTO workflow_state_capability(state_id,capability_code,enabled) VALUES (?, 'public-listable', 1)"
+                    [toPersistValue socialEventWorkflowStateFixtureId]
+                profile 50 (Just "115")
+                profile 52 (Just "999")
+                publicEvent 81 "Listed artist date"
+                publicEvent 82 "Suppressed artist date"
+                publicEvent 83 "Other artist date"
+                link 81 50
+                link 82 50
+                link 83 52
+                -- 82 is public-listable with public metadata but carries a
+                -- suppressed external reference, so the projection excludes it.
+                listed 81
+                listed 83
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = error "envConfig should be unused by public upcoming tests"}
+            startAfter = UTCTime (fromGregorian 2025 12 31) (secondsToDiffTime 0)
+            list artistPartyId = runHandler (runReaderT (publicUpcomingEventsServer Nothing artistPartyId (Just startAfter) Nothing) env)
+        forArtist <- list (Just "115")
+        fmap (map publicUpcomingEventId) forArtist `shouldBe` Right ["81"]
+        unfiltered <- list Nothing
+        fmap (sort . map publicUpcomingEventId) unfiltered `shouldBe` Right ["81", "83"]
+        none <- list (Just "116")
+        fmap length none `shouldBe` Right 0
+        rejected <- list (Just "115 OR 1=1")
+        either errHTTPCode (const 0) rejected `shouldBe` 400
 
     it "accepts only decimal party identifiers as the artist partyId filter" $ do
         validateArtistPartyIdFilter Nothing `shouldBe` Right Nothing
@@ -2854,6 +2919,15 @@ initializeSocialSchema = do
         \\"source_status\" VARCHAR NOT NULL DEFAULT 'active',\
         \UNIQUE (\"provider\", \"external_id\"),\
         \FOREIGN KEY(\"event_id\") REFERENCES \"social_event\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
+    -- Stub of the PostgreSQL directory_public_event view: rows present here are
+    -- the events the anonymous listing may show (public-listable, public
+    -- metadata, no suppressed external reference). Tests insert them explicitly.
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_public_event\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"city_name\" VARCHAR NULL\
         \)"
         []
     rawExecute
