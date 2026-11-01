@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a"
+    "tdf-hq/tdf-hq.cabal": "79a5154176575e0ff9196d5713cf907037509673ea91c2539fd7e568219edce6"
   },
   "obligations": [
     {
@@ -138,6 +138,19 @@
       "change": "Remove automatic private-email substitution in the Google token validator; register GoogleProfileNameSpec in test other-modules only.",
       "semanticReview": "Reversing the exact gpName assignment reproduces the parent ServerAuth bytes; removing exactly one test module registration reproduces the parent Cabal bytes. No authorization predicate, RoleEnum, ingestion admission, recoveryWindowValid, token issuance, expiry SQL, identity contract, dependency, source path, compiler/CPP option or Stack input changes. All obligation claims, assumptions and translator controls are preserved. The decoder-to-name regression uses synthetic contact data and retains six negative authentication cases.",
       "qualification": "Requires fresh source-bound solver execution, replay and mutation controls. Context review is not independent PR approval, whole-program proof or production authorization."
+    },
+    {
+      "reviewedAgainst": "faef28340d410bf57c49678fa4c16f1953a42935",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a",
+          "currentSha256": "79a5154176575e0ff9196d5713cf907037509673ea91c2539fd7e568219edce6"
+        }
+      ],
+      "change": "Register the Datafast merchant metadata module, saved ticket-contact projection and their test group.",
+      "semanticReview": "Reconstructing the full manifest from protected main plus exactly five other-modules registrations produces identical bytes. Existing module entries, build-depends, source paths, language/extensions, compiler/CPP flags and Stack inputs are unchanged. All reviewed authorization/recovery Haskell and SQL sources match the incoming pins exactly. Claims, assumptions, source recognizers and mutation controls are preserved. Datafast checkout changes remain outside these conditional predicate/time proofs.",
+      "qualification": "Requires fresh source-bound solver execution, serialized replay and mutation controls. Context review is not independent PR approval, whole-program proof or production authorization."
     }
   ]
 }
