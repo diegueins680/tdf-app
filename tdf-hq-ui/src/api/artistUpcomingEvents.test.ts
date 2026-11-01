@@ -55,17 +55,28 @@ describe('listArtistUpcomingEvents', () => {
     expect(getMock.mock.calls.some(([path]) => path.endsWith('offset=500'))).toBe(true);
   });
 
-  it('finds a canonical artist beyond the first catalog page without matching names', async () => {
+  it('resolves the Party through the server partyId filter instead of scanning the catalog', async () => {
     getMock.mockImplementation(async (path) => {
-      if (path.includes('/artists?')) return path.endsWith('offset=0')
-        ? Array.from({ length: 500 }, (_, i) => ({ ...artist, artistPartyId: String(1000 + i) }))
-        : [{ ...artist, artistName: 'A previous display name' }];
+      if (path.includes('/artists?')) return [{ ...artist, artistName: 'A previous display name' }];
       return [event('artist-date')];
     });
     expect((await listArtistUpcomingEvents(115, startAfter)).map((r) => r.publicUpcomingEventId)).toEqual(['artist-date']);
+    const artistCalls = getMock.mock.calls.map(([path]) => path).filter((path) => path.includes('/artists?'));
+    expect(artistCalls).toEqual(['/social-events/artists?partyId=115&limit=500&offset=0']);
   });
 
-  it('does not guess a relationship when only the display name matches', async () => {
+  it('keeps reading artist pages when the Party filter still spans more than one page', async () => {
+    getMock.mockImplementation(async (path) => {
+      if (path.includes('/artists?')) return path.endsWith('offset=0')
+        ? Array.from({ length: 500 }, (_, i) => ({ ...artist, artistId: String(1000 + i) }))
+        : [{ ...artist, artistId: '50' }];
+      return path.includes('artistId=50&') ? [event('artist-date')] : [];
+    });
+    expect((await listArtistUpcomingEvents(115, startAfter)).map((r) => r.publicUpcomingEventId)).toEqual(['artist-date']);
+    expect(getMock.mock.calls.some(([path]) => path === '/social-events/artists?partyId=115&limit=500&offset=500')).toBe(true);
+  });
+
+  it('does not trust a lenient server response that returns another Party\'s artist', async () => {
     getMock.mockResolvedValue([{ ...artist, artistPartyId: '999' }]);
     expect(await listArtistUpcomingEvents(115, startAfter)).toEqual([]);
     expect(getMock).toHaveBeenCalledTimes(1);

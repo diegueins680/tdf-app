@@ -21,7 +21,12 @@ export async function listArtistUpcomingEvents(
   signal?: AbortSignal,
 ): Promise<PublicUpcomingEventDTO[]> {
   const partyId = String(artistPartyId);
-  const artists = await readPages<SocialArtistDTO>('/social-events/artists', signal);
+  // Ask the server for this Party's profiles instead of paging the whole catalog:
+  // the catalog list caps offset at 10000, so a full scan stops working once the
+  // catalog grows past it. The server still returns pages, so keep reading them.
+  const artists = await readPages<SocialArtistDTO>(`/social-events/artists?partyId=${encodeURIComponent(partyId)}`, signal);
+  // The server filter is authoritative; re-check defensively so a lenient or
+  // older server never lets another Party's artist through.
   const matches = artists.filter((artist) => artist.artistId && artist.artistPartyId === partyId);
   if (!matches.length) return [];
   const pages = await Promise.all(matches.map((artist) => readPages<SocialEventDTO>(

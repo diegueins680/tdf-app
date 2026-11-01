@@ -46,7 +46,7 @@ import TDF.API.SocialEventsAPI
     , validateEventImageUploadForm
     )
 import TDF.DTO.SocialEventsDTO
-    ( ArtistDTO
+    ( ArtistDTO (..)
     , ArtistFollowerDTO (..)
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
@@ -93,6 +93,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
     , validateInvitationUpdateAuthorization
+    , validateArtistPartyIdFilter
     , validateSocialEventsListFilter
     , validateSocialEventsListOffset
     , validateStoredEventFinanceMetadata
@@ -532,6 +533,67 @@ spec = describe "social event handler helpers" $ do
         assertInvalid
             "offset must be 10000 or fewer"
             (validateSocialEventsListOffset (Just 10001))
+
+    it "accepts only decimal party identifiers as the artist partyId filter" $ do
+        validateArtistPartyIdFilter Nothing `shouldBe` Right Nothing
+        validateArtistPartyIdFilter (Just "   ") `shouldBe` Right Nothing
+        validateArtistPartyIdFilter (Just " 115 ") `shouldBe` Right (Just "115")
+
+        let assertInvalid expectedMessage result =
+                case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected artist partyId filter to be rejected, got: " <> show value)
+
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "115abc"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "-1"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "0115"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "0"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "%"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just (T.replicate 20 "9")))
+        assertInvalid "partyId must be 120 characters or fewer" (validateArtistPartyIdFilter (Just (T.replicate 121 "1")))
+
+    it "lists artists for one Party through the indexed filter instead of a catalog scan" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let profile key partyIdValue nameValue =
+                insertKey
+                    (toSqlKey key :: ArtistProfileId)
+                    ArtistProfile
+                        { artistProfilePartyId = partyIdValue
+                        , artistProfileName = nameValue
+                        , artistProfileBio = Nothing
+                        , artistProfileAvatarUrl = Nothing
+                        , artistProfileGenres = Nothing
+                        , artistProfileSocialLinks = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
+                        , artistProfileCreatedAt = now
+                        , artistProfileUpdatedAt = now
+                        }
+        runSqlPool
+            ( do
+                profile 50 (Just "115") "Verde 70"
+                profile 51 (Just "115") "Verde 70 (legacy duplicate)"
+                profile 52 (Just "999") "Verde 70"
+                profile 53 Nothing "Verde 70"
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = error "envConfig should be unused by artist list tests"}
+            list partyIdFilter = runHandler (runReaderT (artistListHandlerFor (socialEventUser 1) partyIdFilter) env)
+        matching <- list (Just "115")
+        fmap (sort . map artistId) matching `shouldBe` Right [Just "50", Just "51"]
+        fmap (map artistPartyId) matching `shouldBe` Right [Just "115", Just "115"]
+        none <- list (Just "116")
+        fmap length none `shouldBe` Right 0
+        unfiltered <- list Nothing
+        fmap length unfiltered `shouldBe` Right 4
+        rejected <- list (Just "115;drop")
+        either errHTTPCode (const 0) rejected `shouldBe` 400
 
     it "rejects oversized or unsafe social event list filters before DB fallback scans" $ do
         validateSocialEventsListFilter "city" Nothing `shouldBe` Right Nothing
@@ -2367,6 +2429,34 @@ artistGetHandlerFor user =
                     :<|> _followArtist
                     :<|> _unfollowArtist ->
                     getArtistHandler
+
+artistListHandlerFor
+    :: AuthedUser
+    -> Maybe T.Text
+    -> ReaderT Env Handler [ArtistDTO]
+artistListHandlerFor user partyIdFilter =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> artistsServer
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> _moments
+            :<|> _tickets
+            :<|> _budget
+            :<|> _finance ->
+            case artistsServer of
+                listArtistsHandler
+                    :<|> _createArtist
+                    :<|> _getArtist
+                    :<|> _updateArtist
+                    :<|> _listArtistFollowers
+                    :<|> _followArtist
+                    :<|> _unfollowArtist ->
+                    listArtistsHandler Nothing Nothing Nothing partyIdFilter Nothing Nothing
 
 socialEventInvitationCreateHandlerFor
     :: AuthedUser

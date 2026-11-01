@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-01T08:03:27.973Z",
+  "generatedAt": "2026-11-01T15:29:45.380Z",
   "repositoryRoot": ".",
   "filesScanned": 2468,
   "candidateCount": 1354,
@@ -15628,7 +15628,7 @@
       "lines": [
         236
       ],
-      "consumerCount": 94,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -15660,6 +15660,7 @@
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/src/TDF/SocialEventLifecycle.hs",
         "tdf-hq/test/Spec.hs",
@@ -15675,6 +15676,7 @@
         "tdf-hq/test/TDF/ServerAdminSpec.hs",
         "tdf-hq/test/TDF/ServerExtraSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
@@ -150736,7 +150738,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1716,
+      "line": 1718,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -150747,7 +150749,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1716
+        1718
       ],
       "consumerCount": 85,
       "backendConsumers": [

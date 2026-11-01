@@ -9546,14 +9546,17 @@
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-        "tdf-hq-ui/src/api/artistUpcomingEvents.ts"
+        "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
-        "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts"
+        "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
       "formalModels": [],
       "verification": "Client unit tests",

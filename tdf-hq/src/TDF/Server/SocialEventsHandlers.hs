@@ -73,6 +73,7 @@ module TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateSocialEventsListOffset,
     validateSocialEventsListFilter,
+    validateArtistPartyIdFilter,
     postgresVisibleImportedMetadataClause,
     validateDiscoverySourceWrite,
     validateVenueCreateUpdateFields,
@@ -158,6 +159,7 @@ import Data.Char (
     isAsciiLower,
     isAsciiUpper,
     isControl,
+    isDigit,
     isHexDigit,
  )
 import Data.Int (Int64)
@@ -1962,6 +1964,19 @@ validateSocialEventsListOffset (Just rawOffset)
 maxSocialEventsListOffset :: Int
 maxSocialEventsListOffset = 10000
 
+-- | Party identifiers are rendered as decimal Int64 keys; accept only that shape
+-- so a filter cannot become a wildcard or a scan over unrelated text values.
+validateArtistPartyIdFilter :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateArtistPartyIdFilter mRaw = do
+    cleaned <- validateSocialEventsListFilter "partyId" mRaw
+    case cleaned of
+        Nothing -> Right Nothing
+        Just value
+            | T.length value <= 19 && T.all isDigit value && not (T.isPrefixOf "0" value) ->
+                Right (Just value)
+            | otherwise ->
+                Left err400{errBody = "partyId must be a positive integer party identifier"}
+
 validateSocialEventsListFilter :: T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
 validateSocialEventsListFilter _ Nothing = Right Nothing
 validateSocialEventsListFilter fieldName (Just rawFilter) =
@@ -3422,8 +3437,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             :<|> followArtist
             :<|> unfollowArtist
 
-    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
-    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mLimit mOffset = do
+    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
+    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mPartyIdFilter mLimit mOffset = do
         Env{..} <- ask
         when (isJust mLegacyGenreFilter) $
             throwError err400{errBody = "genre is obsolete; use the canonical genreId UUID parameter"}
@@ -3432,12 +3447,17 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         nameFilter <-
             either throwError pure $
                 fmap T.toCaseFold <$> validateSocialEventsListFilter "name" mNameFilter
+        -- Party relationship lookup is an exact indexed equality, so callers never
+        -- have to page through the whole catalog (bounded by the offset cap) to
+        -- find the one profile that belongs to a Party.
+        partyFilter <- either throwError pure (validateArtistPartyIdFilter mPartyIdFilter)
         let hasFilter = isJust nameFilter || isJust mGenreIdFilter
+            partyCondition = maybe [] (\partyIdText -> [ArtistProfilePartyId ==. Just partyIdText]) partyFilter
         rows <-
             liftIO $
                 runSqlPool
                     ( selectList
-                        []
+                        partyCondition
                         ( [Desc ArtistProfileCreatedAt]
                             ++ if hasFilter
                                 then [LimitTo 1000]

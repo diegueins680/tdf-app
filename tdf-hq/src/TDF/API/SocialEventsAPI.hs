@@ -463,7 +463,7 @@ type VenuesRoutes =
         :<|> "venues" :> IdParam :> ReqBody '[JSON] VenueUpdateDTO :> Put '[JSON] VenueDTO
 
 type ArtistsRoutes =
-    "artists" :> QueryParam "name" Text :> QueryParam "genreId" UUID :> QueryParam "genre" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [ArtistDTO]
+    "artists" :> QueryParam "name" Text :> QueryParam "genreId" UUID :> QueryParam "genre" Text :> QueryParam "partyId" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [ArtistDTO]
         :<|> "artists" :> ReqBody '[JSON] ArtistDTO :> Post '[JSON] ArtistDTO
         :<|> "artists" :> IdParam :> Get '[JSON] ArtistDTO
         :<|> "artists" :> IdParam :> ReqBody '[JSON] ArtistDTO :> Put '[JSON] ArtistDTO
