@@ -3,8 +3,8 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1176,
-    "reviewedByPolicy": 147,
+    "preservedDecisions": 1205,
+    "reviewedByPolicy": 146,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
     "consolidatedMainRetirements": {
@@ -738,9 +738,11 @@
         "kind": "object-registry",
         "name": "publicEvent",
         "valueCount": 11,
-        "consumerCount": 131,
+        "consumerCount": 140,
         "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "similarCandidateIds": [
+          "46515447e1de3fdd20c9"
+        ]
       }
     },
     {
@@ -930,7 +932,7 @@
         "kind": "object-registry",
         "name": "options",
         "valueCount": 4,
-        "consumerCount": 220,
+        "consumerCount": 239,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -2208,11 +2210,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 119,
+        "line": 136,
         "kind": "literal-union",
         "name": "SocialRsvpStatus",
         "valueCount": 3,
-        "consumerCount": 67,
+        "consumerCount": 74,
         "exactDuplicateIds": [
           "a36272e80e7d7145a46b",
           "d2df22e8c9f29c516d07"
@@ -4996,7 +4998,7 @@
         "kind": "object-registry",
         "name": "eventSearchResponse",
         "valueCount": 3,
-        "consumerCount": 53,
+        "consumerCount": 61,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -5164,11 +5166,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "line": 22,
+        "line": 27,
         "kind": "object-registry",
         "name": "sessionMock",
         "valueCount": 5,
-        "consumerCount": 129,
+        "consumerCount": 134,
         "exactDuplicateIds": [
           "a86872972efe04fbd789",
           "032010c2e0452a17c57c",
@@ -5178,11 +5180,12 @@
           "a86872972efe04fbd789",
           "032010c2e0452a17c57c",
           "2af7ddc51c86f983bc3c",
-          "e4c7ffe2a8fc0a5752d0",
           "5434d31cde115fdd283a",
+          "a08e3450ef31db632d8d",
           "a6c32f91d1f591487d49",
           "cbb4b83dfc2c8da596a4",
           "0fcb046ecd22403d559d",
+          "e1630a13682bf0fee90d",
           "320dead252ef1658d8a8"
         ]
       }
@@ -5702,7 +5705,7 @@
         "kind": "array",
         "name": "categories",
         "valueCount": 8,
-        "consumerCount": 64,
+        "consumerCount": 65,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "18346b7a2c0aaaecf9cc",
@@ -5728,7 +5731,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 5,
-        "consumerCount": 61,
+        "consumerCount": 62,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "37947a8e810836a21c9a"
@@ -5752,7 +5755,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 14,
-        "consumerCount": 238,
+        "consumerCount": 252,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -5802,7 +5805,7 @@
         "kind": "literal-union",
         "name": "SellerTab",
         "valueCount": 4,
-        "consumerCount": 48,
+        "consumerCount": 49,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -5824,7 +5827,7 @@
         "kind": "object-registry",
         "name": "allPermissions",
         "valueCount": 6,
-        "consumerCount": 53,
+        "consumerCount": 54,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -5846,7 +5849,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 9,
-        "consumerCount": 58,
+        "consumerCount": 59,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -7530,7 +7533,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 10780,
+        "line": 11096,
         "kind": "openapi-enum",
         "name": "reportReason",
         "valueCount": 9,
@@ -7557,7 +7560,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 10791,
+        "line": 11107,
         "kind": "openapi-enum",
         "name": "moderationReasonCode",
         "valueCount": 10,
@@ -7584,7 +7587,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 10917,
+        "line": 11233,
         "kind": "openapi-enum",
         "name": "MerchProductCategory",
         "valueCount": 9,
@@ -7613,11 +7616,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 10920,
+        "line": 11236,
         "kind": "openapi-enum",
         "name": "MerchProductStatus",
         "valueCount": 7,
-        "consumerCount": 160,
+        "consumerCount": 168,
         "exactDuplicateIds": [
           "ab22a28a6c1f13d36e93"
         ],
@@ -7640,11 +7643,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 10923,
+        "line": 11239,
         "kind": "openapi-enum",
         "name": "MerchFulfillmentStatus",
         "valueCount": 9,
-        "consumerCount": 41,
+        "consumerCount": 42,
         "exactDuplicateIds": [
           "2dc22aa76fd15d95fa1b"
         ],
@@ -7666,11 +7669,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11263,
+        "line": 11579,
         "kind": "openapi-enum",
         "name": "MerchIssueStatus",
         "valueCount": 7,
-        "consumerCount": 138,
+        "consumerCount": 140,
         "exactDuplicateIds": [
           "be1f72b6a12dba445b47",
           "282b46a9f2d482e2e13a"
@@ -7694,11 +7697,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11318,
+        "line": 11634,
         "kind": "openapi-enum",
         "name": "MerchRefundStatus",
         "valueCount": 6,
-        "consumerCount": 250,
+        "consumerCount": 257,
         "exactDuplicateIds": [
           "53eb977c438f2629bf40",
           "015ddf4475d1e02f496a"
@@ -7721,11 +7724,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11405,
+        "line": 11721,
         "kind": "openapi-enum",
         "name": "MerchSettlementStatus",
         "valueCount": 6,
-        "consumerCount": 194,
+        "consumerCount": 206,
         "exactDuplicateIds": [
           "4f748f0a512f9deb694a",
           "7d45ba63a043428fa3f0"
@@ -7900,11 +7903,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 13587,
+        "line": 13965,
         "kind": "openapi-enum",
         "name": "EventRsvpStatus",
         "valueCount": 3,
-        "consumerCount": 68,
+        "consumerCount": 75,
         "exactDuplicateIds": [
           "91952765f2d528c2a6c6",
           "d2df22e8c9f29c516d07"
@@ -7971,11 +7974,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 13912,
+        "line": 14290,
         "kind": "openapi-enum",
         "name": "OnboardingIntent",
         "valueCount": 6,
-        "consumerCount": 104,
+        "consumerCount": 105,
         "exactDuplicateIds": [
           "dc2478eb86deaac6aed4",
           "9ebf2e096eeddbecfa52",
@@ -8003,11 +8006,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 13927,
+        "line": 14305,
         "kind": "openapi-enum",
         "name": "firstValue",
         "valueCount": 4,
-        "consumerCount": 47,
+        "consumerCount": 49,
         "exactDuplicateIds": [
           "69594af6193f077ea0a2"
         ],
@@ -8029,11 +8032,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 14125,
+        "line": 14503,
         "kind": "openapi-enum",
         "name": "Role",
         "valueCount": 31,
-        "consumerCount": 335,
+        "consumerCount": 358,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fffe489557d71ad441fc",
@@ -10906,7 +10909,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 95,
+        "consumerCount": 96,
         "exactDuplicateIds": [
           "dc2478eb86deaac6aed4",
           "9ebf2e096eeddbecfa52",
@@ -10964,7 +10967,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 239,
+        "consumerCount": 245,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "b5cf352ce0b028fa7f58"
@@ -10988,7 +10991,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 81,
+        "consumerCount": 83,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "daa37fcffc0e8bd8a2ed"
@@ -11047,7 +11050,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 118,
+        "consumerCount": 129,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "e2c7b685298f05265cb9"
@@ -11149,7 +11152,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 160,
+        "consumerCount": 168,
         "exactDuplicateIds": [
           "df4db7e4f0142896d690"
         ],
@@ -11176,7 +11179,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 226,
+        "consumerCount": 249,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "466bc208eb4fdfa1d8c2",
@@ -11245,7 +11248,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 47,
+        "consumerCount": 58,
         "exactDuplicateIds": [
           "84b896cbe258f816048c"
         ],
@@ -11272,7 +11275,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 115,
+        "consumerCount": 118,
         "exactDuplicateIds": [
           "1c1246b2d50069074ba9"
         ],
@@ -11298,7 +11301,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 106,
+        "consumerCount": 112,
         "exactDuplicateIds": [
           "c2530dae2f9a5c20f9c9"
         ],
@@ -11324,7 +11327,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 86,
+        "consumerCount": 89,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11346,7 +11349,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 74,
+        "consumerCount": 77,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "7ef1fc8434bd594babcc",
@@ -11371,7 +11374,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 132,
+        "consumerCount": 137,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11393,7 +11396,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 41,
+        "consumerCount": 42,
         "exactDuplicateIds": [
           "a3c297baf99f209ccdac"
         ],
@@ -11419,7 +11422,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 277,
+        "consumerCount": 284,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11441,7 +11444,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 30,
+        "consumerCount": 31,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11463,7 +11466,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 226,
+        "consumerCount": 243,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "29477a732e910fa947a8",
@@ -11488,7 +11491,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 75,
+        "consumerCount": 79,
         "exactDuplicateIds": [
           "9cea7e5ef61b0b6a9786"
         ],
@@ -11512,7 +11515,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 73,
+        "consumerCount": 76,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11556,7 +11559,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 94,
+        "consumerCount": 99,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11600,7 +11603,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 74,
+        "consumerCount": 76,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11622,7 +11625,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 138,
+        "consumerCount": 140,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "282b46a9f2d482e2e13a"
@@ -11650,7 +11653,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "b353ecdfc08e2a005034"
         ],
@@ -11676,7 +11679,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 194,
+        "consumerCount": 206,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "7d45ba63a043428fa3f0"
@@ -11704,7 +11707,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 181,
+        "consumerCount": 185,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "30a381d06cc0d1594f1c"
@@ -11728,7 +11731,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 198,
+        "consumerCount": 212,
         "exactDuplicateIds": [
           "2281d810a9d407c3857d"
         ],
@@ -11821,7 +11824,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 48,
+        "consumerCount": 49,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11883,7 +11886,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 113,
+        "consumerCount": 124,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fcc83a1bc147933d21b3"
@@ -11907,7 +11910,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 79,
+        "consumerCount": 82,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11994,7 +11997,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 29,
+        "consumerCount": 30,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12016,7 +12019,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 68,
+        "consumerCount": 75,
         "exactDuplicateIds": [
           "91952765f2d528c2a6c6",
           "a36272e80e7d7145a46b"
@@ -12045,7 +12048,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 109,
+        "consumerCount": 113,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12133,7 +12136,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 139,
+        "consumerCount": 142,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "6cf3c47175b7c9af19d0",
@@ -12238,7 +12241,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 237,
+        "consumerCount": 243,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "76645902bce3902042f9",
@@ -12263,7 +12266,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 47,
+        "consumerCount": 58,
         "exactDuplicateIds": [
           "0c575e3bf3fa4309062a"
         ],
@@ -12312,7 +12315,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 198,
+        "consumerCount": 212,
         "exactDuplicateIds": [
           "9053eecad03f9b4e6349"
         ],
@@ -12339,7 +12342,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 113,
+        "consumerCount": 125,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "f99ba8fe6f37a8606d3d",
@@ -12365,7 +12368,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 35,
+        "consumerCount": 36,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12444,7 +12447,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 81,
+        "consumerCount": 87,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12597,7 +12600,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 10,
-        "consumerCount": 69,
+        "consumerCount": 72,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12641,7 +12644,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 75,
+        "consumerCount": 79,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "8c80d98c11e7d2dca074",
@@ -12717,7 +12720,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 85,
+        "consumerCount": 89,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12739,7 +12742,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 86,
+        "consumerCount": 87,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12761,7 +12764,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 78,
+        "consumerCount": 80,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12810,7 +12813,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 80,
+        "consumerCount": 89,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12920,7 +12923,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 63,
+        "consumerCount": 69,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12942,7 +12945,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 115,
+        "consumerCount": 120,
         "exactDuplicateIds": [
           "16f710ef8ebe240ee82e"
         ],
@@ -12969,7 +12972,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 115,
+        "consumerCount": 120,
         "exactDuplicateIds": [
           "67ea93ac852e5fd17892"
         ],
@@ -12997,7 +13000,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 131,
+        "consumerCount": 136,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "f5f8a84bb3e6d74a2289",
@@ -13022,7 +13025,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 131,
+        "consumerCount": 136,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "a958d32adbe9458a74cc",
@@ -13047,7 +13050,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 131,
+        "consumerCount": 136,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "a958d32adbe9458a74cc"
@@ -13071,7 +13074,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 149,
+        "consumerCount": 159,
         "exactDuplicateIds": [
           "7c7e2e150ed59b1e3fc2",
           "d14b4c467d704c72df48",
@@ -13097,7 +13100,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 189,
+        "consumerCount": 210,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13119,7 +13122,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 229,
+        "consumerCount": 236,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13141,7 +13144,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 98,
+        "consumerCount": 106,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13237,7 +13240,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 74,
+        "consumerCount": 87,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13294,7 +13297,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 13,
-        "consumerCount": 113,
+        "consumerCount": 119,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13316,7 +13319,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 42,
+        "consumerCount": 44,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13338,7 +13341,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 75,
+        "consumerCount": 77,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13360,7 +13363,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 92,
+        "consumerCount": 95,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13382,7 +13385,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 78,
+        "consumerCount": 91,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13404,7 +13407,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 70,
+        "consumerCount": 75,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13426,7 +13429,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 97,
+        "consumerCount": 101,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13505,7 +13508,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 93,
+        "consumerCount": 98,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13527,7 +13530,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 140,
+        "consumerCount": 146,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13549,7 +13552,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 47,
+        "consumerCount": 62,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13571,7 +13574,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 46,
+        "consumerCount": 48,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13593,7 +13596,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 205,
+        "consumerCount": 218,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13615,7 +13618,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 201,
+        "consumerCount": 206,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13637,7 +13640,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 106,
+        "consumerCount": 111,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13681,7 +13684,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 90,
+        "consumerCount": 96,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13738,7 +13741,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 102,
+        "consumerCount": 107,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "54897f48b8b6bba443e2"
@@ -13762,7 +13765,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 73,
+        "consumerCount": 76,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "ede13c91340393b6fa1c"
@@ -13786,7 +13789,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 39,
+        "consumerCount": 41,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -15343,7 +15346,7 @@
         "kind": "haskell-list",
         "name": "terminalIssueStatuses",
         "valueCount": 3,
-        "consumerCount": 135,
+        "consumerCount": 137,
         "exactDuplicateIds": [
           "04a2bfe3f922f36836d2"
         ],
@@ -15369,7 +15372,7 @@
         "kind": "haskell-list",
         "name": "staffOnlyIssueTypes",
         "valueCount": 4,
-        "consumerCount": 33,
+        "consumerCount": 34,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "ddcaea8fa30272376cdb"
@@ -15422,7 +15425,7 @@
         "kind": "haskell-sum-type",
         "name": "CaptureMethod",
         "valueCount": 2,
-        "consumerCount": 2,
+        "consumerCount": 3,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -15561,11 +15564,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-        "line": 556,
+        "line": 557,
         "kind": "haskell-list",
         "name": "eventUpdateAllowedKeys",
         "valueCount": 26,
-        "consumerCount": 34,
+        "consumerCount": 38,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -16127,7 +16130,7 @@
         "kind": "haskell-list",
         "name": "issueStatuses",
         "valueCount": 7,
-        "consumerCount": 137,
+        "consumerCount": 139,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "be1f72b6a12dba445b47"
@@ -16155,7 +16158,7 @@
         "kind": "haskell-list",
         "name": "refundStatuses",
         "valueCount": 6,
-        "consumerCount": 249,
+        "consumerCount": 256,
         "exactDuplicateIds": [
           "6e49e1dd9002b9a384f9",
           "53eb977c438f2629bf40"
@@ -16182,7 +16185,7 @@
         "kind": "haskell-list",
         "name": "settlementStatuses",
         "valueCount": 6,
-        "consumerCount": 193,
+        "consumerCount": 205,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "4f748f0a512f9deb694a"
@@ -16516,7 +16519,7 @@
         "kind": "haskell-list",
         "name": "recognizedSocialEventCapabilityCodes",
         "valueCount": 3,
-        "consumerCount": 21,
+        "consumerCount": 24,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
