@@ -206,6 +206,9 @@ jobs:
       - name: Check artist tip idempotency migration on isolated PostgreSQL
         run: sh scripts/test-artist-tip-idempotency-postgres.sh
 
+      - name: Check social delivery designation migration on isolated PostgreSQL
+        run: sh scripts/test-social-designation-postgres.sh
+
   postgres-api:
     runs-on: ubuntu-latest
     timeout-minutes: 10

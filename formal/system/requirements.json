@@ -14178,11 +14178,11 @@
     {
       "id": "AUTH-SOCIAL-OAUTH-001",
       "title": "Instagram OAuth exchange binds connected accounts to the connecting user",
-      "statement": "POST /instagram/oauth/exchange requires social-inbox module access, a configured Facebook app, and a redirect URI equal to the configured callback. It exchanges the code, resolves the user's pages and Instagram accounts, and upserts one social_sync_account row per Instagram account (unique by platform and external id) bound to the connecting user's party with the page access token. Open policy (Q6): whether a user may rebind an account another party connected, and whether user-connected accounts may serve as the platform's delivery or backfill channel.",
+      "statement": "POST /instagram/oauth/exchange requires social-inbox module access, a configured Facebook app, and a redirect URI equal to the configured callback. Each resolved Instagram account is bound to the connecting party as its connector: a new account is created and audited ('connected'); the owner refreshes its own account; an account another party connected is rebound only by a caller with the Admin role, audited ('rebound') and stripped of its artist binding and delivery designation; any other caller receives 409 before any row changes. Only accounts a strict administrator designated (POST /admin/social/accounts/{id}/delivery, audited) are used as platform delivery or backfill channels; the environment-configured token remains the fallback.",
       "domain": "AUTH",
-      "authority": "Current implementation (tdf-hq/src/TDF/ServerInstagramOAuth.hs) recorded as observed behavior; product policy pending owner decision Q6 (audit F-19).",
+      "authority": "AUTHORITY-094 (owner accepted the audit recommendation on 2026-11-01); the discovery of F-19.",
       "source": "formal/system/audit-2026-10-31-phase1.md (F-19, Q6)",
-      "property": "exchange(user) succeeds => hasSocialInboxAccess(user) /\\ redirectUri = configuredCallback; every written row has party_id = user. Rebind and delivery-channel policy: unspecified.",
+      "property": "exchange(user) succeeds => hasSocialInboxAccess(user) /\\ redirectUri = configuredCallback /\\ for every account: decideConnect(isAdmin user, user, owner) /= RebindRefused; delivery(account) => deliveryDesignated(account). Pure rules in TDF.Social.AccountOwnership.",
       "contract": "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
       "actors": [
         "Staff with social-inbox access",
@@ -14199,20 +14199,29 @@
         "social_sync_account.status": [
           "pending",
           "connected"
+        ],
+        "social_sync_account.delivery_designated": [
+          "false",
+          "true"
         ]
       },
       "allowedTransitions": [
-        "absent -> connected bound to the connecting user",
-        "connected (any party) -> connected bound to the connecting user (observed; policy pending)"
+        "absent -> connected bound to the connecting party ('connected' event)",
+        "connected(owner) -> connected(owner) token refresh",
+        "connected(other) -> connected(admin caller) by an administrator only ('rebound' event; artist binding and designation cleared)",
+        "delivery_designated false <-> true by a strict administrator ('designated'/'undesignated' events)"
       ],
       "forbiddenTransitions": [
         "exchange without social-inbox access",
-        "redirect URI other than the configured callback"
+        "redirect URI other than the configured callback",
+        "rebinding by a non-administrator (409, no row changes)",
+        "platform delivery or backfill through a non-designated account",
+        "designation without designator and timestamp (table CHECK)"
       ],
       "effects": [
-        "Upsert social_sync_account rows with page tokens."
+        "Upsert social_sync_account rows with page tokens, connector and audit events; administrator designation writes designation columns and an event."
       ],
-      "authorization": "hasSocialInboxAccess: Admin, Manager, StudioManager, Reception, LiveSessionsProducer with CRM module.",
+      "authorization": "Exchange: hasSocialInboxAccess. Rebind: Admin role. Designation: strict administrator with Admin module.",
       "privacy": "Page access tokens are stored in social_sync_account.access_token.",
       "concurrency": "Upsert by unique (platform, external id).",
       "idempotency": "Repeated exchange by the same user is idempotent per account.",
@@ -14220,31 +14229,36 @@
       "recovery": "Not applicable.",
       "observability": "None specific.",
       "implementation": [
-        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
-        "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Social/AccountOwnership.hs",
         "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql",
-        "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql"
+        "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql",
+        "tdf-hq/src/TDF/API/Admin.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-hq/src/TDF/Social/AccountOwnership.hs"
       ],
-      "verification": "Observed behavior by source review; the silent rebind and the delivery-channel selection are recorded as F-19 pending Q6. No new test until the policy is decided.",
-      "evidence": "formal/system/audit-2026-10-31-phase1.md §14",
+      "verification": "Pure ownership and eligibility rules by QuickCheck properties (every owner change is audited or refused); migration forward/rollback/idempotent re-apply and constraint probes on disposable PostgreSQL; delivery and backfill selections filter on delivery_designated by review.",
+      "evidence": "tdf-hq-test AccountOwnershipSpec run; scripts/test-social-designation-postgres.sh output.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
       "tests": [
+        "scripts/test-social-designation-postgres.sh",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs"
       ],
       "formalModels": [],
-      "confidence": "Low for policy: behavior documented, not approved.",
+      "confidence": "High for the pure rules and the migration; handler correspondence by review; no HTTP-level test of the exchange or the designation route.",
       "ambiguity": [
-        "No test exercises the exchange handler end to end.",
-        "AUTHORITY-094 decided the policy; the migration and pure rules exist, handler wiring (OAuth rebind rule, delivery selection, admin designation route) is in progress."
+        "No HTTP-level test drives the OAuth exchange with a foreign-owned account or the admin designation route.",
+        "Existing production accounts are not designated by the migration; an administrator must designate the intended delivery account, until then the configured environment token is the only channel."
       ],
       "conformance": {
-        "classification": "SPECIFICATION AMBIGUITY",
-        "reason": "Implementation observed; product policy on account rebinding and delivery-channel selection is undecided (Q6)."
+        "classification": "PARTIAL",
+        "reason": "Policy decided (AUTHORITY-094), rules, migration and handlers implemented with unit and SQL evidence; HTTP-level checks remain."
       }
     },
     {
