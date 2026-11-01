@@ -1150,8 +1150,8 @@ fanPublicServer =
     getPublicClub = fanClubPublicGetClub
     getPublicClubEvents = fanClubPublicGetEvents
 
-    tipArtist :: Int64 -> APITypes.ArtistTipRequest -> AppM APITypes.ArtistTipResponse
-    tipArtist artistIdRaw req = createArtistTip artistIdRaw req
+    tipArtist :: Int64 -> Maybe Text -> APITypes.ArtistTipRequest -> AppM APITypes.ArtistTipResponse
+    tipArtist artistIdRaw mIdempotencyKey req = createArtistTip artistIdRaw mIdempotencyKey req
 
 artistPublicServer :: ServerT ArtistPublicAPI AppM
 artistPublicServer =
@@ -1238,9 +1238,10 @@ parseArtistPublicRef ref
 -- is logged, never returned to the caller (PRIV-ERROR-001).
 createArtistTip
   :: Int64
+  -> Maybe Text
   -> APITypes.ArtistTipRequest
   -> AppM APITypes.ArtistTipResponse
-createArtistTip artistIdRaw req = do
+createArtistTip artistIdRaw mIdempotencyKey req = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
   artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistIdRaw)
@@ -1248,6 +1249,10 @@ createArtistTip artistIdRaw req = do
     throwError err400 { errBody = "Tip amount must be greater than zero" }
   when (T.null (T.strip (APITypes.atrCurrency req))) $
     throwError err400 { errBody = "Tip currency is required" }
+  mKey <- case mIdempotencyKey of
+    Nothing -> pure Nothing
+    Just raw -> either (\msg -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) })
+                       (pure . Just) (ArtistTip.validateTipIdempotencyKey raw)
   stripeCfg <- case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
     (Just secretKey, Just webhookSecret) ->
       pure Stripe.StripeConfig
@@ -1275,6 +1280,8 @@ createArtistTip artistIdRaw req = do
   let amountCents = APITypes.atrAmountCents req
       currency = T.toLower (T.strip (APITypes.atrCurrency req))
       platformFeeCents = ArtistTip.artistTipPlatformFeeCents amountCents
+      fingerprint = ArtistTip.tipRequestFingerprint artistIdValid amountCents currency
+        (APITypes.atrTipperName req) (APITypes.atrTipperEmail req) (APITypes.atrMessage req)
       tipRow = ME.ArtistTip
         { ME.artistTipArtistProfileId = profileKey
         , ME.artistTipTipperPartyId = Nothing
@@ -1286,51 +1293,92 @@ createArtistTip artistIdRaw req = do
         , ME.artistTipStripePaymentIntentId = Nothing
         , ME.artistTipStatus = "pending"
         , ME.artistTipMessage = APITypes.atrMessage req
+        , ME.artistTipIdempotencyKey = mKey
+        , ME.artistTipRequestSha256 = fingerprint <$ mKey
         , ME.artistTipCreatedAt = now
         , ME.artistTipUpdatedAt = now
         }
-  tipKey <- runDB $ insert tipRow
-  let tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
-      description = "Tip to artist " <> T.pack (show artistIdValid) <> " from " <> tipperLabel
-      metadata = object
-        [ "purpose" .= ("artist_tip" :: Text)
-        , "artist_tip_id" .= fromSqlKey tipKey
-        , "artist_party_id" .= artistIdValid
-        , "artist_profile_id" .= fromSqlKey profileKey
-        ]
-      metadataJson =
-        Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
-  result <- liftIO $
-    Stripe.createPaymentIntentForTip
-      stripeCfg
-      destinationAccountId
-      amountCents
-      platformFeeCents
-      currency
-      description
-      metadataJson
-  case result of
-    Left err -> do
-      runDB $ update tipKey
-        [ ME.ArtistTipStatus =. "failed"
-        , ME.ArtistTipUpdatedAt =. now
-        ]
-      liftIO $ hPutStrLn stderr $
-        "artist tip " <> show (fromSqlKey tipKey) <> " Stripe error: " <> T.unpack err
-      throwError err502 { errBody = "The payment provider could not start this tip" }
-    Right paymentIntent -> do
-      (piId, clientSecret) <- eitherStripeServerError $
-        parseStripePaymentIntentResponse paymentIntent
-      runDB $ update tipKey
-        [ ME.ArtistTipStripePaymentIntentId =. Just piId
-        , ME.ArtistTipUpdatedAt =. now
-        ]
-      pure APITypes.ArtistTipResponse
-        { APITypes.atrespTipId = fromSqlKey tipKey
-        , APITypes.atrespClientSecret = clientSecret
-        , APITypes.atrespAmountCents = amountCents
-        , APITypes.atrespCurrency = currency
-        }
+      conflict msg = throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+      storedFor (Entity _ tip) =
+        ( fromMaybe "" (ME.artistTipRequestSha256 tip)
+        , ME.artistTipStripePaymentIntentId tip
+        , ME.artistTipStatus tip )
+      -- Replay (PAY-TIP-001): answer with the stored PaymentIntent; the client
+      -- secret is retrieved from Stripe, never stored.
+      replayResponse tipKey tip intentId = do
+        retrieved <- liftIO (Stripe.retrievePaymentIntent stripeCfg intentId)
+        paymentIntent <- either
+          (\err -> do
+             liftIO $ hPutStrLn stderr $
+               "artist tip " <> show (fromSqlKey tipKey) <> " Stripe retrieve error: " <> T.unpack err
+             throwError err502 { errBody = "The payment provider could not resume this tip" })
+          pure retrieved
+        (_, clientSecret) <- eitherStripeServerError (parseStripePaymentIntentResponse paymentIntent)
+        pure APITypes.ArtistTipResponse
+          { APITypes.atrespTipId = fromSqlKey tipKey
+          , APITypes.atrespClientSecret = clientSecret
+          , APITypes.atrespAmountCents = ME.artistTipAmountCents tip
+          , APITypes.atrespCurrency = ME.artistTipCurrency tip
+          }
+      lookupKeyed = maybe (pure Nothing)
+        (\key -> runDB (getBy (ME.UniqueArtistTipIdempotency profileKey (Just key)))) mKey
+      createFresh tipKey = do
+        let tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
+            description = "Tip to artist " <> T.pack (show artistIdValid) <> " from " <> tipperLabel
+            metadata = object $
+              [ "purpose" .= ("artist_tip" :: Text)
+              , "artist_tip_id" .= fromSqlKey tipKey
+              , "artist_party_id" .= artistIdValid
+              , "artist_profile_id" .= fromSqlKey profileKey
+              ] <> maybe [] (\key -> ["idempotency_key" .= key]) mKey
+            metadataJson = Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
+        result <- liftIO $
+          Stripe.createPaymentIntentForTip
+            stripeCfg
+            destinationAccountId
+            amountCents
+            platformFeeCents
+            currency
+            description
+            metadataJson
+        case result of
+          Left err -> do
+            runDB $ update tipKey
+              [ ME.ArtistTipStatus =. "failed"
+              , ME.ArtistTipUpdatedAt =. now
+              ]
+            liftIO $ hPutStrLn stderr $
+              "artist tip " <> show (fromSqlKey tipKey) <> " Stripe error: " <> T.unpack err
+            throwError err502 { errBody = "The payment provider could not start this tip" }
+          Right paymentIntent -> do
+            (piId, clientSecret) <- eitherStripeServerError $
+              parseStripePaymentIntentResponse paymentIntent
+            runDB $ update tipKey
+              [ ME.ArtistTipStripePaymentIntentId =. Just piId
+              , ME.ArtistTipUpdatedAt =. now
+              ]
+            pure APITypes.ArtistTipResponse
+              { APITypes.atrespTipId = fromSqlKey tipKey
+              , APITypes.atrespClientSecret = clientSecret
+              , APITypes.atrespAmountCents = amountCents
+              , APITypes.atrespCurrency = currency
+              }
+  existing <- lookupKeyed
+  case ArtistTip.decideTipReplay fingerprint (storedFor <$> existing) of
+    ArtistTip.TipReplayIntent intentId | Just (Entity tipKey tip) <- existing ->
+      replayResponse tipKey tip intentId
+    ArtistTip.TipReplayConflict msg -> conflict msg
+    _ -> do
+      inserted <- runDB (insertUnique tipRow)
+      case inserted of
+        Just tipKey -> createFresh tipKey
+        Nothing -> do
+          -- A concurrent request with the same key won the insert; replay it.
+          raced <- lookupKeyed
+          case ArtistTip.decideTipReplay fingerprint (storedFor <$> raced) of
+            ArtistTip.TipReplayIntent intentId | Just (Entity k tip) <- raced -> replayResponse k tip intentId
+            ArtistTip.TipReplayConflict msg -> conflict msg
+            _ -> conflict "Tip request is already being processed; retry with the same Idempotency-Key"
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =

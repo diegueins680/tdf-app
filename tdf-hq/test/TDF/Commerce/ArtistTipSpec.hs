@@ -3,6 +3,7 @@
 -- | PAY-TIP-001: pure admission and fee rules for public artist tips.
 module TDF.Commerce.ArtistTipSpec (spec) where
 
+import           Data.Either (isLeft, isRight)
 import qualified Data.Text as T
 import Test.Hspec
 import Test.QuickCheck
@@ -67,3 +68,47 @@ spec = describe "TDF.Commerce.ArtistTip (PAY-TIP-001)" $ do
              .&&. amount * artistTipPlatformFeeBps < (fee + 1) * 10000
     it "does not overflow at the validated maximum" $
       artistTipPlatformFeeCents maxArtistTipAmountCents `shouldBe` 9999999
+
+  describe "request idempotency (PAY-TIP-001)" $ do
+    it "accepts only 1..128 ASCII letters, digits, hyphens and underscores as keys" $ do
+      validateTipIdempotencyKey "order-2026_11-01" `shouldSatisfy` isRight
+      validateTipIdempotencyKey "" `shouldSatisfy` isLeft
+      validateTipIdempotencyKey (T.replicate 129 "a") `shouldSatisfy` isLeft
+      validateTipIdempotencyKey "key with space" `shouldSatisfy` isLeft
+      validateTipIdempotencyKey "clave-\241" `shouldSatisfy` isLeft
+      validateTipIdempotencyKey "a/b" `shouldSatisfy` isLeft
+    it "fingerprints differ whenever any request field differs" $
+      property $ \(Positive a) (Positive b) (NonNegative n) (NonNegative m) ->
+        let f = tipRequestFingerprint a n "usd" (Just "n") Nothing Nothing
+        in conjoin
+             [ (a /= b) ==> f /= tipRequestFingerprint b n "usd" (Just "n") Nothing Nothing
+             , (n /= m) ==> f /= tipRequestFingerprint a m "usd" (Just "n") Nothing Nothing
+             , property (f /= tipRequestFingerprint a n "eur" (Just "n") Nothing Nothing)
+             , property (f /= tipRequestFingerprint a n "usd" Nothing Nothing Nothing)
+             , property (f /= tipRequestFingerprint a n "usd" (Just "n") (Just "") Nothing)
+             , f === tipRequestFingerprint a n " USD " (Just "n") Nothing Nothing
+             ]
+    it "distinguishes an absent optional field from an empty one and from a shifted boundary" $ do
+      tipRequestFingerprint 1 100 "usd" Nothing Nothing Nothing
+        `shouldNotBe` tipRequestFingerprint 1 100 "usd" (Just "") Nothing Nothing
+      tipRequestFingerprint 1 100 "usd" (Just "ab") (Just "c") Nothing
+        `shouldNotBe` tipRequestFingerprint 1 100 "usd" (Just "a") (Just "bc") Nothing
+    it "replays only the same request with a bound PaymentIntent, and never a failed or unbound attempt" $ do
+      let fp = tipRequestFingerprint 1 100 "usd" Nothing Nothing Nothing
+          other = tipRequestFingerprint 1 200 "usd" Nothing Nothing Nothing
+      decideTipReplay fp Nothing `shouldBe` TipCreateNew
+      decideTipReplay fp (Just (fp, Just "pi_1", "pending")) `shouldBe` TipReplayIntent "pi_1"
+      decideTipReplay fp (Just (fp, Just "pi_1", "paid")) `shouldBe` TipReplayIntent "pi_1"
+      decideTipReplay fp (Just (other, Just "pi_1", "pending")) `shouldSatisfy` isConflict
+      decideTipReplay fp (Just (fp, Just "pi_1", "failed")) `shouldSatisfy` isConflict
+      decideTipReplay fp (Just (fp, Nothing, "pending")) `shouldSatisfy` isConflict
+      decideTipReplay fp (Just (fp, Just "", "pending")) `shouldSatisfy` isConflict
+    it "never creates a new charge when a row for the key exists" $
+      property $ \(Positive n) mIntent status ->
+        let fp = tipRequestFingerprint 1 n "usd" Nothing Nothing Nothing
+            stored = (fp, fmap T.pack mIntent, T.pack status)
+        in decideTipReplay fp (Just stored) =/= TipCreateNew
+  where
+    isConflict (TipReplayConflict _) = True
+    isConflict _ = False
+

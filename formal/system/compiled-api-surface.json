@@ -4117,6 +4117,27 @@
               "module": "GHC.Internal.Int",
               "name": "Int64"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
           }
         ],
         "bodies": [

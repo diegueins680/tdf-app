@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- | Pure admission and fee rules for public artist tips (PAY-TIP-001).
 --
 -- The route @POST /fans/artists/{artistId}/tips@ addresses the artist by the
@@ -16,10 +17,18 @@ module TDF.Commerce.ArtistTip
   , admitArtistTip
   , artistTipPlatformFeeBps
   , artistTipPlatformFeeCents
+  , TipReplay (..)
+  , validateTipIdempotencyKey
+  , tipRequestFingerprint
+  , decideTipReplay
   ) where
 
+import           Crypto.Hash (Digest, SHA256, hash)
+import           Data.Char (isAscii, isAlphaNum)
+import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 
 import           TDF.Profiles.ArtistVisibility
   ( ArtistDirectoryVisibility (..)
@@ -63,3 +72,56 @@ artistTipPlatformFeeBps = 1000
 artistTipPlatformFeeCents :: Int -> Int
 artistTipPlatformFeeCents amountCents =
   (amountCents * artistTipPlatformFeeBps) `div` 10000
+
+-- | Request-level idempotency (PAY-TIP-001). The client may send an
+-- @Idempotency-Key@; the same key with the same request replays the stored
+-- tip, the same key with a different request is a conflict, and a key whose
+-- earlier attempt never obtained a PaymentIntent or already failed cannot be
+-- replayed into a new charge.
+data TipReplay
+  = TipCreateNew
+    -- ^ no stored tip for this key: create one
+  | TipReplayIntent Text
+    -- ^ same request: answer with the stored PaymentIntent
+  | TipReplayConflict Text
+    -- ^ the key cannot be honoured; the text is the public reason
+  deriving (Eq, Show)
+
+-- | Keys are 1..128 ASCII letters, digits, hyphens or underscores, so they are
+-- safe in logs, indexes and provider metadata.
+validateTipIdempotencyKey :: Text -> Either Text Text
+validateTipIdempotencyKey raw
+  | T.null raw || T.length raw > 128 =
+      Left "Idempotency-Key must contain 1 to 128 characters"
+  | not (T.all allowed raw) =
+      Left "Idempotency-Key must contain only ASCII letters, digits, hyphens or underscores"
+  | otherwise = Right raw
+  where
+    allowed c = isAscii c && (isAlphaNum c || c == '-' || c == '_')
+
+-- | Canonical fingerprint of the request the key is bound to. Every field is
+-- length-prefixed so no two different requests share a fingerprint text.
+tipRequestFingerprint
+  :: Int64 -> Int -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
+tipRequestFingerprint artistPartyId amountCents currency tipperName tipperEmail message =
+  T.pack (show (hash (TE.encodeUtf8 canonical) :: Digest SHA256))
+  where
+    canonical = T.intercalate "\n" (map field
+      [ T.pack (show artistPartyId), T.pack (show amountCents), T.toLower (T.strip currency)
+      , opt tipperName, opt tipperEmail, opt message ])
+    opt = maybe "-" ("+" <>)
+    field value = T.pack (show (T.length value)) <> ":" <> value
+
+-- | Decide what a keyed request does, given the stored row for that key, if
+-- any: its fingerprint, PaymentIntent id and status.
+decideTipReplay :: Text -> Maybe (Text, Maybe Text, Text) -> TipReplay
+decideTipReplay _ Nothing = TipCreateNew
+decideTipReplay fingerprint (Just (storedFingerprint, storedIntent, storedStatus))
+  | storedFingerprint /= fingerprint =
+      TipReplayConflict "Idempotency-Key was already used for a different tip request"
+  | storedStatus == "failed" =
+      TipReplayConflict "The earlier attempt with this Idempotency-Key failed; use a new key"
+  | otherwise = case storedIntent of
+      Just intentId | not (T.null intentId) -> TipReplayIntent intentId
+      _ -> TipReplayConflict "The earlier attempt with this Idempotency-Key did not reach the payment provider; use a new key"
+

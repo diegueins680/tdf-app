@@ -1155,6 +1155,21 @@
       "id": "2026-10-25_event_memory_source_permission_locks",
       "path": "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql",
       "introducedBy": "baab857f085b74f333c9f5d29e31306072fbc496"
+    },
+    {
+      "id": "2026-11-01_artist_tip_idempotency",
+      "path": "tdf-hq/sql/2026-11-01_artist_tip_idempotency.sql",
+      "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
+    },
+    {
+      "id": "2026-11-01_social_sync_account_delivery_designation",
+      "path": "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql",
+      "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
+    },
+    {
+      "id": "2026-11-01_domo_cancellation_policy",
+      "path": "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql",
+      "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
     }
   ]
 }
