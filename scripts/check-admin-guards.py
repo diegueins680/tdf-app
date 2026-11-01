@@ -60,6 +60,26 @@ def handlers(path):
     return result
 
 
+def registry_mismatches():
+    """AUTH-REGISTRY-001: the video-source settings feature exposes discovery,
+    view and administration only under strict administrator and Admin module,
+    the same predicates RecordsIngestion.requireAdmin enforces."""
+    registry = json.loads((ROOT / 'tdf-hq/assets/feature-registry.json').read_text())
+    feature = next((f for f in registry['features'] if f.get('id') == 'admin.video-sources'), None)
+    if feature is None:
+        return ['feature-registry: admin.video-sources is missing']
+    problems = []
+    for action in ('discover', 'view', 'administer'):
+        rule = (feature.get('permissions') or {}).get(action) or {}
+        if not (rule.get('strictAdmin') is True and rule.get('rolesAny') == ['Admin']
+                and rule.get('modulesAll') == ['Admin']):
+            problems.append(f'feature-registry: admin.video-sources.{action} is not strictAdmin+Admin module: {rule}')
+    source = (ROOT / 'tdf-hq/src/TDF/Server/RecordsIngestion.hs').read_text()
+    if not re.search(r'requireAdmin\s*=\s*unless\s*\(hasStrictAdminAccess user\s*&&\s*hasModuleAccess ModuleAdmin user\)', source):
+        problems.append('RecordsIngestion.requireAdmin no longer requires strict admin and the Admin module')
+    return problems
+
+
 def main():
     want_json = '--json' in sys.argv[1:]
     report = []
@@ -72,14 +92,18 @@ def main():
             report.append(row)
             if leaf and not row['guarded']:
                 unguarded.append(row)
+    registry_problems = registry_mismatches()
     if want_json:
-        print(json.dumps({'ok': not unguarded, 'handlers': report, 'unguarded': unguarded}, indent=2))
+        print(json.dumps({'ok': not unguarded and not registry_problems, 'handlers': report, 'unguarded': unguarded, 'registry': registry_problems}, indent=2))
     else:
         leaves = [r for r in report if r['leaf']]
         print(f'Admin guard sweep: {len(leaves)} leaf handlers, {len(unguarded)} unguarded')
         for row in unguarded:
             print(f"  {row['file']}:{row['line']} {row['name']}")
-    return 1 if unguarded else 0
+        print(f'Registry correspondence (admin.video-sources): {len(registry_problems)} problems')
+        for problem in registry_problems:
+            print('  ' + problem)
+    return 1 if unguarded or registry_problems else 0
 
 
 if __name__ == '__main__':

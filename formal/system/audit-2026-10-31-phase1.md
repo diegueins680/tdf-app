@@ -253,3 +253,11 @@ Estado de verificación tras esta fase: 22 obligaciones de modelo (TLC positivos
 
 Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).
 
+## 21. Seguridad P0 — registro de funcionalidades (2026-11-01)
+
+`AUTH-REGISTRY-001`: el gate `check-admin-guards.py` comprueba ahora también que la entrada `admin.video-sources` del registro concede descubrimiento, vista y administración solo bajo administrador estricto con rol y módulo Admin, y que `RecordsIngestion.requireAdmin` sigue exigiendo exactamente esos predicados. Control de mutación sobre el registro verificado. Sin hallazgos.
+
+## 22. Contratos P1 — gate del gitlink móvil (2026-11-01)
+
+F-01: nuevo `scripts/check-mobile-gitlink-ancestry.sh` exige que el gitlink de `tdf-mobile` sea alcanzable desde `main` del móvil. Hoy falla (12 commits faltan en `main`), así que corre en CI como advisorio (`continue-on-error`) hasta que se fusione diegueins680/TDF-mobile#178; entonces debe pasar a bloqueante quitando esa línea.
+

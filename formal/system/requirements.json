@@ -921,7 +921,8 @@
       ],
       "tests": [
         "scripts/test-specification-inventory.py",
-        "scripts/test-requirement-declarations.py"
+        "scripts/test-requirement-declarations.py",
+        "scripts/check-mobile-gitlink-ancestry.sh"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",
@@ -931,7 +932,8 @@
       "confidence": "high for tooling boundary; domain semantics require separate correspondence",
       "ambiguity": [
         "Discovery coverage is not exhaustive semantic extraction of each implicit business rule.",
-        "Authored domain table declarations retain source authority and historical claims; extraction does not approve them or establish current conformance."
+        "Authored domain table declarations retain source authority and historical claims; extraction does not approve them or establish current conformance.",
+        "The gitlink reachability gate is advisory (continue-on-error) until diegueins680/TDF-mobile#178 advances Mobile main to the pinned revision; it then becomes blocking (audit F-01)."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -1238,7 +1240,8 @@
       "tests": [
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "scripts/audit-feature-registry.mjs",
-        "scripts/test-auth-predicates.py"
+        "scripts/test-auth-predicates.py",
+        "scripts/check-admin-guards.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1254,7 +1257,7 @@
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
-      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN.",
+      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN. CI gate (check-admin-guards.py) asserts the registry entry admin.video-sources grants discover, view and administer only under strictAdmin with the Admin role and module, and that RecordsIngestion.requireAdmin still requires hasStrictAdminAccess and the Admin module; mutation control on the registry entry.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
