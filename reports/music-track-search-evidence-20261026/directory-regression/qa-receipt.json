@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "status": "PARTIAL_ENVIRONMENT_NOT_RELEASE_QUALIFICATION",
+  "observedAt": "2026-10-27T00:14:25.450251+00:00",
+  "sourceRevision": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "actualExit": 1,
+  "actualExitConfirmedBy": "root/session74683 message; no child browser/service execution",
+  "stats": {
+    "startTime": "2026-10-27T00:09:22.833Z",
+    "duration": 171189.272,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "chromium-desktop",
+      "status": "passed",
+      "durationMs": 3343,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "chromium-phone",
+      "status": "passed",
+      "durationMs": 3849,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "firefox-critical",
+      "status": "passed",
+      "durationMs": 6957,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "firefox-critical",
+      "status": "passed",
+      "durationMs": 4985,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "firefox-critical",
+      "status": "passed",
+      "durationMs": 4669,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-desktop",
+      "status": "failed",
+      "durationMs": 9835,
+      "retry": 0,
+      "errors": [
+        "Error: ENOSPC: no space left on device, mkdir '/private/tmp/tdf-directory-search-regression-20261026/test-results/directory-language-Directo-b75da-te-recovery-use-es-critical-chromium-desktop'\n\n   96 |       await expect(page.getByRole('status').filter({ hasText: english ? 'Link copied.' : 'Enlace copiado.' })).toBeVisible();\n   97 |       expect(await page.evaluate(() => window.__directoryCopiedUrl)).toBe(origin + '/eventos/42');\n>  98 |       await page.screenshot({ path: testInfo.outputPath('directory-recovered.png'), fullPage: true });\n      |                                              ^\n   99 |       await page.getByRole('button', { name: copy.location, exact: true }).click();\n  100 |       await expect(page.getByRole('alert').filter({ hasText: copy.locationError })).toBeVisible();\n  101 |       await page.getByRole('button', { name: copy.map, exact: true }).click();\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/directory-language.spec.mjs:98:46",
+        "Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, write",
+        "Error: ENOSPC: no space left on device, mkdir '/private/tmp/tdf-directory-search-regression-20261026/test-results/directory-language-Directo-b75da-te-recovery-use-es-critical-chromium-desktop'",
+        "Error: ENOSPC: no space left on device, write",
+        "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+      ],
+      "attachments": []
+    },
+    {
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "chromium-desktop",
+      "status": "passed",
+      "durationMs": 11766,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-phone",
+      "status": "passed",
+      "durationMs": 12566,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "chromium-phone",
+      "status": "passed",
+      "durationMs": 12388,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "firefox-critical",
+      "status": "passed",
+      "durationMs": 13064,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    },
+    {
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "firefox-critical",
+      "status": "passed",
+      "durationMs": 13005,
+      "retry": 0,
+      "errors": [],
+      "attachments": []
+    }
+  ],
+  "discovery": {
+    "actualCases": 11,
+    "chromiumDesktop": 3,
+    "chromiumPhone": 3,
+    "firefoxCritical": 5,
+    "reason": "Installed Playwright config.js:152 uses takeFirst(projectConfig.grep, config.grep, defaultGrep); Firefox @critical replaces root selection filter. Initial9-case estimate corrected; no skip/filter/test modification during run."
+  },
+  "functionalBoundary": {
+    "apis": "Synthetic intercepted directory/session/favorite/music-search replies; unknown fetch/xhr fulfilled[]; no actual backend or production calls.",
+    "music": "New /buscar music region receives empty fixture[]; no actual search backend/audio delivery/decode here.",
+    "accessibility": "Existing Axe serious/critical assertions passed in10 successful cases. Failed desktopES stops at screenshot98; latergeolocation/map/Axe unexecuted. Not fullWCAG or assistive-technology proof.",
+    "failure": "DesktopES screenshot path creation raises ENOSPC, followed by write/mkdir errors and reported30s timeout. No screenshot failure artifact attachment available. Cannot classify entire body as passed; no product failure inferred solely fromdiskerror.",
+    "budgets": "Existing30s test/8s expectation/300s webServer/retries0 unchanged; serviceWorkers blocked/reuseExistingServer false/owned4189.",
+    "untested": "Physicaldevices/WebKit/realserver/searchranking/audio/production/entire-directory flows not established."
+  },
+  "unchangedSevenSourceFiles": {
+    "e2e/web/directory-entry.spec.mjs": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
+    "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
+    "playwright.config.mjs": "0576069d58c4deb2a53222843ea01ebcaa3d636e8327253746b09a5b9fe96df7",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04"
+  },
+  "configSha256": "7d38c53ab710c8f56efc957215e0e74b4c21c3d0c73c6b3707f9c1fcea4c2639",
+  "sourceBeforeObservedAt": "2026-10-27T00:09:20.991116+00:00",
+  "preservedRawInputs": {
+    "source-before.json": {
+      "path": "/private/tmp/tdf-directory-search-regression-failure-20261026/source-before.json",
+      "sha256": "1d47b95627793197c960589e927d0ad35b088d819ccb756c142a902631c1aa88",
+      "bytes": 886
+    },
+    "source-after.json": {
+      "path": "/private/tmp/tdf-directory-search-regression-failure-20261026/source-after.json",
+      "sha256": "9b12a9cb05dedfb14dcd21a1107d8881268b508df612150efcc4f8ee77e42e12",
+      "bytes": 1070
+    },
+    "run.log": {
+      "path": "/private/tmp/tdf-directory-search-regression-failure-20261026/run.log",
+      "sha256": "2815a0ce86d2dc8b2dd21f3e4879246e82cff782deabb105ef4ccb7265f97484",
+      "bytes": 7224
+    },
+    "results.json": {
+      "path": "/private/tmp/tdf-directory-search-regression-failure-20261026/results.json",
+      "sha256": "bb7b96c01f76e4d3c507169a179b52e64a329c4edf5fcadc336cac3d5fad02d4",
+      "bytes": 20555
+    },
+    "playwright.config.mjs": {
+      "path": "/private/tmp/tdf-directory-search-regression-failure-20261026/playwright.config.mjs",
+      "sha256": "7d38c53ab710c8f56efc957215e0e74b4c21c3d0c73c6b3707f9c1fcea4c2639",
+      "bytes": 1174
+    }
+  },
+  "availableOriginalArtifactManifest": [
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/html/index.html",
+      "bytes": 542728,
+      "sha256": "f352c541cc7487e8d242f655d181b48748ff4340586b0f0aef01a0a29ac6778e"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/playwright.config.mjs",
+      "bytes": 1174,
+      "sha256": "7d38c53ab710c8f56efc957215e0e74b4c21c3d0c73c6b3707f9c1fcea4c2639"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/results.json",
+      "bytes": 20555,
+      "sha256": "bb7b96c01f76e4d3c507169a179b52e64a329c4edf5fcadc336cac3d5fad02d4"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/run.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/run.log",
+      "bytes": 7224,
+      "sha256": "2815a0ce86d2dc8b2dd21f3e4879246e82cff782deabb105ef4ccb7265f97484"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/source-before.json",
+      "bytes": 886,
+      "sha256": "1d47b95627793197c960589e927d0ad35b088d819ccb756c142a902631c1aa88"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/test-results/.last-run.json",
+      "bytes": 96,
+      "sha256": "96e5c1aec608fcc0313f588bd3e324b724ab1a675f1c3db4062376b3b7b6e6fe"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/test-results/directory-language-Directo-b75da-te-recovery-use-es-critical-chromium-phone/directory-recovered.png",
+      "bytes": 1538336,
+      "sha256": "55bf6be44fdf5fb736b1c6b1519a450c4d93931332834a9ccfee44fe78df394a"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/test-results/directory-language-Directo-b75da-te-recovery-use-es-critical-firefox-critical/directory-recovered.png",
+      "bytes": 438398,
+      "sha256": "5fe14fa44d4dc4416d923ffc4f153bcd7bc2ce64e0fecaa274a7a020faebeca8"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/test-results/directory-language-Directo-e5dd1-te-recovery-use-en-critical-chromium-desktop/directory-recovered.png",
+      "bytes": 562177,
+      "sha256": "2b076519e69917d93509e8f55589e61f3bcdb7189ec165848caa0ff0cc450c06"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/test-results/directory-language-Directo-e5dd1-te-recovery-use-en-critical-chromium-phone/directory-recovered.png",
+      "bytes": 1424549,
+      "sha256": "7c3b484258e45034bdb9bc7559ee7c10f55301c29b7804fdbb4d561a02cd45f4"
+    },
+    {
+      "path": "/private/tmp/tdf-directory-search-regression-20261026/test-results/directory-language-Directo-e5dd1-te-recovery-use-en-critical-firefox-critical/directory-recovered.png",
+      "bytes": 423460,
+      "sha256": "467804bd963dd481c41e3c2a9391612ca5d9e31eee11233f9b0a74492ecf60fb"
+    }
+  ],
+  "reruns": 0,
+  "childRepositoryEdits": 0,
+  "previousSearchNativeReceiptsReclassified": false
+}

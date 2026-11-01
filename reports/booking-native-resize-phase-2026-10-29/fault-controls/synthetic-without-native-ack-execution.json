@@ -1,0 +1,11 @@
+{
+  "label": "synthetic-without-native-ack",
+  "port": 41323,
+  "actualExit": 1,
+  "trackedDiagnosticSha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+  "executedTestSha256": "e7e793fc5f23e743898924c0f004f933c155085eaac712a18f0c8fe523e42825",
+  "startedAt": 1793287102.588635,
+  "finishedAt": 1793287132.3095481,
+  "serverStopped": true,
+  "ownedAliasesRemoved": true
+}

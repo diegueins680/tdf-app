@@ -1,0 +1,107 @@
+{
+  "recordedAt": "2026-10-27T00:19:38.913328+00:00",
+  "baseRootHead": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "mobileBefore": {
+    "head": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "branch": "feat/music-search-contract-20261026",
+    "beforeSha256": "76df1aac037bdab83262a65de0ca428adae659d7d3b7bd6927730cc91353339c",
+    "generationNode": "22.14.0",
+    "nativeAppNodeScope": "No app commands or Node20/Expo checks executed; generation only"
+  },
+  "node": "22.14.0",
+  "generator": "openapi-typescript7.10.1",
+  "generatedFiles": {
+    "tdf-hq/docs/openapi/api.yaml": {
+      "sha256": "0c34c59a78d764e911031128f01bd84fc6eafb18438132e49b59f3fb14b87ea3",
+      "bytes": 760074
+    },
+    "tdf-hq-ui/src/api/generated/types.ts": {
+      "sha256": "36e46d7af5ad300b8cfa91786439facf1daeb92b903571ab5d88f4476101564e",
+      "bytes": 1214188
+    },
+    "tdf-mobile/src/api/generated/types.ts": {
+      "sha256": "36e46d7af5ad300b8cfa91786439facf1daeb92b903571ab5d88f4476101564e",
+      "bytes": 1214188
+    }
+  },
+  "canonicalOperationPreservation": {
+    "base": "b8a13e66fb40613250c047df92b6775a04eebf67",
+    "canonicalBeforeOperations": 531,
+    "canonicalAfterOperations": 532,
+    "all531PriorResolvedOperationRecordsExact": true,
+    "onlyAddedOperation": {
+      "id": "GET /music/search",
+      "operationId": "searchPublicMusicTracks",
+      "source": "tdf-hq/docs/openapi/music-search.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "400",
+        "404",
+        "500"
+      ]
+    },
+    "duplicateNormalizedIdentities": 0,
+    "schemaScope": "Existing UniqueMappingLoader and root-confined resolve_reference; generation additionally performs installed Redocly lint/bundle. Not full payload/runtime conformance."
+  },
+  "generatedTypePreservation": {
+    "node": "v22.14.0",
+    "typescript": "5.9.3",
+    "allPriorTypeMembersAndOtherTopDeclarationsExact": true,
+    "oldMemberLeavesCompared": 1543,
+    "paths": {
+      "before": 459,
+      "after": 460,
+      "added": [
+        "\"/music/search\""
+      ]
+    },
+    "operations": {
+      "before": 525,
+      "after": 526,
+      "added": [
+        "searchPublicMusicTracks"
+      ]
+    },
+    "schemas": {
+      "before": 554,
+      "after": 556,
+      "added": [
+        "MusicTrackSearchSource",
+        "MusicTrackSearchHit"
+      ]
+    },
+    "isolatedGeneratedTypesNoEmitDiagnostics": 0,
+    "webMobileByteIdentical": true,
+    "beforeSha256": "76df1aac037bdab83262a65de0ca428adae659d7d3b7bd6927730cc91353339c",
+    "afterSha256": "36e46d7af5ad300b8cfa91786439facf1daeb92b903571ab5d88f4476101564e",
+    "scope": "Generated declarations only; no Expo/Mobile full app lint/test/typecheck/release/start claim."
+  },
+  "generatorChecks": {
+    "webExitCode": 0,
+    "mobileExitCode": 0,
+    "webCheckExitCode": 0,
+    "mobileCheckExitCode": 0,
+    "validation": "Installed openapi-typescript lintDocument/bundle validation plus existing strict YAML/ref resolver and isolated TypeScript noEmit. No external CLI install or full semantic API proof."
+  },
+  "logs": {
+    "web-generation.log": "b535e876868b3241fbaf5de35dc3e69254d3e03cadc1ad8ddb779604a7bbbc65",
+    "mobile-generation.log": "05c86cfedafe1d620d7f2addd14a00cb4c2f151ac3fab42f2ad4138d9582fdc1",
+    "web-generation-check.log": "d9542348fc405b4e64cf3f9707f8bc878f01516d4d5351faed07cd88d3d80746",
+    "mobile-generation-check.log": "d9542348fc405b4e64cf3f9707f8bc878f01516d4d5351faed07cd88d3d80746"
+  },
+  "diffBound": {
+    "apiYaml": "+2/-0",
+    "webTypes": "+105/-0",
+    "mobileTypes": "+105/-0",
+    "onlyAdditions": [
+      "GET /music/search path-item ref",
+      "/music/search generated path",
+      "searchPublicMusicTracks generated operation",
+      "MusicTrackSearchHit/Source schemas"
+    ]
+  },
+  "ownership": "Only api.yaml, generated web types and authorized generated Mobile types; no generator/policy/runtime/manual-client/gitlink/Git edits",
+  "remainingGates": "Mobile full app Node20/Expo deps absent: no install/start/lint/test/full typecheck/release claim. Root commits Mobile types and pin, then final existing committed-client drift gate and hosted gates.",
+  "writerState": "ALL_WRITERS_STOPPED"
+}
