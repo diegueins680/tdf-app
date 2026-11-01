@@ -230,3 +230,9 @@ Evidencia: `PAY-DOMO-QUOTE-001` tiene 4 lemas demostrados en Z3 (sin cota) con t
 
 Estado de verificación tras esta fase: 22 obligaciones de modelo (TLC positivos, controles negativos y pruebas inductivas Apalache) pasan en `verify:inductive-proofs`; 11 obligaciones SMT del informe de garantía demostradas; 11 lemas Z3 de aritmética Domo/cursos demostrados con 5 testigos; gate de guardas admin con control de mutación.
 
+## 17. Evidencia PostgreSQL e integración de `main` (2026-11-01)
+
+- `scripts/test-provider-retry-runtime.sh` sobre `pgvector/pgvector:pg17` con el esquema completo: 224 casos de dominio de proveedor, 4 de comisiones e impuestos, 16 de concurrencia y reintentos, controles de mutación de expiración de intents, y **318 ejemplos de `provider-retry-runtime` sin fallos**, incluido el nuevo test del lease reclamado (F-17).
+- Suite completa de Haskell: 4 077 ejemplos, 0 fallos (21 pendientes por base de datos).
+- `main` avanzó hasta `be87455` (PR #646, privacidad del nombre de Google). Integrado por merge normal; inventario y trazabilidad regenerados; los recibos SMT de autorización y recuperación toman los pines de `main` y añaden la revisión del Cabal de esta rama (siete registros de módulos, sin otros cambios).
+
