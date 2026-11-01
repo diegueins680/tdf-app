@@ -9496,8 +9496,8 @@
       "id": "EVT-DISCOVERY-001",
       "title": "One events entry in navigation and an upcoming-events carousel after login",
       "domain": "EVT",
-      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
-      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in.",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference. On /artista/:slugOrId and /a/:slugOrId, show every future publicly listable event belonging to the resolved artist first, in chronological order, followed by the general upcoming selection without duplicate events. The artist group is not subject to the eight-event general limit. Resolve the profile Party ID to social Artist relationships; never infer identity from a matching name or equal numeric IDs. If no artist dates exist or that read fails, retain the general agenda.",
+      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in. User request 2026-10-28: prioritize all future events of the corresponding artist on every artist profile.",
       "source": "tdf-hq-ui navigation and shells",
       "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
       "actors": [
@@ -9531,10 +9531,10 @@
         "Viewer's RSVP upserted with their showEventRsvpsOnProfile preference"
       ],
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
-      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
+      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
       "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
-      "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
+      "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
       "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
@@ -9546,13 +9546,18 @@
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
-        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx"
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
+        "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
-        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx"
+        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
+        "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
       "formalModels": [],
       "verification": "Client unit tests",
@@ -13986,7 +13991,7 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "59bbdf8f3bc4d7619776ca87f8ccf14d9718d7eee08bff9f2aa53023118d5eb8",
+    "formal/system/compiled-api-surface.json": "89fb0afd54fddd5eb17075653137445283e35408e8b694749468ea1929aca643",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
     "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
@@ -14344,6 +14349,8 @@
     "tdf-hq-ui/src/api/accountDeletion.test.ts": "5a039f2ef3658b1aabee56a51f1f1e4a23c2e895ed22d863879fd245e95a4785",
     "tdf-hq-ui/src/api/accountDeletion.ts": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
     "tdf-hq-ui/src/api/artistInvitations.ts": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
+    "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts": "26f48bfd4ea10067fe35c87a72553091e51349ca55d3638e315acfe492f9c36d",
+    "tdf-hq-ui/src/api/artistUpcomingEvents.ts": "39f404af0080d8948d28fbe9e5b55ffa15ba2569343e9228639afd8f5968a3cf",
     "tdf-hq-ui/src/api/auth.test.ts": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
     "tdf-hq-ui/src/api/auth.ts": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
@@ -14430,8 +14437,8 @@
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
     "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "f970f18ff3ca6992f619ef997b8903edc01ee737fafce75a32affb5f012f2cfd",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "94d9680fdcad3b85b257cedfb6dcb296a2c7bac96330d86ff9834d2475986cac",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "1bc3ec362082c00106dcac5bcc8131cf15da631d8844e7e9b8823a3836089171",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "2eca95aa1fa92a54659053cfd91e0a0f686ee6a3dd34e1fbaf64dbbe85c24d90",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
@@ -14771,7 +14778,7 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/MusicRelease.hs": "3cb60fb17c91e6d8c5ac46e02c637f88456f047fb34ce6ea3137120881e37072",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
-    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "0bcd509d2fc77d6c47e6cb8aa736c28a5be3936ba43fee5a0fd892670f911e09",
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "2f0395f784b9600abf35a5b0eacce472c63f50c0ccfa55a6e7fec5189e560dd0",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
@@ -14855,7 +14862,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "f091c8d3ed6238940adb125e6d08a2c5e30d0f80b4370d88944b6df37d0c9e25",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "d048e3a88db5abdbbe2299a1158cd394f371afc26111c6d1f7af918ca678148d",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -14930,7 +14937,7 @@
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
-    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a9ddc435252ad7ff07555c98168e6e72716eef6c0fff25e3d33eebb827a5bb16",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
@@ -19194,6 +19201,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "LEGAL-CONSENT-001",
         "relationship": "implementation"
       },
@@ -19325,6 +19336,10 @@
       },
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
         "relationship": "tests"
       },
       {
@@ -21829,6 +21844,10 @@
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
         "relationship": "implementation"
       },
       {
@@ -24386,6 +24405,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/api/artistUpcomingEvents.ts": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": [
       {
         "requirement": "EVT-DISCOVERY-001",
@@ -24393,6 +24418,12 @@
       }
     ],
     "tdf-hq-ui/src/routes/AppShell.test.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts": [
       {
         "requirement": "EVT-DISCOVERY-001",
         "relationship": "tests"
@@ -34246,6 +34277,30 @@
       ]
     },
     {
+      "id": "SURFACE-fa5eff3f33ac2893",
+      "path": "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
+      "sha256": "26f48bfd4ea10067fe35c87a72553091e51349ca55d3638e315acfe492f9c36d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c9c6b050b6693977",
+      "path": "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+      "sha256": "39f404af0080d8948d28fbe9e5b55ffa15ba2569343e9228639afd8f5968a3cf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-aecace78aa4aecae",
       "path": "tdf-hq-ui/src/api/auth.test.ts",
       "sha256": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
@@ -36467,7 +36522,7 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "f970f18ff3ca6992f619ef997b8903edc01ee737fafce75a32affb5f012f2cfd",
+      "sha256": "1bc3ec362082c00106dcac5bcc8131cf15da631d8844e7e9b8823a3836089171",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36479,7 +36534,7 @@
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "94d9680fdcad3b85b257cedfb6dcb296a2c7bac96330d86ff9834d2475986cac",
+      "sha256": "2eca95aa1fa92a54659053cfd91e0a0f686ee6a3dd34e1fbaf64dbbe85c24d90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46246,7 +46301,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "0bcd509d2fc77d6c47e6cb8aa736c28a5be3936ba43fee5a0fd892670f911e09",
+      "sha256": "2f0395f784b9600abf35a5b0eacce472c63f50c0ccfa55a6e7fec5189e560dd0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46255,6 +46310,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         },
         {
@@ -48173,7 +48232,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "f091c8d3ed6238940adb125e6d08a2c5e30d0f80b4370d88944b6df37d0c9e25",
+      "sha256": "d048e3a88db5abdbbe2299a1158cd394f371afc26111c6d1f7af918ca678148d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48202,6 +48261,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         },
         {
@@ -49807,7 +49870,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
+      "sha256": "a9ddc435252ad7ff07555c98168e6e72716eef6c0fff25e3d33eebb827a5bb16",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49816,6 +49879,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "tests"
         },
         {
@@ -56815,7 +56882,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3123e03b35a6dc47e3f13f3a3ca87680e5f12b7f4b733a3ed5521309abdd20a8",
+      "sourceSha256": "b106878568829917b8a57da782a6eb9858303ca2d63ac3fbd7324b30f58ce833",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56843,7 +56910,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3123e03b35a6dc47e3f13f3a3ca87680e5f12b7f4b733a3ed5521309abdd20a8",
+      "sourceSha256": "b106878568829917b8a57da782a6eb9858303ca2d63ac3fbd7324b30f58ce833",
       "definition": {
         "states": [
           "absent",
@@ -56873,7 +56940,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3123e03b35a6dc47e3f13f3a3ca87680e5f12b7f4b733a3ed5521309abdd20a8",
+      "sourceSha256": "b106878568829917b8a57da782a6eb9858303ca2d63ac3fbd7324b30f58ce833",
       "definition": {
         "export": [
           "queued",

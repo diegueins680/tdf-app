@@ -704,6 +704,8 @@
       "tdf-hq-ui/src/api/artistEnrichment.test.ts",
       "tdf-hq-ui/src/api/artistEnrichment.ts",
       "tdf-hq-ui/src/api/artistInvitations.ts",
+      "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
+      "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
       "tdf-hq-ui/src/api/auth.test.ts",
       "tdf-hq-ui/src/api/auth.ts",
       "tdf-hq-ui/src/api/authHeader.test.ts",
@@ -6857,6 +6859,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fa5eff3f33ac2893",
+      "path": "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
+      "sha256": "26f48bfd4ea10067fe35c87a72553091e51349ca55d3638e315acfe492f9c36d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c9c6b050b6693977",
+      "path": "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+      "sha256": "39f404af0080d8948d28fbe9e5b55ffa15ba2569343e9228639afd8f5968a3cf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-aecace78aa4aecae",
       "path": "tdf-hq-ui/src/api/auth.test.ts",
       "sha256": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
@@ -8221,13 +8235,13 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "f970f18ff3ca6992f619ef997b8903edc01ee737fafce75a32affb5f012f2cfd",
+      "sha256": "1bc3ec362082c00106dcac5bcc8131cf15da631d8844e7e9b8823a3836089171",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "94d9680fdcad3b85b257cedfb6dcb296a2c7bac96330d86ff9834d2475986cac",
+      "sha256": "2eca95aa1fa92a54659053cfd91e0a0f686ee6a3dd34e1fbaf64dbbe85c24d90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14599,7 +14613,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "0bcd509d2fc77d6c47e6cb8aa736c28a5be3936ba43fee5a0fd892670f911e09",
+      "sha256": "2f0395f784b9600abf35a5b0eacce472c63f50c0ccfa55a6e7fec5189e560dd0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15541,7 +15555,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "f091c8d3ed6238940adb125e6d08a2c5e30d0f80b4370d88944b6df37d0c9e25",
+      "sha256": "d048e3a88db5abdbbe2299a1158cd394f371afc26111c6d1f7af918ca678148d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16339,7 +16353,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
+      "sha256": "a9ddc435252ad7ff07555c98168e6e72716eef6c0fff25e3d33eebb827a5bb16",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28074,7 +28088,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3123e03b35a6dc47e3f13f3a3ca87680e5f12b7f4b733a3ed5521309abdd20a8",
+      "sha256": "b106878568829917b8a57da782a6eb9858303ca2d63ac3fbd7324b30f58ce833",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -73,6 +73,7 @@ module TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateSocialEventsListOffset,
     validateSocialEventsListFilter,
+    validateArtistPartyIdFilter,
     postgresVisibleImportedMetadataClause,
     validateDiscoverySourceWrite,
     validateVenueCreateUpdateFields,
@@ -158,6 +159,7 @@ import Data.Char (
     isAsciiLower,
     isAsciiUpper,
     isControl,
+    isDigit,
     isHexDigit,
  )
 import Data.Int (Int64)
@@ -329,16 +331,20 @@ import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
 
-publicUpcomingEventsServer :: Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
-publicUpcomingEventsServer mCity mStartAfter mLimit = do
+publicUpcomingEventsServer :: Maybe T.Text -> Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
+publicUpcomingEventsServer mCity mArtistPartyId mStartAfter mLimit = do
     Env{..} <- ask
     now <- liftIO getCurrentTime
+    -- Artist profile carousels read through this public projection so every
+    -- anonymous-listing predicate (public-listable state, public metadata and
+    -- no suppressed external reference) applies to them as well.
+    artistPartyFilter <- either throwError pure (validateArtistPartyIdFilter mArtistPartyId)
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
     liftIO $
         runSqlPool
             ( do
-                rows <- selectPublicUpcomingSocialEvents mCity startAfter limit
+                rows <- selectPublicUpcomingSocialEvents mCity artistPartyFilter startAfter limit
                 catMaybes
                     <$> mapM
                         (\(eventEntity, Single canonicalCity) ->
@@ -353,17 +359,34 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
 -- complete future-event table when a city has few or no matches.
 selectPublicUpcomingSocialEvents ::
     Maybe T.Text ->
+    Maybe T.Text ->
     UTCTime ->
     Int ->
     SqlPersistT IO [(Entity SocialEvent, Single (Maybe T.Text))]
-selectPublicUpcomingSocialEvents mCity startAfter limit = do
+selectPublicUpcomingSocialEvents mCity mArtistPartyId startAfter limit = do
     eventTable <- getEscapedRawName "social_event"
     eventIdField <- getEscapedRawName "id"
     eventStartField <- getEscapedRawName "start_time"
     eventMetadataField <- getEscapedRawName "metadata"
     publicEventView <- getEscapedRawName "directory_public_event"
+    eventArtistTable <- getEscapedRawName "event_artist"
+    artistProfileTable <- getEscapedRawName "social_artist_profile"
     backendName <- T.toCaseFold <$> getRDBMS
     let eventIdColumn = eventTable <> "." <> eventIdField
+        -- Exact Party equality through the event/artist link; the view above
+        -- already restricts the candidate events, so this only narrows them.
+        (artistClause, artistValues) = case mArtistPartyId of
+            Nothing -> ("", [])
+            Just partyIdText ->
+                ( " AND EXISTS (SELECT 1 FROM "
+                    <> eventArtistTable
+                    <> " AS artist_link INNER JOIN "
+                    <> artistProfileTable
+                    <> " AS artist_profile ON artist_profile.id=artist_link.artist_id WHERE artist_link.event_id="
+                    <> eventIdColumn
+                    <> " AND artist_profile.party_id=?)"
+                , [PersistText partyIdText]
+                )
         eventStartColumn = eventTable <> "." <> eventStartField
         eventMetadataColumn = eventTable <> "." <> eventMetadataField
         metadataClause = visibleImportedMetadataClause backendName eventMetadataColumn
@@ -391,13 +414,14 @@ selectPublicUpcomingSocialEvents mCity startAfter limit = do
                 <> ">=? AND "
                 <> metadataClause
                 <> cityClause
+                <> artistClause
                 <> " ORDER BY "
                 <> eventStartColumn
                 <> " ASC,"
                 <> eventIdColumn
                 <> " ASC"
     query <- getConnLimitOffset (limit, 0) orderedQuery
-    rawSql query (toPersistValue startAfter : cityValues)
+    rawSql query (toPersistValue startAfter : cityValues ++ artistValues)
 
 collectMatchingRows ::
     Monad m =>
@@ -1987,6 +2011,19 @@ validateSocialEventsListOffset (Just rawOffset)
 maxSocialEventsListOffset :: Int
 maxSocialEventsListOffset = 10000
 
+-- | Party identifiers are rendered as decimal Int64 keys; accept only that shape
+-- so a filter cannot become a wildcard or a scan over unrelated text values.
+validateArtistPartyIdFilter :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateArtistPartyIdFilter mRaw = do
+    cleaned <- validateSocialEventsListFilter "partyId" mRaw
+    case cleaned of
+        Nothing -> Right Nothing
+        Just value
+            | T.length value <= 19 && T.all isDigit value && not (T.isPrefixOf "0" value) ->
+                Right (Just value)
+            | otherwise ->
+                Left err400{errBody = "partyId must be a positive integer party identifier"}
+
 validateSocialEventsListFilter :: T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
 validateSocialEventsListFilter _ Nothing = Right Nothing
 validateSocialEventsListFilter fieldName (Just rawFilter) =
@@ -3447,8 +3484,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             :<|> followArtist
             :<|> unfollowArtist
 
-    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
-    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mLimit mOffset = do
+    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
+    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mPartyIdFilter mLimit mOffset = do
         Env{..} <- ask
         when (isJust mLegacyGenreFilter) $
             throwError err400{errBody = "genre is obsolete; use the canonical genreId UUID parameter"}
@@ -3457,12 +3494,17 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         nameFilter <-
             either throwError pure $
                 fmap T.toCaseFold <$> validateSocialEventsListFilter "name" mNameFilter
+        -- Party relationship lookup is an exact indexed equality, so callers never
+        -- have to page through the whole catalog (bounded by the offset cap) to
+        -- find the one profile that belongs to a Party.
+        partyFilter <- either throwError pure (validateArtistPartyIdFilter mPartyIdFilter)
         let hasFilter = isJust nameFilter || isJust mGenreIdFilter
+            partyCondition = maybe [] (\partyIdText -> [ArtistProfilePartyId ==. Just partyIdText]) partyFilter
         rows <-
             liftIO $
                 runSqlPool
                     ( selectList
-                        []
+                        partyCondition
                         ( [Desc ArtistProfileCreatedAt]
                             ++ if hasFilter
                                 then [LimitTo 1000]
