@@ -63,6 +63,12 @@ test('music source projection runner alone selects real PostgreSQL backend valid
   });
 });
 
+test('music purchase asset query alone selects the real backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-purchase-asset-query.py']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
 test('music track search runner alone selects real PostgreSQL backend validation', () => {
   assert.deepEqual(classifyChangedFiles(['scripts/test-music-track-search.mjs']), {
     repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,

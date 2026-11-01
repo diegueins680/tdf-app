@@ -4701,7 +4701,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4752,7 +4752,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4821,7 +4821,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -8488,11 +8488,11 @@
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request. Purchase creation admits the rule only when its asset belongs to the offered release version and satisfies the same downloadable-asset predicate at the offer query snapshot; rejection creates no purchase.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "formal/system/music-purchase-entitlement.md",
-      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit.",
+      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit. At purchase offer admission, asset.release_version_id equals the offered release version and the existing shared downloadable-asset predicate is true.",
       "actors": [
         "Buyer",
         "Payment provider"
@@ -8555,17 +8555,19 @@
         "scripts/test-music-download-predicate.mjs",
         "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
         "scripts/test-music-purchase.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-music-purchase-asset-query.py"
       ],
-      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
-      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised. A 324-case extracted-SQL relation projection independently checks purchase/download admission agreement and requires two guard-removal counterexamples. Nine real-handler rejection cases are registered in the existing fully migrated PostgreSQL runner; new-candidate hosted execution is pending.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10. See formal/system/evidence/2026-10-27-music-purchase-asset/README.md for source-bound admission evidence and its exact limits.",
       "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
         "No live payment provider wiring for music_download has been verified.",
         "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
         "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
         "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
-        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established."
+        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established.",
+        "Purchase asset admission is sampled at the offer query, before the order transaction and provider execution. No guarantee against later withdrawal, storage loss or availability changes is established; publication reachability of all synthetic matrix combinations is not claimed."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9258,7 +9260,7 @@
     {
       "id": "SYS-WEB-LAYOUT-001",
       "title": "Public mobile layouts stay usable at 360px",
-      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping.",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "SYS",
       "actors": [
@@ -9299,7 +9301,7 @@
       "failure": "Layout degrades by wrapping rather than overflow.",
       "recovery": "Not applicable.",
       "observability": "Browser layout assertions in mobile-flow projects.",
-      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; user mobile radio minimization defect report 2026-10-28",
       "implementation": [
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -9330,7 +9332,7 @@
       "critical": false,
       "property": "NoSqueezeNoOverflow and LegibleControls",
       "contract": "formal/system/mobile-entry-ux.md",
-      "verification": "Layout jest tests and browser geometry/contrast assertions at 360px.",
+      "verification": "Layout jest tests and browser geometry/contrast assertions at 360px. Radio dock/panel minimization and restoration at 320, 360, 390 and 430px, pointer-event isolation and persisted visibility.",
       "evidence": "PublicBookingPage, RadioWidget layout and LiveSessionPublicPage tests; e2e mobile-layout-regressions.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
@@ -9493,8 +9495,8 @@
       "id": "EVT-DISCOVERY-001",
       "title": "One events entry in navigation and an upcoming-events carousel after login",
       "domain": "EVT",
-      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
-      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in.",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference. On /artista/:slugOrId and /a/:slugOrId, show every future publicly listable event belonging to the resolved artist first, in chronological order, followed by the general upcoming selection without duplicate events. The artist group is not subject to the eight-event general limit. Resolve the profile Party ID to social Artist relationships; never infer identity from a matching name or equal numeric IDs. If no artist dates exist or that read fails, retain the general agenda.",
+      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in. User request 2026-10-28: prioritize all future events of the corresponding artist on every artist profile.",
       "source": "tdf-hq-ui navigation and shells",
       "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
       "actors": [
@@ -9528,10 +9530,10 @@
         "Viewer's RSVP upserted with their showEventRsvpsOnProfile preference"
       ],
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
-      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
+      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
       "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
-      "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
+      "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
       "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
@@ -9543,13 +9545,18 @@
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
-        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx"
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
+        "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
-        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx"
+        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
+        "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
       "formalModels": [],
       "verification": "Client unit tests",
@@ -10753,7 +10760,8 @@
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/components/ArtistFansList.tsx"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -13564,6 +13572,82 @@
         "classification": "PARTIAL",
         "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
       }
+    },
+    {
+      "id": "EVT-REPORT-LINK-001",
+      "title": "Read-only event closeout accessible by an unguessable link",
+      "domain": "EVT",
+      "statement": "Serve the organizer-authorized PATCH CULTURE provisional financial closeout within the TDF application only to a complete matching capability; preserve its reconciliation qualifications and permit revocation and rotation without exposing accounting records.",
+      "authority": "Direct organizer instruction on 2026-10-27: the URL must be inside the application; implement what is necessary in the repository, continuing the request for Anyone who has the link privacy.",
+      "source": "docs/events/report-link-access.md",
+      "contract": "docs/events/report-link-access.md",
+      "actors": [
+        "Organizer",
+        "Recipient with report capability",
+        "Unauthenticated visitor"
+      ],
+      "preconditions": [
+        "The approved snapshot is deployed as authenticated ciphertext, with its key kept outside the public repository",
+        "A cryptographically random 32-byte capability is delivered separately to the organizer"
+      ],
+      "inputs": [
+        "HTTP method",
+        "Route capability",
+        "Enable binding",
+        "Expected SHA-256 digest binding"
+      ],
+      "state": {
+        "enabled": "Absent or exact true binding",
+        "capability": "SHA-256 digest and AES-256-GCM ciphertext; separately delivered 32-byte raw capability is the key",
+        "content": "Authenticated encrypted provisional snapshot, not a live ledger"
+      },
+      "allowedTransitions": [
+        "Matching canonical capability, successful authenticated decryption and enabled configuration -> GET HTML or empty successful HEAD",
+        "Disable or rotate -> former link denied on next request in that deployment",
+        "Malformed or missing capability -> generic 404"
+      ],
+      "forbiddenTransitions": [
+        "Publish snapshot in static assets or React bundles",
+        "Admit by predictable event ID, name, query string or session alone",
+        "Mutate ledger, payment, event or attendee data",
+        "Render snapshot for a revoked or incorrect capability",
+        "Publish plaintext snapshot or private editorial values in current public source, tests or documentation"
+      ],
+      "effects": [
+        "Read-only HTML response and protective HTTP headers"
+      ],
+      "authorization": "The canonical 256-bit random bearer capability is required at the edge for digest matching and AES-256-GCM authentication/decryption. Digest overrides cannot substitute a new key for resealing.",
+      "privacy": "No client analytics, index/listing, third-party resource, frame, script or referrer. Responses and redirects are no-store. Recipients may retain copies; provider URL logging and historical deployments remain operational boundaries. Earlier public PR revisions disclosed plaintext; this forward correction cannot erase public Git history or recipient copies.",
+      "concurrency": "Each request checks the current deployment configuration; no writes or mutable shared state.",
+      "idempotency": "Repeated reads have no business side effects.",
+      "failure": "Invalid capability/configuration, failed authentication, malformed or corrupted payload -> generic 404; unsupported methods -> 405. Malformed report paths do not fall through to the SPA.",
+      "recovery": "Disable or reseal with a fresh capability and redeploy every serving environment; update any digest override and retire old previews separately.",
+      "observability": "Node Request/Response tests, installed local Pages worker and browser inspection; never log a real token in test output.",
+      "implementation": [
+        "functions/_shared/event-report-data.mjs",
+        "functions/_shared/event-report.mjs",
+        "functions/reportes/eventos/[token].js",
+        "functions/_middleware.js",
+        "functions/_shared/event-report-crypto.mjs",
+        "scripts/seal-event-report.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/event-preview.test.mjs",
+        "scripts/__tests__/event-report-crypto.test.mjs",
+        "scripts/__tests__/fixtures/event-report.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Finite handler and middleware boundary checks; not a cryptographic proof or a proof of all hosting/CDN configurations.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Handler implementation and explicit negative access tests exist; canonical hosted deployment and provider cache/log behavior require release verification."
+      },
+      "property": "No report content is returned without an enabled matching capability; a valid link confers read-only access to the authorized provisional snapshot only.",
+      "verification": "Independent Node/OpenSSL ciphertext fixtures, Worker WebCrypto authentication and malformed-input controls, CLI disclosure checks, actual Request/Response access tests and hosted Pages verification before release.",
+      "evidence": "23 focused local crypto/event/transaction tests pass with fictional fixtures; current encrypted source-bound hosted deployment evidence remains pending."
     },
     {
       "id": "SYS-WEBTORRENT-BROWSER-001",
