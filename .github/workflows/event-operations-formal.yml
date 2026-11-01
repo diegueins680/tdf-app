@@ -203,6 +203,9 @@ jobs:
       - name: Check public artist visibility SQL on isolated PostgreSQL
         run: sh scripts/test-artist-visibility-postgres.sh
 
+      - name: Check artist tip idempotency migration on isolated PostgreSQL
+        run: sh scripts/test-artist-tip-idempotency-postgres.sh
+
   postgres-api:
     runs-on: ubuntu-latest
     timeout-minutes: 10

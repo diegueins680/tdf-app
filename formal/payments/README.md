@@ -49,7 +49,7 @@ conditional write per delivery. It is not mechanically refined.
 
 ## Not covered
 
-- Request-level idempotency of `POST /fans/artists/{artistId}/tips`. A retry creates another pending row and PaymentIntent, which charges nothing unless the client confirms it.
+- Request-level idempotency of `POST /fans/artists/{artistId}/tips` is now provided by the optional `Idempotency-Key` header (`TDF.Commerce.ArtistTip.decideTipReplay`, unique index `uq_artist_tip_idempotency`); the concurrent two-request case is covered by review and the unique index, not by a database test.
 - Ticket orders, which have their own path (`EVT-TICKET-001`).
 - A fully migrated database for the public-listing query, which is tested on a minimal PostgreSQL fixture with the migrated column types (`scripts/test-artist-visibility-postgres.sh`).
 

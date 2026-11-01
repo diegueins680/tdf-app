@@ -1074,6 +1074,51 @@
       "conflict": "Public /fans/artists, /artists and /fans/clubs reads returned every artist profile, including those whose directory identity is private, draft, moderated, suspended or merged, while the directory hides them and tips (AUTHORITY-090) refuse them.",
       "authority": "Product owner decision 2026-11-01: apply the directory visibility rule to the public artist reads.",
       "resolution": "ART-PUBLIC-VISIBILITY-001. One shared rule in TDF.Profiles.ArtistVisibility serves tips and every public artist read; hidden artists answer like absent ones. Admin and owner reads are unchanged."
+    },
+    {
+      "id": "AUTHORITY-093",
+      "sources": [
+        "formal/system/audit-2026-10-31-phase1.md",
+        "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+      ],
+      "conflict": "The Domo quote machine allows deposit_paid, in_progress and balance_due to cancel with money already collected, but no source states what happens to that money (audit F-15, Q5).",
+      "authority": "Product owner accepted the audit recommendation on 2026-11-01.",
+      "resolution": "Deposit refund follows lead time to the event: more than 30 days, full refund; 7 to 30 days, 50% retained; under 7 days or cancellation by the customer once in progress, fully retained. Cancellation by TDF always refunds in full. Collected balance (balance_due -> cancelled) is refunded in full because the service was not delivered. The policy is a versioned database table, not code constants; cancellation creates the refund request for the computed amount in the same transaction so no money is left unaccounted. Implementation pending as a separate small PR with migration (PAY-DOMO-CANCEL-001)."
+    },
+    {
+      "id": "AUTHORITY-094",
+      "sources": [
+        "formal/system/audit-2026-10-31-phase1.md",
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "conflict": "Any user with social-inbox access (including Reception) who connects a page by OAuth becomes the platform's most recent connected delivery account, and connecting an Instagram account already bound to another party rebinds it silently (audit F-19, Q6).",
+      "authority": "Product owner accepted the audit recommendation on 2026-11-01.",
+      "resolution": "Only environment-configured accounts and accounts an administrator explicitly designates may send platform messages or run backfills. OAuth-connected accounts are marked user-owned and serve only that user's own synchronization. Rebinding an account another party connected requires the Admin role and is audited; any other user receives 409. Implementation pending as a separate small PR with migration (AUTH-SOCIAL-OAUTH-001 refinement)."
+    },
+    {
+      "id": "AUTHORITY-095",
+      "sources": [
+        "formal/system/audit-2026-10-31-phase1.md",
+        "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Commerce/CourseCheckout.hs"
+      ],
+      "conflict": "Basis-point deposits can round to 0 (Domo, then rejected) or equal the whole total (courses at or below 50.00) (audit F-16, F-20).",
+      "authority": "Product owner accepted the audit recommendation on 2026-11-01.",
+      "resolution": "A configurable absolute deposit minimum (default 5.00) applies; when the computed deposit exceeds 90% of the total, the quote or course switches to full payment instead of a nominal deposit. No quote is rejected because of rounding alone. Implementation pending with the deposit policy configuration."
+    },
+    {
+      "id": "AUTHORITY-096",
+      "sources": [
+        "formal/system/audit-2026-10-31-phase1.md",
+        ".github/workflows/ci-safe-install.yml",
+        "package.json"
+      ],
+      "conflict": "CI Safe Install fails on main and on PR #691 because npm audit reports GHSA-2p57-rm9w-gvfp in ip via webtorrent (development dependency) (audit F-21).",
+      "authority": "Product owner accepted the audit recommendation on 2026-11-01.",
+      "resolution": "Update or isolate webtorrent in its own PR; the audit gate is not weakened."
     }
   ]
 }

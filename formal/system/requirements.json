@@ -13579,7 +13579,7 @@
     {
       "id": "PAY-TIP-001",
       "title": "Public artist tips: addressed artist, listing admission and recorded outcome",
-      "statement": "POST /fans/artists/{artistId}/tips addresses the artist by PartyId, as every sibling /fans/artists route and the public apArtistId do. A tip is admitted only for an artist the public directory currently lists (its directory identity is published, public, allowed and not merged, or it has no directory identity) and whose payout account is complete; funds are routed only to that artist's own connected account with a 10% platform fee rounded down. An unavailable provider stores nothing. Provider error text is never returned to the caller. A recorded tip outcome changes only from pending, by a conditional update, so duplicated, reordered or concurrent webhook deliveries never replace it.",
+      "statement": "POST /fans/artists/{artistId}/tips addresses the artist by PartyId, as every sibling /fans/artists route and the public apArtistId do. A tip is admitted only for an artist the public directory currently lists (its directory identity is published, public, allowed and not merged, or it has no directory identity) and whose payout account is complete; funds are routed only to that artist's own connected account with a 10% platform fee rounded down. An unavailable provider stores nothing. Provider error text is never returned to the caller. An optional Idempotency-Key (1..128 ASCII letters, digits, hyphens or underscores) binds the request fingerprint: the same key with the same request replays the stored tip and its PaymentIntent (client secret retrieved from Stripe, never stored), the same key with a different request, a failed attempt or an attempt without a PaymentIntent is a 409, and concurrent duplicates are serialized by a unique index per artist and key. A recorded tip outcome changes only from pending, by a conditional update, so duplicated, reordered or concurrent webhook deliveries never replace it.",
       "domain": "PAY",
       "authority": "Product owner decision 2026-10-31 (AUTHORITY-090): tips only for listed artists; no business minimum or maximum beyond the provider limit. Sibling route semantics and ArtistProfileDTO.apArtistId fix the identifier. PRIV-ERROR-001 forbids rendering provider payloads.",
       "source": "formal/system/audit-2026-10-31-phase1.md (F-06, F-07); formal/payments/README.md; AUTHORITY-090",
@@ -13625,12 +13625,15 @@
       "authorization": "Public intake (AUTH-PUBLIC-001 boundary public-intake); a hidden artist answers exactly like an absent one (404).",
       "privacy": "Provider error text is logged server-side only; the caller receives a fixed 502 message.",
       "concurrency": "Webhook outcome writes are conditional UPDATE ... WHERE status='pending'; formal/payments/StripeIntentOutcome.tla proves Safe inductively for up to six concurrent deliveries with Apalache.",
-      "idempotency": "Webhook events are deduplicated by event id and outcome writes are idempotent. Request-level idempotency is not provided: a retried request creates another pending row and PaymentIntent, which charges nothing unless the client confirms it.",
+      "idempotency": "Request-level: Idempotency-Key per artist profile, unique partial index uq_artist_tip_idempotency, request fingerprint (SHA-256 of length-prefixed artist, amount, currency and optional fields) compared on replay; replay never creates a new PaymentIntent. Webhook events are deduplicated by event id and outcome writes are idempotent.",
       "failure": "Unconfigured provider: 503 before any write. Provider creation error: row marked failed, fixed 502. Unparseable provider response: row stays pending without intent id.",
       "recovery": "Pending rows without an intent id or never confirmed remain auditable; no automatic charge.",
       "observability": "Tip id, artist party id and artist profile id in PaymentIntent metadata; provider errors logged with the tip id.",
       "implementation": [
+        "tdf-hq/sql/2026-11-01_artist_tip_idempotency.sql",
+        "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
         "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
@@ -13645,7 +13648,8 @@
         "tdf-hq/test/Spec.hs",
         "scripts/verify-inductive-proofs.sh",
         "scripts/test-artist-visibility-sql.py",
-        "scripts/test-artist-visibility-postgres.sh"
+        "scripts/test-artist-visibility-postgres.sh",
+        "scripts/test-artist-tip-idempotency-postgres.sh"
       ],
       "formalModels": [
         "formal/payments/StripeIntentOutcome.tla",
@@ -13655,13 +13659,13 @@
       ],
       "confidence": "High for the pure admission/fee rules, for the outcome-write protocol as modelled, and for the visibility SQL on PostgreSQL (eight scenarios plus a mutation control); the handler-to-model correspondence is established by review.",
       "ambiguity": [
-        "Request-level idempotency (Idempotency-Key) needs a schema change and remains open.",
         "The model abstracts each delivery to one read and one write; the event-id dedupe insert is not modelled because it does not guard dispatch.",
-        "The visibility SQL is tested on a minimal fixture with the migrated column types, not on the fully migrated schema."
+        "The visibility SQL is tested on a minimal fixture with the migrated column types, not on the fully migrated schema.",
+        "The replay path is covered by pure-rule properties and review; no database-backed test drives two concurrent keyed requests."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unbounded model proof, pure-rule properties and PostgreSQL visibility checks exist; request-level idempotency and a fully migrated handler test remain."
+        "reason": "Unbounded model proof, pure-rule properties and PostgreSQL visibility checks exist; a database-backed concurrent keyed-request test remains."
       }
     },
     {
@@ -14237,6 +14241,145 @@
       "conformance": {
         "classification": "SPECIFICATION AMBIGUITY",
         "reason": "Implementation observed; product policy on account rebinding and delivery-channel selection is undecided (Q6)."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "critical": true,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "observability": "Not applicable.",
+      "recovery": "Not applicable.",
+      "privacy": "Not applicable.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Deterministic.",
+      "id": "PAY-DOMO-CANCEL-001",
+      "title": "Domo cancellation refunds follow the approved versioned policy",
+      "statement": "Cancelling a Domo quote after money was collected refunds according to the single approved domo_cancellation_policy version: cancellation by TDF refunds everything collected; customer cancellation refunds the collected balance in full and the deposit by lead time (at or above full_refund_min_days: all; at or above partial_refund_min_days: deposit minus partial_retained_bps rounded half up; below, or once the event is in progress: nothing). The refund is within 0..collected, the deposit is conserved (retained + refunded = deposit), and cancelling earlier never refunds less. Approved policy versions are immutable except for retirement; exactly one version is approved at a time.",
+      "domain": "PAY",
+      "authority": "AUTHORITY-093 (owner accepted the audit recommendation on 2026-11-01).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-15, Q5); AUTHORITY-093",
+      "property": "refund in 0..deposit+balance; TDF cancel => refund = deposit+balance; retained+refunded = deposit; retentionBps2 <= retentionBps => refund2 >= refund; proved with Z3 over unbounded integers.",
+      "contract": "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
+      "actors": [
+        "Customer",
+        "TDF staff",
+        "Refund reconciliation"
+      ],
+      "preconditions": [
+        "An approved domo_cancellation_policy row (version 1 seeded by the migration)."
+      ],
+      "inputs": [
+        "canceller",
+        "in-progress flag",
+        "lead days",
+        "collected deposit and balance"
+      ],
+      "state": {
+        "domo_cancellation_policy.status": [
+          "draft",
+          "approved",
+          "retired"
+        ]
+      },
+      "allowedTransitions": [
+        "draft -> approved (sets approved_at)",
+        "approved -> retired (row otherwise immutable)",
+        "a new approved version only after the previous is retired"
+      ],
+      "forbiddenTransitions": [
+        "two approved versions at once",
+        "any change to an approved or retired row other than retirement",
+        "retired -> approved"
+      ],
+      "effects": [
+        "Pure refund computation; the cancellation transaction creates the refund request for exactly this amount (wiring pending: no cancellation endpoint exists yet)."
+      ],
+      "authorization": "Cancellation endpoints (pending) decide who may cancel; the policy itself is data approved by an administrator.",
+      "failure": "Invalid policy values are rejected by validateDomoCancellationPolicy and by table CHECKs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
+        "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql"
+      ],
+      "verification": "Z3 lemmas (refund within collected, conservation, monotonicity, full/zero retention) with witnesses and controls; QuickCheck properties on the real function; PostgreSQL probes of the policy table invariants (single approved version, immutability, retirement).",
+      "evidence": "formal/payments/domo_cancellation_refund.py output; tdf-hq-test DomoCancellationSpec run.",
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs",
+        "formal/payments/domo_cancellation_refund.py"
+      ],
+      "confidence": "High for the policy arithmetic and the table invariants; the cancellation flow that applies it is not implemented yet (no Domo cancellation endpoint exists), so no runtime refund is created by this change.",
+      "ambiguity": [
+        "No Domo cancellation endpoint exists; the policy is specified and seeded but not yet applied by any handler.",
+        "Lead time is measured in whole days before the event start in the venue time zone; the day boundary rule is not yet fixed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Policy, arithmetic proofs and table exist; the cancellation flow applying them remains to be built."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "critical": true,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "observability": "Not applicable.",
+      "recovery": "Not applicable.",
+      "privacy": "Not applicable.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Deterministic.",
+      "id": "PAY-DEPOSIT-POLICY-001",
+      "title": "Deposits have an absolute minimum and switch to full payment above a share",
+      "statement": "For Domo quotes and course checkouts, a computed basis-point deposit is raised to the configured absolute minimum (default 5.00) and, when the raised deposit would reach the total or exceed the configured share of it (default 90%), the checkout charges the full total instead of a nominal deposit. No quote is rejected because of rounding alone.",
+      "domain": "PAY",
+      "authority": "AUTHORITY-095 (owner accepted the audit recommendation on 2026-11-01).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-16, F-20); AUTHORITY-095",
+      "property": "For total > 0: outcome is DepositOf d with 1 <= d <= total, or FullPaymentNow exactly when the raised deposit reaches the total or exceeds the share.",
+      "contract": "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
+      "actors": [
+        "Quote requester",
+        "Course registrant"
+      ],
+      "preconditions": [
+        "Positive total from the price computation."
+      ],
+      "inputs": [
+        "total",
+        "computed deposit"
+      ],
+      "state": {
+        "depositOutcome": [
+          "deposit",
+          "full_payment"
+        ]
+      },
+      "allowedTransitions": [
+        "computed deposit -> raised to minimum -> deposit or full payment"
+      ],
+      "forbiddenTransitions": [
+        "a deposit of zero",
+        "a deposit above the total",
+        "a 'deposit' above the configured share of the total"
+      ],
+      "effects": [
+        "Pure computation; wiring into DomoQuoteCheckout and CourseCheckout pending."
+      ],
+      "authorization": "Not applicable.",
+      "failure": "Invalid policy values rejected.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/DepositPolicy.hs"
+      ],
+      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
+      "evidence": "tdf-hq-test DepositPolicySpec run.",
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs"
+      ],
+      "confidence": "High for the pure rule; not yet applied by the Domo and course handlers.",
+      "ambiguity": [
+        "Wiring into the Domo rate card and course checkout policy (and their immutable snapshots) is pending; until then calculateDomoQuote still rejects a zero deposit and courses may charge a deposit equal to the total."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule specified and tested; handler wiring pending."
       }
     }
   ]
