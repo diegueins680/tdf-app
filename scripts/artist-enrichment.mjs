@@ -611,6 +611,8 @@ export function isTdfManagedImageUrl(rawUrl) {
       || host.endsWith('.googleusercontent.com')
       || host === 'tdf-hq.fly.dev'
       || host === 'api.tdfrecords.net'
+      || host === 'tdfrecords.net'
+      || host === 'www.tdfrecords.net'
       || host === 'tdfrecords.com'
       || host.endsWith('.tdfrecords.com');
   } catch {
@@ -623,9 +625,9 @@ async function persistHotlinkReview(api, profile) {
   if (!url || isTdfManagedImageUrl(url) || !/^https?:\/\//i.test(url)) return;
   await persistSource(api, profile, {
     url,
-    type: 'link_validation_broken',
+    type: 'media_rights_review',
     fields: ['heroImageUrl'],
-    attribution: JSON.stringify({ valid: false, reason: 'third_party_hotlink_requires_authorized_ingestion' }),
+    attribution: JSON.stringify({ rightsStatus: 'unconfirmed', reason: 'third_party_hotlink_requires_authorized_ingestion' }),
   });
 }
 

@@ -1,0 +1,14 @@
+{
+  "executionContext": "main session normal tools; no permission override",
+  "startedAt": 1793246596.683715,
+  "ownedAliases": [
+    "/private/tmp/tdf-provider-evidence-actualmain-20261028/node_modules",
+    "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/node_modules"
+  ],
+  "browserExit": 1,
+  "previewPid": 45822,
+  "browserPid": 45857,
+  "finishedAt": 1793246619.759426,
+  "previewStopped": true,
+  "ownedAliasesRemoved": true
+}

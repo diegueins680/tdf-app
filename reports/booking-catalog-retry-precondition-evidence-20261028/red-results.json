@@ -1,0 +1,314 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red.config.mjs",
+    "rootDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red",
+        "testIgnore": [
+          "/music-player-native\\.spec\\.mjs$/",
+          "/music-player-integration\\.spec\\.mjs$/",
+          "/community-discovery\\.spec\\.mjs$/"
+        ],
+        "testMatch": [
+          "booking-catalog-recovery.spec.mjs"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox-critical",
+        "name": "firefox-critical",
+        "testDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red",
+        "testIgnore": [
+          "/music-player-native\\.spec\\.mjs$/",
+          "/music-player-integration\\.spec\\.mjs$/",
+          "/community-discovery\\.spec\\.mjs$/"
+        ],
+        "testMatch": [
+          "booking-catalog-recovery.spec.mjs"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "env": {
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED": "true",
+        "VITE_ACCOUNT_DELETION_QUEUE_ENABLED": "true"
+      },
+      "command": "npm exec --workspace=tdf-hq-ui -- vite preview --host 127.0.0.1 --port 4186 --strictPort",
+      "url": "http://127.0.0.1:4186/inicio",
+      "reuseExistingServer": false,
+      "timeout": 300000,
+      "cwd": "/private/tmp/tdf-patch-report-predecessor-636-20261028"
+    }
+  },
+  "suites": [
+    {
+      "title": "booking-catalog-recovery.spec.mjs",
+      "file": "booking-catalog-recovery.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10197,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\u001b[22m\n\n    at /private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs:58:27",
+                    "location": {
+                      "file": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs",
+                      "column": 27,
+                      "line": 58
+                    },
+                    "snippet": "  56 |     releaseInitial();\n  57 |     const warning = page.getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' });\n> 58 |     await expect(warning).toBeVisible();\n     |                           ^\n  59 |     await expect(name).toBeDisabled();\n  60 |     const retryButton = warning.getByRole('button', { name: 'Reintentar catálogo', exact: true });\n  61 |     await expect(retryButton).toBeEnabled();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs",
+                        "column": 27,
+                        "line": 58
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\u001b[22m\n\n\n  56 |     releaseInitial();\n  57 |     const warning = page.getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' });\n> 58 |     await expect(warning).toBeVisible();\n     |                           ^\n  59 |     await expect(name).toBeDisabled();\n  60 |     const retryButton = warning.getByRole('button', { name: 'Reintentar catálogo', exact: true });\n  61 |     await expect(retryButton).toBeEnabled();\n    at /private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs:58:27"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:53:11.778Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-chromium-desktop/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-chromium-desktop/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-chromium-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-chromium-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs",
+                    "column": 27,
+                    "line": 58
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d20329362b05903e166e-ede142bd762ca6833aa9",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-critical",
+              "projectName": "firefox-critical",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 12119,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\u001b[22m\n\n    at /private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs:58:27",
+                    "location": {
+                      "file": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs",
+                      "column": 27,
+                      "line": 58
+                    },
+                    "snippet": "  56 |     releaseInitial();\n  57 |     const warning = page.getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' });\n> 58 |     await expect(warning).toBeVisible();\n     |                           ^\n  59 |     await expect(name).toBeDisabled();\n  60 |     const retryButton = warning.getByRole('button', { name: 'Reintentar catálogo', exact: true });\n  61 |     await expect(retryButton).toBeEnabled();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs",
+                        "column": 27,
+                        "line": 58
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' })\u001b[22m\n\n\n  56 |     releaseInitial();\n  57 |     const warning = page.getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' });\n> 58 |     await expect(warning).toBeVisible();\n     |                           ^\n  59 |     await expect(name).toBeDisabled();\n  60 |     const retryButton = warning.getByRole('button', { name: 'Reintentar catálogo', exact: true });\n  61 |     await expect(retryButton).toBeEnabled();\n    at /private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs:58:27"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:53:24.763Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-firefox-critical/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-firefox-critical/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-firefox-critical/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red-artifacts/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-firefox-critical/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/red/booking-catalog-recovery.spec.mjs",
+                    "column": 27,
+                    "line": 58
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d20329362b05903e166e-7a6882261c874e4225ea",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-critical",
+              "projectName": "firefox-critical",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5532,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:53:40.946Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d20329362b05903e166e-55e390d0428e8b04968b",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-28T17:53:08.300Z",
+    "duration": 40342.636,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

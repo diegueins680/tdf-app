@@ -1,0 +1,109 @@
+{
+  "stats": {
+    "startTime": "2026-10-26T22:58:27.742Z",
+    "duration": 77765.86600000001,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 11245,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3114,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12036,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4092,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12759,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4945,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 13772,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3807,
+          "errors": []
+        }
+      ]
+    }
+  ],
+  "scope": "Synthetic business/session APIs; external traffic and all business writes blocked. No physical-device, human, provider, backend persistence or production claim."
+}

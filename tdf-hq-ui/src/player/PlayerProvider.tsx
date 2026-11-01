@@ -263,6 +263,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const sourceGenerationRef = useRef(0);
   const playAttemptRef = useRef(0);
   const loadedSourceRef = useRef<{ trackId: string; url: string; preview?: boolean; quality: PlayerQuality } | null>(null);
+  const pendingPositionRef = useRef<{ generation: number; trackId: string; url: string; position: number } | null>(null);
   const lastContinuousPositionRef = useRef(0);
   const listenedSinceProgressRef = useRef(0);
   const currentTrack = queue.currentIndex >= 0 ? queue.tracks[queue.currentIndex] ?? null : null;
@@ -331,6 +332,10 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       return;
     }
     autoplayRef.current = true;
+    if (pendingPositionRef.current?.generation === sourceGenerationRef.current) {
+      setStatus('loading');
+      return;
+    }
     if (!audio.getAttribute('src') || audio.error) {
       retryRef.current = 0; // explicit retry starts a new bounded attempt
       setStatus('loading');
@@ -375,6 +380,19 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     dispatchQueue({ type: 'select', index });
   }, [dispatchQueue, play, queue.currentIndex]);
 
+  const seek = useCallback((seconds: number) => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(seconds)) return;
+    const nextTime = Math.min(Math.max(seconds, 0), Number.isFinite(audio.duration) ? audio.duration : seconds);
+    const pending = pendingPositionRef.current;
+    if (pending?.generation === sourceGenerationRef.current) pending.position = nextTime;
+    else audio.currentTime = nextTime;
+    if (currentTrack) positionsRef.current[currentTrack.id] = nextTime;
+    lastContinuousPositionRef.current = nextTime;
+    setCurrentTime(nextTime);
+    if (currentTrack) emitPlayerEvent('seek', currentTrack, nextTime);
+  }, [currentTrack]);
+
   const next = useCallback(() => {
     const nextIndex = nextQueueIndex(queue);
     if (nextIndex < 0) {
@@ -382,20 +400,18 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       return;
     }
     if (nextIndex === queue.currentIndex) {
-      if (audioRef.current) audioRef.current.currentTime = 0;
-      setCurrentTime(0);
+      seek(0);
       void play();
       return;
     }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index: nextIndex });
-  }, [dispatchQueue, pause, play, queue]);
+  }, [dispatchQueue, pause, play, queue, seek]);
 
   const previous = useCallback(() => {
     const audio = audioRef.current;
-    if (audio && audio.currentTime > 3) {
-      audio.currentTime = 0;
-      setCurrentTime(0);
+    if (audio && (pendingPositionRef.current?.position ?? audio.currentTime) > 3) {
+      seek(0);
       return;
     }
     const previousIndex = previousQueueIndex(queue);
@@ -403,7 +419,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       autoplayRef.current = true;
       dispatchQueue({ type: 'select', index: previousIndex });
     }
-  }, [dispatchQueue, queue]);
+  }, [dispatchQueue, queue, seek]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -415,6 +431,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       // pause/load can deliver old timeupdate events while the next track's
       // signed URL is pending. Never attribute that position/listening to it.
       if (!loadedSource || loadedSource.trackId !== track?.id || audio.currentSrc !== loadedSource.url) return;
+      if (pendingPositionRef.current?.generation === sourceGenerationRef.current) return;
       const position = audio.currentTime;
       const delta = position - lastContinuousPositionRef.current;
       lastContinuousPositionRef.current = position;
@@ -449,12 +466,12 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     const ownsNativeSource = () => loadedSourceRef.current?.trackId === currentTrack?.id
       && loadedSourceRef.current?.url === audio.currentSrc;
     const handlePlaying = () => {
-      if (!ownsNativeSource() || !autoplayRef.current || audio.paused) return;
+      if (!ownsNativeSource() || pendingPositionRef.current || !autoplayRef.current || audio.paused) return;
       lastContinuousPositionRef.current = audio.currentTime;
       setStatus('playing');
     };
     const handleWaiting = () => {
-      if (!ownsNativeSource() || !autoplayRef.current || audio.paused) return;
+      if (!ownsNativeSource() || pendingPositionRef.current || !autoplayRef.current || audio.paused) return;
       setStatus('buffering');
       const track = queue.tracks[queue.currentIndex];
       if (track) emitPlayerEvent('buffering', track, audio.currentTime);
@@ -464,7 +481,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       setStatus((current) => current === 'error' || current === 'unavailable' || current === 'loading' ? current : 'paused');
     };
     const handleEnded = () => {
-      if (!ownsNativeSource()) return;
+      if (!ownsNativeSource() || pendingPositionRef.current) return;
       const track = queue.tracks[queue.currentIndex];
       if (track) emitPlayerEvent('complete', track, audio.currentTime, {
         listenedDeltaMs: Math.round(listenedSinceProgressRef.current),
@@ -492,7 +509,10 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       // media. Reauthorization remains bounded and may deny access outright.
       const retryable = !audio.error || audio.error.code === 2
         || (Boolean(source?.assetId) && audio.error.code === 4);
-      if (retryable && currentTrack && scheduleRecovery(currentTrack, audio.currentTime, generation)) return;
+      const position = pendingPositionRef.current?.generation === generation
+        ? pendingPositionRef.current.position : audio.currentTime;
+      pendingPositionRef.current = null;
+      if (retryable && currentTrack && scheduleRecovery(currentTrack, position, generation)) return;
       autoplayRef.current = false;
       audio.pause();
       setStatus('error');
@@ -548,6 +568,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     const generation = sourceGenerationRef.current + 1;
     sourceGenerationRef.current = generation;
     loadedSourceRef.current = null;
+    pendingPositionRef.current = null;
+    let removePreparationListener: () => void = () => undefined;
     lastContinuousPositionRef.current = 0;
     listenedSinceProgressRef.current = 0;
     setCurrentTime(0);
@@ -586,13 +608,34 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         loadedSourceRef.current = { trackId: currentTrack.id, url: audio.src,
           preview: resolved.source.preview, quality: resolved.source.quality };
         setResolvedQuality(resolved.source.quality);
-        audio.load();
         const storedPosition = positionsRef.current[currentTrack.id] ?? 0;
         const savedPosition = resolved.source.preview && currentTrack.previewEndMs
           && storedPosition * 1000 >= currentTrack.previewEndMs ? 0 : storedPosition;
-        if (savedPosition > 0) audio.currentTime = savedPosition;
+        if (savedPosition > 0) {
+          const pending = { generation, trackId: currentTrack.id, url: audio.src, position: savedPosition };
+          pendingPositionRef.current = pending;
+          const restorePosition = () => {
+            if (controller.signal.aborted || generation !== sourceGenerationRef.current
+              || pendingPositionRef.current !== pending || loadedSourceRef.current?.trackId !== pending.trackId
+              || loadedSourceRef.current.url !== pending.url || audio.currentSrc !== pending.url
+              || audio.readyState < HTMLMediaElement.HAVE_METADATA) return;
+            // Nonzero default-position seeks before metadata can stall WebKit
+            // after a rendition change. Restore only the current source, once.
+            audio.currentTime = pending.position;
+            positionsRef.current[pending.trackId] = pending.position;
+            lastContinuousPositionRef.current = pending.position;
+            setCurrentTime(pending.position);
+            pendingPositionRef.current = null;
+            removePreparationListener();
+            if (autoplayRef.current) void play();
+            else setStatus('paused');
+          };
+          audio.addEventListener('loadedmetadata', restorePosition);
+          removePreparationListener = () => { audio.removeEventListener('loadedmetadata', restorePosition); };
+        }
+        audio.load();
         emitPlayerEvent('quality_selected', currentTrack, savedPosition, { quality: resolved.source.quality, automatic: quality === 'auto' });
-        if (autoplayRef.current) void play();
+        if (!(savedPosition > 0) && autoplayRef.current) void play();
       } catch (caught) {
         if (generation !== sourceGenerationRef.current) return;
         const httpStatus = caught && typeof caught === 'object' && 'status' in caught ? caught.status : null;
@@ -605,7 +648,11 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         logger.warn('Global player could not refresh asset authorization', caught);
       }
     })();
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      removePreparationListener();
+      if (pendingPositionRef.current?.generation === generation) pendingPositionRef.current = null;
+    };
   }, [cancelRetry, candidates, currentTrack, play, quality, scheduleRecovery, source, sourceRefresh]);
 
   useEffect(() => {
@@ -653,7 +700,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     const handlers: Partial<Record<MediaSessionAction, MediaSessionActionHandler>> = {
       play: () => { void play(); }, pause, previoustrack: previous, nexttrack: next,
       seekto: (details) => {
-        if (audioRef.current && details.seekTime !== undefined) audioRef.current.currentTime = details.seekTime;
+        if (details.seekTime !== undefined) seek(details.seekTime);
       },
     };
     for (const [action, handler] of Object.entries(handlers)) {
@@ -669,7 +716,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         }
       });
     };
-  }, [currentTrack, next, pause, play, previous]);
+  }, [currentTrack, next, pause, play, previous, seek]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -763,15 +810,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     pause,
     next,
     previous,
-    seek: (seconds) => {
-      const audio = audioRef.current;
-      if (!audio || !Number.isFinite(seconds)) return;
-      const nextTime = Math.min(Math.max(seconds, 0), Number.isFinite(audio.duration) ? audio.duration : seconds);
-      audio.currentTime = nextTime;
-      lastContinuousPositionRef.current = nextTime;
-      setCurrentTime(nextTime);
-      if (currentTrack) emitPlayerEvent('seek', currentTrack, nextTime);
-    },
+    seek,
     setVolume: (nextVolume) => updateVolume(Math.min(Math.max(nextVolume, 0), 1)),
     setMuted: updateMuted,
     setQuality: updateQuality,
@@ -779,7 +818,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     setRepeat: (mode) => dispatchQueue({ type: 'repeat', mode }),
   }), [
     currentTime, currentTrack, duration, error, muted, next, pause, play, playTrack, previous,
-    quality, queue, resolvedQuality, selectTrack, status, volume, dispatchQueue, updateMuted, updateQuality, updateVolume,
+    quality, queue, resolvedQuality, seek, selectTrack, status, volume, dispatchQueue, updateMuted, updateQuality, updateVolume,
   ]);
 
   return (

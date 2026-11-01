@@ -1,0 +1,861 @@
+{
+  "schemaVersion": 3,
+  "status": "PARTIAL_ENVIRONMENT",
+  "head": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "currentSpecSha256": "74b1f2c2f0d521efc31e20fbf6a015fcf4f7eb80b4c93e2ba7cfeb9701927042",
+  "observedAt": "2026-10-26T23:30:29.890615+00:00",
+  "source": {
+    "pre": {
+      "observedAt": "2026-10-26T23:25:31.315021+00:00",
+      "head": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+      "files": {
+        "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+        "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+        "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+        "playwright.config.mjs": "0576069d58c4deb2a53222843ea01ebcaa3d636e8327253746b09a5b9fe96df7",
+        "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+        "e2e/web/music-search-native.spec.mjs": "74b1f2c2f0d521efc31e20fbf6a015fcf4f7eb80b4c93e2ba7cfeb9701927042",
+        "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+        "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
+        "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+        "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+        "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+      }
+    },
+    "post": {
+      "observedAt": "2026-10-26T23:30:29.890615+00:00",
+      "head": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+      "files": {
+        "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+        "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+        "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+        "playwright.config.mjs": "0576069d58c4deb2a53222843ea01ebcaa3d636e8327253746b09a5b9fe96df7",
+        "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+        "e2e/web/music-search-native.spec.mjs": "74b1f2c2f0d521efc31e20fbf6a015fcf4f7eb80b4c93e2ba7cfeb9701927042",
+        "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+        "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
+        "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+        "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+        "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+      }
+    },
+    "all20Identical": true,
+    "priorQualifiedSpecSha256": "385d8a55f51ff61cb75cf5cb8c769ef9e5f2cbc859cf433db881472700520695",
+    "change": "ONLY2test-title annotations add@mobile-flow; removing those tags exactly reconstructs prior source bytes; other19inputs identical",
+    "annotationPatch": "/private/tmp/tdf-music-search-native-v3-20261026/annotation-only.patch",
+    "runPlan": "/private/tmp/tdf-music-search-native-v3-20261026/run-plan.json"
+  },
+  "execution": {
+    "runBy": "root",
+    "session": 96663,
+    "actualExitCode": 1,
+    "exitMarker": "/private/tmp/tdf-music-search-native-v3-20261026/root-execution.exit",
+    "stats": {
+      "startTime": "2026-10-26T23:26:42.798Z",
+      "duration": 114340.363,
+      "expected": 5,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "passed": 5,
+    "failed": 1,
+    "skipped": 0,
+    "flaky": 0,
+    "retries": 0,
+    "cases": [
+      {
+        "title": "@critical @mobile-flow PW-MUSIC-SEARCH-NATIVE-01 plays the exact matched recording and retains its real decoder across release navigation",
+        "project": "chromium-desktop",
+        "status": "passed",
+        "durationMs": 7077,
+        "errors": [],
+        "attachments": [
+          {
+            "name": "music-search-native-boundary.json",
+            "contentType": "application/json",
+            "path": null,
+            "pathExists": null,
+            "inlineBodyPresent": true
+          }
+        ]
+      },
+      {
+        "title": "@critical @mobile-flow PW-MUSIC-SEARCH-NATIVE-02 late query A cannot replace B and revoked B never plays the release intro",
+        "project": "chromium-desktop",
+        "status": "passed",
+        "durationMs": 2592,
+        "errors": [],
+        "attachments": [
+          {
+            "name": "music-search-native-boundary.json",
+            "contentType": "application/json",
+            "path": null,
+            "pathExists": null,
+            "inlineBodyPresent": true
+          }
+        ]
+      },
+      {
+        "title": "@critical @mobile-flow PW-MUSIC-SEARCH-NATIVE-01 plays the exact matched recording and retains its real decoder across release navigation",
+        "project": "chromium-phone",
+        "status": "passed",
+        "durationMs": 7016,
+        "errors": [],
+        "attachments": [
+          {
+            "name": "music-search-native-boundary.json",
+            "contentType": "application/json",
+            "path": null,
+            "pathExists": null,
+            "inlineBodyPresent": true
+          }
+        ]
+      },
+      {
+        "title": "@critical @mobile-flow PW-MUSIC-SEARCH-NATIVE-02 late query A cannot replace B and revoked B never plays the release intro",
+        "project": "chromium-phone",
+        "status": "passed",
+        "durationMs": 3802,
+        "errors": [],
+        "attachments": [
+          {
+            "name": "music-search-native-boundary.json",
+            "contentType": "application/json",
+            "path": null,
+            "pathExists": null,
+            "inlineBodyPresent": true
+          }
+        ]
+      },
+      {
+        "title": "@critical @mobile-flow PW-MUSIC-SEARCH-NATIVE-01 plays the exact matched recording and retains its real decoder across release navigation",
+        "project": "firefox-critical",
+        "status": "failed",
+        "durationMs": 13049,
+        "errors": [
+          "Error: ENOSPC: no space left on device, mkdir '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical'\n\n  149 |     audio: [...document.querySelectorAll('audio')].map((audio) => ({ source: audio.currentSrc,\n  150 |       time: audio.currentTime, paused: audio.paused, error: audio.error?.code ?? null })) }));\n> 151 |   await testInfo.attach('music-search-native-boundary.json', {\n      |                  ^\n  152 |     body: JSON.stringify({ ...state, ...native }, null, 2), contentType: 'application/json' });\n  153 | });\n  154 |\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:151:18",
+          "Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, copyfile '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/.playwright-artifacts-2/traces/0f3e173df523c4896b3c-571de50d7a6eee3079f9.network' -> '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/.playwright-artifacts-2/traces/0f3e173df523c4896b3c-571de50d7a6eee3079f9-pwnetcopy-1.network'",
+          "Error: ENOSPC: no space left on device, mkdir '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical'"
+        ],
+        "attachments": [
+          {
+            "name": "trace",
+            "contentType": "application/zip",
+            "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical/trace.zip",
+            "pathExists": true,
+            "inlineBodyPresent": false
+          }
+        ]
+      },
+      {
+        "title": "@critical @mobile-flow PW-MUSIC-SEARCH-NATIVE-02 late query A cannot replace B and revoked B never plays the release intro",
+        "project": "firefox-critical",
+        "status": "passed",
+        "durationMs": 5475,
+        "errors": [],
+        "attachments": [
+          {
+            "name": "music-search-native-boundary.json",
+            "contentType": "application/json",
+            "path": null,
+            "pathExists": null,
+            "inlineBodyPresent": true
+          }
+        ]
+      }
+    ],
+    "failedCase": "firefox-critical PW-MUSIC-SEARCH-NATIVE-01",
+    "phase": "afterEach testInfo.attach and tracing file creation/copy",
+    "cause": "Explicit ENOSPC: no space left on device",
+    "testBodyAssertionsComplete": {
+      "observed": true,
+      "evidence": "CRC-valid test.trace records final body assertions lines195–198 with completed successful after events before afterEach attach failure151. Intermediate false poll probes later succeed; they are not additional final failures.",
+      "stillFailedTest": true
+    },
+    "passedCoverage": "2 actual AAC/FLAC decoder case executions+3 deniedB403/no-media case executions",
+    "noAll6PassClaim": true
+  },
+  "evidence": {
+    "log": {
+      "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026.log",
+      "sha256": "31f3ad937c6b1830aac33c8d7bf6bcf9d80d762a8d72343790951e51adfed869"
+    },
+    "results": {
+      "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/results.json",
+      "sha256": "5812ae549157e75142234c47a6331392dae19ca8befd5a0ddf0d7c9971b9689b"
+    },
+    "postSource": {
+      "path": "/private/tmp/tdf-music-search-native-v3-20261026/source-after.json",
+      "sha256": "01da0ba1f8f8fc0e7ce9ca27a1efe0f98bdff7e2a2b76d85374df6bdab81823b"
+    },
+    "summary": {
+      "path": "/private/tmp/tdf-music-search-native-v3-failure-summary-20261026.json",
+      "sha256": "503d6e08420d0d62050dc725b3cc714243be1bd03a7b6299e1559899472b1f33"
+    },
+    "traceAvailability": {
+      "path": "/private/tmp/tdf-music-search-native-v3-20261026/failed-trace-availability.json",
+      "sha256": "0bc2a27e2471c876d987708807d7609bea9cf5d1a9ab079adcb98f6148d1d60d",
+      "details": {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical/trace.zip",
+        "exists": true,
+        "bytes": 14867,
+        "members": 2,
+        "uncompressedBytes": 111644,
+        "crcCheck": "PASS",
+        "lastFunctionalAssertions": [
+          {
+            "line": 170,
+            "title": "Press \"Enter\" getByRole('region', { name: 'Resultados musicales', exact: true }).getByRole('button', { name: 'Reproducir Constelación nativa B', exact: true })",
+            "error": null,
+            "start": 94171.422,
+            "end": 94379.657
+          },
+          {
+            "line": 173,
+            "title": "Expect \"toBeVisible\"",
+            "error": null,
+            "start": 94381.648,
+            "end": 94443.667
+          },
+          {
+            "line": 174,
+            "title": "Expect \"toHaveCount\"",
+            "error": null,
+            "start": 94445.33,
+            "end": 94467.058
+          },
+          {
+            "line": 175,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 94470.824,
+            "end": 94502.019
+          },
+          {
+            "line": 175,
+            "title": "Matched B must advance real AAC playback",
+            "error": {
+              "name": "",
+              "message": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+              "stack": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:175:3"
+            },
+            "start": 94504.723,
+            "end": 94510.068
+          },
+          {
+            "line": 175,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 94611.784,
+            "end": 94636.511
+          },
+          {
+            "line": 175,
+            "title": "Matched B must advance real AAC playback",
+            "error": {
+              "name": "",
+              "message": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+              "stack": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:175:3"
+            },
+            "start": 94637.533,
+            "end": 94637.943
+          },
+          {
+            "line": 175,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 94888.826,
+            "end": 94943.641
+          },
+          {
+            "line": 175,
+            "title": "Matched B must advance real AAC playback",
+            "error": {
+              "name": "",
+              "message": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+              "stack": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:175:3"
+            },
+            "start": 94944.765,
+            "end": 94945.711
+          },
+          {
+            "line": 175,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 95448.114,
+            "end": 95473.516
+          },
+          {
+            "line": 175,
+            "title": "Matched B must advance real AAC playback",
+            "error": {
+              "name": "",
+              "message": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+              "stack": "Error: Matched B must advance real AAC playback\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:175:3"
+            },
+            "start": 95474.553,
+            "end": 95474.936
+          },
+          {
+            "line": 175,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 96476.211,
+            "end": 96503.032
+          },
+          {
+            "line": 175,
+            "title": "Matched B must advance real AAC playback",
+            "error": null,
+            "start": 96504.077,
+            "end": 96504.176
+          },
+          {
+            "line": 176,
+            "title": "Matched B must advance real AAC playback",
+            "error": null,
+            "start": 94468.388,
+            "end": 96504.269
+          },
+          {
+            "line": 177,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 96506.259,
+            "end": 96545.365
+          },
+          {
+            "line": 177,
+            "title": "Expect \"toMatch\"",
+            "error": null,
+            "start": 96546.497,
+            "end": 96546.941
+          },
+          {
+            "line": 177,
+            "title": "Expect \"poll toMatch\"",
+            "error": null,
+            "start": 96505.194,
+            "end": 96547.021
+          },
+          {
+            "line": 178,
+            "title": "Expect \"toEqual\"",
+            "error": null,
+            "start": 96547.879,
+            "end": 96548.126
+          },
+          {
+            "line": 179,
+            "title": "Evaluate",
+            "error": null,
+            "start": 96549.154,
+            "end": 96562.268
+          },
+          {
+            "line": 179,
+            "title": "Expect \"toEqual\"",
+            "error": null,
+            "start": 96563.3,
+            "end": 96563.466
+          },
+          {
+            "line": 180,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 96564.652,
+            "end": 96588.931
+          },
+          {
+            "line": 181,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 96590.293,
+            "end": 96614.063
+          },
+          {
+            "line": 182,
+            "title": "Click getByRole('region', { name: 'Resultados musicales', exact: true }).getByRole('link', { name: 'Ver lanzamiento Dos pistas sintéticas', exact: true })",
+            "error": null,
+            "start": 96615.346,
+            "end": 96739.759
+          },
+          {
+            "line": 183,
+            "title": "Expect \"toHaveURL\"",
+            "error": null,
+            "start": 96740.843,
+            "end": 96763.239
+          },
+          {
+            "line": 184,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 96764.713,
+            "end": 96814.22
+          },
+          {
+            "line": 184,
+            "title": "Expect \"toBe\"",
+            "error": null,
+            "start": 96815.274,
+            "end": 96815.376
+          },
+          {
+            "line": 185,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 96817.627,
+            "end": 96879.119
+          },
+          {
+            "line": 185,
+            "title": "Expect \"toBeGreaterThan\"",
+            "error": {
+              "name": "",
+              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m1.811687\u001b[39m\nReceived:   \u001b[31m1.581291\u001b[39m",
+              "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m1.811687\u001b[39m\nReceived:   \u001b[31m1.581291\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:185:3"
+            },
+            "start": 96880.291,
+            "end": 96881.096
+          },
+          {
+            "line": 185,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 96983.75,
+            "end": 97011.256
+          },
+          {
+            "line": 185,
+            "title": "Expect \"toBeGreaterThan\"",
+            "error": {
+              "name": "",
+              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m1.811687\u001b[39m\nReceived:   \u001b[31m1.712187\u001b[39m",
+              "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m1.811687\u001b[39m\nReceived:   \u001b[31m1.712187\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:185:3"
+            },
+            "start": 97012.331,
+            "end": 97012.666
+          },
+          {
+            "line": 185,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 97264.378,
+            "end": 97563.446
+          },
+          {
+            "line": 185,
+            "title": "Expect \"toBeGreaterThan\"",
+            "error": null,
+            "start": 97564.462,
+            "end": 97564.557
+          },
+          {
+            "line": 185,
+            "title": "Expect \"poll toBeGreaterThan\"",
+            "error": null,
+            "start": 96816.336,
+            "end": 97564.637
+          },
+          {
+            "line": 186,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 97566.623,
+            "end": 97871.798
+          },
+          {
+            "line": 186,
+            "title": "Expect \"toMatch\"",
+            "error": null,
+            "start": 97872.813,
+            "end": 97872.985
+          },
+          {
+            "line": 186,
+            "title": "Expect \"poll toMatch\"",
+            "error": null,
+            "start": 97565.498,
+            "end": 97873.079
+          },
+          {
+            "line": 187,
+            "title": "Click getByRole('region', { name: 'Reproductor global' }).getByRole('button', { name: 'Opciones de reproducción', exact: true })",
+            "error": null,
+            "start": 97874.2,
+            "end": 98304.599
+          },
+          {
+            "line": 189,
+            "title": "Click getByRole('dialog', { name: 'Opciones de reproducción', exact: true }).getByRole('combobox', { name: 'Calidad de audio', exact: true })",
+            "error": null,
+            "start": 98305.969,
+            "end": 98477.284
+          },
+          {
+            "line": 190,
+            "title": "Click getByRole('option', { name: 'Lossless', exact: true })",
+            "error": null,
+            "start": 98478.553,
+            "end": 98898.954
+          },
+          {
+            "line": 191,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 98901.199,
+            "end": 99253.297
+          },
+          {
+            "line": 191,
+            "title": "Expect \"toMatch\"",
+            "error": null,
+            "start": 99255.79,
+            "end": 99256.043
+          },
+          {
+            "line": 191,
+            "title": "Expect \"poll toMatch\"",
+            "error": null,
+            "start": 98900.04,
+            "end": 99256.183
+          },
+          {
+            "line": 192,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 99257.62,
+            "end": 99289.989
+          },
+          {
+            "line": 193,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 99293.211,
+            "end": 99315.466
+          },
+          {
+            "line": 193,
+            "title": "Expect \"toBe\"",
+            "error": {
+              "name": "",
+              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+              "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:193:3"
+            },
+            "start": 99316.582,
+            "end": 99317.048
+          },
+          {
+            "line": 193,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 99419.733,
+            "end": 99469.723
+          },
+          {
+            "line": 193,
+            "title": "Expect \"toBe\"",
+            "error": {
+              "name": "",
+              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+              "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs:193:3"
+            },
+            "start": 99470.87,
+            "end": 99471.293
+          },
+          {
+            "line": 193,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 99722.458,
+            "end": 99767.227
+          },
+          {
+            "line": 193,
+            "title": "Expect \"toBe\"",
+            "error": null,
+            "start": 99768.353,
+            "end": 99768.461
+          },
+          {
+            "line": 193,
+            "title": "Expect \"poll toBe\"",
+            "error": null,
+            "start": 99291.347,
+            "end": 99768.581
+          },
+          {
+            "line": 194,
+            "title": "Click getByRole('dialog', { name: 'Opciones de reproducción', exact: true }).getByRole('button', { name: 'Cerrar opciones', exact: true })",
+            "error": null,
+            "start": 99770.091,
+            "end": 100211.111
+          },
+          {
+            "line": 195,
+            "title": "Evaluate locator('audio')",
+            "error": null,
+            "start": 100212.459,
+            "end": 100266.824
+          },
+          {
+            "line": 195,
+            "title": "Expect \"toBe\"",
+            "error": null,
+            "start": 100268.053,
+            "end": 100268.147
+          },
+          {
+            "line": 196,
+            "title": "Expect \"toEqual\"",
+            "error": null,
+            "start": 100268.982,
+            "end": 100269.143
+          },
+          {
+            "line": 197,
+            "title": "Expect \"toEqual\"",
+            "error": null,
+            "start": 100270.341,
+            "end": 100270.474
+          },
+          {
+            "line": 198,
+            "title": "Expect \"toEqual\"",
+            "error": null,
+            "start": 100271.742,
+            "end": 100271.876
+          }
+        ],
+        "errors": [
+          {
+            "type": "error",
+            "message": "Error: ENOSPC: no space left on device, mkdir '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical'",
+            "stack": [
+              {
+                "file": "/private/tmp/tdf-universal-music-search-20261026/e2e/web/music-search-native.spec.mjs",
+                "line": 151,
+                "column": 18
+              }
+            ]
+          },
+          {
+            "type": "error",
+            "message": "Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, copyfile '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/.playwright-artifacts-2/traces/0f3e173df523c4896b3c-571de50d7a6eee3079f9.network' -> '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/.playwright-artifacts-2/traces/0f3e173df523c4896b3c-571de50d7a6eee3079f9-pwnetcopy-1.network'",
+            "stack": []
+          },
+          {
+            "type": "error",
+            "message": "Error: ENOSPC: no space left on device, mkdir '/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical'",
+            "stack": []
+          }
+        ]
+      }
+    },
+    "availableRuntimeArtifactFiles": [
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/results.json",
+        "bytes": 53307,
+        "sha256": "5812ae549157e75142234c47a6331392dae19ca8befd5a0ddf0d7c9971b9689b"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/index.html",
+        "bytes": 560396,
+        "sha256": "10e38cad60456d056e5eebdd49aa349595b63aeef7a3fd02d69d5d6a049f9bf7"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/.last-run.json",
+        "bytes": 96,
+        "sha256": "08b967c5ddbddfa0986850b8d04ddbc6f64b01398406ea75cd0691d400457033"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical/trace.zip",
+        "bytes": 14867,
+        "sha256": "5498204a1b2b9f5695dd5428677ef2a2ab7a6eaceeacf4127a11a8c4df60516c"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/codeMirrorModule.DYBRYzYX.css",
+        "bytes": 6421,
+        "sha256": "70bf421a13e87857ca684bfa2cc55f06d7c5a50f71253a3ff1d74769b14a957e"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/index.html",
+        "bytes": 2283,
+        "sha256": "4c31886e6b746d02ab0ee0f5f5b8524d855573d6fdc99bf1a280db90a51e0987"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/defaultSettingsView.B4dS75f0.css",
+        "bytes": 110544,
+        "sha256": "844a328b121a95937eec1893b391d5a3473194568dc585ba927f16c8ed0f90c8"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/index.C5466mMT.js",
+        "bytes": 6509,
+        "sha256": "452eab81f93a4001fee058fa2cd1d4e245eed3d28bfe10f7296a6c099ce8d64f"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/uiMode.Btcz36p_.css",
+        "bytes": 60239,
+        "sha256": "bfe8330cc78eeb1b1c4d8983aab7068d725526e407903ee19e515996250cb221"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/xtermModule.DYP7pi_n.css",
+        "bytes": 4150,
+        "sha256": "7c5a01f382f76539fc9b4db6b18e18a7035741845fd14968c5cdc0a7e373d817"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/index.CzXZzn5A.css",
+        "bytes": 2111,
+        "sha256": "4ec2a3d49db259ce9025cb4fa48d73b1afd58215e567eef3b4a4cbf76c1674d9"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/codicon.DCmgc-ay.ttf",
+        "bytes": 80340,
+        "sha256": "0f1d5219934e96e83b8db162d60b4d8c09b5de1e7d38031cbafe4a3c0f2889c9"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/snapshot.html",
+        "bytes": 935,
+        "sha256": "e192546675329f804bb9d4afbd96f7a1368e53cc42a05f0cc4a57949df7bc245"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/manifest.webmanifest",
+        "bytes": 429,
+        "sha256": "d8540500603a32a39fe7e5a0375dc0f9ebafd11118e06a846db7efc608223ab9"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/sw.bundle.js",
+        "bytes": 95084,
+        "sha256": "c76aa023df69a0835d12bfae95dddf91c5c90e4e87791d64f41aa051f394d678"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/uiMode.html",
+        "bytes": 647,
+        "sha256": "6cb988cb543334e85350fea36b4ccecae80e76294e0f6c326d7067a1cfa7aaaa"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/playwright-logo.svg",
+        "bytes": 5033,
+        "sha256": "6b0a4367bdeab10995bc239278f04c68c10e48adbec15e799e01909a0d66dcb9"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/uiMode.Vipi55dB.js",
+        "bytes": 38156,
+        "sha256": "fb1005d82811458ffd6ae041d79cc7ebabcb6073f7fe03b5f7694c093433ba7b"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/data/a2ef23c42475d14f56eaf5ffb5b4c40561365444.zip",
+        "bytes": 14867,
+        "sha256": "5498204a1b2b9f5695dd5428677ef2a2ab7a6eaceeacf4127a11a8c4df60516c"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/assets/defaultSettingsView-GTWI-W_B.js",
+        "bytes": 643623,
+        "sha256": "9c48649a4dfc1ba799a687c4ac96a6a9ada57696116044c227c67c51ebbfdce7"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/html/trace/assets/codeMirrorModule-DS0FLvoc.js",
+        "bytes": 313023,
+        "sha256": "dd5360bef14066001507518e8c2f6b3e525ac1cc41fa7fdf23c34e96f4efadb1"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v3-20261026/source-before.json",
+        "bytes": 2432,
+        "sha256": "69e7c30a175ae6e77ba05cbfcacb101308891b828c9409f06d4b6110570db650"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v3-20261026/source-after.json",
+        "bytes": 2432,
+        "sha256": "01da0ba1f8f8fc0e7ce9ca27a1efe0f98bdff7e2a2b76d85374df6bdab81823b"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v3-20261026/before-annotation.json",
+        "bytes": 2432,
+        "sha256": "840fde08323dd722ed8b0665a97659d6ad674eb5097df909555929c7027879be"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v3-20261026/root-execution.exit",
+        "bytes": 2,
+        "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v3-20261026/root-launch.json",
+        "bytes": 148,
+        "sha256": "f444e92cadbfca5080a1f32e2c629f1ac90575f88fd5c8452b619bc6ef30bb3b"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v3-20261026/annotation-only.patch",
+        "bytes": 774,
+        "sha256": "c9cb6224804193b87deeb3bb92f0fe9941b1cfb8b51acc84a709ce0d9ce084fa"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v3-20261026/run-plan.json",
+        "bytes": 7056,
+        "sha256": "62d98e99951d660f68039a950c24a2b2ea8f07aebe02fee35aa848bf38fb092f"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v3-20261026.log",
+        "bytes": 8157,
+        "sha256": "31f3ad937c6b1830aac33c8d7bf6bcf9d80d762a8d72343790951e51adfed869"
+      }
+    ],
+    "availabilityLimits": "Failed Firefox case has NO inline native-boundary attachment; five passed cases retain theirs. Failed-case trace physically exists,14867bytes/2members/CRCcheckPASS; full browser/network trace is not asserted complete."
+  },
+  "environment": {
+    "directEvidence": "ENOSPC mkdir/copyfile errors plus nearlyfull volume; no product assertion failure recorded",
+    "rootReportedDiskAtFailure": "528MB then transient0;807MB after",
+    "qaDfAt232932": "1197048KiB available on Data volume, capacity100%",
+    "rootReportedRecovery": "2.6GiB available23:31:56UTC",
+    "concurrentBuildActorAttribution": "Root reports concurrent build pressure; exact writer attribution not independently established"
+  },
+  "history": {
+    "originalQualifiedV2Receipt": "/private/tmp/tdf-music-search-native-qualified-receipt-20261026.json",
+    "v2Result": "6/6PASS before annotation change; source385d8a retained unchanged as historical, not relabeled current74b1 result",
+    "initialSetupAndEvaluatorFailures": "Preserved through v2receipt, no overwrite"
+  },
+  "coverageBounds": {
+    "hostedDiscoveryStatic": "2newtagged cases match7baseprojects inclAndroidsmall+WebKit-iPhone=14expected newcase executions; old40baseline unchanged so54expected combined ifthisbaseline only.",
+    "actualHostedNewMobilePass": false,
+    "localWebKit": "UNVERIFIED unsupportedmac12",
+    "physicalDevices": false,
+    "syntheticApisAndPermissions": true,
+    "actualLocalAacFlacBytes": true,
+    "lateA": "Browser cancelled requests; no delivered stale-response proof",
+    "productionOrSloOrWholeSystemProof": false
+  },
+  "nextAction": {
+    "status": "Root authorized ONE newfullv4 run after explicit diskcapacity recovery, identical source/config/assertions/timeouts/retries",
+    "ifCapacityFailsAgain": "No further local repeats; block local native qualification pending controlled capacity/hostedCI",
+    "noTimeoutRaise": true
+  },
+  "actionsByQA": {
+    "sourceEditsDuringRun": 0,
+    "rerunsLaunched": 0,
+    "installs": 0,
+    "cleanupOrDeletion": 0,
+    "reviewRequests": 0,
+    "commits": 0,
+    "pushes": 0,
+    "merges": 0
+  }
+}
