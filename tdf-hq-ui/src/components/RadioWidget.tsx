@@ -1,3 +1,4 @@
+import { availableRadioStations } from '../utils/availableRadioStations';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { ABOVE_GLOBAL_PLAYER, RADIO_BAR_HEIGHT_VAR, useDockedBarHeight } from '../utils/bottomDock';
 import { logger } from '../utils/logger';
@@ -591,17 +592,23 @@ export default function RadioWidget() {
       setActiveId(allStations[0]!.id);
     }
   }, [activeId, allStations]);
-  const availableStations = allStations;
+  const availableStations = useMemo(
+    () => availableRadioStations(allStations, player.unavailableTrackIds),
+    [allStations, player.unavailableTrackIds],
+  );
+  const availableRecentStations = useMemo(
+    () => recentStations.filter((station) => availableStations.some((item) => item.id === station.id)),
+    [availableStations, recentStations],
+  );
   const visibleStations = useMemo(
     () =>
-      allStations.filter((s) => {
+      availableStations.filter((s) => {
         const key = keyFor(s);
-        if (player.unavailableTrackIds.includes(`radio:${s.id}`)) return false;
         if (!showHidden && hiddenSet.has(key)) return false;
         if (showFavoritesOnly && !favoriteSet.has(key)) return false;
         return true;
       }),
-    [allStations, favoriteSet, hiddenSet, showHidden, showFavoritesOnly, keyFor, player.unavailableTrackIds],
+    [availableStations, favoriteSet, hiddenSet, showHidden, showFavoritesOnly, keyFor],
   );
   const sortedVisibleStations = useMemo(() => {
     const arr = [...visibleStations];
@@ -614,8 +621,8 @@ export default function RadioWidget() {
     return arr;
   }, [favoriteSet, keyFor, visibleStations]);
   const hiddenStations = useMemo(
-    () => allStations.filter((s) => hiddenSet.has(keyFor(s))),
-    [allStations, hiddenSet, keyFor],
+    () => availableStations.filter((s) => hiddenSet.has(keyFor(s))),
+    [availableStations, hiddenSet, keyFor],
   );
   const activeStation = useMemo<Station>(
     () => allStations.find((s) => s.id === activeId) ?? defaultStation,
@@ -1979,12 +1986,12 @@ export default function RadioWidget() {
               <Typography variant="caption" color="text.secondary" noWrap>
                 {nowPlayingSubtitle}
               </Typography>
-              {recentStations.length > 1 && (
+              {availableRecentStations.length > 1 && (
                 <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
                   <Typography variant="caption" color="text.secondary">
                     Recientes:
                   </Typography>
-                  {recentStations.slice(1).map((s) => (
+                  {availableRecentStations.slice(1).map((s) => (
                     <Chip
                       key={s.id}
                       label={s.name}
