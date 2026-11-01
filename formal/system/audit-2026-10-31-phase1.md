@@ -198,3 +198,35 @@ satisfacibles. Es evidencia **acotada** (`verificado-acotado`), no una prueba (v
 
 Evidencia: `PAY-DOMO-QUOTE-001` tiene 4 lemas demostrados en Z3 (sin cota) con testigos y controles de mutación, más propiedades QuickCheck sobre la función real.
 
+## 13. Fase 2 — worker de eventos de proveedor (2026-11-01)
+
+| ID | Sev. | Hallazgo |
+|---|---|---|
+| F-17 | error | Las escrituras de resultado del inbox de eventos de proveedor (`processed`, `ignored`, `retry`, `dead_letter`) solo exigían `processing_status = 'processing'`. Un worker colgado más de 15 minutos pierde su lease, otro lo reclama, y el primero podía después sobrescribir el resultado del segundo: marcar `dead_letter` un evento que el otro procesó bien, o marcar `retry` y provocar que el evento se procese otra vez. **Corregido** cercando cada escritura con el `attempt_count` reclamado (`PAY-PROVIDER-INBOX-001`). TLC reproduce el defecto; Apalache demuestra la corrección de forma inductiva. El doble efecto del worker reclamado (admisión del pago) queda cubierto por la idempotencia de `PAY-RETRY-001` y `PAY-CAPTURE-RECON-001`. |
+
+## 14. Fase 2 — seguridad P0, primera pasada (2026-11-01)
+
+| ID | Sev. | Hallazgo |
+|---|---|---|
+| F-18 | info | `/admin/**`: barrido de los 60 manejadores de `ServerAdmin.hs` y `Server/RecordsIngestion.hs`. Todos los manejadores hoja exigen `ensureStrictAdmin` o `ensureModule ModuleAdmin`; los enrutadores solo delegan. No hay rutas admin sin guarda. Convertido en gate: `scripts/check-admin-guards.py` (`AUTH-ADMIN-GUARD-001`) falla en CI si un manejador hoja pierde su guarda; es un chequeo sintáctico, no prueba que la guarda sea la correcta ni que preceda a todo efecto. |
+| F-19 | error | `POST /instagram/oauth/exchange` (requiere acceso al módulo de bandeja social): la fila `social_sync_account` es única por `(platform, externalUserId)` y el intercambio hace `upsert` reasignando `party_id` al usuario actual. Dos efectos: (a) si la cuenta de Instagram ya estaba vinculada a otra party, se reasigna en silencio, sin auditoría, y las publicaciones sincronizadas pasan a atribuirse al nuevo usuario; (b) el acceso a la bandeja social lo tienen Admin, Manager, StudioManager, Reception y LiveSessionsProducer; `resolveInstagramDeliveryAccount` y el backfill de Meta eligen "la cuenta conectada más reciente" de toda la plataforma, así que cualquier usuario con acceso a la bandeja social que conecte su propia página convierte su token en el canal de envío de mensajes de la plataforma. **Sin corregir**: la política de qué cuentas son canales de la plataforma es decisión de negocio (Q6). Recomendación: marcar las cuentas conectadas por OAuth como "del usuario" y usar para envío solo las designadas por un administrador; al cambiar de party, exigir confirmación o rol admin y registrar auditoría. |
+
+### Preguntas nuevas
+
+- **Q6 (F-19):** ¿qué cuentas de Instagram/Facebook deben poder usarse como canal de envío de la plataforma: solo las configuradas por entorno y las designadas por un administrador, o cualquier cuenta conectada por un usuario con acceso a la bandeja social? ¿Debe poder un usuario reasignarse una cuenta de Instagram que otro usuario ya conectó?
+
+## 15. CI del PR #691 (2026-11-01)
+
+| ID | Sev. | Hallazgo |
+|---|---|---|
+| F-21 | warning | `CI Safe Install` falla por `npm audit`: aviso alto GHSA-2p57-rm9w-gvfp en `ip`, vía `webtorrent > torrent-discovery > bittorrent-tracker` (dependencia de desarrollo). **No lo causa esta rama**: `main` (`be87455`, PR #646) falla igual desde el 2026-11-01; `main` en `234ff6f7` pasaba el 2026-10-30, así que el aviso es nuevo. Corrección pendiente aparte (actualizar o aislar `webtorrent`). |
+| F-22 | info | El informe de garantía (`verification-report.py`) marcaba las obligaciones SMT de autorización y recuperación como `UNPROVEN` por "Receipt source fingerprint mismatch": sus recibos fijan el hash de `tdf-hq.cabal`, que esta rama cambia solo por registrar siete módulos nuevos. `Auth.hs`, `Models.hs`, `RecordsIngestion.hs`, `ServerAuth.hs`, el SQL de expiración y Stack/lock son idénticos a `main`. **Resuelto**: revisión de fuente añadida a ambos recibos según el procedimiento de `auth-predicates.md` y pin refrescado; el informe vuelve a demostrar las 11 obligaciones (`executionPassed: true`, release sigue `BLOCKED` por diseño). |
+
+## 16. Fase 2 — adaptadores de proveedor y precio de cursos (2026-11-01)
+
+- `PAY-ADAPTER-BINDING-001`: propiedades QuickCheck sobre los adaptadores reales de PlaceToPay y PayPhone con respuestas generadas cuya referencia, importe o moneda coinciden o difieren en exactamente un campo. Solo se admite un resultado con coincidencia exacta; PlaceToPay solo reporta éxito con exactamente una transacción aprobada y no revertida; los callbacks de PayPhone nunca se consideran autenticados. La conversión de dinero ida y vuelta es exacta y rechaza fracciones de centavo. Sin hallazgos: el código cumple.
+- `PAY-COURSE-PRICE-001`: lemas Z3 sin cota (depósito dentro del total con tasas 1..9999; saldo estrictamente positivo si el total supera 50,00) y propiedades sobre `calculateCoursePrice`. Sin hallazgos de corrección.
+- F-20 (info): un curso en modo depósito con total ≤ 50,00 puede tener saldo 0, es decir, el "depósito" es el precio completo. Es seguro; confirmar que es la intención.
+
+Estado de verificación tras esta fase: 22 obligaciones de modelo (TLC positivos, controles negativos y pruebas inductivas Apalache) pasan en `verify:inductive-proofs`; 11 obligaciones SMT del informe de garantía demostradas; 11 lemas Z3 de aritmética Domo/cursos demostrados con 5 testigos; gate de guardas admin con control de mutación.
+

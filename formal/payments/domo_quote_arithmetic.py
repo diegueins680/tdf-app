@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""PAY-DOMO-QUOTE-001: unbounded arithmetic lemmas behind calculateDomoQuote
-(tdf-hq/src/TDF/Commerce/DomoQuotes.hs).
+"""PAY-DOMO-QUOTE-001 / PAY-COURSE-PRICE-001: unbounded arithmetic lemmas behind
+calculateDomoQuote (tdf-hq/src/TDF/Commerce/DomoQuotes.hs) and calculateCoursePrice
+(tdf-hq/src/TDF/Commerce/CourseCheckout.hs).
 
 roundBasisPoints a b = (a * b + 5000) `div` 10000 over mathematical integers
 (Haskell Integer). Each safety lemma is proved by showing its negation UNSAT.
@@ -60,6 +61,15 @@ def main():
         # Mutation controls: the bounds are necessary.
         check('control-deposit-over-10000bps', [t >= 0, b >= 1, b <= 10001], deposit > t, 'witness'),
         check('control-negative-total', [t >= -1, b >= 1, b <= 10000], t - deposit < 0, 'witness'),
+        # Course checkout (PAY-COURSE-PRICE-001): the same rounding with a
+        # deposit rate in 1..9999. The deposit is still within the total, and a
+        # strictly positive balance is guaranteed only above 50.00 (5000 minor).
+        check('course-deposit-within-total', [t >= 1, b >= 1, b <= 9999],
+              z3.And(deposit >= 0, deposit <= t), 'proof'),
+        check('course-balance-positive-above-5000', [t > 5000, b >= 1, b <= 9999],
+              t - deposit > 0, 'proof'),
+        check('course-zero-balance-reachable-at-or-below-5000', [t >= 1, t <= 5000, b >= 1, b <= 9999],
+              t - deposit == 0, 'witness'),
     ]
     return 0 if all(results) else 1
 

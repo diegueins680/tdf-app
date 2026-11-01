@@ -13867,6 +13867,295 @@
         "classification": "PARTIAL",
         "reason": "Arithmetic proved and property-tested; lifecycle and checkout boundaries remain separate obligations."
       }
+    },
+    {
+      "id": "PAY-PROVIDER-INBOX-001",
+      "title": "Provider event lease writes are fenced by the claimed attempt",
+      "statement": "A provider event in commerce_provider_event_inbox is claimed with a lease that increments attempt_count; a lease older than fifteen minutes may be reclaimed. Every outcome write (processed, ignored, retry, dead_letter) requires processing_status = 'processing' AND attempt_count equal to the writer's claimed attempt, so a worker whose lease was reclaimed can no longer record an outcome over the current holder's lease. A terminal status is always the one written by the latest lease holder, and a successful outcome of the latest lease holder is never lost.",
+      "domain": "PAY",
+      "authority": "Declared provider_event machine in docs/revenue-platform/formal-model.yaml (a claim increments attempt_count exactly once) and audit finding F-17; owner mandate 2026-10-31 (money first).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-17); formal/payments/README.md",
+      "property": "TerminalByLatest: status in {processed, dead_letter} => recordedBy = attempt. NoLostSuccess: a done worker with outcome processed holding the latest attempt => status = processed. Proved inductively with the fence; refuted without it.",
+      "contract": "formal/payments/README.md",
+      "actors": [
+        "Provider event worker",
+        "Inline webhook handler (service storefront PayPal)",
+        "Operations manager (dead-letter replay)"
+      ],
+      "preconditions": [
+        "commerce_provider_event_inbox with processing_started_at and attempt_count (2026-08-14 migrations)."
+      ],
+      "inputs": [
+        "ProviderEventReference",
+        "claimed attempt_count",
+        "worker outcome"
+      ],
+      "state": {
+        "processing_status": [
+          "pending",
+          "processing",
+          "retry",
+          "processed",
+          "ignored",
+          "dead_letter"
+        ]
+      },
+      "allowedTransitions": [
+        "pending|retry|stale processing -> processing (attempt_count + 1)",
+        "processing -> processed|ignored|retry|dead_letter by the holder of the current attempt only",
+        "retry -> dead_letter when attempt_count reaches 8"
+      ],
+      "forbiddenTransitions": [
+        "an outcome written by a worker whose attempt is not the current attempt_count",
+        "processed|ignored|dead_letter -> any other status by a worker"
+      ],
+      "effects": [
+        "Conditional UPDATE fenced by attempt_count on every lease write."
+      ],
+      "authorization": "Workers and the inline handler only; events need verified signatures in production (schema CHECK).",
+      "privacy": "Error summaries are sanitized to printable text, 500 characters.",
+      "concurrency": "Stale reclaim after fifteen minutes is intentional; the fence makes the reclaimed worker's late write a no-op. The side effect it already performed (payment admission) is idempotent under PAY-RETRY-001 and PAY-CAPTURE-RECON-001.",
+      "idempotency": "Event id unique per provider, environment and merchant; outcome writes idempotent under the fence.",
+      "failure": "Decryption or processing exceptions mark retry with exponential backoff up to 3600 seconds; the eighth attempt dead-letters.",
+      "recovery": "Dead letters are replayed by operations (operations-failure-replay.md).",
+      "observability": "attempt_count, last_attempt_at, processing_started_at, error_summary.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+      ],
+      "verification": "Bounded TLC with three workers and a negative control reproducing the stale-reclaim overwrite; Apalache inductive proof for any nonempty set of up to three workers, attempt budgets 1..8 and claim bounds 1..8; PostgreSQL-backed ProviderRetrySpec exercises claim, retry exhaustion and processed replay.",
+      "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test ProviderRetrySpec run with a database.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "formalModels": [
+        "formal/payments/ProviderInbox.tla",
+        "formal/payments/ProviderInbox.cfg",
+        "formal/payments/ProviderInboxLegacy.cfg"
+      ],
+      "confidence": "High for the lease protocol as modelled; the SQL-to-model correspondence is by review (one conditional UPDATE per write). No database test yet drives a stale reclaim followed by the stale worker's write.",
+      "ambiguity": [
+        "The model abstracts the fifteen-minute threshold to a nondeterministic Expire step.",
+        "Duplicate side effects of a reclaimed worker are delegated to downstream idempotency, not proved here."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Inductive proof and existing database tests; a stale-reclaim database test remains."
+      }
+    },
+    {
+      "id": "PAY-ADAPTER-BINDING-001",
+      "title": "Hosted provider adapters admit results only on an exact binding match",
+      "statement": "The PlaceToPay and PayPhone adapters parse a provider query or cancel response into a result only when the provider's reference, amount and currency equal the stored expectation and the provider identifier equals the stored session or transaction id; otherwise they fail. PlaceToPay reports success only for an APPROVED session with exactly one APPROVED unreversed transaction whose original and settled amounts both match; PayPhone callbacks are never authenticated and always require a server query. Money crosses the boundary as exact minor units: decimal amounts with sub-cent precision are rejected, not rounded.",
+      "domain": "PAY",
+      "authority": "Adapter module contracts (tdf-hq/src/TDF/Commerce/ProviderAdapter*.hs) and PAY-DOMAIN-BINDING-001; audit F-03 coverage gap.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-03); formal/payments/README.md",
+      "property": "parse(expected, response) = Right r => binding(response) = expected /\\ id(response) = id(locator); r.state = Succeeded => exactly one approved complete transaction (PlaceToPay) or statusCode 3 (PayPhone); decimalToMinor (minorToDecimal m) = Just m and decimalToMinor rejects sub-cent values.",
+      "contract": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
+      "actors": [
+        "Provider executor",
+        "PlaceToPay",
+        "PayPhone"
+      ],
+      "preconditions": [
+        "Adapter built from validated configuration."
+      ],
+      "inputs": [
+        "PaymentLocator with ExpectedPayment",
+        "provider JSON response"
+      ],
+      "state": {
+        "adapterResult": [
+          "pending",
+          "requires_customer_action",
+          "succeeded",
+          "cancelled",
+          "declined",
+          "unknown",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "response -> Right result only under an exact binding match",
+        "response -> Left otherwise"
+      ],
+      "forbiddenTransitions": [
+        "Right Succeeded with a mismatched reference, amount, currency or identifier",
+        "Right Succeeded for a refunded or partially approved PlaceToPay session",
+        "authenticated PayPhone callback"
+      ],
+      "effects": [
+        "Pure parsing; no I/O."
+      ],
+      "authorization": "Not applicable (pure).",
+      "privacy": "Credentials are SensitiveText and never printed.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Deterministic.",
+      "failure": "Every mismatch is an AdapterError with a public message.",
+      "recovery": "Callers reconcile (PAY-CAPTURE-RECON-001).",
+      "observability": "AdapterError messages.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs"
+      ],
+      "verification": "QuickCheck properties over the real adapters with generated matching and mismatching bindings, transaction status lists and status codes; exact money round-trip and sub-cent rejection.",
+      "evidence": "tdf-hq-test ProviderAdapterBindingSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "High for the parsers under generated inputs; the request builders (create/cancel bodies) and HTTP execution are covered by PAY-RETRY-001 and existing provider retry tests, not here.",
+      "ambiguity": [
+        "Signature verification of PlaceToPay notifications is covered by existing unit tests, not by these properties.",
+        "No proof that the generators cover every JSON shape the providers can return."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Property evidence on the parsers; request construction and runtime remain separate obligations."
+      }
+    },
+    {
+      "id": "PAY-COURSE-PRICE-001",
+      "title": "Course checkout price snapshot is exact and bounded",
+      "statement": "calculateCoursePrice prices a course in exact minor units: tax rounds half up in basis points within 0..10000, total = price + tax, a full-payment course charges the whole total now, a deposit course charges a rate in 1..9999 basis points rounded half up, dueNow + balance = total, 0 <= dueNow <= total, and any amount beyond Int64 is rejected.",
+      "domain": "PAY",
+      "authority": "tdf-hq/src/TDF/Commerce/CourseCheckout.hs contract comments and COURSE-ENROLL-001.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-03); formal/payments/README.md",
+      "property": "Lemmas proved over unbounded integers: deposit within total for rates 1..9999; balance strictly positive when total > 5000 minor units; a zero balance is reachable at or below 5000.",
+      "contract": "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
+      "actors": [
+        "Public course registrant",
+        "Policy approver"
+      ],
+      "preconditions": [
+        "Approved course checkout policy."
+      ],
+      "inputs": [
+        "price minor units",
+        "tax basis points",
+        "payment mode",
+        "deposit basis points"
+      ],
+      "state": {
+        "priceComputation": [
+          "priced",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "inputs -> priced when every guard holds and amounts fit Int64",
+        "inputs -> rejected with an explicit reason otherwise"
+      ],
+      "forbiddenTransitions": [
+        "priced with a wrapped Int64 amount",
+        "priced with dueNow > total or a negative balance"
+      ],
+      "effects": [
+        "Pure computation."
+      ],
+      "authorization": "Not applicable.",
+      "privacy": "Not applicable.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Deterministic.",
+      "failure": "Explicit Left messages.",
+      "recovery": "Not applicable.",
+      "observability": "Not applicable.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/CourseCheckout.hs"
+      ],
+      "verification": "Z3 4.13.3 lemmas with witnesses; QuickCheck properties on the real function including the overflow guard.",
+      "evidence": "formal/payments/domo_quote_arithmetic.py output; tdf-hq-test DomoQuotePropertiesSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
+      "formalModels": [],
+      "confidence": "High: lemmas unbounded, composition property-tested.",
+      "ambiguity": [
+        "A deposit course whose total is at most 50.00 can have a zero balance, so the deposit equals the full price; whether such courses should use the deposit mode is a business decision (F-20)."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Arithmetic proved and property-tested; the registration lifecycle and hold expiry are covered by COURSE-ENROLL-001 and PAY-CAPTURE-RECON-001."
+      }
+    },
+    {
+      "id": "AUTH-ADMIN-GUARD-001",
+      "title": "Every /admin leaf handler enforces an authorization guard",
+      "statement": "Every leaf handler mounted under the authenticated /admin API (ServerAdmin.adminServer and Server.RecordsIngestion.recordsIngestionServer) calls ensureStrictAdmin, ensureModule ModuleAdmin, or the records-ingestion requireAdmin before any effect; routers only delegate. The structural sweep scripts/check-admin-guards.py fails CI when a leaf handler has no guard call.",
+      "domain": "AUTH",
+      "authority": "AUTH-REGISTRY-001 predicates; audit F-18 (manual sweep of 60 handlers, 2026-11-01).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-18)",
+      "property": "forall leaf handler h in admin: guard(h). Structural: a guard call appears in h's body; the predicate semantics are AUTH-REGISTRY-001.",
+      "contract": "scripts/check-admin-guards.py",
+      "actors": [
+        "Authenticated staff",
+        "Administrator"
+      ],
+      "preconditions": [
+        "Bearer-authenticated request reaching the protected server."
+      ],
+      "inputs": [
+        "AuthedUser roles and module grants"
+      ],
+      "state": {
+        "adminLeafHandler": [
+          "guarded",
+          "unguarded"
+        ]
+      },
+      "allowedTransitions": [
+        "handler added -> guarded in the same change"
+      ],
+      "forbiddenTransitions": [
+        "an admin leaf handler executing its effect without a guard call"
+      ],
+      "effects": [
+        "None; read-only source check."
+      ],
+      "authorization": "Strict admin or ModuleAdmin, per handler.",
+      "privacy": "Not applicable.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Not applicable.",
+      "failure": "CI fails naming the unguarded handlers.",
+      "recovery": "Add the guard or register a reviewed helper.",
+      "observability": "Gate output.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
+        "scripts/check-admin-guards.py"
+      ],
+      "verification": "Structural source sweep in CI; manual review of the twelve registered helpers.",
+      "evidence": "scripts/check-admin-guards.py output.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "scripts/check-admin-guards.py"
+      ],
+      "formalModels": [],
+      "confidence": "High that no leaf handler lacks a guard call; the gate is syntactic and does not establish that each guard is the right one or that the guard precedes every effect.",
+      "ambiguity": [
+        "Guard placement before effects is by review, not checked.",
+        "Handlers mounted outside these two modules are not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Structural gate in place; per-handler HTTP denial execution remains open (AUTH-REGISTRY-001)."
+      }
     }
   ]
 }

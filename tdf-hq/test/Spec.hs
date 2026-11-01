@@ -122,6 +122,7 @@ import TDF.Merch.Reputation
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Commerce.ArtistTipSpec as ArtistTipSpec
 import qualified TDF.Commerce.DomoQuotePropertiesSpec as DomoQuotePropertiesSpec
+import qualified TDF.Commerce.ProviderAdapterBindingSpec as ProviderAdapterBindingSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import qualified TDF.CorsSpec as CorsSpec
@@ -17929,6 +17930,7 @@ main = hspec $ do
     APITypesSpec.spec
     ArtistTipSpec.spec
     DomoQuotePropertiesSpec.spec
+    ProviderAdapterBindingSpec.spec
     ProviderRetrySpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec

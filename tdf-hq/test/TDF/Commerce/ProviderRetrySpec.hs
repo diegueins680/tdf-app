@@ -952,13 +952,40 @@ notificationIdentityInboxSpec = describe "PlaceToPay signed identity inbox" $ do
     creation <- newNotification Checkout.ProviderPlaceToPay
     stored <- storeNotification pool creation >>= requireRight
     _ <- runSqlPool (Event.claimProviderEvent (Event.pesReference stored) notificationTime) pool
-    runSqlPool (Event.markProviderEventProcessed (Event.pesReference stored)
+    runSqlPool (Event.markProviderEventProcessed (Event.pesReference stored) 1
       Nothing Nothing Nothing notificationTime) pool
     replay <- storeNotification pool creation { Event.pecRawPayload = last placeToPayReplayVariants }
       >>= requireRight
     Event.pesReference replay `shouldBe` Event.pesReference stored
     Event.pesInserted replay `shouldBe` False
     runSqlPool (Event.claimProviderEvent (Event.pesReference replay) notificationTime) pool
+      `shouldReturn` Event.ProviderEventAlreadyHandled "processed"
+
+  it "fences a reclaimed stale lease against the former holder's late writes" $ \pool -> do
+    -- PAY-PROVIDER-INBOX-001 / formal/payments/ProviderInbox.tla
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    stored <- storeNotification pool creation >>= requireRight
+    let ref = Event.pesReference stored
+        sixteenMinutesLater = addUTCTime (16 * 60) notificationTime
+        leaseState = runSqlPool (rawSql
+          "SELECT processing_status, attempt_count FROM commerce_provider_event_inbox WHERE id = ?::uuid"
+          [PersistText (Event.providerEventReferenceId ref)]) pool
+          :: IO [(Single Text, Single Int)]
+    runSqlPool (Event.claimProviderEvent ref notificationTime) pool
+      `shouldReturn` Event.ProviderEventClaimed 1
+    -- The first holder stalls past the stale threshold; another worker reclaims.
+    runSqlPool (Event.claimProviderEvent ref sixteenMinutesLater) pool
+      `shouldReturn` Event.ProviderEventClaimed 2
+    -- Every late write of the former holder is a no-op.
+    runSqlPool (Event.markProviderEventDeadLetter ref 1 Nothing Nothing Nothing "late" sixteenMinutesLater) pool
+    runSqlPool (Event.markProviderEventRetry ref 1 "late" sixteenMinutesLater) pool `shouldReturn` False
+    runSqlPool (Event.markProviderEventIgnored ref 1 Nothing Nothing Nothing sixteenMinutesLater) pool
+    runSqlPool (Event.markProviderEventProcessed ref 1 Nothing Nothing Nothing sixteenMinutesLater) pool
+    leaseState `shouldReturn` [(Single "processing", Single 2)]
+    -- The current holder's outcome is recorded and the event is not requeued.
+    runSqlPool (Event.markProviderEventProcessed ref 2 Nothing Nothing Nothing sixteenMinutesLater) pool
+    leaseState `shouldReturn` [(Single "processed", Single 2)]
+    runSqlPool (Event.claimProviderEvent ref (addUTCTime 3600 sixteenMinutesLater)) pool
       `shouldReturn` Event.ProviderEventAlreadyHandled "processed"
 
   it "scopes deduplication by merchant and environment" $ \pool -> do

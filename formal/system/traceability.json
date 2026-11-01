@@ -13868,6 +13868,295 @@
         "classification": "PARTIAL",
         "reason": "Arithmetic proved and property-tested; lifecycle and checkout boundaries remain separate obligations."
       }
+    },
+    {
+      "id": "PAY-PROVIDER-INBOX-001",
+      "title": "Provider event lease writes are fenced by the claimed attempt",
+      "statement": "A provider event in commerce_provider_event_inbox is claimed with a lease that increments attempt_count; a lease older than fifteen minutes may be reclaimed. Every outcome write (processed, ignored, retry, dead_letter) requires processing_status = 'processing' AND attempt_count equal to the writer's claimed attempt, so a worker whose lease was reclaimed can no longer record an outcome over the current holder's lease. A terminal status is always the one written by the latest lease holder, and a successful outcome of the latest lease holder is never lost.",
+      "domain": "PAY",
+      "authority": "Declared provider_event machine in docs/revenue-platform/formal-model.yaml (a claim increments attempt_count exactly once) and audit finding F-17; owner mandate 2026-10-31 (money first).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-17); formal/payments/README.md",
+      "property": "TerminalByLatest: status in {processed, dead_letter} => recordedBy = attempt. NoLostSuccess: a done worker with outcome processed holding the latest attempt => status = processed. Proved inductively with the fence; refuted without it.",
+      "contract": "formal/payments/README.md",
+      "actors": [
+        "Provider event worker",
+        "Inline webhook handler (service storefront PayPal)",
+        "Operations manager (dead-letter replay)"
+      ],
+      "preconditions": [
+        "commerce_provider_event_inbox with processing_started_at and attempt_count (2026-08-14 migrations)."
+      ],
+      "inputs": [
+        "ProviderEventReference",
+        "claimed attempt_count",
+        "worker outcome"
+      ],
+      "state": {
+        "processing_status": [
+          "pending",
+          "processing",
+          "retry",
+          "processed",
+          "ignored",
+          "dead_letter"
+        ]
+      },
+      "allowedTransitions": [
+        "pending|retry|stale processing -> processing (attempt_count + 1)",
+        "processing -> processed|ignored|retry|dead_letter by the holder of the current attempt only",
+        "retry -> dead_letter when attempt_count reaches 8"
+      ],
+      "forbiddenTransitions": [
+        "an outcome written by a worker whose attempt is not the current attempt_count",
+        "processed|ignored|dead_letter -> any other status by a worker"
+      ],
+      "effects": [
+        "Conditional UPDATE fenced by attempt_count on every lease write."
+      ],
+      "authorization": "Workers and the inline handler only; events need verified signatures in production (schema CHECK).",
+      "privacy": "Error summaries are sanitized to printable text, 500 characters.",
+      "concurrency": "Stale reclaim after fifteen minutes is intentional; the fence makes the reclaimed worker's late write a no-op. The side effect it already performed (payment admission) is idempotent under PAY-RETRY-001 and PAY-CAPTURE-RECON-001.",
+      "idempotency": "Event id unique per provider, environment and merchant; outcome writes idempotent under the fence.",
+      "failure": "Decryption or processing exceptions mark retry with exponential backoff up to 3600 seconds; the eighth attempt dead-letters.",
+      "recovery": "Dead letters are replayed by operations (operations-failure-replay.md).",
+      "observability": "attempt_count, last_attempt_at, processing_started_at, error_summary.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+      ],
+      "verification": "Bounded TLC with three workers and a negative control reproducing the stale-reclaim overwrite; Apalache inductive proof for any nonempty set of up to three workers, attempt budgets 1..8 and claim bounds 1..8; PostgreSQL-backed ProviderRetrySpec exercises claim, retry exhaustion and processed replay.",
+      "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test ProviderRetrySpec run with a database.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "formalModels": [
+        "formal/payments/ProviderInbox.tla",
+        "formal/payments/ProviderInbox.cfg",
+        "formal/payments/ProviderInboxLegacy.cfg"
+      ],
+      "confidence": "High for the lease protocol as modelled; the SQL-to-model correspondence is by review (one conditional UPDATE per write). No database test yet drives a stale reclaim followed by the stale worker's write.",
+      "ambiguity": [
+        "The model abstracts the fifteen-minute threshold to a nondeterministic Expire step.",
+        "Duplicate side effects of a reclaimed worker are delegated to downstream idempotency, not proved here."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Inductive proof and existing database tests; a stale-reclaim database test remains."
+      }
+    },
+    {
+      "id": "PAY-ADAPTER-BINDING-001",
+      "title": "Hosted provider adapters admit results only on an exact binding match",
+      "statement": "The PlaceToPay and PayPhone adapters parse a provider query or cancel response into a result only when the provider's reference, amount and currency equal the stored expectation and the provider identifier equals the stored session or transaction id; otherwise they fail. PlaceToPay reports success only for an APPROVED session with exactly one APPROVED unreversed transaction whose original and settled amounts both match; PayPhone callbacks are never authenticated and always require a server query. Money crosses the boundary as exact minor units: decimal amounts with sub-cent precision are rejected, not rounded.",
+      "domain": "PAY",
+      "authority": "Adapter module contracts (tdf-hq/src/TDF/Commerce/ProviderAdapter*.hs) and PAY-DOMAIN-BINDING-001; audit F-03 coverage gap.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-03); formal/payments/README.md",
+      "property": "parse(expected, response) = Right r => binding(response) = expected /\\ id(response) = id(locator); r.state = Succeeded => exactly one approved complete transaction (PlaceToPay) or statusCode 3 (PayPhone); decimalToMinor (minorToDecimal m) = Just m and decimalToMinor rejects sub-cent values.",
+      "contract": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
+      "actors": [
+        "Provider executor",
+        "PlaceToPay",
+        "PayPhone"
+      ],
+      "preconditions": [
+        "Adapter built from validated configuration."
+      ],
+      "inputs": [
+        "PaymentLocator with ExpectedPayment",
+        "provider JSON response"
+      ],
+      "state": {
+        "adapterResult": [
+          "pending",
+          "requires_customer_action",
+          "succeeded",
+          "cancelled",
+          "declined",
+          "unknown",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "response -> Right result only under an exact binding match",
+        "response -> Left otherwise"
+      ],
+      "forbiddenTransitions": [
+        "Right Succeeded with a mismatched reference, amount, currency or identifier",
+        "Right Succeeded for a refunded or partially approved PlaceToPay session",
+        "authenticated PayPhone callback"
+      ],
+      "effects": [
+        "Pure parsing; no I/O."
+      ],
+      "authorization": "Not applicable (pure).",
+      "privacy": "Credentials are SensitiveText and never printed.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Deterministic.",
+      "failure": "Every mismatch is an AdapterError with a public message.",
+      "recovery": "Callers reconcile (PAY-CAPTURE-RECON-001).",
+      "observability": "AdapterError messages.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs"
+      ],
+      "verification": "QuickCheck properties over the real adapters with generated matching and mismatching bindings, transaction status lists and status codes; exact money round-trip and sub-cent rejection.",
+      "evidence": "tdf-hq-test ProviderAdapterBindingSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "High for the parsers under generated inputs; the request builders (create/cancel bodies) and HTTP execution are covered by PAY-RETRY-001 and existing provider retry tests, not here.",
+      "ambiguity": [
+        "Signature verification of PlaceToPay notifications is covered by existing unit tests, not by these properties.",
+        "No proof that the generators cover every JSON shape the providers can return."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Property evidence on the parsers; request construction and runtime remain separate obligations."
+      }
+    },
+    {
+      "id": "PAY-COURSE-PRICE-001",
+      "title": "Course checkout price snapshot is exact and bounded",
+      "statement": "calculateCoursePrice prices a course in exact minor units: tax rounds half up in basis points within 0..10000, total = price + tax, a full-payment course charges the whole total now, a deposit course charges a rate in 1..9999 basis points rounded half up, dueNow + balance = total, 0 <= dueNow <= total, and any amount beyond Int64 is rejected.",
+      "domain": "PAY",
+      "authority": "tdf-hq/src/TDF/Commerce/CourseCheckout.hs contract comments and COURSE-ENROLL-001.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-03); formal/payments/README.md",
+      "property": "Lemmas proved over unbounded integers: deposit within total for rates 1..9999; balance strictly positive when total > 5000 minor units; a zero balance is reachable at or below 5000.",
+      "contract": "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
+      "actors": [
+        "Public course registrant",
+        "Policy approver"
+      ],
+      "preconditions": [
+        "Approved course checkout policy."
+      ],
+      "inputs": [
+        "price minor units",
+        "tax basis points",
+        "payment mode",
+        "deposit basis points"
+      ],
+      "state": {
+        "priceComputation": [
+          "priced",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "inputs -> priced when every guard holds and amounts fit Int64",
+        "inputs -> rejected with an explicit reason otherwise"
+      ],
+      "forbiddenTransitions": [
+        "priced with a wrapped Int64 amount",
+        "priced with dueNow > total or a negative balance"
+      ],
+      "effects": [
+        "Pure computation."
+      ],
+      "authorization": "Not applicable.",
+      "privacy": "Not applicable.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Deterministic.",
+      "failure": "Explicit Left messages.",
+      "recovery": "Not applicable.",
+      "observability": "Not applicable.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/CourseCheckout.hs"
+      ],
+      "verification": "Z3 4.13.3 lemmas with witnesses; QuickCheck properties on the real function including the overflow guard.",
+      "evidence": "formal/payments/domo_quote_arithmetic.py output; tdf-hq-test DomoQuotePropertiesSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
+      "formalModels": [],
+      "confidence": "High: lemmas unbounded, composition property-tested.",
+      "ambiguity": [
+        "A deposit course whose total is at most 50.00 can have a zero balance, so the deposit equals the full price; whether such courses should use the deposit mode is a business decision (F-20)."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Arithmetic proved and property-tested; the registration lifecycle and hold expiry are covered by COURSE-ENROLL-001 and PAY-CAPTURE-RECON-001."
+      }
+    },
+    {
+      "id": "AUTH-ADMIN-GUARD-001",
+      "title": "Every /admin leaf handler enforces an authorization guard",
+      "statement": "Every leaf handler mounted under the authenticated /admin API (ServerAdmin.adminServer and Server.RecordsIngestion.recordsIngestionServer) calls ensureStrictAdmin, ensureModule ModuleAdmin, or the records-ingestion requireAdmin before any effect; routers only delegate. The structural sweep scripts/check-admin-guards.py fails CI when a leaf handler has no guard call.",
+      "domain": "AUTH",
+      "authority": "AUTH-REGISTRY-001 predicates; audit F-18 (manual sweep of 60 handlers, 2026-11-01).",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-18)",
+      "property": "forall leaf handler h in admin: guard(h). Structural: a guard call appears in h's body; the predicate semantics are AUTH-REGISTRY-001.",
+      "contract": "scripts/check-admin-guards.py",
+      "actors": [
+        "Authenticated staff",
+        "Administrator"
+      ],
+      "preconditions": [
+        "Bearer-authenticated request reaching the protected server."
+      ],
+      "inputs": [
+        "AuthedUser roles and module grants"
+      ],
+      "state": {
+        "adminLeafHandler": [
+          "guarded",
+          "unguarded"
+        ]
+      },
+      "allowedTransitions": [
+        "handler added -> guarded in the same change"
+      ],
+      "forbiddenTransitions": [
+        "an admin leaf handler executing its effect without a guard call"
+      ],
+      "effects": [
+        "None; read-only source check."
+      ],
+      "authorization": "Strict admin or ModuleAdmin, per handler.",
+      "privacy": "Not applicable.",
+      "concurrency": "Not applicable.",
+      "idempotency": "Not applicable.",
+      "failure": "CI fails naming the unguarded handlers.",
+      "recovery": "Add the guard or register a reviewed helper.",
+      "observability": "Gate output.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
+        "scripts/check-admin-guards.py"
+      ],
+      "verification": "Structural source sweep in CI; manual review of the twelve registered helpers.",
+      "evidence": "scripts/check-admin-guards.py output.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "scripts/check-admin-guards.py"
+      ],
+      "formalModels": [],
+      "confidence": "High that no leaf handler lacks a guard call; the gate is syntactic and does not establish that each guard is the right one or that the guard precedes every effect.",
+      "ambiguity": [
+        "Guard placement before effects is by review, not checked.",
+        "Handlers mounted outside these two modules are not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Structural gate in place; per-handler HTTP denial execution remains open (AUTH-REGISTRY-001)."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13877,7 +14166,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "28717ec1b73d9bd8f2da065ba97577e9195d1215ecb79c88edd60d5e97bb1195",
+    ".github/workflows/event-operations-formal.yml": "b7f021500b253a38e81396dc8532fc6f63e50a7350c62e9de8cccb8524515ae1",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -14207,11 +14496,14 @@
     "formal/payments/CaptureAccounting.cfg": "1c3cfc664c1a702b0f7db89a5aa631f94670e5297fd3ce38b1329f7f2aad743c",
     "formal/payments/CaptureAccounting.tla": "78c86aa59ebfd73c24fda852348978875a5f60f8925d5f4fbc8e0e7ebb104172",
     "formal/payments/CaptureAccountingLegacy.cfg": "eaba43f7267541499daabeb5e4e512679b2ab36b34154c28dbfaaa1b1f078c30",
+    "formal/payments/ProviderInbox.cfg": "c338fd5ea2fc6cb09f6b3c84757a49607180238a24816a60abd8ed81a688b716",
+    "formal/payments/ProviderInbox.tla": "d8031c066a1ae6b2662f8ea6a058721a6ca9a570b21d7f4db7a0d530c54ca557",
+    "formal/payments/ProviderInboxLegacy.cfg": "f220fe509efe3db485668e3a10cb130e83b28d603bbbc9dde8ec41faae57cba1",
     "formal/payments/StripeIntentOutcome.cfg": "08ab691b2e45f5c419be1188c66733c35df2c51bcadad26a5389d4e45ce65180",
     "formal/payments/StripeIntentOutcome.tla": "f90c50f337b57734f1fa10e0ed782b29288eafabeb0cf5b1b82a31a89d4da55d",
     "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg": "4ee4910e438960debc6a0ea55f4e4fb080b8a0bc07bd34bd226d0ae0be95abb4",
     "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg": "0318b9637e5ccb2bf641b0e7816ee64e3b944e7662a9870e6ec8a477871d2dbf",
-    "formal/payments/domo_quote_arithmetic.py": "0a3ff4e2cc9b0e0c842f4abce3502c9e14aabfe60ac7bc1e0a982118903bc348",
+    "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -14225,7 +14517,7 @@
     "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "ef15fb5c615f577bf11c4158d8032a04714318f1033b68ffdb3f00e5f040c43f",
+    "formal/system/recovery-expiry-arithmetic.json": "4f96b5f50c11369575c35cea3f75b91c3faa37ae940b61a0bd399e829b737cfc",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -14331,6 +14623,7 @@
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
+    "scripts/check-admin-guards.py": "1839a26c893c4b910ad767f70f4f0abb733dc5e65bdc944f2c5f678fa0088ac8",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
@@ -14525,7 +14818,7 @@
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
-    "scripts/verify-inductive-proofs.sh": "d904cf0328730ce5f1c8d38856d4c8356bd793fe0a5c3ac6b6f647fcaec38fbc",
+    "scripts/verify-inductive-proofs.sh": "691cf28577d664fcfaa52ef4e78ea441e4b30041eb2ac5cef31c10b05388cdbc",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -15012,6 +15305,7 @@
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
     "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "108bb356ae8afca170851515fdd16a468881f4621bc9b3f89f59c312a5e6b427",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
+    "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "e3ef7dda2df82c2c04080597197b8b13cc46aa8ce44d6d4877a8a4dabec8154d",
     "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": "5acc12c8159c592832e38f69ed75e958504bf841341970759cc7df18fb1b2081",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
@@ -15019,8 +15313,12 @@
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a",
     "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
-    "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": "901c237849c3a4b102ea5e0bdc16c029bfce1096fec5ccb40d0e8e3aa9d2f5cf",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs": "58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9",
+    "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
+    "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "ed7e4240362edafb3cb90524c148832e6880cf89f62a6ea3120add7c0dfc0016",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
     "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
@@ -15085,7 +15383,7 @@
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "14ff9f888212e5a78d41708c1e61a68c3983bbfb794a9a57f837cf59bc57a56e",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "206eb6d9815e739f855c7f09407eef0ed43934356446420611984117ea47a414",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "e999cd12e7ff20fa7622ccd86b3008663d12861156d5e2290582bff663027ed6",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "9f65feb02951330dc232cb0eb446c7f812c5dabf718be33c21c2e59f7dbe882b",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
@@ -15112,21 +15410,22 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "4105a289e04ef277e6f298e9755457f3780cdddf036a2643b6993d5d3d0da239",
+    "tdf-hq/tdf-hq.cabal": "2023fa80accdb0e584a0f47be60ac2a8a15f1b9495cada0de86db64c70db0e92",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "1f9af8a8777ee6f49a99847b3d973c3954e88b5d7bd67b7207fe27fc51f788e8",
+    "tdf-hq/test/Spec.hs": "27d36364bbb22b5df3729c5ce7de1ef284216764939b9df0ba3db6a54c676b30",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "2070ec578fe45e417f7d4255555467c4caca6c6f8e470ed2027ec4692a6fa07d",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
-    "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "bf03722e18c0a2dfd37b143127c5bbfa03422b2550734ebabd6d0fb773b74054",
+    "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "9daa2fc28741f1f448bce67a37e52bae5b32767720029aa2919d6e3f7da9fcc1",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
+    "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "49d3deb4beed24f40cba32d100739884ae0cf1369af964005329f20b9c12f06c",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -16731,6 +17030,10 @@
       {
         "requirement": "AUTH-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ADMIN-GUARD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/assets/feature-registry.json": [
@@ -17042,6 +17345,10 @@
     "tdf-hq/src/TDF/ServerAdmin.hs": [
       {
         "requirement": "ID-SESSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ADMIN-GUARD-001",
         "relationship": "implementation"
       }
     ],
@@ -17511,6 +17818,10 @@
       {
         "requirement": "PAY-DOMAIN-BINDING-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-provider-retry-runtime.sh": [
@@ -17746,6 +18057,10 @@
       },
       {
         "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
         "relationship": "tests"
       }
     ],
@@ -18861,6 +19176,10 @@
       {
         "requirement": "PAY-CAPTURE-RECON-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": [
@@ -19750,6 +20069,10 @@
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": [
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
         "relationship": "implementation"
       }
     ],
@@ -26731,6 +27054,10 @@
       {
         "requirement": "PAY-CAPTURE-RECON-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-artist-visibility-sql.py": [
@@ -26797,6 +27124,10 @@
       {
         "requirement": "PAY-DOMO-QUOTE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-COURSE-PRICE-001",
+        "relationship": "tests"
       }
     ],
     "formal/payments/CaptureAccounting.tla": [
@@ -26826,6 +27157,74 @@
     "formal/payments/domo_quote_arithmetic.py": [
       {
         "requirement": "PAY-DOMO-QUOTE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-COURSE-PRICE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": [
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/payments/ProviderInbox.tla": [
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/payments/ProviderInbox.cfg": [
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/payments/ProviderInboxLegacy.cfg": [
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs": [
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs": [
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": [
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": [
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": [
+      {
+        "requirement": "PAY-COURSE-PRICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/check-admin-guards.py": [
+      {
+        "requirement": "AUTH-ADMIN-GUARD-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ADMIN-GUARD-001",
         "relationship": "tests"
       }
     ]
@@ -26992,7 +27391,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "28717ec1b73d9bd8f2da065ba97577e9195d1215ecb79c88edd60d5e97bb1195",
+      "sha256": "b7f021500b253a38e81396dc8532fc6f63e50a7350c62e9de8cccb8524515ae1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29376,6 +29775,22 @@
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-b97fb34e9d864d74",
+      "path": "scripts/check-admin-guards.py",
+      "sha256": "1839a26c893c4b910ad767f70f4f0abb733dc5e65bdc944f2c5f678fa0088ac8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ADMIN-GUARD-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-ADMIN-GUARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4bf839700e64b995",
@@ -33706,7 +34121,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "d904cf0328730ce5f1c8d38856d4c8356bd793fe0a5c3ac6b6f647fcaec38fbc",
+      "sha256": "691cf28577d664fcfaa52ef4e78ea441e4b30041eb2ac5cef31c10b05388cdbc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33715,6 +34130,10 @@
         },
         {
           "requirement": "PAY-CAPTURE-RECON-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-PROVIDER-INBOX-001",
           "relationship": "tests"
         }
       ]
@@ -46841,7 +47260,12 @@
       "path": "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
       "sha256": "e3ef7dda2df82c2c04080597197b8b13cc46aa8ce44d6d4877a8a4dabec8154d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-COURSE-PRICE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-764d135c920e69a2",
@@ -46961,7 +47385,12 @@
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "sha256": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-ADAPTER-BINDING-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-059d1c74b4946473",
@@ -46987,14 +47416,24 @@
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
       "sha256": "901c237849c3a4b102ea5e0bdc16c029bfce1096fec5ccb40d0e8e3aa9d2f5cf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-ADAPTER-BINDING-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f3e27f9ed209afef",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
       "sha256": "58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-ADAPTER-BINDING-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-163048cc75f29b92",
@@ -47013,11 +47452,15 @@
     {
       "id": "SURFACE-e499402b9aad0cfc",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
-      "sha256": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
+      "sha256": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PROVIDER-INBOX-001",
           "relationship": "implementation"
         }
       ]
@@ -47025,9 +47468,14 @@
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "57320f3b97d5f82419e1942b769fd4c8ab9766a58cbdd8fc01caff82cd3ca639",
+      "sha256": "ed7e4240362edafb3cb90524c148832e6880cf89f62a6ea3120add7c0dfc0016",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PROVIDER-INBOX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1d441708a9c7e070",
@@ -48464,6 +48912,10 @@
         {
           "requirement": "AUTH-REGISTRY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-ADMIN-GUARD-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -48477,7 +48929,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "206eb6d9815e739f855c7f09407eef0ed43934356446420611984117ea47a414",
+      "sha256": "e999cd12e7ff20fa7622ccd86b3008663d12861156d5e2290582bff663027ed6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48494,6 +48946,10 @@
         },
         {
           "requirement": "PAY-CAPTURE-RECON-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PROVIDER-INBOX-001",
           "relationship": "implementation"
         }
       ]
@@ -48628,6 +49084,10 @@
       "requirements": [
         {
           "requirement": "ID-SESSION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-ADMIN-GUARD-001",
           "relationship": "implementation"
         }
       ]
@@ -49131,7 +49591,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "4105a289e04ef277e6f298e9755457f3780cdddf036a2643b6993d5d3d0da239",
+      "sha256": "2023fa80accdb0e584a0f47be60ac2a8a15f1b9495cada0de86db64c70db0e92",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49277,7 +49737,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1f9af8a8777ee6f49a99847b3d973c3954e88b5d7bd67b7207fe27fc51f788e8",
+      "sha256": "27d36364bbb22b5df3729c5ce7de1ef284216764939b9df0ba3db6a54c676b30",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49346,6 +49806,10 @@
         },
         {
           "requirement": "PAY-CAPTURE-RECON-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-ADAPTER-BINDING-001",
           "relationship": "tests"
         }
       ]
@@ -49465,7 +49929,7 @@
     {
       "id": "SURFACE-8764885fa15a0fd8",
       "path": "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
-      "sha256": "bf03722e18c0a2dfd37b143127c5bbfa03422b2550734ebabd6d0fb773b74054",
+      "sha256": "9daa2fc28741f1f448bce67a37e52bae5b32767720029aa2919d6e3f7da9fcc1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49474,6 +49938,10 @@
         },
         {
           "requirement": "PAY-DOMO-QUOTE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-COURSE-PRICE-001",
           "relationship": "tests"
         }
       ]
@@ -49499,9 +49967,21 @@
       ]
     },
     {
+      "id": "SURFACE-5d36ee6901338dab",
+      "path": "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
+      "sha256": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-ADAPTER-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
+      "sha256": "49d3deb4beed24f40cba32d100739884ae0cf1369af964005329f20b9c12f06c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49526,6 +50006,10 @@
         },
         {
           "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-PROVIDER-INBOX-001",
           "relationship": "tests"
         }
       ]
@@ -55552,17 +56036,12 @@
     "SURFACE-fafba19435170b95",
     "SURFACE-511b3353261bf5fb",
     "SURFACE-68f141730b470989",
-    "SURFACE-ee01356d907d3fc2",
     "SURFACE-6158a3005f97f9a6",
     "SURFACE-42d48212b5b3fd40",
     "SURFACE-64cb8366887e5054",
-    "SURFACE-1f329e23e5aba24d",
     "SURFACE-059d1c74b4946473",
-    "SURFACE-9038b2dbdf428e2c",
-    "SURFACE-f3e27f9ed209afef",
     "SURFACE-163048cc75f29b92",
     "SURFACE-d117ca68ab1ef0d1",
-    "SURFACE-ec38793d0cc5b091",
     "SURFACE-b3ab13afc655164b",
     "SURFACE-e566657be7de3ed5",
     "SURFACE-95011c3eb812e7fd",
@@ -56066,7 +56545,10 @@
     "MEDIA-MUSIC-PRIVACY-001",
     "SYS-CI-SELECTED-001",
     "ART-PUBLIC-VISIBILITY-001",
-    "PAY-DOMO-QUOTE-001"
+    "PAY-DOMO-QUOTE-001",
+    "PAY-ADAPTER-BINDING-001",
+    "PAY-COURSE-PRICE-001",
+    "AUTH-ADMIN-GUARD-001"
   ],
   "stateMachines": [
     {
@@ -57185,7 +57667,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7c641e5143273ac19ecfbf371b834d265f36674944e7bd5a37c5bcda712c66e7",
+      "sourceSha256": "e43d088861bac79acb169600c64907af77de6be502494047d9f8c270d4abfd9f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57213,7 +57695,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7c641e5143273ac19ecfbf371b834d265f36674944e7bd5a37c5bcda712c66e7",
+      "sourceSha256": "e43d088861bac79acb169600c64907af77de6be502494047d9f8c270d4abfd9f",
       "definition": {
         "states": [
           "absent",
@@ -57243,7 +57725,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7c641e5143273ac19ecfbf371b834d265f36674944e7bd5a37c5bcda712c66e7",
+      "sourceSha256": "e43d088861bac79acb169600c64907af77de6be502494047d9f8c270d4abfd9f",
       "definition": {
         "export": [
           "queued",
@@ -79730,7 +80212,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 163,
+    "PARTIAL": 167,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

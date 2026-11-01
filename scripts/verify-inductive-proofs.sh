@@ -72,7 +72,7 @@ apalache_expect() {
     echo "TDF_APALACHE_RESULT proof ${module} ${label}"
     return 0
   fi
-  if [[ "${expect}" == "Error" && "${outcome}" == "Error" ]] && grep -q "state invariant 0 violated" "${log}"; then
+  if [[ "${expect}" == "Error" && "${outcome}" == "Error" ]] && grep -Eq "state invariant [0-9]+ violated" "${log}"; then
     echo "TDF_APALACHE_RESULT negative ${module} ${label}"
     return 0
   fi
@@ -130,5 +130,15 @@ apalache_expect "${C}" CInitReconcile Init IndInv 0 NoError "CaptureAccounting-i
 apalache_expect "${C}" CInitReconcile IndInv IndInv 1 NoError "CaptureAccounting-consecution"
 apalache_expect "${C}" CInitReconcile IndInv Safe 0 NoError "CaptureAccounting-implication"
 apalache_expect "${C}" CInitLegacy Init Safe 6 Error "CaptureAccountingLegacy-reachable-violation"
+
+P=ProviderInbox.tla
+
+# PAY-PROVIDER-INBOX-001: lease writes fenced by the claimed attempt number.
+tlc_expect "${P}" ProviderInbox.cfg pass
+tlc_expect "${P}" ProviderInboxLegacy.cfg violation
+apalache_expect "${P}" CInitFence Init IndInv 0 NoError "ProviderInbox-initiation"
+apalache_expect "${P}" CInitFence IndInv IndInv 1 NoError "ProviderInbox-consecution"
+apalache_expect "${P}" CInitFence IndInv Safe 0 NoError "ProviderInbox-implication"
+apalache_expect "${P}" CInitLegacy Init Safe 6 Error "ProviderInboxLegacy-reachable-violation"
 
 echo "Inductive proofs and controls passed."

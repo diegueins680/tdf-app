@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | PAY-DOMO-QUOTE-001 arithmetic properties of 'calculateDomoQuote', and the
+-- | PAY-DOMO-QUOTE-001 arithmetic properties of 'calculateDomoQuote',
+-- PAY-COURSE-PRICE-001 properties of 'calculateCoursePrice', and the
 -- PAY-CAPTURE-RECON-001 decision of 'verifiedPaymentNeedsReconciliation'.
 module TDF.Commerce.DomoQuotePropertiesSpec (spec) where
 
@@ -15,6 +16,7 @@ import           TDF.Commerce.CheckoutStore
   , verifiedPaymentNeedsReconciliation
   )
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import           TDF.Commerce.CourseCheckout
 import           TDF.Commerce.DomoQuotes
 
 -- Rate cards within the documented validation envelope, including amounts
@@ -93,6 +95,37 @@ spec = do
             card' = huge { drcMaximumDurationHours = max 2 (drcMaximumDurationHours huge) }
         in calculateDomoQuote card' input' === Left "Domo quote total is too large"
 
+  describe "calculateCoursePrice arithmetic (PAY-COURSE-PRICE-001)" $ do
+    let genPrice = frequency [(8, fromIntegral <$> chooseInt (1, 5000000)), (1, choose (1, maxBound `div` 4))] :: Gen Int64
+    it "full payment charges exactly the total and leaves no balance" $
+      property $ forAll genPrice $ \price -> forAll (chooseInt (0, 10000)) $ \taxBps ->
+        case calculateCoursePrice price taxBps CourseFullPayment 10000 of
+          Left err -> counterexample (show err) False
+          Right b -> conjoin
+            [ toInteger (cpbTotalMinor b) === toInteger price + toInteger (cpbTaxMinor b)
+            , cpbDueNowMinor b === cpbTotalMinor b
+            , cpbBalanceMinor b === 0
+            , property (cpbTaxMinor b >= 0 && cpbTaxMinor b <= price)
+            ]
+    it "deposit mode keeps the deposit within the total and the balance non-negative" $
+      property $ forAll genPrice $ \price -> forAll (chooseInt (0, 10000)) $ \taxBps ->
+        forAll (chooseInt (1, 9999)) $ \depositBps ->
+          case calculateCoursePrice price taxBps CourseDeposit depositBps of
+            Left err -> counterexample (show err) False
+            Right b -> conjoin
+              [ toInteger (cpbDueNowMinor b) + toInteger (cpbBalanceMinor b) === toInteger (cpbTotalMinor b)
+              , property (cpbDueNowMinor b >= 0 && cpbDueNowMinor b <= cpbTotalMinor b)
+              , property (cpbBalanceMinor b >= 0)
+              , property (cpbTotalMinor b <= 5000 || cpbBalanceMinor b > 0)
+              ]
+    it "rejects the deposit rate boundaries and a full-payment rate other than 10000" $ do
+      calculateCoursePrice 10000 1200 CourseDeposit 0 `shouldSatisfy` isLeftE
+      calculateCoursePrice 10000 1200 CourseDeposit 10000 `shouldSatisfy` isLeftE
+      calculateCoursePrice 10000 1200 CourseFullPayment 5000 `shouldSatisfy` isLeftE
+      calculateCoursePrice 0 1200 CourseFullPayment 10000 `shouldSatisfy` isLeftE
+    it "rejects instead of wrapping beyond Int64" $
+      calculateCoursePrice maxBound 10000 CourseFullPayment 10000 === Left "Course total is too large"
+
   describe "verifiedPaymentNeedsReconciliation (PAY-CAPTURE-RECON-001)" $ do
     let base = VerifiedPayment
           { vpAttempt = Checkout.PaymentAttemptReference "00000000-0000-0000-0000-000000000001"
@@ -119,3 +152,6 @@ spec = do
     it "records nothing for evidence that is not money" $ do
       verifiedPaymentNeedsReconciliation base { vpEvidence = "browser_redirect" } (Left "x") `shouldBe` False
       verifiedPaymentNeedsReconciliation base { vpAmountMinor = 0 } (Left "x") `shouldBe` False
+
+isLeftE :: Either a b -> Bool
+isLeftE = either (const True) (const False)

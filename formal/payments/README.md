@@ -1,4 +1,7 @@
-# Payment proofs (PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001)
+# Payment proofs
+
+PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001.
 
 ## Contract
 
@@ -82,4 +85,43 @@ basis points, a negative total) show the bounds are necessary. QuickCheck
 properties in `tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs` check the real
 `calculateDomoQuote`: line sums, `total = subtotal + tax`,
 `deposit + balance = total`, and rejection instead of wrapping beyond Int64.
+
+## Provider event lease fencing (PAY-PROVIDER-INBOX-001)
+
+`ProviderInbox.tla` models one inbox event, workers that claim it (incrementing
+`attempt_count`), a stale lease that another worker may reclaim after fifteen
+minutes, and the outcome write of each worker.
+
+Before 2026-11-01 the outcome writes only required `processing_status =
+'processing'`. TLC finds the defect with two workers: A claims attempt 1 and
+stalls, B reclaims attempt 2, A finishes and writes `dead_letter` over B's lease
+(`TerminalByLatest` violated); in the retry variant, A writes `retry` and B's
+later success can no longer be recorded (`NoLostSuccess` violated), so the event
+is processed again. Every write now also requires `attempt_count = <claimed
+attempt>`. Apalache proves `TerminalByLatest /\ NoLostSuccess` inductively for any
+nonempty set of up to three workers and any attempt budget and claim bound in
+1..8, and finds the violation for the unfenced protocol.
+
+The side effect a reclaimed worker already performed is outside this model; its
+idempotency is PAY-RETRY-001 and PAY-CAPTURE-RECON-001.
+
+## Course price arithmetic (PAY-COURSE-PRICE-001)
+
+`domo_quote_arithmetic.py` also covers `calculateCoursePrice`, which uses the same
+half-up basis-point rounding with a deposit rate in 1..9999: the deposit stays
+within the total, and the balance is strictly positive whenever the total exceeds
+50.00 (5000 minor units). Below that, a deposit can equal the whole total; Z3 gives
+the witness. QuickCheck properties on the real function are in
+`tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs`.
+
+## Hosted adapter binding admission (PAY-ADAPTER-BINDING-001)
+
+`tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs` drives the real PlaceToPay
+and PayPhone adapters with generated provider responses whose reference, amount
+and currency either equal the stored expectation or differ in exactly one field.
+The adapters admit a result only on an exact match; PlaceToPay reports success only
+for exactly one approved, unreversed transaction; PayPhone callbacks are never
+authenticated. Money conversion round-trips every minor amount and rejects
+sub-cent precision. These are properties, not proofs: they cover the generated
+response shapes.
 

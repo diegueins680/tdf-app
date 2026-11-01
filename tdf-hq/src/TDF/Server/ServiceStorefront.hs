@@ -839,17 +839,17 @@ paypalWebhookHandler transmissionId transmissionTime certUrl authAlgo transmissi
         PaypalEventProcessed checkoutId attemptId refundId -> do
           liftIO $ flip runSqlPool envPool $
             ProviderEvent.markProviderEventProcessed
-              (ProviderEvent.pesReference stored) checkoutId attemptId refundId now
+              (ProviderEvent.pesReference stored) attemptCount checkoutId attemptId refundId now
           pure NoContent
         PaypalEventIgnored -> do
           liftIO $ flip runSqlPool envPool $
             ProviderEvent.markProviderEventIgnored
-              (ProviderEvent.pesReference stored) Nothing Nothing Nothing now
+              (ProviderEvent.pesReference stored) attemptCount Nothing Nothing Nothing now
           pure NoContent
         PaypalEventPermanentFailure summary checkoutId attemptId refundId -> do
           liftIO $ flip runSqlPool envPool $
             ProviderEvent.markProviderEventDeadLetter
-              (ProviderEvent.pesReference stored)
+              (ProviderEvent.pesReference stored) attemptCount
               checkoutId attemptId refundId summary now
           pure NoContent
         PaypalEventRetry summary -> do

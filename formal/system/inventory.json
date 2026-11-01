@@ -234,6 +234,7 @@
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
       "scripts/catalog-list-audit.mjs",
+      "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
       "scripts/check-build-trust.mjs",
       "scripts/check-dependency-security.mjs",
@@ -2228,6 +2229,7 @@
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
       "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+      "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
       "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
       "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
       "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
@@ -2824,7 +2826,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "28717ec1b73d9bd8f2da065ba97577e9195d1215ecb79c88edd60d5e97bb1195",
+      "sha256": "b7f021500b253a38e81396dc8532fc6f63e50a7350c62e9de8cccb8524515ae1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4055,6 +4057,12 @@
       "id": "SURFACE-74289e89f4a7d171",
       "path": "scripts/catalog-list-audit.mjs",
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b97fb34e9d864d74",
+      "path": "scripts/check-admin-guards.py",
+      "sha256": "1839a26c893c4b910ad767f70f4f0abb733dc5e65bdc944f2c5f678fa0088ac8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6364,7 +6372,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "d904cf0328730ce5f1c8d38856d4c8356bd793fe0a5c3ac6b6f647fcaec38fbc",
+      "sha256": "691cf28577d664fcfaa52ef4e78ea441e4b30041eb2ac5cef31c10b05388cdbc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14824,13 +14832,13 @@
     {
       "id": "SURFACE-e499402b9aad0cfc",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
-      "sha256": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
+      "sha256": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "57320f3b97d5f82419e1942b769fd4c8ab9766a58cbdd8fc01caff82cd3ca639",
+      "sha256": "ed7e4240362edafb3cb90524c148832e6880cf89f62a6ea3120add7c0dfc0016",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15502,7 +15510,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "206eb6d9815e739f855c7f09407eef0ed43934356446420611984117ea47a414",
+      "sha256": "e999cd12e7ff20fa7622ccd86b3008663d12861156d5e2290582bff663027ed6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15844,7 +15852,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "4105a289e04ef277e6f298e9755457f3780cdddf036a2643b6993d5d3d0da239",
+      "sha256": "2023fa80accdb0e584a0f47be60ac2a8a15f1b9495cada0de86db64c70db0e92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15916,7 +15924,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1f9af8a8777ee6f49a99847b3d973c3954e88b5d7bd67b7207fe27fc51f788e8",
+      "sha256": "27d36364bbb22b5df3729c5ce7de1ef284216764939b9df0ba3db6a54c676b30",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15976,7 +15984,7 @@
     {
       "id": "SURFACE-8764885fa15a0fd8",
       "path": "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
-      "sha256": "bf03722e18c0a2dfd37b143127c5bbfa03422b2550734ebabd6d0fb773b74054",
+      "sha256": "9daa2fc28741f1f448bce67a37e52bae5b32767720029aa2919d6e3f7da9fcc1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15986,9 +15994,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5d36ee6901338dab",
+      "path": "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
+      "sha256": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
+      "sha256": "49d3deb4beed24f40cba32d100739884ae0cf1369af964005329f20b9c12f06c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26960,8 +26974,29 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/payments/ProviderInbox.cfg",
+      "sha256": "c338fd5ea2fc6cb09f6b3c84757a49607180238a24816a60abd8ed81a688b716",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/payments/ProviderInbox.tla",
+      "sha256": "d8031c066a1ae6b2662f8ea6a058721a6ca9a570b21d7f4db7a0d530c54ca557",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/payments/ProviderInboxLegacy.cfg",
+      "sha256": "f220fe509efe3db485668e3a10cb130e83b28d603bbbc9dde8ec41faae57cba1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/payments/README.md",
-      "sha256": "2a3a2add1c6c5ebf1188b279f60997f279af3ba657e7b83670b86d326c57ab1a",
+      "sha256": "442cd40412701c32233bae216e089cdfc696666ec2ccdd3e35a377f78cdc63e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27437,7 +27472,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28102,7 +28137,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7c641e5143273ac19ecfbf371b834d265f36674944e7bd5a37c5bcda712c66e7",
+      "sha256": "e43d088861bac79acb169600c64907af77de6be502494047d9f8c270d4abfd9f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33831,7 +33866,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -33862,7 +33897,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -33893,7 +33928,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -33924,7 +33959,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -33955,7 +33990,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -33986,7 +34021,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -34017,7 +34052,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -34048,7 +34083,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -34079,7 +34114,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -34110,7 +34145,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -34141,7 +34176,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -34172,7 +34207,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -34201,7 +34236,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -34230,7 +34265,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -34259,7 +34294,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -34288,7 +34323,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "574decf915129a51073dbbe9201de2cce4c3e0382fbaabed62f36b394d42c1b6",
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -34306,6 +34341,151 @@
             "ID": "F-16",
             "Sev.": "info",
             "Hallazgo": "Con un total pequeño y una tasa de depósito baja, el depósito redondeado puede ser 0 y la cotización se rechaza. Es seguro, pero conviene confirmar que es la intención de negocio."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-17-A8D218EC",
+      "declaredId": "F-17",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 205,
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-17",
+        "Sev.": "error",
+        "Hallazgo": "Las escrituras de resultado del inbox de eventos de proveedor (`processed`, `ignored`, `retry`, `dead_letter`) solo exigían `processing_status = 'processing'`. Un worker colgado más de 15 minutos pierde su lease, otro lo reclama, y el primero podía después sobrescribir el resultado del segundo: marcar `dead_letter` un evento que el otro procesó bien, o marcar `retry` y provocar que el evento se procese otra vez. **Corregido** cercando cada escritura con el `attempt_count` reclamado (`PAY-PROVIDER-INBOX-001`). TLC reproduce el defecto; Apalache demuestra la corrección de forma inductiva. El doble efecto del worker reclamado (admisión del pago) queda cubierto por la idempotencia de `PAY-RETRY-001` y `PAY-CAPTURE-RECON-001`."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 205,
+          "statement": "error",
+          "columns": {
+            "ID": "F-17",
+            "Sev.": "error",
+            "Hallazgo": "Las escrituras de resultado del inbox de eventos de proveedor (`processed`, `ignored`, `retry`, `dead_letter`) solo exigían `processing_status = 'processing'`. Un worker colgado más de 15 minutos pierde su lease, otro lo reclama, y el primero podía después sobrescribir el resultado del segundo: marcar `dead_letter` un evento que el otro procesó bien, o marcar `retry` y provocar que el evento se procese otra vez. **Corregido** cercando cada escritura con el `attempt_count` reclamado (`PAY-PROVIDER-INBOX-001`). TLC reproduce el defecto; Apalache demuestra la corrección de forma inductiva. El doble efecto del worker reclamado (admisión del pago) queda cubierto por la idempotencia de `PAY-RETRY-001` y `PAY-CAPTURE-RECON-001`."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-18-A8D218EC",
+      "declaredId": "F-18",
+      "statement": "info",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 211,
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-18",
+        "Sev.": "info",
+        "Hallazgo": "`/admin/**`: barrido de los 60 manejadores de `ServerAdmin.hs` y `Server/RecordsIngestion.hs`. Todos los manejadores hoja exigen `ensureStrictAdmin` o `ensureModule ModuleAdmin`; los enrutadores solo delegan. No hay rutas admin sin guarda. Convertido en gate: `scripts/check-admin-guards.py` (`AUTH-ADMIN-GUARD-001`) falla en CI si un manejador hoja pierde su guarda; es un chequeo sintáctico, no prueba que la guarda sea la correcta ni que preceda a todo efecto."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 211,
+          "statement": "info",
+          "columns": {
+            "ID": "F-18",
+            "Sev.": "info",
+            "Hallazgo": "`/admin/**`: barrido de los 60 manejadores de `ServerAdmin.hs` y `Server/RecordsIngestion.hs`. Todos los manejadores hoja exigen `ensureStrictAdmin` o `ensureModule ModuleAdmin`; los enrutadores solo delegan. No hay rutas admin sin guarda. Convertido en gate: `scripts/check-admin-guards.py` (`AUTH-ADMIN-GUARD-001`) falla en CI si un manejador hoja pierde su guarda; es un chequeo sintáctico, no prueba que la guarda sea la correcta ni que preceda a todo efecto."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-19-A8D218EC",
+      "declaredId": "F-19",
+      "statement": "error",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 212,
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-19",
+        "Sev.": "error",
+        "Hallazgo": "`POST /instagram/oauth/exchange` (requiere acceso al módulo de bandeja social): la fila `social_sync_account` es única por `(platform, externalUserId)` y el intercambio hace `upsert` reasignando `party_id` al usuario actual. Dos efectos: (a) si la cuenta de Instagram ya estaba vinculada a otra party, se reasigna en silencio, sin auditoría, y las publicaciones sincronizadas pasan a atribuirse al nuevo usuario; (b) el acceso a la bandeja social lo tienen Admin, Manager, StudioManager, Reception y LiveSessionsProducer; `resolveInstagramDeliveryAccount` y el backfill de Meta eligen \"la cuenta conectada más reciente\" de toda la plataforma, así que cualquier usuario con acceso a la bandeja social que conecte su propia página convierte su token en el canal de envío de mensajes de la plataforma. **Sin corregir**: la política de qué cuentas son canales de la plataforma es decisión de negocio (Q6). Recomendación: marcar las cuentas conectadas por OAuth como \"del usuario\" y usar para envío solo las designadas por un administrador; al cambiar de party, exigir confirmación o rol admin y registrar auditoría."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 212,
+          "statement": "error",
+          "columns": {
+            "ID": "F-19",
+            "Sev.": "error",
+            "Hallazgo": "`POST /instagram/oauth/exchange` (requiere acceso al módulo de bandeja social): la fila `social_sync_account` es única por `(platform, externalUserId)` y el intercambio hace `upsert` reasignando `party_id` al usuario actual. Dos efectos: (a) si la cuenta de Instagram ya estaba vinculada a otra party, se reasigna en silencio, sin auditoría, y las publicaciones sincronizadas pasan a atribuirse al nuevo usuario; (b) el acceso a la bandeja social lo tienen Admin, Manager, StudioManager, Reception y LiveSessionsProducer; `resolveInstagramDeliveryAccount` y el backfill de Meta eligen \"la cuenta conectada más reciente\" de toda la plataforma, así que cualquier usuario con acceso a la bandeja social que conecte su propia página convierte su token en el canal de envío de mensajes de la plataforma. **Sin corregir**: la política de qué cuentas son canales de la plataforma es decisión de negocio (Q6). Recomendación: marcar las cuentas conectadas por OAuth como \"del usuario\" y usar para envío solo las designadas por un administrador; al cambiar de party, exigir confirmación o rol admin y registrar auditoría."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-21-A8D218EC",
+      "declaredId": "F-21",
+      "statement": "warning",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 222,
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-21",
+        "Sev.": "warning",
+        "Hallazgo": "`CI Safe Install` falla por `npm audit`: aviso alto GHSA-2p57-rm9w-gvfp en `ip`, vía `webtorrent > torrent-discovery > bittorrent-tracker` (dependencia de desarrollo). **No lo causa esta rama**: `main` (`be87455`, PR #646) falla igual desde el 2026-11-01; `main` en `234ff6f7` pasaba el 2026-10-30, así que el aviso es nuevo. Corrección pendiente aparte (actualizar o aislar `webtorrent`)."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 222,
+          "statement": "warning",
+          "columns": {
+            "ID": "F-21",
+            "Sev.": "warning",
+            "Hallazgo": "`CI Safe Install` falla por `npm audit`: aviso alto GHSA-2p57-rm9w-gvfp en `ip`, vía `webtorrent > torrent-discovery > bittorrent-tracker` (dependencia de desarrollo). **No lo causa esta rama**: `main` (`be87455`, PR #646) falla igual desde el 2026-11-01; `main` en `234ff6f7` pasaba el 2026-10-30, así que el aviso es nuevo. Corrección pendiente aparte (actualizar o aislar `webtorrent`)."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-F-22-A8D218EC",
+      "declaredId": "F-22",
+      "statement": "info",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "line": 223,
+      "sourceSha256": "7758a64e4dbbc7e036d528d4e6df42000413b7dc507bf2bea02a503e71f2dad3",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "F-22",
+        "Sev.": "info",
+        "Hallazgo": "El informe de garantía (`verification-report.py`) marcaba las obligaciones SMT de autorización y recuperación como `UNPROVEN` por \"Receipt source fingerprint mismatch\": sus recibos fijan el hash de `tdf-hq.cabal`, que esta rama cambia solo por registrar siete módulos nuevos. `Auth.hs`, `Models.hs`, `RecordsIngestion.hs`, `ServerAuth.hs`, el SQL de expiración y Stack/lock son idénticos a `main`. **Resuelto**: revisión de fuente añadida a ambos recibos según el procedimiento de `auth-predicates.md` y pin refrescado; el informe vuelve a demostrar las 11 obligaciones (`executionPassed: true`, release sigue `BLOCKED` por diseño)."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 223,
+          "statement": "info",
+          "columns": {
+            "ID": "F-22",
+            "Sev.": "info",
+            "Hallazgo": "El informe de garantía (`verification-report.py`) marcaba las obligaciones SMT de autorización y recuperación como `UNPROVEN` por \"Receipt source fingerprint mismatch\": sus recibos fijan el hash de `tdf-hq.cabal`, que esta rama cambia solo por registrar siete módulos nuevos. `Auth.hs`, `Models.hs`, `RecordsIngestion.hs`, `ServerAuth.hs`, el SQL de expiración y Stack/lock son idénticos a `main`. **Resuelto**: revisión de fuente añadida a ambos recibos según el procedimiento de `auth-predicates.md` y pin refrescado; el informe vuelve a demostrar las 11 obligaciones (`executionPassed: true`, release sigue `BLOCKED` por diseño)."
           }
         }
       ],
@@ -43635,6 +43815,38 @@
       "declarations": [
         "CONSTANTS",
         "  Reconcile = FALSE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/ProviderInbox.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Fence = TRUE",
+        "  Workers = {1, 2, 3}",
+        "  MaxAttempts = 3",
+        "  MaxClaims = 4",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/ProviderInboxLegacy.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Fence = FALSE",
+        "  Workers = {1, 2}",
+        "  MaxAttempts = 8",
+        "  MaxClaims = 4",
         "INIT Init",
         "NEXT Next",
         "INVARIANTS TypeOK Safe",
