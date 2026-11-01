@@ -14967,7 +14967,7 @@
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
-    "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "44069cd6e90f22552991d29475660c9d5a54780a4de39b692e39983f281cf953",
+    "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "2070ec578fe45e417f7d4255555467c4caca6c6f8e470ed2027ec4692a6fa07d",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
@@ -49165,7 +49165,7 @@
     {
       "id": "SURFACE-4ef1e9594dedfc53",
       "path": "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
-      "sha256": "44069cd6e90f22552991d29475660c9d5a54780a4de39b692e39983f281cf953",
+      "sha256": "2070ec578fe45e417f7d4255555467c4caca6c6f8e470ed2027ec4692a6fa07d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

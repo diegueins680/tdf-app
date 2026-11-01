@@ -17,7 +17,7 @@ spec = describe "TDF.Commerce.ArtistTip (PAY-TIP-001)" $ do
       artistPubliclyListed (artistDirectoryVisibilityFromCounts 0 0) `shouldBe` True
     it "lets a private, draft, moderated or merged identity hide the legacy profile" $
       artistPubliclyListed (artistDirectoryVisibilityFromCounts 2 0) `shouldBe` False
-    it "lists an artist with at least one public identity" $
+    it "lists an artist that has a public identity" $
       artistPubliclyListed (artistDirectoryVisibilityFromCounts 2 1) `shouldBe` True
     it "fails closed on impossible evidence" $ do
       artistPubliclyListed (artistDirectoryVisibilityFromCounts 1 2) `shouldBe` False
