@@ -6,7 +6,7 @@ export default defineConfig({
   testDir: './e2e/web',
   // These suites require their own synthetic-media or API/S3 lifecycle and
   // run from playwright.music-native/-integration.config.mjs instead.
-  testIgnore: [/music-player-native\.spec\.mjs$/, /music-player-integration\.spec\.mjs$/, /community-discovery\.spec\.mjs$/],
+  testIgnore: [/music-player-native\.spec\.mjs$/, /music-search-native\.spec\.mjs$/, /music-player-integration\.spec\.mjs$/, /community-discovery\.spec\.mjs$/],
   // Playwright's git-info plugin buffers the whole `git diff <prBase> HEAD`
   // into one string before truncating it. This repository's merge commits span
   // tens of thousands of files, which exceeds V8's maximum string length and

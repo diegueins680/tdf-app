@@ -1,0 +1,106 @@
+{
+  "source": "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+  "sha256": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
+  "solver": "4.13.3",
+  "results": [
+    {
+      "function": "capture",
+      "safety": "unsat",
+      "admission_equivalence": "unsat",
+      "non_vacuity": "sat",
+      "legacy_counterexample": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]"
+    },
+    {
+      "function": "refund",
+      "safety": "unsat",
+      "admission_equivalence": "unsat",
+      "non_vacuity": "sat",
+      "legacy_counterexample": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "capture-safety",
+      "file": "capture-safety.smt2",
+      "expected": "unsat",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "actual": "unsat",
+      "model": null
+    },
+    {
+      "id": "capture-admission",
+      "file": "capture-admission.smt2",
+      "expected": "unsat",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "actual": "unsat",
+      "model": null
+    },
+    {
+      "id": "capture-witness-0",
+      "file": "capture-witness-0.smt2",
+      "expected": "sat",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "actual": "sat",
+      "model": "[current = 0, limit = 1, amount = 1]"
+    },
+    {
+      "id": "capture-witness-1",
+      "file": "capture-witness-1.smt2",
+      "expected": "sat",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "actual": "sat",
+      "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775806]"
+    },
+    {
+      "id": "capture-legacy-counterexample",
+      "file": "capture-legacy-counterexample.smt2",
+      "expected": "sat",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "actual": "sat",
+      "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]"
+    },
+    {
+      "id": "refund-safety",
+      "file": "refund-safety.smt2",
+      "expected": "unsat",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "actual": "unsat",
+      "model": null
+    },
+    {
+      "id": "refund-admission",
+      "file": "refund-admission.smt2",
+      "expected": "unsat",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "actual": "unsat",
+      "model": null
+    },
+    {
+      "id": "refund-witness-0",
+      "file": "refund-witness-0.smt2",
+      "expected": "sat",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "actual": "sat",
+      "model": "[current = 0, limit = 1, amount = 1]"
+    },
+    {
+      "id": "refund-witness-1",
+      "file": "refund-witness-1.smt2",
+      "expected": "sat",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "actual": "sat",
+      "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775806]"
+    },
+    {
+      "id": "refund-legacy-counterexample",
+      "file": "refund-legacy-counterexample.smt2",
+      "expected": "sat",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "actual": "sat",
+      "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]"
+    }
+  ],
+  "executionPassed": true,
+  "error": null,
+  "boundary": "Two recognized Haskell arithmetic fragments, all signed Int64 inputs with nonnegative current and limit; trusted shallow translation; not SQL or whole-program refinement"
+}

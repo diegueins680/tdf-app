@@ -63,6 +63,18 @@ test('music source projection runner alone selects real PostgreSQL backend valid
   });
 });
 
+test('music purchase asset query alone selects the real backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-purchase-asset-query.py']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
+test('music track search runner alone selects real PostgreSQL backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-track-search.mjs']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
 test('OpenAPI changes validate both generated clients', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/docs/openapi/api.yaml']), {
     repo: true,
@@ -134,6 +146,9 @@ test('ledger runtime and verification changes select the real PostgreSQL backend
     'scripts/test-ledger-posting.sh',
     'scripts/test-provider-retry-runtime.sh',
     'scripts/verify-payment-intent-expiry.py',
+    'scripts/verify-checkout-money.py',
+    'scripts/test-checkout-money-verifier.py',
+    'scripts/verify-google-account-name.py',
     'scripts/__tests__/ledger-posting-upgrade.py',
     'scripts/__tests__/ledger-posting-snapshot.py',
     'scripts/__tests__/ledger-posting-namespace.py',

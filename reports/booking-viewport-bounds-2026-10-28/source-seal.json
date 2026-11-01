@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "84d7ed562ef54f759d061dce7a71337b047871a6",
+  "baselineMain": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "24cdaa83f7110b62f9b3f7a715c7d25cd3395f7b",
+  "sourceTree": "6da51d00079fa666f04f292652c3807935162a3b",
+  "registeredInputs": 1413,
+  "sourceDigest": "93efb8be0154ebfd7c543cd55f0b2b25bb52d9d279b6ec7b1a1d047cdf388be0",
+  "allRegisteredGitBlobAndMobileHashesVerified": true,
+  "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "contract": {
+    "path": "formal/system/booking-viewport-bounds.md",
+    "sha256": "c8d4474bf2041987906192b6560ae09e1d5ef08d44964cb080bf2719c6700263",
+    "discoveryEntryMatches": true
+  },
+  "mainApplicationAndWorkflowObjectsUnchanged": true,
+  "otherRequirementObjectsPreserved": 155,
+  "totalRequirements": 156,
+  "allCatalogDecisionObjectsExactMain": 1352,
+  "originalProviderArchiveObjectsExactOriginal": 15,
+  "materialChangedSurfaces": 1,
+  "cleanCommittedAssurancePass": true,
+  "localPositiveBrowserCases": 9,
+  "localWebKitExecuted": false,
+  "manualIntegerWidthClaims": {
+    "count": 2,
+    "checkerSha256": "2a8b301bd8beba7947f813cb65181703647049778c16e2b240e9ce333b3673bf",
+    "sourceSha256": "4d2c74f95eb3683f93f0c94d3ab46def1437e7876f70d7a760889a2e384091b7",
+    "normalAndOptimizedReceiptsIdentical": true,
+    "sourceComparatorMutantRejectedBothModes": true,
+    "scope": "Conditional comparison abstraction only; hash/syntax binding is not JS/CSSOM/compiler refinement."
+  },
+  "originalHostedWebKitCause": "UNKNOWN",
+  "hostedNewSourceQualification": "pending",
+  "requiredNewCurrentHeadGitHubReview": "pending",
+  "release": "BLOCKED"
+}

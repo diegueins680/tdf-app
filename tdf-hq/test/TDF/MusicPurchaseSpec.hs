@@ -122,6 +122,26 @@ spec = describe "music-purchase-postgresql" $ do
         either errHTTPCode (const 201) response `shouldBe` 404
         ordersOf pool offer `shouldReturn` 0
 
+      forM_ ["quarantined", "uploaded", "inspecting", "valid", "invalid", "processing", "failed", "deleted"] $ \state ->
+        it ("refuses a purchase whose cover download asset is " <> T.unpack state) $ \pool -> do
+          offer <- purchaseOffer pool
+          -- Like offerWith, change only the synthetic publication fixture;
+          -- release authoring and publication guards are outside this test.
+          runSqlPool (do
+            rawExecute "SET LOCAL session_replication_role = replica" []
+            rawExecute "UPDATE music_asset SET processing_state=? WHERE id=?::uuid"
+              [toPersistValue state, toPersistValue (offerAsset offer)]) pool
+          assertPurchaseUnavailable pool offer
+
+      it "refuses an offer pointing at another release version's download asset" $ \pool -> do
+        offer <- purchaseOffer pool
+        other <- purchaseOffer pool
+        runSqlPool (do
+          rawExecute "SET LOCAL session_replication_role = replica" []
+          rawExecute "UPDATE music_availability_rule SET downloadable_asset_id=?::uuid WHERE id=?::uuid"
+            [toPersistValue (offerAsset other), toPersistValue (offerRule offer)]) pool
+        assertPurchaseUnavailable pool offer
+
       it "refuses a purchase key replay with different accepted terms" $ \pool -> do
         offer <- purchaseOffer pool
         original <- order pool offer "music-fixture-replay-terms"
@@ -379,7 +399,16 @@ data Offer = Offer
   { offerBuyer :: Int64
   , offerRule :: UUID
   , offerRelease :: UUID
+  , offerAsset :: UUID
   }
+
+assertPurchaseUnavailable :: ConnectionPool -> Offer -> IO ()
+assertPurchaseUnavailable pool offer = do
+  response <- run pool (createMusicPurchase (buyerOf offer)
+    (Just "music-fixture-unavailable-asset") Nothing
+    (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1" "250" "USD"))
+  either errHTTPCode (const 201) response `shouldBe` 404
+  ordersOf pool offer `shouldReturn` 0
 
 open :: String -> IO (ConnectionPool, [Text])
 open connection = do
@@ -448,7 +477,7 @@ offerWith pool terms = do
        \purchasable, price_minor, currency, downloadable_asset_id) VALUES (?::uuid, ?::uuid, 'none', "
         <> terms <> ", ?::uuid)")
       [toPersistValue rule, toPersistValue version, toPersistValue asset]) pool
-  pure (Offer buyer rule release)
+  pure (Offer buyer rule release asset)
 
 buyerOf :: Offer -> AuthedUser
 buyerOf offer = AuthedUser

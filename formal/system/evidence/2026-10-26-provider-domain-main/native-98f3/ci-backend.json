@@ -1,0 +1,54 @@
+{
+  "run": 40413235195,
+  "job": 121890412249,
+  "associatedHead": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
+  "actualCheckout": "7f89768d75bfcdf019f5c9ba192f08c4e4ed55eb",
+  "uncompressedLogSha256": "50a24d5ee1ba509137adfd325c92491fa4faf3365a01390a5376cfc33d966f35",
+  "aggregate": {
+    "examples": 4039,
+    "failures": 0,
+    "explicitExternalRunnerPending": 21
+  },
+  "provider": {
+    "examples": 317,
+    "failures": 0,
+    "pending": 0
+  },
+  "expiry": {
+    "revision": "7f89768d75bfcdf019f5c9ba192f08c4e4ed55eb",
+    "worktreeDirty": false,
+    "tools": {
+      "stack": "Version 3.3.1, Git revision 7540878295db1899b55855cc765ab1eacdf30f3c x86_64 hpack-0.37.0",
+      "ghc": "9.10.3",
+      "postgres": "PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+    },
+    "sourcesUnchanged": true,
+    "passed": true
+  },
+  "expiryMutations": [
+    {
+      "variant": "intended",
+      "exit": 0,
+      "expectedResultObserved": true
+    },
+    {
+      "variant": "request-time",
+      "exit": 1,
+      "expectedResultObserved": true
+    },
+    {
+      "variant": "transaction-start-time",
+      "exit": 1,
+      "expectedResultObserved": true
+    },
+    {
+      "variant": "clock-before-lock",
+      "exit": 1,
+      "expectedResultObserved": true
+    }
+  ],
+  "limits": [
+    "Exact interpreter and database-client versions are fully recorded by the independent native receipt. Hosted expiry records its actual Stack/GHC/server versions; other package installation details and container identity remain in the complete job log.",
+    "The external-runner pending aggregate is distinct from the actual317-case provider execution; no complete specification equivalence is claimed."
+  ]
+}

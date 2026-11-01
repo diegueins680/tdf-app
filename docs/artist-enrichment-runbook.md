@@ -148,6 +148,42 @@ profile, and enrichment row atomically; a matching existing profile is reused.
 Approval also supersedes every pending candidate for the same normalized-name
 group, preventing a later decision from silently reassigning its references.
 
+## Verification and completeness are different
+
+The Coverage tab is an audit inventory. Its missing-field chips include optional
+data such as achievements, highlights and a website; filling every chip is not a
+prerequisite for verifying an artist's researched identity. `Reauditar` requests
+a dry-run audit and queues review records. It does not mark the artist verified.
+
+For a verification review:
+
+1. Corroborate the existing artist using independent official-provider evidence
+   and stable identifiers. Do not use name similarity alone or assume that a
+   roster's outgoing links are correct. Resolve any relevant pending identity
+   matches in **Identidades** before publication.
+   Selecting an artist scopes the identity list to that artist or its inventory
+   references; alternative candidates for the same reference remain visible.
+2. In **Sugerencias**, inspect the evidence and current-versus-proposed values.
+   Approve only supported corrections, confidence and a current verification
+   timestamp. A stale-value refusal requires a new read and research; do not
+   force an overwrite.
+3. Approve the `reviewStatus = verified` proposal last, after confirming the
+   preceding decisions succeeded. A proposal merely changing the status to
+   `pending` is not a verification proposal.
+4. Confirm the resulting status, confidence, date and field-change history.
+   This verifies researched artist metadata, not the ownership of a user account
+   or a licence to reproduce the artist's photographs.
+
+External-image permission review is recorded as `media_rights_review`, separately
+from HTTP availability observations. A working external image must not be labelled
+as a broken link solely because its ingestion rights are unconfirmed. The web
+review also recognizes legacy `link_validation_broken` records carrying the
+`third_party_hotlink_requires_authorized_ingestion` reason, while retaining real
+HTTP failures. A newer replacement URL supersedes warnings about the old URL;
+checking the same external URL successfully does not grant image rights.
+Authorized image ingestion still requires explicit rights and provenance, as in
+the existing media workflow above. No historic source records are deleted.
+
 ## Daily maintenance
 
 Two complementary layers run daily in `America/Guayaquil`:
