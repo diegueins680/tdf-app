@@ -157,6 +157,8 @@ type SocialAdminAPI =
        "social" :> "unhold" :> ReqBody '[JSON] SocialUnholdRequest :> Post '[JSON] Value
   :<|> "social" :> "status" :> Get '[JSON] Value
   :<|> "social" :> "errors" :> QueryParam "channel" Text :> QueryParam "limit" Int :> Get '[JSON] Value
+  :<|> "social" :> "accounts" :> Capture "accountId" Int64 :> "delivery"
+         :> ReqBody '[JSON] SocialDeliveryDesignation :> Post '[JSON] Value
 
 type AdminAPI =
        "seed" :> Header "X-Seed-Token" Text :> Post '[JSON] NoContent
@@ -171,6 +173,21 @@ type AdminAPI =
   :<|> RagAdminAPI
   :<|> SocialAdminAPI
   :<|> "records-ingestion" :> RecordsIngestionAPI
+
+-- | AUTHORITY-094: designate (or withdraw) a social sync account as a platform
+-- delivery/backfill channel. Strict administrators only.
+data SocialDeliveryDesignation = SocialDeliveryDesignation
+  { sddDesignated :: Bool
+  , sddNote       :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON SocialDeliveryDesignation where
+  parseJSON value = do
+    rejectNullOptionalField "SocialDeliveryDesignation" "note" "note must be omitted instead of null" value
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } value
 
 -- | Unhold a social inbound message so the auto-reply worker can retry.
 -- One of externalId/ids should be provided.

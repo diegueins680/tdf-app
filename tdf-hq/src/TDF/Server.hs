@@ -3106,6 +3106,8 @@ metaBackfillServer user payload = do
       [ SocialSyncAccountPlatform ==. "instagram"
       , SocialSyncAccountAccessToken !=. Nothing
       , SocialSyncAccountStatus ==. "connected"
+      -- AUTHORITY-094: backfill only through administrator-designated accounts.
+      , SocialSyncAccountDeliveryDesignated ==. True
       ]
       [Desc SocialSyncAccountUpdatedAt]
   let sources =

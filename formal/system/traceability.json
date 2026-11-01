@@ -14163,7 +14163,8 @@
       "historicalStatus": null,
       "critical": true,
       "tests": [
-        "scripts/check-admin-guards.py"
+        "scripts/check-admin-guards.py",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "formalModels": [],
       "confidence": "High that no leaf handler lacks a guard call; the gate is syntactic and does not establish that each guard is the right one or that the guard precedes every effect.",
@@ -14249,7 +14250,8 @@
       "tests": [
         "scripts/test-social-designation-postgres.sh",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs"
+        "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "formalModels": [],
       "confidence": "High for the pure rules and the migration; handler correspondence by review; no HTTP-level test of the exchange or the designation route.",
@@ -14763,13 +14765,13 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "16bce8f483c714b5c6b2f322929b713d70d116e92c655e9c32eafe00abbd45c2",
+    "formal/system/compiled-api-surface.json": "3a57f94eca3b4bed1ac40682c19a9986b18639bc0e89010766a4da8fec3525d4",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
     "formal/system/public-routes.json": "19c80495b110471f09fb990d42b874cd85976f596b01222963859dda525a7268",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "d38451be78216fb190819e9aa6ccec713e00be86adac0e11c9606b39d4049623",
+    "formal/system/recovery-expiry-arithmetic.json": "aaad8723ea4002887419c180271302a68261b61bfdeb24bad1c67f31d79d2e2c",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -15656,7 +15658,7 @@
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
-    "tdf-hq/src/TDF/ServerAdmin.hs": "8e009a1e83f3e673c09b77338e01ca4003f64f0e41797164a1ed2961a7c4e40d",
+    "tdf-hq/src/TDF/ServerAdmin.hs": "88522c717218bada9c54209606f5ec5b1c7844037b32ab8031970639dcda0525",
     "tdf-hq/src/TDF/ServerAuth.hs": "48686841bfe8bb363c2652390574e0de1ae99807e344b9f2f9623ac249158613",
     "tdf-hq/src/TDF/ServerExtra.hs": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
     "tdf-hq/src/TDF/ServerFanClub.hs": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
@@ -15733,8 +15735,9 @@
     "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
+    "tdf-hq/test/TDF/ServerAdminSpec.hs": "a8f527cdc70434617ad9f93c9f859fa26b9fe846aad43b9b79798d4a0165f115",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
-    "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
+    "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a2a6f52943aacb44664f1f3962c4e54296e8ebfcfa114ab375db6e4beec24bea",
@@ -27621,6 +27624,16 @@
       {
         "requirement": "PAY-DEPOSIT-POLICY-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/ServerAdminSpec.hs": [
+      {
+        "requirement": "AUTH-ADMIN-GUARD-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql": [
@@ -49762,7 +49775,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "8e009a1e83f3e673c09b77338e01ca4003f64f0e41797164a1ed2961a7c4e40d",
+      "sha256": "88522c717218bada9c54209606f5ec5b1c7844037b32ab8031970639dcda0525",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51325,9 +51338,18 @@
     {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
-      "sha256": "103007ca5c6dfd9f1441476783ef46066308de883f8f35e5799364e22a582d25",
+      "sha256": "a8f527cdc70434617ad9f93c9f859fa26b9fe846aad43b9b79798d4a0165f115",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-ADMIN-GUARD-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c37a9a53d010234",
@@ -51352,7 +51374,7 @@
     {
       "id": "SURFACE-fd889b176c72565e",
       "path": "tdf-hq/test/TDF/ServerExtraSpec.hs",
-      "sha256": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
+      "sha256": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56926,7 +56948,6 @@
     "SURFACE-705eb0208602ff31",
     "SURFACE-85348e5ee1e69142",
     "SURFACE-c823af87bc95031c",
-    "SURFACE-9c08dc84fc4d951b",
     "SURFACE-fa6329758744ce4e",
     "SURFACE-c6b62f6ae6aecf86",
     "SURFACE-916f8955abd0c6a2",
@@ -58454,7 +58475,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "42882db54702deee3ea1238c32bd420914b2c557e20401273a246cd6202f0453",
+      "sourceSha256": "4cfbe30a7602df7412d3e3d290ae66e3a251f46d0c70e853568a2e75a27c6db3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -58482,7 +58503,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "42882db54702deee3ea1238c32bd420914b2c557e20401273a246cd6202f0453",
+      "sourceSha256": "4cfbe30a7602df7412d3e3d290ae66e3a251f46d0c70e853568a2e75a27c6db3",
       "definition": {
         "states": [
           "absent",
@@ -58512,7 +58533,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "42882db54702deee3ea1238c32bd420914b2c557e20401273a246cd6202f0453",
+      "sourceSha256": "4cfbe30a7602df7412d3e3d290ae66e3a251f46d0c70e853568a2e75a27c6db3",
       "definition": {
         "export": [
           "queued",

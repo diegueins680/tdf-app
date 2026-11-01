@@ -84,6 +84,9 @@ executable tdf-hq-exe
     TDF.CampaignAutomation
     TDF.Commerce.Money
     TDF.Commerce.ArtistTip
+    TDF.Commerce.DomoCancellation
+    TDF.Commerce.DepositPolicy
+    TDF.Social.AccountOwnership
     TDF.Profiles.ArtistVisibility
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
@@ -458,12 +461,18 @@ test-suite tdf-hq-test
     TDF.CampaignAutomation
     TDF.Commerce.Money
     TDF.Commerce.ArtistTip
+    TDF.Commerce.DomoCancellation
+    TDF.Commerce.DepositPolicy
+    TDF.Social.AccountOwnership
     TDF.Profiles.ArtistVisibility
     TDF.Commerce.ArtistTipSpec
     TDF.Commerce.DomoQuotePropertiesSpec
     TDF.Commerce.ProviderAdapterBindingSpec
     TDF.MetaWebhookSignatureSpec
     TDF.CorsPropertiesSpec
+    TDF.Commerce.DomoCancellationSpec
+    TDF.Commerce.DepositPolicySpec
+    TDF.Social.AccountOwnershipSpec
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes

@@ -116,7 +116,9 @@ spec = do
               [ toInteger (cpbDueNowMinor b) + toInteger (cpbBalanceMinor b) === toInteger (cpbTotalMinor b)
               , property (cpbDueNowMinor b >= 0 && cpbDueNowMinor b <= cpbTotalMinor b)
               , property (cpbBalanceMinor b >= 0)
-              , property (cpbTotalMinor b <= 5000 || cpbBalanceMinor b > 0)
+              -- PAY-DEPOSIT-POLICY-001: a zero balance means the policy switched to full payment.
+              , property (cpbBalanceMinor b > 0 || cpbDueNowMinor b == cpbTotalMinor b)
+              , property (cpbDueNowMinor b >= min 500 (cpbTotalMinor b))
               ]
     it "rejects the deposit rate boundaries and a full-payment rate other than 10000" $ do
       calculateCoursePrice 10000 1200 CourseDeposit 0 `shouldSatisfy` isLeftE

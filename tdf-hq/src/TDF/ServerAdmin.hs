@@ -100,6 +100,7 @@ import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Admin          ( AdminAPI
+                                        , SocialDeliveryDesignation(..)
                                         , AdminEmailBroadcastRecipientDTO(..)
                                         , AdminEmailBroadcastRequest(..)
                                         , AdminEmailBroadcastResponse(..)
@@ -428,6 +429,55 @@ adminServer user =
 
     socialRouter =
       socialUnholdHandler :<|> socialStatusHandler :<|> socialErrorsHandler
+        :<|> socialDeliveryDesignationHandler
+
+    -- AUTHORITY-094: only a strict administrator designates platform delivery
+    -- channels; every change is recorded in social_sync_account_event.
+    socialDeliveryDesignationHandler accountIdRaw SocialDeliveryDesignation{..} = do
+      ensureStrictAdmin user
+      ensureModule ModuleAdmin user
+      when (accountIdRaw <= 0) $ throwError err400 { errBody = "accountId must be positive" }
+      now <- liftIO getCurrentTime
+      let accountKey = toSqlKey accountIdRaw :: SocialSyncAccountId
+          actor = auPartyId user
+      outcome <- withPool $ do
+        mAccount <- get accountKey
+        case mAccount of
+          Nothing -> pure Nothing
+          Just account -> do
+            update accountKey $
+              if sddDesignated
+                then [ SocialSyncAccountDeliveryDesignated =. True
+                     , SocialSyncAccountDesignatedByPartyId =. Just actor
+                     , SocialSyncAccountDesignatedAt =. Just now
+                     , SocialSyncAccountUpdatedAt =. Just now ]
+                else [ SocialSyncAccountDeliveryDesignated =. False
+                     , SocialSyncAccountDesignatedByPartyId =. Nothing
+                     , SocialSyncAccountDesignatedAt =. Nothing
+                     , SocialSyncAccountUpdatedAt =. Just now ]
+            _ <- insert SocialSyncAccountEvent
+              { socialSyncAccountEventAccountId = accountKey
+              , socialSyncAccountEventActorPartyId = Just actor
+              , socialSyncAccountEventEventType = if sddDesignated then "designated" else "undesignated"
+              , socialSyncAccountEventFromPartyId = socialSyncAccountPartyId account
+              , socialSyncAccountEventToPartyId = socialSyncAccountPartyId account
+              , socialSyncAccountEventCreatedAt = now
+              }
+            pure (Just account)
+      case outcome of
+        Nothing -> throwError err404 { errBody = "Social sync account not found" }
+        Just account -> do
+          recordActivity "social_sync_account" (T.pack (show accountIdRaw))
+            (if sddDesignated then "designate_delivery" else "undesignate_delivery")
+            (Just (object ["platform" .= socialSyncAccountPlatform account, "note" .= sddNote]))
+          pure (object
+            [ "status" .= ("ok" :: Text)
+            , "accountId" .= accountIdRaw
+            , "platform" .= socialSyncAccountPlatform account
+            , "externalUserId" .= socialSyncAccountExternalUserId account
+            , "deliveryDesignated" .= sddDesignated
+            , "ts" .= T.pack (show now)
+            ])
 
     recordActivity entity entityId action details = do
       pool <- asks envPool

@@ -39,6 +39,7 @@ import TDF.API.Admin
     , ConnectOnboardingLinkResponse
     , EmailTestRequest (..)
     , ArtistEnrichmentOverviewDTO
+    , SocialDeliveryDesignation (..)
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
@@ -1555,7 +1556,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , surNote = Nothing
                         }
                 assertRoleRejected role = do
-                    let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                    let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery =
                             socialHandlersFor (mkUser [role])
                     result <- runAdminTest (socialUnhold req)
                     case result of
@@ -1573,7 +1574,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertRoleRejected StudioManager
             assertRoleRejected Webmaster
 
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery =
                     socialHandlersFor malformedAdmin
             result <- runAdminTest (socialUnhold req)
             case result of
@@ -1587,8 +1588,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             <> show value
                         )
 
+        it "rejects social delivery designation without the strict Admin role (AUTHORITY-094)" $ do
+            let designation = SocialDeliveryDesignation { sddDesignated = True, sddNote = Nothing }
+                assertDesignationRejected role = do
+                    let _socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> socialDelivery =
+                            socialHandlersFor (mkUser [role])
+                    result <- runAdminTest (socialDelivery 1 designation)
+                    case result of
+                        Left err -> errHTTPCode err `shouldBe` 403
+                        Right value ->
+                            expectationFailure
+                                ("Expected " <> show role <> " delivery designation to be rejected, got " <> show value)
+            assertDesignationRejected StudioManager
+            assertDesignationRejected Webmaster
+            assertDesignationRejected Manager
+
         it "rejects blank channels before surfacing lookup-shape errors" $ do
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "   "
@@ -1607,7 +1623,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure ("Expected blank channel social unhold to be rejected, got " <> show value)
 
         it "rejects unsupported channels before any unhold lookup work" $ do
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "telegram"
@@ -1625,7 +1641,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure ("Expected unsupported channel social unhold to be rejected, got " <> show value)
 
         it "rejects malformed notes before querying social inbox rows" $ do
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "whatsapp"
@@ -1646,7 +1662,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
           withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
-                socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "whatsapp"
@@ -1685,7 +1701,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
           withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
-                socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery =
                     socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
@@ -1725,7 +1741,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
           withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
-                socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "whatsapp"
@@ -2218,6 +2234,7 @@ socialHandlersFor
     -> (SocialUnholdRequest -> AdminTestM Value)
         :<|> AdminTestM Value
         :<|> (Maybe T.Text -> Maybe Int -> AdminTestM Value)
+        :<|> (Int64 -> SocialDeliveryDesignation -> AdminTestM Value)
 socialHandlersFor user =
     case adminServer user of
         _seed

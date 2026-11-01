@@ -14162,7 +14162,8 @@
       "historicalStatus": null,
       "critical": true,
       "tests": [
-        "scripts/check-admin-guards.py"
+        "scripts/check-admin-guards.py",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "formalModels": [],
       "confidence": "High that no leaf handler lacks a guard call; the gate is syntactic and does not establish that each guard is the right one or that the guard precedes every effect.",
@@ -14248,7 +14249,8 @@
       "tests": [
         "scripts/test-social-designation-postgres.sh",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs"
+        "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "formalModels": [],
       "confidence": "High for the pure rules and the migration; handler correspondence by review; no HTTP-level test of the exchange or the designation route.",

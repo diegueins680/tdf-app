@@ -15656,7 +15656,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "8e009a1e83f3e673c09b77338e01ca4003f64f0e41797164a1ed2961a7c4e40d",
+      "sha256": "88522c717218bada9c54209606f5ec5b1c7844037b32ab8031970639dcda0525",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16412,7 +16412,7 @@
     {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
-      "sha256": "103007ca5c6dfd9f1441476783ef46066308de883f8f35e5799364e22a582d25",
+      "sha256": "a8f527cdc70434617ad9f93c9f859fa26b9fe846aad43b9b79798d4a0165f115",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16424,7 +16424,7 @@
     {
       "id": "SURFACE-fd889b176c72565e",
       "path": "tdf-hq/test/TDF/ServerExtraSpec.hs",
-      "sha256": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
+      "sha256": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27640,7 +27640,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -28305,7 +28305,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "42882db54702deee3ea1238c32bd420914b2c557e20401273a246cd6202f0453",
+      "sha256": "4cfbe30a7602df7412d3e3d290ae66e3a251f46d0c70e853568a2e75a27c6db3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -34034,7 +34034,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -34065,7 +34065,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -34096,7 +34096,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -34127,7 +34127,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -34158,7 +34158,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -34189,7 +34189,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -34220,7 +34220,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -34251,7 +34251,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -34282,7 +34282,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -34313,7 +34313,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -34344,7 +34344,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -34375,7 +34375,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -34404,7 +34404,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -34433,7 +34433,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -34462,7 +34462,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -34491,7 +34491,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -34520,7 +34520,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -34549,7 +34549,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -34578,12 +34578,12 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
         "Sev.": "error",
-        "Hallazgo": "`POST /instagram/oauth/exchange` (requiere acceso al módulo de bandeja social): la fila `social_sync_account` es única por `(platform, externalUserId)` y el intercambio hace `upsert` reasignando `party_id` al usuario actual. Dos efectos: (a) si la cuenta de Instagram ya estaba vinculada a otra party, se reasigna en silencio, sin auditoría, y las publicaciones sincronizadas pasan a atribuirse al nuevo usuario; (b) el acceso a la bandeja social lo tienen Admin, Manager, StudioManager, Reception y LiveSessionsProducer; `resolveInstagramDeliveryAccount` y el backfill de Meta eligen \"la cuenta conectada más reciente\" de toda la plataforma, así que cualquier usuario con acceso a la bandeja social que conecte su propia página convierte su token en el canal de envío de mensajes de la plataforma. **Sin corregir**: la política de qué cuentas son canales de la plataforma es decisión de negocio (Q6). Recomendación: marcar las cuentas conectadas por OAuth como \"del usuario\" y usar para envío solo las designadas por un administrador; al cambiar de party, exigir confirmación o rol admin y registrar auditoría."
+        "Hallazgo": "`POST /instagram/oauth/exchange` (requiere acceso al módulo de bandeja social): la fila `social_sync_account` es única por `(platform, externalUserId)` y el intercambio hace `upsert` reasignando `party_id` al usuario actual. Dos efectos: (a) si la cuenta de Instagram ya estaba vinculada a otra party, se reasigna en silencio, sin auditoría, y las publicaciones sincronizadas pasan a atribuirse al nuevo usuario; (b) el acceso a la bandeja social lo tienen Admin, Manager, StudioManager, Reception y LiveSessionsProducer; `resolveInstagramDeliveryAccount` y el backfill de Meta eligen \"la cuenta conectada más reciente\" de toda la plataforma, así que cualquier usuario con acceso a la bandeja social que conecte su propia página convierte su token en el canal de envío de mensajes de la plataforma. **Corregido** (AUTHORITY-094, sección 25): las cuentas conectadas por OAuth pertenecen a la party que las conectó; solo las designadas por un administrador se usan para envío; reasignar a otra party exige rol Admin y queda auditada en `social_sync_account_event`."
       },
       "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
       "verification": "open",
@@ -34595,7 +34595,7 @@
           "columns": {
             "ID": "F-19",
             "Sev.": "error",
-            "Hallazgo": "`POST /instagram/oauth/exchange` (requiere acceso al módulo de bandeja social): la fila `social_sync_account` es única por `(platform, externalUserId)` y el intercambio hace `upsert` reasignando `party_id` al usuario actual. Dos efectos: (a) si la cuenta de Instagram ya estaba vinculada a otra party, se reasigna en silencio, sin auditoría, y las publicaciones sincronizadas pasan a atribuirse al nuevo usuario; (b) el acceso a la bandeja social lo tienen Admin, Manager, StudioManager, Reception y LiveSessionsProducer; `resolveInstagramDeliveryAccount` y el backfill de Meta eligen \"la cuenta conectada más reciente\" de toda la plataforma, así que cualquier usuario con acceso a la bandeja social que conecte su propia página convierte su token en el canal de envío de mensajes de la plataforma. **Sin corregir**: la política de qué cuentas son canales de la plataforma es decisión de negocio (Q6). Recomendación: marcar las cuentas conectadas por OAuth como \"del usuario\" y usar para envío solo las designadas por un administrador; al cambiar de party, exigir confirmación o rol admin y registrar auditoría."
+            "Hallazgo": "`POST /instagram/oauth/exchange` (requiere acceso al módulo de bandeja social): la fila `social_sync_account` es única por `(platform, externalUserId)` y el intercambio hace `upsert` reasignando `party_id` al usuario actual. Dos efectos: (a) si la cuenta de Instagram ya estaba vinculada a otra party, se reasigna en silencio, sin auditoría, y las publicaciones sincronizadas pasan a atribuirse al nuevo usuario; (b) el acceso a la bandeja social lo tienen Admin, Manager, StudioManager, Reception y LiveSessionsProducer; `resolveInstagramDeliveryAccount` y el backfill de Meta eligen \"la cuenta conectada más reciente\" de toda la plataforma, así que cualquier usuario con acceso a la bandeja social que conecte su propia página convierte su token en el canal de envío de mensajes de la plataforma. **Corregido** (AUTHORITY-094, sección 25): las cuentas conectadas por OAuth pertenecen a la party que las conectó; solo las designadas por un administrador se usan para envío; reasignar a otra party exige rol Admin y queda auditada en `social_sync_account_event`."
           }
         }
       ],
@@ -34607,7 +34607,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -34636,7 +34636,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "3bdbd2ae2deff609c20625935ac005a006280d06c24d6b68c4e4f2d0c4ad74a3",
+      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",
