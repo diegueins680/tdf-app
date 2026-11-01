@@ -1,0 +1,11 @@
+{
+  "phase": "negative-control receipt parser",
+  "initialDriver": "Failed after actual1assertionfailure because prettyDOM omitted postselection count4. Both implementation files restoredfinally.",
+  "correction": "Keep existingtest/implementation unchanged; require exact expected-count assertionfailure and no runtimeerror. Initial4 is observed by earlierassert; postcount4 is source inference, not captured DOM.",
+  "guaranteeNotClaimed": "Do not present an absent prettyDOM value as an observedmeasurement.",
+  "sourceSealInitialFilenameAssumption": {
+    "initialActualExit": 1,
+    "reason": "Expected static-list-inventory.csv; canonical generator actually writes list-consumer-matrix.csv. Exact changed-path assertion failed before a receipt could be emitted.",
+    "correction": "Correct checker expected path to actual canonical generator output; source/test/spec bytes unchanged; full1417blob source seal then actualexit0."
+  }
+}

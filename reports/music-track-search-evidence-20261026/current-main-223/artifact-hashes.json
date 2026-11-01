@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "scope": "Append-only current-main-223 leaves; excludes this self-manifest. Parent artifact-hashes remains historical unchanged.",
+  "files": {
+    "http-results.json": {
+      "bytes": 15484,
+      "sha256": "9930a5c59146176348426fe7efedb170b213ec8fcc5dede190c3cd146f5bfbe9"
+    },
+    "summary.json": {
+      "bytes": 4005,
+      "sha256": "221fb5bc5e5a00f6d6a3456422faac6411ae4c79009bd9350ff9e9fdabf11c1f"
+    },
+    "helper-and-source-dry-check.json": {
+      "bytes": 1226,
+      "sha256": "65fda1993d6dd287e12192cb527743c3c3b0c856317be80c37c23b7a69b8503d"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 8886,
+      "sha256": "67fd8656fd5d8ed7328c741616941054ca0212d6758fb4aad18570e1127f5003"
+    },
+    "README.md": {
+      "bytes": 1981,
+      "sha256": "c70eb9cdf3e439e8cce0b358e2a8a6b065bd307bdd0072745a8a869a5fe4a4f8"
+    },
+    "local-current223-execution-evidence.tar.gz": {
+      "bytes": 342096,
+      "sha256": "eb780d168da2d23c4852d0407249055913e44849f553097500b2af5026c1e73f"
+    },
+    "delivery-before-current223.md": {
+      "bytes": 12291,
+      "sha256": "1edaf25cffdbdfc82eba8efdb0f7c5b15bcd477554dea5d34b21cc9258bb1582"
+    },
+    "driver-review-manifest.json": {
+      "bytes": 6016,
+      "sha256": "c797379d72188a6a696de87670f506c29b2f8731b2212e3f3eca440f5e3179b3"
+    },
+    "source-inputs-before-build.json": {
+      "bytes": 280872,
+      "sha256": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3"
+    },
+    "report-before-current223.json": {
+      "bytes": 35476,
+      "sha256": "0003662f99c2dba24c3840fc378223d4824bb2b8c3c37fd10039a024bb3f273f"
+    },
+    "committed-source-admission.json": {
+      "bytes": 1523,
+      "sha256": "5d7744ccddcc27abf96be199f89f8a23094a87f9907a9afa710a573ae804c005"
+    }
+  }
+}

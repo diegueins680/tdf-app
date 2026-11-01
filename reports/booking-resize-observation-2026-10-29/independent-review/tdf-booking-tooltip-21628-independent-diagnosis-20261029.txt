@@ -1,0 +1,44 @@
+Independent read-only diagnosis: PR638 initial WebKit helper edge failure
+
+Source HEAD: 21628cdc8523bfd5ff4bd3259648400c0d1ed34d, clean /private/tmp/tdf-provider-evidence-actualmain-20261028. Hosted run 40824696334 / persona job 123285127676. Supplied artifact verification records 118630708 bytes and SHA256 141e00d191127a8676342b0212c6f1d6539e372d9e84f2758af5c6909cc9c0d2. This review reads the extracted trace data and source; it did not independently download/reverify the outer artifact, execute any browser/server/test/DB, request permissions or modify product/test source. Installed primary Popper source reviewed is version 2.11.8.
+
+Confirmed findings
+
+Both WebKit-iPhone booking scenarios fail the initial helper-right assertion at spec line 220, receiving 339.640625 against 320.3333333333333. The same atomic result shows inner/client/scroll width 320/320/320, scale 1 and visual width 320. Thus the root/scale correction succeeds at that sampled point while the CURRENT written initial overlay contract is FAILED. This cannot be labeled merely a generic CLI failure, waived flake or fully qualified UI correction. Rectangle extension beyond the client is established; its actual painted/clipped extent and duration are not established by rectangle arithmetic alone.
+
+The focused helper is the expected 04:00 text, x104/right339.640625/width235.640625. The anchor is x193.78125/y588.890625. In both traces the fixed Popper transform is translate3d(104px,390.666667px,0), unchanged from before the 390->320 resize. I decoded the compressed DOM snapshots using Playwright's postorder node-reference format. In the error trace resize runs 780393.791..780403.315, the atomic evaluate runs 780463.954..780478.539 and the last snapshot is +92.399ms from resize start. In the empty trace those times are 787543.473..787552.307, 787606.826..787613.953 and +75.766ms. The final snapshots still retain the old transform. This supports a stale position, not merely a one-pixel rounding issue. It does not establish indefinite persistence.
+
+The existing diagnostic attachment condition is only viewportMeasurement.overflow. Therefore these overlay-only failures do not execute failedViewportGeometry or collect later root/helper/event samples. The traces have no DOM window/visualViewport resize delivery or Popper update milestones. Neither a missing event nor an event/update completed before the initial measurement can be inferred from elapsed milliseconds, setViewportSize completion, clientWidth readiness or the already-present mobile step marker.
+
+Primary implementation evidence
+
+The fixed strategy remains configured and the snapshot confirms fixed positioning. Popper eventListeners installs window resize -> instance.update and scroll-parent scroll listeners, with matching cleanup. update is microtask-debounced; forceUpdate recomputes reference and popup rectangles and runs modifiers. getViewportRect reads visualViewport.width/height whenever available. eventListeners does not independently subscribe to visualViewport resize. MUI BasePopper may also forceUpdate after a React render; an unchanged mobile breakpoint does not establish a render/update acknowledgment.
+
+These facts permit at least two hypotheses: the initial measurement occurs before the resize-driven update, or an update occurs against an earlier viewport state and a later visualViewport-only change has no subscribed resize signal. Other failure modes remain possible. The missing visualViewport-resize subscription is a concrete source fact, but causal relevance to this hosted schedule is unproven. The trace does not show its event ordering or update input/output geometry. The local Chromium nine-case success and original one-option mutation cannot prove current WebKit overlay qualification.
+
+Smallest justified next diagnostic
+
+Preserve the existing initial atomic measurement and all strict assertions. Before resize, register observation-only window.resize and visualViewport.resize/scroll listeners recording monotonic time, client/inner/visual dimensions, scale and focused anchor/helper geometry. Observe positioner style/placement mutations without calling update or changing DOM styles. On ANY failed initial requirement, attach the immutable initial value plus a bounded later/event timeline, even when root overflow is false. Capture whether a following task after delivered resize has an updated transform, without using that later fit as acceptance. Keep focus and helper open; no dismissal, added wait-for-fit, clipping or retry-to-green. The measurement observer's timing effect itself remains a limitation.
+
+Principled correction decision
+
+No new product correction is yet causally justified beyond diagnostic observability. If the timeline demonstrates a relevant visualViewport resize after Popper's last update with no subsequent subscribed update, a narrowly scoped Popper modifier effect subscribing that event to instance.update, with symmetric removal on destroy, is a plausible smallest product correction. It must be tested against the actual failing event order, preserve fixed positioning/content/focus and root strictness, and have a sole-listener-removal negative control. Do not assume this fix works before that evidence exists.
+
+If the helper is shown to update correctly only after the first measurement's not-yet-delivered native resize event, that establishes an asynchronous timing mismatch, not automatic permission to relax the existing contract. Requiring event delivery for an overlay assertion would explicitly change its currently stated initial measurement boundary. That requires a documented specification decision and counterexample-preserving verification; it must not silently move or soften the original first root-overflow guard. Calling Popper.update from a test before checking would hide product behavior and is not a product repair. If the initial overlay contract is retained literally, the implementation must satisfy it rather than promoting later convergence to success.
+
+Remaining limits
+
+The separate gallery contrast failure is outside this diagnosis; preserve approved 648/651 and avoid a duplicate patch. Current source remains empirically partial: two hosted contract violations, no new WebKit reproduction by this reviewer and no proof of the original 84d failure cause. No all-browser, accessibility completeness, CSSOM/refinement, merge or production claim is made.
+
+Reviewed SHA256 values:
+/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/src/pages/PublicBookingPage.tsx: 3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3
+/private/tmp/tdf-provider-evidence-actualmain-20261028/e2e/web/booking-catalog-recovery.spec.mjs: 401c4c15062d4337d53a118c25b0d52b0facb7db0e3119fdc98ded8a05932198
+/private/tmp/tdf-provider-evidence-actualmain-20261028/formal/system/booking-tooltip-viewport.md: ef0b6d6c7b70d1ade3ae6f51943a4e2369da52e25c4357961bb1ca28c965ff41
+/private/tmp/tdf-correctness-cycle-20261028/node_modules/@popperjs/core/lib/modifiers/eventListeners.js: 6d10614b494320d1dd278b26c1707aa1f8191ef39875984cf1d51bac7cbfd9e9
+/private/tmp/tdf-correctness-cycle-20261028/node_modules/@popperjs/core/lib/dom-utils/getViewportRect.js: d214bcfbf9c40bdf33d6af6b06d27b95bfaf9cc8f1ea0d78ab374c88b8586f8a
+/private/tmp/tdf-correctness-cycle-20261028/node_modules/@popperjs/core/lib/utils/debounce.js: 30bce1b3ef4b3153a3c455bf48d8d17c8f7a6b062298b300520573b5d4ce88b7
+/private/tmp/tdf-correctness-cycle-20261028/node_modules/@popperjs/core/lib/createPopper.js: f9939ec81f7feaec3131624f824e6417ab944c06029d977ae7a818feb6ec6f27
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/@mui/material/Popper/BasePopper.js: 806f27b0d15b672454befc33f5e40355b1f7dbbe5663664774721f6c58818811
+/private/tmp/tdf-pr638-21628-booking-failure-20261029/artifact-verification.json: d0ae15867dafc4010593428cf431cda19186d4c2ed9903f0bc9accb6cf3c391a
+/private/tmp/tdf-pr638-21628-booking-failure-20261029/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/trace.zip: aedde876e55e1090aeb162a06fb9860e407c2d36e8a683ea792afc03114d450d
+/private/tmp/tdf-pr638-21628-booking-failure-20261029/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/trace.zip: e1d69c53c2d3e0ba3df5f15a3eaa92a04baab16d8e7b9809f3dfe7c3cad9ef4b

@@ -1,0 +1,3 @@
+import base from '/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/playwright.config.mjs';
+import {defineConfig} from '/private/tmp/tdf-correctness-cycle-20261028/node_modules/@playwright/test/index.mjs';
+export default defineConfig({...base,testDir:'/private/tmp/tdf-booking-resize-phase-controls-20261029',use:{...base.use,baseURL:'http://127.0.0.1:41321'},projects:base.projects.filter(p=>p.name==='chromium-phone'),reporter:[['line'],['json',{outputFile:'/private/tmp/tdf-booking-resize-phase-controls-20261029/helper-only-fault.json'}]],outputDir:'/private/tmp/tdf-booking-resize-phase-controls-20261029/helper-only-fault'});
