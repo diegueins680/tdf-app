@@ -204,6 +204,7 @@ import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.Money as CommerceMoney
 import qualified TDF.Commerce.ArtistTip as ArtistTip
+import qualified TDF.Profiles.ArtistVisibility as ArtistVisibility
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
@@ -1092,11 +1093,12 @@ fanPublicServer =
     listFanArtists :: AppM [ArtistProfileDTO]
     listFanArtists = do
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool loadAllArtistProfilesDTO
+      liftIO $ flip runSqlPool pool (loadAllArtistProfilesDTO >>= filterPubliclyListedArtists)
 
     fanArtistProfile :: Int64 -> AppM ArtistProfileDTO
     fanArtistProfile artistId = do
       artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistIdValid)
       maybe (throwError err404) pure mDto
@@ -1104,6 +1106,7 @@ fanPublicServer =
     fanArtistReleases :: Int64 -> AppM [ArtistReleaseDTO]
     fanArtistReleases artistId = do
       artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool $ do
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
@@ -1115,6 +1118,7 @@ fanPublicServer =
       let page = max 1 (fromMaybe 1 mPage)
           pageSize = min 100 (max 1 (fromMaybe 5 mPageSize))
           offset = (page - 1) * pageSize
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool $ do
         let artistKey = toSqlKey artistIdValid
@@ -1159,14 +1163,14 @@ artistPublicServer =
     listArtists :: AppM [ArtistProfileDTO]
     listArtists = do
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool loadAllArtistProfilesDTO
+      liftIO $ flip runSqlPool pool (loadAllArtistProfilesDTO >>= filterPubliclyListedArtists)
 
     searchArtists :: Maybe Text -> Maybe UUID.UUID -> Maybe Text -> AppM [ArtistProfileDTO]
     searchArtists mQuery mGenreId mLegacyGenre = do
       when (mLegacyGenre /= Nothing) $
         throwBadRequest "genre is obsolete; use the canonical genreId UUID parameter"
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool $ searchArtistProfilesDTO mQuery mGenreId
+      liftIO $ flip runSqlPool pool (searchArtistProfilesDTO mQuery mGenreId >>= filterPubliclyListedArtists)
 
     artistPublicProfile :: Text -> AppM ArtistProfileDTO
     artistPublicProfile rawRef = do
@@ -1178,14 +1182,31 @@ artistPublicServer =
         case parseArtistPublicRef ref of
           ArtistPublicRefId artistId -> loadArtistProfileDTO (toSqlKey artistId)
           ArtistPublicRefSlug slug   -> loadArtistProfileBySlugDTO slug
-      maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+      dto <- maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+      listed <- liftIO $ flip runSqlPool pool $
+        ArtistVisibility.artistPartyPubliclyListed (toSqlKey (apArtistId dto))
+      unless listed $ throwError err404 { errBody = "Artist profile not found" }
+      pure dto
 
     artistProfileById :: Int64 -> AppM ArtistProfileDTO
     artistProfileById artistId = do
       artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistIdValid)
       maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+
+-- | Keep only artists the public may see (ART-PUBLIC-VISIBILITY-001).
+filterPubliclyListedArtists :: MonadIO m => [ArtistProfileDTO] -> SqlPersistT m [ArtistProfileDTO]
+filterPubliclyListedArtists dtos = do
+  listed <- ArtistVisibility.loadPubliclyListedArtistParties
+  pure [dto | dto <- dtos, Set.member (toSqlKey (apArtistId dto)) listed]
+
+-- | A hidden artist answers exactly like an absent one (ART-PUBLIC-VISIBILITY-001).
+requirePubliclyListedArtist :: PartyId -> AppM ()
+requirePubliclyListedArtist partyKey = do
+  listed <- runDB (ArtistVisibility.artistPartyPubliclyListed partyKey)
+  unless listed $ throwError err404 { errBody = "Artist profile not found" }
 
 data ArtistPublicRef
   = ArtistPublicRefId Int64
@@ -1240,7 +1261,7 @@ createArtistTip artistIdRaw req = do
     mEntity <- getBy (UniqueArtistProfile artistPartyKey)
     vis <- case mEntity of
       Nothing -> pure ArtistTip.NoDirectoryIdentity
-      Just (Entity profileKey _) -> loadArtistDirectoryVisibility artistPartyKey profileKey
+      Just (Entity profileKey _) -> ArtistVisibility.loadArtistDirectoryVisibility artistPartyKey profileKey
     pure (mEntity, vis)
   destinationAccountId <-
     case ArtistTip.admitArtistTip (artistProfileStripeAccountId . entityVal <$> mProfile) visibility of
@@ -1310,33 +1331,6 @@ createArtistTip artistIdRaw req = do
         , APITypes.atrespAmountCents = amountCents
         , APITypes.atrespCurrency = currency
         }
-
--- | Public-directory visibility of one artist (see 'ArtistTip.ArtistDirectoryVisibility').
--- Counts every directory identity of the artist party (by subject or by the
--- legacy @artist_profile@ link) and the ones the directory publicly lists, with
--- the predicate used by the discovery projection.
-loadArtistDirectoryVisibility
-  :: MonadIO m
-  => PartyId
-  -> ArtistProfileId
-  -> SqlPersistT m ArtistTip.ArtistDirectoryVisibility
-loadArtistDirectoryVisibility partyKey profileKey = do
-  rows <- rawSql
-    "SELECT count(*)::bigint, \
-    \count(*) FILTER (WHERE profile.profile_status='published' AND profile.visibility='public' \
-    \AND profile.moderation_status='allowed' AND profile.canonical_profile_id IS NULL)::bigint \
-    \FROM directory_profile profile \
-    \WHERE profile.subject_party_id = ? \
-    \OR profile.id IN (SELECT link.profile_id FROM directory_legacy_link link \
-    \WHERE link.legacy_kind='artist_profile' AND link.legacy_id = ?)"
-    [ PersistInt64 (fromSqlKey partyKey)
-    , PersistText (T.pack (show (fromSqlKey profileKey)))
-    ]
-  pure $ case rows of
-    [(Single total, Single public)] ->
-      ArtistTip.artistDirectoryVisibilityFromCounts (fromIntegral (total :: Int64)) (fromIntegral (public :: Int64))
-    -- No aggregate row is impossible evidence: fail closed.
-    _ -> ArtistTip.DirectoryIdentity 0
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =

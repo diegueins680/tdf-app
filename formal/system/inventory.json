@@ -450,6 +450,8 @@
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
       "scripts/test-artist-self-service.sh",
+      "scripts/test-artist-visibility-postgres.sh",
+      "scripts/test-artist-visibility-sql.py",
       "scripts/test-auth-predicates.py",
       "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
@@ -2112,6 +2114,7 @@
       "tdf-hq/src/TDF/Operations/Types.hs",
       "tdf-hq/src/TDF/Operations/Worker.hs",
       "tdf-hq/src/TDF/Profiles/Artist.hs",
+      "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
       "tdf-hq/src/TDF/PublicUrl.hs",
       "tdf-hq/src/TDF/RagStore.hs",
       "tdf-hq/src/TDF/Reputation.hs",
@@ -2820,7 +2823,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "cf83ac919f15571467b1e5f69437f568ce5d0f3adb8ee82670a547082131117f",
+      "sha256": "efe46cbabb4707064793ddacec033a93f91ffbd27a69d05c9092dbb232257cfd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5347,6 +5350,18 @@
       "id": "SURFACE-a2d5738156c69d37",
       "path": "scripts/test-artist-self-service.sh",
       "sha256": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-edfbf2162dc95e0e",
+      "path": "scripts/test-artist-visibility-postgres.sh",
+      "sha256": "c642a50af2d7593f73e2edbda8d03b177585a5cab052eea1368618e5a31bd3d0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-077a15726f3bb5d0",
+      "path": "scripts/test-artist-visibility-sql.py",
+      "sha256": "7027d2fadfedcebc9d7b367c3f17c425191c4e3186f0178939b01f72453941c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14688,7 +14703,7 @@
     {
       "id": "SURFACE-f423f120377b48f6",
       "path": "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
-      "sha256": "16a57779666f74019ee3c5c61dc8cd04ca48190a6b175d233e40fe9241d819a5",
+      "sha256": "108bb356ae8afca170851515fdd16a468881f4621bc9b3f89f59c312a5e6b427",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15286,6 +15301,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1541d1749d1a17a9",
+      "path": "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
+      "sha256": "352dd0ea4d8df0c977b6f02acdba30a38e4275b2c2d48872480ddbdff205461a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-099a5e005841f88e",
       "path": "tdf-hq/src/TDF/PublicUrl.hs",
       "sha256": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
@@ -15342,7 +15363,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "edbc275f4071b598a45d5a459e903d6d758edc5fbd0078a121762f9cadfc149b",
+      "sha256": "1b7f8efb3dad0e65c54ecde353809a27875a95d06155969af80883d45b348d68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15546,7 +15567,7 @@
     {
       "id": "SURFACE-5cfb0ad2589bfb68",
       "path": "tdf-hq/src/TDF/ServerFanClub.hs",
-      "sha256": "18710b60c3edd287962b329be0f367443cc2395037a7cec5524650fb4109f8cd",
+      "sha256": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15822,7 +15843,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "f42f589e5d71b11e6540f42f09270db471dd744670278e98c0172ec174139bea",
+      "sha256": "462f80a3e740b2da49cdf40ac00dd8a02311fee5c343a3fc00d6022e43e6786c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27388,7 +27409,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27402,7 +27423,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "d227c663a217dfe443931b235c24320b23a4f22a148ab628e464caf208b624fb",
+      "sha256": "30b0bfd1bea4ccfe1686200825f3c0db30725efa6379770f50f6a7b8fdf82dd6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28053,7 +28074,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
+      "sha256": "d3a0609d6cf95e1dea10d4739162ea595b489e111e954d3ff0f68a0a4cac673b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33782,7 +33803,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -33813,7 +33834,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -33844,7 +33865,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -33875,7 +33896,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -33906,7 +33927,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -33937,7 +33958,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -33968,7 +33989,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -33999,7 +34020,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -34030,7 +34051,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -34061,7 +34082,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -34092,7 +34113,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -34123,7 +34144,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -34152,12 +34173,12 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "3efb8ea20aba905562efe047c5b047f39dfa6d859b804a58f1629c480e35ff78",
+      "sourceSha256": "a0f5f6631fd025616a429ba189b561a419013dc3c566fd7a60499a8097441bfc",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
         "Sev.": "error",
-        "Hallazgo": "`/fans/artists` y `/fans/artists/{id}` muestran **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). Contradice la regla de visibilidad del directorio y la decisión sobre propinas. **Pendiente**: requiere decidir si se aplica el mismo predicado (recomendado)."
+        "Hallazgo": "`/fans/artists` y `/fans/artists/{id}` (y también `/artists`, la búsqueda, el perfil público por id o referencia y `/fans/clubs`) mostraban **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). **Corregido** por decisión del responsable (AUTHORITY-092, `ART-PUBLIC-VISIBILITY-001`): una sola regla en `TDF.Profiles.ArtistVisibility`, compartida con las propinas; un artista oculto responde como uno inexistente. Las lecturas admin y del propio dueño no cambian."
       },
       "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
       "verification": "open",
@@ -34169,7 +34190,7 @@
           "columns": {
             "ID": "F-13",
             "Sev.": "error",
-            "Hallazgo": "`/fans/artists` y `/fans/artists/{id}` muestran **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). Contradice la regla de visibilidad del directorio y la decisión sobre propinas. **Pendiente**: requiere decidir si se aplica el mismo predicado (recomendado)."
+            "Hallazgo": "`/fans/artists` y `/fans/artists/{id}` (y también `/artists`, la búsqueda, el perfil público por id o referencia y `/fans/clubs`) mostraban **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). **Corregido** por decisión del responsable (AUTHORITY-092, `ART-PUBLIC-VISIBILITY-001`): una sola regla en `TDF.Profiles.ArtistVisibility`, compartida con las propinas; un artista oculto responde como uno inexistente. Las lecturas admin y del propio dueño no cambian."
           }
         }
       ],

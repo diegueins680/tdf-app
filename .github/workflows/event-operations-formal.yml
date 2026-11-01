@@ -192,6 +192,9 @@ jobs:
       - name: Check recovery time constraint on isolated PostgreSQL
         run: sh scripts/test-recovery-time-postgres.sh
 
+      - name: Check public artist visibility SQL on isolated PostgreSQL
+        run: sh scripts/test-artist-visibility-postgres.sh
+
   postgres-api:
     runs-on: ubuntu-latest
     timeout-minutes: 10

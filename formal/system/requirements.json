@@ -13618,6 +13618,7 @@
       "observability": "Tip id, artist party id and artist profile id in PaymentIntent metadata; provider errors logged with the tip id.",
       "implementation": [
         "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+        "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
@@ -13629,7 +13630,9 @@
       "tests": [
         "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
         "tdf-hq/test/Spec.hs",
-        "scripts/verify-inductive-proofs.sh"
+        "scripts/verify-inductive-proofs.sh",
+        "scripts/test-artist-visibility-sql.py",
+        "scripts/test-artist-visibility-postgres.sh"
       ],
       "formalModels": [
         "formal/payments/StripeIntentOutcome.tla",
@@ -13637,15 +13640,83 @@
         "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg",
         "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg"
       ],
-      "confidence": "High for the pure admission/fee rules and for the outcome-write protocol as modelled; the SQL visibility query and the handler-to-model correspondence are established by review, not by a database-backed test.",
+      "confidence": "High for the pure admission/fee rules, for the outcome-write protocol as modelled, and for the visibility SQL on PostgreSQL (eight scenarios plus a mutation control); the handler-to-model correspondence is established by review.",
       "ambiguity": [
         "Request-level idempotency (Idempotency-Key) needs a schema change and remains open.",
         "The model abstracts each delivery to one read and one write; the event-id dedupe insert is not modelled because it does not guard dispatch.",
-        "Database-backed handler tests for the visibility query are pending."
+        "The visibility SQL is tested on a minimal fixture with the migrated column types, not on the fully migrated schema."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unbounded model proof and pure-rule properties exist; database-backed handler tests and request-level idempotency remain."
+        "reason": "Unbounded model proof, pure-rule properties and PostgreSQL visibility checks exist; request-level idempotency and a fully migrated handler test remain."
+      }
+    },
+    {
+      "id": "ART-PUBLIC-VISIBILITY-001",
+      "title": "Public artist reads follow the directory's public-listing rule",
+      "statement": "Every public artist read (/fans/artists list, profile, releases and fans; /artists list, search, profile by id and by public reference; /fans/clubs/{artistId} and its events) and tip admission show an artist only when the public directory lists it: a directory identity of the artist (by subject party or legacy artist_profile link) always wins and must be published, public, allowed and not merged; an artist without any directory identity is listed through its legacy profile. A hidden artist answers exactly like an absent one (404, or an empty event list). Administrative and owner reads are unaffected.",
+      "domain": "PRIV",
+      "authority": "Product owner decision 2026-10-31 (AUTHORITY-092) extending AUTHORITY-090; the discovery projection in tdf-hq/src/TDF/Server/Directory.hs defines the rule.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-13); AUTHORITY-092",
+      "property": "publicRead(artist) => listed(artist), with listed(artist) = (identities(artist) = {} \\/ \\E i \\in identities(artist): public(i)).",
+      "contract": "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
+      "actors": [
+        "Anonymous visitor",
+        "Fan",
+        "Directory moderator"
+      ],
+      "preconditions": [
+        "Directory profile and legacy link rows are as migrated by tdf-hq/sql/2026-08-14_music_directory_core.sql."
+      ],
+      "inputs": [
+        "artist party id or public reference"
+      ],
+      "state": {
+        "listed": [
+          "true",
+          "false"
+        ]
+      },
+      "allowedTransitions": [
+        "Visibility follows directory profile status, visibility, moderation and merge changes immediately on the next read."
+      ],
+      "forbiddenTransitions": [
+        "A private, draft, moderated, suspended, archived or merged directory identity exposes its legacy artist profile through a public read."
+      ],
+      "effects": [
+        "None; read-only filtering."
+      ],
+      "authorization": "Public reads only; admin and owner reads keep their own authorization.",
+      "privacy": "Hidden artists are indistinguishable from absent ones on public routes.",
+      "concurrency": "Each read evaluates visibility in its own statement; a concurrent status change is reflected on the next read.",
+      "idempotency": "Read-only.",
+      "failure": "Missing aggregate evidence fails closed (not listed).",
+      "recovery": "Not applicable.",
+      "observability": "None beyond existing request logging.",
+      "implementation": [
+        "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "verification": "Pure visibility rule by QuickCheck property; the SQL extracted from the Haskell source runs on PostgreSQL against eight scenarios, with a mutation control that removes the merge condition.",
+      "evidence": "scripts/test-artist-visibility-postgres.sh output; tdf-hq-test ArtistTipSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
+        "scripts/test-artist-visibility-sql.py",
+        "scripts/test-artist-visibility-postgres.sh"
+      ],
+      "formalModels": [],
+      "confidence": "High for the rule and its SQL on the fixture; route coverage established by review of each public handler.",
+      "ambiguity": [
+        "No HTTP-level test exercises each public route against a fully migrated database.",
+        "The legacy artist release and fan-follow tables are not themselves filtered for non-public readers outside these routes."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule, SQL and handlers implemented and tested at unit and SQL level; HTTP-level checks on the migrated schema remain."
       }
     }
   ]

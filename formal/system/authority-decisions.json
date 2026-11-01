@@ -1062,6 +1062,18 @@
       "conflict": "Bounded TLC/Alloy results were the strongest evidence for state-machine requirements; the audit mandate asks for proofs.",
       "authority": "Owner asked for a recommendation (2026-10-31); recommendation adopted for this audit.",
       "resolution": "Adopt Apalache v0.62.4 (archive sha256 8ac8488422c30d552735bae11b92a2d014d8e02e8608702acc08f9a2d8a9abb2), downloaded and checksum-verified like the TLA+ and Alloy pins, for inductive-invariant proofs (initiation, consecution, implication) with mandatory negative controls. A proof claim names its constant bounds. TLAPS is reserved for money invariants that need unbounded parameters."
+    },
+    {
+      "id": "AUTHORITY-092",
+      "sources": [
+        "formal/system/audit-2026-10-31-phase1.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs"
+      ],
+      "conflict": "Public /fans/artists, /artists and /fans/clubs reads returned every artist profile, including those whose directory identity is private, draft, moderated, suspended or merged, while the directory hides them and tips (AUTHORITY-090) refuse them.",
+      "authority": "Product owner decision 2026-11-01: apply the directory visibility rule to the public artist reads.",
+      "resolution": "ART-PUBLIC-VISIBILITY-001. One shared rule in TDF.Profiles.ArtistVisibility serves tips and every public artist read; hidden artists answer like absent ones. Admin and owner reads are unchanged."
     }
   ]
 }

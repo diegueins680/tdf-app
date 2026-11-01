@@ -21,34 +21,11 @@ module TDF.Commerce.ArtistTip
 import           Data.Text (Text)
 import qualified Data.Text as T
 
--- | How the public directory decides whether an artist party is listed.
---
--- A directory identity (a @directory_profile@ whose subject is the artist
--- party, or one linked to the legacy @artist_profile@ row) always wins, even
--- when it is private, draft, moderated or merged: the legacy profile is then
--- never listed on its own. Without any directory identity the legacy profile
--- is listed. This mirrors the discovery projection in "TDF.Server.Directory".
-data ArtistDirectoryVisibility
-  = NoDirectoryIdentity
-  | DirectoryIdentity
-      { publicIdentityCount :: !Int
-        -- ^ identities that are published, public, allowed and not merged
-      }
-  deriving (Eq, Show)
-
--- | Build the visibility evidence from the two counts the handler queries:
--- all directory identities of the artist, and the publicly listed ones.
--- A public count larger than the total is impossible evidence and is treated
--- as not listed, never as listed.
-artistDirectoryVisibilityFromCounts :: Int -> Int -> ArtistDirectoryVisibility
-artistDirectoryVisibilityFromCounts total public
-  | total <= 0 = NoDirectoryIdentity
-  | public < 0 || public > total = DirectoryIdentity 0
-  | otherwise = DirectoryIdentity public
-
-artistPubliclyListed :: ArtistDirectoryVisibility -> Bool
-artistPubliclyListed NoDirectoryIdentity = True
-artistPubliclyListed (DirectoryIdentity public) = public > 0
+import           TDF.Profiles.ArtistVisibility
+  ( ArtistDirectoryVisibility (..)
+  , artistDirectoryVisibilityFromCounts
+  , artistPubliclyListed
+  )
 
 data TipRejection
   = TipArtistNotFound

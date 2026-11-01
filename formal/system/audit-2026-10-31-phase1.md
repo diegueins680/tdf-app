@@ -160,7 +160,7 @@ satisfacibles. Es evidencia **acotada** (`verificado-acotado`), no una prueba (v
 | ID | Sev. | Hallazgo |
 |---|---|---|
 | F-12 | error | La ruta de propinas convertía `artistId` en una clave de `artist_profile`, mientras sus rutas hermanas y `apArtistId` usan el **PartyId**. Un cliente que usara el id público enviaría el dinero a la cuenta Stripe de otro artista. No había clientes, operación OpenAPI ni tests que la usaran, así que el defecto era latente. **Corregido.** |
-| F-13 | error | `/fans/artists` y `/fans/artists/{id}` muestran **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). Contradice la regla de visibilidad del directorio y la decisión sobre propinas. **Pendiente**: requiere decidir si se aplica el mismo predicado (recomendado). |
+| F-13 | error | `/fans/artists` y `/fans/artists/{id}` (y también `/artists`, la búsqueda, el perfil público por id o referencia y `/fans/clubs`) mostraban **todos** los perfiles de artista, incluidos los que el directorio oculta (privados, en moderación, suspendidos o fusionados). **Corregido** por decisión del responsable (AUTHORITY-092, `ART-PUBLIC-VISIBILITY-001`): una sola regla en `TDF.Profiles.ArtistVisibility`, compartida con las propinas; un artista oculto responde como uno inexistente. Las lecturas admin y del propio dueño no cambian. |
 
 ### Cambios
 
@@ -181,4 +181,10 @@ satisfacibles. Es evidencia **acotada** (`verificado-acotado`), no una prueba (v
 - El código anterior era seguro solo bajo el supuesto de que Stripe nunca emite dos resultados terminales distintos; sin ese supuesto, TLC y Apalache encuentran el contraejemplo.
 - Propiedades QuickCheck: la admisión nunca acepta a un artista oculto ni inventa un destino, y la comisión es exactamente el piso de la división y siempre menor que el importe.
 - **Primera obligación del sistema demostrada de forma no acotada fuera de SMT.**
+
+### Decisiones del 2026-11-01
+
+- **Q1:** abierto diegueins680/TDF-mobile#178, que avanza `main` del móvil hasta `7586be9` sin merge.
+- **F-13:** aplicado; ver la tabla de hallazgos.
+- **Evidencia SQL:** la consulta de visibilidad se extrae del código Haskell y se ejecuta en PostgreSQL (`scripts/test-artist-visibility-postgres.sh`, imagen fijada por digest y paso en CI) contra 8 escenarios: sin identidad, pública por sujeto, borrador, pública por enlace legado, privada más pública, fusionada, suspendida alcanzada por los dos caminos y enlace de otro tipo. Un control negativo, que quita la condición de no fusionado, hace fallar el test.
 

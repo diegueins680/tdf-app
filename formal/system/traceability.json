@@ -13619,6 +13619,7 @@
       "observability": "Tip id, artist party id and artist profile id in PaymentIntent metadata; provider errors logged with the tip id.",
       "implementation": [
         "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+        "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
@@ -13630,7 +13631,9 @@
       "tests": [
         "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
         "tdf-hq/test/Spec.hs",
-        "scripts/verify-inductive-proofs.sh"
+        "scripts/verify-inductive-proofs.sh",
+        "scripts/test-artist-visibility-sql.py",
+        "scripts/test-artist-visibility-postgres.sh"
       ],
       "formalModels": [
         "formal/payments/StripeIntentOutcome.tla",
@@ -13638,15 +13641,83 @@
         "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg",
         "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg"
       ],
-      "confidence": "High for the pure admission/fee rules and for the outcome-write protocol as modelled; the SQL visibility query and the handler-to-model correspondence are established by review, not by a database-backed test.",
+      "confidence": "High for the pure admission/fee rules, for the outcome-write protocol as modelled, and for the visibility SQL on PostgreSQL (eight scenarios plus a mutation control); the handler-to-model correspondence is established by review.",
       "ambiguity": [
         "Request-level idempotency (Idempotency-Key) needs a schema change and remains open.",
         "The model abstracts each delivery to one read and one write; the event-id dedupe insert is not modelled because it does not guard dispatch.",
-        "Database-backed handler tests for the visibility query are pending."
+        "The visibility SQL is tested on a minimal fixture with the migrated column types, not on the fully migrated schema."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unbounded model proof and pure-rule properties exist; database-backed handler tests and request-level idempotency remain."
+        "reason": "Unbounded model proof, pure-rule properties and PostgreSQL visibility checks exist; request-level idempotency and a fully migrated handler test remain."
+      }
+    },
+    {
+      "id": "ART-PUBLIC-VISIBILITY-001",
+      "title": "Public artist reads follow the directory's public-listing rule",
+      "statement": "Every public artist read (/fans/artists list, profile, releases and fans; /artists list, search, profile by id and by public reference; /fans/clubs/{artistId} and its events) and tip admission show an artist only when the public directory lists it: a directory identity of the artist (by subject party or legacy artist_profile link) always wins and must be published, public, allowed and not merged; an artist without any directory identity is listed through its legacy profile. A hidden artist answers exactly like an absent one (404, or an empty event list). Administrative and owner reads are unaffected.",
+      "domain": "PRIV",
+      "authority": "Product owner decision 2026-10-31 (AUTHORITY-092) extending AUTHORITY-090; the discovery projection in tdf-hq/src/TDF/Server/Directory.hs defines the rule.",
+      "source": "formal/system/audit-2026-10-31-phase1.md (F-13); AUTHORITY-092",
+      "property": "publicRead(artist) => listed(artist), with listed(artist) = (identities(artist) = {} \\/ \\E i \\in identities(artist): public(i)).",
+      "contract": "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
+      "actors": [
+        "Anonymous visitor",
+        "Fan",
+        "Directory moderator"
+      ],
+      "preconditions": [
+        "Directory profile and legacy link rows are as migrated by tdf-hq/sql/2026-08-14_music_directory_core.sql."
+      ],
+      "inputs": [
+        "artist party id or public reference"
+      ],
+      "state": {
+        "listed": [
+          "true",
+          "false"
+        ]
+      },
+      "allowedTransitions": [
+        "Visibility follows directory profile status, visibility, moderation and merge changes immediately on the next read."
+      ],
+      "forbiddenTransitions": [
+        "A private, draft, moderated, suspended, archived or merged directory identity exposes its legacy artist profile through a public read."
+      ],
+      "effects": [
+        "None; read-only filtering."
+      ],
+      "authorization": "Public reads only; admin and owner reads keep their own authorization.",
+      "privacy": "Hidden artists are indistinguishable from absent ones on public routes.",
+      "concurrency": "Each read evaluates visibility in its own statement; a concurrent status change is reflected on the next read.",
+      "idempotency": "Read-only.",
+      "failure": "Missing aggregate evidence fails closed (not listed).",
+      "recovery": "Not applicable.",
+      "observability": "None beyond existing request logging.",
+      "implementation": [
+        "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "verification": "Pure visibility rule by QuickCheck property; the SQL extracted from the Haskell source runs on PostgreSQL against eight scenarios, with a mutation control that removes the merge condition.",
+      "evidence": "scripts/test-artist-visibility-postgres.sh output; tdf-hq-test ArtistTipSpec run.",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
+        "scripts/test-artist-visibility-sql.py",
+        "scripts/test-artist-visibility-postgres.sh"
+      ],
+      "formalModels": [],
+      "confidence": "High for the rule and its SQL on the fixture; route coverage established by review of each public handler.",
+      "ambiguity": [
+        "No HTTP-level test exercises each public route against a fully migrated database.",
+        "The legacy artist release and fan-follow tables are not themselves filtered for non-public readers outside these routes."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule, SQL and handlers implemented and tested at unit and SQL level; HTTP-level checks on the migrated schema remain."
       }
     }
   ],
@@ -13657,7 +13728,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "cf83ac919f15571467b1e5f69437f568ce5d0f3adb8ee82670a547082131117f",
+    ".github/workflows/event-operations-formal.yml": "efe46cbabb4707064793ddacec033a93f91ffbd27a69d05c9092dbb232257cfd",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -14193,6 +14264,8 @@
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
+    "scripts/test-artist-visibility-postgres.sh": "c642a50af2d7593f73e2edbda8d03b177585a5cab052eea1368618e5a31bd3d0",
+    "scripts/test-artist-visibility-sql.py": "7027d2fadfedcebc9d7b367c3f17c425191c4e3186f0178939b01f72453941c0",
     "scripts/test-auth-predicates.py": "d84c51fe21419d6dc1ad6136be88b4231c4c53177c011be084444babb939c30b",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "a5e6a9437be4b0c0b4db2e466bd851b288f2003debc5d0aff30ddd5e80ef49dc",
@@ -14784,7 +14857,7 @@
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
-    "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "16a57779666f74019ee3c5c61dc8cd04ca48190a6b175d233e40fe9241d819a5",
+    "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "108bb356ae8afca170851515fdd16a468881f4621bc9b3f89f59c312a5e6b427",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "ea2f1106a8efc7214e1296cfb1239ab2361d932ae4cbae3713d1b8acd776086a",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
@@ -14833,12 +14906,13 @@
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "45363018da50e080a6f8853ecbb32c5dfb5818bd4a16b5a42cd5527eeb2635ba",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
+    "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs": "352dd0ea4d8df0c977b6f02acdba30a38e4275b2c2d48872480ddbdff205461a",
     "tdf-hq/src/TDF/PublicUrl.hs": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
     "tdf-hq/src/TDF/RagStore.hs": "f76a6745947e7f2087606d2d78a2fb8309560fc43c7adb00da9f210b430bd4c6",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
-    "tdf-hq/src/TDF/Server.hs": "edbc275f4071b598a45d5a459e903d6d758edc5fbd0078a121762f9cadfc149b",
+    "tdf-hq/src/TDF/Server.hs": "1b7f8efb3dad0e65c54ecde353809a27875a95d06155969af80883d45b348d68",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
@@ -14865,6 +14939,7 @@
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
     "tdf-hq/src/TDF/ServerExtra.hs": "ba415c384195ae77200926d96d85257e8654986ff64455b32ede127bc7bc42b9",
+    "tdf-hq/src/TDF/ServerFanClub.hs": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
@@ -14882,7 +14957,7 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "f42f589e5d71b11e6540f42f09270db471dd744670278e98c0172ec174139bea",
+    "tdf-hq/tdf-hq.cabal": "462f80a3e740b2da49cdf40ac00dd8a02311fee5c343a3fc00d6022e43e6786c",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
@@ -15935,6 +16010,10 @@
       },
       {
         "requirement": "PAY-TIP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-PUBLIC-VISIBILITY-001",
         "relationship": "implementation"
       }
     ],
@@ -26444,15 +26523,49 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-PUBLIC-VISIBILITY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": [
       {
         "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-PUBLIC-VISIBILITY-001",
         "relationship": "tests"
       }
     ],
     "scripts/verify-inductive-proofs.sh": [
       {
         "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-artist-visibility-sql.py": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-PUBLIC-VISIBILITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-artist-visibility-postgres.sh": [
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-PUBLIC-VISIBILITY-001",
         "relationship": "tests"
       }
     ],
@@ -26478,6 +26591,12 @@
       {
         "requirement": "PAY-TIP-001",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/src/TDF/ServerFanClub.hs": [
+      {
+        "requirement": "ART-PUBLIC-VISIBILITY-001",
+        "relationship": "implementation"
       }
     ]
   },
@@ -26643,7 +26762,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "cf83ac919f15571467b1e5f69437f568ce5d0f3adb8ee82670a547082131117f",
+      "sha256": "efe46cbabb4707064793ddacec033a93f91ffbd27a69d05c9092dbb232257cfd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31246,6 +31365,38 @@
       "requirements": [
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-edfbf2162dc95e0e",
+      "path": "scripts/test-artist-visibility-postgres.sh",
+      "sha256": "c642a50af2d7593f73e2edbda8d03b177585a5cab052eea1368618e5a31bd3d0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-TIP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ART-PUBLIC-VISIBILITY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-077a15726f3bb5d0",
+      "path": "scripts/test-artist-visibility-sql.py",
+      "sha256": "7027d2fadfedcebc9d7b367c3f17c425191c4e3186f0178939b01f72453941c0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-TIP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ART-PUBLIC-VISIBILITY-001",
           "relationship": "tests"
         }
       ]
@@ -46406,7 +46557,7 @@
     {
       "id": "SURFACE-f423f120377b48f6",
       "path": "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
-      "sha256": "16a57779666f74019ee3c5c61dc8cd04ca48190a6b175d233e40fe9241d819a5",
+      "sha256": "108bb356ae8afca170851515fdd16a468881f4621bc9b3f89f59c312a5e6b427",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47513,6 +47664,22 @@
       ]
     },
     {
+      "id": "SURFACE-1541d1749d1a17a9",
+      "path": "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs",
+      "sha256": "352dd0ea4d8df0c977b6f02acdba30a38e4275b2c2d48872480ddbdff205461a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-TIP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-PUBLIC-VISIBILITY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-099a5e005841f88e",
       "path": "tdf-hq/src/TDF/PublicUrl.hs",
       "sha256": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
@@ -47631,7 +47798,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "edbc275f4071b598a45d5a459e903d6d758edc5fbd0078a121762f9cadfc149b",
+      "sha256": "1b7f8efb3dad0e65c54ecde353809a27875a95d06155969af80883d45b348d68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47716,6 +47883,10 @@
         },
         {
           "requirement": "PAY-TIP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-PUBLIC-VISIBILITY-001",
           "relationship": "implementation"
         }
       ]
@@ -48256,9 +48427,14 @@
     {
       "id": "SURFACE-5cfb0ad2589bfb68",
       "path": "tdf-hq/src/TDF/ServerFanClub.hs",
-      "sha256": "18710b60c3edd287962b329be0f367443cc2395037a7cec5524650fb4109f8cd",
+      "sha256": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-PUBLIC-VISIBILITY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4e1ca7d206cc436f",
@@ -48691,7 +48867,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "f42f589e5d71b11e6540f42f09270db471dd744670278e98c0172ec174139bea",
+      "sha256": "462f80a3e740b2da49cdf40ac00dd8a02311fee5c343a3fc00d6022e43e6786c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48994,6 +49170,10 @@
       "requirements": [
         {
           "requirement": "PAY-TIP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ART-PUBLIC-VISIBILITY-001",
           "relationship": "tests"
         }
       ]
@@ -55150,7 +55330,6 @@
     "SURFACE-c446ba475dccb0e6",
     "SURFACE-e4ab6ea991643db1",
     "SURFACE-cb2c54ef31474aee",
-    "SURFACE-5cfb0ad2589bfb68",
     "SURFACE-81312ef85a6b405a",
     "SURFACE-b0f11c67be4fa672",
     "SURFACE-48a864e76f6a2ed9",
@@ -55603,7 +55782,8 @@
     "SOCIAL-EVENT-MODERATION-001",
     "SOCIAL-EVENT-SESSION-001",
     "MEDIA-MUSIC-PRIVACY-001",
-    "SYS-CI-SELECTED-001"
+    "SYS-CI-SELECTED-001",
+    "ART-PUBLIC-VISIBILITY-001"
   ],
   "stateMachines": [
     {
@@ -56722,7 +56902,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
+      "sourceSha256": "d3a0609d6cf95e1dea10d4739162ea595b489e111e954d3ff0f68a0a4cac673b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56750,7 +56930,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
+      "sourceSha256": "d3a0609d6cf95e1dea10d4739162ea595b489e111e954d3ff0f68a0a4cac673b",
       "definition": {
         "states": [
           "absent",
@@ -56780,7 +56960,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "70ff13d85d009553cf498c767bfbe1593df7dd160034e28ee6836f10d32d86a8",
+      "sourceSha256": "d3a0609d6cf95e1dea10d4739162ea595b489e111e954d3ff0f68a0a4cac673b",
       "definition": {
         "export": [
           "queued",
@@ -79267,7 +79447,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 160,
+    "PARTIAL": 161,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
