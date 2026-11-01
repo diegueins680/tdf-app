@@ -116,7 +116,8 @@ jobs:
   repo-quality:
     needs: changes
     if: needs.changes.outputs.repo == 'true'
-    runs-on: ubuntu-latest
+    # Keep the actual Docker recovery checks on the qualified Noble environment.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -406,6 +407,11 @@ jobs:
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
         run: node scripts/test-music-source-projection.mjs
+
+      - name: Verify authorized recording search and metadata boundaries
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
+        run: node scripts/test-music-track-search.mjs
 
       - name: Verify authenticated account deletion and auditable resolution
         env:

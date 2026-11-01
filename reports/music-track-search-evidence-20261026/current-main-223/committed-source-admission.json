@@ -1,0 +1,31 @@
+{
+  "base": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+  "head": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mappedChangedSurfaces": [
+    ".github/workflows/ci.yml",
+    "e2e/web/music-search-native.spec.mjs",
+    "scripts/__tests__/ci-change-scope.test.mjs",
+    "scripts/__tests__/music-track-search-model.test.mjs",
+    "scripts/ci-change-scope.mjs",
+    "scripts/quality-repo.sh",
+    "scripts/test-music-track-search.mjs",
+    "tdf-hq-ui/src/api/musicReleases.search.test.ts",
+    "tdf-hq-ui/src/api/musicReleases.ts",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
+    "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+    "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+    "tdf-hq-ui/src/player/publicMusicTrack.test.ts",
+    "tdf-hq-ui/src/player/publicMusicTrack.ts",
+    "tdf-hq/docs/openapi/music-search.yaml",
+    "tdf-hq/src/TDF/API/MusicRelease.hs",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

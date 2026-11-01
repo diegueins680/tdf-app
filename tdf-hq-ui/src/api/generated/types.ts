@@ -8920,6 +8920,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/music/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find a currently discoverable recording with its exact playback context
+         * @description Requires the existing music_releases.public feature. Text matches current
+         *     public release/track contexts inside the database. Every returned context
+         *     must have an eligible stream or matching preview under the existing public
+         *     delivery policy and trusted edge territory. Contexts without eligible audio
+         *     are excluded before recording deduplication, pagination and JSON projection.
+         *     Results contain deferred asset IDs, never delivery URLs or storage keys.
+         *     The player reauthorizes the selected asset. This is canonical release audio
+         *     search, not indexing of all historical, social, podcast or event sources.
+         */
+        get: operations["searchPublicMusicTracks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/music/releases/{releaseId}/versions/{versionId}/validate": {
         parameters: {
             query?: never;
@@ -16452,6 +16479,34 @@ export interface components {
             sourceId: string;
             rating: number;
             body?: string | null;
+        };
+        MusicTrackSearchSource: {
+            /** Format: uuid */
+            assetId: string;
+            /** @enum {string} */
+            role: "stream_audio" | "preview_audio";
+            mediaType: string;
+            technicalMetadata: {
+                bitrate_kbps?: number;
+                loudness_lufs?: number;
+            };
+        };
+        MusicTrackSearchHit: {
+            /** Format: uuid */
+            trackId: string;
+            /** Format: uuid */
+            recordingId: string;
+            /** Format: uuid */
+            releaseId: string;
+            /** Format: uuid */
+            releaseVersionId: string;
+            releaseSlug: string;
+            releaseTitle: string;
+            title: string;
+            displayArtist: string;
+            /** Format: int64 */
+            durationMs: number | null;
+            sources: components["schemas"]["MusicTrackSearchSource"][];
         };
     };
     responses: {
@@ -37268,6 +37323,56 @@ export interface operations {
             };
             /** @description Music commerce is disabled in the applicable environment */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    searchPublicMusicTracks: {
+        parameters: {
+            query?: {
+                /** @description Trimmed query; absent or blank returns an empty array. Accent/case and literal non-Latin substring matching; no typo-tolerance guarantee. */
+                q?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Accepted only through the existing trusted-edge configuration. Absent, ignored or invalid values use the existing unknown-territory policy; the browser does not choose this value. */
+                "CF-IPCountry"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stable authorized recording hits, deduplicated before pagination. Readiness and rights may change before selection. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicTrackSearchHit"][];
+                };
+            };
+            /** @description Invalid query length or pagination. Handler denials use private/no-store; parameter-parser errors precede the handler. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing public music feature disabled; no catalog existence inferred. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Explicit service failure; not an empty catalog. */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };

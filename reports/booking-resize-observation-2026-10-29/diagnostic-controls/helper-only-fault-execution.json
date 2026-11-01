@@ -1,0 +1,11 @@
+{
+  "label": "helper-only-fault",
+  "port": 41221,
+  "actualExit": 1,
+  "trackedDiagnosticSha256": "64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87",
+  "executedTestSha256": "f7e7b76c95b1ec88e3f655473f58890e8e258a94f1bc992b014a94857b90eeb5",
+  "startedAt": 1793255684.677352,
+  "finishedAt": 1793255706.062968,
+  "serverStopped": true,
+  "ownedAliasesRemoved": true
+}

@@ -1,0 +1,26 @@
+{
+  "sourceCommit": "a5d8b29987acfeb460a86e662fd5ead53ab379e8",
+  "trackedE2ESha256": "f3bab37d454a87aeb44a22b74805efbdaab327f97d3291c16f04dd70ce333196",
+  "results": [
+    {
+      "project": "chromium-phone",
+      "passed": 3,
+      "driverExit": 0,
+      "browserExit": 0,
+      "retries": 0,
+      "skipped": 0,
+      "actualStats": {
+        "startTime": "2026-10-29T04:58:48.977Z",
+        "duration": 31586.03,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "previewStopped": true,
+      "ownAliasesRemoved": true
+    }
+  ],
+  "status": "running-partial",
+  "scope": "Three source-identical permanent cases per isolated local profile; not Linux WebKit qualification or production deployment."
+}

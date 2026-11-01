@@ -1,0 +1,2 @@
+[fix/booking-tooltip-viewport-20261028 a5535c59e] test(booking): observe delivered scroll events after viewport checks
+ 4 files changed, 35 insertions(+), 13 deletions(-)
