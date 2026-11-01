@@ -101,6 +101,7 @@ import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Admin          ( AdminAPI
                                         , SocialDeliveryDesignation(..)
+                                        , DomoQuoteCancelRequest(..)
                                         , AdminEmailBroadcastRecipientDTO(..)
                                         , AdminEmailBroadcastRequest(..)
                                         , AdminEmailBroadcastResponse(..)
@@ -123,6 +124,9 @@ import           TDF.API.Admin          ( AdminAPI
                                         , WhatsAppMessageAdminDTO(..)
                                         )
 import qualified TDF.Services.Stripe    as Stripe
+import qualified TDF.Commerce.DomoCancellation as DomoCancellation
+import qualified TDF.Commerce.DomoCancellationStore as DomoCancel
+import qualified Data.UUID              as UUID
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
@@ -260,8 +264,69 @@ adminServer user =
   :<|> brainRouter
   :<|> ragRouter
   :<|> socialRouter
+  :<|> domoRouter
   :<|> recordsIngestionServer user
   where
+    domoRouter = domoCancelHandler
+
+    -- PAY-DOMO-CANCEL-001: strict administrators cancel Domo quotes; the
+    -- approved policy prices the refund and the request is created with the
+    -- administrator as requester (a different party must approve it).
+    domoCancelHandler rawQuoteId DomoQuoteCancelRequest{..} = do
+      ensureStrictAdmin user
+      ensureModule ModuleAdmin user
+      let encodeBody = BL.fromStrict . TE.encodeUtf8
+      quoteId <- case UUID.fromText (T.strip rawQuoteId) of
+        Just parsed -> pure (UUID.toText parsed)
+        Nothing -> throwError err400 { errBody = "quoteId must be a UUID" }
+      canceller <- case T.toLower (T.strip dqcCanceller) of
+        "customer" -> pure DomoCancellation.CancelledByCustomer
+        "tdf" -> pure DomoCancellation.CancelledByTdf
+        _ -> throwError err400 { errBody = "canceller must be \"customer\" or \"tdf\"" }
+      note <- either throwError pure (validateSocialUnholdNote dqcNote)
+      now <- liftIO getCurrentTime
+      outcome <- withPool $ DomoCancel.cancelDomoQuote DomoCancel.CancellationRequest
+        { DomoCancel.crQuoteId = quoteId
+        , DomoCancel.crActor = DomoCancel.OperatorActor (fromSqlKey (auPartyId user))
+        , DomoCancel.crCanceller = canceller
+        , DomoCancel.crNote = note
+        , DomoCancel.crNow = now
+        }
+      record <- case outcome of
+        Left DomoCancel.CancellationNotFound -> throwError err404 { errBody = "Domo quote not found" }
+        Left (DomoCancel.CancellationNotAllowed message) -> throwError err409 { errBody = encodeBody message }
+        Left (DomoCancel.CancellationPolicyUnavailable message) -> throwError err503 { errBody = encodeBody message }
+        Left (DomoCancel.CancellationRefundRejected message) -> throwError err409 { errBody = encodeBody message }
+        Right record -> pure record
+      recordActivity "domo_quote" quoteId
+        (if DomoCancel.dcrReplayed record then "cancellation_refund_requested" else "cancelled") $
+        Just (object
+          [ "canceller" .= DomoCancel.dcrCanceller record
+          , "refundDueMinor" .= DomoCancel.dcrRefundDueMinor record
+          , "retainedMinor" .= DomoCancel.dcrRetainedMinor record
+          , "refundStatus" .= DomoCancel.dcrRefundStatus record
+          , "policyVersion" .= DomoCancel.dcrPolicyVersion record
+          ])
+      pure $ object
+        [ "quoteId" .= DomoCancel.dcrQuoteId record
+        , "quoteStatus" .= DomoCancel.dcrQuoteStatus record
+        , "canceller" .= DomoCancel.dcrCanceller record
+        , "actorType" .= DomoCancel.dcrActorType record
+        , "policyVersion" .= DomoCancel.dcrPolicyVersion record
+        , "cancelledAt" .= DomoCancel.dcrCancelledAt record
+        , "leadDays" .= DomoCancel.dcrLeadDays record
+        , "inProgress" .= DomoCancel.dcrInProgress record
+        , "retainedBasisPoints" .= DomoCancel.dcrRetainedBasisPoints record
+        , "depositCollectedMinor" .= DomoCancel.dcrDepositCollectedMinor record
+        , "balanceCollectedMinor" .= DomoCancel.dcrBalanceCollectedMinor record
+        , "retainedMinor" .= DomoCancel.dcrRetainedMinor record
+        , "refundDueMinor" .= DomoCancel.dcrRefundDueMinor record
+        , "currency" .= DomoCancel.dcrCurrency record
+        , "refundStatus" .= DomoCancel.dcrRefundStatus record
+        , "refundId" .= DomoCancel.dcrRefundId record
+        , "alreadyCancelled" .= DomoCancel.dcrReplayed record
+        ]
+
     seedHandler rawToken = do
       ensureStrictAdmin user
       ensureModule ModuleAdmin user

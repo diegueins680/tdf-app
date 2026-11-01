@@ -1170,6 +1170,16 @@
       "id": "2026-11-01_domo_cancellation_policy",
       "path": "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql",
       "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
+    },
+    {
+      "id": "2026-11-02_domo_quote_cancellation",
+      "path": "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
+      "introducedBy": "81a5a6e26f7b0a86c44e6bf5d0e30c654ae7c5bd"
+    },
+    {
+      "id": "2026-11-02_course_checkout_deposit_policy",
+      "path": "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql",
+      "introducedBy": "81a5a6e26f7b0a86c44e6bf5d0e30c654ae7c5bd"
     }
   ]
 }

@@ -204,6 +204,7 @@ import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.Money as CommerceMoney
 import qualified TDF.Commerce.ArtistTip as ArtistTip
+import qualified TDF.Commerce.ArtistTipStore as TipStore
 import qualified TDF.Profiles.ArtistVisibility as ArtistVisibility
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
@@ -1299,10 +1300,6 @@ createArtistTip artistIdRaw mIdempotencyKey req = do
         , ME.artistTipUpdatedAt = now
         }
       conflict msg = throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-      storedFor (Entity _ tip) =
-        ( fromMaybe "" (ME.artistTipRequestSha256 tip)
-        , ME.artistTipStripePaymentIntentId tip
-        , ME.artistTipStatus tip )
       -- Replay (PAY-TIP-001): answer with the stored PaymentIntent; the client
       -- secret is retrieved from Stripe, never stored.
       replayResponse tipKey tip intentId = do
@@ -1320,8 +1317,6 @@ createArtistTip artistIdRaw mIdempotencyKey req = do
           , APITypes.atrespAmountCents = ME.artistTipAmountCents tip
           , APITypes.atrespCurrency = ME.artistTipCurrency tip
           }
-      lookupKeyed = maybe (pure Nothing)
-        (\key -> runDB (getBy (ME.UniqueArtistTipIdempotency profileKey (Just key)))) mKey
       createFresh tipKey = do
         let tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
             description = "Tip to artist " <> T.pack (show artistIdValid) <> " from " <> tipperLabel
@@ -1363,22 +1358,15 @@ createArtistTip artistIdRaw mIdempotencyKey req = do
               , APITypes.atrespAmountCents = amountCents
               , APITypes.atrespCurrency = currency
               }
-  existing <- lookupKeyed
-  case ArtistTip.decideTipReplay fingerprint (storedFor <$> existing) of
-    ArtistTip.TipReplayIntent intentId | Just (Entity tipKey tip) <- existing ->
-      replayResponse tipKey tip intentId
-    ArtistTip.TipReplayConflict msg -> conflict msg
-    _ -> do
-      inserted <- runDB (insertUnique tipRow)
-      case inserted of
-        Just tipKey -> createFresh tipKey
-        Nothing -> do
-          -- A concurrent request with the same key won the insert; replay it.
-          raced <- lookupKeyed
-          case ArtistTip.decideTipReplay fingerprint (storedFor <$> raced) of
-            ArtistTip.TipReplayIntent intentId | Just (Entity k tip) <- raced -> replayResponse k tip intentId
-            ArtistTip.TipReplayConflict msg -> conflict msg
-            _ -> conflict "Tip request is already being processed; retry with the same Idempotency-Key"
+  -- Reserve the row (or recognise a replay) before any provider call; the
+  -- ordering lives in TDF.Commerce.ArtistTipStore so it is tested against a
+  -- database without Stripe.
+  reservation <- runDB (TipStore.reserveArtistTip fingerprint mKey tipRow)
+  case reservation of
+    TipStore.TipReserved tipKey -> createFresh tipKey
+    TipStore.TipReplay tipKey tip intentId -> replayResponse tipKey tip intentId
+    TipStore.TipConflict msg -> conflict msg
+    TipStore.TipPending -> conflict "Tip request is already being processed; retry with the same Idempotency-Key"
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =

@@ -15,10 +15,14 @@ module TDF.Commerce.DomoCancellation
   , validateDomoCancellationPolicy
   , depositRetainedBasisPoints
   , domoCancellationRefund
+  , leadDaysBefore
+  , CancellationAssessment (..)
+  , assessDomoCancellation
   ) where
 
 import           Data.Int (Int64)
 import           Data.Text (Text)
+import           Data.Time (UTCTime, diffUTCTime)
 
 data Canceller = CancelledByCustomer | CancelledByTdf
   deriving (Eq, Show)
@@ -83,3 +87,53 @@ domoCancellationRefund policy canceller inProgress leadDays depositMinor balance
   where
     deposit = max 0 depositMinor
     balance = max 0 balanceMinor
+
+-- | Whole days from the cancellation instant to the event start; negative once
+-- the start has passed. The day boundary is 24 hours before the start instant
+-- (not a calendar day in the venue time zone), so the rule is the same for
+-- every venue and does not depend on daylight-saving transitions.
+leadDaysBefore :: UTCTime -> UTCTime -> Int
+leadDaysBefore now startsAt =
+  let seconds = toRational (diffUTCTime startsAt now)
+      days = floor (seconds / 86400) :: Integer
+  in fromInteger (max (toInteger (minBound :: Int)) (min (toInteger (maxBound :: Int)) days))
+
+-- | The money outcome of one cancellation, recorded with the cancellation so
+-- the refund obligation is auditable without recomputing it later.
+data CancellationAssessment = CancellationAssessment
+  { caLeadDays               :: !Int
+  , caInProgress             :: !Bool
+  , caRetainedBasisPoints    :: !Int
+  , caDepositCollectedMinor  :: !Int64
+  , caBalanceCollectedMinor  :: !Int64
+  , caRetainedMinor          :: !Int64
+  , caRefundDueMinor         :: !Int64
+  } deriving (Eq, Show)
+
+-- | Assess a cancellation at @now@ for an event starting at @startsAt@.
+--
+-- @statusInProgress@ is the quote lifecycle flag; the event is also treated as
+-- in progress once @now >= startsAt@. Collected amounts below zero count as
+-- zero. The invariants @retained + refundDue = collected@ and
+-- @retained <= deposit collected@ hold for every input.
+assessDomoCancellation
+  :: DomoCancellationPolicy -> Canceller -> Bool -> UTCTime -> UTCTime -> Int64 -> Int64
+  -> CancellationAssessment
+assessDomoCancellation policy canceller statusInProgress now startsAt depositMinor balanceMinor =
+  CancellationAssessment
+    { caLeadDays = leadDays
+    , caInProgress = inProgress
+    , caRetainedBasisPoints = case canceller of
+        CancelledByTdf -> 0
+        CancelledByCustomer -> depositRetainedBasisPoints policy inProgress leadDays
+    , caDepositCollectedMinor = deposit
+    , caBalanceCollectedMinor = balance
+    , caRetainedMinor = deposit + balance - refund
+    , caRefundDueMinor = refund
+    }
+  where
+    leadDays = leadDaysBefore now startsAt
+    inProgress = statusInProgress || now >= startsAt
+    deposit = max 0 depositMinor
+    balance = max 0 balanceMinor
+    refund = domoCancellationRefund policy canceller inProgress leadDays deposit balance

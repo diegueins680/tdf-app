@@ -127,6 +127,8 @@ import qualified TDF.Commerce.ProviderAdapterBindingSpec as ProviderAdapterBindi
 import qualified TDF.MetaWebhookSignatureSpec as MetaWebhookSignatureSpec
 import qualified TDF.CorsPropertiesSpec as CorsPropertiesSpec
 import qualified TDF.Commerce.DomoCancellationSpec as DomoCancellationSpec
+import qualified TDF.Commerce.ArtistTipStoreSpec as ArtistTipStoreSpec
+import qualified TDF.Social.AccountOwnershipStoreSpec as AccountOwnershipStoreSpec
 import qualified TDF.Commerce.DepositPolicySpec as DepositPolicySpec
 import qualified TDF.Social.AccountOwnershipSpec as AccountOwnershipSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
@@ -17941,6 +17943,8 @@ main = hspec $ do
     MetaWebhookSignatureSpec.spec
     CorsPropertiesSpec.spec
     DomoCancellationSpec.spec
+    ArtistTipStoreSpec.spec
+    AccountOwnershipStoreSpec.spec
     DepositPolicySpec.spec
     AccountOwnershipSpec.spec
     ProviderRetrySpec.spec

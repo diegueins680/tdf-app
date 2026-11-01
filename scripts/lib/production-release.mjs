@@ -1639,7 +1639,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 13 OR (
+  ) <> 17 OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1662,6 +1662,10 @@ BEGIN
         ('social_sync_account', 'platform', 'character varying', 'NO'),
         ('social_sync_account', 'external_user_id', 'character varying', 'NO'),
         ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_account', 'delivery_designated', 'boolean', 'NO'),
+        ('social_sync_account', 'connected_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_at', 'timestamp with time zone', 'YES'),
         ('social_sync_post', 'account_id', 'bigint', 'YES'),
         ('social_sync_post', 'platform', 'character varying', 'NO'),
         ('social_sync_post', 'external_post_id', 'character varying', 'NO'),
@@ -1719,7 +1723,7 @@ BEGIN
       'public.social_sync_post'::regclass,
       'public.social_discovery_review'::regclass
     ) AND contype = 'f' AND convalidated
-  ) <> 7 THEN
+  ) <> 9 THEN
     RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
   END IF;
 

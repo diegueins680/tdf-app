@@ -172,7 +172,31 @@ type AdminAPI =
   :<|> BrainAdminAPI
   :<|> RagAdminAPI
   :<|> SocialAdminAPI
+  :<|> DomoAdminAPI
   :<|> "records-ingestion" :> RecordsIngestionAPI
+
+-- | PAY-DOMO-CANCEL-001 (AUTHORITY-093): an operator cancels a Domo quote on
+-- behalf of the customer or of TDF. Collected money is priced by the approved
+-- cancellation policy and the refund request is created in the same
+-- transaction; calling again on a customer-cancelled quote with an open refund
+-- obligation creates that refund request.
+type DomoAdminAPI =
+  "domo" :> "quotes" :> Capture "quoteId" Text :> "cancel"
+    :> ReqBody '[JSON] DomoQuoteCancelRequest :> Post '[JSON] Value
+
+data DomoQuoteCancelRequest = DomoQuoteCancelRequest
+  { dqcCanceller :: Text
+    -- ^ "customer" (policy ladder applies) or "tdf" (everything collected is refunded)
+  , dqcNote      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON DomoQuoteCancelRequest where
+  parseJSON value = do
+    rejectNullOptionalField "DomoQuoteCancelRequest" "note" "note must be omitted instead of null" value
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } value
 
 -- | AUTHORITY-094: designate (or withdraw) a social sync account as a platform
 -- delivery/backfill channel. Strict administrators only.

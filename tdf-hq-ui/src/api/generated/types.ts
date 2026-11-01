@@ -7285,6 +7285,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/domo/quotes/{quoteId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel the quote and record its refund obligation (PAY-DOMO-CANCEL-001)
+         * @description Releases the quote and its date hold. Collected money is priced by the single approved cancellation policy version (AUTHORITY-093, by lead time before the event) and recorded as an immutable cancellation with the retained and refundable amounts. The quote holder is not an authenticated party, so a refund due is recorded as an open obligation that an operator turns into a refund request; replaying returns the stored record.
+         */
+        post: operations["cancelPublicDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a Domo quote as an operator and request the policy refund
+         * @description Strict administrators only. The approved cancellation policy prices the refund (customer ladder or full refund when TDF cancels) and the refund request is created in the same transaction with the administrator as requester; a different party must approve it. Called on a customer-cancelled quote with an open obligation, it creates that refund request.
+         */
+        post: operations["adminCancelDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/fans/me/notifications": {
         parameters: {
             query?: never;
@@ -10588,6 +10628,46 @@ export interface components {
         PublicDomoQuoteAcceptRequest: {
             /** @enum {boolean} */
             termsAccepted: true;
+        };
+        PublicDomoQuoteCancelRequest: {
+            /** @enum {boolean} */
+            confirmCancellation: true;
+            cancellationNote?: string;
+        };
+        PublicDomoCancellation: {
+            /** Format: uuid */
+            quoteId: string;
+            quoteStatus: string;
+            /** @enum {string} */
+            canceller: "customer" | "tdf";
+            policyVersion?: number | null;
+            /** Format: date-time */
+            cancelledAt: string;
+            /** @description Whole 24-hour periods before the event start; negative after it */
+            leadDays: number;
+            inProgress: boolean;
+            retainedBasisPoints: number;
+            /** Format: int64 */
+            depositCollectedMinor: number;
+            /** Format: int64 */
+            balanceCollectedMinor: number;
+            /** Format: int64 */
+            retainedMinor: number;
+            /**
+             * Format: int64
+             * @description retainedMinor + refundDueMinor equals the collected money
+             */
+            refundDueMinor: number;
+            currency: string;
+            /** @enum {string} */
+            refundStatus: "none" | "awaiting_operator" | "requested";
+            /** @description True when the quote was cancelled earlier and the stored record is returned */
+            alreadyCancelled: boolean;
+        };
+        DomoQuoteCancelRequest: {
+            /** @enum {string} */
+            canceller: "customer" | "tdf";
+            note?: string;
         };
         PublicDomoQuoteLine: {
             code: string;
@@ -34321,6 +34401,126 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoQuoteCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded cancellation outcome */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoCancellation"];
+                };
+            };
+            /** @description Cancellation not confirmed or note too long */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote is completed or expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved cancellation policy exists; nothing was cancelled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminCancelDomoQuote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomoQuoteCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded cancellation including the linked refund request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Malformed quoteId */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin role or module access missing */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote cannot be cancelled or the refund request was refused */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved cancellation policy exists */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

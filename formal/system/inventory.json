@@ -1958,6 +1958,10 @@
       "tdf-hq/sql/2026-11-01_domo_cancellation_policy_rollback.sql",
       "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql",
       "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql",
+      "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql",
+      "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy_rollback.sql",
+      "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
+      "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2027,10 +2031,12 @@
       "tdf-hq/src/TDF/Catalog/Seed.hs",
       "tdf-hq/src/TDF/Catalog/Types.hs",
       "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
+      "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
       "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
       "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
       "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
+      "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
       "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
       "tdf-hq/src/TDF/Commerce/EventTickets.hs",
       "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
@@ -2192,6 +2198,7 @@
       "tdf-hq/src/TDF/Services/YouTube.hs",
       "tdf-hq/src/TDF/Social/API.hs",
       "tdf-hq/src/TDF/Social/AccountOwnership.hs",
+      "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
       "tdf-hq/src/TDF/Social/Chat.hs",
       "tdf-hq/src/TDF/Social/FanEffects.hs",
       "tdf-hq/src/TDF/Social/Profiles.hs",
@@ -2241,8 +2248,10 @@
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
+      "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
+      "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
       "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs",
       "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
       "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
@@ -2305,6 +2314,7 @@
       "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs",
       "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
       "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs",
+      "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
@@ -2846,7 +2856,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "41be88bd920eb5a573a730bb2e37c227b78bf892e53c4d115ad58dbf771d64ff",
+      "sha256": "558fc3298677ac68b7e330726615db7c88641c92defe6ed6917d03fa6cc41568",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4622,7 +4632,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+      "sha256": "e5839a4c4b4fc6cfdeb89438b682e6a0a57eccb90792980c07a78bac88e4cfa8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4808,7 +4818,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "e1f6efbfb684f0d20b4a08de7072601dd510650155a677a5a5f10d59cf70616a",
+      "sha256": "a76123c505ca8250c8f352c61e83d4d9e7c8d9f8984218868a0949b9fd24312f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5558,7 +5568,7 @@
     {
       "id": "SURFACE-ce3ab4115ddf1e35",
       "path": "scripts/test-domo-quote-checkout-runtime-migration.sh",
-      "sha256": "0410732d3ddf4c526b0b85b95f72905c5e5929445d601c3feeb41ccbd3ebbdc8",
+      "sha256": "8b51f9e41bcd8fa224dffc3878d24d2587fc3ccce797a67927ad8cd3f96b6680",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7022,13 +7032,13 @@
     {
       "id": "SURFACE-d87ef23be735ae46",
       "path": "tdf-hq-ui/src/api/domoQuotes.test.ts",
-      "sha256": "c33bd90e49a28f200f1c77d4e98e2ac9c5e9afd879efc6b5290ddcf0657b1dc0",
+      "sha256": "667cea36c2f98a12b4bc7355019a31ba5028cdfc29d8a7b0481da566ff6d40af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2f2b0036b97be1b2",
       "path": "tdf-hq-ui/src/api/domoQuotes.ts",
-      "sha256": "45b5d7b9d2c49f0dbc32a3329d3845b21a02065334ff4b58cc1986a070e2eb49",
+      "sha256": "d1353a1cd98093582b6d90df3fd061ea759d003bc1b7d4112809f9789af32373",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7184,7 +7194,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "58d557a129f756848a4a76010491f8decdb777b7a77449ec5de4f1057a23ce63",
+      "sha256": "6d0e03d5de68ff47ccdd7283637492808b94f8d0025cc7035019b2653330ce04",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11684,7 +11694,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "fba1c9ce678b966bf36754e5325f12cf3f75438a62d8e9e51dcfd4b35be1400d",
+      "sha256": "be318e3cde6871d3325da983f5d61888e930b0603a8389e79ec14874f5093134",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14388,6 +14398,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-034664def9c93115",
+      "path": "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql",
+      "sha256": "ce70b347ef286915e239e1c1ec34bda783d34199d1757b08a78262a1d2f79c3a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-32e94fc393a76f0d",
+      "path": "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy_rollback.sql",
+      "sha256": "aa37b8a6d5c387ce3e55e39ceddff228581226b0e922ab152410b0ff7725d9b7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4be0627dc995cdde",
+      "path": "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
+      "sha256": "b5591df9ea95e2ea08007c62ccb45b0727a4ef0f9c492f77ddb72630bc4b008f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e34d49b89ffb6928",
+      "path": "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
+      "sha256": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -14420,7 +14454,7 @@
     {
       "id": "SURFACE-dfe3755c60d368f8",
       "path": "tdf-hq/src/TDF/API/Admin.hs",
-      "sha256": "9314e8e426d450724880f65b72e07c611533599416b2ead84a43fd62df2675e0",
+      "sha256": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14802,6 +14836,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-29114654bb1575ce",
+      "path": "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
+      "sha256": "904a12195f63b47f44286560f466e6686c97e44333f864ba2434a77003472382",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
       "sha256": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
@@ -14822,7 +14862,13 @@
     {
       "id": "SURFACE-55812205822ed3aa",
       "path": "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
-      "sha256": "059866be5226bf48bfc8fa2d127bc5d16ec641712e02df3d0e0f90142d0ee74d",
+      "sha256": "dcbc9345ad6a6c2e850c5d9a523061994e282d65edc92968dfe951797f065ca2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-52b27b4edfde0af0",
+      "path": "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+      "sha256": "619db6954ecf5bdcefa59909019a54ead88c13225a8889cfbeac54c8d5297b7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15452,7 +15498,7 @@
     {
       "id": "SURFACE-21573408c23f618c",
       "path": "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
-      "sha256": "b118acba22e08f48bf389b980e42078c8986635809bc23df93e73d81945b557b",
+      "sha256": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15470,7 +15516,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "82fa378883d00325b1c8ccd06d4b0222185bac1d2ceb0bafcd13ca9f5ae7daee",
+      "sha256": "b6613ac1cf73843402960070aea42b1ca26dd01cccdc086c3b6b8b9765246593",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15488,7 +15534,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "05f9737bd13ddeb8dcc1272d3aab3a71409e40944f8fe0653e85b39376a25b92",
+      "sha256": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15506,7 +15552,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "be648aa0aa8bd4d73fdf64bb208c9235ad2d50af345733579af1dd9cc88436b9",
+      "sha256": "8259c0b2c3e661c34ad8e8d76238af00da017c3b6edee0db52ddf027022bef8b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15656,7 +15702,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "88522c717218bada9c54209606f5ec5b1c7844037b32ab8031970639dcda0525",
+      "sha256": "774a4f3b7f6f6732222937e1795e4430669ca968cb46fcf30110370458868fd5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15692,7 +15738,7 @@
     {
       "id": "SURFACE-b0f11c67be4fa672",
       "path": "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
-      "sha256": "fcad20c29ec89b4c08e93a6c6821ff53e2b03ca336d9799a9fe98a29d4cc17fe",
+      "sha256": "281784ebbcd00541f402b67b1cd284d79693c935c1f4d7cab25b31bf862b436f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15789,6 +15835,12 @@
       "id": "SURFACE-6bc6c4636ebad8cf",
       "path": "tdf-hq/src/TDF/Social/AccountOwnership.hs",
       "sha256": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e7cca2eec6466e79",
+      "path": "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
+      "sha256": "c3f8f3e427eee3af103b53563c2dfbddbc25869c859d1d92eff7471611a24478",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15956,7 +16008,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1d4067bd9c4a00a49dc07ea26d80df872a38891d1e38630625e2a52231b3db53",
+      "sha256": "635d309b2552cedb13a5ea54af0945dfc0f7f86e1e3df1e573e43e3718f0697d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16028,7 +16080,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "025a1c926ee8e8aade2396396871b2c8ec9dc1c6404794acf3d7990dd5e4d943",
+      "sha256": "90dff839d072fe973c0cd88536c0a08a511ec8f2e1dd585111da1852b8e412d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16086,6 +16138,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ca89e954244ca188",
+      "path": "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
+      "sha256": "66516405eb2b4213b72be45b0b7035b8c29fe05df3f898c48e9f4b06c1732b4c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-841860cc12b9ab42",
       "path": "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "sha256": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -16098,9 +16156,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cf246373db6d4c39",
+      "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
+      "sha256": "c175d7ef00d9db2f6e4fb9453d75d0970459d98f5ab30cf5dd07f0e4690c927c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1b324dccdd7b5f4d",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs",
-      "sha256": "e1a9d3fbe382e050aa96fe2b125073c7c1233954f75770bab356ee88fc64f56b",
+      "sha256": "149e170bc2b0d686ef3ea666fafafe41211206136b80bcaba9b5de63b0b49a3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16124,7 +16188,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "49d3deb4beed24f40cba32d100739884ae0cf1369af964005329f20b9c12f06c",
+      "sha256": "387a8a2a94125f8324a6afae8c402add89bd3ae0c7e177ab4e23d494319f1b1e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16412,7 +16476,7 @@
     {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
-      "sha256": "a8f527cdc70434617ad9f93c9f859fa26b9fe846aad43b9b79798d4a0165f115",
+      "sha256": "5957cc34b09649f00e1d8973936621d7342969c9e4797bc739bd8d4cc1847b8f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16467,6 +16531,12 @@
       "id": "SURFACE-475a60a9e0a3b633",
       "path": "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs",
       "sha256": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-84995ad64af241c6",
+      "path": "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs",
+      "sha256": "3bb7fed5db5bb1da6b772bbaf5ee3da77bf03cb33c4ab9348f5826dca0072575",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27640,7 +27710,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -28305,7 +28375,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4cfbe30a7602df7412d3e3d290ae66e3a251f46d0c70e853568a2e75a27c6db3",
+      "sha256": "2cdb29b9fc71dc19a1cbd76869066e976905fcba9f79f01e085d5fe46bae721c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28676,7 +28746,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "fba1c9ce678b966bf36754e5325f12cf3f75438a62d8e9e51dcfd4b35be1400d",
+      "sha256": "be318e3cde6871d3325da983f5d61888e930b0603a8389e79ec14874f5093134",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -34034,7 +34104,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -34065,7 +34135,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -34096,7 +34166,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -34127,7 +34197,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -34158,7 +34228,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -34189,7 +34259,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -34220,7 +34290,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -34251,7 +34321,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -34282,7 +34352,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -34313,7 +34383,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -34344,7 +34414,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -34375,7 +34445,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -34404,7 +34474,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -34433,7 +34503,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -34462,7 +34532,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -34491,7 +34561,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -34520,7 +34590,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -34549,7 +34619,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -34578,7 +34648,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -34607,7 +34677,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -34636,7 +34706,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "16c723f31b7e2793ef584baa281a371efecc83593a5427845c26c10159c7954b",
+      "sourceSha256": "94597dc6a217b97494958d90e5e639ecd1e5340146d4a623694608ccdb41ec49",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",

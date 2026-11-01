@@ -81,6 +81,8 @@ jobs:
           python scripts/test-music-money-wire-verifier.py
       - name: Prove Domo quote arithmetic lemmas and negative controls
         run: python formal/payments/domo_quote_arithmetic.py
+      - name: Prove Domo cancellation refund lemmas and negative controls
+        run: python formal/payments/domo_cancellation_refund.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

@@ -61,6 +61,7 @@ import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import qualified TDF.Commerce.RefundStore as Refund
 import qualified TDF.Commerce.RefundSafetySpec as RefundSafety
 import qualified TDF.Commerce.RefundRecoverySpec as RefundRecovery
+import qualified TDF.Commerce.DomoCancellationRuntimeSpec as DomoCancellationRuntime
 import qualified TDF.Commerce.RefundReconciliation as TicketRecovery
 import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as TicketQuery
 import qualified TDF.Server.TicketRefunds as TicketRefundAPI
@@ -425,6 +426,7 @@ spec = do
           captureFixtureForDomainWithLines "service_booking" "payment" Checkout.AttemptProcessing amounts pool provider
         RefundRecovery.databaseSpec
           (captureFixtureForDomain "mixing_mastering" "capture" Checkout.AttemptProcessing)
+        DomoCancellationRuntime.databaseSpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently

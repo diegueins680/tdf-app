@@ -45,7 +45,7 @@ import           Data.Text.Encoding.Error   (lenientDecode)
 import           Data.Time                  (UTCTime, getCurrentTime)
 import           Data.Time.Format           (defaultTimeLocale, parseTimeM)
 import           Data.Time.Format.ISO8601   (iso8601ParseM)
-import           Database.Persist           (Entity(..), SelectOpt(Desc), getBy, insert_, selectList, upsert, (=.), (==.))
+import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, (=.), (==.))
 import           Database.Persist.Sql       (fromSqlKey, runSqlPool)
 import           GHC.Generics               (Generic)
 import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, parseRequest, responseBody, responseStatus)
@@ -62,8 +62,8 @@ import           TDF.Config
   , resolveConfiguredAppBase
   )
 import           TDF.DB                     (Env(..), sharedTlsManager)
-import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountArtistProfileId, SocialSyncAccountConnectedByPartyId, SocialSyncAccountDeliveryDesignated, SocialSyncAccountDesignatedAt, SocialSyncAccountDesignatedByPartyId, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), RoleEnum(Admin), SocialSyncAccount(..), SocialSyncAccountEvent(..), Unique(UniqueSocialSyncAccount))
-import qualified TDF.Social.AccountOwnership as Ownership
+import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountArtistProfileId, SocialSyncAccountConnectedByPartyId, SocialSyncAccountDeliveryDesignated, SocialSyncAccountDesignatedAt, SocialSyncAccountDesignatedByPartyId, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), RoleEnum(Admin), SocialSyncAccount(..))
+import qualified TDF.Social.AccountOwnershipStore as OwnershipStore
 
 data FacebookAccessToken = FacebookAccessToken
   { fatAccessToken :: Text
@@ -366,68 +366,18 @@ instagramOAuthServer user = exchangeHandler
       -- an administrator, and every binding change is audited. A refused
       -- rebind fails the whole exchange before any row changes.
       let isAdmin = Admin `elem` auRoles user
-          callerId = fromSqlKey (auPartyId user)
-          connectable = [ (ctx, igUserId) | ctx <- pageContexts, Just igUserId <- [pcInstagramUserId ctx] ]
-      decisions <- liftIO $ flip runSqlPool envPool $
-        forM connectable $ \(ctx, igUserId) -> do
-          existing <- getBy (UniqueSocialSyncAccount "instagram" igUserId)
-          let owner = fmap (fmap fromSqlKey . socialSyncAccountPartyId . entityVal) existing
-          pure (ctx, igUserId, existing, Ownership.decideConnect isAdmin callerId owner)
-      forM_ decisions $ \(_, igUserId, _, decision) ->
-        when (decision == Ownership.RebindRefused) $
-          throwError err409
-            { errBody = BL.fromStrict (TE.encodeUtf8
-                ("Instagram account " <> igUserId <> " is connected by another user; an administrator must rebind it")) }
-      liftIO $ flip runSqlPool envPool $
-        forM_ decisions $ \(ctx, igUserId, existing, decision) -> do
-          let record = SocialSyncAccount
-                { socialSyncAccountPartyId = Just (auPartyId user)
-                , socialSyncAccountArtistProfileId = Nothing
-                , socialSyncAccountPlatform = "instagram"
-                , socialSyncAccountExternalUserId = igUserId
-                , socialSyncAccountHandle = pcInstagramHandle ctx
-                , socialSyncAccountAccessToken = Just (pcAccessToken ctx)
-                , socialSyncAccountTokenExpiresAt = Nothing
-                , socialSyncAccountStatus = "connected"
-                , socialSyncAccountLastSyncedAt = Nothing
-                , socialSyncAccountCreatedAt = now
-                , socialSyncAccountUpdatedAt = Just now
-                , socialSyncAccountDeliveryDesignated = False
-                , socialSyncAccountConnectedByPartyId = Just (auPartyId user)
-                , socialSyncAccountDesignatedByPartyId = Nothing
-                , socialSyncAccountDesignatedAt = Nothing
+          connectable =
+            [ OwnershipStore.ConnectedAccountInput
+                { OwnershipStore.caiExternalUserId = igUserId
+                , OwnershipStore.caiHandle = pcInstagramHandle ctx
+                , OwnershipStore.caiAccessToken = pcAccessToken ctx
                 }
-              rebindUpdates = case decision of
-                Ownership.RebindAudited _ ->
-                  [ SocialSyncAccountPartyId =. Just (auPartyId user)
-                  , SocialSyncAccountConnectedByPartyId =. Just (auPartyId user)
-                  -- A rebound account loses its artist binding and delivery designation.
-                  , SocialSyncAccountArtistProfileId =. Nothing
-                  , SocialSyncAccountDeliveryDesignated =. False
-                  , SocialSyncAccountDesignatedByPartyId =. Nothing
-                  , SocialSyncAccountDesignatedAt =. Nothing ]
-                _ -> []
-          Entity accountKey _ <- upsert record $
-            [ SocialSyncAccountHandle =. pcInstagramHandle ctx
-            , SocialSyncAccountAccessToken =. Just (pcAccessToken ctx)
-            , SocialSyncAccountTokenExpiresAt =. Nothing
-            , SocialSyncAccountStatus =. "connected"
-            , SocialSyncAccountUpdatedAt =. Just now
-            ] ++ rebindUpdates
-          let formerOwner = existing >>= socialSyncAccountPartyId . entityVal
-              eventType = case decision of
-                Ownership.ConnectNew -> Just "connected"
-                Ownership.RebindAudited _ -> Just "rebound"
-                _ -> Nothing
-          forM_ eventType $ \kind ->
-            insert_ SocialSyncAccountEvent
-              { socialSyncAccountEventAccountId = accountKey
-              , socialSyncAccountEventActorPartyId = Just (auPartyId user)
-              , socialSyncAccountEventEventType = kind
-              , socialSyncAccountEventFromPartyId = formerOwner
-              , socialSyncAccountEventToPartyId = Just (auPartyId user)
-              , socialSyncAccountEventCreatedAt = now
-              }
+            | ctx <- pageContexts, Just igUserId <- [pcInstagramUserId ctx] ]
+      plan <- liftIO (flip runSqlPool envPool
+          (OwnershipStore.planInstagramConnections isAdmin (auPartyId user) connectable))
+        >>= either (\message -> throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure
+      _ <- liftIO $ flip runSqlPool envPool $
+        OwnershipStore.applyInstagramConnections now (auPartyId user) plan
 
       let pagesDto = map toPageDTO pageContexts
       (mPrimaryId, mPrimaryHandle, media) <-

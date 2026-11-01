@@ -40,6 +40,7 @@ import TDF.API.Admin
     , EmailTestRequest (..)
     , ArtistEnrichmentOverviewDTO
     , SocialDeliveryDesignation (..)
+    , DomoQuoteCancelRequest (..)
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
@@ -1588,6 +1589,33 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             <> show value
                         )
 
+        it "rejects Domo quote cancellation without the strict Admin role (PAY-DOMO-CANCEL-001)" $ do
+            let request = DomoQuoteCancelRequest { dqcCanceller = "customer", dqcNote = Nothing }
+                assertRejected role = do
+                    result <- runAdminTest (domoCancelHandlerFor (mkUser [role]) "d1000000-0000-4000-8000-000000000001" request)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right value ->
+                            expectationFailure ("Expected " <> show role <> " Domo cancellation to be rejected, got " <> show value)
+            mapM_ assertRejected [StudioManager, Manager, Reception, Fan]
+            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+            result <- runAdminTest (domoCancelHandlerFor malformedAdmin "d1000000-0000-4000-8000-000000000001" request)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Missing required module access"
+                Right value -> expectationFailure ("Expected malformed Admin to be rejected, got " <> show value)
+            badId <- runAdminTest (domoCancelHandlerFor (mkUser [Admin]) "not-a-uuid" request)
+            case badId of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected 400 for a malformed quoteId, got " <> show value)
+            badCanceller <- runAdminTest (domoCancelHandlerFor (mkUser [Admin]) "d1000000-0000-4000-8000-000000000001" request { dqcCanceller = "someone" })
+            case badCanceller of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected 400 for an unknown canceller, got " <> show value)
+
         it "rejects social delivery designation without the strict Admin role (AUTHORITY-094)" $ do
             let designation = SocialDeliveryDesignation { sddDesignated = True, sddNote = Nothing }
                 assertDesignationRejected role = do
@@ -2235,6 +2263,24 @@ socialHandlersFor
         :<|> AdminTestM Value
         :<|> (Maybe T.Text -> Maybe Int -> AdminTestM Value)
         :<|> (Int64 -> SocialDeliveryDesignation -> AdminTestM Value)
+domoCancelHandlerFor :: AuthedUser -> T.Text -> DomoQuoteCancelRequest -> AdminTestM Value
+domoCancelHandlerFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _artists
+            :<|> _logs
+            :<|> _activity
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social
+            :<|> domoCancel
+            :<|> _recordsIngestion ->
+                domoCancel
+
 socialHandlersFor user =
     case adminServer user of
         _seed
@@ -2248,5 +2294,6 @@ socialHandlersFor user =
             :<|> _brain
             :<|> _rag
             :<|> socialRouter
+            :<|> _domo
             :<|> _recordsIngestion ->
                 socialRouter
