@@ -13822,7 +13822,7 @@
     {
       "id": "PAY-DOMO-QUOTE-001",
       "title": "Domo quote arithmetic is exact, bounded and internally consistent",
-      "statement": "calculateDomoQuote prices an approved rate card in exact integers: line subtotals equal quantity times unit, the subtotal is their sum, tax and deposit round half up in basis points, total = subtotal + tax, deposit + balance = total, 0 < deposit <= total, balance >= 0, and any amount beyond Int64 is rejected instead of wrapped.",
+      "statement": "calculateDomoQuote prices an approved rate card in exact integers: line subtotals equal quantity times unit, the subtotal is their sum, tax and the raw deposit round half up in basis points, the deposit then follows PAY-DEPOSIT-POLICY-001 (minimum 5.00; full payment above 90%), total = subtotal + tax, deposit + balance = total, 0 < deposit <= total, balance >= 0, and any amount beyond Int64 is rejected instead of wrapped.",
       "domain": "PAY",
       "authority": "Existing rate-card validation in tdf-hq/src/TDF/Commerce/DomoQuotes.hs and the immutable quote snapshot triggers (tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime.sql).",
       "source": "formal/system/audit-2026-10-31-phase1.md (F-03); formal/payments/README.md",
@@ -13880,7 +13880,7 @@
       "confidence": "High: lemmas proved unbounded; the composition into calculateDomoQuote is checked by properties, not mechanically refined.",
       "ambiguity": [
         "The Domo quote lifecycle (DomoQuoteState) and its refund policy after deposit_paid -> cancelled are not specified here.",
-        "A small total with a small deposit rate yields a zero deposit, which the function rejects; whether such quotes should exist is a business decision."
+        "A quote whose raw deposit rounds to zero is no longer rejected: the deposit policy raises it to the minimum (AUTHORITY-095)."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -14381,25 +14381,29 @@
         "a 'deposit' above the configured share of the total"
       ],
       "effects": [
-        "Pure computation; wiring into DomoQuoteCheckout and CourseCheckout pending."
+        "calculateDomoQuote and calculateCoursePrice apply the default policy (calculateDomoQuoteWith / calculateCoursePriceWith take an explicit one); Domo no longer rejects a quote whose deposit rounds to zero."
       ],
       "authorization": "Not applicable.",
       "failure": "Invalid policy values rejected.",
       "implementation": [
-        "tdf-hq/src/TDF/Commerce/DepositPolicy.hs"
+        "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
+        "tdf-hq/src/TDF/Commerce/DomoQuotes.hs"
       ],
       "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
-        "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs"
+        "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs"
       ],
       "confidence": "High for the pure rule; not yet applied by the Domo and course handlers.",
       "ambiguity": [
-        "Wiring into the Domo rate card and course checkout policy (and their immutable snapshots) is pending; until then calculateDomoQuote still rejects a zero deposit and courses may charge a deposit equal to the total."
+        "The policy values are the code defaults (5.00 minimum, 90% switch); reading them from the approved rate card or course policy snapshot is pending.",
+        "The immutable commerce quote snapshot stores the final deposit; the raw basis-point deposit is not retained separately."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Rule specified and tested; handler wiring pending."
+        "reason": "Rule applied by both calculators and property-tested; configurable policy values and database-backed checkout tests remain."
       }
     }
   ],
@@ -15565,10 +15569,10 @@
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
     "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "8a50636ce52c2003f812737b424370b5a1c8c9170b0e4260af6b11fc5046e5ce",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
-    "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "e3ef7dda2df82c2c04080597197b8b13cc46aa8ce44d6d4877a8a4dabec8154d",
+    "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "89f7c69cf5cf176c890e0cd09f1a0e561ab0fe3e45e9f14fc738b9479a5df917",
     "tdf-hq/src/TDF/Commerce/DepositPolicy.hs": "6829fa5bf78c1d1839770e0728960967dfdbcdca62661dadd06adb2191d0a94f",
     "tdf-hq/src/TDF/Commerce/DomoCancellation.hs": "059866be5226bf48bfc8fa2d127bc5d16ec641712e02df3d0e0f90142d0ee74d",
-    "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": "5acc12c8159c592832e38f69ed75e958504bf841341970759cc7df18fb1b2081",
+    "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": "54da88fdabb8ad1160224d3b930dfa1d44cd656cf491e74cfb0dba35c353eef4",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
@@ -15690,7 +15694,7 @@
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
     "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs": "e1a9d3fbe382e050aa96fe2b125073c7c1233954f75770bab356ee88fc64f56b",
-    "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "9daa2fc28741f1f448bce67a37e52bae5b32767720029aa2919d6e3f7da9fcc1",
+    "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "49d3deb4beed24f40cba32d100739884ae0cf1369af964005329f20b9c12f06c",
@@ -27517,6 +27521,10 @@
       {
         "requirement": "PAY-COURSE-PRICE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DEPOSIT-POLICY-001",
+        "relationship": "tests"
       }
     ],
     "formal/payments/CaptureAccounting.tla": [
@@ -27540,6 +27548,10 @@
     "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": [
       {
         "requirement": "PAY-DOMO-QUOTE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DEPOSIT-POLICY-001",
         "relationship": "implementation"
       }
     ],
@@ -27604,6 +27616,10 @@
     "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": [
       {
         "requirement": "PAY-COURSE-PRICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DEPOSIT-POLICY-001",
         "relationship": "implementation"
       }
     ],
@@ -47876,11 +47892,15 @@
     {
       "id": "SURFACE-ee01356d907d3fc2",
       "path": "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
-      "sha256": "e3ef7dda2df82c2c04080597197b8b13cc46aa8ce44d6d4877a8a4dabec8154d",
+      "sha256": "89f7c69cf5cf176c890e0cd09f1a0e561ab0fe3e45e9f14fc738b9479a5df917",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-COURSE-PRICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DEPOSIT-POLICY-001",
           "relationship": "implementation"
         }
       ]
@@ -47912,11 +47932,15 @@
     {
       "id": "SURFACE-764d135c920e69a2",
       "path": "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
-      "sha256": "5acc12c8159c592832e38f69ed75e958504bf841341970759cc7df18fb1b2081",
+      "sha256": "54da88fdabb8ad1160224d3b930dfa1d44cd656cf491e74cfb0dba35c353eef4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-DOMO-QUOTE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DEPOSIT-POLICY-001",
           "relationship": "implementation"
         }
       ]
@@ -50653,7 +50677,7 @@
     {
       "id": "SURFACE-8764885fa15a0fd8",
       "path": "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
-      "sha256": "9daa2fc28741f1f448bce67a37e52bae5b32767720029aa2919d6e3f7da9fcc1",
+      "sha256": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50666,6 +50690,10 @@
         },
         {
           "requirement": "PAY-COURSE-PRICE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-DEPOSIT-POLICY-001",
           "relationship": "tests"
         }
       ]
@@ -58426,7 +58454,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "251a04b28bdd000a4be52f4314c05b20bc50020ae833818363e47446d662fa69",
+      "sourceSha256": "42882db54702deee3ea1238c32bd420914b2c557e20401273a246cd6202f0453",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -58454,7 +58482,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "251a04b28bdd000a4be52f4314c05b20bc50020ae833818363e47446d662fa69",
+      "sourceSha256": "42882db54702deee3ea1238c32bd420914b2c557e20401273a246cd6202f0453",
       "definition": {
         "states": [
           "absent",
@@ -58484,7 +58512,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "251a04b28bdd000a4be52f4314c05b20bc50020ae833818363e47446d662fa69",
+      "sourceSha256": "42882db54702deee3ea1238c32bd420914b2c557e20401273a246cd6202f0453",
       "definition": {
         "export": [
           "queued",

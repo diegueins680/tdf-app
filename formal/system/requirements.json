@@ -13821,7 +13821,7 @@
     {
       "id": "PAY-DOMO-QUOTE-001",
       "title": "Domo quote arithmetic is exact, bounded and internally consistent",
-      "statement": "calculateDomoQuote prices an approved rate card in exact integers: line subtotals equal quantity times unit, the subtotal is their sum, tax and deposit round half up in basis points, total = subtotal + tax, deposit + balance = total, 0 < deposit <= total, balance >= 0, and any amount beyond Int64 is rejected instead of wrapped.",
+      "statement": "calculateDomoQuote prices an approved rate card in exact integers: line subtotals equal quantity times unit, the subtotal is their sum, tax and the raw deposit round half up in basis points, the deposit then follows PAY-DEPOSIT-POLICY-001 (minimum 5.00; full payment above 90%), total = subtotal + tax, deposit + balance = total, 0 < deposit <= total, balance >= 0, and any amount beyond Int64 is rejected instead of wrapped.",
       "domain": "PAY",
       "authority": "Existing rate-card validation in tdf-hq/src/TDF/Commerce/DomoQuotes.hs and the immutable quote snapshot triggers (tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime.sql).",
       "source": "formal/system/audit-2026-10-31-phase1.md (F-03); formal/payments/README.md",
@@ -13879,7 +13879,7 @@
       "confidence": "High: lemmas proved unbounded; the composition into calculateDomoQuote is checked by properties, not mechanically refined.",
       "ambiguity": [
         "The Domo quote lifecycle (DomoQuoteState) and its refund policy after deposit_paid -> cancelled are not specified here.",
-        "A small total with a small deposit rate yields a zero deposit, which the function rejects; whether such quotes should exist is a business decision."
+        "A quote whose raw deposit rounds to zero is no longer rejected: the deposit policy raises it to the minimum (AUTHORITY-095)."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -14380,25 +14380,29 @@
         "a 'deposit' above the configured share of the total"
       ],
       "effects": [
-        "Pure computation; wiring into DomoQuoteCheckout and CourseCheckout pending."
+        "calculateDomoQuote and calculateCoursePrice apply the default policy (calculateDomoQuoteWith / calculateCoursePriceWith take an explicit one); Domo no longer rejects a quote whose deposit rounds to zero."
       ],
       "authorization": "Not applicable.",
       "failure": "Invalid policy values rejected.",
       "implementation": [
-        "tdf-hq/src/TDF/Commerce/DepositPolicy.hs"
+        "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
+        "tdf-hq/src/TDF/Commerce/DomoQuotes.hs"
       ],
       "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
-        "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs"
+        "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs"
       ],
       "confidence": "High for the pure rule; not yet applied by the Domo and course handlers.",
       "ambiguity": [
-        "Wiring into the Domo rate card and course checkout policy (and their immutable snapshots) is pending; until then calculateDomoQuote still rejects a zero deposit and courses may charge a deposit equal to the total."
+        "The policy values are the code defaults (5.00 minimum, 90% switch); reading them from the approved rate card or course policy snapshot is pending.",
+        "The immutable commerce quote snapshot stores the final deposit; the raw basis-point deposit is not retained separately."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Rule specified and tested; handler wiring pending."
+        "reason": "Rule applied by both calculators and property-tested; configurable policy values and database-backed checkout tests remain."
       }
     }
   ]
