@@ -540,7 +540,8 @@ spec = describe "social event handler helpers" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
         now <- getCurrentTime
-        let profile key partyIdValue =
+        let profile :: Int64 -> Maybe T.Text -> SqlPersistT IO ()
+            profile key partyIdValue =
                 insertKey
                     (toSqlKey key :: ArtistProfileId)
                     ArtistProfile
@@ -555,6 +556,7 @@ spec = describe "social event handler helpers" $ do
                         , artistProfileCreatedAt = now
                         , artistProfileUpdatedAt = now
                         }
+            publicEvent :: Int64 -> T.Text -> SqlPersistT IO ()
             publicEvent key title =
                 insertKey
                     (toSqlKey key :: SocialEventId)
@@ -562,12 +564,14 @@ spec = describe "social event handler helpers" $ do
                         { socialEventMetadata = Just "{\"isPublic\":true}"
                         , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         })
+            link :: Int -> Int -> SqlPersistT IO ()
             link eventKey artistKey =
                 rawExecute
                     "INSERT INTO event_artist(event_id,artist_id,role) VALUES (?,?,NULL)"
-                    [toPersistValue (eventKey :: Int), toPersistValue (artistKey :: Int)]
+                    [toPersistValue eventKey, toPersistValue artistKey]
+            listed :: Int -> SqlPersistT IO ()
             listed eventKey =
-                rawExecute "INSERT INTO directory_public_event(id,city_name) VALUES (?,'Quito')" [toPersistValue (eventKey :: Int)]
+                rawExecute "INSERT INTO directory_public_event(id,city_name) VALUES (?,'Quito')" [toPersistValue eventKey]
         runSqlPool
             ( do
                 rawExecute

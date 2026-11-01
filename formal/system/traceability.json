@@ -14937,7 +14937,7 @@
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
-    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "af95813be77f6d0c9e111646ad8e3f58dd5b39af224e5b797e19ad5ccefacc17",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a9ddc435252ad7ff07555c98168e6e72716eef6c0fff25e3d33eebb827a5bb16",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
@@ -49870,7 +49870,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "af95813be77f6d0c9e111646ad8e3f58dd5b39af224e5b797e19ad5ccefacc17",
+      "sha256": "a9ddc435252ad7ff07555c98168e6e72716eef6c0fff25e3d33eebb827a5bb16",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
