@@ -247,3 +247,9 @@ Estado de verificación tras esta fase: 22 obligaciones de modelo (TLC positivos
 
 `AUTH-CORS-001`: propiedades QuickCheck sobre los predicados puros de `TDF.Cors` con orígenes generados. `isTrustedPreviewOrigin` acepta exactamente las dos raíces de Pages y una etiqueta de vista previa bajo ellas, solo por https y en cualquier caja; rechaza http, puertos, rutas, etiquetas más profundas, parecidos sin punto (`evil-tdfui.pages.dev`), sufijos añadidos y otros proyectos de Pages. La prueba de origen del borrado de cuenta exige la cabecera, rechaza el origen `null` y nunca se satisface a través del comodín. La derivación del origen desde `HQ_APP_URL` devuelve solo esquema y host y es idempotente. Sin hallazgos de corrección. La construcción del middleware (producción rechaza comodín y allow-all) sigue cubierta por `CorsSpec` y los controles de mutación de `verify-cors-boundary.py`.
 
+## 20. Seguridad P0 — intención de cierre de sesión web (2026-11-01)
+
+`AUTH-LOGOUT-001` pasa de "sin modelo" a demostrado sobre el modelo: `formal/auth/LogoutIntent.tla`. Apalache demuestra de forma no acotada que la restauración automática queda suprimida exactamente desde un cierre explícito hasta una autenticación interactiva nueva, y que un callback con revisión antigua nunca puede marcar como cerrada una sesión nueva. El control negativo (aceptar cualquier revisión) reproduce ese ataque. La correspondencia con `logoutIntent.ts` es por revisión; las ramas de fallo de almacenamiento del navegador siguen cubiertas solo por Vitest. Sin hallazgos de corrección.
+
+Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).
+

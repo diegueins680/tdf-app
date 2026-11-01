@@ -12048,15 +12048,20 @@
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
-        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx"
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "scripts/verify-inductive-proofs.sh"
       ],
-      "formalModels": [],
-      "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL.",
+      "formalModels": [
+        "formal/auth/LogoutIntent.tla",
+        "formal/auth/LogoutIntent.cfg",
+        "formal/auth/LogoutIntentLegacy.cfg"
+      ],
+      "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL. TLA+ model of the logout-intent revisions with bounded TLC exploration, a negative control for an unfenced finish, and Apalache inductive proofs (initiation, consecution, implication) for up to eight revisions and any number of pending callbacks.",
       "evidence": "Pre-fix native reproduction retained; current candidate execution receipts qualified separately from CI, review, merge and deployment.",
       "historicalStatus": "new",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for scoped local controls; production and human acceptance remain unverified.",
+      "confidence": "High for the revision protocol as modelled (unbounded proof); correspondence to logoutIntent.ts by review; storage-failure branches covered by Vitest only.",
       "ambiguity": [
         "Offline server revocation, accepted requests, cross-document Set-Cookie ordering, raw transports outside scoped clients, native devices and external providers are not certified."
       ],

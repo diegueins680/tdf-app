@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Unbounded safety proofs by inductive invariants (Apalache) plus bounded TLC
-# exploration and negative controls for formal/payments.
+# exploration and negative controls for formal/payments and formal/auth.
 #
 # Requires the pinned official artifacts:
 #   APALACHE_TGZ   apalache.tgz from apalache-mc/apalache release v0.62.4
@@ -15,6 +15,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODEL_DIR="${REPO_DIR}/formal/payments"
+AUTH_MODEL_DIR="${REPO_DIR}/formal/auth"
 JAVA_BIN="${JAVA_BIN:-java}"
 APALACHE_TGZ="${APALACHE_TGZ:-}"
 TLA2TOOLS_JAR="${TLA2TOOLS_JAR:-}"
@@ -62,7 +63,7 @@ apalache_expect() {
   local module="$1" cinit="$2" init="$3" inv="$4" length="$5" expect="$6" label="$7"
   local log="${run_root}/apalache-${label}.log"
   local status=0
-  (cd "${MODEL_DIR}" && "${APALACHE}" check \
+  (cd "${CURRENT_MODEL_DIR:-${MODEL_DIR}}" && "${APALACHE}" check \
       --out-dir="${run_root}/apalache-out-${label}" \
       --cinit="${cinit}" --init="${init}" --inv="${inv}" --length="${length}" \
       "${module}") >"${log}" 2>&1 || status=$?
@@ -86,7 +87,7 @@ tlc_expect() {
   local module="$1" config="$2" expect="$3"
   local log="${run_root}/tlc-${config}.log"
   local status=0
-  (cd "${MODEL_DIR}" && "${JAVA_BIN}" "-Djava.io.tmpdir=${run_root}" -XX:+UseParallelGC \
+  (cd "${CURRENT_MODEL_DIR:-${MODEL_DIR}}" && "${JAVA_BIN}" "-Djava.io.tmpdir=${run_root}" -XX:+UseParallelGC \
       -jar "${TLA2TOOLS_JAR}" -workers 1 -metadir "${run_root}/tlc-${config}" \
       -config "${config}" "${module}") >"${log}" 2>&1 || status=$?
   if [[ "${expect}" == "pass" && "${status}" -eq 0 ]] && grep -q "No error has been found" "${log}"; then
@@ -140,5 +141,18 @@ apalache_expect "${P}" CInitFence Init IndInv 0 NoError "ProviderInbox-initiatio
 apalache_expect "${P}" CInitFence IndInv IndInv 1 NoError "ProviderInbox-consecution"
 apalache_expect "${P}" CInitFence IndInv Safe 0 NoError "ProviderInbox-implication"
 apalache_expect "${P}" CInitLegacy Init Safe 6 Error "ProviderInboxLegacy-reachable-violation"
+
+L=LogoutIntent.tla
+CURRENT_MODEL_DIR="${AUTH_MODEL_DIR}"
+
+# AUTH-LOGOUT-001: explicit logout suppresses restoration until fresh auth;
+# stale callbacks never own a new login.
+tlc_expect "${L}" LogoutIntent.cfg pass
+tlc_expect "${L}" LogoutIntentLegacy.cfg violation
+apalache_expect "${L}" CInitFence Init IndInv 0 NoError "LogoutIntent-initiation"
+apalache_expect "${L}" CInitFence IndInv IndInv 1 NoError "LogoutIntent-consecution"
+apalache_expect "${L}" CInitFence IndInv Safe 0 NoError "LogoutIntent-implication"
+apalache_expect "${L}" CInitLegacy Init Safe 5 Error "LogoutIntentLegacy-reachable-violation"
+unset CURRENT_MODEL_DIR
 
 echo "Inductive proofs and controls passed."

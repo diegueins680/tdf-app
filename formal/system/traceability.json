@@ -12049,15 +12049,20 @@
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
-        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx"
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "scripts/verify-inductive-proofs.sh"
       ],
-      "formalModels": [],
-      "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL.",
+      "formalModels": [
+        "formal/auth/LogoutIntent.tla",
+        "formal/auth/LogoutIntent.cfg",
+        "formal/auth/LogoutIntentLegacy.cfg"
+      ],
+      "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL. TLA+ model of the logout-intent revisions with bounded TLC exploration, a negative control for an unfenced finish, and Apalache inductive proofs (initiation, consecution, implication) for up to eight revisions and any number of pending callbacks.",
       "evidence": "Pre-fix native reproduction retained; current candidate execution receipts qualified separately from CI, review, merge and deployment.",
       "historicalStatus": "new",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for scoped local controls; production and human acceptance remain unverified.",
+      "confidence": "High for the revision protocol as modelled (unbounded proof); correspondence to logoutIntent.ts by review; storage-failure branches covered by Vitest only.",
       "ambiguity": [
         "Offline server revocation, accepted requests, cross-document Set-Cookie ordering, raw transports outside scoped clients, native devices and external providers are not certified."
       ],
@@ -14281,6 +14286,9 @@
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
+    "formal/auth/LogoutIntent.cfg": "f30060897bc76161ef739e65981da34addc1e9ef7ef6d5892a7184521eb3c7ae",
+    "formal/auth/LogoutIntent.tla": "1b08e8a1073c5aa73236e42bac4e02dd9ebf5a64bbcf68729101eed15cf34445",
+    "formal/auth/LogoutIntentLegacy.cfg": "a89e41350ca46b7e087f4dd3a99858ca54518951d98e653d858051591e788d4e",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -14894,7 +14902,7 @@
     "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
-    "scripts/verify-inductive-proofs.sh": "691cf28577d664fcfaa52ef4e78ea441e4b30041eb2ac5cef31c10b05388cdbc",
+    "scripts/verify-inductive-proofs.sh": "3f3a34833332539d133a7ad622355465f5ad1599d85a15f08437dfcf81ca20e9",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -26502,6 +26510,42 @@
         "relationship": "tests"
       }
     ],
+    "scripts/verify-inductive-proofs.sh": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/auth/LogoutIntent.tla": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/auth/LogoutIntent.cfg": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/auth/LogoutIntentLegacy.cfg": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq-ui/src/pages/FanClubPage.tsx": [
       {
         "requirement": "COMM-CLUB-001",
@@ -27165,20 +27209,6 @@
       },
       {
         "requirement": "ART-PUBLIC-VISIBILITY-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/verify-inductive-proofs.sh": [
-      {
-        "requirement": "PAY-TIP-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-CAPTURE-RECON-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-PROVIDER-INBOX-001",
         "relationship": "tests"
       }
     ],
@@ -34273,9 +34303,13 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "691cf28577d664fcfaa52ef4e78ea441e4b30041eb2ac5cef31c10b05388cdbc",
+      "sha256": "3f3a34833332539d133a7ad622355465f5ad1599d85a15f08437dfcf81ca20e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "PAY-TIP-001",
           "relationship": "tests"
@@ -56738,7 +56772,6 @@
     "DEPLOY-VERSION-001",
     "MEDIA-DRIVE-002",
     "COMMUNITY-PROFILE-001",
-    "AUTH-LOGOUT-001",
     "MEDIA-MUSIC-DISCOVERY-001",
     "MEDIA-MUSIC-LEGACY-001",
     "PAY-DOMAIN-BINDING-001",
@@ -57872,7 +57905,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8d9bd12d2ff33cae18751fe13739b8218f2c3c4162cc53edf6a80674df29a71b",
+      "sourceSha256": "428b17296cf3fe44bee76c8c1ba52e4a7fa39b3ade97f77f61d0afa8914ef6f4",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57900,7 +57933,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8d9bd12d2ff33cae18751fe13739b8218f2c3c4162cc53edf6a80674df29a71b",
+      "sourceSha256": "428b17296cf3fe44bee76c8c1ba52e4a7fa39b3ade97f77f61d0afa8914ef6f4",
       "definition": {
         "states": [
           "absent",
@@ -57930,7 +57963,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8d9bd12d2ff33cae18751fe13739b8218f2c3c4162cc53edf6a80674df29a71b",
+      "sourceSha256": "428b17296cf3fe44bee76c8c1ba52e4a7fa39b3ade97f77f61d0afa8914ef6f4",
       "definition": {
         "export": [
           "queued",
