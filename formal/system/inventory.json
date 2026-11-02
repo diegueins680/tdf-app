@@ -213,6 +213,7 @@
       "scripts/__tests__/startup-gates-postgres.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
+      "scripts/__tests__/test-child-completion.test.mjs",
       "scripts/__tests__/test-process-session.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
@@ -336,6 +337,7 @@
       "scripts/lib/requirement_declarations.py",
       "scripts/lib/sri-invoice.mjs",
       "scripts/lib/studio-audit-safety.mjs",
+      "scripts/lib/test-child-completion.mjs",
       "scripts/lib/test-process-session.mjs",
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
@@ -3984,6 +3986,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a1dd9455f7a2ce96",
+      "path": "scripts/__tests__/test-child-completion.test.mjs",
+      "sha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f108b694973ffac6",
       "path": "scripts/__tests__/test-process-session.test.mjs",
       "sha256": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
@@ -4722,6 +4730,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0ebd44c86ad332c6",
+      "path": "scripts/lib/test-child-completion.mjs",
+      "sha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cf6df3f57a9edc7c",
       "path": "scripts/lib/test-process-session.mjs",
       "sha256": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
@@ -4910,7 +4924,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3ebd2339d632ea21cf999081c87afe6f4012584e14ff7eb274cb93fa28287657",
+      "sha256": "15af7f4b412bf117fc752bf0c4fbcfd1b58c8861ba70490d31d16a68ab42d9a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6014,7 +6028,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
+      "sha256": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15806,7 +15820,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "f57b6f900d796b4b8f5c7643caffe74f082edd23f70bdd1f0e83158cd1819557",
+      "sha256": "00059dc5f98811642658e3ac63a94de4d2105e217616314b10bdbbf06eefc821",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16682,7 +16696,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "a9ddc435252ad7ff07555c98168e6e72716eef6c0fff25e3d33eebb827a5bb16",
+      "sha256": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28031,6 +28045,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-finance-report-range.md",
+      "sha256": "18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-memories.md",
       "sha256": "a2aee45f6ad159d06c3dbd2883060dcc56b4cc1429afead1115e3d10fd6c7a4f",
       "authority": "inferred",
@@ -28353,6 +28374,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-worker-completion-observation.md",
+      "sha256": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-aux-write.md",
       "sha256": "2d8dee259c38886c7de44bb20df7085d406984d16647b2c41659792806e8f391",
       "authority": "inferred",
@@ -28543,7 +28571,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "adb7be428ff2cc8e746d8d947fc4951f03bd0d47fc041730924b6aee8495c734",
+      "sha256": "6fa91b5e2f823b0aa77805d6368c0aa6b9737330420ed2665be41ad12100910e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

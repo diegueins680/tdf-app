@@ -1,0 +1,20 @@
+Independent RANGE composition review, 2026-10-29
+Source M2: 2a057442d4b1a803d52860af2c524f0a7bbea37c
+Parents: e612b6f1d8cedb988618dc81bf3fe1bbc12462db (qualified eab96 evidence descendant), cd091a3c81d5ab70e175d339860fa1921ca1f0c3 (incoming protected artist main).
+Result: zero blocking defects identified in scoped source composition and evidence correspondence.
+
+I independently rehashed all 1417 registered filesystem inputs and corresponding Git blobs (1317 main plus 100 Mobile). All agree with committed clean-source assurance. Digest: 9faa47dd75d36aee554c51516f1d888d326f39e6396a25304d979cc2acc89aa4. The separate Markdown range contract retains Git SHA256 18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf. All 986 qualified backend file inputs match both filesystem and M2 Git blobs. The entire tdf-hq Git tree equals qualified source eab96f0c861ee7aeecf2855141dffed3fe7f60e6 exactly: 127e7add253ae023b11d2f9e7a944dd4fba27bbd.
+
+All 157 incoming main requirement objects are structurally preserved; the sole added range requirement exactly equals the reviewed eab96 object, total 158. Incoming six artist code/test files and artist runbook are byte-identical to main cd091. The full 1352-row historical catalog decision file is byte-identical to incoming main. The four original RANGE report/evidence Git blobs are byte-identical to e612; the historical eab96 report has not been rewritten to pretend native execution against M2. I independently verified archive SHA/size, exact membership and all 120 member hashes/sizes against its manifest without extracting or executing contents. Inner members are hash-bound archive bytes, not individually claimed Git blobs.
+
+Current composed root-quality-result records actual exit 0 for root quality, admission and catalog unit lane (8 cases). Current clean-source assurance executes successfully while preserving 158 whole requirements and 316 implementation/refinement obligations UNPROVEN, 11 inherited conditional SMT claims, and release BLOCKED. No new whole-platform proof is established. Source-correspondence-final explicitly marks no fresh full native qualification for this composed Git identity and no new derivedVersion/artifact identity claim.
+
+Reusing eab96 component evidence is accurately bounded: targeted native 15/0, full native 4060/0/21 pending and two native mutation variants with three intended assertion failures apply to the byte-exact qualified backend. They do not constitute a fresh all-component or hosted M2 execution. Current artist hosted results apply to the separately qualified artist branch; they are not financial backend qualification. Fresh published-head hosted CI, required independent GitHub review, current-main/FIFO/branch-protection checks remain necessary. I have not granted such approval or performed a remote action.
+
+A separate independent currency observation probe is compiling against frozen M2 backend in an owned temporary directory. It is not part of RANGE qualification and has no runtime verdict yet at this composition review. I did not execute new composition tests, mutate source, change refs or run a database/server for this composition assessment. There is no claim of new PostgreSQL/provider/deployment correspondence or complete refinement proof.
+
+Receipt hashes:
+- source-correspondence-final.json: 40aa664ce33256114c8d15579ce890d28c7e5d9b1d2f8c8a1948776ee45b570c
+- root-quality-result.json: 52e73fbab0a7f1a4d28ac9330b1452c01daf0bfa2943a8b15b32a1cced7165c1
+- assurance-committed/report.json: 70396026734f7fce5d9b0a211a29db5e975c0f9a5435e50d19818a722d94643f
+- historical evidence archive: bf9a40d64572dc995e371ad2df16848f8a80b5adde10b658d379b71f501397c9
