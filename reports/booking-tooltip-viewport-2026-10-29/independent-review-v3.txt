@@ -1,0 +1,20 @@
+Independent read-only V3 source and logic review
+
+Working parent / observed HEAD: a5d8b29987acfeb460a86e662fd5ead53ab379e8.
+Worktree: /private/tmp/tdf-provider-evidence-actualmain-20261028.
+Reviewed file SHA256 values:
+tdf-hq-ui/src/pages/PublicBookingPage.tsx: 3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3
+e2e/web/booking-catalog-recovery.spec.mjs: 401c4c15062d4337d53a118c25b0d52b0facb7db0e3119fdc98ded8a05932198
+formal/system/booking-tooltip-viewport.md: ef0b6d6c7b70d1ade3ae6f51943a4e2369da52e25c4357961bb1ca28c965ff41
+
+Blocking findings: 0 within this source and logic scope.
+
+The immutable first root-overflow, scale, helper text/edges, focus and accessible-name assertions still execute before centering and tracking synchronization. An initial failure stops the case before either secondary operation. V3 neither polls overflow to acceptance nor dismisses or clips the helper.
+
+The secondary scroll registers the window scroll listener before scrollBy. It requires event delivery rather than assuming a frame implies the event has run. Once the event is delivered, a following task permits event-driven microtasks to complete before measurement. This is an appropriate synchronization boundary for the installed event-driven Popper behavior; it is not a universal browser layout convergence proof. Browser window scroll events, once/passive listeners and timers are appropriate for these browser targets. Actual page and anchor movement remain asserted, preventing an event acknowledgment without the required movement from passing the scenario.
+
+On event delivery the once listener is removed automatically and the eight-second refusal timer is cleared. On missing event the timer explicitly removes the listener and rejects, so an unavailable or blocked scroll fails closed. The following-task timer is finite and one-shot. The separate centering frame/250ms race remains bounded; its unused branch can complete harmlessly within that bound. Page teardown destroys page-scoped timers/listeners. No additional persistent product listener or state is introduced.
+
+Original secondary movement, anchor visibility, helper bounds/content, same-placement displacement, root fit, scale and final focus/name checks remain unchanged. The contract distinguishes centering observation from actual event acknowledgment and does not present the eight-second event deadline as proof of general response time. A legitimate placement flip continues to bypass equal-displacement comparison only, with other bounds assertions retained.
+
+Limits: source and logic assessment only; no independent browser, server, build, database or hosted execution was performed. V3 runtime is underway separately and is not qualified by this receipt. Earlier V2 Firefox tracking failure remains historical evidence and must not be relabeled as a V3 result. No claim about the original hosted WebKit root cause, all-browser correctness, implementation refinement or protected integration follows from this review. Separate exact-source positive and negative execution receipts remain necessary.

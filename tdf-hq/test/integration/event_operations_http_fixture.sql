@@ -3,7 +3,7 @@
 ALTER TABLE event_logistics_activity ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 CREATE TABLE api_token (
  id BIGSERIAL PRIMARY KEY, token TEXT NOT NULL UNIQUE, party_id BIGINT NOT NULL REFERENCES party(id),
- label TEXT, active BOOLEAN NOT NULL
+ label TEXT, active BOOLEAN NOT NULL, issued_at_epoch BIGINT, expires_at_epoch BIGINT
 );
 CREATE TABLE party_security_role (
  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), party_id BIGINT NOT NULL REFERENCES party(id),

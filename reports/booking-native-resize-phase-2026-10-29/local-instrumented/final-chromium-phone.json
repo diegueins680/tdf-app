@@ -1,0 +1,248 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/playwright.final-chromium-phone.config.mjs",
+    "rootDir": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/final-chromium-phone",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/final-chromium-phone.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "booking.spec.mjs",
+      "file": "booking.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "booking viewport check detects known client-width overflow @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1151,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:13:34.497Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-fa5ca4fce60c062da8bd",
+          "file": "booking.spec.mjs",
+          "line": 150,
+          "column": 1
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13967,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:13:36.617Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-initial-viewport",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDExMjA0LAogICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICJpbm5lcldpZHRoIjogMzIwLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgInZpc3VhbFZpZXdwb3J0IjogewogICAgIndpZHRoIjogMzIwLAogICAgInNjYWxlIjogMQogIH0sCiAgIm92ZXJmbG93IjogZmFsc2UsCiAgImRldmljZVBpeGVsUmF0aW8iOiAzLAogICJzY3JvbGxZIjogMTQ2NiwKICAiYW5jaG9yIjogewogICAgIngiOiAyMDAuMjUsCiAgICAieSI6IDQxNS40Mzc1LAogICAgInJpZ2h0IjogMjYwLjIzNDM3NSwKICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICJoZWlnaHQiOiAzMiwKICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICJwbGFjZW1lbnQiOiBudWxsCiAgfSwKICAidG9vbHRpcCI6IHsKICAgICJ4IjogNTgsCiAgICAieSI6IDQ0Ny4zMzMzNDM1MDU4NTk0LAogICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAiaGVpZ2h0IjogNDAuNSwKICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgfSwKICAiZXZlbnRzIjogWwogICAgewogICAgICAiYXQiOiAxMTAxOCwKICAgICAgInR5cGUiOiAiYmVmb3JlLXZpZXdwb3J0LXJlcXVlc3QiLAogICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg5OS4zMzMzcHgsIDM5MC4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMTExMzksCiAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgImF0dHJpYnV0ZSI6ICJzdHlsZSIsCiAgICAgICJvbGRWYWx1ZSI6ICJwb3NpdGlvbjogZml4ZWQ7IGluc2V0OiAwcHggYXV0byBhdXRvIDBweDsgbWFyZ2luOiAwcHg7IHRyYW5zZm9ybTogdHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCk7IiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgewogICAgICAiYXQiOiAxMTEzOSwKICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAiYXR0cmlidXRlIjogImRhdGEtcG9wcGVyLXBsYWNlbWVudCIsCiAgICAgICJvbGRWYWx1ZSI6ICJib3R0b20iLAogICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg1OHB4LCA0NDcuMzMzcHgsIDBweCkiLAogICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDExMTM5LAogICAgICAidHlwZSI6ICJ3aW5kb3cucmVzaXplIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMTExNDAsCiAgICAgICJ0eXBlIjogInZpc3VhbFZpZXdwb3J0LnJlc2l6ZSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDExMTQyLAogICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgIm9sZFZhbHVlIjogImJvdHRvbSIsCiAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfQogIF0sCiAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IHRydWUsCiAgInNhbWVPYnNlcnZlZFBvc2l0aW9uZXIiOiB0cnVlCn0="
+                    },
+                    {
+                      "name": "booking-resize-acknowledgement",
+                      "contentType": "application/json",
+                      "body": "ewogICJkZWxpdmVyZWQiOiB0cnVlLAogICJ0cnVzdGVkIjogdHJ1ZSwKICAiZXZlbnRBdCI6IDExMTM5LAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAiaW5uZXJIZWlnaHQiOiA3NDAsCiAgInRhc2tBdCI6IDExMTQ2Cn0="
+                    },
+                    {
+                      "name": "booking-after-native-resize",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDExMjQ1LAogICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICJpbm5lcldpZHRoIjogMzIwLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgInZpc3VhbFZpZXdwb3J0IjogewogICAgIndpZHRoIjogMzIwLAogICAgInNjYWxlIjogMQogIH0sCiAgIm92ZXJmbG93IjogZmFsc2UsCiAgImRldmljZVBpeGVsUmF0aW8iOiAzLAogICJzY3JvbGxZIjogMTQ2NiwKICAiYW5jaG9yIjogewogICAgIngiOiAyMDAuMjUsCiAgICAieSI6IDQxNS40Mzc1LAogICAgInJpZ2h0IjogMjYwLjIzNDM3NSwKICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICJoZWlnaHQiOiAzMiwKICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICJwbGFjZW1lbnQiOiBudWxsCiAgfSwKICAidG9vbHRpcCI6IHsKICAgICJ4IjogNTgsCiAgICAieSI6IDQ0Ny4zMzMzNDM1MDU4NTk0LAogICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAiaGVpZ2h0IjogNDAuNSwKICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgfSwKICAiZXZlbnRzIjogWwogICAgewogICAgICAiYXQiOiAxMTAxOCwKICAgICAgInR5cGUiOiAiYmVmb3JlLXZpZXdwb3J0LXJlcXVlc3QiLAogICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg5OS4zMzMzcHgsIDM5MC4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMTExMzksCiAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgImF0dHJpYnV0ZSI6ICJzdHlsZSIsCiAgICAgICJvbGRWYWx1ZSI6ICJwb3NpdGlvbjogZml4ZWQ7IGluc2V0OiAwcHggYXV0byBhdXRvIDBweDsgbWFyZ2luOiAwcHg7IHRyYW5zZm9ybTogdHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCk7IiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgewogICAgICAiYXQiOiAxMTEzOSwKICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAiYXR0cmlidXRlIjogImRhdGEtcG9wcGVyLXBsYWNlbWVudCIsCiAgICAgICJvbGRWYWx1ZSI6ICJib3R0b20iLAogICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg1OHB4LCA0NDcuMzMzcHgsIDBweCkiLAogICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDExMTM5LAogICAgICAidHlwZSI6ICJ3aW5kb3cucmVzaXplIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMTExNDAsCiAgICAgICJ0eXBlIjogInZpc3VhbFZpZXdwb3J0LnJlc2l6ZSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDExMTQyLAogICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgIm9sZFZhbHVlIjogImJvdHRvbSIsCiAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfQogIF0sCiAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IHRydWUsCiAgInNhbWVPYnNlcnZlZFBvc2l0aW9uZXIiOiB0cnVlCn0="
+                    },
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiAxMTM2NSwKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAzLAogICAgInNjcm9sbFkiOiAxNTI3LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMDAuMjUsCiAgICAgICJ5IjogMzU0LjQzNzUsCiAgICAgICJyaWdodCI6IDI2MC4yMzQzNzUsCiAgICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMzg2LjMzMzM0MzUwNTg1OTQsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgImV2ZW50cyI6IFsKICAgICAgewogICAgICAgICJhdCI6IDExMDE4LAogICAgICAgICJ0eXBlIjogImJlZm9yZS12aWV3cG9ydC1yZXF1ZXN0IiwKICAgICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDk5LjMzMzNweCwgMzkwLjMzM3B4LCAwcHgpIiwKICAgICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgICB9LAogICAgICB7CiAgICAgICAgImF0IjogMTExMzksCiAgICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAgICJhdHRyaWJ1dGUiOiAic3R5bGUiLAogICAgICAgICJvbGRWYWx1ZSI6ICJwb3NpdGlvbjogZml4ZWQ7IGluc2V0OiAwcHggYXV0byBhdXRvIDBweDsgbWFyZ2luOiAwcHg7IHRyYW5zZm9ybTogdHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCk7IiwKICAgICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgICAgfSwKICAgICAgewogICAgICAgICJhdCI6IDExMTM5LAogICAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgICAiYXR0cmlidXRlIjogImRhdGEtcG9wcGVyLXBsYWNlbWVudCIsCiAgICAgICAgIm9sZFZhbHVlIjogImJvdHRvbSIsCiAgICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg1OHB4LCA0NDcuMzMzcHgsIDBweCkiLAogICAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAxMTEzOSwKICAgICAgICAidHlwZSI6ICJ3aW5kb3cucmVzaXplIgogICAgICB9LAogICAgICB7CiAgICAgICAgImF0IjogMTExNDAsCiAgICAgICAgInR5cGUiOiAidmlzdWFsVmlld3BvcnQucmVzaXplIgogICAgICB9LAogICAgICB7CiAgICAgICAgImF0IjogMTExNDIsCiAgICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgICAib2xkVmFsdWUiOiAiYm90dG9tIiwKICAgICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgICAgfQogICAgXSwKICAgICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IHRydWUsCiAgICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IHRydWUKICB9LAogICJhZnRlclNjcm9sbCI6IHsKICAgICJhdCI6IDExNDA1LAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDMsCiAgICAic2Nyb2xsWSI6IDE1NjcsCiAgICAiYW5jaG9yIjogewogICAgICAieCI6IDIwMC4yNSwKICAgICAgInkiOiAzMTQuNDM3NSwKICAgICAgInJpZ2h0IjogMjYwLjIzNDM3NSwKICAgICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAzNDYuMzMzMzQzNTA1ODU5NCwKICAgICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICAgIndpZHRoIjogMjYyLjA0Njg3NSwKICAgICAgImhlaWdodCI6IDQwLjUsCiAgICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICAiZXZlbnRzIjogWwogICAgICB7CiAgICAgICAgImF0IjogMTEwMTgsCiAgICAgICAgInR5cGUiOiAiYmVmb3JlLXZpZXdwb3J0LXJlcXVlc3QiLAogICAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCkiLAogICAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAxMTEzOSwKICAgICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICAgImF0dHJpYnV0ZSI6ICJzdHlsZSIsCiAgICAgICAgIm9sZFZhbHVlIjogInBvc2l0aW9uOiBmaXhlZDsgaW5zZXQ6IDBweCBhdXRvIGF1dG8gMHB4OyBtYXJnaW46IDBweDsgdHJhbnNmb3JtOiB0cmFuc2xhdGUzZCg5OS4zMzMzcHgsIDM5MC4zMzNweCwgMHB4KTsiLAogICAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgICB9LAogICAgICB7CiAgICAgICAgImF0IjogMTExMzksCiAgICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgICAib2xkVmFsdWUiOiAiYm90dG9tIiwKICAgICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgICAgfSwKICAgICAgewogICAgICAgICJhdCI6IDExMTM5LAogICAgICAgICJ0eXBlIjogIndpbmRvdy5yZXNpemUiCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAxMTE0MCwKICAgICAgICAidHlwZSI6ICJ2aXN1YWxWaWV3cG9ydC5yZXNpemUiCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAxMTE0MiwKICAgICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICAgImF0dHJpYnV0ZSI6ICJkYXRhLXBvcHBlci1wbGFjZW1lbnQiLAogICAgICAgICJvbGRWYWx1ZSI6ICJib3R0b20iLAogICAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgICB9CiAgICBdLAogICAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogdHJ1ZSwKICAgICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogdHJ1ZQogIH0sCiAgImVwc2lsb24iOiAwLjMzMzMzMzMzMzMzMzMzMzMKfQ=="
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-86f8013d470642ab6e42",
+          "file": "booking.spec.mjs",
+          "line": 173,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6591,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:13:51.158Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-initial-viewport",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDM4OTMsCiAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgImlubmVyV2lkdGgiOiAzMjAsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJzY3JvbGxXaWR0aCI6IDMyMCwKICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAid2lkdGgiOiAzMjAsCiAgICAic2NhbGUiOiAxCiAgfSwKICAib3ZlcmZsb3ciOiBmYWxzZSwKICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDMsCiAgInNjcm9sbFkiOiAxNDY2LAogICJhbmNob3IiOiB7CiAgICAieCI6IDIwMC4yNSwKICAgICJ5IjogNDE1LjQzNzUsCiAgICAicmlnaHQiOiAyNjAuMjM0Mzc1LAogICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgImhlaWdodCI6IDMyLAogICAgInRleHQiOiAiMDQ6MDAiLAogICAgInBsYWNlbWVudCI6IG51bGwKICB9LAogICJ0b29sdGlwIjogewogICAgIngiOiA1OCwKICAgICJ5IjogNDQ3LjMzMzM0MzUwNTg1OTQsCiAgICAicmlnaHQiOiAzMjAuMDQ2ODc1LAogICAgIndpZHRoIjogMjYyLjA0Njg3NSwKICAgICJoZWlnaHQiOiA0MC41LAogICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICB9LAogICJldmVudHMiOiBbCiAgICB7CiAgICAgICJhdCI6IDM3NjIsCiAgICAgICJ0eXBlIjogImJlZm9yZS12aWV3cG9ydC1yZXF1ZXN0IiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCkiLAogICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDM4NDAsCiAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgImF0dHJpYnV0ZSI6ICJzdHlsZSIsCiAgICAgICJvbGRWYWx1ZSI6ICJwb3NpdGlvbjogZml4ZWQ7IGluc2V0OiAwcHggYXV0byBhdXRvIDBweDsgbWFyZ2luOiAwcHg7IHRyYW5zZm9ybTogdHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCk7IiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgewogICAgICAiYXQiOiAzODQwLAogICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgIm9sZFZhbHVlIjogImJvdHRvbSIsCiAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMzg0MCwKICAgICAgInR5cGUiOiAid2luZG93LnJlc2l6ZSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDM4NDAsCiAgICAgICJ0eXBlIjogInZpc3VhbFZpZXdwb3J0LnJlc2l6ZSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDM4NDMsCiAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgImF0dHJpYnV0ZSI6ICJkYXRhLXBvcHBlci1wbGFjZW1lbnQiLAogICAgICAib2xkVmFsdWUiOiAiYm90dG9tIiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9CiAgXSwKICAib2JzZXJ2YXRpb25UcnVuY2F0ZWQiOiBmYWxzZSwKICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogdHJ1ZSwKICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IHRydWUKfQ=="
+                    },
+                    {
+                      "name": "booking-resize-acknowledgement",
+                      "contentType": "application/json",
+                      "body": "ewogICJkZWxpdmVyZWQiOiB0cnVlLAogICJ0cnVzdGVkIjogdHJ1ZSwKICAiZXZlbnRBdCI6IDM4NDAsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJpbm5lckhlaWdodCI6IDc0MCwKICAidGFza0F0IjogMzg1MQp9"
+                    },
+                    {
+                      "name": "booking-after-native-resize",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDM5MzAsCiAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgImlubmVyV2lkdGgiOiAzMjAsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJzY3JvbGxXaWR0aCI6IDMyMCwKICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAid2lkdGgiOiAzMjAsCiAgICAic2NhbGUiOiAxCiAgfSwKICAib3ZlcmZsb3ciOiBmYWxzZSwKICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDMsCiAgInNjcm9sbFkiOiAxNDY2LAogICJhbmNob3IiOiB7CiAgICAieCI6IDIwMC4yNSwKICAgICJ5IjogNDE1LjQzNzUsCiAgICAicmlnaHQiOiAyNjAuMjM0Mzc1LAogICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgImhlaWdodCI6IDMyLAogICAgInRleHQiOiAiMDQ6MDAiLAogICAgInBsYWNlbWVudCI6IG51bGwKICB9LAogICJ0b29sdGlwIjogewogICAgIngiOiA1OCwKICAgICJ5IjogNDQ3LjMzMzM0MzUwNTg1OTQsCiAgICAicmlnaHQiOiAzMjAuMDQ2ODc1LAogICAgIndpZHRoIjogMjYyLjA0Njg3NSwKICAgICJoZWlnaHQiOiA0MC41LAogICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICB9LAogICJldmVudHMiOiBbCiAgICB7CiAgICAgICJhdCI6IDM3NjIsCiAgICAgICJ0eXBlIjogImJlZm9yZS12aWV3cG9ydC1yZXF1ZXN0IiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCkiLAogICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDM4NDAsCiAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgImF0dHJpYnV0ZSI6ICJzdHlsZSIsCiAgICAgICJvbGRWYWx1ZSI6ICJwb3NpdGlvbjogZml4ZWQ7IGluc2V0OiAwcHggYXV0byBhdXRvIDBweDsgbWFyZ2luOiAwcHg7IHRyYW5zZm9ybTogdHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCk7IiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgewogICAgICAiYXQiOiAzODQwLAogICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgIm9sZFZhbHVlIjogImJvdHRvbSIsCiAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMzg0MCwKICAgICAgInR5cGUiOiAid2luZG93LnJlc2l6ZSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDM4NDAsCiAgICAgICJ0eXBlIjogInZpc3VhbFZpZXdwb3J0LnJlc2l6ZSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDM4NDMsCiAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgImF0dHJpYnV0ZSI6ICJkYXRhLXBvcHBlci1wbGFjZW1lbnQiLAogICAgICAib2xkVmFsdWUiOiAiYm90dG9tIiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9CiAgXSwKICAib2JzZXJ2YXRpb25UcnVuY2F0ZWQiOiBmYWxzZSwKICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogdHJ1ZSwKICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IHRydWUKfQ=="
+                    },
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiA0MDUwLAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDMsCiAgICAic2Nyb2xsWSI6IDE1MjcsCiAgICAiYW5jaG9yIjogewogICAgICAieCI6IDIwMC4yNSwKICAgICAgInkiOiAzNTQuNDM3NSwKICAgICAgInJpZ2h0IjogMjYwLjIzNDM3NSwKICAgICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAzODYuMzMzMzQzNTA1ODU5NCwKICAgICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICAgIndpZHRoIjogMjYyLjA0Njg3NSwKICAgICAgImhlaWdodCI6IDQwLjUsCiAgICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICAiZXZlbnRzIjogWwogICAgICB7CiAgICAgICAgImF0IjogMzc2MiwKICAgICAgICAidHlwZSI6ICJiZWZvcmUtdmlld3BvcnQtcmVxdWVzdCIsCiAgICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg5OS4zMzMzcHgsIDM5MC4zMzNweCwgMHB4KSIsCiAgICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgICAgfSwKICAgICAgewogICAgICAgICJhdCI6IDM4NDAsCiAgICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAgICJhdHRyaWJ1dGUiOiAic3R5bGUiLAogICAgICAgICJvbGRWYWx1ZSI6ICJwb3NpdGlvbjogZml4ZWQ7IGluc2V0OiAwcHggYXV0byBhdXRvIDBweDsgbWFyZ2luOiAwcHg7IHRyYW5zZm9ybTogdHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCk7IiwKICAgICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgICAgfSwKICAgICAgewogICAgICAgICJhdCI6IDM4NDAsCiAgICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgICAib2xkVmFsdWUiOiAiYm90dG9tIiwKICAgICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgICAgfSwKICAgICAgewogICAgICAgICJhdCI6IDM4NDAsCiAgICAgICAgInR5cGUiOiAid2luZG93LnJlc2l6ZSIKICAgICAgfSwKICAgICAgewogICAgICAgICJhdCI6IDM4NDAsCiAgICAgICAgInR5cGUiOiAidmlzdWFsVmlld3BvcnQucmVzaXplIgogICAgICB9LAogICAgICB7CiAgICAgICAgImF0IjogMzg0MywKICAgICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICAgImF0dHJpYnV0ZSI6ICJkYXRhLXBvcHBlci1wbGFjZW1lbnQiLAogICAgICAgICJvbGRWYWx1ZSI6ICJib3R0b20iLAogICAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgICB9CiAgICBdLAogICAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogdHJ1ZSwKICAgICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogdHJ1ZQogIH0sCiAgImFmdGVyU2Nyb2xsIjogewogICAgImF0IjogNDA4NiwKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAzLAogICAgInNjcm9sbFkiOiAxNTY3LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMDAuMjUsCiAgICAgICJ5IjogMzE0LjQzNzUsCiAgICAgICJyaWdodCI6IDI2MC4yMzQzNzUsCiAgICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMzQ2LjMzMzM0MzUwNTg1OTQsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgImV2ZW50cyI6IFsKICAgICAgewogICAgICAgICJhdCI6IDM3NjIsCiAgICAgICAgInR5cGUiOiAiYmVmb3JlLXZpZXdwb3J0LXJlcXVlc3QiLAogICAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCkiLAogICAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAzODQwLAogICAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgICAiYXR0cmlidXRlIjogInN0eWxlIiwKICAgICAgICAib2xkVmFsdWUiOiAicG9zaXRpb246IGZpeGVkOyBpbnNldDogMHB4IGF1dG8gYXV0byAwcHg7IG1hcmdpbjogMHB4OyB0cmFuc2Zvcm06IHRyYW5zbGF0ZTNkKDk5LjMzMzNweCwgMzkwLjMzM3B4LCAwcHgpOyIsCiAgICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg1OHB4LCA0NDcuMzMzcHgsIDBweCkiLAogICAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAzODQwLAogICAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgICAiYXR0cmlidXRlIjogImRhdGEtcG9wcGVyLXBsYWNlbWVudCIsCiAgICAgICAgIm9sZFZhbHVlIjogImJvdHRvbSIsCiAgICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg1OHB4LCA0NDcuMzMzcHgsIDBweCkiLAogICAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAzODQwLAogICAgICAgICJ0eXBlIjogIndpbmRvdy5yZXNpemUiCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiYXQiOiAzODQwLAogICAgICAgICJ0eXBlIjogInZpc3VhbFZpZXdwb3J0LnJlc2l6ZSIKICAgICAgfSwKICAgICAgewogICAgICAgICJhdCI6IDM4NDMsCiAgICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgICAib2xkVmFsdWUiOiAiYm90dG9tIiwKICAgICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgICAgfQogICAgXSwKICAgICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IHRydWUsCiAgICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IHRydWUKICB9LAogICJlcHNpbG9uIjogMC4zMzMzMzMzMzMzMzMzMzMzCn0="
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-bee2f5ad4fd4a309d24d",
+          "file": "booking.spec.mjs",
+          "line": 173,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T15:13:32.765Z",
+    "duration": 30971.944,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

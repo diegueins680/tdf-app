@@ -580,6 +580,11 @@
   },
   {
    "method": "GET",
+   "path": "/music/search",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
    "path": "/openapi.yaml",
    "boundary": "public-diagnostic"
   },

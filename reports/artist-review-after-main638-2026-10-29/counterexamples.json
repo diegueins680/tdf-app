@@ -1,0 +1,25 @@
+{
+  "controls": [
+    {
+      "baselineFile": "scripts/artist-enrichment.mjs",
+      "baselineSha256": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
+      "actualExit": 1,
+      "actualBehavioralFailures": 2,
+      "point": "Persisted source type incorrectly conflates HTTP availability with unconfirmed reuse rights"
+    },
+    {
+      "baselineFile": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
+      "baselineSha256": "923f72c77a82ef34dc9b94b7d42fa9084b3c9ff2ab82dbf2c0d7905d1d3fcd70",
+      "actualExit": 1,
+      "actualBehavioralFailures": 1,
+      "initialCountObservedByTest": 4,
+      "expectedSelectedCount": 3,
+      "actualAfterSelection": "Expected3absent; postselectionDOMcountnotcaptured. Oldunscopedsourcewouldretainall4 fixturecandidates byinspection.",
+      "point": "Existingselected-artistcount assertionfails, not a setup/runtimeerror"
+    }
+  ],
+  "exactSourceRestored": true,
+  "correctWorkerActualExit": 0,
+  "correctWorkerCases": 27,
+  "scope": "Existing exact tests against actual-main baseline; all API/provider operations are fixture-intercepted."
+}

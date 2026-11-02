@@ -24,7 +24,7 @@ import Test.Hspec
 import TDF.Auth (lockCredentialForSession, revokeInteractiveSessions)
 import TDF.DTO (LoginResponse)
 import TDF.Models (PartyId, UserCredentialId, UserCredential(..))
-import TDF.ServerAuth (GoogleProfile(..), completeGoogleLogin)
+import TDF.ServerAuth (GoogleProfile(..), SessionTokenTtl(..), completeGoogleLogin)
 
 -- This starts after provider cryptographic verification. No provider request is
 -- made, and the database is the same fully migrated synthetic HTTP fixture.
@@ -121,7 +121,7 @@ disable credentialId = do
       revokeInteractiveSessions (userCredentialPartyId credential)
 
 google :: GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-google = completeGoogleLogin Nothing Nothing Nothing Nothing Nothing
+google = completeGoogleLogin (SessionTokenTtl 3600) Nothing Nothing Nothing Nothing Nothing
 
 activeGoogleCount :: ConnectionPool -> UserCredentialId -> IO Int64
 activeGoogleCount pool credential = do

@@ -40,3 +40,56 @@ stale metadata, browser-path redirection and failed launches. Mock launch contro
 do not establish actual Linux browser availability. Fresh complete hosted execution
 of the preflight and all three existing browser stages remains required. No browser
 assertion or budget is waived, and no production or release authority is granted.
+
+## Social preview job
+
+The social client job uses the same immutable Noble browser image and user 1001
+as the persona job. Its Node 24 setup, fifteen-minute limit, six focused test
+files, generated-contract comparison, synthetic browser journey and always-run
+artifact upload remain required. It does not install browser system packages
+during the job.
+
+The shared preflight selects the social workflow and its `social-client` job
+explicitly. It must validate that selected job's container, lockfile, installed
+packages, bundled metadata, browser directory and home ownership, then launch
+and close Chromium, Firefox and WebKit. A valid persona job cannot substitute
+for an absent or invalid social container. The original command without
+arguments continues to select the persona job.
+
+Observed motivation: the social job for source `7ddfbd73bf08d007b4658b700bb9cbe289a6b480`
+exceeded its fifteen-minute limit during Playwright dependency installation;
+its browser journey did not execute. Retain that failure and its distinction
+from the separate WebKit marketplace-cart timeout. This change removes that
+installer from the social lane; it does not establish a fix for the cart case.
+Registry availability and a fresh Linux execution of the selected preflight
+and unchanged social assertions remain qualification requirements. Local pure
+tests do not establish installed-image or application acceptance.
+
+The first social-image candidate `fd5eefbc1b94acbec6e9ab22ad8f27f138e17083`
+passed all 63 focused tests and its generated-contract check, then the new
+preflight rejected installed Playwright 1.64.1 against the locked/image version
+1.59.1. The existing additional root `npm install --no-save --package-lock=false`
+for the missing resolver binding had re-resolved project dependencies. Preserve
+that failed run and its skipped browser journey. Install the same pinned binding
+into a fresh isolated prefix with scripts and workspaces disabled, then copy
+only that native package into the existing install. The version guard remains
+unchanged and fresh current-head Linux qualification is still required.
+
+## WebKit project capacity
+
+The iPhone and critical Safari projects each admit one worker. The global CI
+limit remains two, and Chromium and Firefox keep their existing scheduling.
+All original browser cases, project filters, 30-second test deadlines,
+eight-second expectations, zero retries, screenshots and traces remain required.
+The complete test listing must match the preceding configuration before this
+scheduling change is admitted. Multiple pages or simultaneous operations within
+a test remain available; application and database concurrency checks are unchanged.
+
+Two complete executions of source `7bed38d67d3d418eec2ae655c01a61c1f227f821`
+each ended with 579 passes, 22 skips and one failure. The first reported campaign
+tab contrast in WebKit; the single replay instead exhausted the cart journey's
+30-second deadline after several successful actions had each taken seconds.
+Preserve both failures and their distinct diagnostics. Per-project capacity is
+a bounded contention hypothesis, not an established explanation of either
+failure. Fresh hosted Linux execution of the complete suite is still mandatory;
+local configuration controls and Chromium results do not qualify WebKit.
