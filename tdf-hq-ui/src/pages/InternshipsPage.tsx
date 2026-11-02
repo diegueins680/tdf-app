@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -1167,7 +1168,7 @@ export default function InternshipsPage() {
                     <Box>
                       <Typography fontWeight={700}>{project.ipTitle}</Typography>
                       {project.ipDescription && (
-                        <Typography variant="body2" color="text.secondary">{project.ipDescription}</Typography>
+                        <MarkdownText variant="body2" color="text.secondary">{project.ipDescription}</MarkdownText>
                       )}
                       <Typography variant="caption" color="text.secondary">
                         Inicio {formatDate(project.ipStartAt)} · Entrega {formatDate(project.ipDueAt)}
@@ -1501,9 +1502,9 @@ export default function InternshipsPage() {
                   >
                     {todo.itdDone ? 'Hecho' : 'Marcar'}
                   </Button>
-                  <Typography sx={{ flex: 1, textDecoration: todo.itdDone ? 'line-through' : 'none' }}>
+                  <MarkdownText sx={{ flex: 1, textDecoration: todo.itdDone ? 'line-through' : 'none' }}>
                     {todo.itdText}
-                  </Typography>
+                  </MarkdownText>
                   <Button
                     size="small"
                     color="error"
@@ -1636,7 +1637,7 @@ export default function InternshipsPage() {
                           {perm.iprPartyName} · {formatDate(perm.iprStartAt)} → {formatDate(perm.iprEndAt)}
                         </Typography>
                         {perm.iprReason && (
-                          <Typography variant="body2" color="text.secondary">{perm.iprReason}</Typography>
+                          <MarkdownText variant="body2" color="text.secondary">{perm.iprReason}</MarkdownText>
                         )}
                       </Box>
                       <Chip
