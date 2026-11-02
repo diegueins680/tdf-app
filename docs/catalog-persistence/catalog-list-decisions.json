@@ -20066,6 +20066,16 @@
       },
       "reviewBatch": "webtorrent-browser-boundary-2026-10-31",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b9cf25b6724b84e4dc9d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "InAppBrowserHost names the embedded-browser user-agent families (Instagram, Facebook, Messenger, TikTok, LINE, Snapchat, generic WebView) that cannot complete Google Sign-In; it drives client-side detection and copy only and is not a governed business catalog.",
+      "reviewed": true
     }
   ]
 }
