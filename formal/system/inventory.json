@@ -6206,7 +6206,7 @@
     {
       "id": "SURFACE-7d9c91182787e22c",
       "path": "scripts/test-provider-domain-harness.py",
-      "sha256": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+      "sha256": "f93568e6c72b2297e2294c44e4002c792d3410df38bc9c76407d1fce788d8615",
       "semanticConformance": "not-established-by-discovery"
     },
     {
