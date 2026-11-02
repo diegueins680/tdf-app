@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.domo_manual_refund_evidence (
   provider TEXT NOT NULL,
   environment TEXT NOT NULL CHECK (environment IN ('sandbox','production')),
   merchant_account_ref TEXT NOT NULL,
-  external_reference TEXT NOT NULL CHECK (external_reference ~ '^[A-Za-z0-9_.-]{1,256}$'),
+  external_reference TEXT NOT NULL,
   evidence_reference TEXT NOT NULL CHECK (length(evidence_reference) BETWEEN 16 AND 256),
   amount_minor BIGINT NOT NULL CHECK (amount_minor > 0),
   currency TEXT NOT NULL CHECK (currency ~ '^[A-Z]{3}$'),
@@ -21,6 +21,15 @@ CREATE TABLE IF NOT EXISTS public.domo_manual_refund_evidence (
   CHECK (confirmed_by IS NULL OR confirmed_by <> recorded_by),
   UNIQUE(provider,environment,merchant_account_ref,external_reference)
 );
+
+-- PostgreSQL limits regex repetition bounds to 255. Keep the separately
+-- reviewed 256-character contract without an invalid regex, also on reapply.
+ALTER TABLE public.domo_manual_refund_evidence
+ DROP CONSTRAINT IF EXISTS domo_manual_refund_evidence_external_reference_check,
+ DROP CONSTRAINT IF EXISTS domo_manual_refund_external_reference_shape;
+ALTER TABLE public.domo_manual_refund_evidence
+ ADD CONSTRAINT domo_manual_refund_external_reference_shape
+ CHECK (length(external_reference) BETWEEN 1 AND 256 AND external_reference ~ '^[A-Za-z0-9_.-]+$');
 
 -- These raw-SQL references already appear through PostgreSQL FK discovery.
 -- Install the same archived-identity write guard as the other financial tables.

@@ -16591,7 +16591,7 @@
     "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql": "378c49acf1a52f1e28fc7f2db51fdc454575a8deb73115b5685eeffc28edc333",
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql": "b5591df9ea95e2ea08007c62ccb45b0727a4ef0f9c492f77ddb72630bc4b008f",
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
-    "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql": "709904c66f766b0119aea195bdc31f85c31eb4083b5403f75b8d5ce7a4010b71",
+    "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql": "889d9636c32bd4fdd78eb8e51590954cf150d71db07ec416a80acdddd7b1ea80",
     "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
@@ -16754,7 +16754,7 @@
     "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "66516405eb2b4213b72be45b0b7035b8c29fe05df3f898c48e9f4b06c1732b4c",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
-    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "e017996ac1ab3980dd748d9c90a09cff12c86982197339dca2ed8e267df5e95a",
+    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "818ccc61e212c8dd7d4fb9637874daaefea4c18dae70d82941d8bc8d87ce5acd",
     "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs": "149e170bc2b0d686ef3ea666fafafe41211206136b80bcaba9b5de63b0b49a3f",
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -50457,7 +50457,7 @@
     {
       "id": "SURFACE-6af2fb60590d5f42",
       "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
-      "sha256": "709904c66f766b0119aea195bdc31f85c31eb4083b5403f75b8d5ce7a4010b71",
+      "sha256": "889d9636c32bd4fdd78eb8e51590954cf150d71db07ec416a80acdddd7b1ea80",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54176,7 +54176,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "e017996ac1ab3980dd748d9c90a09cff12c86982197339dca2ed8e267df5e95a",
+      "sha256": "818ccc61e212c8dd7d4fb9637874daaefea4c18dae70d82941d8bc8d87ce5acd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

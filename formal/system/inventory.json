@@ -14732,7 +14732,7 @@
     {
       "id": "SURFACE-6af2fb60590d5f42",
       "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
-      "sha256": "709904c66f766b0119aea195bdc31f85c31eb4083b5403f75b8d5ce7a4010b71",
+      "sha256": "889d9636c32bd4fdd78eb8e51590954cf150d71db07ec416a80acdddd7b1ea80",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16508,7 +16508,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "e017996ac1ab3980dd748d9c90a09cff12c86982197339dca2ed8e267df5e95a",
+      "sha256": "818ccc61e212c8dd7d4fb9637874daaefea4c18dae70d82941d8bc8d87ce5acd",
       "semanticConformance": "not-established-by-discovery"
     },
     {

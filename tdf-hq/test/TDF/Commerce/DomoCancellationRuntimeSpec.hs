@@ -415,8 +415,10 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
     now <- getCurrentTime
     _ <- runSqlPool (D.approveDomoRefund (fxQuoteId fixture) 2 now) pool
     (_,True) <- runSqlPool (D.claimDomoRefund (fxQuoteId fixture) 2 now) pool
-    let evidence = D.ManualEvidence ("MANUAL-"<>fxQuoteId fixture) ("secure-receipt:"<>fxQuoteId fixture) depositMinor "USD" now
+    let evidence = D.ManualEvidence (T.justifyLeft 256 'M' ("MANUAL-"<>fxQuoteId fixture)) ("secure-receipt:"<>fxQuoteId fixture) depositMinor "USD" now
     expectFailure $ runSqlPool (D.recordManualEvidence (fxQuoteId fixture) 2 now evidence {D.meAmountMinor=depositMinor-1}) pool
+    expectFailure $ runSqlPool (D.recordManualEvidence (fxQuoteId fixture) 2 now evidence {D.meExternalReference=T.replicate 257 "M"}) pool
+    expectFailure $ runSqlPool (D.recordManualEvidence (fxQuoteId fixture) 2 now evidence {D.meExternalReference="INVALID/REFERENCE"}) pool
     expectFailure $ runSqlPool (D.confirmManualEvidence (fxQuoteId fixture) 3 now) pool
     runSqlPool (D.recordManualEvidence (fxQuoteId fixture) 2 now evidence) pool
     runSqlPool (D.recordManualEvidence (fxQuoteId fixture) 2 now evidence) pool
