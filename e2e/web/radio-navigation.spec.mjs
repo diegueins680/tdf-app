@@ -68,7 +68,10 @@ test('@critical radio keeps native playback and controls across sidebar navigati
     });
     expect(before.connected).toBe(true);
     expect(before.paused).toBe(false);
-    expect(before.volume).toBeCloseTo(0.35, 6);
+    // WebKit stores HTMLMediaElement.volume as float32 (0.35 reads back as
+    // 0.34999597…), so allow float32 rounding while still rejecting any other
+    // persisted level.
+    expect(before.volume).toBeCloseTo(0.35, 4);
     if (checkpoints.length) expect(before.volume).toBe(checkpoints[0].volume);
     expect(before.source).toBe(`${origin}/fixture-radio.wav`);
     expect(before.errors).toBeNull();
