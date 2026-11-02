@@ -15303,7 +15303,7 @@
     "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
-    "scripts/__tests__/production-release.test.mjs": "89bcde93815f17e78ec777e1a8f1c2711eacebb00a5a1b1aa99165e23d6d0233",
+    "scripts/__tests__/production-release.test.mjs": "30dff825b56c8f00d78c5b4e07087d9372cba382295c5315b758ddd1c43a80ac",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
@@ -15362,7 +15362,7 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "e5839a4c4b4fc6cfdeb89438b682e6a0a57eccb90792980c07a78bac88e4cfa8",
+    "scripts/lib/production-release.mjs": "fabc91df4704ad2eaba6bc86fac451f34e5ab2e423530b880fafd1e7ff2f0368",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -15535,7 +15535,7 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
-    "tdf-hq-ui/package.json": "eeb143e7bb9c0f4e2c3c3d014322f375b161773cf47648aab5ed1872f7c81df8",
+    "tdf-hq-ui/package.json": "78a0896bbd4aece4f87944b64891680d681c43d413f4170bed257e3fe04a4316",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
@@ -31270,7 +31270,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "89bcde93815f17e78ec777e1a8f1c2711eacebb00a5a1b1aa99165e23d6d0233",
+      "sha256": "30dff825b56c8f00d78c5b4e07087d9372cba382295c5315b758ddd1c43a80ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32563,7 +32563,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "e5839a4c4b4fc6cfdeb89438b682e6a0a57eccb90792980c07a78bac88e4cfa8",
+      "sha256": "fabc91df4704ad2eaba6bc86fac451f34e5ab2e423530b880fafd1e7ff2f0368",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36308,7 +36308,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "eeb143e7bb9c0f4e2c3c3d014322f375b161773cf47648aab5ed1872f7c81df8",
+      "sha256": "78a0896bbd4aece4f87944b64891680d681c43d413f4170bed257e3fe04a4316",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
