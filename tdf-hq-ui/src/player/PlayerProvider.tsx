@@ -670,10 +670,15 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     }
     setStatus('loading');
     let watchdog: number | undefined;
-    const clearWatchdog = () => { if (watchdog !== undefined) window.clearTimeout(watchdog); };
+    let lastMediaPosition = audio.currentTime;
+    const clearWatchdog = () => {
+      if (watchdog !== undefined) window.clearTimeout(watchdog);
+      watchdog = undefined;
+    };
     cancelWatchdogRef.current = clearWatchdog;
     const waitForMedia = () => {
-      clearWatchdog();
+      // Repeated buffering events must not postpone the same failure deadline.
+      if (watchdog !== undefined) return;
       watchdog = window.setTimeout(() => {
         if (controller.signal.aborted || generation !== sourceGenerationRef.current) return;
         if (skipFailed()) return;
@@ -685,9 +690,16 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
           : 'No quedan fuentes reproducibles. Puedes reintentar o elegir otra música.');
       }, 15000);
     };
+    const mediaProgress = () => {
+      if (loadedSourceRef.current?.generation !== generation
+        || loadedSourceRef.current?.url !== audio.currentSrc) return;
+      const position = audio.currentTime;
+      if (position > lastMediaPosition) clearWatchdog();
+      lastMediaPosition = position;
+    };
     const prepared = () => { if (!autoplayRef.current) clearWatchdog(); };
     audio.addEventListener('playing', clearWatchdog);
-    audio.addEventListener('timeupdate', clearWatchdog);
+    audio.addEventListener('timeupdate', mediaProgress);
     audio.addEventListener('waiting', waitForMedia);
     audio.addEventListener('canplay', prepared);
     audio.addEventListener('pause', prepared);
@@ -773,7 +785,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       removePreparationListener();
       if (pendingPositionRef.current?.generation === generation) pendingPositionRef.current = null;
       audio.removeEventListener('playing', clearWatchdog);
-      audio.removeEventListener('timeupdate', clearWatchdog);
+      audio.removeEventListener('timeupdate', mediaProgress);
       audio.removeEventListener('waiting', waitForMedia);
       audio.removeEventListener('canplay', prepared);
       audio.removeEventListener('pause', prepared);

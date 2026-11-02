@@ -13667,7 +13667,8 @@
         "tdf-hq-ui/src/player/publicMusicTrack.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
-        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx"
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/utils/availableRadioStations.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
@@ -13677,7 +13678,8 @@
         "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
         "e2e/web/music-player.spec.mjs",
-        "e2e/web/music-player-native.spec.mjs"
+        "e2e/web/music-player-native.spec.mjs",
+        "tdf-hq-ui/src/utils/availableRadioStations.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",

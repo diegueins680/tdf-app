@@ -771,3 +771,49 @@ it('can explicitly retry a recording after every rendition was exhausted', async
   expect(player.status).toBe('playing');
   expect(player.unavailableTrackIds).toEqual([]);
 });
+
+
+it.each(['waiting', 'timeupdate'])('skips stalled media despite repeated %s events without progress', async (event) => {
+  jest.useFakeTimers();
+  jest.mocked(HTMLMediaElement.prototype.play).mockResolvedValue(undefined);
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  try {
+    await act(async () => player.playTrack(track('stalled'), [track('stalled'), track('good')]));
+    const audio = view.container.querySelector('audio')!;
+    await act(async () => { jest.advanceTimersByTime(10000); });
+    act(() => { audio.dispatchEvent(new Event(event)); });
+    await act(async () => { jest.advanceTimersByTime(5000); });
+    expect(player.currentTrack?.id).toBe('good');
+    expect(player.unavailableTrackIds).toContain('stalled');
+  } finally {
+    view.unmount();
+    jest.useRealTimers();
+  }
+});
+
+
+it.each(['progress', 'pause'])('does not skip media after actual %s cancels the buffering deadline', async (action) => {
+  jest.useFakeTimers();
+  jest.mocked(HTMLMediaElement.prototype.play).mockResolvedValue(undefined);
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  try {
+    await act(async () => player.playTrack(track('one'), [track('one'), track('two')]));
+    const audio = view.container.querySelector('audio')!;
+    await act(async () => { jest.advanceTimersByTime(10000); });
+    act(() => {
+      if (action === 'pause') player.pause();
+      else { audio.currentTime = 1; audio.dispatchEvent(new Event('timeupdate')); }
+    });
+    await act(async () => { jest.advanceTimersByTime(5000); });
+    expect(player.currentTrack?.id).toBe('one');
+    expect(player.unavailableTrackIds).toEqual([]);
+    if (action === 'progress') {
+      act(() => { audio.dispatchEvent(new Event('waiting')); });
+      await act(async () => { jest.advanceTimersByTime(15000); });
+      expect(player.currentTrack?.id).toBe('two');
+    }
+  } finally {
+    view.unmount();
+    jest.useRealTimers();
+  }
+});

@@ -13668,7 +13668,8 @@
         "tdf-hq-ui/src/player/publicMusicTrack.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
-        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx"
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/utils/availableRadioStations.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
@@ -13678,7 +13679,8 @@
         "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
         "e2e/web/music-player.spec.mjs",
-        "e2e/web/music-player-native.spec.mjs"
+        "e2e/web/music-player-native.spec.mjs",
+        "tdf-hq-ui/src/utils/availableRadioStations.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -14625,7 +14627,7 @@
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "cf93561dd977eca30e4e04a7f323ef0413f85bea197e4894733e8bc5ede2ec2a",
     "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": "8c777a3db79c4c3185afd93df48a8ed42df8373a568252360ea5fb64ccf88727",
-    "tdf-hq-ui/src/components/RadioWidget.tsx": "bc853c223ed2910db7b7cdd5b8612880d7c2da6cac67d5ab32f43aa0eeb5c0b4",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "797f5c0e88c784688d181a0529f0a97193e8647ce9048481d3c0a84de5a735ae",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
@@ -14804,8 +14806,8 @@
     "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx": "517be4f01f31b64e2a53c7fef1cb4469a05c85d71c32e4b6943e5f706ab0d517",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
-    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "b1dcd742b534ff8a1b4e49bac46b99b266d51ada21b3cf9799310ef99a79a508",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "239dff8584ac52d2ab5ef80d1e1a639a43fbeef220300d4b39333e8a8d40dfc6",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "e86d2a823bf039b42f5f9bf7983896dcefdbf42675407cb3a67070ea5f3f8fbc",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "f8c466289b971f6f94b5f7ac671512e812aa40ccda60466be52e7a47b222f6db",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
@@ -14854,6 +14856,8 @@
     "tdf-hq-ui/src/utils/artistIdentity.ts": "e037a5ceb7a7c8377575666d7d0e3a540a3c714da8324f17b85521c96e047a4d",
     "tdf-hq-ui/src/utils/authErrorMessage.test.ts": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
     "tdf-hq-ui/src/utils/authErrorMessage.ts": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
+    "tdf-hq-ui/src/utils/availableRadioStations.test.ts": "fb403dac0b0d3e81b4ff5651a231039a033f17520a3fbb0532cfcb14acb0cac8",
+    "tdf-hq-ui/src/utils/availableRadioStations.ts": "d3a756e5ee95d3cf375dfaa5535a43e0dd6469aa45eec7e7403ac19d32427eeb",
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
     "tdf-hq-ui/src/utils/bottomDock.ts": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
     "tdf-hq-ui/src/utils/checkoutStripe.ts": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
@@ -26853,6 +26857,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/utils/availableRadioStations.ts": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts": [
       {
         "requirement": "MEDIA-ARTIST-PLAYBACK-001",
@@ -26874,6 +26884,12 @@
       }
     ],
     "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/availableRadioStations.test.ts": [
       {
         "requirement": "MEDIA-ARTIST-PLAYBACK-001",
         "relationship": "tests"
@@ -36297,7 +36313,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "bc853c223ed2910db7b7cdd5b8612880d7c2da6cac67d5ab32f43aa0eeb5c0b4",
+      "sha256": "797f5c0e88c784688d181a0529f0a97193e8647ce9048481d3c0a84de5a735ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40924,7 +40940,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "b1dcd742b534ff8a1b4e49bac46b99b266d51ada21b3cf9799310ef99a79a508",
+      "sha256": "e86d2a823bf039b42f5f9bf7983896dcefdbf42675407cb3a67070ea5f3f8fbc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40944,7 +40960,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "239dff8584ac52d2ab5ef80d1e1a639a43fbeef220300d4b39333e8a8d40dfc6",
+      "sha256": "f8c466289b971f6f94b5f7ac671512e812aa40ccda60466be52e7a47b222f6db",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41726,6 +41742,30 @@
       "requirements": [
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-93b63525299c65ce",
+      "path": "tdf-hq-ui/src/utils/availableRadioStations.test.ts",
+      "sha256": "fb403dac0b0d3e81b4ff5651a231039a033f17520a3fbb0532cfcb14acb0cac8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3f2108df5cb42f5b",
+      "path": "tdf-hq-ui/src/utils/availableRadioStations.ts",
+      "sha256": "d3a756e5ee95d3cf375dfaa5535a43e0dd6469aa45eec7e7403ac19d32427eeb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-ARTIST-PLAYBACK-001",
           "relationship": "implementation"
         }
       ]
@@ -57473,7 +57513,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a15177e98f99604cb05426297c37f3bc8269d79212f1f94329e25b88d98a9866",
+      "sourceSha256": "7616b939929d557622e494a3e56f1cd773c95d2054680a9e8c929f82f0c19690",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57501,7 +57541,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a15177e98f99604cb05426297c37f3bc8269d79212f1f94329e25b88d98a9866",
+      "sourceSha256": "7616b939929d557622e494a3e56f1cd773c95d2054680a9e8c929f82f0c19690",
       "definition": {
         "states": [
           "absent",
@@ -57531,7 +57571,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a15177e98f99604cb05426297c37f3bc8269d79212f1f94329e25b88d98a9866",
+      "sourceSha256": "7616b939929d557622e494a3e56f1cd773c95d2054680a9e8c929f82f0c19690",
       "definition": {
         "export": [
           "queued",
