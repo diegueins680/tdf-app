@@ -1,0 +1,12 @@
+Node22.14.0, pinnedPlaywright1.59.1 and exactMobiled832.
+node --test scripts/__tests__/playwright-image.test.mjs scripts/__tests__/ci-pipeline.test.mjs
+python scripts/test-specification-inventory.py
+python scripts/test-specification-conformance.py
+python scripts/test-new-specification-surfaces.py
+python scripts/specification-inventory.py --check
+python scripts/specification-conformance.py --check
+python scripts/check-new-specification-surfaces.py --base 63c56aaf919a07e919a61280311be1dc809cd6fe --head 8ecc837d62cff32804756966a6e67a869ee1fd92
+node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /tmp/634-catalog.json
+Repeat with --format csv; regenerate canonical inventories from reconciled source.
+node node_modules/playwright/cli.js test --list --reporter=json (listing is not execution).
+Full hosted social/persona/rollout/discovery and20required gates must qualify the published new head; old3206/c66 success remains historical. No forcepush, gate bypass, activation or deployment.

@@ -1,0 +1,111 @@
+{
+  "inputs": {
+    "UICompilationCommit": "a5535c59e49064fec535daa3682a4a1dc31c68f4",
+    "UIFileSha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+    "workingFinalTestSha256": "64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87",
+    "executedTestSha256": "efb3a3c77cc99998a154f9d41255e73a96b59abd16ea61a99fc3bc916360fb14",
+    "testTransform": "Only package import locations; complete test body matches working observation.",
+    "change": "Observation-only resize/style timeline; any-bound diagnostic; every initial and secondary assertion preserved.",
+    "allUISourceAndDependenciesEqualCompiledC2": true,
+    "scope": "New diagnostic test body against exact unchanged immutable C2 UI artifacts; no new product repair or hosted WebKit guarantee."
+  },
+  "results": [
+    {
+      "project": "chromium-desktop",
+      "port": 41211,
+      "passed": 3,
+      "failures": 0,
+      "skipped": 0,
+      "retries": 0,
+      "driverExit": 0,
+      "browserExit": 0,
+      "actualStats": {
+        "startTime": "2026-10-29T06:32:01.943Z",
+        "duration": 27089.408000000003,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cleanup": {
+        "executionContext": "main session normal tools; no permission override",
+        "startedAt": 1793255519.7998989,
+        "ownedAliases": [
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/node_modules",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/node_modules"
+        ],
+        "browserExit": 0,
+        "previewPid": 96343,
+        "browserPid": 96349,
+        "finishedAt": 1793255549.12555,
+        "previewStopped": true,
+        "ownedAliasesRemoved": true
+      }
+    },
+    {
+      "project": "chromium-phone",
+      "port": 41212,
+      "passed": 3,
+      "failures": 0,
+      "skipped": 0,
+      "retries": 0,
+      "driverExit": 0,
+      "browserExit": 0,
+      "actualStats": {
+        "startTime": "2026-10-29T06:32:31.549Z",
+        "duration": 34240.216,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cleanup": {
+        "executionContext": "main session normal tools; no permission override",
+        "startedAt": 1793255549.301687,
+        "ownedAliases": [
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/node_modules",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/node_modules"
+        ],
+        "browserExit": 0,
+        "previewPid": 96503,
+        "browserPid": 96506,
+        "finishedAt": 1793255585.895553,
+        "previewStopped": true,
+        "ownedAliasesRemoved": true
+      }
+    },
+    {
+      "project": "firefox",
+      "port": 41213,
+      "passed": 3,
+      "failures": 0,
+      "skipped": 0,
+      "retries": 0,
+      "driverExit": 0,
+      "browserExit": 0,
+      "actualStats": {
+        "startTime": "2026-10-29T06:33:08.174Z",
+        "duration": 28198.480000000003,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cleanup": {
+        "executionContext": "main session normal tools; no permission override",
+        "startedAt": 1793255586.07147,
+        "ownedAliases": [
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/node_modules",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/node_modules"
+        ],
+        "browserExit": 0,
+        "previewPid": 96647,
+        "browserPid": 96665,
+        "finishedAt": 1793255616.452325,
+        "previewStopped": true,
+        "ownedAliasesRemoved": true
+      }
+    }
+  ],
+  "status": "PASS"
+}

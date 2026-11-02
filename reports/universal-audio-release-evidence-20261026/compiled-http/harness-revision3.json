@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-10-26T18:33:30.743459+00:00",
+  "attempt2": {
+    "status": "HARNESS_LOCALE_CONFIGURATION_REJECTED_BY_UNMODIFIED_STARTUP_GUARD",
+    "result": "/private/tmp/tdf-audio-http-5f-a2qsy_nl/results.json",
+    "resultSha256": "88b149435e46a58ecf1618f4c31b2cbd04d9055d78a7bfac4de3639739929903",
+    "full222MigrationRehearsal": "PASS",
+    "cleanup": {
+      "backendStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "httpAssertionsCompleted": 0
+  },
+  "revision3": {
+    "file": "run-v3.py",
+    "sha256": "c95aead66b93bb6366dc43d6890e06ac57f8bbfc200d82d19f8f095a56cc2601",
+    "change": "Set DEFAULT_LOCALE=es to match authoritative migrated deployment catalog and existing native integration harness. No schema/default mutation, startup-guard bypass or assertion change.",
+    "authority": [
+      "tdf-hq/src/TDF/App/Boot.hs:validateRegionalDeploymentConfig",
+      "reports/welcome-club-integration-evidence-20261026/run.py:89"
+    ],
+    "astSyntax": "PASS",
+    "notYetExecuted": true
+  }
+}

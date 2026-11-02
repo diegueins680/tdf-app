@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -551,9 +552,9 @@ export default function ClassesPage() {
                             Alumno: {student?.displayName ?? cls.studentName ?? cls.studentId}
                           </Typography>
                           {cls.notes && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                               {cls.notes}
-                            </Typography>
+                            </MarkdownText>
                           )}
                         </Box>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
