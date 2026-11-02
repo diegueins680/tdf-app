@@ -2,6 +2,10 @@ const path = require('path');
 
 /** @type {import('jest').Config} */
 module.exports = {
+  // Keep suites serial, but recycle the child between files when its retained
+  // heap grows. --runInBand would bypass Jest's worker memory limit.
+  maxWorkers: 1,
+  workerIdleMemoryLimit: '1GiB',
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
   testEnvironmentOptions: {

@@ -13969,6 +13969,87 @@
       "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
       "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
       "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
+    },
+    {
+      "id": "SYS-UI-TEST-WORKER-001",
+      "title": "Serial UI qualification recycles retained worker heap and preserves every test result",
+      "domain": "SYS",
+      "critical": true,
+      "authority": "Required UI quality execution and observed hosted heap abort; pinned Jest worker contract",
+      "contract": "formal/system/ui-test-worker-memory.md",
+      "source": "formal/system/ui-test-worker-memory.md",
+      "status": "specified and implemented",
+      "confidence": "Controlled actual-command process tests; full suite and hosted runtime pending; no universal memory proof",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Controlled recycling/failure fixtures pass; fullUI and hostedNode22 qualification pending."
+      },
+      "statement": "The default UI qualification command must run selected test files serially through one recyclable worker slot, preserve selection/assertions/timeouts, and report failure for any failed assertion or fatal execution.",
+      "actors": [
+        "Repository contributor",
+        "UI quality runner",
+        "Jest worker"
+      ],
+      "preconditions": [
+        "Pinned Jest dependencies are installed.",
+        "Default CI test command runs without explicit in-band/debug overrides."
+      ],
+      "inputs": [
+        "Workspace test command",
+        "Jest configuration",
+        "Selected test files",
+        "Worker execution/memory observations"
+      ],
+      "state": {
+        "validation": [
+          "queued",
+          "running",
+          "passed",
+          "failed"
+        ],
+        "worker": [
+          "idle",
+          "executing",
+          "recycled",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Run every selected file serially through worker slot1.",
+        "Recycle an over-budget worker between files while preserving completed results.",
+        "Report failed assertions and fatal execution as failed qualification."
+      ],
+      "forbiddenTransitions": [
+        "Force default CI in-band execution that bypasses idle worker recycling.",
+        "Skip selected files or relax assertions/timeouts to obtain green evidence.",
+        "Treat a process abort or incomplete suite as passing evidence."
+      ],
+      "effects": [
+        "Complete failure-aware test results and source-bound qualification evidence"
+      ],
+      "authorization": "Only the normal test harness executes synthetic local fixtures; no provider or production financial operation is part of this requirement.",
+      "privacy": "Fixtures contain no credentials or personal records; artifact reports must exclude environment secrets.",
+      "concurrency": "One worker slot preserves serial suite scheduling; a recycled process may replace it between files.",
+      "idempotency": "Separate attempts retain independent source/outcome evidence; retries are not earlier passing evidence.",
+      "failure": "Failed assertions, worker startup/fatal errors and incomplete suite results block qualification.",
+      "recovery": "Repair source/configuration and requalify changed inputs while retaining failed evidence.",
+      "observability": "Record source SHA, actual command, exit code, selected/completed counts, worker slot/PID controls and limitations.",
+      "verification": "Actual-command controlled PID fixtures, forced-in-band negative control, deliberate failed assertion, unchanged full suite and fresh hosted qualification.",
+      "property": "A completed over-budget worker is not reused for the next file; every selected fixture reports a result and any failing assertion yields nonzero exit.",
+      "implementation": [
+        "tdf-hq-ui/package.json",
+        "tdf-hq-ui/jest.config.cjs",
+        "scripts/quality-ui.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/ui-worker-memory.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "The1GiBidle budget is an operational choice, not a theorem or business requirement.",
+        "The worker boundary does not bound single-file/parent/OS memory or identify the underlying retention source."
+      ],
+      "evidence": "Controlled1024bytefixture fails old forced-in-band PID obligations and passes repaired serial worker, negative in-band control and failure propagation; fullUI/hosted qualification separately pending."
     }
   ]
 }
