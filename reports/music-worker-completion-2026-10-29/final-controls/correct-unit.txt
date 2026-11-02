@@ -1,0 +1,14 @@
+✔ normal completion retains full output and observes exit before close (121.434729ms)
+✔ the default completion deadline remains 30 seconds (1.485793ms)
+✔ an early spawn error remains rejected when completion is awaited later (5.500946ms)
+✔ a live child timeout retains bounded output and remains a failure (143.616956ms)
+✔ exited parent with descendant-held output cannot complete before close (258.541378ms)
+✔ missing descendant readiness rejects within the bound and cleans the fixture (171.025086ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 858.593814
