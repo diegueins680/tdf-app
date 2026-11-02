@@ -62,7 +62,9 @@ export default function MarkdownText({ children, inline = false, disableLinks = 
       ]}
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks, markdownMentions(children ?? '', mentions)]}
+        // Mentions are located by source offsets, so they must run before remarkBreaks
+        // replaces soft line breaks with position-less nodes.
+        remarkPlugins={[remarkGfm, markdownMentions(children ?? '', mentions), remarkBreaks]}
         skipHtml
         components={inline ? inlineComponents : components}
         disallowedElements={disableLinks ? ['a', 'input'] : undefined}

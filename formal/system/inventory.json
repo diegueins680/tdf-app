@@ -7809,13 +7809,13 @@
     {
       "id": "SURFACE-6b73f6ff34a9a41e",
       "path": "tdf-hq-ui/src/components/MarkdownText.test.tsx",
-      "sha256": "0f575ed766ce35c3af16d9c08856f5b6da71e8bc68d82ca98d8ce20f7bebe2f1",
+      "sha256": "a6e845060a000ab70e99751f3d466b5f2c1b8178f107f676986d5e5b0bd10892",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1e5e203495c86d2c",
       "path": "tdf-hq-ui/src/components/MarkdownText.tsx",
-      "sha256": "56d9b02f102e8c04f44ecebcbb3febace682453741c645ddd6a0f94b3dabe27e",
+      "sha256": "a6e333469fbbf62fc62ae3d58b5d682986a35f78c188f0697ef3d92fe896b253",
       "semanticConformance": "not-established-by-discovery"
     },
     {

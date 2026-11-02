@@ -102,4 +102,13 @@ const ritmo = 1;
     expect(container.querySelector('strong')).toHaveTextContent('Hola');
     expect(container.querySelector('a a')).toBeNull();
   });
+
+  it('links a mention that follows a soft line break', () => {
+    const body = 'Hola\n@Ana, ¿vienes?';
+    const start = [...body].indexOf('@');
+    const { container } = render(<MarkdownText mentions={[{ partyId: 7, start, end: start + 4 }]}>{body}</MarkdownText>);
+    expect(container.querySelector('a[href="/perfil/7"]')).toHaveTextContent('@Ana');
+    expect(container.querySelector('br')).not.toBeNull();
+    expect(container).toHaveTextContent('¿vienes?');
+  });
 });
