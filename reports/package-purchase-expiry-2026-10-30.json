@@ -1,0 +1,423 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "sourceCommit": "90eb633d56b405029782a82007fc9ea3742deed3",
+  "evidenceCommit": "Containing report-only child; independently verify Git blobs and complete archive aftercommit.",
+  "rootQuality": {
+    "sourceCommit": "90eb633d56b405029782a82007fc9ea3742deed3",
+    "actualExits": {
+      "root-quality": 0,
+      "new-surface-admission": 0,
+      "catalog-unit": 0
+    },
+    "catalogUnitCases": 8,
+    "aliasesRemoved": true,
+    "sourceCleanAfter": true
+  },
+  "sourceSeal": {
+    "baseline": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+    "sourceCommit": "90eb633d56b405029782a82007fc9ea3742deed3",
+    "registeredGitFilesystemMobileHashesVerified": 1428,
+    "sourceDigest": "4e69bf0c89f8d15a8aa880daf4e448cf6eb1f2b0efe627e23889b8e1fd592905",
+    "all158IncomingRequirementsExact": true,
+    "requirementsTotal": 159,
+    "contractAndAuthorityGitSha256": {
+      "formal/system/package-purchase-expiry.md": "c3fcb526015fe5d1dafb38252f9f345484e9a2ec27da4435d9009be6a87a088c",
+      "docs/Manual_Usuario_TDF.md": "c1ea6f2b6b16834cf33993ebbb45747648c3acee77de78936e9862cf73807b31",
+      "tdf-hq/src/TDF/Seed.hs": "668e0807edbcb212145d2802a6abbd0f7f3676121731b01252dbc0fc4dacaf05",
+      "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql": "38bb4dbd9368562c8b78eff933ced68df3bf7c6d65e32d14d7403bf61e6126cb"
+    },
+    "allQualifiedBackendInputsGitExact": true,
+    "qualifiedBackendInputCount": 987,
+    "nativeTargeted": {
+      "examples": 11,
+      "failures": 0,
+      "pending": 0
+    },
+    "nativeFull": {
+      "examples": 4056,
+      "failures": 0,
+      "pending": 21
+    },
+    "nativeTestBinarySha256": "48cde77fcebcf484a7cc52858d4c4f0530540cc4c7edb757d664ca00ddff52ee",
+    "precommitControls": {
+      "phase": "TWO_NATIVE_FAULTS_DETECTED_RESTORED",
+      "sourceContext": {
+        "base": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+        "baselineBuildExit": 0,
+        "baselineExamples": 11,
+        "baselineAssertionFailures": 5,
+        "baselineCompatibilityPasses": 6,
+        "originalHandlerSha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+        "correctedHandlerSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+        "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+        "onlyEffects": "New purchase expiry snapshot and invalid configured validity refusal; no historicalwrites/provider/authpolicychange"
+      },
+      "results": [
+        {
+          "label": "corrected",
+          "buildExit": 0,
+          "testExit": 0,
+          "examples": 11,
+          "assertionFailures": 0,
+          "handlerSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+          "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+          "binarySha256": "b08dc66ba3a318afee5c89bcb418e5294bb4d2189a720835965e0eaa173308a8",
+          "logSha256": "2dfdf69cbf135419c1eba3315035976b60d55fd8d0d616bcf9662e7e78322102"
+        },
+        {
+          "label": "wrong-unit",
+          "buildExit": 0,
+          "testExit": 1,
+          "examples": 11,
+          "assertionFailures": 3,
+          "handlerSha256": "479fc65c305506439e54e251aa5078da054e3de606918c3d354dc40ea6ca604b",
+          "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+          "binarySha256": "ccea3bcc910032e20a57b85fe86f34faabd7bc3e4feb097df1ea34abeed9c780",
+          "logSha256": "4f7243729b43e0d43aaed50f53224e110a1458023fd579d8c86e66db814608fe"
+        },
+        {
+          "label": "write-before-refuse",
+          "buildExit": 0,
+          "testExit": 1,
+          "examples": 11,
+          "assertionFailures": 2,
+          "handlerSha256": "2de1cfcf1f3207c28360c6b8c6c4f60829b0b7224226448fac00f5b9cb8933c5",
+          "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+          "binarySha256": "4bf7ab6fa5033599a67b8e617f5ee5600c8e2875b3a1af47b3c7364b08bac83d",
+          "logSha256": "2e8a7961f14b6b734e400ce1bf7e6e2258de179b48991705ff0a9a81098f28f9"
+        },
+        {
+          "label": "restored",
+          "buildExit": 0,
+          "testExit": 0,
+          "examples": 11,
+          "assertionFailures": 0,
+          "handlerSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+          "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+          "binarySha256": "1c199cdbe68e8230b3b17e74459ffe749a7d07e7a61de5bef2a497992f27a29b",
+          "logSha256": "db5c87c332d0100bb1b90c9ef54f7bc08be47b2c612cd992033385894226d240"
+        }
+      ],
+      "activePID": 85150,
+      "activeOperation": "restored-tests",
+      "sourceRestoredSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+      "actualVariants": 2,
+      "intendedAssertionFailures": 5,
+      "completedAtUTC": "2026-10-30T06:37:52.388436+00:00"
+    },
+    "unchangedTestBytesBaselineControlsQualifiedSource": true,
+    "reversingOnlyTwoProductionEditsReconstructsMain": true,
+    "uiMobileWorkflowCabalStackModelContractsExactMain": true,
+    "backendChangesOnly": [
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/test/TDF/ServerSpec.hs"
+    ],
+    "freshAssuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "sourceCleanAfter": true,
+    "limits": [
+      "Finite typed Handler/SQLite tests; no authenticatedHTTP, production PostgreSQL trigger or serving executable/deployment guarantee.",
+      "Very large configured durations/database timestamp range and concurrent product-edit snapshot policy remain separate.",
+      "No actor/payment/gift/redemption policy or historical record change.",
+      "Source controls execute native actual Server module before clean-source commit; source/test bytes bound separately to final qualified native test artifact."
+    ],
+    "canonicalForceDirtyConfirmed": {
+      "sourceCommit": "90eb633d56b405029782a82007fc9ea3742deed3",
+      "canonicalForceDirty": true,
+      "buildExit": 0,
+      "actualTargeted": {
+        "examples": 11,
+        "failures": 0,
+        "pending": 0
+      },
+      "actualFull": {
+        "examples": 4056,
+        "failures": 0,
+        "pending": 21
+      },
+      "binarySha256": "48cde77fcebcf484a7cc52858d4c4f0530540cc4c7edb757d664ca00ddff52ee",
+      "earlierUnforcedBinarySha256": "1c199cdbe68e8230b3b17e74459ffe749a7d07e7a61de5bef2a497992f27a29b",
+      "binaryChangedAfterForcedBuild": true,
+      "versionObject": "/private/tmp/tdf-package-purchase-expiry-20261030/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test-tmp/TDF/Version.o",
+      "versionObjectSha256": "6eae2edf8802cf1ebf493c2ea6771555aea62f019ec303466a277e152657ecc9",
+      "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+      "versionRecompilationLogSha256": "65e4a221d635eef6a8299235b7bdd25b284de5401bef531ebaa54933ab164b4d",
+      "servingExecutableQualified": false,
+      "observedAtUTC": "2026-10-30T06:58:41.050297+00:00"
+    }
+  },
+  "formal": {
+    "executionPassed": true,
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "release": "BLOCKED",
+    "newCompleteImplementationProofs": 0,
+    "scope": "Inherited conditional results retain their original assumptions; no passing test is promoted to a complete proof."
+  },
+  "independentReview": {
+    "path": "reports/package-purchase-expiry-2026-10-30/independent-review.txt",
+    "sha256": "27300fb1c689c86de05ea7c44a991f6b9bfda7ab79bb79c0a079edc33dc8d6f7",
+    "scope": "Independent source, rawlog,1428FS/Git/Mobile+987backend/52assurance artifacts and forcedVersion/binaryhash review; no independent runtime/GHapproval/serving/deploy/proof."
+  },
+  "archive": {
+    "path": "reports/package-purchase-expiry-2026-10-30/evidence.tar.gz",
+    "sha256": "a180dff16f926a8ba376061885cab3860e24ae2dbfa0d717d9ecdff8723664d0",
+    "bytes": 2751560,
+    "innerFiles": 141,
+    "manifest": "reports/package-purchase-expiry-2026-10-30/manifest.json"
+  },
+  "integration": {
+    "draftIntended": true,
+    "autoMerge": false,
+    "merged": false,
+    "deployment": "UNVERIFIED",
+    "productionWrites": false,
+    "realProviderCalls": false,
+    "requirements": "Fresh published-head CI/current review/main composition/protected FIFO; no bypass or borrowed approval."
+  },
+  "createdAtUTC": "2026-10-30T07:05:00.464090+00:00",
+  "problem": "createPurchase discarded positive product validity and always persisted no expiry. The existing manual promises validity/expiry and the seed configures120days. Nonpositive handling was ambiguous until the owner explicitly selected refusal.",
+  "ownerDecisions": [
+    "Positive validity: exact stored purchasedAt plus n*86400 elapsed seconds.",
+    "Refuse zero/negative configured validity; absent value remains nonexpiring."
+  ],
+  "correction": "Snapshot expiry on new purchases and refuse invalid configured validity with409 before insertion, after existing reference/inactive checks. Two production edits only; no historical record rewrite.",
+  "properties": [
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001/POSITIVE",
+      "status": "TESTED",
+      "statement": "A successful positive-term purchase has expiry exactly n elapsed days from its persisted purchasedAt.",
+      "bounds": "Actual1/120/365day Handler/SQLite fixtures; timestamp must fit database representation."
+    },
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001/INVALID",
+      "status": "TESTED",
+      "statement": "Zero/negative configured terms refuse409 with no persisted row.",
+      "bounds": "Actual0/-1fixtures; late-refusal source fault commits a row and is detected."
+    },
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001/COMPATIBILITY",
+      "status": "TESTED",
+      "statement": "Absent expiry, purchase fields and existing module/reference/inactive refusals remain.",
+      "bounds": "Finite actual Handler/SQLite fixtures and exact two-edit source reversal; no authenticatedHTTP proof."
+    }
+  ],
+  "baseline": {
+    "buildExit": 0,
+    "examples": 11,
+    "assertionFailures": 5,
+    "interpretation": "Three positive-term expiry counterexamples plus two owner-clarified invalid-term acceptance failures; six compatibility cases pass. Baseline invalid-term tests fail on success before their row-count assertions; baseline row counts are not claimed observed."
+  },
+  "native": {
+    "sourceCommit": "90eb633d56b405029782a82007fc9ea3742deed3",
+    "phase": "QUALIFIED_TARGETED_AND_FULL",
+    "startedAt": "2026-10-30T06:55:16.557264+00:00",
+    "actualExits": {
+      "build": 0,
+      "targeted": 0,
+      "full": 0
+    },
+    "buildPID": 4893,
+    "binary": "/private/tmp/tdf-package-purchase-expiry-20261030/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+    "binarySha256": "48cde77fcebcf484a7cc52858d4c4f0530540cc4c7edb757d664ca00ddff52ee",
+    "targetedPID": 5731,
+    "targeted": {
+      "examples": 11,
+      "failures": 0,
+      "pending": 0
+    },
+    "fullPID": 5745,
+    "full": {
+      "examples": 4056,
+      "failures": 0,
+      "pending": 21
+    },
+    "allBackendInputsUnchangedAndGitExact": true,
+    "sourceCleanAfter": true,
+    "finishedAt": "2026-10-30T06:56:29.984346+00:00",
+    "canonicalForceDirty": true,
+    "compiledVersionObjectContainsQualifiedCommit": true,
+    "canonicalArtifactCurrent": true
+  },
+  "forcedMetadataQualification": {
+    "sourceCommit": "90eb633d56b405029782a82007fc9ea3742deed3",
+    "canonicalForceDirty": true,
+    "buildExit": 0,
+    "actualTargeted": {
+      "examples": 11,
+      "failures": 0,
+      "pending": 0
+    },
+    "actualFull": {
+      "examples": 4056,
+      "failures": 0,
+      "pending": 21
+    },
+    "binarySha256": "48cde77fcebcf484a7cc52858d4c4f0530540cc4c7edb757d664ca00ddff52ee",
+    "earlierUnforcedBinarySha256": "1c199cdbe68e8230b3b17e74459ffe749a7d07e7a61de5bef2a497992f27a29b",
+    "binaryChangedAfterForcedBuild": true,
+    "versionObject": "/private/tmp/tdf-package-purchase-expiry-20261030/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test-tmp/TDF/Version.o",
+    "versionObjectSha256": "6eae2edf8802cf1ebf493c2ea6771555aea62f019ec303466a277e152657ecc9",
+    "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+    "versionRecompilationLogSha256": "65e4a221d635eef6a8299235b7bdd25b284de5401bef531ebaa54933ab164b4d",
+    "servingExecutableQualified": false,
+    "observedAtUTC": "2026-10-30T06:58:41.050297+00:00"
+  },
+  "qualificationHarnessCorrection": "Earlier unforced Stack call passed behavior but reused precommit binary; retained as metadata-incomplete in earlier-unforced-build. Canonical --force-dirty rerun regenerated Version and changed the binary, passed target/full tests, and was resealed. No serving executable claim.",
+  "sourceControls": {
+    "phase": "TWO_NATIVE_FAULTS_DETECTED_RESTORED",
+    "sourceContext": {
+      "base": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+      "baselineBuildExit": 0,
+      "baselineExamples": 11,
+      "baselineAssertionFailures": 5,
+      "baselineCompatibilityPasses": 6,
+      "originalHandlerSha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+      "correctedHandlerSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+      "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+      "onlyEffects": "New purchase expiry snapshot and invalid configured validity refusal; no historicalwrites/provider/authpolicychange"
+    },
+    "results": [
+      {
+        "label": "corrected",
+        "buildExit": 0,
+        "testExit": 0,
+        "examples": 11,
+        "assertionFailures": 0,
+        "handlerSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+        "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+        "binarySha256": "b08dc66ba3a318afee5c89bcb418e5294bb4d2189a720835965e0eaa173308a8",
+        "logSha256": "2dfdf69cbf135419c1eba3315035976b60d55fd8d0d616bcf9662e7e78322102"
+      },
+      {
+        "label": "wrong-unit",
+        "buildExit": 0,
+        "testExit": 1,
+        "examples": 11,
+        "assertionFailures": 3,
+        "handlerSha256": "479fc65c305506439e54e251aa5078da054e3de606918c3d354dc40ea6ca604b",
+        "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+        "binarySha256": "ccea3bcc910032e20a57b85fe86f34faabd7bc3e4feb097df1ea34abeed9c780",
+        "logSha256": "4f7243729b43e0d43aaed50f53224e110a1458023fd579d8c86e66db814608fe"
+      },
+      {
+        "label": "write-before-refuse",
+        "buildExit": 0,
+        "testExit": 1,
+        "examples": 11,
+        "assertionFailures": 2,
+        "handlerSha256": "2de1cfcf1f3207c28360c6b8c6c4f60829b0b7224226448fac00f5b9cb8933c5",
+        "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+        "binarySha256": "4bf7ab6fa5033599a67b8e617f5ee5600c8e2875b3a1af47b3c7364b08bac83d",
+        "logSha256": "2e8a7961f14b6b734e400ce1bf7e6e2258de179b48991705ff0a9a81098f28f9"
+      },
+      {
+        "label": "restored",
+        "buildExit": 0,
+        "testExit": 0,
+        "examples": 11,
+        "assertionFailures": 0,
+        "handlerSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+        "testSha256": "6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9",
+        "binarySha256": "1c199cdbe68e8230b3b17e74459ffe749a7d07e7a61de5bef2a497992f27a29b",
+        "logSha256": "db5c87c332d0100bb1b90c9ef54f7bc08be47b2c612cd992033385894226d240"
+      }
+    ],
+    "activePID": 85150,
+    "activeOperation": "restored-tests",
+    "sourceRestoredSha256": "bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26",
+    "actualVariants": 2,
+    "intendedAssertionFailures": 5,
+    "completedAtUTC": "2026-10-30T06:37:52.388436+00:00"
+  },
+  "regressionProtection": "11 real-handler cases registered through the existing ServerSpec/Cabal lane; same test bytes across baseline,controls and qualifiedsource. Wrong-unit fault3actualdateassertions, late-refusal fault2actualrowcountassertions; restored11/0.",
+  "remaining": [
+    "Very large durations/database timestamp-range admission and concurrent product-edit snapshot policy remain separate.",
+    "No new charge/payment/actor/gift/redemption/idempotency policy, real incident claim or historicaldata correction.",
+    "No actual production PostgreSQL trigger, authenticatedHTTP, serving executable or deployment qualification.",
+    "Original two-case probe linked unchanged qualified M3 objects with relevant source exactmainE1; compile/interface setup failures were not product counterexamples. Final canonical Stack artifact separately qualified current source."
+  ],
+  "nextHighestValueTask": "Normal current-head CI/review/FIFO integration and investigation of actual hosted cleanup response once diagnostic source is qualified."
+}

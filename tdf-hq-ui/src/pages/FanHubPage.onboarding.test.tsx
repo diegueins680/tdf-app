@@ -523,3 +523,75 @@ describe('artist photo continuity in Community', () => {
     } finally { view.queryClient.clear(); imageLoader.mockRestore(); }
   });
 });
+
+
+describe('artist public link never uses an unsaved slug', () => {
+  const initialArtist = (): ArtistProfileDTO => ({
+    apArtistId: 42,
+    apDisplayName: 'Artist 42',
+    apSlug: 'published-artist',
+    apGenreIds: [],
+  } as unknown as ArtistProfileDTO);
+
+  beforeEach(() => {
+    sessionLoading = false;
+    sessionMock = {
+      username: 'artist-42', displayName: 'Artist 42', roles: ['Artist'],
+      modules: [], partyId: 42, apiToken: 'synthetic-artist-token',
+    };
+    loadOnboardingProgressMock.mockReset().mockResolvedValue(completedProgress);
+    completeOnboardingProgressMock.mockReset().mockResolvedValue(completedReceipt);
+    updateMyArtistProfileMock.mockReset();
+    getMyArtistProfileMock.mockReset().mockResolvedValue(initialArtist());
+  });
+
+  afterEach(() => { cleanup(); });
+
+  it('keeps public view and copy pointed at the persisted slug while an artist edits a draft', async () => {
+    const view = renderPage('/mi-artista');
+    try {
+      const publicLink = await screen.findByRole('link', { name: 'Ver público' });
+      expect(publicLink.getAttribute('href')).toBe('/a/published-artist');
+      const slug = await screen.findByRole('textbox', { name: 'Slug público' });
+      await waitFor(() => expect((slug as HTMLInputElement).value).toBe('published-artist'));
+      fireEvent.change(slug, { target: { value: 'not-saved-yet' } });
+      expect(publicLink.getAttribute('href')).toBe('/a/published-artist');
+      expect(screen.getByRole('button', { name: 'Copiar enlace' })).toBeTruthy();
+      expect(updateMyArtistProfileMock).not.toHaveBeenCalled();
+    } finally { view.queryClient.clear(); }
+  });
+
+  it('changes the shareable link only after a matching authoritative save receipt', async () => {
+    let persisted = initialArtist();
+    getMyArtistProfileMock.mockImplementation(async () => persisted);
+    updateMyArtistProfileMock.mockImplementation(async () => {
+      persisted = { ...persisted, apSlug: 'server-confirmed-slug' };
+      return persisted;
+    });
+    const view = renderPage('/mi-artista');
+    try {
+      await screen.findByRole('link', { name: 'Ver público' });
+      const slug = await screen.findByRole('textbox', { name: 'Slug público' });
+      fireEvent.change(slug, { target: { value: 'requested-slug' } });
+      expect(screen.getByRole('link', { name: 'Ver público' }).getAttribute('href')).toBe('/a/published-artist');
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar perfil de artista' }));
+      await waitFor(() => expect(updateMyArtistProfileMock).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(screen.getByRole('link', { name: 'Ver público' }).getAttribute('href')).toBe('/a/server-confirmed-slug'));
+      expect(view.queryClient.getQueryData<ArtistProfileDTO>(['artist-profile', 42])?.apSlug).toBe('server-confirmed-slug');
+    } finally { view.queryClient.clear(); }
+  });
+
+  it('rejects a mismatched account save receipt and never shares its slug', async () => {
+    updateMyArtistProfileMock.mockResolvedValue({
+      ...initialArtist(), apArtistId: 99, apSlug: 'other-artist',
+    });
+    const view = renderPage('/mi-artista');
+    try {
+      await screen.findByRole('link', { name: 'Ver público' });
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar perfil de artista' }));
+      await screen.findByText(/No pudimos confirmar el perfil guardado/);
+      expect(screen.getByRole('link', { name: 'Ver público' }).getAttribute('href')).toBe('/a/published-artist');
+      expect(view.queryClient.getQueryData<ArtistProfileDTO>(['artist-profile', 42])?.apSlug).toBe('published-artist');
+    } finally { view.queryClient.clear(); }
+  });
+});
