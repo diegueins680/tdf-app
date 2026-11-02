@@ -9712,8 +9712,13 @@ export interface components {
             verifiedPurchase: true;
             /** @enum {string} */
             badge: "Compra verificada";
-            /** @description Public name/avatar according to buyer privacy preferences */
+            /** @description Public identity according to buyer privacy preferences; partyId and avatarUrl are omitted for anonymous buyers */
             author: {
+                /** Format: int64 */
+                partyId?: number;
+                name?: string;
+                avatarUrl?: string | null;
+            } & {
                 [key: string]: unknown;
             };
             dimensions: {
@@ -16357,6 +16362,8 @@ export interface components {
         /** @enum {string} */
         ExperienceReviewSourceKind: "event_ticket_order" | "marketplace_order" | "service_booking" | "service_storefront_order";
         ExperienceReviewAuthor: {
+            /** Format: int64 */
+            partyId?: number;
             name: string;
             /** Format: uri */
             avatarUrl?: string | null;
