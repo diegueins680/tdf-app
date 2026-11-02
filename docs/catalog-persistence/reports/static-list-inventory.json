@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-01T23:33:35.805Z",
+  "generatedAt": "2026-11-02T00:11:29.562Z",
   "repositoryRoot": ".",
-  "filesScanned": 2471,
+  "filesScanned": 2473,
   "candidateCount": 1367,
   "byClassification": {
     "dynamic-business-catalog": 887,
@@ -4448,7 +4448,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1108,
+      "consumerCount": 1109,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4736,7 +4736,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1108,
+      "consumerCount": 1109,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -6481,7 +6481,7 @@
       "lines": [
         40
       ],
-      "consumerCount": 206,
+      "consumerCount": 207,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
@@ -6608,6 +6608,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/check-messaging-token.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/check-state-machines.py",
         "scripts/inspect-payment-staging.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
@@ -6643,8 +6644,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-hetzner-inspection.py",
         "scripts/test-hetzner-restore.py",
-        "scripts/test-music-ddex-package.mjs",
-        "scripts/test-music-track-search.mjs"
+        "scripts/test-music-ddex-package.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -7459,7 +7459,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1108,
+      "consumerCount": 1109,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -17116,7 +17116,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 45,
+      "consumerCount": 47,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -17157,6 +17157,7 @@
         "scripts/__tests__/build-trust.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
@@ -17164,6 +17165,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/social/verify-preview.mjs",
         "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
@@ -23221,7 +23223,7 @@
       "lines": [
         181
       ],
-      "consumerCount": 154,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -23344,6 +23346,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -23351,6 +23354,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -30246,7 +30250,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 262,
+      "consumerCount": 264,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -30389,6 +30393,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -30397,6 +30402,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -30419,9 +30425,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-backend-version-rebuild.py",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-permissions.py"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -33557,7 +33561,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 262,
+      "consumerCount": 264,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -33700,6 +33704,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -33708,6 +33713,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -33730,9 +33736,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-backend-version-rebuild.py",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-permissions.py"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -36632,7 +36636,7 @@
       "lines": [
         83
       ],
-      "consumerCount": 156,
+      "consumerCount": 158,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -36756,6 +36760,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -36763,6 +36768,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -42297,7 +42303,7 @@
       "lines": [
         36
       ],
-      "consumerCount": 176,
+      "consumerCount": 178,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -42427,6 +42433,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -42434,6 +42441,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -43575,7 +43583,7 @@
         3774,
         4051
       ],
-      "consumerCount": 237,
+      "consumerCount": 239,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -43722,6 +43730,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
@@ -43732,6 +43741,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -43752,9 +43762,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/production_access.py",
         "scripts/run-event-raci-browser.mjs",
-        "scripts/social/preview.mjs",
-        "scripts/specification-conformance.py",
-        "scripts/specification-inventory.py"
+        "scripts/social/preview.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -44033,7 +44041,7 @@
       "lines": [
         3945
       ],
-      "consumerCount": 219,
+      "consumerCount": 221,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -44175,6 +44183,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -44183,6 +44192,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -44205,9 +44215,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-backend-version-rebuild.py",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-permissions.py"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -44476,7 +44484,7 @@
       "lines": [
         3982
       ],
-      "consumerCount": 159,
+      "consumerCount": 161,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -44599,6 +44607,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -44606,6 +44615,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -44875,7 +44885,7 @@
       "lines": [
         4018
       ],
-      "consumerCount": 158,
+      "consumerCount": 160,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -44999,6 +45009,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -45006,6 +45017,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -45281,7 +45293,7 @@
       "lines": [
         4326
       ],
-      "consumerCount": 219,
+      "consumerCount": 221,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -45423,6 +45435,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -45431,6 +45444,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -45453,9 +45467,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-backend-version-rebuild.py",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-permissions.py"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -45719,7 +45731,7 @@
       "lines": [
         4335
       ],
-      "consumerCount": 219,
+      "consumerCount": 221,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -45861,6 +45873,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -45869,6 +45882,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -45891,9 +45905,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-backend-version-rebuild.py",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-permissions.py"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -45950,7 +45962,7 @@
       "lines": [
         4451
       ],
-      "consumerCount": 245,
+      "consumerCount": 247,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -46098,6 +46110,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
@@ -46108,6 +46121,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -46128,9 +46142,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/production_access.py",
         "scripts/run-event-raci-browser.mjs",
-        "scripts/social/preview.mjs",
-        "scripts/specification-conformance.py",
-        "scripts/specification-inventory.py"
+        "scripts/social/preview.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -46414,7 +46426,7 @@
       "lines": [
         4460
       ],
-      "consumerCount": 245,
+      "consumerCount": 247,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -46562,6 +46574,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
@@ -46572,6 +46585,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -46592,9 +46606,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/production_access.py",
         "scripts/run-event-raci-browser.mjs",
-        "scripts/social/preview.mjs",
-        "scripts/specification-conformance.py",
-        "scripts/specification-inventory.py"
+        "scripts/social/preview.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -53789,7 +53801,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1131,
+      "consumerCount": 1132,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -55622,7 +55634,7 @@
       "lines": [
         402
       ],
-      "consumerCount": 1111,
+      "consumerCount": 1112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -60099,7 +60111,7 @@
       "lines": [
         371
       ],
-      "consumerCount": 154,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -60222,6 +60234,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -60229,6 +60242,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -60727,7 +60741,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 39,
+      "consumerCount": 41,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -60767,11 +60781,13 @@
         "scripts/__tests__/build-trust.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/verify-playwright-image.mjs"
       ],
@@ -68011,7 +68027,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1116,
+      "consumerCount": 1117,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -73236,7 +73252,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 219,
+      "consumerCount": 221,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -73378,6 +73394,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -73386,6 +73403,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -73408,9 +73426,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-backend-version-rebuild.py",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-permissions.py"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -74415,7 +74431,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 172,
+      "consumerCount": 174,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -74549,6 +74565,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -74557,6 +74574,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -74949,7 +74967,7 @@
       "lines": [
         66
       ],
-      "consumerCount": 172,
+      "consumerCount": 174,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -75083,6 +75101,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -75091,6 +75110,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -76197,7 +76217,7 @@
       "lines": [
         84
       ],
-      "consumerCount": 156,
+      "consumerCount": 158,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -76322,6 +76342,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -76329,6 +76350,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -76394,7 +76416,7 @@
       "lines": [
         93
       ],
-      "consumerCount": 162,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -76520,6 +76542,7 @@
         "scripts/__tests__/dependency-security.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ui-validation-bundle.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -76527,6 +76550,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/continuous-improvement-loop.test.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -80280,7 +80304,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 331,
+      "consumerCount": 332,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -80455,6 +80479,7 @@
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
         "scripts/check-mobile-distribution.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/ci-job-admission.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
@@ -80486,8 +80511,7 @@
         "scripts/social/read-model-tests.sql",
         "scripts/test-booking-conformance.py",
         "scripts/test-directory-artist-listings.sh",
-        "scripts/test-event-memory-signup-browser.mjs",
-        "scripts/test-event-memory-source-browser.mjs"
+        "scripts/test-event-memory-signup-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/instagram-token-lifecycle.mjs",
@@ -80597,7 +80621,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 329,
+      "consumerCount": 330,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -80772,6 +80796,7 @@
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
         "scripts/check-mobile-distribution.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/ci-job-admission.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
@@ -80803,8 +80828,7 @@
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
-        "scripts/test-merge-admission.py",
-        "scripts/test-music-catalog-search.mjs"
+        "scripts/test-merge-admission.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/instagram-token-lifecycle.mjs",
@@ -81824,7 +81848,7 @@
       "lines": [
         3221
       ],
-      "consumerCount": 240,
+      "consumerCount": 242,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -81975,12 +81999,14 @@
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/archive/backfill-meta-inbox.sh",
         "scripts/artist-enrichment.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/check-mobile-distribution.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/check-state-machines.py",
         "scripts/diagnose-social.mjs",
         "scripts/eas-build-ios-preview.sh",
@@ -82014,9 +82040,7 @@
         "scripts/test-provider-domain-binding.py",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-recovery-envelope.py",
-        "scripts/test-recovery-tools.py",
-        "scripts/test-state-machines.py",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-recovery-tools.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -86342,7 +86366,7 @@
       "lines": [
         14160
       ],
-      "consumerCount": 1109,
+      "consumerCount": 1110,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -87356,7 +87380,7 @@
       "lines": [
         14562
       ],
-      "consumerCount": 1109,
+      "consumerCount": 1110,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -89420,7 +89444,7 @@
         17023,
         17075
       ],
-      "consumerCount": 1108,
+      "consumerCount": 1109,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -91570,7 +91594,7 @@
       "lines": [
         18612
       ],
-      "consumerCount": 1116,
+      "consumerCount": 1117,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -100427,7 +100451,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 117,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -100531,6 +100555,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/social/schema-compatibility.sql",
         "scripts/social/test-postgres.sh",
@@ -110729,7 +110754,7 @@
         798,
         799
       ],
-      "consumerCount": 78,
+      "consumerCount": 79,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
@@ -110809,6 +110834,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/social/schema-compatibility.sql",
         "scripts/social/test-postgres.sh",
@@ -132982,7 +133008,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 215,
+      "consumerCount": 216,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -133105,6 +133131,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
@@ -133720,7 +133747,7 @@
       "lines": [
         70
       ],
-      "consumerCount": 89,
+      "consumerCount": 90,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -133810,6 +133837,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-native-resolver-lock.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/social/schema-compatibility.sql",
         "scripts/social/test-postgres.sh",
@@ -155922,7 +155950,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 568,
+      "consumerCount": 569,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -156081,6 +156109,7 @@
         "scripts/__tests__/music-s3-test-xml.test.mjs",
         "scripts/__tests__/music-test-database.test.mjs",
         "scripts/__tests__/music-track-search-model.test.mjs",
+        "scripts/__tests__/native-resolver-lock.test.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -156088,8 +156117,7 @@
         "scripts/__tests__/production-catalog-inventory.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/__tests__/public-catalog-http-runtime.mjs",
-        "scripts/__tests__/sri-invoice.test.mjs"
+        "scripts/__tests__/public-catalog-http-runtime.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -157968,7 +157996,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1108,
+      "consumerCount": 1109,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",

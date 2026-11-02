@@ -13728,6 +13728,72 @@
       "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
       "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
       "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
+    },
+    {
+      "id": "SYS-NATIVE-RESOLVER-001",
+      "title": "Lock optional native resolver dependencies and refuse runtime installation during verification",
+      "statement": "The canonical test resolver must load from a complete lock-based install with runtime package downloads disabled. Its published exact optional binding declarations must have matching locked package records.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Use the committed npm v3 workspace lock and canonical npmrc; installed unrs-resolver matches its locked version.",
+        "Trust npm registry metadata and archive SRI; native code and the platform runtime remain assumptions."
+      ],
+      "inputs": [
+        "package-lock.json",
+        "node_modules/unrs-resolver/package.json"
+      ],
+      "state": {
+        "boundary": "formal/system/native-resolver-lock.md"
+      },
+      "allowedTransitions": [
+        "Refresh the same pinned module through npm, preserving existing package records and manifests while restoring missing optional dependency records."
+      ],
+      "forbiddenTransitions": [
+        "Omit or mismatch an exact optional binding lock record.",
+        "Allow the canonical UI verifier or Safe Install to lazily download missing native packages during tests.",
+        "Treat structural lock checks as executed compatibility on all recorded platforms."
+      ],
+      "effects": [
+        "Fail repository checks on incomplete resolver lock evidence; fail UI verification before running suites when the host resolver cannot load without runtime downloads."
+      ],
+      "authorization": "This test-tool repair authorizes no product, provider or deployment operations.",
+      "privacy": "Registry requests contain public package identities only; test probes require no application data or credentials.",
+      "concurrency": "Probe in a fresh process against the immutable candidate; installations and missing-binary controls use isolated owned workspaces.",
+      "idempotency": "Structural verification is deterministic for fixed files; runtime load depends on the documented platform.",
+      "failure": "Reject missing declarations, pins, archive integrity or native initialization without lazy installation.",
+      "recovery": "Restore the npm-generated reviewed lock records and reinstall; do not add manual native copies to claim a canonical install pass.",
+      "observability": "Retain old-lock install/load counterexample, corrected clean-install/load result, missing-binary fault and restoration, source hashes and platform limits.",
+      "source": "Canonical npm ci CI recipes and confirmed successful pristine install followed by failed native resolver initialization without runtime fallback; user reliability and verification mission.",
+      "contract": "formal/system/native-resolver-lock.md",
+      "implementation": [
+        "package-lock.json",
+        "scripts/check-native-resolver-lock.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/quality-ui.sh",
+        ".github/workflows/ci-safe-install.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/native-resolver-lock.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite lock controls and actual host startup/failure probes; no complete transitive graph or supply-chain proof.",
+      "ambiguity": [
+        "Other native platforms require actual execution evidence; recorded platform entries alone do not establish compatibility."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Structural/host controls implemented; candidate-specific clean-install, fault and hosted evidence are separately recorded."
+      },
+      "authority": "Engineering invariant derived from the authorized correctness mission and canonical install recipe; required GitHub approval remains separate.",
+      "property": "Every installed resolver exact optional binding is present with matching version and archive integrity in the lock; canonical verification refuses runtime binding downloads.",
+      "verification": "Deterministic negative fixtures, clean npmci and native probe with fallback disabled, reversible missing-binary fault; no mathematical proof.",
+      "evidence": "scripts/__tests__/native-resolver-lock.test.mjs; candidate-source install/probe receipts separately recorded."
     }
   ],
   "sourceFingerprints": {
@@ -13735,7 +13801,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
+    ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
     ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
@@ -14110,7 +14176,7 @@
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "8d91a0e78d010cea8248104f499bd2565f3707184675b69492ec321fc7a4ceee",
+    "package-lock.json": "c227addc2c70d9e597a850fff7c543029d63a179522a310d52230fd82acea6f9",
     "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
     "playwright.config.mjs": "dd221d9df87a88b7644c19ccf6e714ea07452a056cb63537d7d4f0c8a47ae4b5",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -14174,6 +14240,7 @@
     "scripts/__tests__/music-worker-build.test.mjs": "48ed0c6d1a7308dae7e8d1c6370d2ce14243bd7a1caf80f6b07b1bf5a6e62dcf",
     "scripts/__tests__/music-worker-timing.test.mjs": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
     "scripts/__tests__/music-worker-upload.test.mjs": "85b62ef8c0264b420667a9c519c86cc73aaa926f585638fb97f9b5a70751d005",
+    "scripts/__tests__/native-resolver-lock.test.mjs": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
     "scripts/__tests__/operations-api-schema.test.mjs": "6c1146cf1240e2a90f0f8e62da8e9e7f8abf12440eb4a3bf466e090b93e50f1f",
     "scripts/__tests__/operations-worker-tick-postgres.mjs": "105914e3b21f12195ae1efbb543c16909185e9b348f8c275f9da7c8bc91ca4ab",
     "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
@@ -14199,6 +14266,7 @@
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-mobile-distribution.mjs": "69bcc44343de5106f36d3dd53d7e89a0686db8be324be2a159bcc1e4419e5171",
+    "scripts/check-native-resolver-lock.mjs": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
@@ -14259,7 +14327,8 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "62db0f07210283245076d753ea1d4a01031e1f870be59e5c6303924429804fc6",
+    "scripts/quality-repo.sh": "6e185c6acb66a8808b136a46cde876c0e1150a1fcae2bbc00ff062fcb2402156",
+    "scripts/quality-ui.sh": "15781485c4fa3e3993d5d4d03e2e647775a9d26a850d1b8f38e153816b3ac4d7",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -15487,6 +15556,10 @@
       },
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-NATIVE-RESOLVER-001",
         "relationship": "implementation"
       }
     ],
@@ -18001,6 +18074,10 @@
       },
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-NATIVE-RESOLVER-001",
         "relationship": "implementation"
       }
     ],
@@ -26640,6 +26717,10 @@
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-NATIVE-RESOLVER-001",
+        "relationship": "implementation"
       }
     ],
     "third_party/webtorrent/browser.json": [
@@ -26699,6 +26780,24 @@
     "e2e/web/webtorrent-browser.spec.mjs": [
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/check-native-resolver-lock.mjs": [
+      {
+        "requirement": "SYS-NATIVE-RESOLVER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/quality-ui.sh": [
+      {
+        "requirement": "SYS-NATIVE-RESOLVER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/native-resolver-lock.test.mjs": [
+      {
+        "requirement": "SYS-NATIVE-RESOLVER-001",
         "relationship": "tests"
       }
     ]
@@ -26762,11 +26861,15 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
+      "sha256": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-NATIVE-RESOLVER-001",
           "relationship": "implementation"
         }
       ]
@@ -27886,7 +27989,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "8d91a0e78d010cea8248104f499bd2565f3707184675b69492ec321fc7a4ceee",
+      "sha256": "c227addc2c70d9e597a850fff7c543029d63a179522a310d52230fd82acea6f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27895,6 +27998,10 @@
         },
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-NATIVE-RESOLVER-001",
           "relationship": "implementation"
         }
       ]
@@ -28896,6 +29003,18 @@
       ]
     },
     {
+      "id": "SURFACE-968418b6459c1f09",
+      "path": "scripts/__tests__/native-resolver-lock.test.mjs",
+      "sha256": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-NATIVE-RESOLVER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3875378b2b3df521",
       "path": "scripts/__tests__/navigation-http-runtime.mjs",
       "sha256": "a53889636386d5a6307eca3d6b1fb467bae5abc17abe7b72393e1b32d573729f",
@@ -29442,6 +29561,18 @@
       "requirements": [
         {
           "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0575a70cb91a6ce5",
+      "path": "scripts/check-native-resolver-lock.mjs",
+      "sha256": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-NATIVE-RESOLVER-001",
           "relationship": "implementation"
         }
       ]
@@ -30783,7 +30914,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "62db0f07210283245076d753ea1d4a01031e1f870be59e5c6303924429804fc6",
+      "sha256": "6e185c6acb66a8808b136a46cde876c0e1150a1fcae2bbc00ff062fcb2402156",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30841,15 +30972,24 @@
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-NATIVE-RESOLVER-001",
+          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "sha256": "15781485c4fa3e3993d5d4d03e2e647775a9d26a850d1b8f38e153816b3ac4d7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-NATIVE-RESOLVER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-14ce85c394623bc5",
@@ -54464,7 +54604,6 @@
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-bac1f41447e33768",
-    "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
     "SURFACE-173452b4342d16ba",
     "SURFACE-39275efbaea5cb7e",
@@ -57137,7 +57276,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bb6bb8dbd790721e00c2543836d8758209bcd6881c4919be8957e2c7b8dac9a8",
+      "sourceSha256": "86da51ab65fc69519baa6055ce6db97887060ca293537a80eb910d1e0437abaa",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57165,7 +57304,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bb6bb8dbd790721e00c2543836d8758209bcd6881c4919be8957e2c7b8dac9a8",
+      "sourceSha256": "86da51ab65fc69519baa6055ce6db97887060ca293537a80eb910d1e0437abaa",
       "definition": {
         "states": [
           "absent",
@@ -57195,7 +57334,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bb6bb8dbd790721e00c2543836d8758209bcd6881c4919be8957e2c7b8dac9a8",
+      "sourceSha256": "86da51ab65fc69519baa6055ce6db97887060ca293537a80eb910d1e0437abaa",
       "definition": {
         "export": [
           "queued",
@@ -79682,7 +79821,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 161,
+    "PARTIAL": 162,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

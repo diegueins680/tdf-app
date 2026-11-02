@@ -195,6 +195,7 @@
       "scripts/__tests__/music-worker-build.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
+      "scripts/__tests__/native-resolver-lock.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
       "scripts/__tests__/operations-api-schema.test.mjs",
@@ -249,6 +250,7 @@
       "scripts/check-generated-api.mjs",
       "scripts/check-messaging-token.mjs",
       "scripts/check-mobile-distribution.mjs",
+      "scripts/check-native-resolver-lock.mjs",
       "scripts/check-new-specification-surfaces.py",
       "scripts/check-public-routes.py",
       "scripts/check-state-machines.py",
@@ -2815,7 +2817,7 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
+      "sha256": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3337,7 +3339,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "8d91a0e78d010cea8248104f499bd2565f3707184675b69492ec321fc7a4ceee",
+      "sha256": "c227addc2c70d9e597a850fff7c543029d63a179522a310d52230fd82acea6f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3833,6 +3835,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-968418b6459c1f09",
+      "path": "scripts/__tests__/native-resolver-lock.test.mjs",
+      "sha256": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3875378b2b3df521",
       "path": "scripts/__tests__/navigation-http-runtime.mjs",
       "sha256": "a53889636386d5a6307eca3d6b1fb467bae5abc17abe7b72393e1b32d573729f",
@@ -4154,6 +4162,12 @@
       "id": "SURFACE-7cf4797085be81ca",
       "path": "scripts/check-mobile-distribution.mjs",
       "sha256": "69bcc44343de5106f36d3dd53d7e89a0686db8be324be2a159bcc1e4419e5171",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0575a70cb91a6ce5",
+      "path": "scripts/check-native-resolver-lock.mjs",
+      "sha256": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4867,13 +4881,13 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "62db0f07210283245076d753ea1d4a01031e1f870be59e5c6303924429804fc6",
+      "sha256": "6e185c6acb66a8808b136a46cde876c0e1150a1fcae2bbc00ff062fcb2402156",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "sha256": "15781485c4fa3e3993d5d4d03e2e647775a9d26a850d1b8f38e153816b3ac4d7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27919,6 +27933,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/native-resolver-lock.md",
+      "sha256": "925543ae11d162c986df95a23a95835d2644ce3ff02e78cf721b62d3db241c89",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-aux-write.md",
       "sha256": "2d8dee259c38886c7de44bb20df7085d406984d16647b2c41659792806e8f391",
       "authority": "inferred",
@@ -28109,7 +28130,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bb6bb8dbd790721e00c2543836d8758209bcd6881c4919be8957e2c7b8dac9a8",
+      "sha256": "86da51ab65fc69519baa6055ce6db97887060ca293537a80eb910d1e0437abaa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
