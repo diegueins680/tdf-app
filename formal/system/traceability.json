@@ -14447,7 +14447,7 @@
     "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "67c05020a242489d5edd2617caa0469ae10b86dcd655349c70358740bd82f388",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "71f1ed772a76a0fb6544caa20fb23bf87809972979b6401ba54e08da718f495b",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "58e1f9a2962556913c7540cf9db152866b824323007a5ba7b2eb3b49cf907a8b",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
@@ -38888,7 +38888,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "67c05020a242489d5edd2617caa0469ae10b86dcd655349c70358740bd82f388",
+      "sha256": "71f1ed772a76a0fb6544caa20fb23bf87809972979b6401ba54e08da718f495b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -197,8 +197,11 @@ describe('LoginPage Google signup consent flow', () => {
       expect(screen.getAllByTestId('in-app-browser-notice').length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText('Estás en el navegador de Instagram').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText(/Google no permite crear la cuenta desde aquí/)).toBeTruthy();
-      const openLinks = screen.getAllByRole('link', { name: 'Abrir en Safari' });
-      expect(openLinks[0]?.getAttribute('href')).toMatch(/^x-safari-https:\/\//);
+      // jsdom serves the page over http://localhost, where no Safari/Chrome
+      // hand-off exists (see inAppBrowser.test.ts for the https hrefs), so the
+      // notice must still offer the copy-link escape hatch.
+      expect(screen.getAllByRole('button', { name: 'Copiar enlace' }).length).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByRole('link', { name: 'Abrir en Safari' })).toBeNull();
       expect(screen.getByText('Mínimo 8 caracteres. Es una contraseña nueva solo para TDF: no es la de Google ni la de tu correo.')).toBeTruthy();
     } finally { userAgent.mockRestore(); await cleanup(); }
   });
