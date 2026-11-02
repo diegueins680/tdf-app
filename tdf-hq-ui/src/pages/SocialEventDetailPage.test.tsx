@@ -148,7 +148,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
       { artistId: '1000', artistName: 'Unlinked Artist' },
     ] });
     const view = renderPage();
-    expect((await screen.findByRole('link', { name: 'Synthetic Artist' })).getAttribute('href')).toBe('/artista/55');
+    expect((await screen.findByRole('link', { name: 'Synthetic Artist' })).getAttribute('href')).toBe('/a/55');
     expect(screen.queryByRole('link', { name: 'Unlinked Artist' })).toBeNull();
     view.unmount();
   });
