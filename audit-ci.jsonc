@@ -5,13 +5,5 @@
   "skip-dev": true,
   "show-found": true,
   "show-not-found": true,
-  "allowlist": [
-    {
-      "GHSA-2p57-rm9w-gvfp|webtorrent>torrent-discovery>bittorrent-tracker>ip": {
-        "active": true,
-        "notes": "WebTorrent is bundled only for the browser. bittorrent-tracker excludes its server and HTTP/UDP tracker modules from browser builds; the vulnerable ip import is confined to lib/server/parse-udp.js. Re-evaluated 2026-11-02: ip 2.0.1 is still the latest release with no upstream fix, and the dependency path webtorrent>torrent-discovery>bittorrent-tracker>ip is unchanged (webtorrent 2.8.5). The webtorrent major upgrade is tracked in its own PR per the audit owner decision; re-evaluate upstream before expiry.",
-        "expiry": "2027-01-31"
-      }
-    }
-  ]
+  "allowlist": []
 }
