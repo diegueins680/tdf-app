@@ -469,11 +469,10 @@ export function buildMigrationBatchSql(migrations, options = {}) {
   });
 
   // AUTHORITY-094 (2026-11-01) adds four ownership columns and two Party
-  // foreign keys to social_sync_account. A batch rendered from a manifest
-  // prefix that stops before that migration must verify the earlier shape.
-  const socialDesignationIncluded = entries.some(
-    (entry) => entry.id === '2026-11-01_social_sync_account_delivery_designation',
-  );
+  // foreign keys to social_sync_account. Production batches and synthetic
+  // batches over the current schema verify that shape; only a caller that
+  // renders a manifest prefix ending before that migration opts out.
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [

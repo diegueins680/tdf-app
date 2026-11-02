@@ -1023,7 +1023,7 @@ test('every manifest migration can run inside the batch transaction', async () =
   }
 });
 
-test('buildMigrationBatchSql verifies the social ownership shape only when the batch applies it', () => {
+test('buildMigrationBatchSql verifies the pre-designation social shape only on explicit opt-out', () => {
   const before = {
     id: '2026-10-25_event_memory_invitations',
     path: 'tdf-hq/sql/2026-10-25_event_memory_invitations.sql',
@@ -1036,8 +1036,10 @@ test('buildMigrationBatchSql verifies the social ownership shape only when the b
     checksum: '2'.repeat(64),
     content: 'SELECT 2;',
   };
-  const prefix = buildMigrationBatchSql([before]);
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false });
   const full = buildMigrationBatchSql([before, designation]);
+  // Without the explicit opt-out a batch verifies the current production shape.
+  assert.match(buildMigrationBatchSql([before]), /table_name = 'social_sync_account'\n\s*\) <> 17 OR/);
   const socialCount = (sql) => sql.match(/table_name = 'social_sync_account'\n\s*\) <> (\d+) OR/)[1];
   const socialForeignKeys = (sql) => sql.match(/<> (\d+) THEN\n\s*RAISE EXCEPTION 'A social-sync foreign key/)[1];
   assert.equal(socialCount(prefix), '13');

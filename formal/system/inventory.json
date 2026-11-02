@@ -3940,7 +3940,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "30dff825b56c8f00d78c5b4e07087d9372cba382295c5315b758ddd1c43a80ac",
+      "sha256": "0d709497ac9fb750d518997b8d573c7b28c5832c23dc107040f4315e6e231229",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4696,7 +4696,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "fabc91df4704ad2eaba6bc86fac451f34e5ab2e423530b880fafd1e7ff2f0368",
+      "sha256": "26fa9c12bac43611125ed1771e9ffe65dafd17f0d823f4279d031ebb355e6536",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5686,7 +5686,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "3d25115a7c4767df9537e4c4112ccad2ab88eada159a577925c8665206f0be29",
+      "sha256": "a72edf2babc837d43d092af5a5ad2ed91f562c984e952d6f44a5a484a6d4b3bf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
