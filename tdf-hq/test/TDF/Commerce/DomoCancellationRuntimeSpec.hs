@@ -468,7 +468,7 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
           cancellation = either (const "refused") (const "cancelled") <$> cancel pool fixture CustomerActor CancelledByCustomer
       outcome <- concurrently capture cancellation
       outcome `shouldSatisfy` (`elem` ([("admitted","refused"),("refused","cancelled")] :: [(Text,Text)]))
-  forM_ ["COMPLETED","PENDING","transport_error"] $ \outcome ->
+  forM_ ["COMPLETED","PENDING","transport_error","provider_rejection"] $ \outcome ->
     it ("the real handler keeps "<>T.unpack outcome<>" outstanding and never repeats a refund POST") $ \pool -> do
       fixture <- seedQuote pool 40 True
       _ <- cancel pool fixture (OperatorActor 1) CancelledByTdf >>= requireRight
@@ -477,15 +477,17 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
       _ <- runSqlPool (D.approveDomoRefund (fxQuoteId fixture) (fromIntegral (fromSqlKey (auPartyId user))) now) pool
       configureRecovery pool
       runSqlPool (rawExecute "INSERT INTO revenue_feature_flag(flag_key,enabled,environment,reason) VALUES ('checkout.paypal.refunds',true,'sandbox','synthetic handler fixture') ON CONFLICT(flag_key,environment) DO UPDATE SET enabled=true" []) pool
-      let response = if outcome=="transport_error"
-            then "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 2\r\n\r\n{}"
-            else wire ("{\"id\":\"REFUND-"<>fxQuoteId fixture<>"\",\"status\":\""<>outcome<>"\",\"amount\":{\"value\":\"2007.04\",\"currency_code\":\"USD\"}}")
+      let rejected = outcome `elem` ["transport_error","provider_rejection"]
+          response = case outcome of
+            "transport_error" -> "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 2\r\n\r\n{}"
+            "provider_rejection" -> "HTTP/1.1 422 Unprocessable Entity\r\nContent-Length: 2\r\n\r\n{}"
+            _ -> wire ("{\"id\":\"REFUND-"<>fxQuoteId fixture<>"\",\"status\":\""<>outcome<>"\",\"amount\":{\"value\":\"2007.04\",\"currency_code\":\"USD\"}}")
       withPaypalConfig $ withWire [wire "{\"access_token\":\"synthetic-token\",\"token_type\":\"Bearer\"}",response] $ \manager written -> do
         let _read :<|> _approve :<|> execute :<|> _reconcile :<|> _manual :<|> _confirm :<|> _bind =
               API.domoRefundAdminServerWithManager manager user (fxQuoteId fixture)
             env=Env pool (error "No unrelated config needed")
         result <- runHandler (runReaderT execute env)
-        either errHTTPCode (const 200) result `shouldBe` (if outcome=="transport_error" then 502 else 200)
+        either errHTTPCode (const 200) result `shouldBe` (if rejected then 502 else 200)
         forM_ [1..4::Int] $ \_ -> do
           replay <- runHandler (runReaderT execute env)
           either errHTTPCode (const 200) replay `shouldBe` 200
