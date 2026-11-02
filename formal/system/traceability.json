@@ -16734,7 +16734,7 @@
     "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "66516405eb2b4213b72be45b0b7035b8c29fe05df3f898c48e9f4b06c1732b4c",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
-    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "c175d7ef00d9db2f6e4fb9453d75d0970459d98f5ab30cf5dd07f0e4690c927c",
+    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "ec86d1b9cfb05c08d155f266a1ba93ab963c6190c2768ea04adda8864a30cac0",
     "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs": "149e170bc2b0d686ef3ea666fafafe41211206136b80bcaba9b5de63b0b49a3f",
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -54034,7 +54034,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "c175d7ef00d9db2f6e4fb9453d75d0970459d98f5ab30cf5dd07f0e4690c927c",
+      "sha256": "ec86d1b9cfb05c08d155f266a1ba93ab963c6190c2768ea04adda8864a30cac0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

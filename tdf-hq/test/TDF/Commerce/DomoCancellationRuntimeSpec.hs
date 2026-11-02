@@ -32,6 +32,13 @@ depositMinor = 200704
 
 -- | A Domo quote priced like the migration rehearsal, starting @daysAhead@ days
 -- from now, optionally with its deposit verified through a PayPal capture.
+-- | A 64-hex lookup token hash unique per fixture. Repeating only the first
+-- byte of the UUID (the previous construction) left 256 possible values and
+-- collided across the suite's fixtures on the unique lookup_token_hash
+-- columns roughly one run in six.
+tokenHash :: Text -> Text
+tokenHash identifier = let hex = T.filter (/= '-') identifier in hex <> hex
+
 seedQuote :: ConnectionPool -> Int -> Bool -> IO Fixture
 seedQuote pool daysAhead paid = do
   now <- getCurrentTime
@@ -76,7 +83,7 @@ seedQuote pool daysAhead paid = do
       \ ?, ?, ?)"
       [ PersistText checkoutId, PersistText ("domo-quote:" <> quoteId), PersistText commerceQuoteId
       , PersistInt64 depositMinor, PersistInt64 depositMinor
-      , PersistText (T.replicate 32 (T.take 2 (T.filter (/= '-') quoteId)))
+      , PersistText (tokenHash quoteId)
       , PersistText ("domo-cancel-fixture:" <> quoteId), PersistUTCTime holdExpiresAt ]
     rawExecute
       "INSERT INTO commerce_checkout_line_item(checkout_id, line_number, product_type, product_id,\
@@ -90,16 +97,19 @@ seedQuote pool daysAhead paid = do
        \ starts_at, ends_at, setup_starts_at, duration_hours, setup_hours, catering, production, transport,\
        \ quote_status, fulfillment_status, currency, subtotal_minor, tax_minor, total_minor, deposit_minor,\
        \ balance_minor, tax_basis_points, deposit_basis_points, rate_card_version, rate_card_rules_sha256,\
-       \ timezone, terms_version, hold_expires_at)\
+       \ timezone, terms_version, hold_expires_at, venue_key)\
        \ VALUES (?::uuid, ?::uuid, ?::uuid, '81000000-0000-0000-0000-000000000001', ?, ?, ?,\
        \ 'Domo Customer', 'domo@example.com', 'wedding', 80, ?, ?, ?, 8, 2, TRUE, TRUE, FALSE,\
        \ 'sent', 'date_held', 'USD', 448000, 53760, 501760, ?, ?, 1200, 4000, 'legacy_public_formula-v1',\
-       \ " <> rulesHashSql <> ", 'America/Guayaquil', 'domo-terms-legacy-draft-v1', ?)")
+       \ " <> rulesHashSql <> ", 'America/Guayaquil', 'domo-terms-legacy-draft-v1', ?, ?)")
       [ PersistText quoteId, PersistText commerceQuoteId, PersistText checkoutId
-      , PersistText (T.replicate 32 (T.take 2 (T.filter (/= '-') checkoutId)))
+      , PersistText (tokenHash checkoutId)
       , PersistText ("domo-cancel-runtime:" <> quoteId), PersistText (T.replicate 64 "3")
       , PersistUTCTime startsAt, PersistUTCTime endsAt, PersistUTCTime setupStartsAt
-      , PersistInt64 depositMinor, PersistInt64 (501760 - depositMinor), PersistUTCTime holdExpiresAt ]
+      , PersistInt64 depositMinor, PersistInt64 (501760 - depositMinor), PersistUTCTime holdExpiresAt
+      -- A venue key per fixture keeps the active-window exclusion constraint from
+      -- coupling fixtures that share a date, including leftovers of earlier runs.
+      , PersistText ("domo-cancel-venue:" <> quoteId) ]
     rawExecute
       "INSERT INTO commerce_reservation_hold(checkout_id, resource_type, resource_id, starts_at, ends_at,\
       \ quantity, status, expires_at) VALUES (?::uuid, 'domo_venue', ?, ?, ?, 1, 'active', ?)"
