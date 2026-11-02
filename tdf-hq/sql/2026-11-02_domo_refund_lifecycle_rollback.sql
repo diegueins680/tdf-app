@@ -6,6 +6,8 @@ DO $$ BEGIN
    RAISE EXCEPTION 'Domo refund lifecycle rollback refuses financial history';
  END IF;
 END $$;
+DROP TRIGGER IF EXISTS trg_domo_refund_require_verified_closure ON public.commerce_reconciliation_exception;
+DROP FUNCTION IF EXISTS public.domo_refund_require_verified_closure();
 DROP TRIGGER IF EXISTS trg_domo_refund_close_reconciliation ON public.commerce_refund;
 DROP FUNCTION IF EXISTS public.domo_refund_close_reconciliation();
 DROP TABLE IF EXISTS public.domo_manual_refund_evidence;

@@ -50,12 +50,14 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - uses: actions/cache@v6
+        id: stack-deps
         with:
           path: .stack-root
           key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
           restore-keys: |
             stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
       - uses: actions/cache@v6
+        id: stack-objects
         with:
           path: tdf-hq/.stack-work
           key: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
@@ -64,6 +66,18 @@ jobs:
       - name: Compile backend and test executables
         working-directory: tdf-hq
         run: stack test --no-run-tests
+      # Successful compilation is reusable even when a later runtime assertion
+      # fails. This preserves compiled objects, never a test-pass declaration.
+      - uses: actions/cache/save@v6
+        if: steps.stack-deps.outputs.cache-hit != 'true'
+        with:
+          path: .stack-root
+          key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+      - uses: actions/cache/save@v6
+        if: steps.stack-objects.outputs.cache-hit != 'true'
+        with:
+          path: tdf-hq/.stack-work
+          key: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
       - name: Check Domo unit and authorization tests without a database
         working-directory: tdf-hq
         # Only the runtime gate below supplies its database to the test process.

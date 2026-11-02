@@ -67,6 +67,8 @@ fi
 # Every provider/refund fixture now runs against the complete reviewed schema.
 # No reduced domain projections or disabled triggers are permitted in this gate.
 sh "$TDF_PROVIDER_RETRY_ROOT/scripts/load-payment-test-schema.sh" "$TDF_PROVIDER_RETRY_URL"
+manual_flags=$(psql "$TDF_PROVIDER_RETRY_URL" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM revenue_feature_flag WHERE flag_key='domo.refund_manual' AND environment IN ('sandbox','production') AND NOT enabled")
+[ "$manual_flags" = 2 ] || { echo 'Manual Domo refund flags must start disabled in the fresh fixture' >&2; exit 1; }
 
 # Preserve the pre-existing empty rollback/reapply rehearsals on the full schema,
 # before any provider or refund case inserts financial history.
@@ -138,5 +140,58 @@ fi
 if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql" >/dev/null 2>&1; then
   echo "Ticket refund rollback unexpectedly removed used request bindings" >&2
+  exit 1
+fi
+
+# Generic reconciliation commands must not close a request-only Domo debt.
+# The failed write runs only against this runner's validated disposable database.
+if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL' >/dev/null 2>&1
+DO $$
+DECLARE candidate uuid;
+BEGIN
+ SELECT e.id INTO candidate FROM commerce_reconciliation_exception e
+ JOIN domo_quote_cancellation c ON e.internal_reference='domo-quote:'||c.domo_quote_id::text
+ LEFT JOIN commerce_refund r ON r.id=c.refund_id
+ WHERE e.exception_type='domo_cancellation_refund_due' AND c.refund_due_minor>0
+   AND (r.id IS NULL OR r.status<>'succeeded') LIMIT 1;
+ IF candidate IS NULL THEN RETURN; END IF;
+ UPDATE commerce_reconciliation_exception SET status='resolved',resolved_at=NOW()
+   WHERE id=candidate;
+END $$;
+SQL
+then
+  echo 'Request-only Domo obligation incorrectly permitted reconciliation closure' >&2
+  exit 1
+fi
+# Reapply on used history. No settled refund may reopen, no request-only debt
+# may remain closed, and no operator-owned activation flag may be reset.
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 -c "UPDATE revenue_feature_flag SET enabled=true,reason='synthetic Domo operator setting' WHERE flag_key='domo.refund_manual' AND environment='sandbox'" >/dev/null
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql" >/dev/null
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
+DO $$ BEGIN
+ IF NOT EXISTS (SELECT 1 FROM revenue_feature_flag WHERE flag_key='domo.refund_manual'
+   AND environment='sandbox' AND enabled AND reason='synthetic Domo operator setting') THEN
+   RAISE EXCEPTION 'Domo forward migration reset an operator-owned flag';
+ END IF;
+ IF EXISTS (SELECT 1 FROM commerce_reconciliation_exception e
+   JOIN domo_quote_cancellation c ON e.internal_reference='domo-quote:'||c.domo_quote_id::text
+   LEFT JOIN commerce_refund r ON r.id=c.refund_id
+   WHERE e.exception_type='domo_cancellation_refund_due' AND c.refund_due_minor>0
+     AND (r.id IS NULL OR r.status<>'succeeded') AND e.status='resolved') THEN
+   RAISE EXCEPTION 'Request-only Domo refund incorrectly remains reconciled';
+ END IF;
+ IF EXISTS (SELECT 1 FROM commerce_reconciliation_exception e
+   JOIN domo_quote_cancellation c ON e.internal_reference='domo-quote:'||c.domo_quote_id::text
+   JOIN commerce_refund r ON r.id=c.refund_id
+   WHERE e.exception_type='domo_cancellation_refund_due' AND r.status='succeeded'
+     AND e.status<>'resolved') THEN
+   RAISE EXCEPTION 'Verified Domo refund lost its reconciliation closure';
+ END IF;
+END $$;
+SQL
+if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql" >/dev/null 2>&1; then
+  echo 'Domo refund rollback unexpectedly removed financial history' >&2
   exit 1
 fi

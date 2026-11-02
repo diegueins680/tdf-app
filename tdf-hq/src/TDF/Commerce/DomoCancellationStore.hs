@@ -11,7 +11,7 @@
 -- and its reservation to @cancelled@ and, when an authenticated operator acts,
 -- create the refund request for exactly the obligation. A customer acting with
 -- the lookup token is not a party, so the obligation is recorded and surfaced
--- as an open reconciliation exception until an operator requests the refund;
+-- as an open reconciliation exception until the exact refund is verified;
 -- the refund store then requires a different party to approve it.
 --
 -- Nothing is written before every validation that can fail has passed, so a
@@ -85,7 +85,7 @@ data DomoCancellationRecord = DomoCancellationRecord
   , dcrRefundDueMinor        :: !Int64
   , dcrCurrency              :: !Text
   , dcrRefundStatus          :: !Text
-    -- ^ none | awaiting_operator | requested
+    -- ^ none | awaiting_operator, or the linked canonical refund status
   , dcrRefundId              :: !(Maybe Text)
   , dcrReplayed              :: !Bool
     -- ^ the quote was already cancelled; the stored record is returned
@@ -101,7 +101,7 @@ cancellationRefundIdempotencyKey :: Text -> Text
 cancellationRefundIdempotencyKey quoteId = "domo-cancel:" <> quoteId
 
 -- | Reconciliation exception type carrying a customer cancellation's refund
--- obligation until an operator requests the refund.
+-- obligation until verified completion settles it.
 refundObligationExceptionType :: Text
 refundObligationExceptionType = "domo_cancellation_refund_due"
 

@@ -14468,7 +14468,7 @@
       "confidence": "High for the policy arithmetic, the table invariants and the transaction (property, lemma and database tested); the handler composition is tested, not mechanically refined.",
       "ambiguity": [
         "Lead time is whole 24-hour periods before the event start instant (not venue calendar days), fixed by leadDaysBefore.",
-        "A customer cancellation cannot itself create a commerce_refund because the refund store requires an authenticated requester and a different approver; the obligation is recorded and surfaced as an open reconciliation exception until an operator settles it."
+        "A customer cancellation cannot itself create a commerce_refund because the refund store requires an authenticated requester and a different approver; the obligation is recorded and surfaced as an open reconciliation exception until the exact refund is verified complete."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -15355,7 +15355,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "e52254260549dfb059e43ac797e51ee5eada034fd174196b913f5a53828edb44",
+    "docs/catalog-persistence/catalog-list-decisions.json": "1ab5c98777e4c14493282e207edbfb500056c1455b98c997e0bdf6c541ba951e",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
@@ -15751,7 +15751,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "8c75c43094cdfeb2a961a1f5d43043bb1504ca11398085121e278f1c82b47d9b",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "1f67672f249515c71c59bcf2461d6aa8832ceebae03a28fe392a6088167462ff",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -15887,7 +15887,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "0bb7fbcc2acc0ee34863aba1af636d8689471c77cf4af2f806bbfb6c8611b5c9",
+    "scripts/production-migrations.json": "a32f5e235b22554fea54c4209eadcdb188555d4e204e04c604d9d6412a6da775",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
@@ -15990,7 +15990,7 @@
     "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
     "scripts/test-provider-domain-binding.py": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
     "scripts/test-provider-domain-harness.py": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
-    "scripts/test-provider-retry-runtime.sh": "ece713c3e7acf9976b6878ae390db4b89a3e7470c596043fd7629069eb26f562",
+    "scripts/test-provider-retry-runtime.sh": "f69f1a28f45848370cd94289c4bdf315efd200ea31c4c461dd6a0e7d27433f20",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -16588,7 +16588,7 @@
     "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql": "378c49acf1a52f1e28fc7f2db51fdc454575a8deb73115b5685eeffc28edc333",
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql": "b5591df9ea95e2ea08007c62ccb45b0727a4ef0f9c492f77ddb72630bc4b008f",
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
-    "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql": "c612a442993132147e86c203824c8368e63ffe2174a0826eaa080316c27efb65",
+    "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql": "709904c66f766b0119aea195bdc31f85c31eb4083b5403f75b8d5ce7a4010b71",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
@@ -16620,7 +16620,7 @@
     "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "89f7c69cf5cf176c890e0cd09f1a0e561ab0fe3e45e9f14fc738b9479a5df917",
     "tdf-hq/src/TDF/Commerce/DepositPolicy.hs": "6829fa5bf78c1d1839770e0728960967dfdbcdca62661dadd06adb2191d0a94f",
     "tdf-hq/src/TDF/Commerce/DomoCancellation.hs": "dcbc9345ad6a6c2e850c5d9a523061994e282d65edc92968dfe951797f065ca2",
-    "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs": "b0e64573e7502d060c64923604d92c300a694cb59f149a6e1c4f20235f8173d2",
+    "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs": "0a025b50986c4b714c80dc405f967eb2e1dbcb26db80058d9b55da134fc966ee",
     "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": "54da88fdabb8ad1160224d3b930dfa1d44cd656cf491e74cfb0dba35c353eef4",
     "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs": "eec807766b70146349a81cbb529017ac26692157e0cdbc61016cc302c0739881",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
@@ -16691,7 +16691,7 @@
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "0195a6a9888c881caebc81348b83fc0f98c278af778fcb2d22d69c9ab82d5215",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "c72ca5b42dd22cb1e88233888113f35620f4bbc5b48017a35222eccb713e14d9",
-    "tdf-hq/src/TDF/Server/DomoRefunds.hs": "a2deb36b937f26456c486a113e49d6d6a690fc5f52011c722e23961d0c077ef7",
+    "tdf-hq/src/TDF/Server/DomoRefunds.hs": "e52fa4d635b8917a322f5a83bfa7f9ced168c834d48c34abc653676cd1bfe0c7",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "bfb6201b750b256d8247ef84551ff44076137fc97cff54d59b22b3a575c083ea",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "7e350af012396bb5a846a13f29c91cf2a2f6b8a0d3498f73a050aa2d1d401fd9",
@@ -16750,7 +16750,7 @@
     "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "66516405eb2b4213b72be45b0b7035b8c29fe05df3f898c48e9f4b06c1732b4c",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
-    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "3d94f8aee0342b61c1c4d00620b170c89a6ef9aab7bafcb65d92801c6f71ad40",
+    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "d4d78deefbb6afa1042f6b4890fa2b0d619c35f1722670402bf809c0776585d6",
     "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs": "149e170bc2b0d686ef3ea666fafafe41211206136b80bcaba9b5de63b0b49a3f",
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -30069,7 +30069,7 @@
     {
       "id": "SURFACE-6e2aa20fed937be2",
       "path": ".github/workflows/domo-refund-validation.yml",
-      "sha256": "10964633a7b84b0336474d1d36338d5268daf0b5cf5096786c05d54e01e4cc48",
+      "sha256": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -31225,7 +31225,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "8c75c43094cdfeb2a961a1f5d43043bb1504ca11398085121e278f1c82b47d9b",
+      "sha256": "1f67672f249515c71c59bcf2461d6aa8832ceebae03a28fe392a6088167462ff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33918,7 +33918,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "0bb7fbcc2acc0ee34863aba1af636d8689471c77cf4af2f806bbfb6c8611b5c9",
+      "sha256": "a32f5e235b22554fea54c4209eadcdb188555d4e204e04c604d9d6412a6da775",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36334,7 +36334,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "ece713c3e7acf9976b6878ae390db4b89a3e7470c596043fd7629069eb26f562",
+      "sha256": "f69f1a28f45848370cd94289c4bdf315efd200ea31c4c461dd6a0e7d27433f20",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50436,7 +50436,7 @@
     {
       "id": "SURFACE-6af2fb60590d5f42",
       "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
-      "sha256": "c612a442993132147e86c203824c8368e63ffe2174a0826eaa080316c27efb65",
+      "sha256": "709904c66f766b0119aea195bdc31f85c31eb4083b5403f75b8d5ce7a4010b71",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50448,7 +50448,7 @@
     {
       "id": "SURFACE-4e65b4accc811245",
       "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
-      "sha256": "0a92fd77f1d42204b615922ce5173c0bc7995f483e5763a8c7ec507ebf2cdfae",
+      "sha256": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -51274,7 +51274,7 @@
     {
       "id": "SURFACE-52b27b4edfde0af0",
       "path": "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
-      "sha256": "b0e64573e7502d060c64923604d92c300a694cb59f149a6e1c4f20235f8173d2",
+      "sha256": "0a025b50986c4b714c80dc405f967eb2e1dbcb26db80058d9b55da134fc966ee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52792,7 +52792,7 @@
     {
       "id": "SURFACE-ad9b4538d376377d",
       "path": "tdf-hq/src/TDF/Server/DomoRefunds.hs",
-      "sha256": "a2deb36b937f26456c486a113e49d6d6a690fc5f52011c722e23961d0c077ef7",
+      "sha256": "e52fa4d635b8917a322f5a83bfa7f9ced168c834d48c34abc653676cd1bfe0c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54150,7 +54150,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "3d94f8aee0342b61c1c4d00620b170c89a6ef9aab7bafcb65d92801c6f71ad40",
+      "sha256": "d4d78deefbb6afa1042f6b4890fa2b0d619c35f1722670402bf809c0776585d6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61958,7 +61958,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f121c03ddd9630b9b5965db9deb7330ac4d7cc4c4fd91d70867d23ef272efdbd",
+      "sourceSha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -61986,7 +61986,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f121c03ddd9630b9b5965db9deb7330ac4d7cc4c4fd91d70867d23ef272efdbd",
+      "sourceSha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
       "definition": {
         "states": [
           "absent",
@@ -62016,7 +62016,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f121c03ddd9630b9b5965db9deb7330ac4d7cc4c4fd91d70867d23ef272efdbd",
+      "sourceSha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
       "definition": {
         "export": [
           "queued",

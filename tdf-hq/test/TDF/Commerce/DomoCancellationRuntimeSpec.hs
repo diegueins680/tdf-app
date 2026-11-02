@@ -170,9 +170,11 @@ seedQuoteForProvider provider pool daysAhead paid = do
     rawExecute
       "INSERT INTO commerce_provider_binding(id, payment_attempt_id, provider, environment, merchant_account_ref,\
       \ resource_type, provider_resource_id, provider_resource_path, merchant_reference, amount_minor, currency)\
-      \ VALUES (?::uuid, ?::uuid, ?, 'sandbox', 'PAYPAL-SANDBOX', 'capture', ?, ?, ?, ?, 'USD')"
-      [ PersistText bindingId, PersistText attemptId, PersistText provider, PersistText ("CAPTURE-" <> quoteId)
-      , PersistText ("/v2/checkout/orders/" <> quoteId <> "/capture"), PersistText ("domo-quote:" <> quoteId)
+      \ VALUES (?::uuid, ?::uuid, ?, 'sandbox', 'PAYPAL-SANDBOX', ?, ?, ?, ?, ?, 'USD')"
+      [ PersistText bindingId, PersistText attemptId, PersistText provider
+      , PersistText (if provider=="datafast" then "checkout" else "capture")
+      , PersistText ("CAPTURE-" <> quoteId)
+      , PersistText (if provider=="datafast" then "/v1/checkouts/" <> quoteId <> "/payment" else "/v2/checkout/orders/" <> quoteId <> "/capture"), PersistText ("domo-quote:" <> quoteId)
       , PersistInt64 depositMinor ]
     rawExecute
       "UPDATE commerce_checkout_session SET status='paid', paid_minor=?, paid_at=NOW() WHERE id=?::uuid"
@@ -387,6 +389,25 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
       (\_ -> writeIORef authority False >> pure (Right Q.RefundQueryCompleted))
     denied `shouldSatisfy` isLeft
     outstanding pool fixture `shouldReturn` "1:0"
+
+  it "rolls back reconciliation closure with the ledger and credit note when accounting fails" $ \pool -> do
+    fixture <- seedQuote pool 40 True
+    _ <- cancel pool fixture (OperatorActor 1) CancelledByTdf >>= requireRight
+    now <- getCurrentTime
+    _ <- runSqlPool (D.approveDomoRefund (fxQuoteId fixture) 2 now) pool
+    (refund,True) <- runSqlPool (D.claimDomoRefund (fxQuoteId fixture) 2 now) pool
+    runSqlPool (R.recordRefundPending (R.rrReference refund) ("REFUND-"<>fxQuoteId fixture) now) pool `shouldReturn` Right ()
+    configureRecovery pool
+    let install=rawExecute "ALTER TABLE commerce_receipt ADD CONSTRAINT synthetic_domo_credit_note_failure CHECK(kind<>'credit_note') NOT VALID" []
+        remove=rawExecute "ALTER TABLE commerce_receipt DROP CONSTRAINT synthetic_domo_credit_note_failure" []
+    bracket_ (runSqlPool install pool) (runSqlPool remove pool) $ do
+      result <- Recovery.reconcileKnownRefund pool (R.rrReference refund) 3 (const (pure True))
+        (const (pure (Right Q.RefundQueryCompleted)))
+      result `shouldSatisfy` isLeft
+    outstanding pool fixture `shouldReturn` "1:0"
+    scalar pool "SELECT status FROM commerce_refund WHERE id=?::uuid" [PersistText (R.refundReferenceId (R.rrReference refund))] `shouldReturn` "processing"
+    scalar pool "SELECT status FROM commerce_reconciliation_exception WHERE exception_type=? AND internal_reference=?"
+      [PersistText refundObligationExceptionType,PersistText ("domo-quote:"<>fxQuoteId fixture)] `shouldReturn` "open"
 
   it "requires exact manual evidence and a different confirmer; concurrent confirmations post once" $ \pool -> do
     fixture <- seedQuoteForProvider "datafast" pool 40 True

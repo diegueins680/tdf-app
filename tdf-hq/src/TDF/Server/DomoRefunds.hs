@@ -11,10 +11,12 @@ import Control.Monad (unless, when)
 import Control.Monad.Except (MonadError, catchError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (MonadReader, ReaderT, ask, runReaderT)
-import Data.Aeson (Value, object, (.=))
+import Data.Aeson (Value(..), object, (.=))
+import Data.Aeson.Types (Pair)
+import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (getCurrentTime)
+import Data.Time (UTCTime, getCurrentTime)
 import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..))
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
@@ -24,6 +26,7 @@ import System.Environment (lookupEnv)
 
 import TDF.Auth (AuthedUser(..), ModuleAccess(..), hasStrictAdminAccess, validateModuleAccess, withCurrentAuthorization)
 import TDF.DB (Env(..))
+import TDF.Internationalization (formatMinorUnitsDecimal)
 import TDF.Routes.DomoRefunds
 import qualified TDF.Commerce.CheckoutStore as C
 import qualified TDF.Commerce.DomoRefundStore as D
@@ -56,7 +59,12 @@ domoRefundAdminServerWithManager manager user rawQuoteId =
       either throwError pure (validateModuleAccess ModuleAdmin user)
       maybe (throwError err400 { errBody="quoteId must be a UUID" }) (pure . UUID.toText)
         (UUID.fromText (T.strip rawQuoteId))
-    readStatus quoteId = dto <$> authorizedTransaction user (load quoteId)
+    readStatus quoteId = do
+      (record, evidence) <- authorizedTransaction user $ do
+        record <- load quoteId
+        evidence <- manualEvidenceView (R.rrReference record)
+        pure (record,evidence)
+      pure (object (refundFields record <> ["manualEvidence" .= evidence]))
     approve quoteId = do
       now <- liftIO getCurrentTime
       dto <$> authorizedTransaction user (D.approveDomoRefund quoteId actor now)
@@ -97,30 +105,37 @@ domoRefundAdminServerWithManager manager user rawQuoteId =
           authorizedTransaction user $ do
             _ <- either (fail . T.unpack) pure =<<
               R.recordRefundPending (R.rrReference record) (proRefundId outcome) now
-            R.recordRefundFailure (R.rrReference record) "domo_refund_awaiting_readback" now
-            D.refundAudit record actor "provider_response_received"
+            let matched = proCurrency outcome==R.rrCurrency record && proAmount outcome==
+                  formatMinorUnitsDecimal (R.rrCurrency record) (fromIntegral (R.rrAmountMinor record))
+            R.recordRefundFailure (R.rrReference record)
+              (if matched then "domo_refund_awaiting_readback" else "domo_refund_response_mismatch") now
+            D.refundAudit record actor (case proStatus outcome of
+              "COMPLETED" -> "provider_reported_completed_awaiting_readback"
+              "PENDING" -> "provider_reported_pending"
+              _ -> "provider_status_unverified")
         readStatus quoteId
     reconcile quoteId = do
       env <- ask
       record <- authorizedTransaction user (load quoteId)
-      unless (R.rrProvider record=="paypal") $ throwError err409
-        {errBody="Manual refunds require receipt evidence and independent confirmation"}
-      let configured binding = do
-            result <- runHandler (runReaderT (queryConfigured record) env)
-            pure (result==Right True && R.rrEnvironment record==C.checkoutEnvironmentText (Q.rqbEnvironment binding)
-              && R.rrMerchantRef record==Q.rqbMerchantId binding)
-          query binding = do
-            result <- runHandler (runReaderT (queryRemote manager binding) env)
-            pure (either (const (Left Recovery.RefundRecoveryQueryFailed)) Right result)
-      result <- liftIO $ Recovery.reconcileKnownRefundGuarded
-        (fmap (either (const False) (const True)) (withCurrentAuthorization strictAdmin user (pure ())))
-        (envPool env) (R.rrReference record)
-        actor configured query
-      case result of
-        Right view -> pure (dto (Recovery.rrvRefund view))
-        Left Recovery.RefundRecoveryRateLimited -> throwError err429
-          {errBody="Refund query limit reached",errHeaders=[("Retry-After","10")]}
-        Left _ -> throwError err409 {errBody="Refund remains reserved pending verified reconciliation"}
+      if R.rrStatus record=="succeeded" then pure (dto record) else do
+        unless (R.rrProvider record=="paypal") $ throwError err409
+          {errBody="Manual refunds require receipt evidence and independent confirmation"}
+        let configured binding = do
+              result <- runHandler (runReaderT (queryConfigured record) env)
+              pure (result==Right True && R.rrEnvironment record==C.checkoutEnvironmentText (Q.rqbEnvironment binding)
+                && R.rrMerchantRef record==Q.rqbMerchantId binding)
+            query binding = do
+              result <- runHandler (runReaderT (queryRemote manager binding) env)
+              pure (either (const (Left Recovery.RefundRecoveryQueryFailed)) Right result)
+        result <- liftIO $ Recovery.reconcileKnownRefundGuarded
+          (fmap (either (const False) (const True)) (withCurrentAuthorization strictAdmin user (pure ())))
+          (envPool env) (R.rrReference record)
+          actor configured query
+        case result of
+          Right view -> pure (dto (Recovery.rrvRefund view))
+          Left Recovery.RefundRecoveryRateLimited -> throwError err429
+            {errBody="Refund query limit reached",errHeaders=[("Retry-After","10")]}
+          Left _ -> throwError err409 {errBody="Refund remains reserved pending verified reconciliation"}
     manualEvidence quoteId ManualRefundEvidence{..} = do
       now <- liftIO getCurrentTime
       authorizedTransaction user $ do
@@ -204,7 +219,10 @@ transaction action = do
   either (const (throwError err409 {errBody="Refund state or evidence does not permit this operation"})) pure result
 
 dto :: R.RefundRecord -> Value
-dto record = object
+dto = object . refundFields
+
+refundFields :: R.RefundRecord -> [Pair]
+refundFields record =
   [ "refundId" .= R.refundReferenceId (R.rrReference record),"status" .= R.rrStatus record
   , "provider" .= R.rrProvider record,"environment" .= R.rrEnvironment record
   , "amountMinor" .= T.pack (show (R.rrAmountMinor record)),"currency" .= R.rrCurrency record
@@ -213,3 +231,24 @@ dto record = object
   , "completedAt" .= R.rrCompletedAt record
   , "executionMode" .= (if R.rrProvider record=="paypal" then "automatic" else "manual" :: Text)
   ]
+
+-- Administrators need the immutable receipt reference to perform an actual
+-- independent review. Expose only its secure identifier, never the document,
+-- credentials or bank payload. Authorization is held by readStatus's transaction.
+manualEvidenceView :: R.RefundReference -> SqlPersistT IO Value
+manualEvidenceView ref = do
+  rows <- rawSql
+    "SELECT external_reference,evidence_reference,amount_minor,currency,occurred_at,\
+    \ recorded_by,recorded_at,confirmed_by,confirmed_at FROM domo_manual_refund_evidence WHERE refund_id=?::uuid"
+    [PersistText (R.refundReferenceId ref)]
+    :: SqlPersistT IO [(Single Text,Single Text,Single Int64,Single Text,Single UTCTime,
+                        Single Int64,Single UTCTime,Single (Maybe Int64),Single (Maybe UTCTime))]
+  case rows of
+    [] -> pure Null
+    [(Single external,Single evidence,Single amount,Single currency,Single occurred,
+      Single recorder,Single recorded,Single confirmer,Single confirmed)] -> pure $ object
+        [ "externalReference" .= external,"evidenceReference" .= evidence
+        , "amountMinor" .= T.pack (show amount),"currency" .= currency,"occurredAt" .= occurred
+        , "recordedBy" .= recorder,"recordedAt" .= recorded
+        , "confirmedBy" .= confirmer,"confirmedAt" .= confirmed ]
+    _ -> fail "Manual refund evidence is ambiguous"

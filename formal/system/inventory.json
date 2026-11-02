@@ -2906,7 +2906,7 @@
     {
       "id": "SURFACE-6e2aa20fed937be2",
       "path": ".github/workflows/domo-refund-validation.yml",
-      "sha256": "10964633a7b84b0336474d1d36338d5268daf0b5cf5096786c05d54e01e4cc48",
+      "sha256": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3482,7 +3482,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "8c75c43094cdfeb2a961a1f5d43043bb1504ca11398085121e278f1c82b47d9b",
+      "sha256": "1f67672f249515c71c59bcf2461d6aa8832ceebae03a28fe392a6088167462ff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4940,7 +4940,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "0bb7fbcc2acc0ee34863aba1af636d8689471c77cf4af2f806bbfb6c8611b5c9",
+      "sha256": "a32f5e235b22554fea54c4209eadcdb188555d4e204e04c604d9d6412a6da775",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6230,7 +6230,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "ece713c3e7acf9976b6878ae390db4b89a3e7470c596043fd7629069eb26f562",
+      "sha256": "f69f1a28f45848370cd94289c4bdf315efd200ea31c4c461dd6a0e7d27433f20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14732,13 +14732,13 @@
     {
       "id": "SURFACE-6af2fb60590d5f42",
       "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
-      "sha256": "c612a442993132147e86c203824c8368e63ffe2174a0826eaa080316c27efb65",
+      "sha256": "709904c66f766b0119aea195bdc31f85c31eb4083b5403f75b8d5ce7a4010b71",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4e65b4accc811245",
       "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
-      "sha256": "0a92fd77f1d42204b615922ce5173c0bc7995f483e5763a8c7ec507ebf2cdfae",
+      "sha256": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15200,7 +15200,7 @@
     {
       "id": "SURFACE-52b27b4edfde0af0",
       "path": "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
-      "sha256": "b0e64573e7502d060c64923604d92c300a694cb59f149a6e1c4f20235f8173d2",
+      "sha256": "0a025b50986c4b714c80dc405f967eb2e1dbcb26db80058d9b55da134fc966ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15902,7 +15902,7 @@
     {
       "id": "SURFACE-ad9b4538d376377d",
       "path": "tdf-hq/src/TDF/Server/DomoRefunds.hs",
-      "sha256": "a2deb36b937f26456c486a113e49d6d6a690fc5f52011c722e23961d0c077ef7",
+      "sha256": "e52fa4d635b8917a322f5a83bfa7f9ced168c834d48c34abc653676cd1bfe0c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16508,7 +16508,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "3d94f8aee0342b61c1c4d00620b170c89a6ef9aab7bafcb65d92801c6f71ad40",
+      "sha256": "d4d78deefbb6afa1042f6b4890fa2b0d619c35f1722670402bf809c0776585d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22327,7 +22327,7 @@
     },
     {
       "path": "docs/payments/domo-refunds-2026-11-02.md",
-      "sha256": "4c1d492486bce95a3085f676cb2d547cae007eb1ac617a9a61885ce4f68afa76",
+      "sha256": "2ebe3e29168f2df00c211b4fbcf0247cabff143df05f2457428df6d891f436f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28802,7 +28802,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f121c03ddd9630b9b5965db9deb7330ac4d7cc4c4fd91d70867d23ef272efdbd",
+      "sha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -22,7 +22,8 @@ Conserva AUTHORITY-093, PAY-DOMO-CANCEL-001 y sus importes/versiones aprobados.
 Todos los endpoints administrativos usan bearer auth. Se revalidan sesión,
 roles y permisos actuales bajo bloqueo antes de escribir; no se mantienen
 bloqueos de base de datos mientras se espera HTTP. `GET .../refund` consulta
-el estado. La página privada de la cotización restaura los importes y el estado
+el estado y, para devoluciones manuales, la referencia segura del comprobante
+y las identidades/fechas de registro y confirmación. La página privada de la cotización restaura los importes y el estado
 persistido al recargar. Aprobación/procesamiento nunca se presentan como devolución.
 
 ## Proveedores disponibles en esta implementación
@@ -90,7 +91,10 @@ por sí solo un documento de un proveedor sin adaptador de consulta.
 La migración es aditiva. La vista de obligaciones pendientes ahora incluye
 solicitudes/aprobaciones/procesamientos/errores hasta el éxito efectivo. Reabre
 solo excepciones de cancelación cerradas prematuramente por el código propuesto;
-no cambia importes ni estados financieros. Su rollback rechaza borrar historial.
+conserva las notas y audita la reapertura; también hace visibles las solicitudes
+antiguas sin excepción de cola. No cambia importes ni estados financieros.
+Un guardián SQL impide que la administración genérica resuelva o ignore la deuda
+antes de su confirmación efectiva. Su rollback rechaza borrar historial.
 La política de cancelación aprobada y sus migraciones originales no se reescriben.
 
 La admisión de capturas y la cancelación comparten los bloqueos de cotización y

@@ -22,6 +22,13 @@ CREATE TABLE IF NOT EXISTS public.domo_manual_refund_evidence (
   UNIQUE(provider,environment,merchant_account_ref,external_reference)
 );
 
+-- These raw-SQL references already appear through PostgreSQL FK discovery.
+-- Install the same archived-identity write guard as the other financial tables.
+DROP TRIGGER IF EXISTS identity_archive_reference_guard ON public.domo_manual_refund_evidence;
+CREATE TRIGGER identity_archive_reference_guard BEFORE INSERT OR UPDATE
+ ON public.domo_manual_refund_evidence FOR EACH ROW
+ EXECUTE FUNCTION public.identity_reject_archived_reference('recorded_by','confirmed_by');
+
 CREATE OR REPLACE FUNCTION public.domo_manual_refund_validate()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -84,14 +91,69 @@ DROP TRIGGER IF EXISTS trg_domo_refund_close_reconciliation ON public.commerce_r
 CREATE TRIGGER trg_domo_refund_close_reconciliation AFTER UPDATE OF status
   ON public.commerce_refund FOR EACH ROW EXECUTE FUNCTION public.domo_refund_close_reconciliation();
 
+-- Operator cancellations written by the earlier proposal linked a request but
+-- did not always create a reconciliation queue entry. Surface those obligations
+-- without changing the immutable request or its financial state.
+INSERT INTO public.commerce_reconciliation_exception
+ (provider,environment,merchant_account_ref,exception_type,internal_reference,
+  provider_reference,expected_amount_minor,currency,status,detected_at)
+ SELECT r.provider,r.environment,r.merchant_account_ref,'domo_cancellation_refund_due',
+   'domo-quote:'||c.domo_quote_id::text,r.payment_attempt_id::text,c.refund_due_minor,c.currency,'open',c.cancelled_at
+ FROM public.domo_quote_cancellation c
+ JOIN public.domo_event_quote_runtime q ON q.id=c.domo_quote_id
+ JOIN public.commerce_refund r ON r.id=c.refund_id AND r.checkout_id=q.checkout_id
+ WHERE c.refund_due_minor>0 AND r.amount_minor=c.refund_due_minor AND r.currency=c.currency
+   AND r.status<>'succeeded' AND NOT EXISTS (
+     SELECT 1 FROM public.commerce_reconciliation_exception e
+     WHERE e.exception_type='domo_cancellation_refund_due'
+       AND e.internal_reference='domo-quote:'||c.domo_quote_id::text
+       AND e.provider=r.provider AND e.environment=r.environment AND e.merchant_account_ref=r.merchant_account_ref)
+ ON CONFLICT DO NOTHING;
+
+-- Preserve the prior closure and its time in the canonical audit; retain free
+-- form notes in their original restricted row, never copy them to audit metadata.
+INSERT INTO public.commerce_checkout_audit_event(checkout_id,event_type,actor_type,correlation_id,metadata)
+ SELECT q.checkout_id,'domo_refund_reconciliation_reopened','system','domo-refund-migration:'||e.id::text,
+   jsonb_build_object('exception_id',e.id::text,'previous_status',e.status,'previous_resolved_at',e.resolved_at)
+ FROM public.commerce_reconciliation_exception e
+ JOIN public.domo_quote_cancellation c ON e.internal_reference='domo-quote:'||c.domo_quote_id::text
+ JOIN public.domo_event_quote_runtime q ON q.id=c.domo_quote_id
+ LEFT JOIN public.commerce_refund r ON r.id=c.refund_id
+ WHERE e.exception_type='domo_cancellation_refund_due' AND c.refund_due_minor>0
+   AND (r.id IS NULL OR r.status<>'succeeded') AND e.status IN ('resolved','ignored');
+
 -- Repair only premature reconciliation labels introduced by the proposal.
 -- Never reinterpret a completed refund or alter any amount/provider status.
 UPDATE public.commerce_reconciliation_exception e SET status='open',resolved_at=NULL,
-  resolution_notes='Reopened: a refund request is not evidence of returned money'
+  resolution_notes=COALESCE(e.resolution_notes||E'\n','')||'Reopened: a refund request is not evidence of returned money'
  FROM public.domo_quote_cancellation c LEFT JOIN public.commerce_refund r ON r.id=c.refund_id
  WHERE e.exception_type='domo_cancellation_refund_due'
    AND e.internal_reference='domo-quote:'||c.domo_quote_id::text
-   AND c.refund_due_minor>0 AND (r.id IS NULL OR r.status<>'succeeded') AND e.status='resolved';
+   AND c.refund_due_minor>0 AND (r.id IS NULL OR r.status<>'succeeded') AND e.status IN ('resolved','ignored');
+
+-- The generic reconciliation administration path must respect the same debt
+-- finality rule. A user cannot resolve/ignore this financial obligation merely
+-- because its request was approved or accepted by a provider.
+CREATE OR REPLACE FUNCTION public.domo_refund_require_verified_closure()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+ IF NEW.exception_type='domo_cancellation_refund_due' AND NEW.status IN ('resolved','ignored')
+    AND (TG_OP='INSERT' OR OLD.status IS DISTINCT FROM NEW.status) AND NOT EXISTS (
+      SELECT 1 FROM public.domo_quote_cancellation c
+      JOIN public.domo_event_quote_runtime q ON q.id=c.domo_quote_id
+      JOIN public.commerce_refund r ON r.id=c.refund_id AND r.checkout_id=q.checkout_id
+      WHERE NEW.internal_reference='domo-quote:'||c.domo_quote_id::text
+        AND r.status='succeeded' AND r.provider=NEW.provider AND r.environment=NEW.environment
+        AND r.merchant_account_ref=NEW.merchant_account_ref AND r.amount_minor=c.refund_due_minor
+        AND NEW.expected_amount_minor=c.refund_due_minor AND r.currency=c.currency AND NEW.currency=c.currency
+    ) THEN
+   RAISE EXCEPTION 'Domo reconciliation requires verified refund completion';
+ END IF;
+ RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS trg_domo_refund_require_verified_closure ON public.commerce_reconciliation_exception;
+CREATE TRIGGER trg_domo_refund_require_verified_closure BEFORE INSERT OR UPDATE
+ ON public.commerce_reconciliation_exception FOR EACH ROW EXECUTE FUNCTION public.domo_refund_require_verified_closure();
 
 INSERT INTO public.revenue_feature_flag(flag_key,environment,enabled,reason)
  VALUES ('domo.refund_manual','sandbox',FALSE,'Enable only after manual evidence and independent review are staffed'),

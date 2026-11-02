@@ -14467,7 +14467,7 @@
       "confidence": "High for the policy arithmetic, the table invariants and the transaction (property, lemma and database tested); the handler composition is tested, not mechanically refined.",
       "ambiguity": [
         "Lead time is whole 24-hour periods before the event start instant (not venue calendar days), fixed by leadDaysBefore.",
-        "A customer cancellation cannot itself create a commerce_refund because the refund store requires an authenticated requester and a different approver; the obligation is recorded and surfaced as an open reconciliation exception until an operator settles it."
+        "A customer cancellation cannot itself create a commerce_refund because the refund store requires an authenticated requester and a different approver; the obligation is recorded and surfaced as an open reconciliation exception until the exact refund is verified complete."
       ],
       "conformance": {
         "classification": "PARTIAL",

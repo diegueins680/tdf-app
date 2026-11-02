@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "sourceParent": "593b1f286b75e31338d28a03f94be05a08b3777c",
+  "previousDecisionId": "27def070486792cad395",
+  "currentDecisionId": "de3a4e3c339a93b8cac0",
+  "previousDecisionCanonicalSha256": "085659be48eed02b09860767b22855e80f1fe17bddca460289a6ab13504fca03",
+  "preservedPrefixCount": 235,
+  "preservedPrefixCanonicalSha256": "20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41",
+  "appendedMigration": {
+    "id": "2026-11-02_domo_refund_lifecycle",
+    "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
+    "introducedBy": "fee3642a70a1eeabf0c4d2efaace5da5d240e23a"
+  },
+  "scope": "Technical execution registry review only; no production activation, refund or release authorization."
+}
