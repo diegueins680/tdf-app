@@ -3627,7 +3627,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7671,7 +7671,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7771,7 +7771,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7783,7 +7783,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9532,7 +9532,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
       "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -10540,7 +10540,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
       },
-      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure \u2026', 'operations worker \u2026', 'operations retried \u2026', 'operations migration \u2026'; formal/event-operations/OperationsFailureReplay.tla",
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
       "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
@@ -10887,7 +10887,7 @@
     {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
-      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image\u2019s temporary initialization socket server is insufficient.",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
       "domain": "SYS",
       "actors": [
         "CI fixture runner",
@@ -11037,7 +11037,7 @@
       "domain": "PAY",
       "critical": true,
       "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
-      "authority": "User audit sections 14\u201315 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
       "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
       "contract": "formal/system/music-purchase-replay.md",
       "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
@@ -11126,7 +11126,7 @@
       "critical": true,
       "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
       "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
-      "source": "User audit sections9\u201315 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
       "contract": "formal/system/music-money-wire.md",
       "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
       "actors": [
@@ -11240,7 +11240,7 @@
       "critical": false,
       "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
       "authority": "User audit validation and traceability requirements",
-      "source": "User audit sections9,24\u201325; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
       "contract": "formal/system/music-test-entrypoint.md",
       "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
       "actors": [
@@ -13506,8 +13506,8 @@
       "id": "BOOK-STUDIO-TIMEZONE-001",
       "title": "Public studio hours use Quito time independently of visitor preferences",
       "domain": "BOOK",
-      "statement": "The public studio booking page interprets 08:00\u201322:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
-      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00\u201322:00.",
+      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
       "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
       "contract": "formal/system/public-booking-timezone.md",
       "actors": [
@@ -13960,6 +13960,177 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Finite native handler regression scope; complete implementation/refinement and production PostgreSQL/provider/deployment correspondence remain unproven."
+      }
+    },
+    {
+      "id": "MEDIA-ARTIST-CATALOG-001",
+      "title": "Shared artist catalog and identity projections",
+      "statement": "Profiles, followed feeds and Label share catalog reads and published-release presentation while retaining canonical and legacy source identity, bounded pagination, cancellation and honest partial failures. Artist links use a validated Party identity; shared subscription commands and target/account-scoped invalidation keep audience projections coherent without granting social consent.",
+      "domain": "MEDIA",
+      "actors": [
+        "Public listener",
+        "Authenticated fan",
+        "Artist",
+        "Label operator"
+      ],
+      "preconditions": [
+        "Existing public release endpoints and server subscription authorization remain authoritative. No historical rights or identity mapping is inferred."
+      ],
+      "inputs": [
+        "Positive exact Party ID or validated canonical slug",
+        "Canonical and legacy public release responses",
+        "Captured session ownership and explicit follow intent"
+      ],
+      "state": {
+        "catalog": [
+          "loading",
+          "complete",
+          "partial",
+          "unavailable",
+          "cancelled"
+        ],
+        "identity": [
+          "linked-party",
+          "unlinked-external"
+        ]
+      },
+      "allowedTransitions": [
+        "Load -> complete only after all eligible pages finish.",
+        "One source fails -> partial while retaining other available results.",
+        "Committed subscription change -> invalidate its account and target artist projections."
+      ],
+      "forbiddenTransitions": [
+        "Same title -> assume cross-source identity.",
+        "Failed or cancelled fetch -> assert an empty complete catalog.",
+        "Social artist record ID -> substitute as Party ID.",
+        "Subscription -> grant connection consent or club membership."
+      ],
+      "effects": [
+        "Reuse public release cards, bounded public catalog reads, validated profile routes and existing subscription commands."
+      ],
+      "authorization": "Public API visibility and existing server write authorization are unchanged. Shared subscription commands reject a retired session before writing.",
+      "privacy": "Only the captured viewer subscription cache is invalidated; another account list is not refreshed or adopted. No credentials or new persistent personal data are added.",
+      "concurrency": "At most four artist-level reads, with two initial source requests each; obsolete queries receive cancellation. Canonical pagination rejects repeated full pages and more than 10,000 rows.",
+      "idempotency": "Deduplicate only exact source IDs and requested artist IDs. Failed writes are not automatically replayed.",
+      "failure": "Retain partial-source diagnostics and do not render failed reads as a successful empty catalog.",
+      "recovery": "Explicit catalog retry reads current server state. Existing follow-response reconciliation remains authoritative.",
+      "observability": "Scoped catalog/identity/cache tests and existing actual-component regressions; hosted review and deployment remain separate.",
+      "source": "Explicit user instruction on 2026-10-29 to execute the proposed unifications; scoped migration and authority boundaries in docs/architecture/artist-catalog-unification.md",
+      "implementation": [
+        "tdf-hq-ui/src/api/artistCatalog.ts",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/features/fans/artistAudience.ts",
+        "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
+        "tdf-hq-ui/src/features/releases/catalogQueries.ts",
+        "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/utils/artistIdentity.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/artistCatalog.test.ts",
+        "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
+        "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/utils/artistIdentity.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped web adapter and component checks; physical migration, production correspondence and universal media ingestion remain open.",
+      "ambiguity": [
+        "Legacy-to-canonical recording provenance and physical profile conflicts require verified mappings.",
+        "Social subscription, connection and club membership retain separate semantics."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Web consolidation is implemented and tested locally; physical data migration, protected integration and production acceptance are not established."
+      },
+      "critical": false,
+      "authority": "User-authorized source consolidation, preserving existing permissions and data.",
+      "property": "Shared projections preserve source identity, cancellation, partial-failure truthfulness and account scoping.",
+      "contract": "docs/architecture/artist-catalog-unification.md",
+      "verification": "Adapter boundary tests, identity negative cases, cache scoping tests and existing profile/hub/event/label component checks.",
+      "evidence": "Local checks and current-head hosted results must be reported separately; no formal refinement proof is claimed."
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+      "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",
+      "domain": "SYS",
+      "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
+      "source": "formal/system/container-cleanup-evidence.md",
+      "contract": "formal/system/container-cleanup-evidence.md",
+      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout and exact case-insensitive error: no such object: <inspected nonce name>. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
+      "actors": [
+        "Hosted CI upload verifier",
+        "Maintainer diagnosing a failed gate"
+      ],
+      "preconditions": [
+        "Existing isolated GitHub-hosted guard",
+        "Existing nonce ownership boundary",
+        "subprocess capture_output/text contract"
+      ],
+      "inputs": [
+        "Owned synthetic inspect CompletedProcess",
+        "Actually completed synthetic-case records"
+      ],
+      "state": {
+        "initial": "Cleanup inspect response",
+        "terminal": [
+          "Existing confirmed cleanup path",
+          "Exact inspected-container absence",
+          "Failure retaining bounded diagnostic context"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain unexpected response while refusing success",
+        "Preserve prior Python exception chain",
+        "Remove only verified owned container ID under the existing guard",
+        "Accept only the recorded Docker absence response for the exact inspected nonce name"
+      ],
+      "forbiddenTransitions": [
+        "Discard unexpected response into a constant error",
+        "Accept unknown inspect errors as absence",
+        "Remove a foreign container",
+        "Suppress an existing primary exception chain"
+      ],
+      "effects": [
+        "Bounded failure evidence and strict missing-container response classification; Docker commands and isolation unchanged"
+      ],
+      "authorization": "Existing hosted runner gate, local socket and nonce/ownership refusal unchanged.",
+      "privacy": "Only synthetic command status/streams/name/case records; no environment, host-wide inventory or private upload-content dump.",
+      "concurrency": "Existing sequential synthetic runner unchanged; no daemon/process synchronization claim.",
+      "idempotency": "No retry or new cleanup operation; successful inspection retains the existing nonce-checked ID removal.",
+      "failure": "Unexpected cleanup still fails; malformed JSON, removal errors and timeouts retain existing behavior outside new structured path.",
+      "recovery": "Review the captured response before changing classification; require fresh hosted execution before claiming actual Docker repair.",
+      "observability": "Structured error context with each stream limited to2000characters before JSONserialization and explicit truncation flags.",
+      "implementation": [
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-persistent-uploads-container-diagnostics.py"
+      ],
+      "formalModels": [],
+      "verification": "12 mocked actual-main-path tests including four recognized missing-object variants and seven nearby refusals; old classifier reproduces lowercase-response refusal and daemon-error false acceptance. Original diagnostic fault controls remain historical.",
+      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Actual hosted response identifies the later failure cause; finite actual-runner simulations pass. No local Docker or current-head hosted qualification claim.",
+      "ambiguity": [
+        "The original PR677 Docker response remains unknown; later PR679 response is retained in job123928715883.",
+        "Exact classifier covers the recorded Docker spellings, not every version or concurrent daemon state.",
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Simulated diagnostics and source preservation tested; actual hosted Docker run and complete implementation/refinement remain separate."
       }
     },
     {
