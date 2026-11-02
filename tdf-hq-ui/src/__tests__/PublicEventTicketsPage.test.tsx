@@ -395,9 +395,12 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).not.toContain('This event has no approved active ticket price');
     expect(container.textContent).not.toContain('Elige tus entradas');
     expect(container.querySelector('form')).toBeNull();
-    const vendorLink = container.querySelector('a[href="https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325"]');
-    expect(vendorLink?.textContent).toContain('Comprar entradas en Eventbrite');
-    expect(vendorLink?.getAttribute('target')).toBe('_blank');
+    // The Markdown description also renders the raw URL as a link, so select
+    // the purchase CTA by its label rather than the first matching href.
+    const vendorLinks = Array.from(container.querySelectorAll('a[href="https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325"]'));
+    const vendorCta = vendorLinks.find((link) => link.textContent?.includes('Comprar entradas en Eventbrite'));
+    expect(vendorCta).toBeDefined();
+    expect(vendorCta?.getAttribute('target')).toBe('_blank');
   });
 
   it('reports a bank transfer as pending staff verification, never as paid', async () => {
