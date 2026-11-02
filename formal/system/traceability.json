@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "7586be92f447faaf05d1f7d7073af6321ad1496a",
+  "mobileRevision": "6bedbfa1782b0b555d9f19d75763de3054568702",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -15271,7 +15271,7 @@
     "tdf-hq-ui/src/api/eventTickets.ts": "9ed3528a555397f16261758e2fe98aa6b57348ffbda8ed45b6ac629daeaeb736",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "6d0e03d5de68ff47ccdd7283637492808b94f8d0025cc7035019b2653330ce04",
+    "tdf-hq-ui/src/api/generated/types.ts": "35d7d5d78c49aa8bd2d9c13d168266f70be2cd617ac362140d7daf9d4da5591e",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -15989,7 +15989,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "58d557a129f756848a4a76010491f8decdb777b7a77449ec5de4f1057a23ce63",
+    "tdf-mobile/src/api/generated/types.ts": "35d7d5d78c49aa8bd2d9c13d168266f70be2cd617ac362140d7daf9d4da5591e",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -36512,7 +36512,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "6d0e03d5de68ff47ccdd7283637492808b94f8d0025cc7035019b2653330ce04",
+      "sha256": "35d7d5d78c49aa8bd2d9c13d168266f70be2cd617ac362140d7daf9d4da5591e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55042,7 +55042,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "58d557a129f756848a4a76010491f8decdb777b7a77449ec5de4f1057a23ce63",
+      "sha256": "35d7d5d78c49aa8bd2d9c13d168266f70be2cd617ac362140d7daf9d4da5591e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
