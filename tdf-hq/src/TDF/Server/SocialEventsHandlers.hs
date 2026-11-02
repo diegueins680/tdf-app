@@ -14,6 +14,7 @@ module TDF.Server.SocialEventsHandlers (
     ticketPlatformFeeBreakdown,
     ticketTermsAcceptance,
     replaceLogisticsActivityDependencies,
+    resolveLogisticsTimezone,
     socialEventsServer,
     socialEventsServerWithStripeRefund,
     stripeWebhookServer,
@@ -7309,13 +7310,21 @@ validateLogisticsAssignments pool assignments = forM_ assignments $ \assignment 
         when (T.length email > 320 || not ("@" `T.isInfixOf` email)) $
             throwError err400{errBody = "external assignee email is invalid"}
 
+-- Explicit logistics settings win; a new plan inherits the event's clock.
+resolveLogisticsTimezone :: T.Text -> Maybe T.Text -> Maybe T.Text -> T.Text
+resolveLogisticsTimezone fallbackTimezone eventTimezone logisticsTimezone =
+    fromMaybe fallbackTimezone (logisticsTimezone <|> eventTimezone)
+
 loadLogisticsSettings :: T.Text -> ConnectionPool -> SocialEventId -> AppM EventLogisticsSettingsDTO
 loadLogisticsSettings fallbackTimezone pool eventKey = do
     row <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsPlan eventKey)) pool
-    pure $ case row of
-        Nothing -> EventLogisticsSettingsDTO fallbackTimezone "drive"
-        Just (Entity _ value) -> EventLogisticsSettingsDTO
-            { elsTimezone = eventLogisticsPlanTimezone value
+    case row of
+        Nothing -> do
+            event <- liftIO $ runSqlPool (get eventKey) pool
+            pure $ EventLogisticsSettingsDTO
+                (resolveLogisticsTimezone fallbackTimezone (event >>= socialEventTimezone) Nothing) "drive"
+        Just (Entity _ value) -> pure $ EventLogisticsSettingsDTO
+            { elsTimezone = resolveLogisticsTimezone fallbackTimezone Nothing (Just $ eventLogisticsPlanTimezone value)
             , elsDefaultTravelMode = eventLogisticsPlanDefaultTravelMode value
             }
 

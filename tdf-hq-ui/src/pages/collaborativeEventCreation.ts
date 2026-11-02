@@ -5,6 +5,8 @@ import type {
   SocialEventDTO,
 } from '../api/socialEvents';
 import { resolveRuntimeCurrency } from '../utils/formatters';
+import { parseOptionalPriceCents } from '../utils/eventTicketPricing';
+export { parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
 export type CollaborativeEventRole = EventLogisticsMemberDTO['elmRole'];
 
@@ -19,6 +21,7 @@ export interface CollaborativeEventDraft {
   title: string;
   description: string;
   startAt: string;
+  timezone: string;
   durationMinutes: number | null;
   venueId: string;
   eventTypeId: string;
@@ -60,6 +63,7 @@ export function buildInitialCollaborativeEventDraft(
     title: '',
     description: '',
     startAt: startAt.toFormat(LOCAL_DATE_TIME_FORMAT),
+    timezone: now.zoneName ?? 'UTC',
     durationMinutes: 120,
     venueId: '',
     eventTypeId: '',
@@ -82,20 +86,6 @@ const parseOptionalCapacity = (raw: string): number | null => {
     throw new Error('La capacidad debe ser mayor que cero.');
   }
   return parsed;
-};
-
-export const parseOptionalPriceCents = (raw: string): number | null => {
-  const value = raw.trim();
-  if (!value) return null;
-  if (!/^\d+(?:[.,]\d{1,2})?$/.test(value)) {
-    throw new Error('El precio debe tener como máximo dos decimales.');
-  }
-  const [whole = '0', fractional = ''] = value.replace(',', '.').split('.');
-  const cents = (Number(whole) * 100) + Number(fractional.padEnd(2, '0'));
-  if (!Number.isSafeInteger(cents) || cents < 0) {
-    throw new Error('El precio está fuera del rango permitido.');
-  }
-  return cents;
 };
 
 const normalizeTicketUrl = (raw: string): string | null => {
@@ -129,8 +119,17 @@ export function buildCollaborativeEventPayload(
     throw new Error('Selecciona una duración válida.');
   }
 
-  const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT);
+  const timezone = draft.timezone.trim();
+  if (!timezone || !DateTime.now().setZone(timezone).isValid) {
+    throw new Error('Selecciona una zona horaria válida, por ejemplo America/Guayaquil.');
+  }
+  const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT, { zone: timezone });
   if (!start.isValid) throw new Error('Selecciona una fecha y hora válidas.');
+  // Luxon shifts nonexistent clock times during a DST transition. Ask the user
+  // to choose a real, unambiguous wall-clock time instead of silently moving it.
+  if (start.toFormat(LOCAL_DATE_TIME_FORMAT) !== draft.startAt || start.getPossibleOffsets().length > 1) {
+    throw new Error('Esa hora cambia por el horario de verano. Selecciona otra hora.');
+  }
   const startIso = start.toUTC().toISO();
   const endIso = draft.durationMinutes === null
     ? null
@@ -145,6 +144,7 @@ export function buildCollaborativeEventPayload(
     eventTitle: title,
     eventDescription: draft.description.trim() || null,
     eventStart: startIso,
+    eventTimezone: timezone,
     eventEnd: endIso,
     eventVenueId: draft.venueId.trim() || null,
     eventPriceCents: parseOptionalPriceCents(draft.price),
