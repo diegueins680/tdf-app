@@ -4,6 +4,7 @@ set -eu
 TDF_PROVIDER_RETRY_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TDF_PROVIDER_RETRY_CONTAINER=""
 TDF_PROVIDER_RETRY_URL=${TDF_PROVIDER_RETRY_DATABASE_URL:-}
+TDF_PROVIDER_RETRY_DOMO_ROLLBACK_LOG=""
 
 validate_runtime_url() {
   node --input-type=module - "$TDF_PROVIDER_RETRY_URL" "$TDF_PROVIDER_RETRY_ROOT/scripts/lib/disposable-postgres-url.mjs" <<'JS'
@@ -17,6 +18,9 @@ test -z "${PGHOSTADDR:-}${PGSERVICE:-}${PGSERVICEFILE:-}" || {
 }
 
 cleanup() {
+  if [ -n "$TDF_PROVIDER_RETRY_DOMO_ROLLBACK_LOG" ]; then
+    rm -f "$TDF_PROVIDER_RETRY_DOMO_ROLLBACK_LOG"
+  fi
   if [ -n "$TDF_PROVIDER_RETRY_CONTAINER" ]; then
     docker rm -f "$TDF_PROVIDER_RETRY_CONTAINER" >/dev/null 2>&1 || true
   fi
@@ -145,24 +149,33 @@ fi
 
 # Generic reconciliation commands must not close a request-only Domo debt.
 # The failed write runs only against this runner's validated disposable database.
-if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL' >/dev/null 2>&1
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
 DO $$
-DECLARE candidate uuid;
+DECLARE
+ candidate uuid;
+ blocked boolean := false;
 BEGIN
  SELECT e.id INTO candidate FROM commerce_reconciliation_exception e
  JOIN domo_quote_cancellation c ON e.internal_reference='domo-quote:'||c.domo_quote_id::text
  LEFT JOIN commerce_refund r ON r.id=c.refund_id
  WHERE e.exception_type='domo_cancellation_refund_due' AND c.refund_due_minor>0
    AND (r.id IS NULL OR r.status<>'succeeded') LIMIT 1;
- IF candidate IS NULL THEN RETURN; END IF;
- UPDATE commerce_reconciliation_exception SET status='resolved',resolved_at=NOW()
-   WHERE id=candidate;
+ IF candidate IS NULL THEN RAISE EXCEPTION 'Missing request-only Domo fixture'; END IF;
+ BEGIN
+   UPDATE commerce_reconciliation_exception SET status='resolved',resolved_at=NOW()
+     WHERE id=candidate;
+ EXCEPTION WHEN SQLSTATE 'P0001' THEN
+   IF SQLERRM <> 'Domo reconciliation requires verified refund completion' THEN RAISE; END IF;
+   blocked := true;
+ END;
+ IF NOT blocked THEN
+   RAISE EXCEPTION 'Request-only Domo obligation incorrectly permitted reconciliation closure';
+ END IF;
+ IF EXISTS (SELECT 1 FROM commerce_reconciliation_exception WHERE id=candidate AND status IN ('resolved','ignored')) THEN
+   RAISE EXCEPTION 'Rejected Domo closure did not preserve the outstanding obligation';
+ END IF;
 END $$;
 SQL
-then
-  echo 'Request-only Domo obligation incorrectly permitted reconciliation closure' >&2
-  exit 1
-fi
 # Reapply on used history. No settled refund may reopen, no request-only debt
 # may remain closed, and no operator-owned activation flag may be reset.
 psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 -c "UPDATE revenue_feature_flag SET enabled=true,reason='synthetic Domo operator setting' WHERE flag_key='domo.refund_manual' AND environment='sandbox'" >/dev/null
@@ -190,8 +203,14 @@ DO $$ BEGIN
  END IF;
 END $$;
 SQL
-if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
-  -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql" >/dev/null 2>&1; then
+TDF_PROVIDER_RETRY_DOMO_ROLLBACK_LOG=$(mktemp)
+if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 -v VERBOSITY=verbose \
+  -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql" >"$TDF_PROVIDER_RETRY_DOMO_ROLLBACK_LOG" 2>&1; then
   echo 'Domo refund rollback unexpectedly removed financial history' >&2
+  exit 1
+fi
+if ! grep -qE 'ERROR:[[:space:]]+P0001:[[:space:]]+Domo refund lifecycle rollback refuses financial history$' "$TDF_PROVIDER_RETRY_DOMO_ROLLBACK_LOG"; then
+  cat "$TDF_PROVIDER_RETRY_DOMO_ROLLBACK_LOG" >&2
+  echo 'Domo rollback failed for an unexpected reason; financial-history refusal is unverified' >&2
   exit 1
 fi

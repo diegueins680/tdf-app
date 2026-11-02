@@ -69,7 +69,8 @@ class AdmissionHarnessControls(unittest.TestCase):
 class ProviderRunnerGateControls(unittest.TestCase):
     """Execute the real shell runner with inert tools, checking fail-closed wiring."""
 
-    def run_runner(self, expiry_exit, manual_flags=2):
+    def run_runner(self, expiry_exit, manual_flags=2, closure_exit=0,
+                   rollback_error='Domo refund lifecycle rollback refuses financial history'):
         import os
         import subprocess
         import sys
@@ -109,13 +110,16 @@ if name == 'psql':
         elif 'pg_class' in query: print('0')
         else: print('1')
     if '-f' in args and args[args.index('-f') + 1].endswith('_rollback.sql'):
-        if trace.exists() and 'stack' in trace.read_text(): sys.exit(1)
+        if trace.exists() and 'stack' in trace.read_text():
+            if args[args.index('-f') + 1].endswith('/2026-11-02_domo_refund_lifecycle_rollback.sql'):
+                print('ERROR:  P0001: ' + os.environ['GATE_DOMO_ROLLBACK_ERROR'], file=sys.stderr)
+            sys.exit(1)
     if '-c' not in args and '-f' not in args:
         body = sys.stdin.read()
-        # Simulate only this named negative probe. The real runtime still has
-        # to demonstrate the database's rejection against the full schema.
-        if "UPDATE commerce_reconciliation_exception SET status='resolved'" in body:
-            sys.exit(1)
+        # The real SQL probe succeeds only when it catches the exact named
+        # financial guard and checks the unchanged outstanding obligation.
+        if 'Missing request-only Domo fixture' in body:
+            sys.exit(int(os.environ['GATE_DOMO_CLOSURE_EXIT']))
 '''.replace('PYTHON', sys.executable, 1)
             for name in ('node', 'psql', 'python3', 'stack', 'git'):
                 target = tools / name
@@ -128,6 +132,8 @@ if name == 'psql':
                 'GATE_TRACE': str(trace),
                 'GATE_EXPIRY_EXIT': str(expiry_exit),
                 'GATE_MANUAL_FLAGS': str(manual_flags),
+                'GATE_DOMO_CLOSURE_EXIT': str(closure_exit),
+                'GATE_DOMO_ROLLBACK_ERROR': rollback_error,
             }
             result = subprocess.run(['sh', str(scripts / 'test-provider-retry-runtime.sh')],
                                     env=environment, text=True, capture_output=True)
@@ -150,6 +156,17 @@ if name == 'psql':
                 self.assertEqual(result.returncode, 1, result.stderr)
                 self.assertIn('Manual Domo refund flags must start disabled', result.stderr)
                 self.assertEqual(trace, [])
+
+    def test_an_unrelated_closure_probe_error_is_not_guard_evidence(self):
+        result, trace = self.run_runner(0, closure_exit=13)
+        self.assertEqual(result.returncode, 13, result.stderr)
+        self.assertEqual(trace, ['expiry', 'stack'])
+
+    def test_an_unrelated_rollback_error_is_not_financial_history_refusal(self):
+        result, trace = self.run_runner(0, rollback_error='synthetic unrelated SQL error')
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn('financial-history refusal is unverified', result.stderr)
+        self.assertEqual(trace, ['expiry', 'stack'])
 
 
 if __name__ == '__main__':
