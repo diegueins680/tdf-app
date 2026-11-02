@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -7410,9 +7411,9 @@ export default function CourseRegistrationsAdminPage() {
               </Stack>
             </>
           ) : hasSavedNotes ? (
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+            <MarkdownText variant="body2" color="text.secondary">
               {persistedNotes}
-            </Typography>
+            </MarkdownText>
           ) : (
             <Stack spacing={0.75} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
@@ -7674,9 +7675,9 @@ export default function CourseRegistrationsAdminPage() {
                             ) : null}
                           </Stack>
                           {showReceiptNotes && (
-                            <Typography variant="body2" color="text.secondary">
+                            <MarkdownText variant="body2" color="text.secondary">
                               {receiptNotes}
-                            </Typography>
+                            </MarkdownText>
                           )}
                         </Stack>
                       </Paper>
@@ -9561,9 +9562,9 @@ export default function CourseRegistrationsAdminPage() {
                                     {followUpSubject && (
                                       <Typography variant="subtitle2">{followUpSubject}</Typography>
                                     )}
-                                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    <MarkdownText variant="body2" color="text.secondary">
                                       {entry.crfNotes}
-                                    </Typography>
+                                    </MarkdownText>
                                     {entry.crfAttachmentUrl && (
                                       <Link
                                         href={entry.crfAttachmentUrl}

@@ -1,0 +1,63 @@
+ACCEPT — scoped independent review of ROOT PR646 current-main source qualification, evidence binders and report-packaging design. Zero blocking findings remain.
+
+Qualified source de3eac60b74411cfb9f43b0c42bc9abbeed55d31; normal parents published 39b9c78d7fa41b58e468e987914388be6acdf76c and protected-main basis 234ff6f7faf1aecf347c8e92a374228f4ec07aaa. ROOT authored the product reconciliation and these qualification harnesses; my source/evidence review is independent of that authorship. No new GitHub approval is granted by this receipt.
+
+Actual canonical native build used --force-dirty and returned zero. Raw targeted real-ServerAuth module output is 15 examples/0 failures/0 pending. Raw full native output is 4060/0/21 inherited pending. Actual build log records TDF.Version compilation. I checked actual binary SHA 6e1a5054075bbbefd9387ac0ceb19bbb6f05ef965958603f6cbcc85f38d63c34 and test Version.o SHA 06f65bb6054e5eab3fa5ec6a9aedbf53f6bfbe9fa52adb467a5debc4b61f7b51 against the force-dirty receipts and current bytes; both contain the exact de3 source literal. This is native test-binary qualification, not serving/deployment qualification.
+
+Fresh fragment verification actually returned zero for the verifier, with intended 19/0 and restored-email-fallback 19/8. I inspected both actual transcripts and confirmed one complete nonpending 19-example summary each. The restored variant's failures are actual assertions expecting Cuenta TDF but receiving synthetic private.tag+contact@example.invalid, not compiler/setup failures. Its six negative authentication cases and explicit valid-name case remain compatible. The actual registered 15-module tests import full ServerAuth; extracted 19 additionally include the existing four helper cases. Extraction/caller correspondence and Hspec single-program reporting remain trusted boundaries, not a general proof against arbitrary forged or mixed transcripts. No Google HTTP/token-fetch/provider/account-SQL or public-profile persistence was executed by these pure cases.
+
+Independently rehashed all 1432 registered FS/Git/Mobile sources, all 988 complete backend paths independently enumerated from Git, exactly eight canonical fragment inputs and all 52 assurance evidence artifacts. Current source revision/digest/file tables/provenance/Mobile pin and clean state agree. ROOT QA, admission, catalogue 8 and serialized fresh assurance record zero. The five-stage orchestration records actual native, fragment, assurance, seal and seal-controls subprocess exits as zero with exact script hashes and raw logs, sequentially after ROOT QA alias cleanup. No earlier source-context/hosted result is relabeled as this execution.
+
+The backend tree remains exact published 39. Reversing only the gpName assignment reconstructs main ServerAuth; no issuer/audience/email-verification/subject/expiry/consent/linking/session/role logic changed. The credential email stays available as contact data while missing/rejected public name reaches the existing neutral selector. Explicit valid provider names are preserved, including email-looking values explicitly chosen as names; the requirement concerns automatic email substitution. Existing account names and historical disclosures are not migrated. Cabal differs from main only by one test registration; no dependency/compiler/source-path change occurs.
+
+All 158 nonowned main requirement objects remain exact, including PAY-CHECKOUT-001/003, and the owned AUTH-ENTRY-002 amendment remains exact 39, total 159 IDs. The CI classifier and its test are exact main plus Google's verifier path, preserving both checkout paths, main's improved runner/regression/root-QA lane and Google's explicit backend 15/fragment 19 invocations. Both parents' historical report/evidence Git bindings remain exact (1678 old and 1686 main, overlapping sets); catalogue/history 1354 is retained with canonical outputs matching Git. Auth/recovery source contexts and reviewed-source hashes agree, with obligation/assumption arrays unchanged. Current source and aliases are clean/absent.
+
+The initial pre-use fragment-input completeness gap was closed before qualification: the binder now requires the exact eight input paths, not merely supplied entries. The retained counterexample is static logical reasoning, not a fabricated runtime pass or invalid published report. All 18 final evidence-corruption controls actually reached intended assertion rejection, accepting valid evidence before/after and leaving disk/source unchanged. These controls cover phase completeness, real binary/Version identity, proof/provenance promotion, mutation/transcript identity and omitted fragment input. They are evidence-admission controls, not 18 product defects or a complete verification-system theorem.
+
+Assurance preserves 159 whole requirements and 318 implementation/refinement obligations UNPROVEN and eleven inherited conditional SMT claims under unchanged assumptions. Release is BLOCKED/executionAllowed false; no new complete proof or full AUTH-ENTRY-002 refinement follows. Finite synthetic native/fragment cases do not certify real Google login, all identity-publication/consent obligations, historical remediation, production PostgreSQL or physical-device/browser behavior. Unrelated gallery/campaign/worker failures are not claimed repaired, and cleanup is not universally interruption-proven.
+
+The reviewed package script requires manual ROOT reading of a source-bound ACCEPT receipt, creates exactly four report-only additions and a normal child, then verifies all four committed Git/FS blobs and every safe unique manifest-bound archive member. Packaging/archive verification and publication remain future operations at this review. ACCEPT is not required GitHub approval or protected integration authorization. Fresh published-head CI and exact-head review, owner-head/main guards, conversation resolution, FIFO and all branch protections must be checked afresh; no old approval or test status is borrowed.
+
+I did not independently rerun compilers/tests/controls/solvers/probes/browser/DB/provider actions, or mutate source, metadata, refs, remote/PR/review state. I inspected actual raw receipts, source and tool code and performed read-only Git/cryptographic comparisons, writing only owned review receipts. No production write, deployment, universal correctness or serving-artifact claim is made.
+
+Companion independent checks: /private/tmp/tdf-google-name-main643-final-independent-checks-20261031T0039.json
+SHA256: 430c0f05aa2c6dc655c00a037a227facdd97d8791a332c43a77ca2a50b49b114
+
+Exact raw receipt/source/harness SHA256:
+4c808963d3473645257b27cb0a60570fa7b17d399fc8069785f2c4a8ccf190af  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/preparation-state.json
+5a25fac9e64b1786f4e965b619079e9dc7cb9f466e99ba24b5e4ea6a8da6b821  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/native-quality.json
+808264596bf0ea3d89b61b8eda0e0e5b0b6495fc720622cc001d6c0fdaaa3bea  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/native-qualified-inputs.json
+f022b52a8106f9a401fffd15c9c665aff019facb2a6c41f84e63fa1b7fc0fd78  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/native-force-dirty-confirmed.json
+3725b4a2b868c15303af6b929c25d4eb827123a8414b945374e09c683c94a5d7  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/qualified-build.log
+0c30c358e06ee40bc052c0bb18ff8f276d333e48ec6e7adccaa6bbf2e9440ba2  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/qualified-targeted.log
+8d9489d975015123b385a623c1a2d8b0462f58c8ed174d8d8f38f4967c2965a5  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/qualified-full.log
+0268a26b7d919a5323114099218168ef55872c35a222b08e8926485bfc125cbf  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/root-quality-result.json
+386d89ba562a9527501eff4f23377b1e7644673f0e29f8405910ced664958ce9  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/google-fragment-execution.json
+08cef10d7fd4f531acd64fc97e53d54001dd4f5276690c4edb59e7de15ae21be  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/google-fragment-qualified.json
+08cef10d7fd4f531acd64fc97e53d54001dd4f5276690c4edb59e7de15ae21be  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/google-fragment-driver.log
+a8c8bb3829e4a018c6e2891d9104c1f6f8783176a5d360bfd3b4ae3d36c3e337  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/assurance-execution.json
+4723a5c56274b901476897b1d327e14f6559f98ba8202550bee044ec2b85ff1e  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/assurance-committed/report.json
+b06bd1640963e394d77ae5c00b0d5f5ef00a535141ee127c7353b7388fd76e4b  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/assurance-committed/sources.json
+906eb28fe026e1373d9ccbc5887a3b83284c22b96d027dbbc426dcc3b1acaefd  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/source-correspondence.json
+688f713e505c98523ed77350dc2794208f9afa63d9b6fb82a3e648ebf2e26be2  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/seal-binding-controls.json
+3e036187bdfbefe350ad5b5aad6f8443de35793706df64ea2346ea1368507cad  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/qualification-execution.json
+9009f66bd50dd7ad553d4b754af8dbe532d4fb641472e089d1608ca399a024b2  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/qualify-native-execution.log
+e8f909a4b81c04ffbd49ff4f5583ed608515cb9eae91bfff2567d41b3d725868  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/fragment-execution.log
+be22a1fc87f021ca1ec0d395460c4009c84875e274fb693af3147357874d1a27  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/assurance-execution.log
+f506bb3ad39e1c6caf6d7b40b940a722d74f858f16ebb71477844e07645d5afe  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/seal-execution.log
+69506d779af111dc12e5a3d412da01bc16c275ec54eed1bd6c0baeb2fd1cf858  /private/tmp/tdf-google-name-main643-qualification-20261031T0039/seal-controls-execution.log
+86bf6285b79c628634774838835d641abb80fad2274174afdf02f0d9fa2c6fbf  /private/tmp/tdf-google-name-main643-prepare-20261031T0039.py
+34a99d927249f05ae1b1b561993fcb05578ea685ace18f38ea72d8d19b382fed  /private/tmp/tdf-google-name-main643-finish-source-20261031T0039.py
+99442eefcb3b94b7229bd1ef908525265594840cd33f0d27049cc6f029333805  /private/tmp/tdf-google-name-main643-qualify-native-20261031T0039.py
+0fee41fac8fe166e549e4f28d265ba804f964a2ed14b301e35e9a54b71fbe30a  /private/tmp/tdf-google-name-main643-fragment-20261031T0039.py
+a75adbc3662a28beefb960a3e74ab18aaa35133fc7984ed871d1361178499029  /private/tmp/tdf-google-name-main643-assurance-20261031T0039.py
+402703142fdfc4b3da4a724f6c95d05d82932b7faf5e96c71340df344c4738b4  /private/tmp/tdf-google-name-main643-seal-20261031T0039.py
+58aa8c748721495110e2c3e2a04c92ced0e1dee7c4d0bbc6930ac7650fa9f2ed  /private/tmp/tdf-google-name-main643-seal-controls-20261031T0039.py
+a14a52d78b76fece2b424d7be0fc7d5baac2e1feb8ea48580ea7e6cc7a37ff06  /private/tmp/tdf-google-name-main643-package-20261031T0039.py
+3f8cb13374f8245816e028225e40b62bf75e0fde0bdd344713e24cf944381beb  /private/tmp/tdf-google-name-main643-qualify-all-20261031T0039.py
+27d9f59e9475295fe59ae9546b5452495279ae20bbd75b1a9338ff8ddb043514  /private/tmp/tdf-verify-report-archive-20261030.py
+652590275ce2c11edbd954cafb77f9b7e6ce2248de23000571f50618182af164  /private/tmp/tdf-google-name-main643-20261031T0039/formal/system/mobile-entry-ux.md
+6f2fa5c03b96085ae88dba6b78b41119789deba560f6ee60d505b58e5a5c595c  /private/tmp/tdf-google-name-main643-20261031T0039/formal/system/auth-predicates.json
+29b390dd902815042bcdc297be71cc4886a375f5ce77735c86eca195b8422387  /private/tmp/tdf-google-name-main643-20261031T0039/formal/system/recovery-expiry-arithmetic.json
+
+Reviewed at UTC 2026-10-31T01:07:08.900962+00:00
