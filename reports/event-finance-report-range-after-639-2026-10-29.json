@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-29",
+  "baselineMain": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+  "sourceCommit": "2a057442d4b1a803d52860af2c524f0a7bbea37c",
+  "sourceParents": [
+    "e612b6f1d8cedb988618dc81bf3fe1bbc12462db",
+    "cd091a3c81d5ab70e175d339860fa1921ca1f0c3"
+  ],
+  "qualifiedNativeComponentSource": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+  "componentEvidenceCommit": "e612b6f1d8cedb988618dc81bf3fe1bbc12462db",
+  "componentReport": "reports/event-finance-report-range-2026-10-29.json",
+  "evidenceCommit": "Containing report-only child commit; verified after commit.",
+  "problem": "Event-finance and budget actual sums can wrap positive type-valid amounts into negative reported cents.12actual native main6197 counterexamples establish one confirmed failure family.",
+  "correction": "Keep all aggregate sums/differences as Integer; apply shared signed Int checks to all18summary monetary outputs andbudgetactuals. Refuse unsupportedbudgetactual before existing UPDATE; preserve supported negative balances and filters.",
+  "properties": [
+    {
+      "id": "PAY-EVENT-REPORT-RANGE-001/EXACT-AGGREGATION",
+      "sourceCommit": "2a057442d4b1a803d52860af2c524f0a7bbea37c",
+      "implementation": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+      "tests": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+      "contract": "formal/system/event-finance-report-range.md",
+      "status": "TESTED",
+      "method": "Native eab96 handler/fullsuite evidence +exact whole-backend tree correspondence; source-specific aggregate guard mutant produces2assertionfailures.",
+      "assumptions": "Trusted compiler/runtime and existing row validation; no complete refinement/production PostgreSQL reachability proof."
+    },
+    {
+      "id": "PAY-EVENT-REPORT-RANGE-001/PREWRITE-REFUSAL",
+      "sourceCommit": "2a057442d4b1a803d52860af2c524f0a7bbea37c",
+      "implementation": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+      "tests": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+      "contract": "formal/system/event-finance-report-range.md",
+      "status": "TESTED",
+      "method": "Native fixture preserves planned7 after refused99; check-after-write mutant produces1actualDBstatefailure.",
+      "assumptions": "Observed-row precheck, not a new serializable snapshot or whole transaction proof."
+    }
+  ],
+  "currentCompositionVerification": {
+    "rootQuality": {
+      "sourceCommit": "2a057442d4b1a803d52860af2c524f0a7bbea37c",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "strictCatalogJSONCSVAndCanonicalIndices": "PASS",
+    "sourceCorrespondence": {
+      "incomingMain": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+      "qualifiedBackendSource": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+      "all157IncomingRequirementsPlusExactRangePreserved": true,
+      "all986QualifiedBackendInputsByteExact": true,
+      "allSevenIncomingArtistInputsExactMain": true,
+      "historicalCatalogDecisionWholeFileExactMain": true,
+      "normativeConflictResolution": "Main requirementobjects +exactownedrangeobject; canonicalgeneratedindicesregenerated/check0.",
+      "nativeTests": "Not rerun for composedGitidentity; prior eab96 backendcomponentqualification retained. Freshpublished-headCIstillrequired.",
+      "sourceCommit": "2a057442d4b1a803d52860af2c524f0a7bbea37c",
+      "sourceParents": [
+        "e612b6f1d8cedb988618dc81bf3fe1bbc12462db",
+        "cd091a3c81d5ab70e175d339860fa1921ca1f0c3"
+      ],
+      "backendWholeGitTreeExactQualifiedSource": "127e7add253ae023b11d2f9e7a944dd4fba27bbd",
+      "all986QualifiedBackendFilesStillByteExact": true,
+      "selectedMoneyContractGitSha256": "18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf",
+      "changedPathsVsCurrentMain": [
+        "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "docs/catalog-persistence/reports/static-list-inventory.json",
+        "formal/system/event-finance-report-range.md",
+        "formal/system/inventory.json",
+        "formal/system/requirements.json",
+        "formal/system/traceability.json",
+        "reports/event-finance-report-range-2026-10-29.json",
+        "reports/event-finance-report-range-2026-10-29/evidence.tar.gz",
+        "reports/event-finance-report-range-2026-10-29/independent-review.txt",
+        "reports/event-finance-report-range-2026-10-29/manifest.json",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "localNativeQualification": "Original eab96 native4060/0/21pending +15targeted+2nativefaultcontrols; backendtreeexact. No full native run/derivedVersionartifactclaim for this new Git identity; freshhostedCI required.",
+      "registeredGitMobileAndFilesystemHashesVerified": 1417,
+      "sourceDigest": "9faa47dd75d36aee554c51516f1d888d326f39e6396a25304d979cc2acc89aa4",
+      "formalEvidenceCleanSource": true,
+      "canonicalRequirementsTotal": 158,
+      "completeImplementationRefinementUnproven": 316,
+      "inheritedConditionalSMTClaims": 11,
+      "newWholePlatformProofs": 0,
+      "formalRelease": "BLOCKED"
+    },
+    "CISourceSelection": {
+      "scopes": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      },
+      "files": [
+        "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "docs/catalog-persistence/reports/static-list-inventory.json",
+        "formal/system/event-finance-report-range.md",
+        "formal/system/inventory.json",
+        "formal/system/requirements.json",
+        "formal/system/traceability.json",
+        "reports/event-finance-report-range-2026-10-29.json",
+        "reports/event-finance-report-range-2026-10-29/evidence.tar.gz",
+        "reports/event-finance-report-range-2026-10-29/independent-review.txt",
+        "reports/event-finance-report-range-2026-10-29/manifest.json",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "fallback": false
+    },
+    "independentReview": "reports/event-finance-report-range-after-639-2026-10-29/independent-review.txt",
+    "reviewScope": "Read-only independent source and raw receipt reasoning, no independent runtime execution.",
+    "fullNativeRunAtThisNewGitIdentity": "NOT_RUN; exact backend component reuse is explicit. No derived Version/build artifact correspondence claimed for2a057.",
+    "backendWholeGitTree": "127e7add253ae023b11d2f9e7a944dd4fba27bbd"
+  },
+  "retainedNativeComponentEvidence": {
+    "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+    "targeted": {
+      "examples": 15,
+      "failures": 0,
+      "pending": 0
+    },
+    "full": {
+      "examples": 4060,
+      "failures": 0,
+      "pending": 21
+    },
+    "actualSourceMutants": 2,
+    "intendedAssertionFailures": 3,
+    "qualifiedBinarySha256": "cfaac0bfeffd5e0590d2b890cbd5fbb421340714ef280eceb35e4dfc9eea5d56",
+    "all986BackendInputsStillExact": true,
+    "canonicalStack": "lts24.42/GHC9.10.3",
+    "scope": "Actual Servant handler tests on SQLite, plus isolatednativeO0 controls. No provider/PostgreSQL/HTTPtransport/newdeployment qualification.",
+    "bytecodeAttempt": "Compiler panic before assertion/mutation, retained separately; native control results actually executed. GHC pin/assertions unchanged."
+  },
+  "preservation": {
+    "all157IncomingMainRequirementObjectsPlusExactRange": true,
+    "newTotalRequirements": 158,
+    "sevenIncomingArtistInputsExactMain": true,
+    "whole1352CatalogDecisionsExactMain": true,
+    "allBackendOutsideSelectedHandlerTestExactMain": true,
+    "UI_Mobile_Workflows_API_SQL_Dependencies_ExactMain": true
+  },
+  "formalAssurance": {
+    "sourceCommit": "2a057442d4b1a803d52860af2c524f0a7bbea37c",
+    "executionPassed": true,
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 158,
+      "NOT_APPLICABLE": 0
+    },
+    "completeImplementationRefinementUnproven": 316,
+    "inheritedConditionalSMTClaims": 11,
+    "newWholePlatformProofs": 0,
+    "release": "BLOCKED",
+    "missionLevels": "Selected finite properties TESTED; complete requirement/refinement guarantees UNKNOWN."
+  },
+  "regressionProtection": {
+    "newActualHandlerCases": 15,
+    "actualBaselineFailures": 12,
+    "expectedControlsDetected": 2,
+    "CI": "Existing FollowHandlerSpec.spec registration runs in backend-quality; changed-source selection confirms backend=true; required selected quality gate refuses its failure.",
+    "noAssertionsRemovedOrDeadlinesIncreased": true,
+    "originalNativeBinaryAndSourceRestored": true
+  },
+  "integration": {
+    "asOfReport": "Unpublished draft intended; fresh published-head hostedCI and exact-head review, strict currentbase/20required contexts/conversations/FIFO remain required.",
+    "merged": false,
+    "autoMerge": false,
+    "productionFinancialWrites": false,
+    "providerOperations": false,
+    "deployment": "UNVERIFIED",
+    "branchProtectionBypass": false
+  },
+  "separateArtist639": {
+    "head": "7d30e8c3e976853b0945063bc95132c7651d414b",
+    "merged": true,
+    "mergeCommit": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+    "exactApproval": 5705432417,
+    "all20RequiredEvidencePredatesMerge": true,
+    "fullMergeTreeEqualsQualifiedHead": true,
+    "mergeObservedNotPerformedByThisAgent": true,
+    "hostedPersona": "643/0/22skip/0retry;rollout10/discovery25; all21booking+7gallery cases passedinthissample",
+    "deployment": "UNVERIFIED; galleryrisknotclaimedfixed;648existinggallerydraft and651separaterefund retained."
+  },
+  "outstanding": [
+    "Current published-head hosted backend/CI/exactreview/FIFO integration pending.",
+    "21existing optionalnative cases pending; no complete theorem or newproductionPG/provider assurance.",
+    "Versionmetadata/build-artifact correspondence for newcomposedGitidentity awaits fresh hosted build.",
+    "Snapshot concurrency/browser53-bit precision/currency-unit consistency are separate obligations.",
+    "Foreign-currency writer support is authoritative; source currency-report counterexample candidate is being independently probed, no correction mixed into this change.",
+    "Financial ticket-clock666 and its parentrefund/admissionstack remainseparate; this source doesnotqualifythem."
+  ],
+  "nextHighestValueTask": "Publish focused draft withfreshCI/review; advanceexistingFIFO640ownerwork. Reproduce andcorrect separatecurrencyreportunit mismatch withoutrestrictingforeign-currencywriter.",
+  "archive": {
+    "path": "reports/event-finance-report-range-after-639-2026-10-29/evidence.tar.gz",
+    "sha256": "8a0744143ab1f50c5fd733f82198b75e53edfee7eaef999f95358cf857c85cfe",
+    "bytes": 1477537,
+    "innerFiles": 73,
+    "manifest": "reports/event-finance-report-range-after-639-2026-10-29/manifest.json",
+    "binding": "Archive/manifest/review/report are Git blobs; allinnerfiles are hash-bound archive members."
+  },
+  "createdAt": "2026-10-29T23:01:18.527150+00:00"
+}
