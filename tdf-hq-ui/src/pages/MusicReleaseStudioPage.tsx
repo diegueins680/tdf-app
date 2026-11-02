@@ -1,3 +1,4 @@
+import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import MarkdownText from '../components/MarkdownText';
 import { canonicalMusicMinor } from '../utils/musicMoney';
 import AddIcon from '@mui/icons-material/Add';
@@ -511,6 +512,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
       await musicReleases.transition(releaseId, versionId, { targetState, reason: null, ...extra }, newRef('music-transition'));
       const next = await musicReleases.getVersion(releaseId, versionId);
       applyVersion(next); setStatus(`Estado actualizado: ${next.state}.`); setError(null);
+      void invalidateArtistCatalog(queryClient, artistPartyId);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'La transición fue rechazada.'); }
     finally { operationPending.current = false; setActionPending(false); }
   };
