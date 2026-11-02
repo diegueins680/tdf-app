@@ -332,3 +332,10 @@ El responsable aceptó las recomendaciones de la sección 14 y del informe de av
   2. Fusionar TDF-mobile#178 (incluye la fusión de `main` móvil f4c7aba) y, después, convertir el aviso del gitlink móvil en gate bloqueante (§22).
   3. Revisión independiente del PR #691: ninguna decisión del registro de listas ni del manifiesto infiere aprobación; todas exigen revisión humana y CI fresca en la cabeza actual.
 - **Verificación continua**: cada fusión de `main` repite inventario, trazabilidad, superficies nuevas, gate de listas, manifiesto/lote de publicación, rutas públicas, máquinas de estado y compilación del backend antes de publicar la rama.
+
+## 34. Cierre de F-01: gitlink móvil alcanzable desde `main` (2026-11-02)
+
+- diegueins680/TDF-mobile#178 quedó fusionado (merge commit `bee23755`, aprobación del responsable; la fusión por API exigía una revisión aprobatoria y la protección de rama no admite la del autor). `main` del móvil contiene ahora el gitlink fijado `f4c7aba`, que a su vez incluye `7586be9` y la regeneración de tipos de la auditoría.
+- El paso del workflow de operaciones «Check Mobile gitlink reachability from Mobile main» pasa de aviso a bloqueante: `scripts/check-mobile-gitlink-ancestry.sh` falla el job si el gitlink deja de ser alcanzable desde `main` del móvil. F-01 queda cerrado mientras el gate esté verde.
+- F-21 cerrado en la misma jornada: la excepción de `audit-ci.jsonc` se renovó tras reevaluar el aviso (`ip` 2.0.1 sigue sin corrección upstream; ruta de dependencia sin cambios; la actualización mayor de webtorrent va en su propio PR por decisión del responsable); `CI Safe Install` volvió a verde en 8cda1473.
+- Pendiente abierto: el paso «Verify canonical provider retry concurrency and compatibility» falló de forma intermitente en CI (dos de tres ejecuciones; pasa en todas las ejecuciones locales sobre base limpia, 333 ejemplos). El paso ahora reemite la sección de fallos de hspec como anotaciones del workflow para que la próxima falla identifique la prueba.
