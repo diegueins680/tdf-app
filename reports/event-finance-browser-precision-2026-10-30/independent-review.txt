@@ -1,0 +1,60 @@
+Independent final source/evidence review of browser event-finance precision, 2026-10-30.
+
+Qualified clean source:83533b3d980432aea6bab30361453311da4f3905.
+Baseline protected main:0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5.
+Normal preceding unpublished source:b29b385c7cb2b5d5e22453edfd6aadfa385d112e.
+
+Conclusion:zero remaining blocking defects found in reviewed source, ROOT's qualification/seal machinery and completed evidence. Earlier source review and type-only/catalog addenda remain immutable and explicitly rebound to this committed source. This receipt is not a current-head GitHub approval, merge/publication permission, independent runtime repetition or complete implementation proof. I reviewed ROOT's source/qualification; the separate CSV-unit child prepared by me is not imported into this qualified source.
+
+Source correspondence independently checked: current HEAD83533 is clean with normal parentb29. The four product sources are exact initialb29; the only page-test declaration changes are the reviewed type erasure fix. Exactly eight UI source/test paths differ from main; no unrelated UI changes were found. Whole backend, workflows, scripts, ops, dependency manifests/locks and pinned Mobile remain exact main. All159 incoming main normative objects are unchanged plus the precision requirement,160 total. No backend financial range/currency, worker or container patch was imported.
+
+The current tracked-only catalog has1,355 JSON candidates/CSV rows bound byte-for-byte to committed artifacts. All1,354 prior decision objects/order/top-level values remain unchanged plus the explicit synthetic DTO-fixture decision caafb621f3c699640707. Its source file/line9 and technical-constant classification are independently reviewed. The original initial1,354 audit was stale because new files were not staged; its failed successor audit and the b29 lint failure are retained as historical verification-setup stages. They are not current passing evidence, and the auditor was not weakened or widened to ignored/private files.
+
+Completed actual qualification supplied by ROOT:76 targeted tests in4 suites and3,811 full tests in327 suites, all pass; typecheck, lint, build, repository quality, source admission and catalog8 each exit0. I read raw final Jest summaries and rechecked structured phase/exits against current source. Complete UI input coverage was independently enumerated from committed Git, not inferred from a reduced artifact table. I rehashed911 UI/config/root-manifest/feature-JSON inputs,1,434 registered filesystem/Git/Mobile source bindings and52 assurance evidence artifacts. Actual nested UI bundle-check script/configs are included by full UI enumeration. Source digest9ce716ff193c37cfab9fca9807c3d1a891a6717d1429121ddfd5fe6a203d086d and report provenance match revision/files/digest/Mobile/clean state. No serving deployment, Haskell rebuild or production system qualification is implied by UI build success.
+
+I rechecked all36 retained actual isolated fault/restored source/test snapshots against their manifest. Core tests use the actual current utility/API source: bypassing API admission produces21 intended assertions, bypassing cached CSV admission3, and restoring floating division4; restored core68 pass. Actual mounted-page wiring removal gives6 intended disabled-state assertions among8 cases, with2 passes; restored page8 pass. These finite controls are meaningful rather than implementation-mirroring happy-path tests. The earlier7-case no-admission baseline and66-case/33-failure numerical baseline retain their own scopes; later cases are not retroactively counted. Failed old disabled-state assertions occur before click, so no claim is made that those failed cases observed an actual incomplete download.
+
+Current page test4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3 is linked to the executed earlier499c61e7997a810c656b3828142418dcc5b6bc665d99bb38143644a09a285372 by retained TypeScript5.9.3 before/after emissions. I compared the raw outputs:identical5716 bytes/SHA3e2450888f38ad4c083ea7f09ce297b17c76b4658d878292e4d70322b0cb5bd1. Assertion/query/click/cleanup behavior is unchanged, while fresh76/full3811 qualification actually executes the final typed source. This is an explicit trusted-emitter source-context bridge, not a universal compiler/test-runner theorem.
+
+The actual bundled money utility browser receipt reports26/26 cases on local Chromium147.0.7727.15 and Firefox148.0.2, using Playwright1.59.1 with en-US/de-DE contexts. Source and emitted bundle hashes match current unchanged utility inputs. This exercises actual Intl/BigInt formatting in those engines, not the served event page, API, WebKit, physical devices or production data. Additional Node small-cent locale/currency differential tests remain finite samples.
+
+ROOT's final binder checks exact named quality exits/counts, Git-derived input completeness, committed byte hashes, formal provenance, type-emission linkage, three immutable independent review hashes and the current1,355 catalog. The strengthened core source-control exit predicate[1,1,1,0], totals68 and alias-removal checks are present. Twelve actual AST-extracted in-memory evidence corruptions are rejected with intended assertions; valid artifacts pass before/after and disk/source stay unchanged. Seal and control drivers separately record actual0 with matching current script hashes. These are evidence-binding controls, not a proof of the whole verification system or additional product source mutants.
+
+Formal scope remains exact:160 whole requirements and320 implementation/refinement obligations are UNPROVEN;11 inherited conditional SMT claims retain their translation assumptions. Formal release is BLOCKED and executionAllowed false. TESTED utility, API, mounted component and browser samples do not establish a whole implementation theorem, arbitrary malformed-DTO decoding, upstream producer accuracy or multi-query snapshot consistency.
+
+No remaining blocker in the chosen correction: unsafe numeric money is refused at read/cached CSV boundaries; admitted signed cents avoid floating major-unit division while preserving locale/currency rounding; failed/pending/stale-error independent lists cannot silently become a successful partial export; valid empty lists and export feedback remain. Known limitations remain:large-value production exposure UNKNOWN, financial currency attribution, backend contributing-total behavior, other money consumers, concurrent report snapshots, external CSV consumers, full browser coverage and real authenticated HTTP flows. The separate finance-entry CSV unit omission remains unchanged in this parent and has its own uncommitted child work; this review does not label it repaired. Hosted worker/accessibility unknown causes are likewise not repaired by passing samples.
+
+Only read-only source/Git/receipt parsing and hashes were performed for this final review. No redundant Jest/browser/build/database/provider runtime, source mutation or remote operation was executed. Fresh published-head CI, independent exact-head review, latest main/FIFO/protected controls and final archive/containing-Git verification remain required. Publication/archive verification is future work at review time. UI runner cancellation/process-tree cleanup is not fault-tested, and no universal interruption guarantee is granted.
+
+Detailed independent check receipt:/private/tmp/tdf-event-finance-browser-precision-final-independent-checks-20261030.json SHA256 a639992e338646a706ce84a867fe948c6e35ccd5488dc6d2dd62a53f61059805.
+
+Exact current evidence SHA256:
+- source-correspondence.json: 4b944e232ac0a47c6ce8a1bfe83a3fddcbfb6929d968449f1b726805a58f9d67
+- ui-quality.json: 4b8651719c3fb8f7b447c14b684c80c8927c7b3f57b686a6ca1d99469e7b0045
+- ui-qualified-inputs.json: 7a775d386b6a772836a43f319a9138b20594a92438ba787b7c78ba33f629bae6
+- assurance-committed/report.json: 649b52625c2a03f5d227f441e8915eb8b13e58b92bd8b31f2cb0c6fbe199676a
+- assurance-committed/sources.json: 33a4cb8491fb8530ddf7366f9f7f14b0499ce82692c26a71cf1bdbb269830fa3
+- assurance-execution.json: e9bafb5e5bc42b1137de100d7eafd32ac470a99c625c96666078c61ccdc83c6e
+- seal-binding-controls.json: 0e10e4c0c21e0ba4fbafe2d6643af3036fa5af8d39bf2f6078203961519d3154
+- seal-execution.json: bd2bd5215c1084f7bf088a44e68cf1d3c5a15b61df5434dbd0c0fbcf8d58021b
+- source-fault-inputs-manifest.json: d162d8cc4c3d3f32ccdcc4740919d4cf85b905676dc756b7cb011f55cc39b995
+- test-lint-fix-emission-equivalence.json: d342e86cb2e292871bff26d084288d44bf970df4aa57896a386c1c4332bcee18
+- current-catalog.json: 820723f7dc6d05cf82d48a193cb3edb09ad9ebc4a26e59415dafe79ee8f428b7
+- current-catalog.csv: d27faf0e96de5bff9c1fdce60ea595720da05ed8f0871c486981eca823656eca
+- actual-browser-money.json: 4e5b3249bef15872455f142468fcb664715d24861d79a225f822b01f131cbee9
+- final-targeted.log: 6342bcbbcdab18a732adf4c261e29ed7cde42b334bdbef635e18551673bfbfce
+- final-full.log: 178f6eb16f7323335ea4475c454e0778f2c38c77aeb09434f671a103649f651f
+- final-lint.log: 28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5
+- final-typecheck.log: 374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3
+- final-build.log: 16f4fb6cc06107651f0f41d84830d6df9404c82a94ecdd073e0dbb8636faf71f
+- final-root-quality.log: dfa2436abb4eb8c10a0698acb2ed3090d96e920ac11fb25fea3195ddda689f58
+- final-source-admission.log: 4014be77ad6d54ff757a0c02dd7429c417e72acdda02b4524b03e37766e268a4
+- final-catalog-unit.log: 96f39d08ecbeef5689b9bdd59af9d2846f49867e8c4be6b5a7a5a81d36bb94ed
+Reviewed final ROOT harness SHA256:
+- tdf-event-finance-browser-precision-qualify-20261030.py: 6615e338ac59cf5043f0f215e8eeab888b368a44beec403c37cd6cba07f2c01d
+- tdf-event-finance-browser-precision-seal-20261030.py: 333374c5268e8035c328eb1aa79bc6aa4f227384be87ef5d9da12d1161367c98
+- tdf-event-finance-browser-precision-seal-controls-20261030.py: e12f0662feaff1f3162e2b992b0ca93ab45a875f12d8d769d64009afeac96cd9
+Immutable earlier review SHA256:
+- tdf-event-finance-browser-precision-independent-review-20261030.txt: 123db48eef59cf78a7da3ef398a026db7fc8f2fde3d1385bab8733f30afe4959
+- tdf-event-finance-browser-precision-lint-addendum-20261030.txt: ad461310b9b859d6705691df32ccd199e93f8f7da75d9a8fcdb2d9215631a28c
+- tdf-event-finance-browser-precision-catalog-addendum-20261030.txt: 94ca8f0c8eb5770b262da43d5a288528b3e8009539a184ff32bb8c6a729b3d46
