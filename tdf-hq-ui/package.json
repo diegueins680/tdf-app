@@ -14,7 +14,7 @@
     "preview:e2e": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "generate:api": "openapi-typescript ../tdf-hq/docs/openapi/api.yaml --output src/api/generated/types.ts"
   },
   "dependencies": {

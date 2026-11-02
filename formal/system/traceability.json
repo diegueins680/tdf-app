@@ -14041,6 +14041,88 @@
       "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
       "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
       "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
+    },
+    {
+      "id": "SYS-UI-TEST-WORKER-001",
+      "title": "Serial UI qualification recycles retained worker heap and preserves every test result",
+      "domain": "SYS",
+      "critical": true,
+      "authority": "Required UI quality execution and observed hosted heap abort; pinned Jest worker contract",
+      "contract": "formal/system/ui-test-worker-memory.md",
+      "source": "formal/system/ui-test-worker-memory.md",
+      "status": "specified and implemented",
+      "confidence": "Controlled actual-command tests plus full local UI qualification; no hard process/single-file memory bound or universal proof",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Defaultconfiguration, PID/failure controls and persistentcrash checks pass; productionidlelimitremoval is detected. Full328suite/3799test localNode24 qualification/build pass on5fb, laterguard changes verifiedseparately. FreshhostedNode22 pending."
+      },
+      "statement": "The default UI qualification command must run selected test files serially through one recyclable worker slot, preserve selection/assertions/timeouts, and report failure for any failed assertion or unrecoverable worker execution.",
+      "actors": [
+        "Repository contributor",
+        "UI quality runner",
+        "Jest worker"
+      ],
+      "preconditions": [
+        "Pinned Jest dependencies are installed.",
+        "Default CI test command runs without explicit in-band/debug overrides."
+      ],
+      "inputs": [
+        "Workspace test command",
+        "Jest configuration",
+        "Selected test files",
+        "Worker execution/memory observations"
+      ],
+      "state": {
+        "validation": [
+          "queued",
+          "running",
+          "passed",
+          "failed"
+        ],
+        "worker": [
+          "idle",
+          "executing",
+          "recycled",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Run every selected file serially through worker slot1.",
+        "Recycle an over-budget worker between files while preserving completed results.",
+        "Report failed assertions and exhausted worker failures as failed qualification."
+      ],
+      "forbiddenTransitions": [
+        "Force default CI in-band execution that bypasses idle worker recycling.",
+        "Skip selected files or relax assertions/timeouts to obtain green evidence.",
+        "Treat unresolved worker failure or an incomplete final suite as passing evidence."
+      ],
+      "effects": [
+        "Complete failure-aware test results and source-bound qualification evidence"
+      ],
+      "authorization": "Only the normal test harness executes synthetic local fixtures; no provider or production financial operation is part of this requirement.",
+      "privacy": "Fixtures contain no credentials or personal records; artifact reports must exclude environment secrets.",
+      "concurrency": "One worker slot preserves serial suite scheduling; a recycled process may replace it between files.",
+      "idempotency": "Separate attempts retain independent source/outcome evidence; retries are not earlier passing evidence.",
+      "failure": "Failed assertions, exhausted worker startup/process retries and incomplete final results block qualification. Pinned Jest may retry unexpected worker crashes; no first-fault/transient-crash theorem is claimed.",
+      "recovery": "Repair source/configuration and requalify changed inputs while retaining failed evidence.",
+      "observability": "Record source SHA, actual command, exit code, selected/completed counts, worker slot/PID controls and limitations.",
+      "verification": "Actual defaultCLI configuration, controlled PID fixtures, forced-in-band negative control, productionidlelimit removal mutation, deliberate failed assertion and persistent worker crash; unchangedfull UI suite and fresh hosted qualification.",
+      "property": "A completed over-budget worker is not reused for the next file; all selected files have terminal results; failed assertions and exhausted worker failures yield nonzero exit.",
+      "implementation": [
+        "tdf-hq-ui/package.json",
+        "tdf-hq-ui/jest.config.cjs",
+        "scripts/quality-ui.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/ui-worker-memory.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "The1GiBidle budget is an operational choice, not a theorem or business requirement.",
+        "The worker boundary does not bound single-file/parent/OS memory or identify the underlying retention source.",
+        "Pinned Jest permits up to3 retries after unexpected worker crashes. Transientcrash first-attempt failure is not established; persistentcrash control requires terminalfailure and otherfiles complete."
+      ],
+      "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending."
     }
   ],
   "sourceFingerprints": {
@@ -14502,6 +14584,7 @@
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
     "scripts/__tests__/ticket-admission-model.test.mjs": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
+    "scripts/__tests__/ui-worker-memory.test.mjs": "d7c89a32a50a693b71c509fd0145c295507d222bd1a8f438cad815da59fdbacf",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
@@ -14575,6 +14658,7 @@
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "d558f1fa003cc18854824bfe383ba0ec675c931922c76e4aa2b8831f43c39a06",
+    "scripts/quality-ui.sh": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14718,8 +14802,8 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
-    "tdf-hq-ui/jest.config.cjs": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
-    "tdf-hq-ui/package.json": "f80cd85440e682235325079da46876f72ad5088e34ab8f899a9ec9e42f78bb18",
+    "tdf-hq-ui/jest.config.cjs": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
+    "tdf-hq-ui/package.json": "63cc9005b5071062ed1bcbb19ffb8e9b257ee4b022f810ae5829364b9ecc2450",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
@@ -18408,6 +18492,10 @@
       },
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
         "relationship": "implementation"
       }
     ],
@@ -27525,6 +27613,10 @@
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/browser-vendor.test.mjs": [
@@ -27542,6 +27634,18 @@
     "e2e/web/webtorrent-browser.spec.mjs": [
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/quality-ui.sh": [
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/ui-worker-memory.test.mjs": [
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
         "relationship": "tests"
       }
     ]
@@ -30025,6 +30129,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-9c653300b0234205",
+      "path": "scripts/__tests__/ui-worker-memory.test.mjs",
+      "sha256": "d7c89a32a50a693b71c509fd0145c295507d222bd1a8f438cad815da59fdbacf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-c000c38c68fca4c6",
       "path": "scripts/__tests__/ux-quality-audit.test.mjs",
       "sha256": "f12611793851586e0284034f8e927a322c856eb7401b32110fc4aac63ed15a03",
@@ -31718,9 +31834,14 @@
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "sha256": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-14ce85c394623bc5",
@@ -34783,11 +34904,15 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
+      "sha256": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -34802,7 +34927,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "f80cd85440e682235325079da46876f72ad5088e34ab8f899a9ec9e42f78bb18",
+      "sha256": "63cc9005b5071062ed1bcbb19ffb8e9b257ee4b022f810ae5829364b9ecc2450",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34811,6 +34936,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -55785,7 +55914,6 @@
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-bac1f41447e33768",
-    "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
     "SURFACE-173452b4342d16ba",
     "SURFACE-39275efbaea5cb7e",
@@ -57295,7 +57423,8 @@
     "SYS-CI-SELECTED-001",
     "EVT-REPORT-LINK-001",
     "WEB-CONTENT-001",
-    "PAY-EVENT-REPORT-RANGE-001"
+    "PAY-EVENT-REPORT-RANGE-001",
+    "SYS-UI-TEST-WORKER-001"
   ],
   "stateMachines": [
     {
@@ -58414,7 +58543,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fb43178f389c4450dea14f790e1f4758b66027b4aca8be8ebc508d0f9db3283c",
+      "sourceSha256": "0f87036fbe8a0026cb5920e6c0da6db1c93e942baa7eb3748f87e6252eab8a46",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -58442,7 +58571,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fb43178f389c4450dea14f790e1f4758b66027b4aca8be8ebc508d0f9db3283c",
+      "sourceSha256": "0f87036fbe8a0026cb5920e6c0da6db1c93e942baa7eb3748f87e6252eab8a46",
       "definition": {
         "states": [
           "absent",
@@ -58472,7 +58601,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fb43178f389c4450dea14f790e1f4758b66027b4aca8be8ebc508d0f9db3283c",
+      "sourceSha256": "0f87036fbe8a0026cb5920e6c0da6db1c93e942baa7eb3748f87e6252eab8a46",
       "definition": {
         "export": [
           "queued",
@@ -80959,7 +81088,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 164,
+    "PARTIAL": 165,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

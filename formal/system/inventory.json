@@ -220,6 +220,7 @@
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
+      "scripts/__tests__/ui-worker-memory.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
       "scripts/__tests__/verification-evidence.test.mjs",
@@ -3991,6 +3992,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-9c653300b0234205",
+      "path": "scripts/__tests__/ui-worker-memory.test.mjs",
+      "sha256": "d7c89a32a50a693b71c509fd0145c295507d222bd1a8f438cad815da59fdbacf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c000c38c68fca4c6",
       "path": "scripts/__tests__/ux-quality-audit.test.mjs",
       "sha256": "f12611793851586e0284034f8e927a322c856eb7401b32110fc4aac63ed15a03",
@@ -4893,7 +4900,7 @@
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "sha256": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6555,7 +6562,7 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
+      "sha256": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6567,7 +6574,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "f80cd85440e682235325079da46876f72ad5088e34ab8f899a9ec9e42f78bb18",
+      "sha256": "63cc9005b5071062ed1bcbb19ffb8e9b257ee4b022f810ae5829364b9ecc2450",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28193,7 +28200,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fb43178f389c4450dea14f790e1f4758b66027b4aca8be8ebc508d0f9db3283c",
+      "sha256": "0f87036fbe8a0026cb5920e6c0da6db1c93e942baa7eb3748f87e6252eab8a46",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28278,6 +28285,13 @@
     {
       "path": "formal/system/ui-fixture-boundaries.md",
       "sha256": "9c01ca66e0f5be626b294bd426a91f0d349f53833af30f96a4c6ada5be1cb11d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ui-test-worker-memory.md",
+      "sha256": "62ae9d498cd64966c63267221c3738c85c2bd25bcaa11ae4fee43f79f8634b00",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
