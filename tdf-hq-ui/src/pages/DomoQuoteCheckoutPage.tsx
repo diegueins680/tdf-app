@@ -86,6 +86,7 @@ export default function DomoQuoteCheckoutPage() {
     request
       .then((response) => {
         setQuote(response);
+        setCancellation(response.cancellation ?? null);
         if (resourcePath) navigate(location.pathname, { replace: true });
       })
       .catch(() => setMessage(english
@@ -292,7 +293,10 @@ export default function DomoQuoteCheckoutPage() {
                   <Chip label={`${quote.guests} ${english ? 'guests' : 'invitados'}`} variant="outlined" />
                   <Chip label={quote.eventType} variant="outlined" />
                 </Stack>
-                {paid ? <Alert severity="success">{english
+                {quote.quoteStatus === 'cancelled' ? <Alert severity="info">{english
+                  ? 'This quote is cancelled and the date is released. Collected payments remain recorded; any refund is tracked separately below.'
+                  : 'Esta cotización está cancelada y la fecha está liberada. Los cobros permanecen registrados; cualquier devolución se detalla por separado abajo.'}</Alert>
+                  : paid ? <Alert severity="success">{english
                   ? 'The server verified the deposit and reserved the date. This does not mean the event is completed; the remaining balance and fulfillment continue separately.'
                   : 'El servidor verificó el depósito y reservó la fecha. Esto no significa que el evento esté completado; el saldo y el cumplimiento continúan por separado.'}</Alert>
                   : expired ? <Alert severity="error">{english
@@ -321,7 +325,7 @@ export default function DomoQuoteCheckoutPage() {
                 <Stack direction="row" justifyContent="space-between"><Typography fontWeight={800}>{english ? 'Total event quote' : 'Total cotizado'}</Typography><Typography fontWeight={800}>{money(quote.totalMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography color="primary" fontWeight={900}>{english ? 'Initial deposit due' : 'Depósito inicial'}</Typography><Typography color="primary" fontWeight={900}>{money(quote.depositMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography>{english ? 'Remaining balance' : 'Saldo restante'}</Typography><Typography>{money(quote.balanceMinor, quote.currency)}</Typography></Stack>
-                {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
+                {!paid && quote.quoteStatus !== 'cancelled' && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
                 {canAccept && <>
                   <FormControlLabel control={<Checkbox checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} />} label={english
                     ? `I accept the exact quote and terms version ${quote.termsVersion}. Acceptance does not mean payment.`
@@ -329,13 +333,14 @@ export default function DomoQuoteCheckoutPage() {
                   <Button variant="contained" disabled={!termsAccepted || busy} onClick={() => void handleAccept()}>{english ? 'Accept quote and choose deposit method' : 'Aceptar cotización y elegir método de depósito'}</Button>
                 </>}
                 {message && <Alert severity="warning">{message}</Alert>}
-                {cancellation && <Alert severity={cancellation.refundStatus === 'awaiting_operator' ? 'info' : 'success'}>
+                {cancellation && <Alert severity={cancellation.refundStatus === 'succeeded' || cancellation.refundDueMinor === 0 ? 'success' : 'info'}>
                   {english
                     ? `Quote cancelled. Collected: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retained by policy: ${money(cancellation.retainedMinor, cancellation.currency)}. Refund due: ${money(cancellation.refundDueMinor, cancellation.currency)}.`
                     : `Cotización cancelada. Cobrado: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retenido según política: ${money(cancellation.retainedMinor, cancellation.currency)}. Reembolso debido: ${money(cancellation.refundDueMinor, cancellation.currency)}.`}
-                  {cancellation.refundStatus === 'awaiting_operator' && (english
-                    ? ' An operator will issue the refund request; you will be contacted by email.'
-                    : ' Un operador emitirá la solicitud de reembolso; te contactaremos por correo.')}
+                  {cancellation.refundDueMinor > 0 && (cancellation.refundStatus === 'succeeded'
+                    ? (english ? ' Refund confirmed.' : ' Devolución confirmada.')
+                    : (english ? ' Refund pending confirmation. A request or approval does not mean the money has been returned.'
+                      : ' Devolución pendiente de confirmación. Una solicitud o aprobación no significa que el dinero haya sido devuelto.'))}
                 </Alert>}
                 {canCancel && !cancellation && <Button variant="text" color="error" disabled={busy} onClick={() => setCancelOpen(true)}>{english ? 'Cancel quote' : 'Cancelar cotización'}</Button>}
                 {awaitingPayment && quote.paymentMethods.length === 0 && <Alert severity="info">{english

@@ -14377,7 +14377,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_refund_lifecycle.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable.",
@@ -14386,7 +14388,7 @@
       "idempotency": "Deterministic refund key domo-cancel:<quoteId>; replaying a cancellation returns the stored record (alreadyCancelled=true) and never writes a second record or refund.",
       "id": "PAY-DOMO-CANCEL-001",
       "title": "Domo cancellation refunds follow the approved versioned policy",
-      "statement": "Cancelling a Domo quote after money was collected refunds according to the single approved domo_cancellation_policy version: cancellation by TDF refunds everything collected; customer cancellation refunds the collected balance in full and the deposit by lead time (whole 24-hour periods before the event start; at or above full_refund_min_days: all; at or above partial_refund_min_days: deposit minus partial_retained_bps rounded half up; below, or once the event is in progress: nothing). Every cancellation writes one immutable domo_quote_cancellation record fixing the policy version, lead days and collected, retained and refundable amounts, with retained + refund_due = collected and retained <= deposit collected; the quote, its commerce quote, unpaid checkout and date hold move to cancelled in the same transaction. An operator (strict administrator) cancellation creates the refund request for exactly refund_due in the same transaction; a customer cancellation (lookup token, not a party) records the obligation and an open reconciliation exception until an operator settles it, and the schema refuses to cancel a paid quote without its record or to link a refund of a different amount. Approved policy versions are immutable except for retirement; exactly one version is approved at a time.",
+      "statement": "Cancelling a Domo quote after money was collected refunds according to the single approved domo_cancellation_policy version: cancellation by TDF refunds everything collected; customer cancellation refunds the collected balance in full and the deposit by lead time (whole 24-hour periods before the event start; at or above full_refund_min_days: all; at or above partial_refund_min_days: deposit minus partial_retained_bps rounded half up; below, or once the event is in progress: nothing). Every cancellation writes one immutable domo_quote_cancellation record fixing the policy version, lead days and collected, retained and refundable amounts, with retained + refund_due = collected and retained <= deposit collected; the quote, its commerce quote, unpaid checkout and date hold move to cancelled in the same transaction. An operator (strict administrator) cancellation creates the refund request for exactly refund_due in the same transaction; a customer cancellation (lookup token, not a party) records the obligation and an open reconciliation exception until the exact refund is verified complete, and the schema refuses to cancel a paid quote without its record or to link a refund of a different amount. Approved policy versions are immutable except for retirement; exactly one version is approved at a time.",
       "domain": "PAY",
       "authority": "AUTHORITY-093 (owner accepted the audit recommendation on 2026-11-01).",
       "source": "formal/system/audit-2026-10-31-phase1.md (F-15, Q5); AUTHORITY-093",
@@ -14416,15 +14418,19 @@
       "allowedTransitions": [
         "draft -> approved (sets approved_at)",
         "approved -> retired (row otherwise immutable)",
-        "a new approved version only after the previous is retired"
+        "a new approved version only after the previous is retired",
+        "Refund: requested -> approved by a different authenticated party -> processing with one durable execution permit -> succeeded only after exact authenticated PayPal readback or independent manual receipt confirmation."
       ],
       "forbiddenTransitions": [
         "two approved versions at once",
         "any change to an approved or retired row other than retirement",
-        "retired -> approved"
+        "retired -> approved",
+        "Refund request, approval, provider acceptance or ambiguous failure -> resolved reconciliation",
+        "A second provider refund POST after execution admission",
+        "Manual evidence recorder -> own receipt confirmation"
       ],
       "effects": [
-        "Quote, commerce quote, unpaid checkout and reservation hold become cancelled; an immutable cancellation record is written; an operator cancellation creates the commerce_refund request for refund_due; a customer cancellation with refund due records an open reconciliation exception (domo_cancellation_refund_due) that the operator settlement resolves."
+        "Quote, commerce quote, unpaid checkout and reservation hold become cancelled; an immutable cancellation record is written; an operator cancellation creates the commerce_refund request for refund_due; a customer cancellation with refund due records an open reconciliation exception (domo_cancellation_refund_due) that remains open during request, approval, provider processing and errors; exact verified completion resolves it atomically with the canonical refund ledger and credit note."
       ],
       "authorization": "POST /public/domo/quotes/{id}/cancel: the quote holder with the X-Order-Lookup-Token capability header (customer canceller only). POST /admin/domo/quotes/{id}/cancel: strict administrators with admin module access; the refund request they create must be approved by a different party (refund store rule).",
       "failure": "Invalid policy values are rejected by validateDomoCancellationPolicy and by table CHECKs.",
@@ -14440,9 +14446,14 @@
         "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
         "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
         "tdf-hq-ui/src/api/domoQuotes.ts",
-        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx"
+        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
+        "tdf-hq/src/TDF/Server/DomoRefunds.hs",
+        "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
+        "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs"
       ],
-      "verification": "Z3 lemmas (refund within collected, conservation, monotonicity, full/zero retention) with witnesses and controls; QuickCheck properties on domoCancellationRefund and assessDomoCancellation; PostgreSQL probes of the policy table (single approved version, immutability, retirement) and of the cancellation record (conservation CHECKs, required record on paid cancellation, refund linkage amount, immutability, rollback refusal); runtime Hspec cases on the full reviewed schema (unpaid cancel, customer obligation then operator settlement, 10-day half retention, TDF full refund, late customer cancel, terminal refusals); admin 403/400 route tests.",
+      "verification": "Z3 lemmas (refund within collected, conservation, monotonicity, full/zero retention) with witnesses and controls; QuickCheck properties on domoCancellationRefund and assessDomoCancellation; PostgreSQL probes of the policy table (single approved version, immutability, retirement) and of the cancellation record (conservation CHECKs, required record on paid cancellation, refund linkage amount, immutability, rollback refusal); runtime Hspec cases on the full reviewed schema (unpaid cancel, customer obligation then operator settlement, 10-day half retention, TDF full refund, late customer cancel, terminal refusals); admin 403/400 route tests. Refund lifecycle runtime cases cover independent approval, single concurrent execution, exact full/partial completion, provider errors, stale authority, manual receipt checks, atomic ledger/credit note and capture/cancellation admission. Bounded protocol exploration includes counterexample controls; neither model nor test declaration is evidence of a completed runtime run.",
       "evidence": "formal/payments/domo_cancellation_refund.py output; tdf-hq-test DomoCancellationSpec and ServerAdminSpec runs; provider-retry-runtime gate (DomoCancellationRuntimeSpec); scripts/test-domo-quote-checkout-runtime-migration.sh output.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs",

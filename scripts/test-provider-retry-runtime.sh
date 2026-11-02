@@ -83,6 +83,9 @@ done
 psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
   -f "$TDF_PROVIDER_RETRY_ROOT/scripts/__tests__/fixtures/provider-domain-fixtures.sql" >/dev/null
 
+python3 "$TDF_PROVIDER_RETRY_ROOT/formal/payments/domo_refund_lifecycle.py"
+python3 -O "$TDF_PROVIDER_RETRY_ROOT/formal/payments/domo_refund_lifecycle.py"
+
 python3 "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-harness.py"
 python3 -O "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-harness.py"
 
