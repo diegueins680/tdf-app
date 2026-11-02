@@ -4103,22 +4103,184 @@ legacyStripeRefundSpec = describe "legacy Stripe ticket refund execution fence" 
     readIORef calls `shouldReturn` 0
     assertLegacyStripeRefundState pool fixture "pending" "paid" 3 "issued"
 
-  it "releases inventory once for a successful full refund and denies replay" $ \pool -> do
+  let observedId = "re_synthetic_legacy_observed" :: Text
+      field name value = A.Object . KM.insert name value
+      missing name = A.Object . KM.delete name
+      held name change = (name,change,Just observedId)
+      responseCases =
+        [ held "id-only response" (\_ -> A.object ["id" A..= observedId])
+        , held "missing object type" (missing "object")
+        , held "null object type" (field "object" A.Null)
+        , held "wrong object type" (field "object" (A.String "charge"))
+        , held "non-text object type" (field "object" (A.Number 1))
+        , held "missing status" (missing "status")
+        , held "null status" (field "status" A.Null)
+        , held "non-text status" (field "status" (A.Bool True))
+        , held "pending status" (field "status" (A.String "pending"))
+        , held "requires-action status" (field "status" (A.String "requires_action"))
+        , held "failed status" (field "status" (A.String "failed"))
+        , held "canceled status" (field "status" (A.String "canceled"))
+        , held "unknown status" (field "status" (A.String "SYNTHETIC_PRIVATE_NEW_STATUS"))
+        , held "uppercase success status" (field "status" (A.String "SUCCEEDED"))
+        , held "padded success status" (field "status" (A.String " succeeded "))
+        , held "missing amount" (missing "amount")
+        , held "null amount" (field "amount" A.Null)
+        , held "text amount" (field "amount" (A.String "12515"))
+        , held "fractional minor-unit amount" (field "amount" (A.Number 12515.5))
+        , held "zero amount" (field "amount" (A.Number 0))
+        , held "negative amount" (field "amount" (A.Number (-12515)))
+        , held "different amount" (field "amount" (A.Number 12516))
+        , held "amount outside signed storage" (field "amount" (A.Number 9223372036854775808))
+        , held "missing currency" (missing "currency")
+        , held "null currency" (field "currency" A.Null)
+        , held "non-text currency" (field "currency" (A.Number 1))
+        , held "different currency" (field "currency" (A.String "eur"))
+        , held "uppercase currency" (field "currency" (A.String "USD"))
+        , held "padded currency" (field "currency" (A.String " usd "))
+        , held "short currency" (field "currency" (A.String "us"))
+        , held "missing payment intent" (missing "payment_intent")
+        , held "null payment intent" (field "payment_intent" A.Null)
+        , held "non-text payment intent" (field "payment_intent" (A.Number 1))
+        , held "different payment intent" (field "payment_intent" (A.String "pi_synthetic_other_order"))
+        , held "unexpected expanded payment intent" (\object ->
+            field "payment_intent" (A.object ["id" A..= KM.lookup "payment_intent" object]) object)
+        , ("missing refund id",missing "id",Nothing)
+        , ("null refund id",field "id" A.Null,Nothing)
+        , ("non-text refund id",field "id" (A.Number 1),Nothing)
+        , ("empty refund id",field "id" (A.String ""),Nothing)
+        , ("padded refund id",field "id" (A.String " re_synthetic_padded "),Nothing)
+        , ("control character in refund id",field "id" (A.String "re_synthetic\nprivate"),Nothing)
+        , ("non-ASCII refund id",field "id" (A.String "re_synthetic_\241"),Nothing)
+        , ("oversized refund id",field "id" (A.String (T.replicate 129 "x")),Nothing)
+        , ("non-object response",const A.Null,Nothing)
+        ]
+  forM_ responseCases $ \(scenario,change,expectedObservedId) ->
+    it ("holds unverified Stripe completion evidence: " <> scenario) $ \pool -> do
+      fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 12515
+      env <- legacyStripeRefundEnv pool True
+      calls <- newIORef (0 :: Int)
+      let provider _ paymentIntent amount = do
+            atomicModifyIORef' calls (\count -> (count+1,()))
+            pure (Right (change (KM.fromList
+              [("id",A.String observedId),("object",A.String "refund")
+              ,("status",A.String "succeeded"),("amount",A.toJSON amount)
+              ,("currency",A.String "usd"),("payment_intent",A.String paymentIntent)])))
+          (approve,_) = legacyStripeRefundHandlers provider
+          action = runHandler (runReaderT
+            (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+      result <- action
+      case result of
+        Left failure -> do
+          errHTTPCode failure `shouldBe` 502
+          BS.unpack (BL.toStrict (errBody failure)) `shouldNotContain` "SYNTHETIC_PRIVATE"
+          BS.unpack (BL.toStrict (errBody failure)) `shouldNotContain` T.unpack observedId
+        Right response -> expectationFailure
+          ("Unverified provider evidence completed a refund: " <> show response)
+      -- The provider ID is observed correlation, not proof of intent/money
+      -- binding. Retain it for investigation without marking completion.
+      runSqlPool (rawSql
+        "SELECT stripe_refund_id,processed_at FROM ticket_refund_request WHERE id=?"
+        [PersistInt64 (fromSqlKey refundKey)]) pool
+        `shouldReturn` [(Single expectedObservedId,Single (Nothing :: Maybe UTCTime))]
+      assertLegacyStripeRefundState pool fixture "processing" "paid" 3 "issued"
+      action >>= assertLegacyRefundDenied
+      readIORef calls `shouldReturn` 1
+
+  it "preserves a conflicting observed provider id without completing or posting again" $ \pool -> do
     fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 12515
     env <- legacyStripeRefundEnv pool True
     calls <- newIORef (0 :: Int)
-    let provider _ paymentIntent amount = do
+    let priorId = "re_synthetic_prior_observation" :: Text
+        returnedId = "re_synthetic_conflicting_response" :: Text
+        provider _ paymentIntent amount = do
           atomicModifyIORef' calls (\count -> (count+1,()))
-          pure (Right (A.object ["id" A..= ("re_synthetic_legacy" :: Text)
+          -- Model another observer recording an ID after the durable claim and
+          -- before this provider response. An incompatible response cannot erase it.
+          changed <- runSqlPool (rawSql
+            "UPDATE ticket_refund_request SET stripe_refund_id=?\
+            \ WHERE id=? AND status='processing' RETURNING id"
+            [PersistText priorId,PersistInt64 (fromSqlKey refundKey)]) pool
+          (changed :: [Single Int64]) `shouldBe` [Single (fromSqlKey refundKey)]
+          pure (Right (A.object ["id" A..= returnedId,"object" A..= ("refund" :: Text)
             ,"status" A..= ("succeeded" :: Text),"amount" A..= amount
             ,"currency" A..= ("usd" :: Text),"payment_intent" A..= paymentIntent]))
         (approve,_) = legacyStripeRefundHandlers provider
-        action = runHandler (runReaderT (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
-    first <- action >>= requireRight
-    TD.refundStatus first `shouldBe` "approved"
+        action = runHandler (runReaderT
+          (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+    result <- action
+    case result of
+      Left failure -> errHTTPCode failure `shouldBe` 502
+      Right _ -> expectationFailure "Conflicting provider identity must not complete a refund"
+    runSqlPool (rawSql
+      "SELECT stripe_refund_id,processed_at FROM ticket_refund_request WHERE id=?"
+      [PersistInt64 (fromSqlKey refundKey)]) pool
+      `shouldReturn` [(Single (Just priorId),Single (Nothing :: Maybe UTCTime))]
+    assertLegacyStripeRefundState pool fixture "processing" "paid" 3 "issued"
     action >>= assertLegacyRefundDenied
     readIORef calls `shouldReturn` 1
-    assertLegacyStripeRefundState pool fixture "approved" "refunded" 0 "refunded"
+
+  it "retains observed evidence and rolls back completion after a synthetic bigint projection failure" $ \pool -> do
+    fixture@(eventKey,orderKey,refundKey) <- legacyStripeRefundFixture pool 12515
+    env <- legacyStripeRefundEnv pool True
+    calls <- newIORef (0 :: Int)
+    let returnedId = "re_synthetic_projection_failure" :: Text
+        provider _ paymentIntent amount = do
+          atomicModifyIORef' calls (\count -> (count+1,()))
+          -- Full schema has a bigint sold counter, without a nonnegative CHECK.
+          -- Force its later decrement to underflow using only our fixture row.
+          -- This checks transaction rollback, not business inventory validity.
+          runSqlPool (rawExecute
+            "UPDATE event_ticket_tier SET quantity_sold=?\
+            \ WHERE id=(SELECT tier_id FROM event_ticket_order WHERE id=?)"
+            [PersistInt64 (minBound :: Int64),PersistInt64 (fromSqlKey orderKey)]) pool
+          pure (Right (A.object ["id" A..= returnedId,"object" A..= ("refund" :: Text)
+            ,"status" A..= ("succeeded" :: Text),"amount" A..= amount
+            ,"currency" A..= ("usd" :: Text),"payment_intent" A..= paymentIntent]))
+        (approve,_) = legacyStripeRefundHandlers provider
+        action = runHandler (runReaderT
+          (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+    -- Restore only the counter deliberately corrupted by this fault fixture,
+    -- after checking rollback evidence, including when an assertion fails.
+    bracket (pure ()) (\_ -> runSqlPool (rawExecute
+      "UPDATE event_ticket_tier SET quantity_sold=3\
+      \ WHERE id=(SELECT tier_id FROM event_ticket_order WHERE id=?)"
+      [PersistInt64 (fromSqlKey orderKey)]) pool) $ \_ -> do
+      result <- action
+      case result of
+        Left failure -> errHTTPCode failure `shouldBe` 502
+        Right _ -> expectationFailure "A failed inventory projection must roll back refund completion"
+      runSqlPool (rawSql
+        "SELECT stripe_refund_id,processed_at FROM ticket_refund_request WHERE id=?"
+        [PersistInt64 (fromSqlKey refundKey)]) pool
+        `shouldReturn` [(Single (Just returnedId),Single (Nothing :: Maybe UTCTime))]
+      assertLegacyStripeRefundState pool fixture "processing" "paid" minBound "issued"
+      action >>= assertLegacyRefundDenied
+      readIORef calls `shouldReturn` 1
+
+  forM_
+    [ ("releases inventory once for a successful full refund and denies replay", "re_synthetic_legacy")
+    , ("accepts exactly 128 visible ASCII refund-id characters without assuming a prefix", T.replicate 128 "x")
+    ] $ \(scenario,returnedId) -> it scenario $ \pool -> do
+      fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 12515
+      env <- legacyStripeRefundEnv pool True
+      calls <- newIORef (0 :: Int)
+      let provider _ paymentIntent amount = do
+            atomicModifyIORef' calls (\count -> (count+1,()))
+            pure (Right (A.object ["id" A..= (returnedId :: Text)
+              ,"object" A..= ("refund" :: Text)
+              ,"status" A..= ("succeeded" :: Text),"amount" A..= amount
+              ,"currency" A..= ("usd" :: Text),"payment_intent" A..= paymentIntent]))
+          (approve,_) = legacyStripeRefundHandlers provider
+          action = runHandler (runReaderT
+            (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+      first <- action >>= requireRight
+      TD.refundStatus first `shouldBe` "approved"
+      runSqlPool (rawSql "SELECT stripe_refund_id FROM ticket_refund_request WHERE id=?"
+        [PersistInt64 (fromSqlKey refundKey)]) pool
+        `shouldReturn` [Single (Just returnedId)]
+      action >>= assertLegacyRefundDenied
+      readIORef calls `shouldReturn` 1
+      assertLegacyStripeRefundState pool fixture "approved" "refunded" 0 "refunded"
 
 type LegacyStripeRefundFixture = (TM.SocialEventId,TM.EventTicketOrderId,TM.TicketRefundRequestId)
 
