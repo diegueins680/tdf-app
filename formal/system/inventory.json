@@ -3976,7 +3976,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
+      "sha256": "feebc6a2fd08487f8fd5e8d87b4a2020cd74faec4e39b9867bd7e369860843b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15646,7 +15646,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "c2d7ab6cd9a02369b1c77e6936aa79cc0de8a393bff2fee2621e2f3c02fabbea",
+      "sha256": "ddacfbaee9230369a7d1490d44e6ce47bf32ef3d0fd561ea29b3f38c58806e83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16114,7 +16114,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
+      "sha256": "f655267e5f30c9b0c9e31e6fce03965610c0f3ebee93d4cdc958029cbff832b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27814,6 +27814,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-refund-inventory.md",
+      "sha256": "881d3d000ab900d0efce5bbecc67d0757350e27a4604cedb64f775c07d909922",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-release-playback.md",
       "sha256": "3a98924b03c94913d8aa90f67a4bace35034dff00230924a87ad14cbf416f792",
       "authority": "inferred",
@@ -28200,7 +28207,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2f138242acc0fbc933494e913a6497cef59b9fb14aad9477f3f62d13124b7b9e",
+      "sha256": "4ca676ce31928c011b6e363911bf66d73742612235176d1891b12515fe298b33",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
