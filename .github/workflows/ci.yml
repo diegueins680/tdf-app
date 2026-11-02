@@ -616,6 +616,7 @@ jobs:
         run: |
           sh scripts/test-operations-inbound-capture.sh
           bash scripts/test-auth-recovery-migration.sh
+          bash scripts/test-api-token-session-expiry-migration.sh
           sh scripts/test-meta-redelivery.sh
           sh scripts/test-rag-index-privacy.sh
           node scripts/__tests__/identity-http-runtime.mjs
