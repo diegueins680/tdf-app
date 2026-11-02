@@ -3,7 +3,7 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1205,
+    "preservedDecisions": 1208,
     "reviewedByPolicy": 146,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
@@ -754,11 +754,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "scripts/__tests__/event-preview.test.mjs",
-        "line": 7,
+        "line": 10,
         "kind": "object-registry",
         "name": "publicEvent",
         "valueCount": 11,
-        "consumerCount": 140,
+        "consumerCount": 143,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "46515447e1de3fdd20c9"
@@ -952,7 +952,7 @@
         "kind": "object-registry",
         "name": "options",
         "valueCount": 4,
-        "consumerCount": 239,
+        "consumerCount": 245,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -1964,7 +1964,7 @@
         "kind": "literal-union",
         "name": "MerchConfidence",
         "valueCount": 4,
-        "consumerCount": 26,
+        "consumerCount": 28,
         "exactDuplicateIds": [
           "65a7d6d8d94847221878"
         ],
@@ -2234,7 +2234,7 @@
         "kind": "literal-union",
         "name": "SocialRsvpStatus",
         "valueCount": 3,
-        "consumerCount": 74,
+        "consumerCount": 75,
         "exactDuplicateIds": [
           "a36272e80e7d7145a46b",
           "d2df22e8c9f29c516d07"
@@ -5165,7 +5165,7 @@
         "kind": "object-registry",
         "name": "sessionMock",
         "valueCount": 5,
-        "consumerCount": 134,
+        "consumerCount": 136,
         "exactDuplicateIds": [
           "a86872972efe04fbd789",
           "032010c2e0452a17c57c",
@@ -5696,7 +5696,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
-        "line": 12,
+        "line": 13,
         "kind": "array",
         "name": "categories",
         "valueCount": 8,
@@ -5726,7 +5726,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 5,
-        "consumerCount": 62,
+        "consumerCount": 63,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "37947a8e810836a21c9a"
@@ -6130,7 +6130,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-        "line": 767,
+        "line": 768,
         "kind": "object-registry",
         "name": "bookingPayload",
         "valueCount": 10,
@@ -7528,7 +7528,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11096,
+        "line": 11102,
         "kind": "openapi-enum",
         "name": "reportReason",
         "valueCount": 9,
@@ -7555,7 +7555,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11107,
+        "line": 11113,
         "kind": "openapi-enum",
         "name": "moderationReasonCode",
         "valueCount": 10,
@@ -7582,7 +7582,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11233,
+        "line": 11239,
         "kind": "openapi-enum",
         "name": "MerchProductCategory",
         "valueCount": 9,
@@ -7611,11 +7611,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11236,
+        "line": 11242,
         "kind": "openapi-enum",
         "name": "MerchProductStatus",
         "valueCount": 7,
-        "consumerCount": 168,
+        "consumerCount": 169,
         "exactDuplicateIds": [
           "ab22a28a6c1f13d36e93"
         ],
@@ -7638,7 +7638,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11239,
+        "line": 11245,
         "kind": "openapi-enum",
         "name": "MerchFulfillmentStatus",
         "valueCount": 9,
@@ -7664,7 +7664,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11579,
+        "line": 11585,
         "kind": "openapi-enum",
         "name": "MerchIssueStatus",
         "valueCount": 7,
@@ -7692,11 +7692,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11634,
+        "line": 11640,
         "kind": "openapi-enum",
         "name": "MerchRefundStatus",
         "valueCount": 6,
-        "consumerCount": 257,
+        "consumerCount": 260,
         "exactDuplicateIds": [
           "53eb977c438f2629bf40",
           "015ddf4475d1e02f496a"
@@ -7719,7 +7719,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 11721,
+        "line": 11727,
         "kind": "openapi-enum",
         "name": "MerchSettlementStatus",
         "valueCount": 6,
@@ -7898,11 +7898,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 13965,
+        "line": 13971,
         "kind": "openapi-enum",
         "name": "EventRsvpStatus",
         "valueCount": 3,
-        "consumerCount": 75,
+        "consumerCount": 76,
         "exactDuplicateIds": [
           "91952765f2d528c2a6c6",
           "d2df22e8c9f29c516d07"
@@ -7969,7 +7969,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 14290,
+        "line": 14296,
         "kind": "openapi-enum",
         "name": "OnboardingIntent",
         "valueCount": 6,
@@ -8001,11 +8001,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 14305,
+        "line": 14311,
         "kind": "openapi-enum",
         "name": "firstValue",
         "valueCount": 4,
-        "consumerCount": 49,
+        "consumerCount": 50,
         "exactDuplicateIds": [
           "69594af6193f077ea0a2"
         ],
@@ -8027,11 +8027,11 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 14503,
+        "line": 14509,
         "kind": "openapi-enum",
         "name": "Role",
         "valueCount": 31,
-        "consumerCount": 358,
+        "consumerCount": 365,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fffe489557d71ad441fc",
@@ -10962,7 +10962,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 245,
+        "consumerCount": 246,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "b5cf352ce0b028fa7f58"
@@ -10986,7 +10986,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 83,
+        "consumerCount": 84,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "daa37fcffc0e8bd8a2ed"
@@ -11045,7 +11045,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 129,
+        "consumerCount": 131,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "e2c7b685298f05265cb9"
@@ -11147,7 +11147,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 168,
+        "consumerCount": 169,
         "exactDuplicateIds": [
           "df4db7e4f0142896d690"
         ],
@@ -11296,7 +11296,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 112,
+        "consumerCount": 113,
         "exactDuplicateIds": [
           "c2530dae2f9a5c20f9c9"
         ],
@@ -11369,7 +11369,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 137,
+        "consumerCount": 139,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11417,7 +11417,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 284,
+        "consumerCount": 287,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11461,7 +11461,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 243,
+        "consumerCount": 245,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "29477a732e910fa947a8",
@@ -11554,7 +11554,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 99,
+        "consumerCount": 101,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11598,7 +11598,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 76,
+        "consumerCount": 79,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11881,7 +11881,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 124,
+        "consumerCount": 127,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fcc83a1bc147933d21b3"
@@ -12014,7 +12014,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 75,
+        "consumerCount": 76,
         "exactDuplicateIds": [
           "91952765f2d528c2a6c6",
           "a36272e80e7d7145a46b"
@@ -12363,7 +12363,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 36,
+        "consumerCount": 37,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12442,7 +12442,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 87,
+        "consumerCount": 88,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12569,7 +12569,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 27,
+        "consumerCount": 29,
         "exactDuplicateIds": [
           "dfb0c31740bd6e1b55ab"
         ],
@@ -12639,7 +12639,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 79,
+        "consumerCount": 80,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "8c80d98c11e7d2dca074",
@@ -12715,7 +12715,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 89,
+        "consumerCount": 90,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12759,7 +12759,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 80,
+        "consumerCount": 82,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13095,7 +13095,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 210,
+        "consumerCount": 214,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13117,7 +13117,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 236,
+        "consumerCount": 237,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13139,7 +13139,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 106,
+        "consumerCount": 110,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13235,7 +13235,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 87,
+        "consumerCount": 88,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13292,7 +13292,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 13,
-        "consumerCount": 119,
+        "consumerCount": 122,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13424,7 +13424,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 101,
+        "consumerCount": 102,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13525,7 +13525,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 146,
+        "consumerCount": 148,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13679,7 +13679,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 96,
+        "consumerCount": 97,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13784,7 +13784,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 41,
+        "consumerCount": 42,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -16153,7 +16153,7 @@
         "kind": "haskell-list",
         "name": "refundStatuses",
         "valueCount": 6,
-        "consumerCount": 256,
+        "consumerCount": 259,
         "exactDuplicateIds": [
           "6e49e1dd9002b9a384f9",
           "53eb977c438f2629bf40"

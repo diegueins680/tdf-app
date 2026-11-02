@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -358,9 +359,9 @@ export default function InstagramConnectPage() {
                           <CardMedia component="img" image={item.mediaUrl} alt={item.caption ?? 'Instagram media'} />
                         )}
                         <CardContent>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                          <MarkdownText inline variant="body2" color="text.secondary" gutterBottom>
                             {item.caption ? item.caption.slice(0, 120) : reviewMode ? 'No caption' : 'Sin caption'}
-                          </Typography>
+                          </MarkdownText>
                           {item.permalink && (
                             <Button
                               size="small"
