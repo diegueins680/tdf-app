@@ -72,6 +72,7 @@ function affectsLedgerRuntime(file) {
     || file === 'scripts/verify-payment-intent-expiry.py'
     || file === 'scripts/verify-checkout-money.py'
     || file === 'scripts/test-checkout-money-verifier.py'
+    || file === 'scripts/verify-google-account-name.py'
     || file.startsWith('scripts/__tests__/ledger-');
 }
 
@@ -109,6 +110,7 @@ export function classifyChangedFiles(files, options = {}) {
         || file === '.dockerignore'
         || file === 'scripts/test-public-booking-http-concurrency.sh'
         || file === 'scripts/test-music-catalog-search.mjs'
+        || file === 'scripts/test-music-purchase-asset-query.py'
         || file === 'scripts/test-music-source-projection.mjs'
         || file === 'scripts/test-music-track-search.mjs'
         || file === 'scripts/test-event-operations-http.sh'

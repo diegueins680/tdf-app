@@ -733,15 +733,15 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
         expectationFailure
           ("Expected malformed Google token email to be rejected, got " <> show profile)
 
-  it "falls back to email for punctuation-only Google profile names" $
+  it "preserves absence instead of private email for punctuation-only Google names" $
     case validateGoogleIdTokenInfo
       (Just "client-id")
       googleTokenInfo { gitName = Just " ... --- " } of
       Right profile ->
-        gpName profile `shouldBe` Just "ada@example.com"
+        gpName profile `shouldBe` Nothing
       Left err ->
         expectationFailure
-          ("Expected punctuation-only Google profile name to fall back, got " <> T.unpack err)
+          ("Expected punctuation-only Google profile name to remain absent, got " <> T.unpack err)
 
   it "rejects blank or unsafe Google subjects before account fallback creation" $ do
     let hiddenFormat = T.singleton (chr 0x200D)
@@ -760,20 +760,20 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
     assertRejected (T.replicate 256 "a")
     assertRejected ("google-sub-" <> hiddenFormat <> "1")
 
-  it "falls back to verified email when Google profile names are unsafe" $ do
+  it "preserves absence instead of private email when Google profile names are unsafe" $ do
     let hiddenFormat = T.singleton (chr 0x200D)
-        assertFallsBack rawName =
+        assertAbsent rawName =
           case validateGoogleIdTokenInfo
             (Just "client-id")
             googleTokenInfo { gitName = Just rawName } of
             Right profile ->
-              gpName profile `shouldBe` Just "ada@example.com"
+              gpName profile `shouldBe` Nothing
             Left err ->
               expectationFailure
-                ("Expected unsafe Google profile name to fall back, got " <> T.unpack err)
-    assertFallsBack ("Ada" <> hiddenFormat <> "Lovelace")
-    assertFallsBack "Ada\nLovelace"
-    assertFallsBack (T.replicate 161 "a")
+                ("Expected unsafe Google profile name to remain absent, got " <> T.unpack err)
+    assertAbsent ("Ada" <> hiddenFormat <> "Lovelace")
+    assertAbsent "Ada\nLovelace"
+    assertAbsent (T.replicate 161 "a")
 
 loginEmailFallbackSpec :: Spec
 loginEmailFallbackSpec = describe "selectUniqueLoginEmailCredential" $ do
