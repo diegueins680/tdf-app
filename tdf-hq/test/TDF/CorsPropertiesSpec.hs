@@ -21,7 +21,10 @@ import           TDF.Cors
 newtype Label = Label String deriving (Show)
 
 instance Arbitrary Label where
-  arbitrary = Label <$> (chooseInt (1, 12) >>= \n -> vectorOf n (elements (['a'..'z'] ++ ['0'..'9'])))
+  -- Labels start with a letter: a host made only of digits and dots is parsed
+  -- as an IPv4 literal, which is a different (stricter) rule.
+  arbitrary = Label <$> ((:) <$> elements ['a'..'z']
+    <*> (chooseInt (0, 11) >>= \n -> vectorOf n (elements (['a'..'z'] ++ ['0'..'9']))))
 
 trustedRoots :: [String]
 trustedRoots = ["tdfui.pages.dev", "tdf-app.pages.dev"]

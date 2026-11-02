@@ -2,13 +2,16 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useNavigate, type NavigateFunction } from 'react-router-dom';
 
 import type { PublicUpcomingEventDTO, SocialRsvpDTO, SocialRsvpWriteDTO } from '../../api/socialEvents';
+import type { ArtistProfileDTO } from '../../api/types';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const listMock = jest.fn<(opts?: { startAfter?: string }) => Promise<PublicUpcomingEventDTO[]>>();
+const profileMock = jest.fn<(segment: string) => Promise<ArtistProfileDTO>>();
+const artistEventsMock = jest.fn<(partyId: number, startAfter: string, signal?: AbortSignal) => Promise<PublicUpcomingEventDTO[]>>();
 const getRsvpMock = jest.fn<(eventId: string) => Promise<SocialRsvpDTO | null>>();
 const upsertMock = jest.fn<(eventId: string, input: SocialRsvpWriteDTO) => Promise<SocialRsvpDTO>>();
 let mockSession: { partyId: number; preferences?: { showEventRsvpsOnProfile?: boolean } } | null = { partyId: 7 };
@@ -22,6 +25,8 @@ jest.unstable_mockModule('../../api/socialEvents', () => ({
   },
 }));
 jest.unstable_mockModule('../../api/client', () => ({ API_BASE_URL: 'https://api.example.test' }));
+jest.unstable_mockModule('../../api/fans', () => ({ Fans: { getPublicArtist: profileMock } }));
+jest.unstable_mockModule('../../api/artistUpcomingEvents', () => ({ listArtistUpcomingEvents: artistEventsMock }));
 jest.unstable_mockModule('../../session/SessionContext', () => ({
   useSession: () => ({ session: mockSession, loading: mockSessionLoading }),
 }));
@@ -54,11 +59,16 @@ async function render(path = '/buscar') {
   document.body.appendChild(container);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   let root: Root | null = createRoot(container);
+  let navigate!: NavigateFunction;
+  function Content() {
+    navigate = useNavigate();
+    return <UpcomingEventsCarousel />;
+  }
   await act(async () => {
     root?.render(
       <MemoryRouter initialEntries={[path]}>
         <QueryClientProvider client={queryClient}>
-          <UpcomingEventsCarousel />
+          <Content />
         </QueryClientProvider>
       </MemoryRouter>,
     );
@@ -67,6 +77,7 @@ async function render(path = '/buscar') {
   return {
     container,
     queryClient,
+    navigate: (path: string) => act(async () => { void navigate(path); await flush(); }),
     cleanup: async () => {
       await act(async () => { root?.unmount(); await flush(); });
       root = null;
@@ -83,11 +94,109 @@ describe('UpcomingEventsCarousel', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('es');
     listMock.mockReset();
+    profileMock.mockReset().mockResolvedValue({ apArtistId: 115 } as ArtistProfileDTO);
+    artistEventsMock.mockReset().mockResolvedValue([]);
     getRsvpMock.mockReset();
     upsertMock.mockReset();
     mockSession = { partyId: 7 };
     mockSessionLoading = false;
     window.sessionStorage.clear();
+  });
+
+  it.each(['/artista/115', '/a/verde-70'])('puts every artist date first on %s, even beyond eight, without duplicate cards', async (path) => {
+    const dates = Array.from({ length: 12 }, (_, i) => event(String(200 + i), `Artist concert ${i + 1}`));
+    artistEventsMock.mockResolvedValue(dates);
+    listMock.mockResolvedValue([event('1', 'Earlier general concert'), dates[0]!]);
+    getRsvpMock.mockResolvedValue(null);
+    const before = Date.now();
+    const view = await render(path);
+    try {
+      await waitFor(() => view.container.querySelectorAll('[role="listitem"]').length === 13);
+      const cards = Array.from(view.container.querySelectorAll('[role="listitem"]'));
+      expect(cards.map((card) => card.querySelector('a')?.getAttribute('href')))
+        .toEqual([...dates.map((date) => `/eventos/${date.publicUpcomingEventId}`), '/eventos/1']);
+      expect(artistEventsMock).toHaveBeenCalledWith(115, expect.any(String), expect.any(AbortSignal));
+      expect(Date.parse(artistEventsMock.mock.calls[0]![1])).toBeGreaterThanOrEqual(before);
+      expect(profileMock).toHaveBeenCalledWith(path.split('/').pop());
+    } finally { await view.cleanup(); }
+  });
+
+  it('shows artist dates even when the general agenda fails and drops artist dates that already started', async () => {
+    listMock.mockRejectedValue(new Error('offline'));
+    artistEventsMock.mockResolvedValue([
+      event('past', 'Past artist concert', { publicUpcomingEventStart: new Date(Date.now() - 1000).toISOString() }),
+      event('artist', 'Future artist concert'),
+    ]);
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render('/artista/115');
+    try {
+      await waitFor(() => (view.container.textContent ?? '').includes('Future artist concert'));
+      expect(view.container.textContent).not.toContain('Past artist concert');
+    } finally { await view.cleanup(); }
+  });
+
+  it.each(['empty', 'error'])('keeps the general agenda when artist dates are %s', async (mode) => {
+    listMock.mockResolvedValue([event('general', 'General concert')]);
+    if (mode === 'error') artistEventsMock.mockRejectedValue(new Error('offline'));
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render('/artista/115');
+    try {
+      await waitFor(() => artistEventsMock.mock.calls.length > 0);
+      expect(view.container.textContent).toContain('General concert');
+    } finally { await view.cleanup(); }
+  });
+
+  it('does not fetch artist events outside an artist profile', async () => {
+    listMock.mockResolvedValue([event('general', 'General concert')]);
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render('/buscar');
+    try {
+      await waitFor(() => (view.container.textContent ?? '').includes('General concert'));
+      expect(profileMock).not.toHaveBeenCalled();
+      expect(artistEventsMock).not.toHaveBeenCalled();
+    } finally { await view.cleanup(); }
+  });
+
+  it('never carries dates from the previous artist into a different profile while its dates load', async () => {
+    listMock.mockResolvedValue([event('general', 'General concert')]);
+    profileMock.mockImplementation(async (segment) => ({ apArtistId: segment === '115' ? 115 : 337 } as ArtistProfileDTO));
+    let finishSecond!: (events: PublicUpcomingEventDTO[]) => void;
+    artistEventsMock.mockImplementation(async (id) => id === 115 ? [event('first', 'First artist concert')]
+      : new Promise((resolve) => { finishSecond = resolve; }));
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render('/artista/115');
+    try {
+      await waitFor(() => (view.container.textContent ?? '').includes('First artist concert'));
+      await view.navigate('/a/another-artist');
+      await waitFor(() => artistEventsMock.mock.calls.some(([id]) => id === 337));
+      expect(view.container.textContent).not.toContain('First artist concert');
+      expect(view.container.textContent).toContain('General concert');
+      await act(async () => { finishSecond([event('second', 'Second artist concert')]); await flush(); });
+      await waitFor(() => (view.container.textContent ?? '').includes('Second artist concert'));
+      expect(view.container.querySelector('[role="listitem"]')?.textContent).toContain('Second artist concert');
+      await view.navigate('/buscar');
+      expect(view.container.textContent).not.toContain('Second artist concert');
+      expect(view.container.textContent).toContain('General concert');
+    } finally { await view.cleanup(); }
+  });
+
+  it('starts at the first artist card when dates arrive after the general agenda and when the profile changes', async () => {
+    listMock.mockResolvedValue([event('general', 'General concert')]);
+    let finishDates!: (events: PublicUpcomingEventDTO[]) => void;
+    artistEventsMock.mockReturnValue(new Promise((resolve) => { finishDates = resolve; }));
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render('/artista/115');
+    try {
+      await waitFor(() => artistEventsMock.mock.calls.length > 0);
+      const list = view.container.querySelector<HTMLElement>('[role="list"]')!;
+      list.scrollLeft = 300;
+      await act(async () => { finishDates([event('artist', 'Artist concert')]); await flush(); });
+      await waitFor(() => (view.container.textContent ?? '').includes('Artist concert'));
+      expect(list.scrollLeft).toBe(0);
+      list.scrollLeft = 200;
+      await view.navigate('/buscar');
+      expect(list.scrollLeft).toBe(0);
+    } finally { await view.cleanup(); }
   });
 
   it('shows upcoming events with the signed-in user\'s RSVP status', async () => {
