@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-02T02:49:05.512Z",
+  "generatedAt": "2026-11-02T05:58:00.600Z",
   "repositoryRoot": ".",
   "filesScanned": 2487,
   "candidateCount": 1355,
@@ -149942,7 +149942,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16501,
+      "line": 16505,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -149950,7 +149950,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16501
+        16505
       ],
       "consumerCount": 0,
       "backendConsumers": [],
