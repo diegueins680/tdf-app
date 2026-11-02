@@ -131,6 +131,22 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     view.queryClient.clear();
   });
 
+  it('sends a guest who opens an invitation link to account creation and back to the event', async () => {
+    const view = renderPage('/eventos/211?signup=1');
+    expect((await screen.findByLabelText('Destino protegido')).textContent).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F211');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('shows the event to a signed-in visitor who opens an invitation link', async () => {
+    sessionMock = { username: 'ana-fan', displayName: 'Ana Fan', roles: ['fan'], modules: [], partyId: 42 };
+    const view = renderPage('/eventos/211?signup=1');
+    expect(await screen.findByText(profile.name)).toBeTruthy();
+    expect(screen.queryByLabelText('Destino protegido')).toBeNull();
+    view.unmount();
+    view.queryClient.clear();
+  });
+
   it('does not redirect an unavailable public event to its protected contents', async () => {
     profileMock.mockRejectedValue(new Error('unavailable'));
     const view = renderPage('/eventos/121?moment=987');

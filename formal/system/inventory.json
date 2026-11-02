@@ -9597,13 +9597,13 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "10fec38f28a13275f31d9ea60b6d95a8a500e92a7ed3a9e45a746beaa5812d6c",
+      "sha256": "25e0875c9fdf63c974d89215b87687b3d624e15dd47517f53ca18593511ac3b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "cec63ae59dea7d81153c31a5247364e784dceb3fb136bed5ad3d81b6d02d5dc7",
+      "sha256": "8ad2cb2c31feaa27005f922ba7d1819045a3cedd9e643df9a1a89de5e6077da8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11451,13 +11451,13 @@
     {
       "id": "SURFACE-f57ff394c49a306f",
       "path": "tdf-hq-ui/src/utils/loginRouting.test.ts",
-      "sha256": "56165bbe1cc06b179403af52cdd1ca6a1ffca655d6394f68dc5d4d6fbb9a9ea9",
+      "sha256": "8fabb75d7f986e9d7bf8f24b2a6a71f786e08fcae9718b8d22ede42eaf89f617",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2c5199a5b87938cc",
       "path": "tdf-hq-ui/src/utils/loginRouting.ts",
-      "sha256": "8b3a0d840447645830d58ac497690cc6a6289ebfe37acb4fd640e35956d5d38a",
+      "sha256": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-02T16:48:39.371Z",
+  "generatedAt": "2026-11-02T19:28:47.643Z",
   "repositoryRoot": ".",
   "filesScanned": 2497,
   "candidateCount": 1369,
@@ -54251,7 +54251,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "event",
-      "line": 311,
+      "line": 327,
       "values": [
         "id",
         "title",
@@ -54266,7 +54266,7 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        311
+        327
       ],
       "consumerCount": 1046,
       "backendConsumers": [
@@ -79014,7 +79014,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesUniverse",
-      "line": 41,
+      "line": 42,
       "values": [
         "admin",
         "manager",
@@ -79034,7 +79034,7 @@
       "valueCount": 14,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        41
+        42
       ],
       "consumerCount": 181,
       "backendConsumers": [
@@ -79221,7 +79221,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "moduleUniverse",
-      "line": 57,
+      "line": 58,
       "values": [
         "admin",
         "crm",
@@ -79236,7 +79236,7 @@
       "valueCount": 9,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        57
+        58
       ],
       "consumerCount": 155,
       "backendConsumers": [
@@ -155157,7 +155157,7 @@
       "lines": [
         926
       ],
-      "consumerCount": 18,
+      "consumerCount": 19,
       "backendConsumers": [
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -155172,6 +155172,7 @@
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.tsx"
       ],
