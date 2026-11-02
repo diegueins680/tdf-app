@@ -104,7 +104,7 @@ estados terminales y estados desde los que no se puede terminar.
 |---|---|
 | 16 de 20 | Sin anomalías estructurales |
 | `music-directory#review` | `pending` es inalcanzable: el inicial es `published` (F-09) |
-| `music-directory#claim` | `approved` es terminal: no hay revocación de una reclamación aprobada por error o fraude (pregunta Q3) |
+| `music-directory#claim` | `approved` era terminal: no había revocación de una reclamación aprobada por error o fraude (Q3). **Resuelto** con AUTHORITY-097 (`approved → revoked`, sección 30) |
 | `revenue-platform#royalty_statement` | Ningún estado del camino exitoso es terminal; `paid → corrected → review → issued → payable → paid` permite volver a pagar sin un invariante de ajuste (ya `SPECIFICATION AMBIGUITY`; sin código) |
 | `operations.control-center`, `SYS-MONEY-003`, `PAY-INVOICE-001` | Formato de transiciones en lista; se analizan en la fase 2 |
 
@@ -302,3 +302,11 @@ El responsable aceptó las recomendaciones de la sección 14 y del informe de av
 
 - La parte persistente de ambos manejadores se extrajo a módulos sin dependencias de proveedor: `TDF.Commerce.ArtistTipStore.reserveArtistTip` (búsqueda por clave, decisión pura de repetición, inserción única y relectura ante carrera) y `TDF.Social.AccountOwnershipStore` (`planInstagramConnections` decide y rechaza antes de escribir; `applyInstagramConnections` hace el upsert y registra el evento de auditoría). Los manejadores de Stripe y de Meta solo orquestan.
 - Pruebas Hspec sobre SQLite real: propina con clave reservada una vez, pendiente hasta que exista el intento de pago, repetida con el intento almacenado, huella distinta rechazada, claves por artista, peticiones sin clave nunca deduplicadas; conexión Instagram propiedad de quien conecta y auditada una vez, reconexión del dueño sin evento y sin perder designación, otra party rechazada sin escribir, reasignación por administrador auditada (party origen y destino) y con pérdida de vínculo de artista y designación.
+
+## 30. Revocación de reclamaciones aprobadas del directorio (Q3, AUTHORITY-097, 2026-11-02)
+
+- El modelo canónico `docs/music-directory/formal-model.yaml#claim` añade `approved → revoked` (terminal) y el invariante I17; la relación `allowedClaimTransition` cambia en sincronía (gate `check-state-machines` estático verde, 10 validadores).
+- Migración `2026-11-02_directory_claim_revocation`: CHECK de estado con `revoked`, CHECK que exige revisor, fecha y motivo no vacío, y trigger inmediato que rechaza una reclamación revocada con alguna concesión de gestión activa creada por ella. Rollback rechazado si existen revocaciones.
+- Manejador `PATCH /directory/admin/claims/{id}/status` con `revoked`: 400 sin motivo; mismo guard de administrador estricto y revisor distinto del solicitante; desactiva las concesiones (`active=false`, `revoked_at`) antes de cambiar el estado; evento `claim.revoked`; repetición observacional; `revoked → approved` es 409.
+- Modelo TLA+ `DirectoryClaimReview` extendido con la decisión `revoked` y el invariante `RevocationWithdrawsGrant`; control negativo `RevokeKeepsGrant` (la revocación que no retira la concesión viola el invariante). UI: la cola de reclamos ofrece «Revocar» en `approved` (la prueba de la página deriva las acciones del contrato). OpenAPI y pruebas HTTP reales ampliadas (400 sin motivo, 403 al propio solicitante, retirada de la concesión en la misma transacción, auditoría única, terminalidad); ensayo de migración con sondas del CHECK y del trigger.
+- Deriva detectada de paso: `scripts/test-music-directory-migration.sh` (no cableado en CI) no aplicaba `2026-10-25_directory_saved_search_parity` que `main` introdujo con cambios en el manejador de búsqueda, así que el ensayo fallaba con 500 en `/directory/search`. Se añadió la migración a la lista de prerrequisitos; el ensayo vuelve a pasar completo con el binario actual.

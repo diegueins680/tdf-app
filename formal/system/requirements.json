@@ -1510,7 +1510,8 @@
       "confidence": "source-confirmed defect and repair; runtime conformance pending",
       "ambiguity": [
         "Full directory moderation, verification and profile-merge lifecycle reconciliation remains open.",
-        "In-flight global-role revocation is not established by the request snapshot."
+        "In-flight global-role revocation is not established by the request snapshot.",
+        "A revoked claim's profile keeps other grants not created by the claim; withdrawing those is a separate management operation."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -1527,12 +1528,14 @@
       ],
       "tests": [
         "scripts/__tests__/identity-http-runtime.mjs",
-        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
+        "scripts/test-music-directory-migration.sh",
+        "formal/event-operations/DirectoryClaimReviewRevokeKeepsGrant.cfg"
       ],
       "id": "ID-CLAIM-REVIEW-001",
       "title": "Claim review requires separated authority and atomic decisions",
-      "statement": "Directory claim review shall require Admin role and Admin module, forbid self-review, serialize state decisions with grants and audit evidence, and make identical-state replay observational.",
-      "property": "GrantMatchesClaim /\\ AdminRoleRequired /\\ SeparatedReview /\\ NoReplayRegrant",
+      "statement": "Directory claim review shall require Admin role and Admin module, forbid self-review, serialize state decisions with grants and audit evidence, and make identical-state replay observational. Revoking an approved claim (AUTHORITY-097) requires a non-empty reason, deactivates every manager grant the claim created in the same transaction, is audited as claim.revoked and is terminal.",
+      "property": "GrantMatchesClaim /\\ AdminRoleRequired /\\ SeparatedReview /\\ NoReplayRegrant /\\ RevocationWithdrawsGrant",
       "actors": [
         "Admin-role and Admin-module reviewer",
         "claimant including Admin claimant",
@@ -1558,30 +1561,36 @@
       },
       "allowedTransitions": [
         "The canonical state_machines.claim.transitions relation in docs/music-directory/formal-model.yaml",
-        "Same known state -> same receipt without effects"
+        "Same known state -> same receipt without effects",
+        "approved -> revoked by a distinct administrator with a stated reason (terminal)"
       ],
       "forbiddenTransitions": [
         "Claimant -> own review",
         "Module without Admin role -> review",
         "Conflicting stale decision -> overwrites terminal state",
-        "Approved replay -> reactivates revoked manager"
+        "Approved replay -> reactivates revoked manager",
+        "Revocation without a reason, or leaving an active grant from the revoked claim"
       ],
       "effects": [
         "Actual transition updates reviewer, status, version and timestamps",
         "Approval creates manager grant and appends review audit in the same transaction",
-        "Identical-state retry changes nothing"
+        "Identical-state retry changes nothing",
+        "Revocation deactivates the claim's manager grants, then records the status, reviewer, reason and a claim.revoked audit event; the database refuses a revoked claim with an active grant or without reviewer and reason"
       ],
       "authorization": "Admin role AND Admin module; extra Artist role does not deny access. Reviewer Party differs from claimant. Request-bound role/session checks do not prove universal in-flight revocation.",
       "concurrency": "One PostgreSQL transaction locks the claim row FOR UPDATE before transition validation; decision, grant, audit and response remain inside it.",
       "idempotency": "Same-status retry preserves evidence and does not re-grant authority. Conflicting terminal transitions return 409.",
-      "failure": "401 unauthenticated; 403 missing role/module or self-review; 404 absent claim; 409 illegal current-state transition; DB failure rolls back all effects.",
+      "failure": "401 unauthenticated; 400 revocation without a reason; 403 missing role/module or self-review; 404 absent claim; 409 illegal current-state transition; DB failure rolls back all effects.",
       "recovery": "Reload current receipt after conflict or lost response. Regranting a revoked manager requires a separate authorized management operation.",
       "implementation": [
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/assets/feature-registry.json",
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/src/TDF/Directory/Policy.hs",
-        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx"
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
+        "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql",
+        "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql",
+        "docs/music-directory/formal-model.yaml"
       ]
     },
     {

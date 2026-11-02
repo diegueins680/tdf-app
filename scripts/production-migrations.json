@@ -1180,6 +1180,11 @@
       "id": "2026-11-02_course_checkout_deposit_policy",
       "path": "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql",
       "introducedBy": "81a5a6e26f7b0a86c44e6bf5d0e30c654ae7c5bd"
+    },
+    {
+      "id": "2026-11-02_directory_claim_revocation",
+      "path": "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql",
+      "introducedBy": "b0be7aabb94222619d72aa074307b8f17f083aef"
     }
   ]
 }

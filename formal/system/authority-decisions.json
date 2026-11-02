@@ -1119,6 +1119,18 @@
       "conflict": "CI Safe Install fails on main and on PR #691 because npm audit reports GHSA-2p57-rm9w-gvfp in ip via webtorrent (development dependency) (audit F-21).",
       "authority": "Product owner accepted the audit recommendation on 2026-11-01.",
       "resolution": "Update or isolate webtorrent in its own PR; the audit gate is not weakened."
+    },
+    {
+      "id": "AUTHORITY-097",
+      "sources": [
+        "formal/system/audit-2026-10-31-phase1.md",
+        "docs/music-directory/formal-model.yaml",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs"
+      ],
+      "conflict": "The directory claim machine made approved terminal, so a claim approved by mistake or fraud could not be revoked and the manager grants it created could only be withdrawn by direct SQL (audit Q3).",
+      "authority": "Product owner accepted the audit recommendation on 2026-11-01.",
+      "resolution": "approved -> revoked is added to the canonical claim machine. Only an administrator with the Admin role and module who is not the claimant may revoke, a non-empty reason is mandatory, every manager grant created by the claim is deactivated in the same transaction (the database refuses a revoked claim with an active grant), the transition is audited as claim.revoked and revoked is terminal; the claimant may submit a new claim."
     }
   ]
 }

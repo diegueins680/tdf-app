@@ -1511,7 +1511,8 @@
       "confidence": "source-confirmed defect and repair; runtime conformance pending",
       "ambiguity": [
         "Full directory moderation, verification and profile-merge lifecycle reconciliation remains open.",
-        "In-flight global-role revocation is not established by the request snapshot."
+        "In-flight global-role revocation is not established by the request snapshot.",
+        "A revoked claim's profile keeps other grants not created by the claim; withdrawing those is a separate management operation."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -1528,12 +1529,14 @@
       ],
       "tests": [
         "scripts/__tests__/identity-http-runtime.mjs",
-        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
+        "scripts/test-music-directory-migration.sh",
+        "formal/event-operations/DirectoryClaimReviewRevokeKeepsGrant.cfg"
       ],
       "id": "ID-CLAIM-REVIEW-001",
       "title": "Claim review requires separated authority and atomic decisions",
-      "statement": "Directory claim review shall require Admin role and Admin module, forbid self-review, serialize state decisions with grants and audit evidence, and make identical-state replay observational.",
-      "property": "GrantMatchesClaim /\\ AdminRoleRequired /\\ SeparatedReview /\\ NoReplayRegrant",
+      "statement": "Directory claim review shall require Admin role and Admin module, forbid self-review, serialize state decisions with grants and audit evidence, and make identical-state replay observational. Revoking an approved claim (AUTHORITY-097) requires a non-empty reason, deactivates every manager grant the claim created in the same transaction, is audited as claim.revoked and is terminal.",
+      "property": "GrantMatchesClaim /\\ AdminRoleRequired /\\ SeparatedReview /\\ NoReplayRegrant /\\ RevocationWithdrawsGrant",
       "actors": [
         "Admin-role and Admin-module reviewer",
         "claimant including Admin claimant",
@@ -1559,30 +1562,36 @@
       },
       "allowedTransitions": [
         "The canonical state_machines.claim.transitions relation in docs/music-directory/formal-model.yaml",
-        "Same known state -> same receipt without effects"
+        "Same known state -> same receipt without effects",
+        "approved -> revoked by a distinct administrator with a stated reason (terminal)"
       ],
       "forbiddenTransitions": [
         "Claimant -> own review",
         "Module without Admin role -> review",
         "Conflicting stale decision -> overwrites terminal state",
-        "Approved replay -> reactivates revoked manager"
+        "Approved replay -> reactivates revoked manager",
+        "Revocation without a reason, or leaving an active grant from the revoked claim"
       ],
       "effects": [
         "Actual transition updates reviewer, status, version and timestamps",
         "Approval creates manager grant and appends review audit in the same transaction",
-        "Identical-state retry changes nothing"
+        "Identical-state retry changes nothing",
+        "Revocation deactivates the claim's manager grants, then records the status, reviewer, reason and a claim.revoked audit event; the database refuses a revoked claim with an active grant or without reviewer and reason"
       ],
       "authorization": "Admin role AND Admin module; extra Artist role does not deny access. Reviewer Party differs from claimant. Request-bound role/session checks do not prove universal in-flight revocation.",
       "concurrency": "One PostgreSQL transaction locks the claim row FOR UPDATE before transition validation; decision, grant, audit and response remain inside it.",
       "idempotency": "Same-status retry preserves evidence and does not re-grant authority. Conflicting terminal transitions return 409.",
-      "failure": "401 unauthenticated; 403 missing role/module or self-review; 404 absent claim; 409 illegal current-state transition; DB failure rolls back all effects.",
+      "failure": "401 unauthenticated; 400 revocation without a reason; 403 missing role/module or self-review; 404 absent claim; 409 illegal current-state transition; DB failure rolls back all effects.",
       "recovery": "Reload current receipt after conflict or lost response. Regranting a revoked manager requires a separate authorized management operation.",
       "implementation": [
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/assets/feature-registry.json",
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/src/TDF/Directory/Policy.hs",
-        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx"
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
+        "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql",
+        "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql",
+        "docs/music-directory/formal-model.yaml"
       ]
     },
     {
@@ -14528,6 +14537,7 @@
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/catalog-persistence/catalog-list-decisions.json": "08f6e44ccd5ce830bee7363c0e66639cc9081be85e7b7c487d8b2089336cf062",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
+    "docs/music-directory/formal-model.yaml": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -14598,7 +14608,8 @@
     "formal/event-operations/CheckoutSnapshotMutableTerms.cfg": "4dfb78201a2f21e44a9b08df5d6bfee520884f45a2bcca4d760645b04e303c31",
     "formal/event-operations/CheckoutSnapshotUnvalidated.cfg": "d12cb28153dca7a90a00bb13968fa1634846562d8867d224212aab93d6e954cf",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
-    "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+    "formal/event-operations/DirectoryClaimReview.tla": "5296340fcb373b506510438f967e8bdb244fe04fb6c4dbdfd142f01a39c564c5",
+    "formal/event-operations/DirectoryClaimReviewRevokeKeepsGrant.cfg": "539094a923250838c271fc8bacac87ae246474b95aa7a8ea3cc8f28ca26035b0",
     "formal/event-operations/DiscoveryFallbackPrivacy.cfg": "a6d95741d13316571594addba3bb26495081132058f0994c800a4b699745b1f8",
     "formal/event-operations/DiscoveryFallbackPrivacy.tla": "e05472793509eb2c2837e3acae82bfd3b49ab9264d0da989f6c7cefda4cb5f3c",
     "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg": "6d4fdf4a9319c4c8a430e03613cb98531d1b5ad096b0f21df2f5321f40b51c9d",
@@ -14946,7 +14957,7 @@
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
-    "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
+    "scripts/__tests__/identity-http-runtime.mjs": "5cfeccabd99fdf936a9669aad9090dc2fa8acd3d7213aa3fc54b364be1a59a8c",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
     "scripts/__tests__/ledger-event-identity.mjs": "65e6578d15bba078f5e48d36a9a8ad2c240d1f34d89b7f015f43a9f9ca23a526",
     "scripts/__tests__/ledger-posting-namespace.py": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
@@ -15050,7 +15061,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "a76123c505ca8250c8f352c61e83d4d9e7c8d9f8984218868a0949b9fd24312f",
+    "scripts/production-migrations.json": "27fd641c5f5776ebd4af323b55866a01856f4c4efd3db8626f1611e24c1a5ab6",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
@@ -15120,7 +15131,7 @@
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
-    "scripts/test-music-directory-migration.sh": "8d9e150890c5202dec3ade32fcef4a0a54d1593b777fe61e05c2911e8aba7df7",
+    "scripts/test-music-directory-migration.sh": "54c4c6e82e08b10460fba9fca2e0b8ef5cd7e5e11ab991960443c2e11089de59",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
     "scripts/test-music-money-wire-verifier.py": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
@@ -15187,7 +15198,7 @@
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
+    "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
     "scripts/verify-inductive-proofs.sh": "3f3a34833332539d133a7ad622355465f5ad1599d85a15f08437dfcf81ca20e9",
@@ -15404,8 +15415,8 @@
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "d76dc8fb08d5a21235267a9a64c199272d2b4351e24811534580ab9c85aa90f4",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
-    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
-    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "d48c1b8f09a778fae561feae57637ac5c8793a26add0ad6669fc6b762dbd3616",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "4faca98825a44ea0db53f41d5cbe0ade76d8762b78b217d72343dc4481f9fa90",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "10fec38f28a13275f31d9ea60b6d95a8a500e92a7ed3a9e45a746beaa5812d6c",
@@ -15547,7 +15558,7 @@
     "tdf-hq/assets/feature-registry.json": "0930159122e545da4166de525b05449b4b22f5207f0bf645ae90d0bb7eee1e92",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
     "tdf-hq/docs/openapi/api.yaml": "be318e3cde6871d3325da983f5d61888e930b0603a8389e79ec14874f5093134",
-    "tdf-hq/docs/openapi/directory.yaml": "39a32047148f160c16d90192eff583dc53b2854b603eea1bb1863ff4b18ffb41",
+    "tdf-hq/docs/openapi/directory.yaml": "114c0e6650440093d3599c08fe9d40ad5d3086bbe3441a885a0ab0f0d1449811",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
     "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
     "tdf-hq/music-worker/stack.yaml": "cd8794225ff4aa9550560653e371d570074d9f6dc261c1dfd138a4aa4fc37df8",
@@ -15667,6 +15678,8 @@
     "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation_rollback.sql": "8b93cc6bc4ad99b3c2b66ea269a5918949f81c3def8809d8d09848d9fec40700",
     "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql": "ce70b347ef286915e239e1c1ec34bda783d34199d1757b08a78262a1d2f79c3a",
     "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy_rollback.sql": "aa37b8a6d5c387ce3e55e39ceddff228581226b0e922ab152410b0ff7725d9b7",
+    "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql": "d5e367607ef7b8ddec254cb5f625cc6dba19fcebbc475d263a54db0ff6c6cebb",
+    "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql": "378c49acf1a52f1e28fc7f2db51fdc454575a8deb73115b5685eeffc28edc333",
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql": "b5591df9ea95e2ea08007c62ccb45b0727a4ef0f9c492f77ddb72630bc4b008f",
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
     "tdf-hq/src/TDF/API.hs": "21206a27a841d24759917b0ad59d402971bcf45f15ef7e3537804b8e92f191f2",
@@ -15726,7 +15739,7 @@
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
-    "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
+    "tdf-hq/src/TDF/Directory/Policy.hs": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
@@ -15763,7 +15776,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
+    "tdf-hq/src/TDF/Server/Directory.hs": "0195a6a9888c881caebc81348b83fc0f98c278af778fcb2d22d69c9ab82d5215",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "8259c0b2c3e661c34ad8e8d76238af00da017c3b6edee0db52ddf027022bef8b",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "bfb6201b750b256d8247ef84551ff44076137fc97cff54d59b22b3a575c083ea",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
@@ -17857,7 +17870,45 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/music-directory/formal-model.yaml": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-music-directory-migration.sh": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/DirectoryClaimReviewRevokeKeepsGrant.cfg": [
       {
         "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "tests"
@@ -25787,16 +25838,6 @@
         "relationship": "tests"
       }
     ],
-    "scripts/test-music-directory-migration.sh": [
-      {
-        "requirement": "DIR-SEARCH-SYNC-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "DISCOVERY-NAV-001",
-        "relationship": "tests"
-      }
-    ],
     "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": [
       {
         "requirement": "MKT-ARTIST-LISTING-001",
@@ -29881,7 +29922,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
+      "sha256": "5cfeccabd99fdf936a9669aad9090dc2fa8acd3d7213aa3fc54b364be1a59a8c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31982,7 +32023,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a76123c505ca8250c8f352c61e83d4d9e7c8d9f8984218868a0949b9fd24312f",
+      "sha256": "27fd641c5f5776ebd4af323b55866a01856f4c4efd3db8626f1611e24c1a5ab6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33892,9 +33933,13 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "8d9e150890c5202dec3ade32fcef4a0a54d1593b777fe61e05c2911e8aba7df7",
+      "sha256": "54c4c6e82e08b10460fba9fca2e0b8ef5cd7e5e11ab991960443c2e11089de59",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "DIR-SEARCH-SYNC-001",
           "relationship": "tests"
@@ -34972,7 +35017,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
+      "sha256": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40158,7 +40203,7 @@
     {
       "id": "SURFACE-bf406241ca9e0491",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-      "sha256": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
+      "sha256": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40170,7 +40215,7 @@
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
+      "sha256": "d48c1b8f09a778fae561feae57637ac5c8793a26add0ad6669fc6b762dbd3616",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43874,7 +43919,7 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "39a32047148f160c16d90192eff583dc53b2854b603eea1bb1863ff4b18ffb41",
+      "sha256": "114c0e6650440093d3599c08fe9d40ad5d3086bbe3441a885a0ab0f0d1449811",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47672,6 +47717,30 @@
       ]
     },
     {
+      "id": "SURFACE-6b7f50d9a9e1710e",
+      "path": "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql",
+      "sha256": "d5e367607ef7b8ddec254cb5f625cc6dba19fcebbc475d263a54db0ff6c6cebb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f65126232808cf83",
+      "path": "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql",
+      "sha256": "378c49acf1a52f1e28fc7f2db51fdc454575a8deb73115b5685eeffc28edc333",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-4be0627dc995cdde",
       "path": "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
       "sha256": "b5591df9ea95e2ea08007c62ccb45b0727a4ef0f9c492f77ddb72630bc4b008f",
@@ -49118,7 +49187,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
+      "sha256": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49901,7 +49970,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
+      "sha256": "0195a6a9888c881caebc81348b83fc0f98c278af778fcb2d22d69c9ab82d5215",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58537,7 +58606,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#profile",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "7d5ecf9e49e6afee6f016e9e507bd82e4197f50afb8aac80b29854f98d6fe0d0",
+      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -58575,7 +58644,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#classified",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "7d5ecf9e49e6afee6f016e9e507bd82e4197f50afb8aac80b29854f98d6fe0d0",
+      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -58624,7 +58693,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#application",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "7d5ecf9e49e6afee6f016e9e507bd82e4197f50afb8aac80b29854f98d6fe0d0",
+      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
       "definition": {
         "initial": "submitted",
         "transitions": {
@@ -58665,7 +58734,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#invitation",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "7d5ecf9e49e6afee6f016e9e507bd82e4197f50afb8aac80b29854f98d6fe0d0",
+      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -58699,7 +58768,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#claim",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "7d5ecf9e49e6afee6f016e9e507bd82e4197f50afb8aac80b29854f98d6fe0d0",
+      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -58721,11 +58790,14 @@
             "submitted",
             "withdrawn"
           ],
-          "approved": [],
+          "approved": [
+            "revoked"
+          ],
           "rejected": [
             "submitted"
           ],
-          "withdrawn": []
+          "withdrawn": [],
+          "revoked": []
         }
       },
       "correspondence": "states checked against migrated directory_claim.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
@@ -58733,7 +58805,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#moderation_case",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "7d5ecf9e49e6afee6f016e9e507bd82e4197f50afb8aac80b29854f98d6fe0d0",
+      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
       "definition": {
         "initial": "open",
         "transitions": {
@@ -58777,7 +58849,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#review",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "7d5ecf9e49e6afee6f016e9e507bd82e4197f50afb8aac80b29854f98d6fe0d0",
+      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
       "definition": {
         "initial": "published",
         "transitions": {
@@ -59103,7 +59175,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0f1e6109924c8a206361a6811d8bc2227f4729340a57581f7e3d0cf73d5878e1",
+      "sourceSha256": "b935ee6e54a229f62860eb4691e25977b9f14b2e42b032b0747959efeaa7a7e4",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -59131,7 +59203,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0f1e6109924c8a206361a6811d8bc2227f4729340a57581f7e3d0cf73d5878e1",
+      "sourceSha256": "b935ee6e54a229f62860eb4691e25977b9f14b2e42b032b0747959efeaa7a7e4",
       "definition": {
         "states": [
           "absent",
@@ -59161,7 +59233,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0f1e6109924c8a206361a6811d8bc2227f4729340a57581f7e3d0cf73d5878e1",
+      "sourceSha256": "b935ee6e54a229f62860eb4691e25977b9f14b2e42b032b0747959efeaa7a7e4",
       "definition": {
         "export": [
           "queued",
@@ -65539,6 +65611,7 @@
       ],
       "responses": [
         "200",
+        "400",
         "401",
         "403",
         "404",
