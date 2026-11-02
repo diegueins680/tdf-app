@@ -269,12 +269,19 @@ instance FromJSON FanClubOfficerRole
 instance ToJSON ElectionStatus
 instance FromJSON ElectionStatus
 
+-- ApiToken.issuedAtEpoch / expiresAtEpoch: server-side validity window in UTC
+-- Unix seconds from the database clock, half-open [issued, expires). Interactive
+-- session tokens (password/google login) must carry one and are rejected once it
+-- has elapsed. Service and custom-label tokens may leave it NULL and remain valid
+-- until revoked.
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 ApiToken
     token            Text
     partyId          PartyId
     label            Text Maybe
     active           Bool
+    issuedAtEpoch    Int64 Maybe
+    expiresAtEpoch   Int64 Maybe
     UniqueApiToken   token
     deriving Show Generic
 UserCredential

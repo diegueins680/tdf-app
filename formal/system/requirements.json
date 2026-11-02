@@ -1662,6 +1662,93 @@
       ]
     },
     {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "ambiguity": [
+        "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
+        "Production release sequencing after the additive migration is not yet verified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+      },
+      "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
+      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
+      "observability": "No token in production receipts; retain migration identity and exact tested source.",
+      "formalModels": [],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-hq/test/integration/event_operations_http_fixture.sql",
+        "scripts/test-api-token-session-expiry-migration.sh",
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/social/test-http.sh",
+        "tdf-hq/test/integration/event_raci_browser_fixture.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "id": "ID-SESSION-004",
+      "title": "Interactive sessions expire on the server",
+      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
+      "actors": [
+        "session holder",
+        "expired or legacy session holder",
+        "service token holder"
+      ],
+      "preconditions": [
+        "Token row is active with an authenticatable label"
+      ],
+      "inputs": [
+        "Opaque bearer or cookie session token",
+        "SESSION_TOKEN_TTL_SECONDS",
+        "Database UTC clock"
+      ],
+      "state": {
+        "window": "api_token.issued_at_epoch, api_token.expires_at_epoch",
+        "time": "UTC epoch seconds; interactive expires=issued+ttl, half-open"
+      },
+      "allowedTransitions": [
+        "Login/signup/password change/recovery -> interactive token issued with window",
+        "Active token with now < expires -> authenticated",
+        "Service token without window -> authenticated"
+      ],
+      "forbiddenTransitions": [
+        "now >= expires -> authenticated",
+        "Interactive label without window -> authenticated",
+        "Expired bearer -> credential identification for password change",
+        "TTL > cookie Max-Age -> configuration accepted"
+      ],
+      "effects": [
+        "Issuance writes the window in the issuing transaction; denial has no side effects"
+      ],
+      "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
+      "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
+      "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
+      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
+      "implementation": [
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
+        "tdf-hq/sql/init_schema.sql",
+        "scripts/production-migrations.json",
+        "scripts/production-release.mjs",
+        "tdf-hq/src/TDF/Social/Session.hs"
+      ]
+    },
+    {
       "id": "SYS-BUILD-001",
       "title": "Single backend package authority",
       "statement": "Build and test the backend with the Stack-selected toolchain and hand-maintained Cabal package; the retired Hpack description must remain outside the active package.",
@@ -13961,6 +14048,409 @@
         "classification": "PARTIAL",
         "reason": "Finite native handler regression scope; complete implementation/refinement and production PostgreSQL/provider/deployment correspondence remain unproven."
       }
+    },
+    {
+      "id": "MEDIA-ARTIST-CATALOG-001",
+      "title": "Shared artist catalog and identity projections",
+      "statement": "Profiles, followed feeds and Label share catalog reads and published-release presentation while retaining canonical and legacy source identity, bounded pagination, cancellation and honest partial failures. Artist links use a validated Party identity; shared subscription commands and target/account-scoped invalidation keep audience projections coherent without granting social consent.",
+      "domain": "MEDIA",
+      "actors": [
+        "Public listener",
+        "Authenticated fan",
+        "Artist",
+        "Label operator"
+      ],
+      "preconditions": [
+        "Existing public release endpoints and server subscription authorization remain authoritative. No historical rights or identity mapping is inferred."
+      ],
+      "inputs": [
+        "Positive exact Party ID or validated canonical slug",
+        "Canonical and legacy public release responses",
+        "Captured session ownership and explicit follow intent"
+      ],
+      "state": {
+        "catalog": [
+          "loading",
+          "complete",
+          "partial",
+          "unavailable",
+          "cancelled"
+        ],
+        "identity": [
+          "linked-party",
+          "unlinked-external"
+        ]
+      },
+      "allowedTransitions": [
+        "Load -> complete only after all eligible pages finish.",
+        "One source fails -> partial while retaining other available results.",
+        "Committed subscription change -> invalidate its account and target artist projections."
+      ],
+      "forbiddenTransitions": [
+        "Same title -> assume cross-source identity.",
+        "Failed or cancelled fetch -> assert an empty complete catalog.",
+        "Social artist record ID -> substitute as Party ID.",
+        "Subscription -> grant connection consent or club membership."
+      ],
+      "effects": [
+        "Reuse public release cards, bounded public catalog reads, validated profile routes and existing subscription commands."
+      ],
+      "authorization": "Public API visibility and existing server write authorization are unchanged. Shared subscription commands reject a retired session before writing.",
+      "privacy": "Only the captured viewer subscription cache is invalidated; another account list is not refreshed or adopted. No credentials or new persistent personal data are added.",
+      "concurrency": "At most four artist-level reads, with two initial source requests each; obsolete queries receive cancellation. Canonical pagination rejects repeated full pages and more than 10,000 rows.",
+      "idempotency": "Deduplicate only exact source IDs and requested artist IDs. Failed writes are not automatically replayed.",
+      "failure": "Retain partial-source diagnostics and do not render failed reads as a successful empty catalog.",
+      "recovery": "Explicit catalog retry reads current server state. Existing follow-response reconciliation remains authoritative.",
+      "observability": "Scoped catalog/identity/cache tests and existing actual-component regressions; hosted review and deployment remain separate.",
+      "source": "Explicit user instruction on 2026-10-29 to execute the proposed unifications; scoped migration and authority boundaries in docs/architecture/artist-catalog-unification.md",
+      "implementation": [
+        "tdf-hq-ui/src/api/artistCatalog.ts",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/features/fans/artistAudience.ts",
+        "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
+        "tdf-hq-ui/src/features/releases/catalogQueries.ts",
+        "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/utils/artistIdentity.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/artistCatalog.test.ts",
+        "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
+        "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/utils/artistIdentity.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped web adapter and component checks; physical migration, production correspondence and universal media ingestion remain open.",
+      "ambiguity": [
+        "Legacy-to-canonical recording provenance and physical profile conflicts require verified mappings.",
+        "Social subscription, connection and club membership retain separate semantics."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Web consolidation is implemented and tested locally; physical data migration, protected integration and production acceptance are not established."
+      },
+      "critical": false,
+      "authority": "User-authorized source consolidation, preserving existing permissions and data.",
+      "property": "Shared projections preserve source identity, cancellation, partial-failure truthfulness and account scoping.",
+      "contract": "docs/architecture/artist-catalog-unification.md",
+      "verification": "Adapter boundary tests, identity negative cases, cache scoping tests and existing profile/hub/event/label component checks.",
+      "evidence": "Local checks and current-head hosted results must be reported separately; no formal refinement proof is claimed."
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+      "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",
+      "domain": "SYS",
+      "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
+      "source": "formal/system/container-cleanup-evidence.md",
+      "contract": "formal/system/container-cleanup-evidence.md",
+      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout and exact case-insensitive error: no such object: <inspected nonce name>. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
+      "actors": [
+        "Hosted CI upload verifier",
+        "Maintainer diagnosing a failed gate"
+      ],
+      "preconditions": [
+        "Existing isolated GitHub-hosted guard",
+        "Existing nonce ownership boundary",
+        "subprocess capture_output/text contract"
+      ],
+      "inputs": [
+        "Owned synthetic inspect CompletedProcess",
+        "Actually completed synthetic-case records"
+      ],
+      "state": {
+        "initial": "Cleanup inspect response",
+        "terminal": [
+          "Existing confirmed cleanup path",
+          "Exact inspected-container absence",
+          "Failure retaining bounded diagnostic context"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain unexpected response while refusing success",
+        "Preserve prior Python exception chain",
+        "Remove only verified owned container ID under the existing guard",
+        "Accept only the recorded Docker absence response for the exact inspected nonce name"
+      ],
+      "forbiddenTransitions": [
+        "Discard unexpected response into a constant error",
+        "Accept unknown inspect errors as absence",
+        "Remove a foreign container",
+        "Suppress an existing primary exception chain"
+      ],
+      "effects": [
+        "Bounded failure evidence and strict missing-container response classification; Docker commands and isolation unchanged"
+      ],
+      "authorization": "Existing hosted runner gate, local socket and nonce/ownership refusal unchanged.",
+      "privacy": "Only synthetic command status/streams/name/case records; no environment, host-wide inventory or private upload-content dump.",
+      "concurrency": "Existing sequential synthetic runner unchanged; no daemon/process synchronization claim.",
+      "idempotency": "No retry or new cleanup operation; successful inspection retains the existing nonce-checked ID removal.",
+      "failure": "Unexpected cleanup still fails; malformed JSON, removal errors and timeouts retain existing behavior outside new structured path.",
+      "recovery": "Review the captured response before changing classification; require fresh hosted execution before claiming actual Docker repair.",
+      "observability": "Structured error context with each stream limited to2000characters before JSONserialization and explicit truncation flags.",
+      "implementation": [
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-persistent-uploads-container-diagnostics.py"
+      ],
+      "formalModels": [],
+      "verification": "12 mocked actual-main-path tests including four recognized missing-object variants and seven nearby refusals; old classifier reproduces lowercase-response refusal and daemon-error false acceptance. Original diagnostic fault controls remain historical.",
+      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Actual hosted response identifies the later failure cause; finite actual-runner simulations pass. No local Docker or current-head hosted qualification claim.",
+      "ambiguity": [
+        "The original PR677 Docker response remains unknown; later PR679 response is retained in job123928715883.",
+        "Exact classifier covers the recorded Docker spellings, not every version or concurrent daemon state.",
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Simulated diagnostics and source preservation tested; actual hosted Docker run and complete implementation/refinement remain separate."
+      }
+    },
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001",
+      "title": "Persist configured validity on new legacy package purchases",
+      "statement": "New package purchases snapshot positive product validity as stored purchase time plus elapsed days; absent validity stays nonexpiring; nonpositive configuration is refused without inserting a purchase.",
+      "domain": "ORD",
+      "authority": "docs/Manual_Usuario_TDF.md Paquetes de Clases; shipped Guitar24h120day seed; explicit owner decisions2026-10-30 purchase-time elapsed days and refuse nonpositive validity.",
+      "source": "formal/system/package-purchase-expiry.md",
+      "contract": "formal/system/package-purchase-expiry.md",
+      "property": "Positive n implies expiresAt = purchasedAt + n*86400seconds; Nothing implies no expiry; Just n<=0 implies409 and no row. Preserve existing reference/module/inactive checks and purchase fields.",
+      "actors": [
+        "Authorized legacy package operator",
+        "Package buyer"
+      ],
+      "preconditions": [
+        "Existing module authorization and reference validity",
+        "Product active",
+        "Elapsed duration fits deployed database timestamp range"
+      ],
+      "inputs": [
+        "buyerId",
+        "productId",
+        "Current product expiresDays"
+      ],
+      "state": {
+        "initial": "Validated new purchase request",
+        "terminal": [
+          "Persisted new purchase with snapshotted terms",
+          "Existing reference/permission refusal",
+          "Invalid validity configuration refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate existing references and active state",
+        "Refuse nonpositive validity before insert",
+        "Persist positive validity using stored purchasedAt",
+        "Keep absent validity nonexpiring"
+      ],
+      "forbiddenTransitions": [
+        "Discard positive product validity",
+        "Use a second clock for expiry anchor",
+        "Interpret days as seconds",
+        "Create a row while refusing invalid validity",
+        "Rewrite historical purchases to simulate correctness"
+      ],
+      "effects": [
+        "One new package purchase on successful admission; none on refusal"
+      ],
+      "authorization": "Existing ModulePackages guard unchanged; no new ownership/payment/gift policy inferred.",
+      "privacy": "Owned synthetic SQLite buyers/products only; no production financial records.",
+      "concurrency": "Existing product-read/insert transaction behavior retained; no new lock or temporal snapshot guarantee.",
+      "idempotency": "Existing duplicate purchase behavior unchanged; no new payment or retry contract.",
+      "failure": "Existing400/403/409/422 precedence retained; invalid configured validity returns409 before insert.",
+      "recovery": "Correct product configuration before retry; do not rewrite historical purchases under this change.",
+      "observability": "Native typed-handler/persisted-row regressions and controlled source mutations.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real pooled SQLite Handler cases, source fault controls and canonical Stack full-suite qualification; no complete proof.",
+      "evidence": "formal/system/package-purchase-expiry.md; reports/package-purchase-expiry-2026-10-30.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Actual finite-term omission reproduced; exact timing and invalid-term handling explicitly owner-authorized.",
+      "ambiguity": [
+        "Database timestamp-range admission for extremely large durations remains separate.",
+        "Payment/actor/gift/redemption and historical records unchanged.",
+        "No production PostgreSQL trigger/authenticatedHTTP/deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite Handler tests; complete implementation/refinement and deployment correspondence unproven."
+      }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001",
+      "title": "Exact browser event-finance cents or explicit refusal",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Event-finance summary, budget and entry reads and CSV exports refuse non-null monetary values that are not JavaScript safe-integer cents. Safe signed cents display without a floating-point division by100 while preserving locale and default ISO currency fraction rounding.",
+      "authority": "Owner financial-integrity mandate; existing cents DTO contracts, signed finance balances, locale formatter and CSV raw-cent columns. Existing UI authoring already requires safe integer inputs.",
+      "source": "formal/system/event-finance-browser-precision.md",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "property": "For every admitted non-null Cents field x, Number.isSafeInteger(x). For signed safe cents c, display is locale currency formatting of the exact rational c/100 rounded to the currency default fraction digits. No lossy monetary value reaches a successful finance read or CSV row. CSV requires successful independent list data; failed/pending lists cannot silently become empty report inputs.",
+      "actors": [
+        "Authorized event manager",
+        "Browser finance report reader"
+      ],
+      "preconditions": [
+        "Existing event API authorization and integer-cent backend contract",
+        "Modern supported browsers provide Intl.NumberFormat BigInt formatToParts",
+        "Finance DTO monetary fields retain their Cents suffix; optional null/undefined retain existing meanings"
+      ],
+      "inputs": [
+        "Decoded summary, budget and finance-entry DTO monetary fields",
+        "Signed safe integer cents, optional values, configured locale and ISO currency"
+      ],
+      "state": {
+        "read": "Decoded transport or cached finance data",
+        "terminal": [
+          "Validated finance data / exact display / CSV rows",
+          "Query failure, unavailable amount or export error"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate each finance read before exposing it",
+        "Validate cached monetary data before building CSV rows",
+        "Separate integer whole and fraction units before locale presentation"
+      ],
+      "forbiddenTransitions": [
+        "Display or export rounded unsafe decoded cents as valid monetary evidence",
+        "Divide safe cent magnitudes by100 in binary floating point before display",
+        "Export a partial CSV after monetary precision refusal"
+      ],
+      "effects": [
+        "Read-only report presentation and CSV export; no backend financial restriction or monetary wire migration"
+      ],
+      "authorization": "Existing event authorization unchanged; validation grants no additional access.",
+      "privacy": "Synthetic fixtures only; no provider or customer data in receipts.",
+      "concurrency": "Validate each returned/cached object independently; no serializable multi-query financial snapshot claim.",
+      "idempotency": "No provider calls or automatic mutation retries. Equal values and locale/currency inputs produce equal report formatting.",
+      "failure": "Unsafe finance data rejects the query or export; existing query warnings and explicit export feedback remain. Unrepresentable displayed prices show Monto no disponible. Missing prices retain Gratis.",
+      "recovery": "Correct source values through authorized workflows or implement an independently reviewed exact monetary wire/client migration. Never clamp or rewrite financial records to make the UI accept them.",
+      "observability": "Retain baseline assertion failures, targeted/full UI logs, independent source faults, source fingerprints and exact-commit evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven Jest tests of actual API getters, extracted unchanged CSV builder and formatter; finite locale/currency differential checks, actual source-fault controls, UI type/lint/build and CI. TESTED, no complete refinement proof.",
+      "evidence": "formal/system/event-finance-browser-precision.md; exact-source execution reports remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped executable evidence; no complete implementation proof or deployed acceptance claim.",
+      "ambiguity": [
+        "Foreign currency attribution and backend aggregation/transaction consistency are independent obligations.",
+        "Safe values already rounded by an upstream producer cannot be detected without a wire migration.",
+        "Production exposure of extreme amounts and all browser/locale combinations remain unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite implementation tests; complete refinement and deployed browser/API correspondence remain unproven."
+      }
+    },
+    {
+      "id": "SYS-WEBTORRENT-BROWSER-001",
+      "title": "Preserve browser playback while removing unused Node torrent dependencies",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker",
+        "Music listener"
+      ],
+      "preconditions": [
+        "Use the reviewed WebTorrent 2.8.5 official browser artifact and committed npm v3 workspace lock.",
+        "Trust official npm archive integrity metadata and the publisher-supplied source map; exact upstream build resolution and compiler version remain unknown."
+      ],
+      "inputs": [
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "package-lock.json",
+        "audit-ci.jsonc"
+      ],
+      "state": {
+        "boundary": "formal/system/webtorrent-browser.md"
+      },
+      "allowedTransitions": [
+        "Reviewed official artifact update with matching provenance, preserved notices, finite compatibility checks and fresh advisory evidence."
+      ],
+      "forbiddenTransitions": [
+        "Reintroduce unused Node WebTorrent/discovery/tracker/ip packages or npm aliases.",
+        "Extend the expired ip exception or lower the production audit threshold.",
+        "Omit mapped package candidate versions or supplied license notices.",
+        "Treat candidate-version advisory results as complete binary provenance or vulnerability clearance."
+      ],
+      "effects": [
+        "Reject invalid browser artifact, missing source/notice/advisory coverage or applicable low-or-higher browser advisories before integration."
+      ],
+      "authorization": "This dependency repair does not authorize real torrent/peer traffic, provider operations or deployment.",
+      "privacy": "Advisory requests contain public package names and candidate versions only; do not send registry credentials or application data.",
+      "concurrency": "Check immutable committed candidate files; do not run installers during source-bound qualification.",
+      "idempotency": "Static checks are deterministic; live advisory checks depend on the registry feed at execution time.",
+      "failure": "Reject integrity, policy, inventory and live scan failures without renewing audit exemptions.",
+      "recovery": "Restore the reviewed browser artifact and complete evidence; preserve review and required CI controls.",
+      "observability": "Record candidate commit, bundle and lock hashes, commands, actual exits and explicit provenance limitations.",
+      "source": "Existing torrentAudio browser-only entry; failed Safe Install after 2026-10-31 exception expiry; GHSA-2p57-rm9w-gvfp; user security and verification requirements.",
+      "contract": "formal/system/webtorrent-browser.md",
+      "implementation": [
+        "scripts/check-browser-vendor.mjs",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci-safe-install.yml",
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "package-lock.json",
+        "audit-ci.jsonc",
+        "tdf-hq-ui/jest.config.cjs"
+      ],
+      "tests": [
+        "scripts/__tests__/browser-vendor.test.mjs",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "e2e/web/webtorrent-browser.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite deterministic rejection and browser compatibility tests; partial upstream build identity and advisory coverage.",
+      "ambiguity": [
+        "Source-map presence does not prove executed statements or unique package versions.",
+        "Nine matching archives lack standalone notice files; exact webpack compiler version is unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite regression controls implemented; source-bound UI/browser/CI evidence is separate and exact upstream build identity remains qualified."
+      },
+      "authority": "approved",
+      "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
+      "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
+      "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
     }
   ]
 }
