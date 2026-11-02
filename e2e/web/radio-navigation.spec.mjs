@@ -77,6 +77,8 @@ test('@critical radio keeps native playback and controls across sidebar navigati
   await check('started');
   const nav = page.getByRole('navigation', { name: 'Navegación de la aplicación' });
   const openSidebar = async () => {
+    // History can report its new URL before React replaces the public layout.
+    await expect(page.locator('#app-sidebar')).toBeAttached();
     if (!await nav.isVisible()) await page.getByRole('button', { name: 'Mostrar menú lateral', exact: true }).click();
     await expect(nav).toBeVisible();
   };
