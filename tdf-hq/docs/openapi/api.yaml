@@ -8886,6 +8886,24 @@ paths:
         '429': { description: Provider query quota exhausted }
         '502': { description: Provider outcome unverified; keep the same refund ID }
         '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/provider-reference:
+    post:
+      tags: [Admin]
+      operationId: bindDomoRefundProviderReference
+      summary: Record an operator-discovered PayPal refund ID for exact authenticated readback
+      description: Current strict administrator distinct from the requester. A query candidate is not evidence of returned money. The original processing fence and existing provider identity are retained; this route never issues a refund POST.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DomoRefundProviderReference' } } }
+      responses:
+        '200': { description: Current processing refund and its immutable query candidate, content: { application/json: { schema: { type: object } } } }
+        '400': { description: Malformed identifier }
+        '401': { description: Current authenticated session required }
+        '403': { description: Strict administrator and Admin module access required }
+        '409': { description: Provider identity, binding or refund state conflicts }
   /fans/me/notifications:
     get:
       tags: [Notifications]
@@ -12020,6 +12038,12 @@ components:
       properties:
         canceller: { type: string, enum: [customer, tdf] }
         note: { type: string, maxLength: 500 }
+    DomoRefundProviderReference:
+      type: object
+      additionalProperties: false
+      required: [providerRefundId]
+      properties:
+        providerRefundId: { type: string, minLength: 1, maxLength: 256, pattern: '^[A-Za-z0-9_.-]+$' }
     DomoManualRefundEvidence:
       type: object
       additionalProperties: false

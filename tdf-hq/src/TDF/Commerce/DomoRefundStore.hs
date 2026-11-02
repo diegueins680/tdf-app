@@ -6,7 +6,7 @@
 module TDF.Commerce.DomoRefundStore
   ( loadDomoRefund, approveDomoRefund, claimDomoRefund
   , loadDomoRefundCapture, recordManualEvidence, confirmManualEvidence
-  , ManualEvidence(..), refundAudit
+  , ManualEvidence(..), bindDomoRefundReference, refundAudit
   ) where
 
 import Control.Monad (unless, when)
@@ -71,6 +71,19 @@ claimDomoRefund quoteId actor now = do
   when (snd result) $ refundAudit (fst result) actor
     (if R.rrProvider record=="paypal" then "execution_claimed" else "manual_execution_claimed")
   pure result
+
+-- An operator-discovered refund ID is only a query candidate, never proof of
+-- completion. It cannot change an already recorded provider identity or permit
+-- a second POST after an ambiguous network outcome.
+bindDomoRefundReference :: Text -> Int64 -> UTCTime -> Text -> SqlPersistT IO ()
+bindDomoRefundReference quoteId actor now providerId = do
+  record <- locked quoteId
+  unless (R.rrProvider record=="paypal" && R.rrStatus record=="processing"
+      && actor>0 && actor/=R.rrRequestedBy record
+      && maybe False (/=R.rrRequestedBy record) (R.rrApprovedBy record)) $
+    fail "Only an independently approved processing PayPal refund can bind a query candidate"
+  _ <- either (fail . T.unpack) pure =<< R.recordRefundPending (R.rrReference record) providerId now
+  refundAudit record actor "provider_query_reference_recorded"
 
 loadDomoRefundCapture :: R.RefundRecord -> SqlPersistT IO Text
 loadDomoRefundCapture record = do

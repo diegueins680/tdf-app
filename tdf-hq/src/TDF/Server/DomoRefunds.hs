@@ -48,6 +48,7 @@ domoRefundAdminServerWithManager manager user rawQuoteId =
   :<|> (authorize >>= reconcile)
   :<|> (\evidence -> authorize >>= \quoteId -> manualEvidence quoteId evidence)
   :<|> (authorize >>= confirmManual)
+  :<|> (\reference -> authorize >>= \quoteId -> bindReference quoteId reference)
   where
     actor = fromSqlKey (auPartyId user)
     authorize = do
@@ -136,6 +137,11 @@ domoRefundAdminServerWithManager manager user rawQuoteId =
         manualReady record
         D.confirmManualEvidence quoteId actor now)
 
+    bindReference quoteId (RefundProviderReference reference) = do
+      now <- liftIO getCurrentTime
+      authorizedTransaction user (D.bindDomoRefundReference quoteId actor now reference)
+      readStatus quoteId
+
 load :: Text -> SqlPersistT IO R.RefundRecord
 load quoteId = either (fail . T.unpack) pure =<< D.loadDomoRefund quoteId
 
@@ -203,6 +209,7 @@ dto record = object
   , "provider" .= R.rrProvider record,"environment" .= R.rrEnvironment record
   , "amountMinor" .= T.pack (show (R.rrAmountMinor record)),"currency" .= R.rrCurrency record
   , "requestedBy" .= R.rrRequestedBy record,"approvedBy" .= R.rrApprovedBy record
+  , "providerRefundId" .= R.rrProviderRefundId record
   , "completedAt" .= R.rrCompletedAt record
   , "executionMode" .= (if R.rrProvider record=="paypal" then "automatic" else "manual" :: Text)
   ]

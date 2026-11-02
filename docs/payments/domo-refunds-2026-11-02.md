@@ -51,7 +51,11 @@ Un timeout, rechazo, estado pendiente, identidad desconocida o evidencia distint
 mantiene los fondos reservados y la excepción abierta. No hay otro POST automático
 ni liberación de reserva por transcurso del tiempo. Si no se conoce el refund ID,
 un operador investiga el registro del proveedor usando el ID canónico como
-PayPal-Request-Id; esta entrega no inventa evidencia ni vuelve a enviar dinero.
+PayPal-Request-Id. Puede registrar el ID encontrado mediante
+`POST .../refund/provider-reference` con `{"providerRefundId":"ID-ENCONTRADO"}`;
+esto solo vincula un candidato inmutable para consulta. Después debe usar
+`reconcile`, que valida la evidencia completa. No se inventa evidencia ni se
+vuelve a enviar dinero.
 
 ## Comprobantes manuales
 
@@ -114,7 +118,9 @@ refinamiento de todo el sistema; las pruebas de runtime cubren Haskell y SQL.
 
 Este cambio atiende la aprobación/ejecución ausente, el cierre anticipado,
 la carrera captura/cancelación, la restauración del resumen y el reporte de fallo
-oculto por `errexit`. La PR base tiene además observaciones sobre validación SQL
+oculto por `errexit`, y hace determinista el encabezado no hexadecimal de
+la prueba Meta. El generador CORS ya exigía una letra en la base inspeccionada;
+no se modificó. La PR base tiene además observaciones sobre validación SQL
 del depósito, tip idempotente y propiedad de cuentas sociales; no se consideran
 resueltas por la entrega de reembolsos. La integración de toda #691 con main
 requiere reconciliar esos cambios y sus conflictos por separado.

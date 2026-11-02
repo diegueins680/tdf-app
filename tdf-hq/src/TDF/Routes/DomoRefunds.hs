@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 
-module TDF.Routes.DomoRefunds (DomoRefundAdminAPI, ManualRefundEvidence(..)) where
+module TDF.Routes.DomoRefunds (DomoRefundAdminAPI, ManualRefundEvidence(..), RefundProviderReference(..)) where
 
 import Data.Aeson (FromJSON(..), Value, defaultOptions, genericParseJSON, rejectUnknownFields)
 import Data.Int (Int64)
@@ -21,6 +21,11 @@ data ManualRefundEvidence = ManualRefundEvidence
 instance FromJSON ManualRefundEvidence where
   parseJSON = genericParseJSON defaultOptions { rejectUnknownFields=True }
 
+newtype RefundProviderReference = RefundProviderReference { providerRefundId :: Text }
+  deriving (Eq, Show, Generic)
+instance FromJSON RefundProviderReference where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields=True }
+
 type DomoRefundAdminAPI = "domo" :> "quotes" :> Capture "quoteId" Text :> "refund" :>
   ( Get '[JSON] Value
     :<|> "approve" :> Post '[JSON] Value
@@ -28,4 +33,5 @@ type DomoRefundAdminAPI = "domo" :> "quotes" :> Capture "quoteId" Text :> "refun
     :<|> "reconcile" :> Post '[JSON] Value
     :<|> "manual-evidence" :> ReqBody '[JSON] ManualRefundEvidence :> Post '[JSON] Value
     :<|> "confirm-manual" :> Post '[JSON] Value
+    :<|> "provider-reference" :> ReqBody '[JSON] RefundProviderReference :> Post '[JSON] Value
   )

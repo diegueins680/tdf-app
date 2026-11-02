@@ -35,7 +35,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Network.HTTP.Client as HC
 import qualified TDF.Commerce.ProviderAdapter.Http as Http
 import qualified TDF.Server.DomoRefunds as API
-import TDF.Routes.DomoRefunds (ManualRefundEvidence(..))
+import TDF.Routes.DomoRefunds (ManualRefundEvidence(..), RefundProviderReference(..))
 import TDF.Auth (AuthedUser(..), loadAuthedUser)
 import TDF.Models (RoleEnum(..))
 import TDF.DB (Env(..))
@@ -47,10 +47,10 @@ spec :: Spec
 spec = describe "Domo refund authorization" $ do
   forM_ [[],[Customer],[Fan],[Accounting],[Webmaster],[StudioManager],[Admin,Manager]] $ \roles ->
     it ("refuses every refund action before database/provider access for "<>show roles) $ do
-      let readStatus :<|> approve :<|> execute :<|> reconcile :<|> manual :<|> confirm =
+      let readStatus :<|> approve :<|> execute :<|> reconcile :<|> manual :<|> confirm :<|> bindReference =
             API.domoRefundAdminServer (AuthedUser (toSqlKey 2) roles mempty Nothing Nothing) "invalid-id"
       now <- getCurrentTime
-      forM_ [readStatus,approve,execute,reconcile,manual (ManualRefundEvidence "receipt" "evidence-reference" 100 "USD" now),confirm] $ \action -> do
+      forM_ [readStatus,approve,execute,reconcile,manual (ManualRefundEvidence "receipt" "evidence-reference" 100 "USD" now),confirm,bindReference (RefundProviderReference "synthetic-refund")] $ \action -> do
         result <- runHandler (runReaderT action (error "Unauthorized caller accessed Env"))
         either errHTTPCode (const 200) result `shouldBe` 403
 
@@ -374,7 +374,9 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
     result <- Recovery.reconcileKnownRefund pool (R.rrReference refund) 3 (const (pure True))
       (\_ -> fail "An unknown provider refund ID must never cause discovery or another refund")
     result `shouldSatisfy` isLeft
-    runSqlPool (R.recordRefundPending (R.rrReference refund) ("REFUND-"<>R.refundReferenceId (R.rrReference refund)) now) pool `shouldReturn` Right ()
+    expectFailure $ runSqlPool (D.bindDomoRefundReference (fxQuoteId fixture) 1 now "synthetic-refund") pool
+    runSqlPool (D.bindDomoRefundReference (fxQuoteId fixture) 2 now ("REFUND-"<>R.refundReferenceId (R.rrReference refund))) pool
+    expectFailure $ runSqlPool (D.bindDomoRefundReference (fxQuoteId fixture) 2 now "CONFLICTING-REFUND") pool
     configureRecovery pool
     failed <- Recovery.reconcileKnownRefund pool (R.rrReference refund) 3 (const (pure True))
       (const (pure (Left Recovery.RefundRecoveryQueryFailed)))
@@ -458,7 +460,7 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
             then "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 2\r\n\r\n{}"
             else wire ("{\"id\":\"REFUND-"<>fxQuoteId fixture<>"\",\"status\":\""<>outcome<>"\",\"amount\":{\"value\":\"2007.04\",\"currency_code\":\"USD\"}}")
       withPaypalConfig $ withWire [wire "{\"access_token\":\"synthetic-token\",\"token_type\":\"Bearer\"}",response] $ \manager written -> do
-        let _read :<|> _approve :<|> execute :<|> _reconcile :<|> _manual :<|> _confirm =
+        let _read :<|> _approve :<|> execute :<|> _reconcile :<|> _manual :<|> _confirm :<|> _bind =
               API.domoRefundAdminServerWithManager manager user (fxQuoteId fixture)
             env=Env pool (error "No unrelated config needed")
         result <- runHandler (runReaderT execute env)

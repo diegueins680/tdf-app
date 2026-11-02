@@ -75,7 +75,7 @@ spec = describe "verifyMetaWebhookSignature (AUTH-WEBHOOK-001)" $ do
             , "sha256=" <> digest <> " "              -- trailing space
             , "sha256=" <> T.take 63 digest           -- short
             , "sha256=" <> digest <> "0"              -- long
-            , "sha256=" <> T.replace "a" "g" (T.replace "0" "g" digest) -- non-hex
+            , "sha256=" <> T.cons 'g' (T.drop 1 digest) -- unconditionally non-hex
             , "SHA256=" <> digest                     -- prefix case
             ]
       in conjoin [status (verifyMetaWebhookSignature (Just secret) (Just h) body) === Just 401 | h <- malformed]

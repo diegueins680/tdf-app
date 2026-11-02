@@ -12,6 +12,7 @@
       ".github/workflows/ci-safe-install.yml",
       ".github/workflows/ci.yml",
       ".github/workflows/datadog-synthetics.yml",
+      ".github/workflows/domo-refund-validation.yml",
       ".github/workflows/event-operations-formal.yml",
       ".github/workflows/event-raci-browser.yml",
       ".github/workflows/interaction-verification.yml",
@@ -2900,6 +2901,12 @@
       "id": "SURFACE-ab96c3ab21cf19fc",
       "path": ".github/workflows/datadog-synthetics.yml",
       "sha256": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6e2aa20fed937be2",
+      "path": ".github/workflows/domo-refund-validation.yml",
+      "sha256": "10964633a7b84b0336474d1d36338d5268daf0b5cf5096786c05d54e01e4cc48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7357,7 +7364,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "e62a65e4e931f0e962d52944c818cd1aad2c0d19737767be7c4477d3fd848d91",
+      "sha256": "3b55256d7f2e90634fcda1e8dc920db836681091f3cfa68473e3f5011f7b1af4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11977,7 +11984,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1e13d90125425415b0e40c4edd99000be803dbe1a43c7443e9576b341418d00c",
+      "sha256": "4b4ff05ff423779aaf634b0e6acc204a210fbd08f678ed1e40610f7ea90a67b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15205,7 +15212,7 @@
     {
       "id": "SURFACE-7c2de260230baa84",
       "path": "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
-      "sha256": "8cd9fc2d230244d3aff087e3e28b58ab26815ef928a4a723a8707f44f4f8d2ea",
+      "sha256": "eec807766b70146349a81cbb529017ac26692157e0cdbc61016cc302c0739881",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15835,7 +15842,7 @@
     {
       "id": "SURFACE-20cea45d38504230",
       "path": "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
-      "sha256": "f6d400044afa241533e0698e5b594fc4a6edb70f2606cbf011cc4488b3eda5cc",
+      "sha256": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15895,7 +15902,7 @@
     {
       "id": "SURFACE-ad9b4538d376377d",
       "path": "tdf-hq/src/TDF/Server/DomoRefunds.hs",
-      "sha256": "fa7c17321f0b719bec294bb6063f343d8f4b816b3e03c4fa77dc7db5619683ea",
+      "sha256": "a2deb36b937f26456c486a113e49d6d6a690fc5f52011c722e23961d0c077ef7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16501,7 +16508,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "3b1083f7d7f55ff13813ec06747a4291b3a0951a01498e251a6005f8abdd9c37",
+      "sha256": "3d94f8aee0342b61c1c4d00620b170c89a6ef9aab7bafcb65d92801c6f71ad40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16711,7 +16718,7 @@
     {
       "id": "SURFACE-6bdd1107c7329e40",
       "path": "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
-      "sha256": "88e6b4fc291228d4ab7e99ac8f2c5e1030e437a8273741f44a6058a242fd2b55",
+      "sha256": "238b986d66985827a5c2532e8ae6d83a863c34d11a05933ac6dd01903e6d7b87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22320,7 +22327,7 @@
     },
     {
       "path": "docs/payments/domo-refunds-2026-11-02.md",
-      "sha256": "3177bc888f667444ee3b8dcda7dc4b805e9688c856993617db862850b7bf44d9",
+      "sha256": "4c1d492486bce95a3085f676cb2d547cae007eb1ac617a9a61885ce4f68afa76",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29173,7 +29180,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1e13d90125425415b0e40c4edd99000be803dbe1a43c7443e9576b341418d00c",
+      "sha256": "4b4ff05ff423779aaf634b0e6acc204a210fbd08f678ed1e40610f7ea90a67b2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
