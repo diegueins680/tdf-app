@@ -8291,7 +8291,7 @@
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
       "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-067 (state sets and lease guard recorded); AUTHORITY-068 (re-upload rebinding)",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md; formal/system/music-worker-heartbeat-shutdown.md (MEDIA-WORKER-HEARTBEAT-STOP-001)",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
       "actors": [
@@ -8396,9 +8396,10 @@
         "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts",
-        "scripts/test-music-integration-rehearsal.mjs"
+        "scripts/test-music-integration-rehearsal.mjs",
+        "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md) Controlled heartbeat shutdown tests require native sleep/SQL reaping under a missed first group delivery, preserve identical lease SQL/options/statuses, and retain the existing completion deadline and stream-close requirement. Live CI descriptor-holder identity remains unestablished; see formal/system/music-worker-heartbeat-shutdown.md.",
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
