@@ -21279,6 +21279,24 @@
         "name": "CHECK IN",
         "valueCount": 2
       }
+    },
+    {
+      "id": "dd23a32ec7e3c87ca08e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-reviewed-wire-format",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Changing these response keys without the administrative API contract could hide refund state or evidence from an independent reviewer.",
+      "justification": "These are the fixed JSON transport field names and execution-mode discriminator of the administrative Domo refund DTO, not selectable business catalog entries. Amounts, provider, status, requester, approver and completion evidence are read from the canonical persisted refund. The PayPal comparison chooses only the qualified adapter; persisted capabilities and current independent authorization still gate every execution.",
+      "reviewed": true,
+      "reviewMethod": "source-and-contract-review",
+      "reviewBatch": "domo-refund-lifecycle-20261102",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Server/DomoRefunds.hs",
+        "line": 225,
+        "kind": "haskell-list",
+        "name": "refundFields",
+        "valueCount": 14
+      }
     }
   ]
 }

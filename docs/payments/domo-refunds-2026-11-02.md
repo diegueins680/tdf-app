@@ -128,3 +128,21 @@ no se modificó. La PR base tiene además observaciones sobre validación SQL
 del depósito, tip idempotente y propiedad de cuentas sociales; no se consideran
 resueltas por la entrega de reembolsos. La integración de toda #691 con main
 requiere reconciliar esos cambios y sus conflictos por separado.
+
+## Dependencia del contrato móvil
+
+El nuevo contrato también genera cambios en `TDF-mobile/src/api/generated/types.ts`.
+La conexión actual permite leer ese repositorio, pero su API de escritura devuelve
+`403 Resource not accessible by integration`. No se ha publicado un commit móvil
+ni cambiado el gitlink por una revisión inaccesible. La comprobación conjunta del
+API sigue bloqueada y esta PR debe permanecer en borrador.
+
+`docs/payments/domo-mobile-generated-client.patch` contiene el cambio exacto,
+generado con el OpenAPI de esta PR sobre el pin
+`f4c7aba45dc153db8809dbe194bc826ff615ef88` (también es el mismo árbol que el main
+móvil `bee23755401f1a3cb6c31fbfb7b42f5c6ccc032f` inspeccionado).
+Después de habilitar escritura en `diegueins680/TDF-mobile`, aplicar ese parche,
+publicar la revisión móvil y fijar su SHA en `tdf-app`; regenerar inventario y
+trazabilidad y volver a ejecutar `npm run generate:api`,
+`node scripts/check-generated-api.mjs` y la integración. No se debe omitir ni
+relajar la comprobación de deriva para publicar esta entrega.

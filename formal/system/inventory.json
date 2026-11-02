@@ -22327,7 +22327,7 @@
     },
     {
       "path": "docs/payments/domo-refunds-2026-11-02.md",
-      "sha256": "2ebe3e29168f2df00c211b4fbcf0247cabff143df05f2457428df6d891f436f2",
+      "sha256": "44af7b9311e3b7ed57b34cf5e059801a9ecd5d7a09d862ae0078793f55595b6d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28802,7 +28802,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
+      "sha256": "993813c5b312f002779ed314d885e022bd25d33d507aeee0966a8f96405b6a2e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

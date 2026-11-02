@@ -14452,7 +14452,8 @@
         "tdf-hq/src/TDF/Server/DomoRefunds.hs",
         "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
         "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
-        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+        "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql"
       ],
       "verification": "Z3 lemmas (refund within collected, conservation, monotonicity, full/zero retention) with witnesses and controls; QuickCheck properties on domoCancellationRefund and assessDomoCancellation; PostgreSQL probes of the policy table (single approved version, immutability, retirement) and of the cancellation record (conservation CHECKs, required record on paid cancellation, refund linkage amount, immutability, rollback refusal); runtime Hspec cases on the full reviewed schema (unpaid cancel, customer obligation then operator settlement, 10-day half retention, TDF full refund, late customer cancel, terminal refusals); admin 403/400 route tests. Refund lifecycle runtime cases cover independent approval, single concurrent execution, exact full/partial completion, provider errors, stale authority, manual receipt checks, atomic ledger/credit note and capture/cancellation admission. Bounded protocol exploration includes counterexample controls; neither model nor test declaration is evidence of a completed runtime run.",
       "evidence": "formal/payments/domo_cancellation_refund.py output; tdf-hq-test DomoCancellationSpec and ServerAdminSpec runs; provider-retry-runtime gate (DomoCancellationRuntimeSpec); scripts/test-domo-quote-checkout-runtime-migration.sh output.",
@@ -14463,7 +14464,8 @@
         "formal/payments/domo_cancellation_refund.py",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/api/domoQuotes.test.ts",
-        "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx"
+        "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        ".github/workflows/domo-refund-validation.yml"
       ],
       "confidence": "High for the policy arithmetic, the table invariants and the transaction (property, lemma and database tested); the handler composition is tested, not mechanically refined.",
       "ambiguity": [
@@ -15348,6 +15350,7 @@
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "3af8f14857331f45406effcbc1885cac962da3616de6f7d20a3ab65037612311",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
+    ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
     ".github/workflows/event-operations-formal.yml": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
@@ -15355,7 +15358,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1ab5c98777e4c14493282e207edbfb500056c1455b98c997e0bdf6c541ba951e",
+    "docs/catalog-persistence/catalog-list-decisions.json": "33e66f28a1d614f44777788fd33d85983611fc196d958f78cc00890aa6fe8caa",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
@@ -16589,6 +16592,7 @@
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql": "b5591df9ea95e2ea08007c62ccb45b0727a4ef0f9c492f77ddb72630bc4b008f",
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
     "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql": "709904c66f766b0119aea195bdc31f85c31eb4083b5403f75b8d5ce7a4010b71",
+    "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
@@ -29285,6 +29289,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql": [
+      {
+        "requirement": "PAY-DOMO-CANCEL-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs": [
       {
         "requirement": "PAY-DOMO-CANCEL-001",
@@ -29316,6 +29326,12 @@
       }
     ],
     "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": [
+      {
+        "requirement": "PAY-DOMO-CANCEL-001",
+        "relationship": "tests"
+      }
+    ],
+    ".github/workflows/domo-refund-validation.yml": [
       {
         "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "tests"
@@ -30071,7 +30087,12 @@
       "path": ".github/workflows/domo-refund-validation.yml",
       "sha256": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-DOMO-CANCEL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-cdbc3458d7b8029f",
@@ -50450,7 +50471,12 @@
       "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
       "sha256": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-DOMO-CANCEL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2bd4ac88b05a1b49",
@@ -59212,7 +59238,6 @@
   ],
   "unmappedSurfaces": [
     "SURFACE-e322a9d58d6bbd4b",
-    "SURFACE-6e2aa20fed937be2",
     "SURFACE-f9eb7b8efd30e406",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
@@ -60281,7 +60306,6 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
-    "SURFACE-4e65b4accc811245",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-87ed7351125c499c",
     "SURFACE-1c1ef431782f3c8d",
@@ -61958,7 +61982,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
+      "sourceSha256": "993813c5b312f002779ed314d885e022bd25d33d507aeee0966a8f96405b6a2e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -61986,7 +62010,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
+      "sourceSha256": "993813c5b312f002779ed314d885e022bd25d33d507aeee0966a8f96405b6a2e",
       "definition": {
         "states": [
           "absent",
@@ -62016,7 +62040,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4967753ad96289eda262fc8556887dc0cb7d71e265c4c85b75974b63e97722c4",
+      "sourceSha256": "993813c5b312f002779ed314d885e022bd25d33d507aeee0966a8f96405b6a2e",
       "definition": {
         "export": [
           "queued",
