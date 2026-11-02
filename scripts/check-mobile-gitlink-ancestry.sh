@@ -14,8 +14,16 @@ checked_out=$(git -C "$root/tdf-mobile" rev-parse HEAD 2>/dev/null) || {
   echo "tdf-mobile submodule is not initialized" >&2; exit 2; }
 test "$checked_out" = "$gitlink" || {
   echo "tdf-mobile checkout $checked_out differs from gitlink $gitlink" >&2; exit 2; }
-git -C "$root/tdf-mobile" fetch --quiet origin main || {
-  echo "Could not fetch Mobile origin/main" >&2; exit 2; }
+fetch_main() { git -C "$root/tdf-mobile" fetch --quiet "$@" origin main; }
+fetch_main || { echo "Could not fetch Mobile origin/main" >&2; exit 2; }
+# CI clones the submodule with depth 1, and a fetch into a shallow repository
+# can graft main as a parentless tip, which would wrongly report the gitlink as
+# unreachable. Recover the commit history (blobless) before judging ancestry.
+if ! git -C "$root/tdf-mobile" merge-base --is-ancestor "$gitlink" origin/main \
+   && [ "$(git -C "$root/tdf-mobile" rev-parse --is-shallow-repository)" = true ]; then
+  fetch_main --unshallow --filter=blob:none || fetch_main --unshallow || {
+    echo "Could not recover Mobile history for the ancestry check" >&2; exit 2; }
+fi
 if git -C "$root/tdf-mobile" merge-base --is-ancestor "$gitlink" origin/main; then
   echo "Mobile gitlink $gitlink is reachable from Mobile main"
   exit 0

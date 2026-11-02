@@ -15646,7 +15646,7 @@
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-mobile-distribution.mjs": "69bcc44343de5106f36d3dd53d7e89a0686db8be324be2a159bcc1e4419e5171",
-    "scripts/check-mobile-gitlink-ancestry.sh": "3663f9d2bd215f072fb8d90cbcfd10eb9132afa0af4e23f80a9a6522e044746c",
+    "scripts/check-mobile-gitlink-ancestry.sh": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
@@ -32216,7 +32216,7 @@
     {
       "id": "SURFACE-8e9419e7643699b3",
       "path": "scripts/check-mobile-gitlink-ancestry.sh",
-      "sha256": "3663f9d2bd215f072fb8d90cbcfd10eb9132afa0af4e23f80a9a6522e044746c",
+      "sha256": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

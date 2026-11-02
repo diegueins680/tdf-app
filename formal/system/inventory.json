@@ -4214,7 +4214,7 @@
     {
       "id": "SURFACE-8e9419e7643699b3",
       "path": "scripts/check-mobile-gitlink-ancestry.sh",
-      "sha256": "3663f9d2bd215f072fb8d90cbcfd10eb9132afa0af4e23f80a9a6522e044746c",
+      "sha256": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
