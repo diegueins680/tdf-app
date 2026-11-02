@@ -4702,7 +4702,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4753,7 +4753,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4822,7 +4822,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -13810,6 +13810,85 @@
       },
       "verification": "Safe Markdown/GFM/Unicode mention cases, unsafe URL/HTML controls, real name/photo navigation, compact preview validity, browser widths/themes and public/private/default buyer SQL projection checks.",
       "evidence": "Revision-bound local logs and hosted PR checks; prior-source passes retain their original identities."
+    },
+    {
+      "id": "SYS-WEBTORRENT-BROWSER-001",
+      "title": "Preserve browser playback while removing unused Node torrent dependencies",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker",
+        "Music listener"
+      ],
+      "preconditions": [
+        "Use the reviewed WebTorrent 2.8.5 official browser artifact and committed npm v3 workspace lock.",
+        "Trust official npm archive integrity metadata and the publisher-supplied source map; exact upstream build resolution and compiler version remain unknown."
+      ],
+      "inputs": [
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "package-lock.json",
+        "audit-ci.jsonc"
+      ],
+      "state": {
+        "boundary": "formal/system/webtorrent-browser.md"
+      },
+      "allowedTransitions": [
+        "Reviewed official artifact update with matching provenance, preserved notices, finite compatibility checks and fresh advisory evidence."
+      ],
+      "forbiddenTransitions": [
+        "Reintroduce unused Node WebTorrent/discovery/tracker/ip packages or npm aliases.",
+        "Extend the expired ip exception or lower the production audit threshold.",
+        "Omit mapped package candidate versions or supplied license notices.",
+        "Treat candidate-version advisory results as complete binary provenance or vulnerability clearance."
+      ],
+      "effects": [
+        "Reject invalid browser artifact, missing source/notice/advisory coverage or applicable low-or-higher browser advisories before integration."
+      ],
+      "authorization": "This dependency repair does not authorize real torrent/peer traffic, provider operations or deployment.",
+      "privacy": "Advisory requests contain public package names and candidate versions only; do not send registry credentials or application data.",
+      "concurrency": "Check immutable committed candidate files; do not run installers during source-bound qualification.",
+      "idempotency": "Static checks are deterministic; live advisory checks depend on the registry feed at execution time.",
+      "failure": "Reject integrity, policy, inventory and live scan failures without renewing audit exemptions.",
+      "recovery": "Restore the reviewed browser artifact and complete evidence; preserve review and required CI controls.",
+      "observability": "Record candidate commit, bundle and lock hashes, commands, actual exits and explicit provenance limitations.",
+      "source": "Existing torrentAudio browser-only entry; failed Safe Install after 2026-10-31 exception expiry; GHSA-2p57-rm9w-gvfp; user security and verification requirements.",
+      "contract": "formal/system/webtorrent-browser.md",
+      "implementation": [
+        "scripts/check-browser-vendor.mjs",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci-safe-install.yml",
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "package-lock.json",
+        "audit-ci.jsonc",
+        "tdf-hq-ui/jest.config.cjs"
+      ],
+      "tests": [
+        "scripts/__tests__/browser-vendor.test.mjs",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "e2e/web/webtorrent-browser.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite deterministic rejection and browser compatibility tests; partial upstream build identity and advisory coverage.",
+      "ambiguity": [
+        "Source-map presence does not prove executed statements or unique package versions.",
+        "Nine matching archives lack standalone notice files; exact webpack compiler version is unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite regression controls implemented; source-bound UI/browser/CI evidence is separate and exact upstream build identity remains qualified."
+      },
+      "authority": "approved",
+      "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
+      "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
+      "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
     }
   ],
   "sourceFingerprints": {
@@ -13817,6 +13896,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+    ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "16cb365423ecc9a1dad6f33b0ec38a7a5829de5d5a2729c008554e5a63202043",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
@@ -13824,8 +13904,9 @@
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
+    "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "e56e44bd933107cbeb04ab1912dd59322f9694bb4625bdc32624dab1893f331a",
+    "docs/catalog-persistence/catalog-list-decisions.json": "8f682dbee7da94ffb2abda9bb25cb565625b4aa5e51113f32c6bf668cac64de5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -13860,6 +13941,7 @@
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
+    "e2e/web/webtorrent-browser.spec.mjs": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -14189,8 +14271,8 @@
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "5a863ee459217180af77bea4e2baeeef8dcd80630c82dbe744e44068507dab12",
-    "package.json": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+    "package-lock.json": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
+    "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
     "playwright.config.mjs": "dd221d9df87a88b7644c19ccf6e714ea07452a056cb63537d7d4f0c8a47ae4b5",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
@@ -14200,6 +14282,7 @@
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
     "scripts/__tests__/artist-enrichment.test.mjs": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
+    "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
@@ -14264,7 +14347,7 @@
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
-    "scripts/__tests__/ticket-admission-model.test.mjs": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a",
+    "scripts/__tests__/ticket-admission-model.test.mjs": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
@@ -14272,6 +14355,7 @@
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
+    "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
@@ -14336,7 +14420,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "3ebd2339d632ea21cf999081c87afe6f4012584e14ff7eb274cb93fa28287657",
+    "scripts/quality-repo.sh": "62db0f07210283245076d753ea1d4a01031e1f870be59e5c6303924429804fc6",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14480,7 +14564,8 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
-    "tdf-hq-ui/package.json": "eeb143e7bb9c0f4e2c3c3d014322f375b161773cf47648aab5ed1872f7c81df8",
+    "tdf-hq-ui/jest.config.cjs": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
+    "tdf-hq-ui/package.json": "f80cd85440e682235325079da46876f72ad5088e34ab8f899a9ec9e42f78bb18",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
@@ -14494,6 +14579,7 @@
     "tdf-hq-ui/public/mobile-distribution.json": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
+    "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
     "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
@@ -14860,6 +14946,9 @@
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
     "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
+    "tdf-hq-ui/src/utils/torrentAudio.test.ts": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
+    "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+    "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
@@ -15077,7 +15166,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "fcf586e355eb603f3109afec08d4d5fbfee8a74ca5d414d9fc0b4c2a1c6f9f73",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "d048e3a88db5abdbbe2299a1158cd394f371afc26111c6d1f7af918ca678148d",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -15115,7 +15204,7 @@
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -15295,7 +15384,9 @@
     "test/fixtures/music-worker/curl.mjs": "1b816316017ca5081325de224176d3f48deb3d60d6ae46db230f052df8c3bb46",
     "test/fixtures/music-worker/ddex-package.mjs": "438d5f66b36297be5ba4bc77d275625ec8c6e228ddb18e22988060af609660a4",
     "test/fixtures/music-worker/ddex-render.mjs": "529eb232ca7550638a0d88d8f64cfcff8ca1fbdec46b338b02e121d887596bc2",
-    "test/fixtures/music-worker/upload-curl.mjs": "2af421e7b5ce9d281bde6205774c628521d1cc3fba78a4cac61ba20d2ed8cf16"
+    "test/fixtures/music-worker/upload-curl.mjs": "2af421e7b5ce9d281bde6205774c628521d1cc3fba78a4cac61ba20d2ed8cf16",
+    "third_party/webtorrent/browser.json": "aaedd205fc6b19e8c850245e6a55fdeb7792bbac89d309a0b3a2e69fcea58dc6",
+    "third_party/webtorrent/bundled-provenance.json": "82971c29f4d319e78318ff66b933ddbfdbf30bc8d8ba83739a804a488722bede"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -15605,6 +15696,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
       }
     ],
@@ -18119,6 +18214,10 @@
     "package-lock.json": [
       {
         "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
       }
     ],
@@ -27187,6 +27286,78 @@
         "requirement": "WEB-CONTENT-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/check-browser-vendor.mjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/ci-safe-install.yml": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "third_party/webtorrent/browser.json": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "third_party/webtorrent/bundled-provenance.json": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/torrentAudio.ts": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "audit-ci.jsonc": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/jest.config.cjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/browser-vendor.test.mjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/torrentAudio.test.ts": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/webtorrent-browser.spec.mjs": [
+      {
+        "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -27248,9 +27419,14 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "ece2be17e5f353890f78bb06c10d649a5280f6c0dbfb7e173083c36ba6c48891",
+      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b803fcb7f17ed923",
@@ -27963,6 +28139,18 @@
       ]
     },
     {
+      "id": "SURFACE-014b25a6dd6c1298",
+      "path": "e2e/web/webtorrent-browser.spec.mjs",
+      "sha256": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-660f7078dc0b381a",
       "path": "fly.toml",
       "sha256": "3d64e80552e75e29e68d012d579456a353ff17b104afd3839b5d554c83f6318e",
@@ -28355,11 +28543,15 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "5a863ee459217180af77bea4e2baeeef8dcd80630c82dbe744e44068507dab12",
+      "sha256": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -28367,7 +28559,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+      "sha256": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28442,6 +28634,18 @@
       "requirements": [
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3bda27b3da891bd5",
+      "path": "scripts/__tests__/browser-vendor.test.mjs",
+      "sha256": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "tests"
         }
       ]
@@ -29590,7 +29794,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a",
+      "sha256": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29824,6 +30028,18 @@
       "requirements": [
         {
           "requirement": "MKT-REPUTATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1e909f329835b442",
+      "path": "scripts/check-browser-vendor.mjs",
+      "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -31224,7 +31440,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3ebd2339d632ea21cf999081c87afe6f4012584e14ff7eb274cb93fa28287657",
+      "sha256": "62db0f07210283245076d753ea1d4a01031e1f870be59e5c6303924429804fc6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31277,6 +31493,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -34341,9 +34561,14 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "6ac4e96dceddad2701acbf190327668b4f5b6d60ddbe407bd0042ff03de2f8a3",
+      "sha256": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-dfe8096f81b40bd5",
@@ -34355,7 +34580,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "eeb143e7bb9c0f4e2c3c3d014322f375b161773cf47648aab5ed1872f7c81df8",
+      "sha256": "f80cd85440e682235325079da46876f72ad5088e34ab8f899a9ec9e42f78bb18",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42942,14 +43167,24 @@
       "path": "tdf-hq-ui/src/utils/torrentAudio.test.ts",
       "sha256": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8b33a680532e58df",
       "path": "tdf-hq-ui/src/utils/torrentAudio.ts",
-      "sha256": "e99fc7b1922238bc4f8b1f2dbfc9c5abc0898e34608f32216b6ef25e11a5e604",
+      "sha256": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2b4be0aef756e7bf",
@@ -42964,6 +43199,18 @@
       "sha256": "04eea6981d1563e975359f94e9dce5c7556254cf03c98f36284d66fd3fd04c05",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-79f181c24f4d078b",
+      "path": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+      "sha256": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2f83dbcb131f448c",
@@ -49336,7 +49583,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "fcf586e355eb603f3109afec08d4d5fbfee8a74ca5d414d9fc0b4c2a1c6f9f73",
+      "sha256": "d048e3a88db5abdbbe2299a1158cd394f371afc26111c6d1f7af918ca678148d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50296,7 +50543,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+      "sha256": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55177,7 +55424,6 @@
   ],
   "unmappedSurfaces": [
     "SURFACE-e322a9d58d6bbd4b",
-    "SURFACE-87abe6b969342c3c",
     "SURFACE-f9eb7b8efd30e406",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
@@ -55444,7 +55690,6 @@
     "SURFACE-531960a153f9c90c",
     "SURFACE-e678e87f09e1d641",
     "SURFACE-4d91a2ae6d7c7367",
-    "SURFACE-4573385494ace809",
     "SURFACE-dfe8096f81b40bd5",
     "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
@@ -55901,8 +56146,6 @@
     "SURFACE-131656bc7b0c9088",
     "SURFACE-0ac75bd9c2678a24",
     "SURFACE-b4e27fc326828984",
-    "SURFACE-816e1b48f3a6c1c0",
-    "SURFACE-8b33a680532e58df",
     "SURFACE-2b4be0aef756e7bf",
     "SURFACE-6caada1aa8461942",
     "SURFACE-c6c52118ad7a43dd",
@@ -57940,7 +58183,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c1bf30d4d8eb795497457f6ae19a71b3d533255e184e07fe62c3740f65299e1b",
+      "sourceSha256": "6a6bf33ba1025f4b2f66609f802e253da29c1a7ca6369c12dd6e74b8b3aa6695",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -57968,7 +58211,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c1bf30d4d8eb795497457f6ae19a71b3d533255e184e07fe62c3740f65299e1b",
+      "sourceSha256": "6a6bf33ba1025f4b2f66609f802e253da29c1a7ca6369c12dd6e74b8b3aa6695",
       "definition": {
         "states": [
           "absent",
@@ -57998,7 +58241,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c1bf30d4d8eb795497457f6ae19a71b3d533255e184e07fe62c3740f65299e1b",
+      "sourceSha256": "6a6bf33ba1025f4b2f66609f802e253da29c1a7ca6369c12dd6e74b8b3aa6695",
       "definition": {
         "export": [
           "queued",
@@ -80485,7 +80728,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 161,
+    "PARTIAL": 162,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
