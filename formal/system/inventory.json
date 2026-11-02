@@ -3146,7 +3146,7 @@
     {
       "id": "SURFACE-ca746d31fe23acf5",
       "path": "e2e/web/radio-navigation.spec.mjs",
-      "sha256": "69f7967190b6a5539a4f7c0375abb662d52afbd705d27e480d119f65f0a8ae45",
+      "sha256": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28270,7 +28270,7 @@
     },
     {
       "path": "formal/system/player-session.md",
-      "sha256": "e3dfc7cbaefef24fe98b49b73fed15156ace0867cd0f06f1ac50394e6c92c79e",
+      "sha256": "03510ba14584b6be7077f0860aa5b806e28c6686eac3c8b9c09c237802ec09a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

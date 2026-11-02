@@ -148,8 +148,8 @@ real menu links and native local WAV clock advancement without patching media
 methods, using synthetic session/API responses. Local Brave, Firefox and Chromium
 phone emulation pass. The radio test belongs to the dedicated native-music suite,
 whose isolated Linux PulseAudio sink lets Firefox advance its real media clock.
-The saved volume preference must remain exact; native level readings allow
-WebKit/PulseAudio hardware quantization within 0.0005 of the requested and
-initial native levels. Network/stream reliability, physical devices, other audio
+The saved volume preference and native level stay exact across navigation.
+Initial native readings allow a representation difference within 0.00005 of
+the requested level. Network/stream reliability, physical devices, other audio
 owners and deployed acceptance remain outside this evidence. The release-player
 model and its proof classifications above are unchanged.
