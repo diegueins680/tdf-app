@@ -1160,6 +1160,11 @@
       "introducedBy": "baab857f085b74f333c9f5d29e31306072fbc496"
     },
     {
+      "id": "2026-10-31_api_token_session_expiry",
+      "path": "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
+      "introducedBy": "8187065f81fad94677c8ba27760ab2cb74f58f79"
+    },
+    {
       "id": "2026-11-01_artist_tip_idempotency",
       "path": "tdf-hq/sql/2026-11-01_artist_tip_idempotency.sql",
       "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
