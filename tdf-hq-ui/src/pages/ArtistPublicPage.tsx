@@ -2,6 +2,7 @@ import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { loadArtistCatalog } from '../api/artistCatalog';
+import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -140,9 +141,9 @@ function ReleaseCard({ release }: ReleaseCardProps) {
             </Typography>
           )}
           {description && (
-            <Typography variant="body2" color="text.secondary">
+            <MarkdownText variant="body2" color="text.secondary">
               {description}
-            </Typography>
+            </MarkdownText>
           )}
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {release.arSpotifyUrl && (
@@ -535,9 +536,9 @@ export default function ArtistPublicPage() {
                 <Typography component="h2" variant="h6" fontWeight={800}>
                   Bio
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
+                <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   {artist.apBio ?? 'Este artista aún no ha agregado una bio.'}
-                </Typography>
+                </MarkdownText>
               </Box>
               <Box sx={{ width: { xs: '100%', md: 340 } }}>
                 <Typography component="h2" variant="h6" fontWeight={800}>

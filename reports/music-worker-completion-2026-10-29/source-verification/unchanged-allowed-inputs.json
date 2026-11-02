@@ -1,0 +1,6 @@
+{
+  "unchangedAllowedPaths": [
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv"
+  ],
+  "scope": "Unchanged canonical CSV is byte-exact baseline, not an omitted correction."
+}

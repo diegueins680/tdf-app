@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
@@ -1439,9 +1440,9 @@ export default function SocialEventsPage() {
                       </Typography>
                     )}
                     {ev.eventDescription && (
-                      <Typography variant="body2" color="text.secondary">
+                      <MarkdownText variant="body2" color="text.secondary">
                         {ev.eventDescription}
-                      </Typography>
+                      </MarkdownText>
                     )}
                     {ev.eventImageUrl && (
                       <Box

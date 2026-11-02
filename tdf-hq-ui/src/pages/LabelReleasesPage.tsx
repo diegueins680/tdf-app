@@ -1,6 +1,7 @@
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { loadArtistCatalogs } from '../api/artistCatalog';
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
+import MarkdownText from '../components/MarkdownText';
 import { logger } from '../utils/logger';
 import { useMemo, useState } from 'react';
 import {
@@ -634,9 +635,9 @@ export default function LabelReleasesPage() {
                               {release.artistCity ? ` · ${release.artistCity}` : ''}
                             </Typography>
                             {release.arDescription && (
-                              <Typography variant="body2" color="text.secondary" noWrap>
+                              <MarkdownText inline variant="body2" color="text.secondary" noWrap>
                                 {release.arDescription}
-                              </Typography>
+                              </MarkdownText>
                             )}
                             <Stack direction="row" spacing={1} flexWrap="wrap">
                               {(() => {

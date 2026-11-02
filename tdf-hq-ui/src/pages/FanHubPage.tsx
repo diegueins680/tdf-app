@@ -1,6 +1,7 @@
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
+import MarkdownText from '../components/MarkdownText';
 import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
@@ -2086,9 +2087,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           </Typography>
                         )}
                         {artist.apBio && (
-                          <Typography variant="body2" color="text.secondary">
+                          <MarkdownText inline variant="body2" color="text.secondary">
                             {artist.apBio.length > 180 ? `${artist.apBio.slice(0, 180)}…` : artist.apBio}
-                          </Typography>
+                          </MarkdownText>
                         )}
                         <Stack direction="row" spacing={1} flexWrap="wrap">
                           {artist.apGenres
