@@ -15,6 +15,7 @@ import {
   Divider,
   FormControlLabel,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
@@ -23,7 +24,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { DomoQuotes, type PublicDomoQuote } from '../api/domoQuotes';
+import { DomoQuotes, type PublicDomoCancellation, type PublicDomoQuote } from '../api/domoQuotes';
 import type { DatafastCheckoutDTO } from '../api/types';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -49,6 +50,9 @@ export default function DomoQuoteCheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelNote, setCancelNote] = useState('');
+  const [cancellation, setCancellation] = useState<PublicDomoCancellation | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastOpen, setDatafastOpen] = useState(false);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
@@ -110,6 +114,26 @@ export default function DomoQuoteCheckoutPage() {
       setMessage(english
         ? 'The quote could not be accepted. It remains unpaid and the hold may have expired.'
         : 'No pudimos aceptar la cotización. Sigue sin pago y la retención puede haber vencido.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // PAY-DOMO-CANCEL-001: the holder cancels with an explicit confirmation. The
+  // server prices any refund with the approved policy; an operator requests it.
+  const handleCancel = async () => {
+    if (!quote || !lookupToken) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const outcome = await DomoQuotes.cancelQuote(quote.quoteId, lookupToken, cancelNote);
+      setCancellation(outcome);
+      setCancelOpen(false);
+      setQuote(await DomoQuotes.getQuote(quote.quoteId, lookupToken));
+    } catch {
+      setMessage(english
+        ? 'The quote could not be cancelled. Nothing changed; if a payment is being verified, retry once it settles.'
+        : 'No pudimos cancelar la cotización. Nada cambió; si hay un pago en verificación, inténtalo cuando se resuelva.');
     } finally {
       setBusy(false);
     }
@@ -243,6 +267,7 @@ export default function DomoQuoteCheckoutPage() {
   const expired = quote.quoteStatus === 'expired' || quote.paymentStatus === 'expired';
   const canAccept = ['sent', 'viewed'].includes(quote.quoteStatus) && !expired;
   const awaitingPayment = quote.quoteStatus === 'deposit_due' && !paid && !expired;
+  const canCancel = !expired && !['cancelled', 'completed', 'expired'].includes(quote.quoteStatus) && quote.paymentStatus !== 'processing';
   const returnUrl = typeof window === 'undefined'
     ? ''
     : new URL(`/domo-del-pululahua/cotizaciones/${quote.quoteId}`, window.location.origin).toString();
@@ -304,6 +329,15 @@ export default function DomoQuoteCheckoutPage() {
                   <Button variant="contained" disabled={!termsAccepted || busy} onClick={() => void handleAccept()}>{english ? 'Accept quote and choose deposit method' : 'Aceptar cotización y elegir método de depósito'}</Button>
                 </>}
                 {message && <Alert severity="warning">{message}</Alert>}
+                {cancellation && <Alert severity={cancellation.refundStatus === 'awaiting_operator' ? 'info' : 'success'}>
+                  {english
+                    ? `Quote cancelled. Collected: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retained by policy: ${money(cancellation.retainedMinor, cancellation.currency)}. Refund due: ${money(cancellation.refundDueMinor, cancellation.currency)}.`
+                    : `Cotización cancelada. Cobrado: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retenido según política: ${money(cancellation.retainedMinor, cancellation.currency)}. Reembolso debido: ${money(cancellation.refundDueMinor, cancellation.currency)}.`}
+                  {cancellation.refundStatus === 'awaiting_operator' && (english
+                    ? ' An operator will issue the refund request; you will be contacted by email.'
+                    : ' Un operador emitirá la solicitud de reembolso; te contactaremos por correo.')}
+                </Alert>}
+                {canCancel && !cancellation && <Button variant="text" color="error" disabled={busy} onClick={() => setCancelOpen(true)}>{english ? 'Cancel quote' : 'Cancelar cotización'}</Button>}
                 {awaitingPayment && quote.paymentMethods.length === 0 && <Alert severity="info">{english
                   ? 'No real payment provider is enabled. The date remains only temporarily held.'
                   : 'No hay un proveedor real habilitado. La fecha sigue únicamente retenida de forma temporal.'}</Alert>}
@@ -335,6 +369,26 @@ export default function DomoQuoteCheckoutPage() {
           </Card>
         </Stack>
       </Container>
+
+      <Dialog open={cancelOpen} onClose={() => !busy && setCancelOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>{english ? 'Cancel this quote?' : '¿Cancelar esta cotización?'}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            <Typography>{paid
+              ? (english
+                ? 'The date will be released. The approved cancellation policy decides how much of the deposit is refunded by lead time; the outcome is shown after confirming.'
+                : 'Se liberará la fecha. La política de cancelación aprobada decide cuánto del depósito se reembolsa según la antelación; verás el resultado al confirmar.')
+              : (english
+                ? 'The date hold will be released. Nothing has been charged.'
+                : 'Se liberará la retención de la fecha. No se ha cobrado nada.')}</Typography>
+            <TextField label={english ? 'Reason (optional)' : 'Motivo (opcional)'} value={cancelNote} onChange={(event) => setCancelNote(event.target.value)} multiline minRows={2} inputProps={{ maxLength: 4000 }} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelOpen(false)} disabled={busy}>{english ? 'Keep quote' : 'Mantener cotización'}</Button>
+          <Button color="error" variant="contained" disabled={busy} onClick={() => void handleCancel()}>{english ? 'Confirm cancellation' : 'Confirmar cancelación'}</Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={datafastOpen} onClose={() => setDatafastOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay deposit with Datafast' : 'Pagar depósito con Datafast'}</DialogTitle>

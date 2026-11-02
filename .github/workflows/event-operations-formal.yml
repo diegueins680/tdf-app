@@ -49,8 +49,10 @@ jobs:
           printf '%s\n' '{"status":"not-executed","reason":"Money wire obligations have not executed"}' > "${{ runner.temp }}/payment-proof/music-money-wire.json"
           printf '%s\n' '{"execution":{"passed":false},"release":{"decision":"BLOCKED","executionAllowed":false},"reason":"Fallback only when report.json is unavailable; inspect failed/timed-out prerequisite and generation steps"}' > "${{ runner.temp }}/assurance-fallback.json"
       - name: Check Mobile gitlink reachability from Mobile main (advisory until TDF-mobile#178 merges)
-        continue-on-error: true
-        run: sh scripts/check-mobile-gitlink-ancestry.sh
+        run: |
+          if ! sh scripts/check-mobile-gitlink-ancestry.sh; then
+            echo "::warning::The committed Mobile gitlink is not reachable from Mobile main yet (advisory until TDF-mobile#178 merges)"
+          fi
 
       - name: Check specification inventory and evidence admission
         timeout-minutes: 5
