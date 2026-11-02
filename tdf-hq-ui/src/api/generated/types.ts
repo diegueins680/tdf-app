@@ -6732,7 +6732,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. */
+        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. Revoking an approved claim (status revoked, AUTHORITY-097) requires a non-empty reason, deactivates every manager grant the claim created in the same transaction and is terminal. */
         patch: operations["decideDirectoryClaim"];
         trace?: never;
     };
@@ -33103,6 +33103,13 @@ export interface operations {
         responses: {
             /** @description Reviewed claim; only a new approval transition creates a manager grant */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revocation without a reason */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
