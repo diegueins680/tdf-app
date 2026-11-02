@@ -1,0 +1,49 @@
+PASS two sibling jobs close a release once without losing the final validation
+Worker elapsed 185 ms
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+PASS heartbeat keeps a long-running job exclusive across multiple lease intervals
+Worker elapsed 655 ms
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"storage_request","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"storage_request","phase":"finish","elapsedSeconds":0,"status":22}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+PASS expired attempt cannot fail a replacement attempt even with the same worker name
+Worker elapsed 714 ms
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"storage_request","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"storage_request","phase":"finish","elapsedSeconds":0,"status":22}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"start","elapsedSeconds":0,"status":0}
+{"event":"music_worker_timing","stage":"sql","phase":"finish","elapsedSeconds":0,"status":0}
+PASS stale transfer cannot promote metadata or overwrite replacement state
+PASS cancellation stops a blocked transfer and its child without changing the cancelled job
+PASS TERM interrupts an active transfer, reaps its child and records one retry
+PASS polling supervisor forwards TERM to the active iteration and waits for cleanup
+Music worker runtime: 7 scenarios passed (transport fault injector; no S3 compatibility claim).
