@@ -63,6 +63,7 @@
       "e2e/web/persona-public.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
       "e2e/web/public-welcome.spec.mjs",
+      "e2e/web/radio-navigation.spec.mjs",
       "e2e/web/records-thumbnails.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
@@ -891,6 +892,7 @@
       "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
       "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
       "tdf-hq-ui/src/components/RouteErrorBoundary.tsx",
+      "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
       "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
       "tdf-hq-ui/src/components/SessionGate.tsx",
       "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
@@ -3109,6 +3111,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ca746d31fe23acf5",
+      "path": "e2e/web/radio-navigation.spec.mjs",
+      "sha256": "4135fe00a18ae7a6c01a04da6d4095c54699cdf3d0b12bf3ac4332f4a56762c5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
       "sha256": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
@@ -3753,7 +3761,7 @@
     {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
-      "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
+      "sha256": "2a3c464d094671845d92968a2230aca06da67fbe07adc046e45d0ce6d5578d6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6633,7 +6641,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "sha256": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7923,7 +7931,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "d200680b4e94a88ed6d53dbb77b8e76ba79dcb81090f50538e35f281a97aa64a",
+      "sha256": "c2969726f53a45e310a3090e123abd56dfb46ed1c5fe97826c1f043656513da2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7981,9 +7989,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-30ea18f2f9ded258",
+      "path": "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+      "sha256": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d9960955f95c03fb",
       "path": "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
-      "sha256": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+      "sha256": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11385,13 +11399,13 @@
     {
       "id": "SURFACE-a415ee89925f5e2f",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
-      "sha256": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
+      "sha256": "7fb6b584f959ca10e07759f679d267c82c92639f96283a46498091ddaad74ec0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ee5ba63310165c5c",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
-      "sha256": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
+      "sha256": "b28ee7c14daea0b4dcadd1121bf77bcc2658e00c88a74cb9cf3e9d894288c717",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27787,7 +27801,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "f3310c0937814a94d95e9f879a7b3402e6a055f13d56d6b5d65ed03b9d2983ee",
+      "sha256": "d5997cfed6cae6fd93e2961fd9a3ed08476c58f83f1601f7bced5cebf95b6f99",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27976,7 +27990,7 @@
     },
     {
       "path": "formal/system/player-session.md",
-      "sha256": "1b42df5d646e6c417de273e4b3e3ddd38017a5142becda4fe40dd772e267b2a0",
+      "sha256": "ed8e84bc8f78c920f7b8a599b8bd312290f556623b5ef569b4fbabaed05e4d7d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28081,7 +28095,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f1459efd5aeeb32ebf101dcabc0c51bca42c9af1c30bd230b4c29ae1045852b5",
+      "sha256": "7d856860a0fcc16b8ee2a96f0a76c54190cebd9de2ccf03694a5843cee992e2a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

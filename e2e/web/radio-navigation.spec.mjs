@@ -68,7 +68,8 @@ test('@critical radio keeps native playback and controls across sidebar navigati
     });
     expect(before.connected).toBe(true);
     expect(before.paused).toBe(false);
-    expect(before.volume).toBe(0.35);
+    expect(before.volume).toBeCloseTo(0.35, 6);
+    if (checkpoints.length) expect(before.volume).toBe(checkpoints[0].volume);
     expect(before.source).toBe(`${origin}/fixture-radio.wav`);
     expect(before.errors).toBeNull();
     await expect.poll(() => page.evaluate(() => globalThis.__originalRadioAudio.currentTime)).toBeGreaterThan(before.time + 0.15);

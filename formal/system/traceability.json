@@ -8585,9 +8585,9 @@
       "title": "Single persistent web player and public music pages",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. The legacy radio widget is hidden on /musica routes; playback analytics use a stable identity with retry-safe ingestion.",
+      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694)",
       "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
@@ -8661,7 +8661,8 @@
         "playwright.music-native.config.mjs",
         ".github/workflows/ci.yml",
         "scripts/run-native-audio-tests.sh",
-        "tdf-hq-ui/src/session/SessionProviders.tsx"
+        "tdf-hq-ui/src/session/SessionProviders.tsx",
+        "playwright.config.mjs"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8686,9 +8687,11 @@
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
         "e2e/web/fixtures/native-music-setup.mjs",
-        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "e2e/web/radio-navigation.spec.mjs"
       ],
-      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified.",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
@@ -9261,7 +9264,7 @@
     {
       "id": "SYS-WEB-LAYOUT-001",
       "title": "Public mobile layouts stay usable at 360px",
-      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player.",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player. The radio bar stays above the sidebar so its controls receive clicks, while modal dialogs remain above both.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "SYS",
       "actors": [
@@ -9302,7 +9305,7 @@
       "failure": "Layout degrades by wrapping rather than overflow.",
       "recovery": "Not applicable.",
       "observability": "Browser layout assertions in mobile-flow projects.",
-      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; user mobile radio minimization defect report 2026-10-28",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; user mobile radio minimization defect report 2026-10-28; user radio navigation defect report 2026-11-01 (PR #694)",
       "implementation": [
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -9318,7 +9321,8 @@
         "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
         "e2e/web/mobile-layout-regressions.spec.mjs",
-        "tdf-hq-ui/src/utils/bottomDock.test.tsx"
+        "tdf-hq-ui/src/utils/bottomDock.test.tsx",
+        "e2e/web/radio-navigation.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -13696,6 +13700,7 @@
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "fdef41e789e2df22b64a134bcfe5f91ca1a39780dfd8252aa6da756110e395a6",
     "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
+    "e2e/web/radio-navigation.spec.mjs": "4135fe00a18ae7a6c01a04da6d4095c54699cdf3d0b12bf3ac4332f4a56762c5",
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -14030,9 +14035,9 @@
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
     "package.json": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
-    "playwright.config.mjs": "dd221d9df87a88b7644c19ccf6e714ea07452a056cb63537d7d4f0c8a47ae4b5",
+    "playwright.config.mjs": "19a4a8d502af0e952e61e29c6716fa1b87cb5204d7a5025401352cd4abc32262",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
-    "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+    "playwright.music-native.config.mjs": "097ce4df9e2759ec6c2d5bbbd352a8555b5aa3da606913e5121d2d3cc0f880fe",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
@@ -14081,7 +14086,7 @@
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
     "scripts/__tests__/migration-batch-postgres.mjs": "198271c553feb4278eed494aa3bf01da43343b86c67901028eecfc41407e797d",
     "scripts/__tests__/mobile-distribution-expiry.test.mjs": "df4e0604abc1dabbc377f14f80a2c598c1e4eaf0c638244bfe7e7b88e2d1e521",
-    "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
+    "scripts/__tests__/music-browser-config.test.mjs": "2a3c464d094671845d92968a2230aca06da67fbe07adc046e45d0ce6d5578d6d",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
     "scripts/__tests__/music-preview-pipeline.test.mjs": "d0079ede38108f4c1a39a070a319b6ff3a5c2f1c78f3b3f6554e7dea9b678d42",
@@ -14333,7 +14338,7 @@
     "tdf-hq-ui/public/mobile-distribution.json": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
-    "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+    "tdf-hq-ui/src/App.tsx": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
@@ -14410,13 +14415,14 @@
     "tdf-hq-ui/src/components/PublicBranding.tsx": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "0f61ba07e4d1c71af5f550af67ada13232f96b00104a7a6f353582991353db61",
-    "tdf-hq-ui/src/components/RadioWidget.tsx": "d200680b4e94a88ed6d53dbb77b8e76ba79dcb81090f50538e35f281a97aa64a",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "c2969726f53a45e310a3090e123abd56dfb46ed1c5fe97826c1f043656513da2",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
     "tdf-hq-ui/src/components/RouteErrorBoundary.tsx": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
-    "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+    "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+    "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SidebarNav.test.tsx": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
@@ -14644,8 +14650,8 @@
     "tdf-hq-ui/src/utils/phone.ts": "eb558c757e4f79a86c7ca3df1da08f98df111d8944c57206e85ea9bb5e1f6ff1",
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
-    "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
-    "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
+    "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "7fb6b584f959ca10e07759f679d267c82c92639f96283a46498091ddaad74ec0",
+    "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "b28ee7c14daea0b4dcadd1121bf77bcc2658e00c88a74cb9cf3e9d894288c717",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
     "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
@@ -21527,6 +21533,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "SYS-CI-BROWSER-001",
         "relationship": "implementation"
       },
@@ -23656,6 +23666,22 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/radio-navigation.spec.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-WEB-LAYOUT-001",
         "relationship": "tests"
       }
     ],
@@ -27263,6 +27289,22 @@
       ]
     },
     {
+      "id": "SURFACE-ca746d31fe23acf5",
+      "path": "e2e/web/radio-navigation.spec.mjs",
+      "sha256": "4135fe00a18ae7a6c01a04da6d4095c54699cdf3d0b12bf3ac4332f4a56762c5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
       "sha256": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
@@ -28567,7 +28609,7 @@
     {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
-      "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
+      "sha256": "2a3c464d094671845d92968a2230aca06da67fbe07adc046e45d0ce6d5578d6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33884,7 +33926,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "sha256": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35978,7 +36020,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "d200680b4e94a88ed6d53dbb77b8e76ba79dcb81090f50538e35f281a97aa64a",
+      "sha256": "c2969726f53a45e310a3090e123abd56dfb46ed1c5fe97826c1f043656513da2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36088,9 +36130,21 @@
       ]
     },
     {
+      "id": "SURFACE-30ea18f2f9ded258",
+      "path": "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+      "sha256": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d9960955f95c03fb",
       "path": "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
-      "sha256": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+      "sha256": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41726,7 +41780,7 @@
     {
       "id": "SURFACE-a415ee89925f5e2f",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
-      "sha256": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
+      "sha256": "7fb6b584f959ca10e07759f679d267c82c92639f96283a46498091ddaad74ec0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41738,7 +41792,7 @@
     {
       "id": "SURFACE-ee5ba63310165c5c",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
-      "sha256": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
+      "sha256": "b28ee7c14daea0b4dcadd1121bf77bcc2658e00c88a74cb9cf3e9d894288c717",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56894,7 +56948,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f1459efd5aeeb32ebf101dcabc0c51bca42c9af1c30bd230b4c29ae1045852b5",
+      "sourceSha256": "7d856860a0fcc16b8ee2a96f0a76c54190cebd9de2ccf03694a5843cee992e2a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56922,7 +56976,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f1459efd5aeeb32ebf101dcabc0c51bca42c9af1c30bd230b4c29ae1045852b5",
+      "sourceSha256": "7d856860a0fcc16b8ee2a96f0a76c54190cebd9de2ccf03694a5843cee992e2a",
       "definition": {
         "states": [
           "absent",
@@ -56952,7 +57006,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f1459efd5aeeb32ebf101dcabc0c51bca42c9af1c30bd230b4c29ae1045852b5",
+      "sourceSha256": "7d856860a0fcc16b8ee2a96f0a76c54190cebd9de2ccf03694a5843cee992e2a",
       "definition": {
         "export": [
           "queued",

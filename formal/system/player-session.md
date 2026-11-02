@@ -129,3 +129,26 @@ intentionally end the prior listening session. See
 [player-listening-privacy.md](player-listening-privacy.md) for finite identity and
 real-decoder evidence. Owner tags, hydration and preference retention are outside
 this bounded model; its counts, assumptions and verification statuses are unchanged.
+
+## Radio navigation continuity
+
+The 2026-11-01 user directive extends navigation continuity to the authenticated
+radio widget. Route policy controls initial discovery, including explicit
+`#radio` opening; once mounted, ordinary internal links, sidebar expansion and
+Back/Forward retain the same audio element, station, playback state and volume.
+Previously quiet routes, including `/musica`, do not remove an opened radio.
+Explicit pause, minimize, playback takeover and session end retain their own
+meaning; navigation does not resume a user-paused stream. The dock stays above
+the sidebar and below modal dialogs.
+
+`RoutedRadioWidget.test.tsx` checks identity and media commands through route and
+history changes, deferred initial discovery and logout. The original route
+wrapper fails both persistence regressions. `radio-navigation.spec.mjs` exercises
+real menu links and native local WAV clock advancement without patching media
+methods, using synthetic session/API responses. Local Brave, Firefox and Chromium
+phone emulation pass. The radio test belongs to the dedicated native-music suite,
+whose isolated Linux PulseAudio sink lets Firefox advance its real media clock.
+Volume is compared with its initial native value after allowing the browser's
+initial floating-point representation. Network/stream reliability, physical devices, other audio
+owners and deployed acceptance remain outside this evidence. The release-player
+model and its proof classifications above are unchanged.
