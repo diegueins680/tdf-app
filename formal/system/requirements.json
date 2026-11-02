@@ -14261,7 +14261,8 @@
         "tdf-hq/src/TDF/Social/AccountOwnership.hs",
         "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
         "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
-        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql"
+        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
+        "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql"
       ],
       "verification": "Pure ownership and eligibility rules by QuickCheck properties (every owner change is audited or refused); migration forward/rollback/idempotent re-apply and constraint probes on disposable PostgreSQL; delivery and backfill selections filter on delivery_designated by review. Database-backed (SQLite) connection tests: first connection owned by the connecting party and audited once, owner reconnect refreshes the token without an event and keeps designation, another party refused before any write, administrator rebind audited (from/to parties) and clearing artist binding and designation.",
       "evidence": "tdf-hq-test AccountOwnershipSpec run; scripts/test-social-designation-postgres.sh output.",

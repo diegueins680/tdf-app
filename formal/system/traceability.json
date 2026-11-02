@@ -14262,7 +14262,8 @@
         "tdf-hq/src/TDF/Social/AccountOwnership.hs",
         "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
         "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
-        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql"
+        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
+        "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql"
       ],
       "verification": "Pure ownership and eligibility rules by QuickCheck properties (every owner change is audited or refused); migration forward/rollback/idempotent re-apply and constraint probes on disposable PostgreSQL; delivery and backfill selections filter on delivery_designated by review. Database-backed (SQLite) connection tests: first connection owned by the connecting party and audited once, owner reconnect refreshes the token without an event and keeps designation, another party refused before any write, administrator rebind audited (from/to parties) and clearing artist binding and designation.",
       "evidence": "tdf-hq-test AccountOwnershipSpec run; scripts/test-social-designation-postgres.sh output.",
@@ -15962,6 +15963,7 @@
     "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql": "0bd6861a729bb7750be09b11efff3c8a4257b814a6208d900bfc7debfe25281e",
     "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql": "0e68b6729957823cdcc98f37a859678a94843489a93b2091f44e65921effdaec",
     "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
+    "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql": "e7028f7235ad54eb41ac72856dbc3ec343c08983520b35b6b9136d73f3db1b18",
     "tdf-hq/sql/2026-09-28_interaction_integrity.sql": "4bddd12c17e189286b4fa468ede50e27a471f370ced44224118e46fef3e1b019",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
@@ -28461,6 +28463,12 @@
       }
     ],
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": [
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql": [
       {
         "requirement": "AUTH-SOCIAL-OAUTH-001",
         "relationship": "implementation"
@@ -47650,7 +47658,12 @@
       "path": "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
       "sha256": "e7028f7235ad54eb41ac72856dbc3ec343c08983520b35b6b9136d73f3db1b18",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f35f345c34f02817",
@@ -58783,7 +58796,6 @@
     "SURFACE-ab1fb43ec0b76059",
     "SURFACE-6a47cc84200ff7ca",
     "SURFACE-9dca64da13fdf992",
-    "SURFACE-a88f3d5f74718b80",
     "SURFACE-f35f345c34f02817",
     "SURFACE-9cc42bba0768e7f8",
     "SURFACE-35a95aa252c44c1d",
@@ -60515,7 +60527,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6fa91b5e2f823b0aa77805d6368c0aa6b9737330420ed2665be41ad12100910e",
+      "sourceSha256": "c65efe47156281c106fb4b8c7c7a4514aad1a6db608a7f0787adfb430dd5f182",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -60543,7 +60555,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6fa91b5e2f823b0aa77805d6368c0aa6b9737330420ed2665be41ad12100910e",
+      "sourceSha256": "c65efe47156281c106fb4b8c7c7a4514aad1a6db608a7f0787adfb430dd5f182",
       "definition": {
         "states": [
           "absent",
@@ -60573,7 +60585,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6fa91b5e2f823b0aa77805d6368c0aa6b9737330420ed2665be41ad12100910e",
+      "sourceSha256": "c65efe47156281c106fb4b8c7c7a4514aad1a6db608a7f0787adfb430dd5f182",
       "definition": {
         "export": [
           "queued",
