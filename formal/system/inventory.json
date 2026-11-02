@@ -66,7 +66,8 @@
       "e2e/web/records-thumbnails.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
-      "e2e/web/ticket-credential.spec.mjs"
+      "e2e/web/ticket-credential.spec.mjs",
+      "e2e/web/webtorrent-browser.spec.mjs"
     ],
     "fly.toml": [
       "fly.toml"
@@ -119,6 +120,7 @@
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
       "scripts/__tests__/artist-import-idempotency.test.mjs",
+      "scripts/__tests__/browser-vendor.test.mjs",
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
@@ -218,6 +220,7 @@
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
+      "scripts/__tests__/ui-worker-memory.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
       "scripts/__tests__/verification-evidence.test.mjs",
@@ -242,6 +245,7 @@
       "scripts/capture-music-directory-visuals.mjs",
       "scripts/catalog-list-audit.mjs",
       "scripts/check-api-availability.mjs",
+      "scripts/check-browser-vendor.mjs",
       "scripts/check-build-trust.mjs",
       "scripts/check-dependency-security.mjs",
       "scripts/check-generated-api.mjs",
@@ -1497,6 +1501,7 @@
       "tdf-hq-ui/src/utils/torrentAudio.ts",
       "tdf-hq-ui/src/utils/vcard.test.ts",
       "tdf-hq-ui/src/utils/vcard.ts",
+      "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
       "tdf-hq-ui/src/vite-env.d.ts",
       "tdf-hq-ui/tsconfig.app.json",
       "tdf-hq-ui/tsconfig.jest.json",
@@ -2830,7 +2835,7 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "ece2be17e5f353890f78bb06c10d649a5280f6c0dbfb7e173083c36ba6c48891",
+      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3152,6 +3157,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-014b25a6dd6c1298",
+      "path": "e2e/web/webtorrent-browser.spec.mjs",
+      "sha256": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-660f7078dc0b381a",
       "path": "fly.toml",
       "sha256": "3d64e80552e75e29e68d012d579456a353ff17b104afd3839b5d554c83f6318e",
@@ -3346,13 +3357,13 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "5a863ee459217180af77bea4e2baeeef8dcd80630c82dbe744e44068507dab12",
+      "sha256": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+      "sha256": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3389,6 +3400,12 @@
       "id": "SURFACE-35a1af26327814c1",
       "path": "scripts/__tests__/artist-import-idempotency.test.mjs",
       "sha256": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3bda27b3da891bd5",
+      "path": "scripts/__tests__/browser-vendor.test.mjs",
+      "sha256": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3970,7 +3987,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a",
+      "sha256": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3983,6 +4000,12 @@
       "id": "SURFACE-d6cb46e6ca8e56e0",
       "path": "scripts/__tests__/ui-validation-bundle.test.mjs",
       "sha256": "952e9c7fae5dc7697bc2b65c455db2545e59f6c99509cd74e57e422ff49e8e4e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9c653300b0234205",
+      "path": "scripts/__tests__/ui-worker-memory.test.mjs",
+      "sha256": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4127,6 +4150,12 @@
       "id": "SURFACE-4bf839700e64b995",
       "path": "scripts/check-api-availability.mjs",
       "sha256": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1e909f329835b442",
+      "path": "scripts/check-browser-vendor.mjs",
+      "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4876,13 +4905,13 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3feb3638a1e086c40c4630498a32638bfaf80a40698ad7a07c407d1913cd12d3",
+      "sha256": "6171954f6314882c0d68232a7fbd1e1faf080d1555bfdfdde70e38cf888bdcf1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "sha256": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6550,7 +6579,7 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "6ac4e96dceddad2701acbf190327668b4f5b6d60ddbe407bd0042ff03de2f8a3",
+      "sha256": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6562,7 +6591,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "78a0896bbd4aece4f87944b64891680d681c43d413f4170bed257e3fe04a4316",
+      "sha256": "c5775b009397ad7f8e873c032fafdea5a2242cc1c6fb5888b383955633b09382",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11620,7 +11649,7 @@
     {
       "id": "SURFACE-8b33a680532e58df",
       "path": "tdf-hq-ui/src/utils/torrentAudio.ts",
-      "sha256": "e99fc7b1922238bc4f8b1f2dbfc9c5abc0898e34608f32216b6ef25e11a5e604",
+      "sha256": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11633,6 +11662,12 @@
       "id": "SURFACE-6caada1aa8461942",
       "path": "tdf-hq-ui/src/utils/vcard.ts",
       "sha256": "04eea6981d1563e975359f94e9dce5c7556254cf03c98f36284d66fd3fd04c05",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-79f181c24f4d078b",
+      "path": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+      "sha256": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15688,7 +15723,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7c72fcdee0f4222c1e9983d36e257fca2f6c4a7e7622306c8b870b47f2918b74",
+      "sha256": "c2d7ab6cd9a02369b1c77e6936aa79cc0de8a393bff2fee2621e2f3c02fabbea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16156,7 +16191,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+      "sha256": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27696,14 +27731,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "d58219378f9f95dfa6db5a2b1148d8576b41d6e64095805e8ea210b9daaffdd9",
+      "sha256": "fecc3f6a7bb2da3cb62767f0a22b190b4cd04a00a16e2e62ed7d8286258cf12f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "2b19aaf4ae97231ce6ecdd6e41115be72047dece08592b5a4044a4b56f2e1450",
+      "sha256": "80e14859fa727ff124a8b6ee6246b12fdfc7c4b48267054ae32361a641472dbd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27877,8 +27912,15 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-stripe-refund-completion.md",
+      "sha256": "28fa11ac539b9ca33fa82c6083f4944d0e7b6df9282a8d23252712b6fe2d0fed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-stripe-refund.md",
-      "sha256": "b446020753cb696c990bfb051fb280e181d8f4ad0e09d52d4498f883c29d376c",
+      "sha256": "dbdec24fc40b1d16d50eff0e4da5cc962aa6a3151f2d6bfae4274692f55d616b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28249,7 +28291,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "75738ccffcfa0c1412326c120930333774587ecfe1be542d07bb25e768026856",
+      "sha256": "5948689d26687d2c51231fc3fc8d6e44dd47985e3ca4c85ccc372f62d3591b41",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28339,6 +28381,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/ui-test-worker-memory.md",
+      "sha256": "f3fcc4520c26967111489988a67ad527973fec4158abe19222ed8e8f1a6bc8bf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/web-cutover-correspondence.md",
       "sha256": "7d2d4a80ba8affb90817add3d27c4eaa53eae76181f9b7920de85808d47f90c9",
       "authority": "inferred",
@@ -28348,6 +28397,13 @@
     {
       "path": "formal/system/webhook-log-privacy.md",
       "sha256": "f4aad0ca7b00b52f4602aa60522282b7ada730d566b95ef9cfb14c33b67ffb17",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/webtorrent-browser.md",
+      "sha256": "34b42c7ca0b8c05ea098fc60d6594fc590e567ff893a6b7eeec9085f7f59defb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
