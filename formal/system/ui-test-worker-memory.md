@@ -2,6 +2,11 @@
 
 Requirement: `SYS-UI-TEST-WORKER-001`.
 
+Narrow obligations: `SYS-UI-WORKER-RECYCLE-001` (serial file-boundary
+recycling), `SYS-UI-WORKER-FAILURE-001` (assertion/exhausted-crash failure
+propagation), and `SYS-UI-CONFIG-PRIVACY-001` (configuration capture never echoes
+private reporter data in diagnostics).
+
 The selected UI quality job must finish the selected Jest suite without retaining
 every file's execution heap in a single in-band process. On source
 `b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0`, hosted job `125064289764` aborted
@@ -41,6 +46,13 @@ Jest configuration: in-band execution must be disabled, there must be one worker
 slot and the 1 GiB budget must be active. This check is separate from the scaled
 fixture: overriding the fixture limit alone cannot detect a missing production
 limit. Controlled removal of that production setting must fail the guard.
+Configuration capture must accept both ordinary npm output and silent output
+whose JSON starts at byte zero. The same policy assertions run in both modes.
+Configuration can include private reporter options. Capture and parse failures
+must emit bounded diagnostics without copying stdout, stderr or JSON snippets.
+Only typed worker-policy fields are returned to assertions. Synthetic private
+configuration fixtures check failed commands, missing/malformed JSON and invalid
+worker fields without using a real credential.
 
 The behavior checks invoke the actual workspace command with dependency-free
 CommonJS fixtures and a controlled 1 KiB threshold. They require three distinct

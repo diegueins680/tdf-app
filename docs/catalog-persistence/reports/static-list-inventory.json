@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-02T04:32:56.093Z",
+  "generatedAt": "2026-11-02T05:27:05.633Z",
   "repositoryRoot": ".",
   "filesScanned": 2480,
   "candidateCount": 1368,
@@ -80541,7 +80541,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 333,
+      "consumerCount": 334,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -80708,6 +80708,7 @@
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/persistent-uploads.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/__tests__/ui-worker-memory.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -80747,8 +80748,7 @@
         "scripts/set-loop-github-polling.mjs",
         "scripts/social/read-model-tests.sql",
         "scripts/test-booking-conformance.py",
-        "scripts/test-directory-artist-listings.sh",
-        "scripts/test-event-memory-signup-browser.mjs"
+        "scripts/test-directory-artist-listings.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/instagram-token-lifecycle.mjs",
@@ -80858,7 +80858,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 331,
+      "consumerCount": 332,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -81025,6 +81025,7 @@
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/persistent-uploads.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/__tests__/ui-worker-memory.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -81064,8 +81065,7 @@
         "scripts/test-booking-conformance.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-event-memory-signup-browser.mjs",
-        "scripts/test-event-memory-source-browser.mjs",
-        "scripts/test-merge-admission.py"
+        "scripts/test-event-memory-source-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/instagram-token-lifecycle.mjs",
@@ -156216,7 +156216,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 569,
+      "consumerCount": 570,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",

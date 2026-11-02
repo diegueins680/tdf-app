@@ -11,6 +11,35 @@ const CONTROLLED_WORKER_LIMIT_BYTES = 1024;
 const DEFAULT_WORKER_LIMIT_BYTES = 1024 ** 3;
 
 /**
+ * @precondition capture is the result of the Jest configuration command.
+ * @invariant errors never include captured configuration or reporter credentials.
+ * @postcondition only typed worker-policy fields are returned; invalid captures fail closed.
+ */
+function parseWorkerConfiguration({ status, stdout }) {
+  if (status !== 0) throw new Error('Jest configuration capture failed');
+  const start = stdout.indexOf('{');
+  let parsed;
+  try {
+    if (start < 0) throw new Error();
+    parsed = JSON.parse(stdout.slice(start));
+  } catch {
+    throw new Error('Jest configuration output is invalid');
+  }
+  const config = parsed?.globalConfig;
+  if (!config || typeof config !== 'object'
+    || typeof config.runInBand !== 'boolean'
+    || !Number.isSafeInteger(config.maxWorkers) || config.maxWorkers < 1
+    || (config.workerIdleMemoryLimit !== undefined && !Number.isSafeInteger(config.workerIdleMemoryLimit))) {
+    throw new Error('Jest worker configuration is invalid');
+  }
+  return {
+    runInBand: config.runInBand,
+    maxWorkers: config.maxWorkers,
+    workerIdleMemoryLimit: config.workerIdleMemoryLimit,
+  };
+}
+
+/**
  * @precondition the actual UI workspace test command and installed Jest are available.
  * @invariant only disposable local CommonJS fixtures execute; no application or provider is called.
  * @postcondition the receipt includes every fixture result and the PID that actually executed it.
@@ -78,16 +107,37 @@ function runFixture({ forcedInBand = false, failedSuite = false, fatalSuite = fa
 }
 
 test('the default UI command enables serial worker recycling with the configured idle budget', () => {
-  const child = spawnSync('npm', ['run', 'test', '--workspace=tdf-hq-ui', '--', '--showConfig'],
-    { cwd: root, encoding: 'utf8', timeout: 90_000 });
-  assert.equal(child.status, 0, child.stdout + child.stderr);
-  const start = child.stdout.indexOf('\n{');
-  assert.notEqual(start, -1, child.stdout);
-  const { globalConfig } = JSON.parse(child.stdout.slice(start + 1));
-  assert.equal(globalConfig.runInBand, false, 'the default command must permit a recyclable child');
-  assert.equal(globalConfig.maxWorkers, 1, 'the default command must preserve serial scheduling');
-  assert.equal(globalConfig.workerIdleMemoryLimit, DEFAULT_WORKER_LIMIT_BYTES,
-    'the real production configuration must supply the memory budget that fixtures scale down');
+  for (const npmLogLevel of ['notice', 'silent']) {
+    const child = spawnSync('npm', ['run', 'test', '--workspace=tdf-hq-ui', '--', '--showConfig'], {
+      cwd: root,
+      encoding: 'utf8',
+      timeout: 90_000,
+      env: { ...process.env, npm_config_loglevel: npmLogLevel },
+    });
+    const globalConfig = parseWorkerConfiguration(child);
+    assert.equal(globalConfig.runInBand, false, 'the default command must permit a recyclable child');
+    assert.equal(globalConfig.maxWorkers, 1, 'the default command must preserve serial scheduling');
+    assert.equal(globalConfig.workerIdleMemoryLimit, DEFAULT_WORKER_LIMIT_BYTES,
+      'the real production configuration must supply the memory budget that fixtures scale down');
+  }
+});
+
+test('configuration errors do not expose captured private reporter settings', () => {
+  const marker = 'synthetic-private-configuration-fixture';
+  const worker = { runInBand: false, maxWorkers: 1, workerIdleMemoryLimit: DEFAULT_WORKER_LIMIT_BYTES };
+  const stdout = JSON.stringify({ globalConfig: { ...worker, reporters: [['fixture', { apiKey: marker }]] } });
+  assert.deepEqual(parseWorkerConfiguration({ status: 0, stdout }), worker);
+  for (const capture of [
+    { status: 7, stdout, stderr: marker },
+    { status: 0, stdout: marker },
+    { status: 0, stdout: stdout.slice(0, -1) },
+    { status: 0, stdout: JSON.stringify({ globalConfig: { ...worker, maxWorkers: marker } }) },
+  ]) {
+    assert.throws(() => parseWorkerConfiguration(capture), error => {
+      assert.equal(error.message.includes(marker), false);
+      return true;
+    });
+  }
 });
 
 test('the real UI command recycles its worker after the controlled per-file memory threshold', () => {
