@@ -14245,7 +14245,7 @@
       "privacy": "Page access tokens are stored in social_sync_account.access_token.",
       "concurrency": "Upsert by unique (platform, external id).",
       "idempotency": "Repeated exchange by the same user is idempotent per account.",
-      "failure": "503 without app credentials; 400 for a mismatching redirect URI; provider errors sanitized.",
+      "failure": "503 without app credentials; 400 for a mismatching redirect URI; provider errors sanitized. Archived (merged) Party identifiers are rejected on the account and its ownership events by the identity archive guard.",
       "recovery": "Not applicable.",
       "observability": "None specific.",
       "implementation": [
@@ -14259,7 +14259,9 @@
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
         "tdf-hq/src/TDF/Social/AccountOwnership.hs",
-        "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs"
+        "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
+        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
+        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql"
       ],
       "verification": "Pure ownership and eligibility rules by QuickCheck properties (every owner change is audited or refused); migration forward/rollback/idempotent re-apply and constraint probes on disposable PostgreSQL; delivery and backfill selections filter on delivery_designated by review. Database-backed (SQLite) connection tests: first connection owned by the connecting party and audited once, owner reconnect refreshes the token without an event and keeps designation, another party refused before any write, administrator rebind audited (from/to parties) and clearing artist binding and designation.",
       "evidence": "tdf-hq-test AccountOwnershipSpec run; scripts/test-social-designation-postgres.sh output.",

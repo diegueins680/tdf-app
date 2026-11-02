@@ -678,19 +678,19 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "903e61463c0222f30d9b",
-      "reason": "Preserve the complete 227-entry protected main c377ce75 migration prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) and append only the six formal-audit migrations introduced on PR #691 (artist tip idempotency, Domo cancellation policy and record, social delivery designation, course deposit policy, directory claim revocation) with unchanged SQL and introduction ancestors. The entire 227-entry review graph (memory, provider and header parents) is preserved by canonical hashes. This 233-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
-      "previousReplacementId": "a2bb0e828d5b94c1cb31",
+      "replacementId": "d9468b767dadec9cf3d8",
+      "reason": "Preserve the complete 233-entry formal-audit manifest reviewed at 70f35ce2 (canonical sha256 e42b5bd9f2354fb6be1d1bf0af13deec8d879a8f7f02ddb04f62492e730e617f before this change) and append only 2026-11-02_identity_party_reference_refresh, which republishes the model-declared Party reference registry view and installs the archived-party write guard on the social ownership tables. The single change inside the reviewed prefix is additive metadata on 2026-09-18_identity_review_dependencies: the regenerated registry file's previous sha256 5636028805b77a1705bb364c87669e8d46983c93d9fc177da9e2187b98972f4f is recorded as a compatible applied checksum so production, which applied the previous registry, is not asked to re-run that migration; its SQL path and introduction ancestor are unchanged and the full 227-entry protected main prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) is preserved once that field is removed. This 234-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "previousReplacementId": "903e61463c0222f30d9b",
       "currentResolution": {
-        "id": "903e61463c0222f30d9b",
-        "valueCount": 233,
+        "id": "d9468b767dadec9cf3d8",
+        "valueCount": 234,
         "sourceParents": [
-          "c377ce75f290396ae6d222e8a7bc55f7bcf1ef7d",
-          "df3417afcd9095d570d7be683eef5ab3382361d1"
+          "69b5cec505443dd57fb65d4205fa2b57382e76e1",
+          "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f"
         ],
-        "justification": "Preserve the complete 227-entry protected main c377ce75 migration prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) and append only the six formal-audit migrations introduced on PR #691 (artist tip idempotency, Domo cancellation policy and record, social delivery designation, course deposit policy, directory claim revocation) with unchanged SQL and introduction ancestors. The entire 227-entry review graph (memory, provider and header parents) is preserved by canonical hashes. This 233-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+        "justification": "Preserve the complete 233-entry formal-audit manifest reviewed at 70f35ce2 (canonical sha256 e42b5bd9f2354fb6be1d1bf0af13deec8d879a8f7f02ddb04f62492e730e617f before this change) and append only 2026-11-02_identity_party_reference_refresh, which republishes the model-declared Party reference registry view and installs the archived-party write guard on the social ownership tables. The single change inside the reviewed prefix is additive metadata on 2026-09-18_identity_review_dependencies: the regenerated registry file's previous sha256 5636028805b77a1705bb364c87669e8d46983c93d9fc177da9e2187b98972f4f is recorded as a compatible applied checksum so production, which applied the previous registry, is not asked to re-run that migration; its SQL path and introduction ancestor are unchanged and the full 227-entry protected main prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) is preserved once that field is removed. This 234-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
       },
-      "change": "Preserve the complete 227-entry protected main c377ce75 migration prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) and append only the six formal-audit migrations introduced on PR #691 (artist tip idempotency, Domo cancellation policy and record, social delivery designation, course deposit policy, directory claim revocation) with unchanged SQL and introduction ancestors. The entire 227-entry review graph (memory, provider and header parents) is preserved by canonical hashes. This 233-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "change": "Preserve the complete 233-entry formal-audit manifest reviewed at 70f35ce2 (canonical sha256 e42b5bd9f2354fb6be1d1bf0af13deec8d879a8f7f02ddb04f62492e730e617f before this change) and append only 2026-11-02_identity_party_reference_refresh, which republishes the model-declared Party reference registry view and installs the archived-party write guard on the social ownership tables. The single change inside the reviewed prefix is additive metadata on 2026-09-18_identity_review_dependencies: the regenerated registry file's previous sha256 5636028805b77a1705bb364c87669e8d46983c93d9fc177da9e2187b98972f4f is recorded as a compatible applied checksum so production, which applied the previous registry, is not asked to re-run that migration; its SQL path and introduction ancestor are unchanged and the full 227-entry protected main prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) is preserved once that field is removed. This 234-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -955,6 +955,17 @@
           "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "979001b3f6bedf6eba7b3a125f243b680c120c81a722286b7faaee25e5ba49a1",
+          "sourceEntry": {
+            "id": "903e61463c0222f30d9b"
+          },
+          "sourceEntryCanonicalSha256": "9adad9f469eb233e58e2cbfac22651f797d7aba5e438d1f10ce880c436e0566c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
         }
       ],
       "previousReplacementIds": [
@@ -978,9 +989,10 @@
         "a70a9a4dd05ce44e950b",
         "f48c34252ff8930b3d74",
         "2634b239375f2ad309ba",
-        "a2bb0e828d5b94c1cb31"
+        "a2bb0e828d5b94c1cb31",
+        "903e61463c0222f30d9b"
       ],
-      "previousReason": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
+      "previousReason": "Preserve the complete 227-entry protected main c377ce75 migration prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) and append only the six formal-audit migrations introduced on PR #691 (artist tip idempotency, Domo cancellation policy and record, social delivery designation, course deposit policy, directory claim revocation) with unchanged SQL and introduction ancestors. The entire 227-entry review graph (memory, provider and header parents) is preserved by canonical hashes. This 233-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
     }
   ]
 }
