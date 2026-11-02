@@ -1,3 +1,4 @@
+import { buildArtistPublicPath } from '../../utils/artistIdentity';
 import UserProfileLink from '../../components/UserProfileLink';
 import MarkdownText from '../../components/MarkdownText';
 import { useState } from 'react';
@@ -99,7 +100,7 @@ export default function SocialWorkspace() {
           {new Date(post.publishedAt).toLocaleString('es-EC')}
         </Typography>
         <UserProfileLink partyId={post.authorId}><Typography>{post.authorName}</Typography></UserProfileLink><MarkdownText>{post.content}</MarkdownText>
-        <Button component={Link} to={`/artista/${post.artistId}`}>Ver artista</Button>
+        <Button component={Link} to={buildArtistPublicPath(post.artistId) ?? '/fans'}>Ver artista</Button>
       </Card>)}
       {feed.hasNextPage && <Button disabled={feed.isFetchingNextPage} onClick={() => { void feed.fetchNextPage(); }}>Ver más</Button>}
     </Stack>}

@@ -64,12 +64,16 @@ test('@critical radio keeps native playback and controls across sidebar navigati
     const before = await page.evaluate(() => {
       const a = globalThis.__originalRadioAudio;
       return { connected: a.isConnected, paused: a.paused, volume: a.volume, time: a.currentTime,
-        source: a.currentSrc, errors: a.error?.code ?? null };
+        source: a.currentSrc, errors: a.error?.code ?? null,
+        savedVolume: localStorage.getItem('radio-volume') };
     });
     expect(before.connected).toBe(true);
     expect(before.paused).toBe(false);
-    expect(before.volume).toBeCloseTo(0.35, 6);
-    if (checkpoints.length) expect(before.volume).toBe(checkpoints[0].volume);
+    // WebKit/PulseAudio quantizes hardware levels; the requested preference
+    // must still survive navigation exactly, alongside the native level.
+    expect(before.savedVolume).toBe('0.35');
+    expect(before.volume).toBeCloseTo(0.35, 3);
+    if (checkpoints.length) expect(before.volume).toBeCloseTo(checkpoints[0].volume, 3);
     expect(before.source).toBe(`${origin}/fixture-radio.wav`);
     expect(before.errors).toBeNull();
     await expect.poll(() => page.evaluate(() => globalThis.__originalRadioAudio.currentTime)).toBeGreaterThan(before.time + 0.15);
