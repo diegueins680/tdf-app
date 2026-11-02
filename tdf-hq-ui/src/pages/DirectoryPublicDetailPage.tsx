@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import {
   Alert,
@@ -9,7 +10,6 @@ import {
   Divider,
   FormControl,
   InputLabel,
-  Link,
   MenuItem,
   Paper,
   Rating,
@@ -67,10 +67,6 @@ const formatEventDate = (value: unknown, locale: string, timezone?: string): str
     return parsed.toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' });
   }
 };
-const linkify = (value: string) => value.split(/(https?:\/\/[^\s<>"')\]]+)/g).map((part, index) =>
-  /^https?:\/\//i.test(part)
-    ? <Link key={`${index}-${part}`} href={part} target="_blank" rel="noopener noreferrer nofollow">{part}</Link>
-    : part);
 const PUBLIC_EVENT_ID = /^[1-9]\d{0,17}$/;
 export default function DirectoryPublicDetailPage({ kind, authenticationFallback }: { kind: DetailKind; authenticationFallback?: string }) {
   const params = useParams();
@@ -287,7 +283,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Alert>
               )}
               <Divider />
-              <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: '1.08rem', lineHeight: 1.75, overflowWrap: 'anywhere' }}>{linkify(description)}</Typography>
+              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</MarkdownText>
 
               {kind === 'event' && (
                 <Stack spacing={2}>
@@ -517,7 +513,7 @@ function ReviewCard({ review, authenticated }: { review: DirectoryReviewPage['it
         <Box><Typography component={RouterLink} to={`/directorio/${review.authorProfile.slug}`} color="text.primary" fontWeight={800} sx={{ textDecoration: 'none' }}>{review.authorProfile.name}</Typography><Typography variant="body2" color="text.secondary">Interacción completada verificada</Typography></Box>
         <Rating value={review.rating} readOnly size="small" aria-label={`${review.rating} de 5 estrellas`} />
       </Stack>
-      {review.body && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{review.body}</Typography>}
+      {review.body && <MarkdownText>{review.body}</MarkdownText>}
       <Typography variant="caption" color="text.secondary">{new Date(review.createdAt).toLocaleDateString()}</Typography>
       {authenticated && <Button size="small" color="inherit" sx={{ alignSelf: 'flex-start' }} disabled={report.isPending || report.isSuccess} onClick={() => report.mutate()}>{report.isSuccess ? 'Reportada' : 'Reportar reseña'}</Button>}
     </Stack>

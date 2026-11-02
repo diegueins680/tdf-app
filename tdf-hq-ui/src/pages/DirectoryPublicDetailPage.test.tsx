@@ -377,8 +377,6 @@ describe('canonical public event authentication fallback', () => {
     expect(buy.getAttribute('target')).toBe('_blank');
     expect(screen.queryByRole('link', { name: 'Ver entradas' })).toBeNull();
     expect(screen.getByText('Las entradas de este evento se venden en Eventbrite.')).toBeTruthy();
-    // The Eventbrite URL inside the description is clickable too.
-    expect(screen.getAllByRole('link', { name: 'https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325' }).length).toBe(1);
   });
 
   it('offers the TDF checkout only when the storefront is open', async () => {

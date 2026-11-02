@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { resolveApiBase } from '../config/apiBase';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference, removeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { useTranslation } from 'react-i18next';
@@ -3127,9 +3128,9 @@ export default function MarketplacePage() {
                     title="Términos de renta"
                     summary={rentalDialogListing.miRentalTermsVersion ? `Versión ${rentalDialogListing.miRentalTermsVersion}` : undefined}
                   >
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <MarkdownText variant="body2">
                       {rentalDialogListing.miRentalTermsSummary}
-                    </Typography>
+                    </MarkdownText>
                   </LegalDisclosure>
                 ) : rentalDialogListing.miRentalTermsVersion && (
                   <Typography variant="caption" color="text.secondary">
