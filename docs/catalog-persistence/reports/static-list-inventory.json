@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-02T20:31:26.604Z",
+  "generatedAt": "2026-11-02T21:07:36.942Z",
   "repositoryRoot": ".",
-  "filesScanned": 2500,
+  "filesScanned": 2502,
   "candidateCount": 1370,
   "byClassification": {
     "dynamic-business-catalog": 889,
@@ -5213,7 +5213,7 @@
       "lines": [
         82
       ],
-      "consumerCount": 126,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5304,6 +5304,7 @@
         "tdf-hq-ui/src/services/instagramAuth.test.ts",
         "tdf-hq-ui/src/services/instagramAuth.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
+        "tdf-hq-ui/src/utils/externalTicketing.test.ts",
         "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
         "tdf-hq-ui/src/utils/inAppBrowser.ts",
         "tdf-hq-ui/src/utils/instagramTraffic.test.ts",
@@ -6204,7 +6205,7 @@
       "lines": [
         119
       ],
-      "consumerCount": 344,
+      "consumerCount": 345,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -6704,7 +6705,7 @@
       "lines": [
         71
       ],
-      "consumerCount": 189,
+      "consumerCount": 190,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -6803,6 +6804,7 @@
         "tdf-hq-ui/src/pages/socialEventsPageState.test.ts",
         "tdf-hq-ui/src/routes/protectedRoutes.tsx",
         "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+        "tdf-hq-ui/src/utils/externalTicketing.ts",
         "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js"
       ],
       "mobileConsumers": [
@@ -17757,7 +17759,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "paymentMethods",
-      "line": 395,
+      "line": 417,
       "values": [
         "paypal",
         "bank_transfer"
@@ -17765,9 +17767,9 @@
       "valueCount": 2,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        395,
-        398,
-        401
+        417,
+        420,
+        423
       ],
       "consumerCount": 118,
       "backendConsumers": [
@@ -17909,7 +17911,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "session",
-      "line": 627,
+      "line": 649,
       "values": [
         "checkoutId",
         "attemptId",
@@ -17923,7 +17925,7 @@
       "valueCount": 8,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        627
+        649
       ],
       "consumerCount": 685,
       "backendConsumers": [
@@ -20547,7 +20549,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 15,
+      "consumerCount": 17,
       "backendConsumers": [
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -20562,6 +20564,8 @@
         "tdf-hq-ui/src/api/eventTickets.test.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
@@ -54260,7 +54264,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "event",
-      "line": 327,
+      "line": 332,
       "values": [
         "id",
         "title",
@@ -54275,9 +54279,9 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        327
+        332
       ],
-      "consumerCount": 1048,
+      "consumerCount": 1050,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -54557,7 +54561,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "schemaType",
-      "line": 112,
+      "line": 128,
       "values": [
         "offering-services",
         "equipment-sale-rental",
@@ -54567,7 +54571,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        112
+        128
       ],
       "consumerCount": 12,
       "backendConsumers": [
@@ -54606,7 +54610,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "schemaType",
-      "line": 114,
+      "line": 130,
       "values": [
         "organization",
         "company",
@@ -54622,7 +54626,7 @@
       "valueCount": 10,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        114
+        130
       ],
       "consumerCount": 124,
       "backendConsumers": [
@@ -64202,7 +64206,7 @@
       "lines": [
         120
       ],
-      "consumerCount": 98,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -64273,13 +64277,15 @@
         "tdf-hq-ui/src/i18n/locales/de.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/socialEventsPageState.test.ts",
-        "tdf-hq-ui/src/pages/socialEventsPageState.ts"
+        "tdf-hq-ui/src/pages/socialEventsPageState.ts",
+        "tdf-hq-ui/src/utils/externalTicketing.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/eventDetail.tsx",
@@ -66938,7 +66944,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 589,
+      "line": 624,
       "values": [
         "consumidor_final",
         "cedula",
@@ -66948,7 +66954,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        589
+        624
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -69329,7 +69335,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1005,
+      "consumerCount": 1007,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -158442,7 +158448,7 @@
       "lines": [
         436
       ],
-      "consumerCount": 230,
+      "consumerCount": 231,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",

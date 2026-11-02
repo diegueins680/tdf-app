@@ -1449,6 +1449,8 @@
       "tdf-hq-ui/src/utils/eventSharing.ts",
       "tdf-hq-ui/src/utils/eventTaskRoutes.test.ts",
       "tdf-hq-ui/src/utils/eventTaskRoutes.ts",
+      "tdf-hq-ui/src/utils/externalTicketing.test.ts",
+      "tdf-hq-ui/src/utils/externalTicketing.ts",
       "tdf-hq-ui/src/utils/formatPhone.ts",
       "tdf-hq-ui/src/utils/formatters.test.ts",
       "tdf-hq-ui/src/utils/formatters.ts",
@@ -6768,7 +6770,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
+      "sha256": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9606,13 +9608,13 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "25e0875c9fdf63c974d89215b87687b3d624e15dd47517f53ca18593511ac3b7",
+      "sha256": "07a61e85fa89ddb7e1c4de1c1f20617c9ac6bb9690aca35daccd914e1422c81d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "8ad2cb2c31feaa27005f922ba7d1819045a3cedd9e643df9a1a89de5e6077da8",
+      "sha256": "526d99c969b397ff9531d01ca361f63932a2e4859e937eff2d44db6ef606a3a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10302,7 +10304,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "2fa370e096abaf8acad3ff12c7aef6e51af67631cf5c562a4f484d91add873d0",
+      "sha256": "e93f211a8931ebbf60d9c32ecfcdd05066712610e16e505201dc7bcfc288e3c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11359,6 +11361,18 @@
       "id": "SURFACE-7025f8d83347e083",
       "path": "tdf-hq-ui/src/utils/eventTaskRoutes.ts",
       "sha256": "a5dc247d88e62245a3f7013e27bf29facd08508ecd6775528859a694c21069fa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a666759a8b6c1e76",
+      "path": "tdf-hq-ui/src/utils/externalTicketing.test.ts",
+      "sha256": "58c361d381fda49a14c4335aecbf3e10f353e53fce94ac615d26bf9d277ca729",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7fcb560ad8ca2dcb",
+      "path": "tdf-hq-ui/src/utils/externalTicketing.ts",
+      "sha256": "1224ccc2f203440828c55c99dc50b60f02b3a36747c2fa63826c73fde51ed8d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28361,7 +28375,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "467ecec7d75e2563d203f1debdba39184a19fc56f9cb27bb153a8a03fded1113",
+      "sha256": "df75037edd5b790195cff5f33f7206d71373deb71b43a2f13d1afea062627b0a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
