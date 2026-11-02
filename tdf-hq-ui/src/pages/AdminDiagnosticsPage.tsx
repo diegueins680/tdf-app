@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -336,20 +337,20 @@ export default function AdminDiagnosticsPage() {
                                   </Typography>
                                 </TableCell>
                                 <TableCell>
-                                  <Typography
+                                  <MarkdownText
                                     variant="body2"
                                     sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
                                   >
                                     {formatBody(msg.text)}
-                                  </Typography>
+                                  </MarkdownText>
                                 </TableCell>
                                 <TableCell>
-                                  <Typography
+                                  <MarkdownText
                                     variant="body2"
                                     sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
                                   >
                                     {formatBody(msg.replyText)}
-                                  </Typography>
+                                  </MarkdownText>
                                 </TableCell>
                               </TableRow>
                             );

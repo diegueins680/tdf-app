@@ -33,6 +33,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [event report link access](../../docs/events/report-link-access.md): server-only provisional closeout, capability checks, revocation and private response handling.
+
 - [payment-intent-expiry.md](payment-intent-expiry.md): database-time admission
   after checkout locking, actual PostgreSQL lock-wait counterexamples, three
   compiled source controls and a bounded model with four negative configurations.
