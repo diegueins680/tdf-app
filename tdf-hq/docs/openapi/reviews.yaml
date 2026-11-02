@@ -260,6 +260,7 @@ components:
       additionalProperties: false
       required: [name]
       properties:
+        partyId: { type: integer, format: int64, minimum: 1 }
         name: { type: string }
         avatarUrl: { type: string, format: uri, nullable: true }
     ExperienceReview:
