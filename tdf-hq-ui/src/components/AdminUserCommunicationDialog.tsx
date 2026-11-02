@@ -1,3 +1,4 @@
+import MarkdownText from './MarkdownText';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
@@ -494,7 +495,7 @@ function MessageCard(props: MessageCardProps) {
       <Stack spacing={1.25}>
         <MessageHeader message={message} />
         <MessageSenderBlock message={message} partyName={partyName} />
-        <Typography whiteSpace="pre-wrap">{normalizeBody(message.text)}</Typography>
+        <MarkdownText>{normalizeBody(message.text)}</MarkdownText>
         <MessageErrorNotice message={message} />
         <DeliveryUpdateNotice message={message} />
         <Divider />

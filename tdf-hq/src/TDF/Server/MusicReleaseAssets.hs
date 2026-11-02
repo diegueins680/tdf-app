@@ -8,6 +8,7 @@ module TDF.Server.MusicReleaseAssets
   , authorizeDownloadDB
   , AssetReference(..)
   , downloadUrlLifetimeSeconds
+  , downloadableAssetPredicate
   , loadMusicS3SigningConfig
   , trustedEdgeTerritory
   ) where
