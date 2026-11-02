@@ -603,7 +603,17 @@ jobs:
           TDF_PROVIDER_RETRY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_provider_retry_test
         run: |
           createdb -h postgres -U postgres tdf_provider_retry_test
-          sh scripts/test-provider-retry-runtime.sh
+          # The job log tail is dominated by the service container dump, so a
+          # failing hspec run also surfaces its failure report as annotations.
+          sh scripts/test-provider-retry-runtime.sh > "$RUNNER_TEMP/provider-retry.log" 2>&1
+          status=$?
+          cat "$RUNNER_TEMP/provider-retry.log"
+          if [ "$status" -ne 0 ]; then
+            sed -n '/^Failures:/,/^Randomized with seed/p' "$RUNNER_TEMP/provider-retry.log" \
+              | grep -v "tdf-intent-expiry" | head -n 120 \
+              | while IFS= read -r line; do printf '::error::%s\n' "$line"; done
+            exit "$status"
+          fi
       - name: Verify invoice worker claim, submission mark and lease fencing
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
