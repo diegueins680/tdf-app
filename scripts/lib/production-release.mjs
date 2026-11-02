@@ -468,6 +468,12 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     };
   });
 
+  // AUTHORITY-094 (2026-11-01) adds four ownership columns and two Party
+  // foreign keys to social_sync_account. A batch rendered from a manifest
+  // prefix that stops before that migration must verify the earlier shape.
+  const socialDesignationIncluded = entries.some(
+    (entry) => entry.id === '2026-11-01_social_sync_account_delivery_designation',
+  );
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
@@ -520,7 +526,7 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     '  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
     ');',
     body,
-    buildSchemaVerificationSql({ includePsqlHeader: false }),
+    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded }),
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
@@ -721,6 +727,10 @@ export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
 
 export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
+  // Production verification expects the full AUTHORITY-094 social shape; only a
+  // batch rendered from a manifest prefix that stops before that migration
+  // passes false (see buildMigrationBatchSql).
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
@@ -1639,7 +1649,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 17 OR (
+  ) <> ${socialDesignationIncluded ? 17 : 13} OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1661,11 +1671,11 @@ BEGIN
         ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
         ('social_sync_account', 'platform', 'character varying', 'NO'),
         ('social_sync_account', 'external_user_id', 'character varying', 'NO'),
-        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),${socialDesignationIncluded ? `
         ('social_sync_account', 'delivery_designated', 'boolean', 'NO'),
         ('social_sync_account', 'connected_by_party_id', 'bigint', 'YES'),
         ('social_sync_account', 'designated_by_party_id', 'bigint', 'YES'),
-        ('social_sync_account', 'designated_at', 'timestamp with time zone', 'YES'),
+        ('social_sync_account', 'designated_at', 'timestamp with time zone', 'YES'),` : ''}
         ('social_sync_post', 'account_id', 'bigint', 'YES'),
         ('social_sync_post', 'platform', 'character varying', 'NO'),
         ('social_sync_post', 'external_post_id', 'character varying', 'NO'),
@@ -1723,7 +1733,7 @@ BEGIN
       'public.social_sync_post'::regclass,
       'public.social_discovery_review'::regclass
     ) AND contype = 'f' AND convalidated
-  ) <> 9 THEN
+  ) <> ${socialDesignationIncluded ? 9 : 7} THEN
     RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
   END IF;
 
