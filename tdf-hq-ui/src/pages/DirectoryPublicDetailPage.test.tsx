@@ -11,6 +11,9 @@ const profileMock = jest.fn<(slug: string) => Promise<Record<string, unknown>>>(
 const profileReviewsMock = jest.fn(async () => ({ items: [], nextCursor: null }));
 const reviewEligibilityMock = jest.fn(async () => []);
 const directoryRsvpFeedMock = jest.fn(async () => ({ feedItems: [], feedNextCursor: null }));
+// The public storefront decides whether the event sells through TDF. Unless a
+// test says otherwise it rejects, which the page treats as "not sold here".
+const storefrontMock = jest.fn<(eventId: number) => Promise<Record<string, unknown>>>();
 let sessionMock: {
   username: string;
   displayName: string;
@@ -51,6 +54,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+jest.unstable_mockModule('../api/eventTickets', () => ({ EventTickets: { getStorefront: storefrontMock } }));
 // Keep the real feed component while isolating its explicit domain API boundary.
 // Do not invent successful low-level transport methods merely to satisfy imports.
 jest.unstable_mockModule('../api/socialEvents', () => ({
@@ -116,6 +120,7 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     profileReviewsMock.mockReset().mockResolvedValue({ items: [], nextCursor: null });
     reviewEligibilityMock.mockReset().mockResolvedValue([]);
     directoryRsvpFeedMock.mockReset().mockResolvedValue({ feedItems: [], feedNextCursor: null });
+    storefrontMock.mockReset().mockRejectedValue(new Error('storefront unavailable'));
   });
 
   afterEach(() => {
@@ -325,8 +330,13 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
 
 describe('canonical public event authentication fallback', () => {
   const event = { id: 141, title: 'Synthetic completed event', startTime: '2026-10-24T19:00:00Z', endTime: '2026-10-25T02:00:00Z', timezone: 'America/Guayaquil', isPublic: true, workflowStateCode: 'completed', publicShareEligible: true, rsvpEligible: false };
-  beforeEach(() => { sessionMock = null; profileMock.mockReset(); });
-  afterEach(cleanup);
+  beforeEach(() => {
+    sessionMock = null;
+    profileMock.mockReset();
+    storefrontMock.mockReset().mockRejectedValue(new Error('storefront unavailable'));
+    jest.spyOn(navigator, 'language', 'get').mockReturnValue('es-EC');
+  });
+  afterEach(() => { cleanup(); jest.restoreAllMocks(); });
 
   it.each([401, 403, 404])('retains the original protected target when public metadata is unavailable (%s)', async status => {
     profileMock.mockRejectedValueOnce(new ApiError('Unavailable', status));
@@ -351,5 +361,38 @@ describe('canonical public event authentication fallback', () => {
     renderPage('/eventos/141?utm_source=invitation&memoryInvite=synthetic', '/login?redirect=event');
     const link = await screen.findByRole('link', { name: 'Compartir mis momentos' });
     expect(link.getAttribute('href')).toBe('/social/eventos/141?utm_source=invitation&memoryInvite=synthetic&compose=1#momentos');
+  });
+
+  it('sends buyers to the external vendor when TDF has no storefront for the event', async () => {
+    profileMock.mockResolvedValueOnce({
+      ...event,
+      id: 211,
+      description: 'Verde 70 en Miami.\nEntradas y detalles: https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325',
+    });
+    storefrontMock.mockResolvedValueOnce({ eventId: 211, checkoutAvailable: false, tiers: [], policy: null,
+      unavailableReason: 'This event has no approved active ticket price and fee policy' });
+    renderPage('/eventos/211');
+    const buy = await screen.findByRole('link', { name: /Comprar entradas en Eventbrite/ });
+    expect(buy.getAttribute('href')).toBe('https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325');
+    expect(buy.getAttribute('target')).toBe('_blank');
+    expect(screen.queryByRole('link', { name: 'Ver entradas' })).toBeNull();
+    expect(screen.getByText('Las entradas de este evento se venden en Eventbrite.')).toBeTruthy();
+  });
+
+  it('offers the TDF checkout only when the storefront is open', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    storefrontMock.mockResolvedValueOnce({ eventId: 141, checkoutAvailable: true, tiers: [{ tierId: 1 }], policy: {}, unavailableReason: null });
+    renderPage('/eventos/141');
+    const link = await screen.findByRole('link', { name: 'Ver entradas' });
+    expect(link.getAttribute('href')).toBe('/eventos/141/entradas');
+  });
+
+  it('explains a closed storefront in Spanish instead of exposing the raw server reason', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    storefrontMock.mockResolvedValueOnce({ eventId: 141, checkoutAvailable: false, tiers: [], policy: null, unavailableReason: 'Ticket inventory is currently exhausted' });
+    renderPage('/eventos/141');
+    expect(await screen.findByText('Las entradas están agotadas.')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Ver entradas' })).toBeNull();
+    expect(screen.queryByText('Ticket inventory is currently exhausted')).toBeNull();
   });
 });
