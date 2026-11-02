@@ -27,7 +27,7 @@ import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.Persist
-    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
+    ( Entity(..), Filter, Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -79,7 +79,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
+import Servant (NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -142,7 +142,8 @@ import TDF.DTO
 import qualified TDF.DTO as DTO
 import qualified TDF.Server as NotificationServer
 import TDF.Server
-    ( MarketplaceCartTotalsState(..)
+    ( createPurchase
+    , MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
     , DriveMetaResp(..)
     , GoogleToken(..)
@@ -3388,6 +3389,79 @@ spec = describe "TDF.Server helpers" $ do
             decodePackagePurchaseReq
                 "{\"buyerId\":42,\"productId\":7,\"packageId\":9}"
                 `shouldSatisfy` isLeft
+
+    describe "createPurchase expiry" $ do
+        forM_ [1, 120, 365] $ \days ->
+            it ("persists " <> show days <> " elapsed days from the stored purchase time") $
+                withPackagePurchaseFixture (Just days) True $ \env buyerKey productKey -> do
+                    before <- getCurrentTime
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                    after <- getCurrentTime
+                    assertPackagePurchaseSuccess result
+                    rows <- runSqlPool (selectList [] []) (envPool env)
+                    case rows of
+                        [Entity _ purchase] -> do
+                            M.packagePurchasePurchasedAt purchase `shouldSatisfy` (>= before)
+                            M.packagePurchasePurchasedAt purchase `shouldSatisfy` (<= after)
+                            M.packagePurchaseExpiresAt purchase `shouldBe`
+                                Just (addUTCTime (fromIntegral days * 86400)
+                                    (M.packagePurchasePurchasedAt purchase))
+                            M.packagePurchaseBuyerId purchase `shouldBe` buyerKey
+                            M.packagePurchaseProductId purchase `shouldBe` productKey
+                            M.packagePurchasePriceCents purchase `shouldBe` 50000
+                            M.packagePurchaseRemainingUnits purchase `shouldBe` 24
+                            M.packagePurchaseStatus purchase `shouldBe` "Active"
+                        _ -> expectationFailure "Expected exactly one persisted package purchase"
+
+        forM_ [0, -1] $ \days ->
+            it ("refuses nonpositive validity " <> show days <> " without creating a purchase") $
+                withPackagePurchaseFixture (Just days) True $ \env buyerKey productKey -> do
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                    assertPackagePurchaseFailure 409 result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        it "keeps an explicitly nonexpiring product nonexpiring" $
+            withPackagePurchaseFixture Nothing True $ \env buyerKey productKey -> do
+                result <- runHandler $ runReaderT
+                    (createPurchase (mkUser [Admin])
+                        (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                assertPackagePurchaseSuccess result
+                rows <- runSqlPool (selectList [] []) (envPool env)
+                case rows of
+                    [Entity _ purchase] -> M.packagePurchaseExpiresAt purchase `shouldBe` Nothing
+                    _ -> expectationFailure "Expected exactly one persisted nonexpiring purchase"
+
+        forM_ [("inactive product", True), ("unknown product", False)] $ \(label, inactive) ->
+            it ("preserves rejection of an " <> label <> " without writing a purchase") $
+                withPackagePurchaseFixture (Just 120) (not inactive) $ \env buyerKey productKey -> do
+                    let selectedProduct = if inactive then fromSqlKey productKey else 999999
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) selectedProduct)) env
+                    assertPackagePurchaseFailure (if inactive then 409 else 422) result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        forM_ [("malformed buyer", 0, 400), ("unknown buyer", 999999, 422)] $ \(label, buyer, code) ->
+            it ("preserves rejection of an " <> label <> " without writing a purchase") $
+                withPackagePurchaseFixture (Just 120) True $ \env _ productKey -> do
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq buyer (fromSqlKey productKey))) env
+                    assertPackagePurchaseFailure code result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        it "preserves the module permission guard before writing a purchase" $
+            withPackagePurchaseFixture (Just 120) True $ \env buyerKey productKey -> do
+                let denied = (mkUser [Fan]) { auModules = Set.empty }
+                result <- runHandler $ runReaderT
+                    (createPurchase denied
+                        (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                assertPackagePurchaseFailure 403 result
+                runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
 
     describe "resolvePackagePurchaseRefs" $ do
         it "resolves existing active package products for known buyers" $ do
@@ -15904,6 +15978,44 @@ seedSessionUsernameFallbackRows = do
     insertCredential googlePartyId "second-google-session@example.com"
     insertToken googlePartyId "google-token" (Just "google-login:google@example.com")
     pure (ambiguousPartyId, googlePartyId)
+
+assertPackagePurchaseSuccess :: Either ServerError NoContent -> Expectation
+assertPackagePurchaseSuccess (Right NoContent) = pure ()
+assertPackagePurchaseSuccess (Left err) = expectationFailure ("Unexpected purchase error: " <> show err)
+
+assertPackagePurchaseFailure :: Int -> Either ServerError NoContent -> Expectation
+assertPackagePurchaseFailure code (Left err) = errHTTPCode err `shouldBe` code
+assertPackagePurchaseFailure _ (Right _) = expectationFailure "Unexpected successful package purchase"
+
+withPackagePurchaseFixture
+    :: Maybe Int -> Bool -> (Env -> Key Party -> Key PackageProduct -> IO a) -> IO a
+withPackagePurchaseFixture days active action =
+    bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+        now <- getCurrentTime
+        (buyerKey, productKey) <- runSqlPool (do
+            initializeAuthSchema
+            initializePackageSchema
+            rawExecute "CREATE TABLE package_purchase(id INTEGER PRIMARY KEY,buyer_id INTEGER NOT NULL REFERENCES party(id),product_id INTEGER NOT NULL REFERENCES package_product(id),purchased_at TIMESTAMP NOT NULL,price_cents INTEGER NOT NULL,expires_at TIMESTAMP NULL,remaining_units INTEGER NOT NULL,status TEXT NOT NULL)" []
+            buyer <- insert Party
+                { partyLegalName = Nothing
+                , partyDisplayName = "Synthetic expiry buyer"
+                , partyIsOrg = False
+                , partyTaxId = Nothing
+                , partyPrimaryEmail = Nothing
+                , partyPrimaryPhone = Nothing
+                , partyWhatsapp = Nothing
+                , partyInstagram = Nothing
+                , partyEmergencyContact = Nothing
+                , partyNotes = Nothing
+                , partyStripeCustomerId = Nothing
+                , partyCountryCode = Nothing
+                , partyCountryId = Nothing
+                , partyCreatedAt = now
+                }
+            product <- insert (PackageProduct "Synthetic expiring product" Classes Hours 24 50000
+                days False CreditOnly active)
+            pure (buyer, product)) pool
+        action (Env pool (marketplaceTestConfig False)) buyerKey productKey
 
 runPackageSqlite :: SqlPersistT IO a -> IO a
 runPackageSqlite action =
