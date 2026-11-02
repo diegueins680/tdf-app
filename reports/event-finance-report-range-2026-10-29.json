@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-29",
+  "repository": "diegueins680/tdf-app",
+  "baselineMain": "6197b87326a437350dca239ee64902e78da6964c",
+  "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+  "evidenceCommit": "Containing Git commit; report-only descendant of sourceCommit, verified after commit.",
+  "problem": {
+    "classification": "Confirmed mathematical/implementation defect in event finance reporting",
+    "failureModeCount": 1,
+    "counterexampleCases": 12,
+    "consequence": "Individually type-representable positive amounts such as maxBound+1 aggregate into negative cents (-9223372036854775808 on the tested native target). Planned, manual, commitment, procurement, combined canonical/legacy revenue and receivable reports can misstate money and dependent budget fields.",
+    "authority": "Existing bounded event DTO/models, exact financial arithmetic mandate and canonical revenue HTTP500 range refusal.",
+    "productionExposure": "UNKNOWN; synthetic real-handler behavior is confirmed, not a production incident or PostgreSQL schema-reachability claim."
+  },
+  "properties": [
+    {
+      "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+      "requirement": "PAY-EVENT-REPORT-RANGE-001",
+      "contract": "formal/system/event-finance-report-range.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "status": "TESTED",
+      "CI": [
+        ".github/workflows/ci.yml backend-quality -> existing full FollowHandlerSpec.spec registration in test/Spec.hs -> required selected quality gate"
+      ],
+      "proof": "No new complete implementation/refinement theorem.",
+      "id": "PAY-EVENT-REPORT-RANGE-001/EXACT-AGGREGATION",
+      "statement": "For rows selected by the unchanged filters, all sums/differences remain exact Integer; every successfully reported cents field fits signed host Int and equals its mathematical expression. Unsupported monetary results return500 rather than wrapping. All16 mandatory and2 optional summary amounts and budget actuals are checked.",
+      "assumptions": [
+        "Trusted GHC/Int/Integer semantics and existing stored dimension validation",
+        "Native target tested is64-bit; SQLite handler fixtures do not establish production PostgreSQL extreme reachability",
+        "Currency-unit consistency and serializable snapshot semantics are separate obligations"
+      ],
+      "evidence": [
+        "baseline15/12actualfailures/3compatibilitypasses",
+        "qualified native15/0 plus4060/0/21pending",
+        "native source-aggregate guard omission mutant2assertionfailures"
+      ]
+    },
+    {
+      "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+      "requirement": "PAY-EVENT-REPORT-RANGE-001",
+      "contract": "formal/system/event-finance-report-range.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "status": "TESTED",
+      "CI": [
+        ".github/workflows/ci.yml backend-quality -> existing full FollowHandlerSpec.spec registration in test/Spec.hs -> required selected quality gate"
+      ],
+      "proof": "No new complete implementation/refinement theorem.",
+      "id": "PAY-EVENT-REPORT-RANGE-001/PREWRITE-REFUSAL",
+      "statement": "A budget edit with an unreportable observed actual refuses before its existing first write; supported edits and signed net/liability/variance values remain valid.",
+      "assumptions": [
+        "The precheck concerns its observed posted rows; no new serializable transaction/snapshot guarantee",
+        "No production data mutation is part of this evidence"
+      ],
+      "evidence": [
+        "Qualified fixture verifies existing planned7 after refused requested99",
+        "Moving check after write causes exactly1DB-state assertion failure;14other cases pass",
+        "Baseline wrong successful response includes99 but its later DB assertion was not reached; no old DB postread observation is claimed"
+      ]
+    }
+  ],
+  "repair": {
+    "calculation": "Convert inputs to Integer before all aggregate arithmetic; check every monetary output against signed Int bounds before narrowing.",
+    "sharedPredicate": "checkedEventFinanceCents is reused by budget list/update and summary validation.",
+    "budgetWriteOrdering": "Read and validate actual before the existing UPDATE; no late refusal after committed edit.",
+    "preserved": "Supported negative balances, zero/fallback budget percentage behavior, row filters, authorizations and source/canonical-order rules.",
+    "unchanged": "Wire DTO/API shape, SQL/schema/migrations, providers, UI/Mobile, workflows and dependencies."
+  },
+  "verification": {
+    "baseline": {
+      "buildExit": 0,
+      "handlerTestExit": 1,
+      "binary": "/private/tmp/tdf-event-finance-report-range-20261029/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "scope": "Actual main6197 implementation plus new tests; nativeGHC9.10.3/Stacklts24.42,SQLitefixtures;notproductionPG.",
+      "binarySha256": "d400bd58e7cd1fc6639c59d38075ec5bc3159c6795a8dfac388e523a6290124a",
+      "examples": 15,
+      "actualAssertionFailures": 12,
+      "compatibilityPasses": 3,
+      "allBaselineInputsStillMatchBeforeRepair": true
+    },
+    "native": {
+      "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+      "phase": "QUALIFIED_TARGETED_AND_FULL",
+      "startedAt": "2026-10-29T21:58:26.712013+00:00",
+      "actualExits": {
+        "build": 0,
+        "targeted": 0,
+        "full": 0
+      },
+      "buildPID": 31690,
+      "binary": "/private/tmp/tdf-event-finance-report-range-20261029/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "binarySha256": "cfaac0bfeffd5e0590d2b890cbd5fbb421340714ef280eceb35e4dfc9eea5d56",
+      "targetedPID": 57970,
+      "targeted": {
+        "examples": 15,
+        "failures": 0,
+        "pending": 0
+      },
+      "fullPID": 59026,
+      "full": {
+        "examples": 4060,
+        "failures": 0,
+        "pending": 21
+      },
+      "allBackendInputsUnchangedAndGitExact": true,
+      "sourceCleanAfter": true,
+      "finishedAt": "2026-10-29T22:13:54.671257+00:00"
+    },
+    "rootQuality": {
+      "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "sourceCorrespondence": {
+      "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+      "baselineMain": "6197b87326a437350dca239ee64902e78da6964c",
+      "sourceDigest": "47add1a1f1ec1661e6cf017b7437601fda25fb90bceed30ecd2e264debd353f0",
+      "registeredGitAndMobileBlobsVerified": 1413,
+      "sourceFingerprintWorktreeClean": true,
+      "all156IncomingRequirementsPreserved": true,
+      "requirements": 157,
+      "changedPathsExactlyEightSelected": [
+        "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "docs/catalog-persistence/reports/static-list-inventory.json",
+        "formal/system/event-finance-report-range.md",
+        "formal/system/inventory.json",
+        "formal/system/requirements.json",
+        "formal/system/traceability.json",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "whole1352CatalogDecisionsByteExactMain": {
+        "path": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sha256": "dfb05263f8744d61806b46ff4d2f7295c5ee65ef1e2df5fdd6fc4195792044fc"
+      },
+      "contractOutsideFingerprintSeparatelyBound": {
+        "path": "formal/system/event-finance-report-range.md",
+        "gitSha256": "18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf",
+        "discoverySha256": "18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf"
+      },
+      "backendOtherThanSelectedHandlerAndTestUnchanged": true,
+      "UI_Mobile_API_Workflows_Dependencies_SQL_Unchanged": true,
+      "scope": "Source correspondence only, not compiler/package attestation or runtime correctness."
+    },
+    "mutationControls": {
+      "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+      "executionMode": "ActualGHC9.10.3 nativeO0 isolatedhandlercontrols; canonicalCabalMbinary independentlyqualifiedbeforeandunchangedafter",
+      "results": [
+        {
+          "label": "correct-native-control",
+          "sourceSha256": "e840df1d1d7f817e71c610eb70d03165c3b83bf986466549de87703028cc9677",
+          "actualExit": 0,
+          "examples": 15,
+          "assertionFailures": 0,
+          "pending": 0,
+          "nativeControlBuildExit": 0,
+          "nativeControlBinarySha256": "060d19414c82414d576c332e10d42bf6f439f3898d4e3abb97c9a3572eae3abc",
+          "logSha256": "42a1729f337f2f85cd014a9c2d67c569a57da769f6c125ee1c1159cc5f4da24f"
+        },
+        {
+          "label": "omitted-source-aggregates",
+          "sourceSha256": "6b838fcd751c0fb27b7b95c075ebcf61c79d820b7638818470c8ae5a7d37096a",
+          "actualExit": 1,
+          "examples": 15,
+          "assertionFailures": 2,
+          "pending": 0,
+          "nativeControlBuildExit": 0,
+          "nativeControlBinarySha256": "e09484693ebe0063b5ffade21f91fbf37b032ea25a806d4acad1223d2faa63c7",
+          "logSha256": "22578cda9e929ce7d5085c50e63b8bd42eb6e36b602bfc22c98b1eb9d4070e42"
+        },
+        {
+          "label": "late-budget-check",
+          "sourceSha256": "89326cf627ec261dd6a6ded71e2eb9b30bf9c885eab215c07a03a2f77d8ce944",
+          "actualExit": 1,
+          "examples": 15,
+          "assertionFailures": 1,
+          "pending": 0,
+          "nativeControlBuildExit": 0,
+          "nativeControlBinarySha256": "e2ab1e31405821b56fa32d9105d2ec290c4a345c6abdd269a5f87f59156e3359",
+          "logSha256": "bc5b5ce056b0b3b851ebf3535eef28ef5e4defce0f4e4798cc7112a66ac752e9"
+        },
+        {
+          "label": "restored-native-control",
+          "sourceSha256": "e840df1d1d7f817e71c610eb70d03165c3b83bf986466549de87703028cc9677",
+          "actualExit": 0,
+          "examples": 15,
+          "assertionFailures": 0,
+          "pending": 0,
+          "nativeControlBuildExit": 0,
+          "nativeControlBinarySha256": "b950920e4ea0f63d2bc90fd487b6e16cbb64bde5b478e4e1624ace4a4bb0c024",
+          "logSha256": "9a420dca410c7ebe81c731b998711596e555753bed24d4aab58648732e3fbe92"
+        }
+      ],
+      "realMutantsDetected": 2,
+      "intendedMutationAssertionFailures": 3,
+      "allOriginalSourceBytesRestored": true,
+      "nativeQualifiedBinarySha256Unchanged": "cfaac0bfeffd5e0590d2b890cbd5fbb421340714ef280eceb35e4dfc9eea5d56",
+      "restoredNativeActualExit": 0,
+      "sourceClean": true,
+      "scope": "Finite test sensitivity, not complete mutation coverage or proof. Mutant native binaries are isolatedtest runners, not deployment artifacts; full mutation completeness is not claimed."
+    },
+    "independentReview": "reports/event-finance-report-range-2026-10-29/independent-review.txt",
+    "reviewScope": "Independent reasoning and raw/source receipt review; no separate independent runtime execution.",
+    "harnessFailuresRetained": [
+      "Initial PATH omitted the installed Stack binary: exit127 before build.",
+      "Initial typed test extractors selected wrong route groups: compile failure, no behavioral test result. Corrected source prefixes/coherent fixture links before actual baseline run.",
+      "Qualified input enumeration initially treated Git UTF8 path quoting as a literal path: stopped before compilation, corrected to NUL paths.",
+      "Optional bytecode control baseline triggered a GHC9.10.3 compiler panic before any assertion/mutation; driver failure retained, not an application failure. Native compiled isolated controls then provide actual sensitivity evidence."
+    ],
+    "scope": "Native Cabal full-suite binary and actual Servant handlers on SQLite fixtures; controls use separately compiled nativeO0 runner with the same GHC and sources. No runtime PostgreSQL/provider/HTTP transport/deployment qualification is claimed."
+  },
+  "regressionPrevention": {
+    "actualCasesRegisteredInExistingFullSuite": 15,
+    "baselineBehavioralFailuresDetected": 12,
+    "controlledSourceMutantsDetected": 2,
+    "intendedMutationAssertionFailures": 3,
+    "existingCIBackendSelection": "Changed handler/test select backend; captured source-selection receipt if present.",
+    "noAssertionsWeakenedOrDeadlinesIncreased": true,
+    "testDifferenceFromConfirmedBaseline": "Only removal of one extra EOF newline; exact baseline bytes preserved in archive.",
+    "allSourceAndQualifiedBinaryRestored": true
+  },
+  "formalAssurance": {
+    "sourceCommit": "eab96f0c861ee7aeecf2855141dffed3fe7f60e6",
+    "executionPassed": true,
+    "canonicalRequirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 157,
+      "NOT_APPLICABLE": 0
+    },
+    "canonicalImplementationRefinementUnproven": 314,
+    "missionWholeRequirementAssurance": "UNKNOWN for157 complete requirements; selected two finite properties TESTED.",
+    "existingConditionalSMTObligations": 11,
+    "newWholePlatformProofs": 0,
+    "releaseDecision": "BLOCKED",
+    "contractFingerprintLimitation": "Selected Markdown is absent from generic fingerprint; bound separately to exact Git and discovery SHA."
+  },
+  "scorecard": {
+    "selectedCriticalProperties": {
+      "total": 2,
+      "TESTED": 2,
+      "PROVEN": 0
+    },
+    "confirmedFailureFamilies": {
+      "mainOpen": 1,
+      "locallyCorrected": 1,
+      "integrated": 0
+    },
+    "regressions": {
+      "newCases": 15,
+      "baselineCounterexamples": 12,
+      "nativeMutationDetections": 2
+    },
+    "sourceEvidence": {
+      "registeredGitMobileInputsVerified": 1413,
+      "contractSeparatelyBound": true,
+      "mainRequirementsPreserved": 156,
+      "catalogDecisionsWholeFilePreserved": 1352
+    },
+    "architecture": "One shared signed range predicate; no schema/API/dependency/workflow change. No arbitrary correctness score."
+  },
+  "integration": {
+    "atReportCreation": "Not yet published; draft PR intended. Current-head hosted CI/review/latest-main composition/FIFO/20protectedcontexts required before integration.",
+    "merged": false,
+    "deployment": "UNVERIFIED",
+    "productionFinancialWrites": false,
+    "providerOperations": false,
+    "branchProtectionBypass": false
+  },
+  "separateArtist639Closure": {
+    "head": "7d30e8c3e976853b0945063bc95132c7651d414b",
+    "run": 40940006520,
+    "requiredContextsPassed": 20,
+    "persona": "643/0/22skip/0retry, rollout10 and discovery25; decoded archive SHA verified.",
+    "review": "APPROVEDtdfrecords5705432417 exact7d30; normal mergecd091a3c observed at22:13:49UTC, tree exactlyqualifiedhead.",
+    "merged": true,
+    "mergeCommit": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+    "qualificationScope": "Artist branch only; this hosted result does not qualify the new finance sourceM. Gallery recurrence risk remains despite passing sample;648 is separate gallery draft and651 separate refund."
+  },
+  "remainingRisks": [
+    "Current-source hosted backend/required checks and independent GitHub review/FIFO integration remain pending.",
+    "Twenty-one inherited optional native cases remain pending; no new complete proof.",
+    "Production PostgreSQL schema/extreme-input reachability, HTTP transport and provider behavior not newly tested.",
+    "Existing multiple-read snapshot/concurrency semantics and browser53-bit numeric precision remain outside scope.",
+    "Separate currency candidate: explicitly supported foreign-currency manual entries may be labeled with event currency in summaries; source evidence exists, real-handler reproduction pending. Preserve foreign-currency authoring; no invented FX conversion.",
+    "Original worker timeout cause remains UNKNOWN; diagnostics668 hosted backend pass does not qualify ticket-clock666 or this source."
+  ],
+  "currentMainAtReportCreation": "cd091a3c81d5ab70e175d339860fa1921ca1f0c3",
+  "nextHighestValueTask": "Normally compose finance source with merged639main, preserve qualifiedbackendcorrespondence, publish focused draft withfreshhostedCI/review/FIFO. Reproduce separatecurrencyreportcandidate.",
+  "archive": {
+    "path": "reports/event-finance-report-range-2026-10-29/evidence.tar.gz",
+    "sha256": "bf9a40d64572dc995e371ad2df16848f8a80b5adde10b658d379b71f501397c9",
+    "bytes": 1732484,
+    "innerFiles": 120,
+    "manifest": "reports/event-finance-report-range-2026-10-29/manifest.json",
+    "binding": "Archive and manifest are Git blobs; inner files are hash-bound archive members, not individually claimed Git blobs."
+  },
+  "createdAt": "2026-10-29T22:38:35.368342+00:00"
+}
