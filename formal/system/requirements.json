@@ -1662,6 +1662,93 @@
       ]
     },
     {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "ambiguity": [
+        "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
+        "Production release sequencing after the additive migration is not yet verified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+      },
+      "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
+      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
+      "observability": "No token in production receipts; retain migration identity and exact tested source.",
+      "formalModels": [],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-hq/test/integration/event_operations_http_fixture.sql",
+        "scripts/test-api-token-session-expiry-migration.sh",
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/social/test-http.sh",
+        "tdf-hq/test/integration/event_raci_browser_fixture.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "id": "ID-SESSION-004",
+      "title": "Interactive sessions expire on the server",
+      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
+      "actors": [
+        "session holder",
+        "expired or legacy session holder",
+        "service token holder"
+      ],
+      "preconditions": [
+        "Token row is active with an authenticatable label"
+      ],
+      "inputs": [
+        "Opaque bearer or cookie session token",
+        "SESSION_TOKEN_TTL_SECONDS",
+        "Database UTC clock"
+      ],
+      "state": {
+        "window": "api_token.issued_at_epoch, api_token.expires_at_epoch",
+        "time": "UTC epoch seconds; interactive expires=issued+ttl, half-open"
+      },
+      "allowedTransitions": [
+        "Login/signup/password change/recovery -> interactive token issued with window",
+        "Active token with now < expires -> authenticated",
+        "Service token without window -> authenticated"
+      ],
+      "forbiddenTransitions": [
+        "now >= expires -> authenticated",
+        "Interactive label without window -> authenticated",
+        "Expired bearer -> credential identification for password change",
+        "TTL > cookie Max-Age -> configuration accepted"
+      ],
+      "effects": [
+        "Issuance writes the window in the issuing transaction; denial has no side effects"
+      ],
+      "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
+      "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
+      "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
+      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
+      "implementation": [
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
+        "tdf-hq/sql/init_schema.sql",
+        "scripts/production-migrations.json",
+        "scripts/production-release.mjs",
+        "tdf-hq/src/TDF/Social/Session.hs"
+      ]
+    },
+    {
       "id": "SYS-BUILD-001",
       "title": "Single backend package authority",
       "statement": "Build and test the backend with the Stack-selected toolchain and hand-maintained Cabal package; the retired Hpack description must remain outside the active package.",
@@ -7477,7 +7564,7 @@
       "id": "EVT-FUNNEL-001",
       "title": "Observe the public ticket funnel without exporting private ticket data",
       "domain": "EVT",
-      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority. Every backend-created hosted payment session counts as initiation, including prepared, failed and confirmed-no-charge outcomes; initiation deduplicates per order/provider. Direct event and checkout landing UTMs replace stale campaign attribution before observation, without persisting private order paths or lookup parameters; disabled analytics stores no attribution.",
+      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority. Every backend-created hosted payment session counts as initiation, including prepared, failed and confirmed-no-charge outcomes; initiation deduplicates per order/provider. Direct event and checkout landing UTMs replace stale campaign attribution before observation, without persisting private order paths or lookup parameters; disabled analytics stores no attribution. When the TDF storefront is closed for an event (no approved price policy, no tiers, sold out), public surfaces never render an empty order form: they localise the server reason and, for imported events, link to the external ticket vendor recovered from the published description.",
       "authority": "User-approved event ticketing scope sections 9, 17, 28 and 39; existing privacy analytics boundary",
       "source": "docs/events/ticket-funnel-observations.md",
       "contract": "docs/events/ticket-funnel-observations.md",
@@ -7530,13 +7617,15 @@
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/utils/externalTicketing.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/utils/externalTicketing.test.ts"
       ],
       "formalModels": [],
       "verification": "React component tests exercise actual route boundaries; helper tests cover privacy, disabled client, storage errors and local deduplication.",
@@ -8996,7 +9085,7 @@
     {
       "id": "AUTH-ENTRY-002",
       "title": "Low-friction account entry that lands on Comunidad or the interrupted intent",
-      "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies.",
+      "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies. Inside social in-app browsers (Instagram, Facebook, Messenger, TikTok and generic WebViews), where Google Sign-In cannot use passkeys and is blocked, the entry surfaces replace the Google button with a hand-off to the system browser (Safari/Chrome link, copy link) and keep email + password available in place.",
       "authority": "product owner request after real-user mobile test (2026-10-07); product owner User Value Activation Sprint privacy/public-information review requirement (2026-10-26), following an isolated before-save disclosure counterexample",
       "domain": "AUTH",
       "actors": [
@@ -9058,7 +9147,9 @@
         "tdf-hq-ui/src/utils/authErrorMessage.ts",
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth/AccountName.hs",
-        "tdf-hq/tdf-hq.cabal"
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/utils/inAppBrowser.ts",
+        "tdf-hq-ui/src/components/InAppBrowserNotice.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9073,7 +9164,8 @@
         "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
         "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
-        "scripts/verify-google-account-name.py"
+        "scripts/verify-google-account-name.py",
+        "tdf-hq-ui/src/utils/inAppBrowser.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -14131,6 +14223,159 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Simulated diagnostics and source preservation tested; actual hosted Docker run and complete implementation/refinement remain separate."
+      }
+    },
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001",
+      "title": "Persist configured validity on new legacy package purchases",
+      "statement": "New package purchases snapshot positive product validity as stored purchase time plus elapsed days; absent validity stays nonexpiring; nonpositive configuration is refused without inserting a purchase.",
+      "domain": "ORD",
+      "authority": "docs/Manual_Usuario_TDF.md Paquetes de Clases; shipped Guitar24h120day seed; explicit owner decisions2026-10-30 purchase-time elapsed days and refuse nonpositive validity.",
+      "source": "formal/system/package-purchase-expiry.md",
+      "contract": "formal/system/package-purchase-expiry.md",
+      "property": "Positive n implies expiresAt = purchasedAt + n*86400seconds; Nothing implies no expiry; Just n<=0 implies409 and no row. Preserve existing reference/module/inactive checks and purchase fields.",
+      "actors": [
+        "Authorized legacy package operator",
+        "Package buyer"
+      ],
+      "preconditions": [
+        "Existing module authorization and reference validity",
+        "Product active",
+        "Elapsed duration fits deployed database timestamp range"
+      ],
+      "inputs": [
+        "buyerId",
+        "productId",
+        "Current product expiresDays"
+      ],
+      "state": {
+        "initial": "Validated new purchase request",
+        "terminal": [
+          "Persisted new purchase with snapshotted terms",
+          "Existing reference/permission refusal",
+          "Invalid validity configuration refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate existing references and active state",
+        "Refuse nonpositive validity before insert",
+        "Persist positive validity using stored purchasedAt",
+        "Keep absent validity nonexpiring"
+      ],
+      "forbiddenTransitions": [
+        "Discard positive product validity",
+        "Use a second clock for expiry anchor",
+        "Interpret days as seconds",
+        "Create a row while refusing invalid validity",
+        "Rewrite historical purchases to simulate correctness"
+      ],
+      "effects": [
+        "One new package purchase on successful admission; none on refusal"
+      ],
+      "authorization": "Existing ModulePackages guard unchanged; no new ownership/payment/gift policy inferred.",
+      "privacy": "Owned synthetic SQLite buyers/products only; no production financial records.",
+      "concurrency": "Existing product-read/insert transaction behavior retained; no new lock or temporal snapshot guarantee.",
+      "idempotency": "Existing duplicate purchase behavior unchanged; no new payment or retry contract.",
+      "failure": "Existing400/403/409/422 precedence retained; invalid configured validity returns409 before insert.",
+      "recovery": "Correct product configuration before retry; do not rewrite historical purchases under this change.",
+      "observability": "Native typed-handler/persisted-row regressions and controlled source mutations.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real pooled SQLite Handler cases, source fault controls and canonical Stack full-suite qualification; no complete proof.",
+      "evidence": "formal/system/package-purchase-expiry.md; reports/package-purchase-expiry-2026-10-30.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Actual finite-term omission reproduced; exact timing and invalid-term handling explicitly owner-authorized.",
+      "ambiguity": [
+        "Database timestamp-range admission for extremely large durations remains separate.",
+        "Payment/actor/gift/redemption and historical records unchanged.",
+        "No production PostgreSQL trigger/authenticatedHTTP/deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite Handler tests; complete implementation/refinement and deployment correspondence unproven."
+      }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001",
+      "title": "Exact browser event-finance cents or explicit refusal",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Event-finance summary, budget and entry reads and CSV exports refuse non-null monetary values that are not JavaScript safe-integer cents. Safe signed cents display without a floating-point division by100 while preserving locale and default ISO currency fraction rounding.",
+      "authority": "Owner financial-integrity mandate; existing cents DTO contracts, signed finance balances, locale formatter and CSV raw-cent columns. Existing UI authoring already requires safe integer inputs.",
+      "source": "formal/system/event-finance-browser-precision.md",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "property": "For every admitted non-null Cents field x, Number.isSafeInteger(x). For signed safe cents c, display is locale currency formatting of the exact rational c/100 rounded to the currency default fraction digits. No lossy monetary value reaches a successful finance read or CSV row. CSV requires successful independent list data; failed/pending lists cannot silently become empty report inputs.",
+      "actors": [
+        "Authorized event manager",
+        "Browser finance report reader"
+      ],
+      "preconditions": [
+        "Existing event API authorization and integer-cent backend contract",
+        "Modern supported browsers provide Intl.NumberFormat BigInt formatToParts",
+        "Finance DTO monetary fields retain their Cents suffix; optional null/undefined retain existing meanings"
+      ],
+      "inputs": [
+        "Decoded summary, budget and finance-entry DTO monetary fields",
+        "Signed safe integer cents, optional values, configured locale and ISO currency"
+      ],
+      "state": {
+        "read": "Decoded transport or cached finance data",
+        "terminal": [
+          "Validated finance data / exact display / CSV rows",
+          "Query failure, unavailable amount or export error"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate each finance read before exposing it",
+        "Validate cached monetary data before building CSV rows",
+        "Separate integer whole and fraction units before locale presentation"
+      ],
+      "forbiddenTransitions": [
+        "Display or export rounded unsafe decoded cents as valid monetary evidence",
+        "Divide safe cent magnitudes by100 in binary floating point before display",
+        "Export a partial CSV after monetary precision refusal"
+      ],
+      "effects": [
+        "Read-only report presentation and CSV export; no backend financial restriction or monetary wire migration"
+      ],
+      "authorization": "Existing event authorization unchanged; validation grants no additional access.",
+      "privacy": "Synthetic fixtures only; no provider or customer data in receipts.",
+      "concurrency": "Validate each returned/cached object independently; no serializable multi-query financial snapshot claim.",
+      "idempotency": "No provider calls or automatic mutation retries. Equal values and locale/currency inputs produce equal report formatting.",
+      "failure": "Unsafe finance data rejects the query or export; existing query warnings and explicit export feedback remain. Unrepresentable displayed prices show Monto no disponible. Missing prices retain Gratis.",
+      "recovery": "Correct source values through authorized workflows or implement an independently reviewed exact monetary wire/client migration. Never clamp or rewrite financial records to make the UI accept them.",
+      "observability": "Retain baseline assertion failures, targeted/full UI logs, independent source faults, source fingerprints and exact-commit evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven Jest tests of actual API getters, extracted unchanged CSV builder and formatter; finite locale/currency differential checks, actual source-fault controls, UI type/lint/build and CI. TESTED, no complete refinement proof.",
+      "evidence": "formal/system/event-finance-browser-precision.md; exact-source execution reports remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped executable evidence; no complete implementation proof or deployed acceptance claim.",
+      "ambiguity": [
+        "Foreign currency attribution and backend aggregation/transaction consistency are independent obligations.",
+        "Safe values already rounded by an upstream producer cannot be detected without a wire migration.",
+        "Production exposure of extreme amounts and all browser/locale combinations remain unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite implementation tests; complete refinement and deployed browser/API correspondence remain unproven."
       }
     },
     {
