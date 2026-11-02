@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-refund-completion",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
+  "baselinePullRequest": 651,
+  "sourceCommit": "14ec243c7e7e220e516f2ab48f4f94fa76281aab",
+  "scope": "Legacy Stripe completion evidence follow-up, stacked on the unmerged execution-fence correction; not a production release or full workflow proof",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-03",
+    "priority": "P0",
+    "category": "implementation defect / financial integrity",
+    "consequence": "Responses with a refund ID could mark money refunded and revoke all tickets/release inventory even when status was pending or the response named different money or PaymentIntent",
+    "status": "corrected-tested-awaiting-protected-integration"
+  },
+  "invariants": [
+    {
+      "id": "PAY-STRIPE-REFUND-COMPLETION-001",
+      "statement": "Only a succeeded refund object with exact requested positive amount, expected lowercase currency and expected PaymentIntent may complete a legacy refund.",
+      "requirement": "EVT-TICKET-001",
+      "assurance": "TESTED",
+      "evidence": "reports/refund-completion-2026-10-28/handler-cases.txt"
+    },
+    {
+      "id": "PAY-STRIPE-REFUND-OBSERVATION-001",
+      "statement": "An observed valid provider ID survives unverified evidence and failed completion, but cannot replace a different recorded ID or itself authorize completion.",
+      "requirement": "EVT-TICKET-001",
+      "assurance": "TESTED",
+      "evidence": "reports/refund-completion-2026-10-28/handler-cases.txt"
+    },
+    {
+      "id": "PAY-STRIPE-REFUND-ATOMIC-COMPLETION-001",
+      "statement": "Request completion and historical ticket/inventory projections commit together; failure preserves the prior processing fence and observed ID.",
+      "requirement": "EVT-TICKET-001",
+      "assurance": "TESTED",
+      "evidence": "reports/refund-completion-2026-10-28/handler-cases.txt"
+    }
+  ],
+  "authority": {
+    "contract": "formal/system/legacy-stripe-refund-completion.md",
+    "externalContract": "https://docs.stripe.com/api/refunds/object?api-version=2026-04-22.dahlia",
+    "projectApiVersion": "2026-04-22.dahlia"
+  },
+  "implementation": [
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "regressionTests": [
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+  ],
+  "formalModels": [
+    "scripts/__tests__/ticket-admission-model.test.mjs"
+  ],
+  "verification": {
+    "baseline": {
+      "examples": 48,
+      "failures": 40,
+      "falseCompletions": 36,
+      "remainingFailures": "Four malformed-ID/non-object cases returned HTTP500 instead of the required upstream-evidence502",
+      "implementationSource": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
+      "note": "Initial baseline precedes seven later-added edge cases; do not relabel as a 55-case failing run"
+    },
+    "initialCorrected": {
+      "examples": 48,
+      "failures": 0
+    },
+    "finalHandlerCases": 55,
+    "finalHandlerResult": {
+      "assurance": "TESTED",
+      "examples": 55,
+      "failures": 0,
+      "execution": "Actual full Stack test run, not a separately claimed 55-case command"
+    },
+    "boundedDesign": {
+      "assurance": "BOUNDED_VERIFIED",
+      "inputs": 224,
+      "statuses": 7,
+      "independentBinaryFields": 5,
+      "states": 560,
+      "transitions": 896,
+      "completedInputs": 1,
+      "heldInputs": 223,
+      "unsafeGuardControls": 6,
+      "heldInventoryControl": 1,
+      "retryPostControl": 1,
+      "nodeSuiteTests": 13,
+      "failures": 0,
+      "scope": "Bounded design abstraction; not Haskell/SQL refinement, actual provider authenticity, recovery, or partial-allocation proof"
+    },
+    "tests": [
+      {
+        "name": "repository quality",
+        "result": "PASS",
+        "platformSkips": 11
+      },
+      {
+        "name": "generated API clients",
+        "result": "PASS",
+        "clients": 2,
+        "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72"
+      },
+      {
+        "name": "compiled API declaration snapshot",
+        "result": "PASS",
+        "operations": 913,
+        "remainingUndocumented": 396,
+        "documentedWithoutTypedRoute": 25,
+        "competing": 0,
+        "statusDifferences": 8,
+        "scope": "Snapshot consistency, not complete API conformance"
+      },
+      {
+        "name": "verification reporter controls",
+        "tests": 27,
+        "result": "PASS"
+      },
+      {
+        "name": "specification conformance controls",
+        "tests": 10,
+        "result": "PASS"
+      },
+      {
+        "name": "specification inventory controls",
+        "tests": 6,
+        "result": "PASS"
+      },
+      {
+        "name": "specification inventory and traceability --check",
+        "result": "PASS"
+      },
+      {
+        "name": "catalog JSON and CSV auditors",
+        "result": "PASS",
+        "preservedParentNormativeDecisions": 1351,
+        "newSourceReviewedModelConstant": 1
+      },
+      {
+        "name": "immutable new-source admission",
+        "base": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
+        "head": "14ec243c7e7e220e516f2ab48f4f94fa76281aab",
+        "mappedChangedSurfaces": 3,
+        "result": "PASS"
+      }
+    ],
+    "proofs": [
+      {
+        "name": "existing conditional source-derived SMT obligations",
+        "result": "11 PROVEN within existing translator assumptions",
+        "scope": "4 arithmetic + 3 authorization + 4 recovery obligations; no new refund-handler proof"
+      },
+      {
+        "name": "full system obligations",
+        "requirements": {
+          "UNPROVEN": 154
+        },
+        "implementation": {
+          "UNPROVEN": 154
+        },
+        "refinement": {
+          "UNPROVEN": 154
+        },
+        "release": "BLOCKED"
+      }
+    ],
+    "sourceHashes": {
+      "docs/catalog-persistence/catalog-list-decisions.json": "a21dcad6092cdaa8213f12373dc2c47efae00e48f4adb60826a0ce2b6e834844",
+      "formal/system/requirements.json": "27fc4a1a9d00ed0cd709f362acfbec39859a8250d06a77010e85950691e692d1",
+      "scripts/__tests__/ticket-admission-model.test.mjs": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "f091c8d3ed6238940adb125e6d08a2c5e30d0f80b4370d88944b6df37d0c9e25",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4"
+    },
+    "independentReview": "Independent read-only review found no blocker for the scoped validator, observed-ID conditional update and rollback boundary; required GitHub review remains separate.",
+    "fullBackend": {
+      "command": "TDF_PROVIDER_RETRY_DATABASE_URL=<isolated-local-fixture> stack test tdf-hq --jobs 2 --test-arguments='--seed=20261028 +RTS -N2 -RTS'",
+      "toolchain": "Stack lts-24.42 / GHC 9.10.3",
+      "cwd": "tdf-hq",
+      "migrations": 227,
+      "freshDatabase": true,
+      "examples": 4417,
+      "failures": 0,
+      "pending": 21,
+      "pendingNotPostgresPass": true,
+      "stackExitCode": 0
+    },
+    "sourceDigest": "49a0ef73a047f2a68bbed3a9e43fdfc3c938220e9f2cedc9853f1c211414fa85",
+    "sourceCount": 1408,
+    "sourceBinding": "Execution manifest matches all1408 files in committed source14ec243c7 and its pinned Mobile tree; clean committed-source reporter and source-admission replay passed. Embedded build Git metadata may name the execution parent; this is source-hash correspondence, not a reproducible-build attestation.",
+    "evidenceArchives": {
+      "execution-receipts.tar.gz": "98d05742b87c84d2b1398c16655654217303d8b8438d34dbb21b1482c5688781",
+      "committed-source-assurance.tar.gz": "2b93d1eef2863adfdaf4900fab73a9ceffec9445409cb7a7e21c341ac9fd28e3",
+      "handler-cases.txt": "9c9aac62ece7ef6fa9f2166004f950bdf7d199b80c6c841fb72ddeccb1b554ae",
+      "execution-sources.json": "d6cf5e4f2b6f18ffc7c05c5d57baebce44de9823b5b36ed842f05a741a8d6507",
+      "source-seal.json": "d902975b5231b71880ca038d1e15cc562e384bb3cf25be3bbaf8e6abde047b7e",
+      "assurance-receipts.tar.gz": "cc4ddacc10547c3199b137d70fd089bd99bcaf2dbbb19ff93d356c1db949b748",
+      "used-database-diagnostic.tar.gz": "c06919e5301a1dff9997f06c6b306fa316e63208062811e1b2593ca8dcb5f812"
+    },
+    "regressionProtection": {
+      "backend": ".github/workflows/ci.yml backend lane creates a fresh provider-retry DB and executes scripts/test-provider-retry-runtime.sh, whose match includes these actual-handler cases",
+      "model": "scripts/__tests__/ticket-admission-model.test.mjs runs under repository quality",
+      "noVerificationWeakening": true,
+      "unchangedOtherRequirements": 153,
+      "unchangedParentCatalogNormativeRows": 1351
+    },
+    "invalidRepeatRun": {
+      "command": "Direct compiled Hspec repeat against the already-used fixture",
+      "examples": 4417,
+      "failures": 11,
+      "pending": 21,
+      "legacyRefundCases": {
+        "examples": 55,
+        "failures": 0
+      },
+      "qualification": "INVALID for fresh-fixture suite assurance; retained as diagnostic, not suppressed or counted as a pass",
+      "diagnosis": "Reconciliation and query queues already populated; fixed synthetic provider IDs, token hash and idempotency references collide with previous run. The canonical runtime runner explicitly requires an empty DB and CI creates it freshly. No test or implementation was changed to silence these failures.",
+      "canonicalPreconditionSource": "scripts/test-provider-retry-runtime.sh",
+      "receipt": "reports/refund-completion-2026-10-28/used-database-diagnostic.tar.gz"
+    },
+    "completeSourceManifest": "reports/refund-completion-2026-10-28/execution-sources.json",
+    "committedSourceSeal": "reports/refund-completion-2026-10-28/source-seal.json"
+  },
+  "remainingRisks": [
+    {
+      "id": "TDF-CORRECTNESS-20261028-02",
+      "priority": "P0",
+      "finding": "confirmed-source",
+      "statement": "Legacy partial refunds still apply the whole-order ticket and inventory projection."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-06",
+      "priority": "P0",
+      "finding": "confirmed-source",
+      "statement": "Legacy issued tickets remain usable during uncertain refund processing; admission and transfer fencing need separate verification."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-07",
+      "priority": "P0",
+      "finding": "confirmed schema/source",
+      "statement": "The complete227 migration schema has no nonnegative quantity_sold CHECK on event_ticket_tier, and the legacy completion decrement has no nonnegative predicate. The synthetic bigint failure tests rollback only; they do not verify nonnegative inventory.",
+      "evidence": "Private read-only pg_constraint receipt SHA256 6bdc08c541b9c6946af1963f9d62a4361670c8d49a92bf27b93225f8a2011e13"
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-04",
+      "priority": "P0",
+      "finding": "hypothesis",
+      "statement": "Concurrent distinct legacy refund creation may allocate multiple requests for one order; needs a current-schema counterexample."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-08",
+      "priority": "P0",
+      "finding": "scope limitation",
+      "statement": "Legacy expected PI/currency/order fields are a stored snapshot; their immutability and current actor authority across provider IO are not established by this correction."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-05",
+      "priority": "P1",
+      "finding": "confirmed in previous cycle",
+      "statement": "Course/service quotes can round a required deposit to zero; reject the zero result without increasing contractual money."
+    }
+  ],
+  "assumptions": [
+    "Provider callback represents authenticated transport using the configured merchant key; not proven by synthetic tests",
+    "No expanded PaymentIntent was requested",
+    "Expected original order/request snapshot remains valid; source current-field mutation and authority fencing remain separate obligations",
+    "No old writer, operator reset or stale database restore reopens processing",
+    "A held observed ID remains investigative evidence; future reconciliation must re-establish original payment/account/environment/money bindings"
+  ],
+  "integration": {
+    "state": "stacked-draft-awaiting-parent-current-main-composition-hosted-CI-and-required-review",
+    "baseBranch": "fix/correctness-cycle-20261028",
+    "pullRequest": 652,
+    "parentPullRequest": 651,
+    "parentUnmerged": true,
+    "merged": false,
+    "deployed": false,
+    "queuePreserved": true,
+    "observedMain": "8250081de10fd21b4854be8736080bbcfd97bfab",
+    "parentGate": "Approved exact head 7b987d99; hosted CI 40645529695 success; main-integration-admission pending behind PR631. Final current-main composition required."
+  },
+  "scorecard": {
+    "method": "Counts scoped failure modes and evidence only, not changes or arbitrary scores",
+    "confirmedDefectsCorrected": 1,
+    "confirmedDefectsIntegrated": 0,
+    "criticalInvariantsSpecified": 3,
+    "pullRequestsCreated": 1,
+    "pullRequestsMerged": 0,
+    "criticalInvariantsByAssurance": {
+      "TESTED": 3
+    },
+    "boundedDesignInvariants": 3,
+    "newWholeWorkflowProofs": 0
+  },
+  "nextTask": "Establish legacy partial-refund fulfillment/accounting rules and prevent invalid inventory release; preserve processing and observed evidence."
+}

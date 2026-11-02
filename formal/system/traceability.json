@@ -4789,7 +4789,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4840,7 +4840,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4909,7 +4909,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -14457,6 +14457,88 @@
       "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
       "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
       "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
+    },
+    {
+      "id": "SYS-UI-TEST-WORKER-001",
+      "title": "Serial UI qualification recycles retained worker heap and preserves every test result",
+      "domain": "SYS",
+      "critical": true,
+      "authority": "Required UI quality execution and observed hosted heap abort; pinned Jest worker contract",
+      "contract": "formal/system/ui-test-worker-memory.md",
+      "source": "formal/system/ui-test-worker-memory.md",
+      "status": "specified and implemented",
+      "confidence": "Controlled actual-command tests plus full local UI qualification; no hard process/single-file memory bound or universal proof",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "WorkerUIcomponent has hostedNode22 5guards/328suites/3799tests PASS on8b. Newjointsource includesquiet-outputguardfollowup verifiedlocally inordinary/quietenvironments; fulljoinedhostedqualification pending."
+      },
+      "statement": "The default UI qualification command must run selected test files serially through one recyclable worker slot, preserve selection/assertions/timeouts, and report failure for any failed assertion or unrecoverable worker execution.",
+      "actors": [
+        "Repository contributor",
+        "UI quality runner",
+        "Jest worker"
+      ],
+      "preconditions": [
+        "Pinned Jest dependencies are installed.",
+        "Default CI test command runs without explicit in-band/debug overrides."
+      ],
+      "inputs": [
+        "Workspace test command",
+        "Jest configuration",
+        "Selected test files",
+        "Worker execution/memory observations"
+      ],
+      "state": {
+        "validation": [
+          "queued",
+          "running",
+          "passed",
+          "failed"
+        ],
+        "worker": [
+          "idle",
+          "executing",
+          "recycled",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Run every selected file serially through worker slot1.",
+        "Recycle an over-budget worker between files while preserving completed results.",
+        "Report failed assertions and exhausted worker failures as failed qualification."
+      ],
+      "forbiddenTransitions": [
+        "Force default CI in-band execution that bypasses idle worker recycling.",
+        "Skip selected files or relax assertions/timeouts to obtain green evidence.",
+        "Treat unresolved worker failure or an incomplete final suite as passing evidence."
+      ],
+      "effects": [
+        "Complete failure-aware test results and source-bound qualification evidence"
+      ],
+      "authorization": "Only the normal test harness executes synthetic local fixtures; no provider or production financial operation is part of this requirement.",
+      "privacy": "Jest capture may include private reporter options: capture/parse errors must never echo stdout, stderr or JSON snippets; only typed worker-policy fields are exposed to assertions. Test with synthetic markers, never a real credential.",
+      "concurrency": "One worker slot preserves serial suite scheduling; a recycled process may replace it between files.",
+      "idempotency": "Separate attempts retain independent source/outcome evidence; retries are not earlier passing evidence.",
+      "failure": "Failed assertions, exhausted worker startup/process retries and incomplete final results block qualification. Pinned Jest may retry unexpected worker crashes; no first-fault/transient-crash theorem is claimed.",
+      "recovery": "Repair source/configuration and requalify changed inputs while retaining failed evidence.",
+      "observability": "Record source SHA, actual command, exit code, selected/completed counts, worker slot/PID controls and limitations.",
+      "verification": "Actual defaultCLI configuration, controlled PID fixtures, forced-in-band negative control, productionidlelimit removal mutation, deliberate failed assertion and persistent worker crash; unchangedfull UI suite and fresh hosted qualification. Defaultconfiguration capture must work with both ordinary npm banners and silent JSON output. Confidentiality faults cover failed capture, missing/malformed JSON and invalid typedworker fields.",
+      "property": "A completed over-budget worker is not reused for the next file; all selected files have terminal results; failed assertions and exhausted worker failures yield nonzero exit.",
+      "implementation": [
+        "tdf-hq-ui/package.json",
+        "tdf-hq-ui/jest.config.cjs",
+        "scripts/quality-ui.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/ui-worker-memory.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "The1GiBidle budget is an operational choice, not a theorem or business requirement.",
+        "The worker boundary does not bound single-file/parent/OS memory or identify the underlying retention source.",
+        "Pinned Jest permits up to3 retries after unexpected worker crashes. Transientcrash first-attempt failure is not established; persistentcrash control requires terminalfailure and otherfiles complete."
+      ],
+      "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending. Followupquietmodecounterexample on8b:4PASS/1configparserFAIL; header-independent reader and explicitnotice/silent variants pass all5guards with both ordinary and quietparent environments. Product/workerconfig unchanged; joinedheadhostedqualificationpending. The8bquietfailure echoedasyntheticreporter token. Followup parser emitsgenericerrors and returns onlytypedworkersettings; sixguardcases include confidentiality faults. No realcredentialorreporter service was used in this probe."
     }
   ],
   "sourceFingerprints": {
@@ -14474,7 +14556,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "d2f0d93e750ad47a99fd9d426004d4069d31d808870c64133bfe0d4fd21665da",
+    "docs/catalog-persistence/catalog-list-decisions.json": "597bd59e2b06ed382d9b2f296bee82ad19c69464f9bb722197b210b684fa2587",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14916,8 +14998,9 @@
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
     "scripts/__tests__/test-child-completion.test.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
-    "scripts/__tests__/ticket-admission-model.test.mjs": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a",
+    "scripts/__tests__/ticket-admission-model.test.mjs": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
+    "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
@@ -14991,6 +15074,7 @@
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "6171954f6314882c0d68232a7fbd1e1faf080d1555bfdfdde70e38cf888bdcf1",
+    "scripts/quality-ui.sh": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -15137,8 +15221,8 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
-    "tdf-hq-ui/jest.config.cjs": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
-    "tdf-hq-ui/package.json": "ca24e657486cbffd37a60f196f273a87b1a00d70a3064b237de293408254065d",
+    "tdf-hq-ui/jest.config.cjs": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
+    "tdf-hq-ui/package.json": "c5775b009397ad7f8e873c032fafdea5a2242cc1c6fb5888b383955633b09382",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
@@ -15764,7 +15848,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "7c72fcdee0f4222c1e9983d36e257fca2f6c4a7e7622306c8b870b47f2918b74",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "c2d7ab6cd9a02369b1c77e6936aa79cc0de8a393bff2fee2621e2f3c02fabbea",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -15802,7 +15886,7 @@
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -18970,6 +19054,10 @@
       },
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
         "relationship": "implementation"
       }
     ],
@@ -28273,6 +28361,10 @@
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/browser-vendor.test.mjs": [
@@ -28290,6 +28382,18 @@
     "e2e/web/webtorrent-browser.spec.mjs": [
       {
         "requirement": "SYS-WEBTORRENT-BROWSER-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/quality-ui.sh": [
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/ui-worker-memory.test.mjs": [
+      {
+        "requirement": "SYS-UI-TEST-WORKER-001",
         "relationship": "tests"
       }
     ]
@@ -30748,7 +30852,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a",
+      "sha256": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30779,6 +30883,18 @@
       "sha256": "952e9c7fae5dc7697bc2b65c455db2545e59f6c99509cd74e57e422ff49e8e4e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-9c653300b0234205",
+      "path": "scripts/__tests__/ui-worker-memory.test.mjs",
+      "sha256": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c000c38c68fca4c6",
@@ -32486,9 +32602,14 @@
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "sha256": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-14ce85c394623bc5",
@@ -35584,11 +35705,15 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
+      "sha256": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEBTORRENT-BROWSER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -35603,7 +35728,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "ca24e657486cbffd37a60f196f273a87b1a00d70a3064b237de293408254065d",
+      "sha256": "c5775b009397ad7f8e873c032fafdea5a2242cc1c6fb5888b383955633b09382",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35612,6 +35737,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-UI-TEST-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -50938,7 +51067,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7c72fcdee0f4222c1e9983d36e257fca2f6c4a7e7622306c8b870b47f2918b74",
+      "sha256": "c2d7ab6cd9a02369b1c77e6936aa79cc0de8a393bff2fee2621e2f3c02fabbea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51914,7 +52043,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+      "sha256": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56962,7 +57091,6 @@
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-bac1f41447e33768",
-    "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
     "SURFACE-173452b4342d16ba",
     "SURFACE-39275efbaea5cb7e",
@@ -58466,7 +58594,8 @@
     "WEB-CONTENT-001",
     "PAY-EVENT-REPORT-RANGE-001",
     "PKG-PURCHASE-EXPIRY-001",
-    "UI-EVENT-FINANCE-PRECISION-001"
+    "UI-EVENT-FINANCE-PRECISION-001",
+    "SYS-UI-TEST-WORKER-001"
   ],
   "stateMachines": [
     {
@@ -59585,7 +59714,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "df75037edd5b790195cff5f33f7206d71373deb71b43a2f13d1afea062627b0a",
+      "sourceSha256": "471b38f8b449f7da18f6b6f7c876f6b7bc12a9db39d274a0001b34ee113067bf",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -59613,7 +59742,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "df75037edd5b790195cff5f33f7206d71373deb71b43a2f13d1afea062627b0a",
+      "sourceSha256": "471b38f8b449f7da18f6b6f7c876f6b7bc12a9db39d274a0001b34ee113067bf",
       "definition": {
         "states": [
           "absent",
@@ -59643,7 +59772,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "df75037edd5b790195cff5f33f7206d71373deb71b43a2f13d1afea062627b0a",
+      "sourceSha256": "471b38f8b449f7da18f6b6f7c876f6b7bc12a9db39d274a0001b34ee113067bf",
       "definition": {
         "export": [
           "queued",
@@ -82130,7 +82259,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 169,
+    "PARTIAL": 170,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
