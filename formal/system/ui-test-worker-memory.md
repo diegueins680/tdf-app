@@ -26,18 +26,31 @@ Under the documented Jest behavior, when a completed file's idle memory exceeds
 the configured limit, its process must not execute the next file. This is a
 conditional implementation contract, not a theorem about the operating system,
 the parent process, arbitrary files, garbage collection or total resident memory.
-An individual file can exceed the budget before its boundary. An in-file fatal
-error, a worker startup error or exhausted retries must still fail qualification.
+An individual file can exceed the budget before its boundary. Exhausted worker
+retries and failed assertions must still fail qualification. The pinned
+[Jest runner](https://github.com/jestjs/jest/blob/v30.2.0/packages/jest-runner/src/index.ts)
+allows up to three worker retries after unexpected process failures;
+this change does not claim that a transient internal crash always fails the
+first attempt. The persistent-crash fixture verifies exhausted-retry failure,
+and the normal fixture run must complete every selected file.
 Explicit developer debugging overrides such as `--runInBand` are outside the
 default CI command contract and cannot count as recycling evidence.
 
-Regression checks invoke the actual workspace command with dependency-free
+Regression checks first inspect the actual default workspace command's normalized
+Jest configuration: in-band execution must be disabled, there must be one worker
+slot and the 1 GiB budget must be active. This check is separate from the scaled
+fixture: overriding the fixture limit alone cannot detect a missing production
+limit. Controlled removal of that production setting must fail the guard.
+
+The behavior checks invoke the actual workspace command with dependency-free
 CommonJS fixtures and a controlled 1 KiB threshold. They require three distinct
 execution PIDs through worker slot 1, all three file results and no pending tests.
 A negative control forces the previous in-band behavior and observes one PID.
 A second negative fixture contains a real failing assertion: all three files must
 report results and the process must exit with failure. The scaled fixture tests
 recycling and failure preservation without allocating a large heap.
+A persistently crashing fixture must also yield a failed file result after the
+framework's worker retries, while the other two files complete successfully.
 
 Assurance is `TESTED` for these controlled fixtures. Full-suite and hosted Node 22
 qualification require separate revision-bound evidence. No application test,

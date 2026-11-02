@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-02T02:25:04.144Z",
+  "generatedAt": "2026-11-02T03:50:04.172Z",
   "repositoryRoot": ".",
-  "filesScanned": 2479,
+  "filesScanned": 2480,
   "candidateCount": 1368,
   "byClassification": {
     "dynamic-business-catalog": 887,
@@ -4450,7 +4450,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1111,
+      "consumerCount": 1112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4738,7 +4738,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1111,
+      "consumerCount": 1112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -7685,7 +7685,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1111,
+      "consumerCount": 1112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -32707,7 +32707,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 478,
+      "consumerCount": 479,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32890,6 +32890,7 @@
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/__tests__/ui-worker-memory.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -32913,8 +32914,7 @@
         "scripts/lib/music_payment_conformance.py",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
-        "scripts/lib/public_routes_conformance.py",
-        "scripts/lib/whatsapp_consent_conformance.py"
+        "scripts/lib/public_routes_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -40611,7 +40611,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 459,
+      "consumerCount": 460,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40794,6 +40794,7 @@
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/__tests__/ui-worker-memory.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -40817,8 +40818,7 @@
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
         "scripts/lib/public_routes_conformance.py",
-        "scripts/lib/whatsapp_consent_conformance.py",
-        "scripts/load-payment-test-schema.sh"
+        "scripts/lib/whatsapp_consent_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -54035,7 +54035,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1134,
+      "consumerCount": 1135,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -54395,7 +54395,7 @@
       "lines": [
         311
       ],
-      "consumerCount": 1043,
+      "consumerCount": 1044,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -55868,7 +55868,7 @@
       "lines": [
         403
       ],
-      "consumerCount": 1114,
+      "consumerCount": 1115,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -62822,7 +62822,7 @@
       "lines": [
         1057
       ],
-      "consumerCount": 335,
+      "consumerCount": 336,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/interactions.yaml",
@@ -62973,6 +62973,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/__tests__/ui-worker-memory.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/catalog-list-audit.mjs",
@@ -63007,8 +63008,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/merge-admission.py",
         "scripts/mobile-publishing-admin-audit.sh",
-        "scripts/operations-load-test.mjs",
-        "scripts/persona-test-program.mjs"
+        "scripts/operations-load-test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -68266,7 +68266,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1119,
+      "consumerCount": 1120,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -86604,7 +86604,7 @@
       "lines": [
         14164
       ],
-      "consumerCount": 1112,
+      "consumerCount": 1113,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -87618,7 +87618,7 @@
       "lines": [
         14566
       ],
-      "consumerCount": 1112,
+      "consumerCount": 1113,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -89683,7 +89683,7 @@
         17027,
         17079
       ],
-      "consumerCount": 1111,
+      "consumerCount": 1112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -91834,7 +91834,7 @@
       "lines": [
         18616
       ],
-      "consumerCount": 1119,
+      "consumerCount": 1120,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -158258,7 +158258,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1111,
+      "consumerCount": 1112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",

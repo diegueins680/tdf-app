@@ -8,13 +8,14 @@ import { test } from 'node:test';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const CONTROLLED_WORKER_LIMIT_BYTES = 1024;
+const DEFAULT_WORKER_LIMIT_BYTES = 1024 ** 3;
 
 /**
  * @precondition the actual UI workspace test command and installed Jest are available.
  * @invariant only disposable local CommonJS fixtures execute; no application or provider is called.
  * @postcondition the receipt includes every fixture result and the PID that actually executed it.
  */
-function runFixture({ forcedInBand = false, failedSuite = false } = {}) {
+function runFixture({ forcedInBand = false, failedSuite = false, fatalSuite = false } = {}) {
   const fixture = realpathSync(mkdtempSync(join(tmpdir(), 'tdf-ui-worker-memory-')));
   const events = join(fixture, 'events.jsonl');
   const result = join(fixture, 'result.json');
@@ -45,6 +46,7 @@ function runFixture({ forcedInBand = false, failedSuite = false } = {}) {
         test(${JSON.stringify(name)}, () => {
           require('node:fs').appendFileSync(${JSON.stringify(events)},
             JSON.stringify({ suite: ${JSON.stringify(name)}, pid: process.pid, worker: process.env.JEST_WORKER_ID }) + '\\n');
+          ${fatalSuite && name === 'middle' ? 'process.exit(1);' : ''}
           expect(${JSON.stringify(failedSuite && name === 'middle' ? 'failure' : 'pass')}).toBe('pass');
         });
       `);
@@ -60,15 +62,33 @@ function runFixture({ forcedInBand = false, failedSuite = false } = {}) {
     const report = JSON.parse(readFileSync(result, 'utf8'));
     const executions = readFileSync(events, 'utf8').trim().split('\n').map(line => JSON.parse(line));
     assert.equal(report.numTotalTestSuites, suites.length, child.stderr);
-    assert.equal(report.numTotalTests, suites.length, child.stderr);
     assert.equal(report.numPendingTests, 0);
-    assert.equal(report.numRuntimeErrorTestSuites, 0);
-    assert.deepEqual(executions.map(x => x.suite).sort(), suites.toSorted());
+    if (fatalSuite) {
+      assert.equal(report.numRuntimeErrorTestSuites, 1);
+      assert.deepEqual([...new Set(executions.map(x => x.suite))].sort(), suites.toSorted());
+    } else {
+      assert.equal(report.numTotalTests, suites.length, child.stderr);
+      assert.equal(report.numRuntimeErrorTestSuites, 0);
+      assert.deepEqual(executions.map(x => x.suite).sort(), suites.toSorted());
+    }
     return { status: child.status, report, executions };
   } finally {
     rmSync(fixture, { recursive: true, force: true });
   }
 }
+
+test('the default UI command enables serial worker recycling with the configured idle budget', () => {
+  const child = spawnSync('npm', ['run', 'test', '--workspace=tdf-hq-ui', '--', '--showConfig'],
+    { cwd: root, encoding: 'utf8', timeout: 90_000 });
+  assert.equal(child.status, 0, child.stdout + child.stderr);
+  const start = child.stdout.indexOf('\n{');
+  assert.notEqual(start, -1, child.stdout);
+  const { globalConfig } = JSON.parse(child.stdout.slice(start + 1));
+  assert.equal(globalConfig.runInBand, false, 'the default command must permit a recyclable child');
+  assert.equal(globalConfig.maxWorkers, 1, 'the default command must preserve serial scheduling');
+  assert.equal(globalConfig.workerIdleMemoryLimit, DEFAULT_WORKER_LIMIT_BYTES,
+    'the real production configuration must supply the memory budget that fixtures scale down');
+});
 
 test('the real UI command recycles its worker after the controlled per-file memory threshold', () => {
   const result = runFixture();
@@ -95,4 +115,13 @@ test('worker recycling preserves a failing assertion and still executes every fi
   assert.equal(result.report.numFailedTests, 1);
   assert.equal(result.report.numPassedTests, 2);
   assert.equal(new Set(result.executions.map(x => x.pid)).size, 3);
+});
+
+test('a persistently crashing file fails after worker retries and other files still complete', () => {
+  const result = runFixture({ fatalSuite: true });
+  assert.equal(result.status, 1);
+  assert.equal(result.report.success, false);
+  assert.equal(result.report.numFailedTestSuites, 1);
+  assert.equal(result.report.numPassedTestSuites, 2);
+  assert.equal(result.report.numPassedTests, 2);
 });

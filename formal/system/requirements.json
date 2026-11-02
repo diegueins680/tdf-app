@@ -13979,12 +13979,12 @@
       "contract": "formal/system/ui-test-worker-memory.md",
       "source": "formal/system/ui-test-worker-memory.md",
       "status": "specified and implemented",
-      "confidence": "Controlled actual-command process tests; full suite and hosted runtime pending; no universal memory proof",
+      "confidence": "Controlled actual-command tests plus full local UI qualification; no hard process/single-file memory bound or universal proof",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Controlled recycling/failure fixtures pass; fullUI and hostedNode22 qualification pending."
+        "reason": "Defaultconfiguration, PID/failure controls and persistentcrash checks pass; productionidlelimitremoval is detected. Full328suite/3799test localNode24 qualification/build pass on5fb, laterguard changes verifiedseparately. FreshhostedNode22 pending."
       },
-      "statement": "The default UI qualification command must run selected test files serially through one recyclable worker slot, preserve selection/assertions/timeouts, and report failure for any failed assertion or fatal execution.",
+      "statement": "The default UI qualification command must run selected test files serially through one recyclable worker slot, preserve selection/assertions/timeouts, and report failure for any failed assertion or unrecoverable worker execution.",
       "actors": [
         "Repository contributor",
         "UI quality runner",
@@ -14017,12 +14017,12 @@
       "allowedTransitions": [
         "Run every selected file serially through worker slot1.",
         "Recycle an over-budget worker between files while preserving completed results.",
-        "Report failed assertions and fatal execution as failed qualification."
+        "Report failed assertions and exhausted worker failures as failed qualification."
       ],
       "forbiddenTransitions": [
         "Force default CI in-band execution that bypasses idle worker recycling.",
         "Skip selected files or relax assertions/timeouts to obtain green evidence.",
-        "Treat a process abort or incomplete suite as passing evidence."
+        "Treat unresolved worker failure or an incomplete final suite as passing evidence."
       ],
       "effects": [
         "Complete failure-aware test results and source-bound qualification evidence"
@@ -14031,11 +14031,11 @@
       "privacy": "Fixtures contain no credentials or personal records; artifact reports must exclude environment secrets.",
       "concurrency": "One worker slot preserves serial suite scheduling; a recycled process may replace it between files.",
       "idempotency": "Separate attempts retain independent source/outcome evidence; retries are not earlier passing evidence.",
-      "failure": "Failed assertions, worker startup/fatal errors and incomplete suite results block qualification.",
+      "failure": "Failed assertions, exhausted worker startup/process retries and incomplete final results block qualification. Pinned Jest may retry unexpected worker crashes; no first-fault/transient-crash theorem is claimed.",
       "recovery": "Repair source/configuration and requalify changed inputs while retaining failed evidence.",
       "observability": "Record source SHA, actual command, exit code, selected/completed counts, worker slot/PID controls and limitations.",
-      "verification": "Actual-command controlled PID fixtures, forced-in-band negative control, deliberate failed assertion, unchanged full suite and fresh hosted qualification.",
-      "property": "A completed over-budget worker is not reused for the next file; every selected fixture reports a result and any failing assertion yields nonzero exit.",
+      "verification": "Actual defaultCLI configuration, controlled PID fixtures, forced-in-band negative control, productionidlelimit removal mutation, deliberate failed assertion and persistent worker crash; unchangedfull UI suite and fresh hosted qualification.",
+      "property": "A completed over-budget worker is not reused for the next file; all selected files have terminal results; failed assertions and exhausted worker failures yield nonzero exit.",
       "implementation": [
         "tdf-hq-ui/package.json",
         "tdf-hq-ui/jest.config.cjs",
@@ -14047,9 +14047,10 @@
       "formalModels": [],
       "ambiguity": [
         "The1GiBidle budget is an operational choice, not a theorem or business requirement.",
-        "The worker boundary does not bound single-file/parent/OS memory or identify the underlying retention source."
+        "The worker boundary does not bound single-file/parent/OS memory or identify the underlying retention source.",
+        "Pinned Jest permits up to3 retries after unexpected worker crashes. Transientcrash first-attempt failure is not established; persistentcrash control requires terminalfailure and otherfiles complete."
       ],
-      "evidence": "Controlled1024bytefixture fails old forced-in-band PID obligations and passes repaired serial worker, negative in-band control and failure propagation; fullUI/hosted qualification separately pending."
+      "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending."
     }
   ]
 }
