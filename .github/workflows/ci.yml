@@ -609,8 +609,10 @@ jobs:
           status=$?
           cat "$RUNNER_TEMP/provider-retry.log"
           if [ "$status" -ne 0 ]; then
-            sed -n '/^Failures:/,/^Randomized with seed/p' "$RUNNER_TEMP/provider-retry.log" \
-              | grep -v "tdf-intent-expiry" | head -n 120 \
+            # hspec failure report when present, otherwise the end of the gate output.
+            { sed -n '/^Failures:/,/^Randomized with seed/p' "$RUNNER_TEMP/provider-retry.log" \
+                | grep -v "tdf-intent-expiry"; echo "--- gate output tail ---"; tail -n 60 "$RUNNER_TEMP/provider-retry.log"; } \
+              | grep -v '^\s*$' | head -n 200 \
               | while IFS= read -r line; do printf '::error::%s\n' "$line"; done
             exit "$status"
           fi

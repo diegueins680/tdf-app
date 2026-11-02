@@ -15335,7 +15335,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
-    ".github/workflows/ci.yml": "74d135bab9f696720016fea401b400ff222951e6757840022978e7d2f61d3ce6",
+    ".github/workflows/ci.yml": "5507e89419444a27b6df4d765de1637b8d5628eabeb00fd0180020b10352d533",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -29923,7 +29923,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "74d135bab9f696720016fea401b400ff222951e6757840022978e7d2f61d3ce6",
+      "sha256": "5507e89419444a27b6df4d765de1637b8d5628eabeb00fd0180020b10352d533",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
