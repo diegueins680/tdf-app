@@ -22553,6 +22553,27 @@
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
+    },
+    {
+      "id": "e741adb645d77858359f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this fixture can hide a regression in the event preparation panel's poster confirmation and destination links; it must never seed runtime event data.",
+      "justification": "This object literal is one synthetic SocialEventDTO (id, title, start, artists) used only as Jest input for EventPreparationPanel. Its four keys are the existing DTO field names, not a selectable event catalog, editable business values or persisted content; the backend event record remains authoritative.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-02",
+      "reviewBatch": "event-planning-ux-20261102",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
+        "line": 13,
+        "kind": "object-registry",
+        "name": "event",
+        "valueCount": 4,
+        "sourceSha256": "3ebfb2ce7f7518651f27477b96a60549be4597f8b89de6403d2edf1f68fed5b9",
+        "requirement": "EVT-PLANNING-UX-001"
+      }
     }
   ]
 }
