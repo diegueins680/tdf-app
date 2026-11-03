@@ -18,6 +18,19 @@ describe('artist follow authentication continuity', () => {
     expect(isArtistFollowResume('?resume=follow&artistId=https://evil.test', 42)).toBe(false);
   });
 
+  it('keeps the selected session and public campaign fields while rejecting substituted or private return data', () => {
+    const auth = new URL(buildArtistFollowAuthPath('/a/las-lolas', 42, { search: '?video=youtube%3AuRNyIMLiqU8&utm_source=instagram&resume=delete&artistId=999&redirect=https://evil.test&token=private-value', hash: '#artist-session' }), 'https://tdf.local');
+    const target = new URL(auth.searchParams.get('redirect') ?? '', 'https://tdf.local');
+    expect(target.pathname).toBe('/a/las-lolas');
+    expect(target.searchParams.get('video')).toBe('youtube:uRNyIMLiqU8');
+    expect(target.searchParams.get('utm_source')).toBe('instagram');
+    expect(target.searchParams.getAll('resume')).toEqual(['follow']);
+    expect(target.searchParams.getAll('artistId')).toEqual(['42']);
+    expect(target.searchParams.has('token')).toBe(false);
+    expect(target.searchParams.has('redirect')).toBe(false);
+    expect(target.hash).toBe('#artist-session');
+  });
+
   it.each([
     '?resume=follow&resume=delete&artistId=42',
     '?resume=follow&artistId=42&artistId=41',

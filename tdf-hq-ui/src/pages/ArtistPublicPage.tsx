@@ -447,7 +447,7 @@ export default function ArtistPublicPage() {
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to={buildArtistFollowAuthPath(profileLink, artistId)}
+                    to={buildArtistFollowAuthPath(profileLink, artistId, { search: location.search, hash: location.hash })}
                     startIcon={<FavoriteBorderIcon />}
                     sx={{ textTransform: 'none' }}
                   >

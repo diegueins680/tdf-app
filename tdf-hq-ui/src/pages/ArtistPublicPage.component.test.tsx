@@ -177,6 +177,20 @@ describe('ArtistPublicPage follow continuity', () => {
     view.queryClient.clear();
   });
 
+  it('returns a guest to the exact session after signup without copying private query data', async () => {
+    const view = renderPage('/a/las-sinteticas?video=youtube%3AuRNyIMLiqU8&utm_source=instagram&token=private-value#artist-session');
+    const follow = await screen.findByRole('link', { name: 'Crear cuenta o ingresar para seguir' });
+    const authUrl = new URL(follow.getAttribute('href') ?? '', 'https://tdf.example.test');
+    const target = new URL(authUrl.searchParams.get('redirect') ?? '', 'https://tdf.example.test');
+    expect(target.searchParams.get('video')).toBe('youtube:uRNyIMLiqU8');
+    expect(target.searchParams.get('utm_source')).toBe('instagram');
+    expect(target.searchParams.get('artistId')).toBe('17');
+    expect(target.searchParams.has('token')).toBe(false);
+    expect(target.hash).toBe('#artist-session');
+    expect(followMock).not.toHaveBeenCalled();
+    view.unmount(); view.queryClient.clear();
+  });
+
   it('follows only after explicit confirmation and clears the resume query on success', async () => {
     sessionMock = {
       username: 'fan-42',

@@ -14765,7 +14765,8 @@
         "tdf-mobile/src/navigation/deepLinks.ts",
         "tdf-mobile/package.json",
         "tdf-mobile/ios/Podfile.lock",
-        "tdf-mobile/.github/workflows/interaction-simulator.yml"
+        "tdf-mobile/.github/workflows/interaction-simulator.yml",
+        "tdf-hq-ui/src/utils/artistFollowIntent.ts"
       ],
       "tests": [
         "services/campaign-platform/tests/test_videos.py",
