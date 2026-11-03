@@ -14760,7 +14760,9 @@
         "tdf-mobile/src/components/ArtistPublicWebView.web.tsx",
         "tdf-mobile/src/lib/artistPublicUrl.ts",
         "tdf-mobile/src/navigation/deepLinks.ts",
-        "tdf-mobile/package.json"
+        "tdf-mobile/package.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/.github/workflows/interaction-simulator.yml"
       ],
       "tests": [
         "services/campaign-platform/tests/test_videos.py",
