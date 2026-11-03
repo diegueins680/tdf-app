@@ -193,6 +193,7 @@
       "scripts/__tests__/music-test-database.test.mjs",
       "scripts/__tests__/music-track-search-model.test.mjs",
       "scripts/__tests__/music-worker-build.test.mjs",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -2853,7 +2854,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "ecaa05e8a74e3b97149f8580d2da5294662d8d40cb36af1150468cfd2894978b",
+      "sha256": "d5f7e50faca1e6283fedf42253584967e2ad9164af97477f3bc9e3fd492a5476",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3850,6 +3851,12 @@
       "id": "SURFACE-523809a7dcf5c848",
       "path": "scripts/__tests__/music-worker-build.test.mjs",
       "sha256": "48ed0c6d1a7308dae7e8d1c6370d2ce14243bd7a1caf80f6b07b1bf5a6e62dcf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d6545235ef8b425c",
+      "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4917,7 +4924,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "6171954f6314882c0d68232a7fbd1e1faf080d1555bfdfdde70e38cf888bdcf1",
+      "sha256": "9faf88d379052251460752e225d8f9c28e471bd8044c3f70791f0de02396611d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4995,7 +5002,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28199,6 +28206,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-worker-heartbeat-shutdown.md",
+      "sha256": "94e3d66490bc334092ae4ae8160ae688be56b9128621c20dce1f0dc393022a28",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-aux-write.md",
       "sha256": "2d8dee259c38886c7de44bb20df7085d406984d16647b2c41659792806e8f391",
       "authority": "inferred",
@@ -28396,7 +28410,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8958fe71354853afc5a0bab791197403546dd22a57de3a0143a278df6cc33521",
+      "sha256": "1ebd041a17a9618f4db2ece7cb0a58f1a1b5923234b91537be7b741d795bdfd1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
