@@ -1,3 +1,4 @@
+import MarkdownText from '../../components/MarkdownText';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Alert, Avatar, Box, Button, Card, CardActionArea, CardContent, LinearProgress, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -70,7 +71,7 @@ export default function CommunityDiscovery() {
             {item.subtitle && <Typography variant="body2">{item.subtitle}</Typography>}
             <Typography variant="body2" color="text.secondary">{[item.location.city, item.location.countryCode].filter(Boolean).join(' · ')}</Typography>
             <Typography variant="body2">{item.taxonomy?.genreIds.map((id) => taxonomies.data?.genres.find((genre) => genre.id === id)?.name).filter(Boolean).join(' · ')}</Typography>
-            {item.summary && <Typography variant="body2" mt={1} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary}</Typography>}
+            {item.summary && <MarkdownText disableLinks inline variant="body2" mt={1} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary}</MarkdownText>}
             <Typography color="primary" mt={2}>Ver perfil</Typography>
           </CardContent>
         </CardActionArea>

@@ -728,6 +728,31 @@ parseStripeRefundResponse =
         "Could not parse Stripe refund response"
         (Aeson.withObject "refund" (Aeson..: "id"))
 
+-- A returned identifier is correlation evidence, not proof of completion.
+-- This endpoint does not request expanded PaymentIntents from Stripe.
+stripeRefundCompletionMatches :: T.Text -> Int -> T.Text -> Aeson.Value -> Bool
+stripeRefundCompletionMatches expectedIntent expectedAmount expectedCurrency =
+    isJust . parseMaybe (Aeson.withObject "refund" $ \response -> do
+        objectType <- response Aeson..: "object" :: Parser T.Text
+        status <- response Aeson..: "status" :: Parser T.Text
+        amount <- response Aeson..: "amount" :: Parser Int
+        currency <- response Aeson..: "currency" :: Parser T.Text
+        paymentIntent <- response Aeson..: "payment_intent" :: Parser T.Text
+        let storedCurrency = T.toLower expectedCurrency
+        unless
+            ( objectType == "refund" && status == "succeeded"
+                && expectedAmount > 0 && amount == expectedAmount
+                && T.length storedCurrency == 3 && T.all isAsciiLower storedCurrency
+                && currency == storedCurrency
+                && not (T.null expectedIntent) && paymentIntent == expectedIntent
+            )
+            (fail "Refund completion evidence does not match its request"))
+
+validObservedStripeRefundId :: T.Text -> Bool
+validObservedStripeRefundId value =
+    not (T.null value) && T.length value <= 128
+        && T.all (\ch -> isAscii ch && ch >= '!' && ch <= '~') value
+
 parseStripeCustomerId :: Aeson.Value -> Either T.Text T.Text
 parseStripeCustomerId =
     parseStripeRequiredText
@@ -5789,14 +5814,43 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         case result of
                             Left err -> throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err))}
                             Right refundResponse -> do
+                                let unverified = err502
+                                        { errBody = "Refund outcome requires reconciliation; request remains processing" }
                                 refundId <-
-                                    eitherStripeServerError $
+                                    either (const (throwError unverified)) pure $
                                         parseStripeRefundResponse refundResponse
-                                liftIO $
+                                unless (validObservedStripeRefundId refundId) $
+                                    throwError unverified
+                                -- Retain an observed ID even when status or money
+                                -- fails validation. It is not verified payment binding.
+                                observed <- liftIO $ runSqlPool
+                                    (updateWhereCount
+                                        ([ TicketRefundRequestId ==. refundKey
+                                         , TicketRefundRequestOrderId ==. orderKey
+                                         , TicketRefundRequestAmountCents
+                                            ==. ticketRefundRequestAmountCents refund
+                                         , TicketRefundRequestStatus ==. "processing"
+                                         ] <>
+                                         ([TicketRefundRequestStripeRefundId ==. Nothing]
+                                            ||. [TicketRefundRequestStripeRefundId ==. Just refundId]))
+                                        [ TicketRefundRequestStripeRefundId =. Just refundId
+                                        , TicketRefundRequestUpdatedAt =. now
+                                        ]) envPool
+                                unless (observed == 1 && stripeRefundCompletionMatches
+                                    piId (ticketRefundRequestAmountCents refund)
+                                    (eventTicketOrderCurrency order) refundResponse) $
+                                    throwError unverified
+                                completed <- liftIO $ trySynchronous $
                                     runSqlPool
                                         ( do
-                                            update
-                                                refundKey
+                                            changed <- updateWhereCount
+                                                [ TicketRefundRequestId ==. refundKey
+                                                , TicketRefundRequestOrderId ==. orderKey
+                                                , TicketRefundRequestAmountCents
+                                                    ==. ticketRefundRequestAmountCents refund
+                                                , TicketRefundRequestStatus ==. "processing"
+                                                , TicketRefundRequestStripeRefundId ==. Just refundId
+                                                ]
                                                 [ TicketRefundRequestStatus =. "approved"
                                                 , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
                                                 , TicketRefundRequestApprovedAt =. Just now
@@ -5804,6 +5858,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                                 , TicketRefundRequestProcessedAt =. Just now
                                                 , TicketRefundRequestUpdatedAt =. now
                                                 ]
+                                            unless (changed == 1) $
+                                                fail "Refund execution state changed before completion"
                                             update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
                                             updateWhere
                                                 [EventTicketOrderRefId ==. orderKey]
@@ -5813,6 +5869,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                                 [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
                                         )
                                         envPool
+                                either (const (throwError unverified)) pure completed
                                 mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
                                 maybe
                                     (throwError err500{errBody = "Could not approve refund"})
@@ -6240,20 +6297,16 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 runSqlPool
                     (selectList [EventFinanceEntryEventId ==. eventKey, EventFinanceEntryStatus ==. "posted"] [])
                     envPool
-        pure $
-            map
-                ( \lineEnt@(Entity lineKey lineRec) ->
-                    let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
-                        actualCents =
-                            sum
-                                [ eventFinanceEntryAmountCents entry
-                                | Entity _ entry <- postedEntries
-                                , eventFinanceEntryBudgetLineId entry == Just lineKey
-                                , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                                ]
-                     in budgetLineEntityToDTO eventKey (Just actualCents) lineEnt
-                )
-                budgetRows
+        forM budgetRows $ \lineEnt@(Entity lineKey lineRec) -> do
+            let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
+                exactActualCents = sum
+                    [ toInteger (eventFinanceEntryAmountCents entry)
+                    | Entity _ entry <- postedEntries
+                    , eventFinanceEntryBudgetLineId entry == Just lineKey
+                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                    ]
+            actualCents <- checkedEventFinanceCents exactActualCents
+            pure (budgetLineEntityToDTO eventKey (Just actualCents) lineEnt)
 
     createBudgetLine :: T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
     createBudgetLine eventIdStr dto = do
@@ -6311,6 +6364,24 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 | existingKey /= lineKey ->
                     throwError err409{errBody = "budget line code already exists for this event"}
             _ -> pure ()
+        postedEntries <-
+            liftIO $
+                runSqlPool
+                    ( selectList
+                        [ EventFinanceEntryEventId ==. eventKey
+                        , EventFinanceEntryBudgetLineId ==. Just lineKey
+                        , EventFinanceEntryStatus ==. "posted"
+                        ]
+                        []
+                    )
+                    envPool
+        let exactActualCents =
+                sum
+                    [ toInteger (eventFinanceEntryAmountCents entry)
+                    | Entity _ entry <- postedEntries
+                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                    ]
+        actualCents <- checkedEventFinanceCents exactActualCents
         liftIO $
             runSqlPool
                 ( update
@@ -6325,24 +6396,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     ]
                 )
                 envPool
-        postedEntries <-
-            liftIO $
-                runSqlPool
-                    ( selectList
-                        [ EventFinanceEntryEventId ==. eventKey
-                        , EventFinanceEntryBudgetLineId ==. Just lineKey
-                        , EventFinanceEntryStatus ==. "posted"
-                        ]
-                        []
-                    )
-                    envPool
         mUpdated <- liftIO $ runSqlPool (getEntity lineKey) envPool
-        let actualCents =
-                sum
-                    [ eventFinanceEntryAmountCents entry
-                    | Entity _ entry <- postedEntries
-                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                    ]
         maybe
             (throwError err500{errBody = "Could not update budget line"})
             (pure . budgetLineEntityToDTO eventKey (Just actualCents))
@@ -6536,17 +6590,17 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
 
         let plannedIncomeCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "income"
                     ]
             plannedExpenseCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "expense"
                     ]
-            entryAmount (amountCents, _, _, _) = amountCents
+            entryAmount (amountCents, _, _, _) = toInteger amountCents
             entryDirection (_, directionVal, _, _) = directionVal
             entrySource (_, _, sourceVal, _) = sourceVal
             entryStatus (_, _, _, statusVal) = statusVal
@@ -6570,20 +6624,20 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     , entryDirection entry == "expense"
                     ]
             ticketPaidRevenueCents =
-                fromInteger canonicalGross + sum
-                    [ amountCents
+                canonicalGross + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "paid"
                     ]
             ticketRefundedRevenueCents =
-                fromInteger canonicalRefunded + sum
-                    [ amountCents
+                canonicalRefunded + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "refunded"
                     ]
             ticketPendingRevenueCents =
                 sum
-                    [ amountCents
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "pending"
                     ]
@@ -6657,7 +6711,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             actualIncomeCents = manualIncomeCents + ticketPaidRevenueCents
             actualExpenseCents = manualExpenseCents + ticketRefundedRevenueCents
             netCents = actualIncomeCents - actualExpenseCents
-            budgetCentsVal = budgetOverride <|> fallbackBudget plannedExpenseCents
+            budgetCentsVal = fmap toInteger budgetOverride <|> fallbackBudget plannedExpenseCents
             budgetVarianceCents = fmap (\budgetCap -> budgetCap - actualExpenseCents) budgetCentsVal
             budgetUtilizationPct =
                 case budgetCentsVal of
@@ -6666,28 +6720,40 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                             Just ((fromIntegral actualExpenseCents / fromIntegral budgetCap) * 100)
                     _ -> Nothing
 
+        -- All sums and differences above are Integer. Validate every monetary
+        -- output before constructing the bounded DTO; no wrapped value is sent.
+        forM_ (
+            [ plannedIncomeCents, plannedExpenseCents, actualIncomeCents, actualExpenseCents
+            , netCents, ticketPaidRevenueCents, ticketRefundedRevenueCents, ticketPendingRevenueCents
+            , accountsPayableCents, accountsReceivableCents, contractCommittedCents, contractPaidCents
+            , procurementCommittedCents, procurementPaidCents, assetInvestmentCents, liabilityBalanceCents
+            ]
+            ++ maybe [] pure budgetCentsVal
+            ++ maybe [] pure budgetVarianceCents
+            ) checkedEventFinanceCents
+
         pure
             EventFinanceSummaryDTO
                 { efsEventId = renderKeyText eventKey
                 , efsCurrency = eventCurrencyVal
-                , efsBudgetCents = budgetCentsVal
-                , efsPlannedIncomeCents = plannedIncomeCents
-                , efsPlannedExpenseCents = plannedExpenseCents
-                , efsActualIncomeCents = actualIncomeCents
-                , efsActualExpenseCents = actualExpenseCents
-                , efsNetCents = netCents
-                , efsTicketPaidRevenueCents = ticketPaidRevenueCents
-                , efsTicketRefundedRevenueCents = ticketRefundedRevenueCents
-                , efsTicketPendingRevenueCents = ticketPendingRevenueCents
-                , efsAccountsPayableCents = accountsPayableCents
-                , efsAccountsReceivableCents = accountsReceivableCents
-                , efsContractCommittedCents = contractCommittedCents
-                , efsContractPaidCents = contractPaidCents
-                , efsProcurementCommittedCents = procurementCommittedCents
-                , efsProcurementPaidCents = procurementPaidCents
-                , efsAssetInvestmentCents = assetInvestmentCents
-                , efsLiabilityBalanceCents = liabilityBalanceCents
-                , efsBudgetVarianceCents = budgetVarianceCents
+                , efsBudgetCents = fmap fromInteger budgetCentsVal
+                , efsPlannedIncomeCents = fromInteger plannedIncomeCents
+                , efsPlannedExpenseCents = fromInteger plannedExpenseCents
+                , efsActualIncomeCents = fromInteger actualIncomeCents
+                , efsActualExpenseCents = fromInteger actualExpenseCents
+                , efsNetCents = fromInteger netCents
+                , efsTicketPaidRevenueCents = fromInteger ticketPaidRevenueCents
+                , efsTicketRefundedRevenueCents = fromInteger ticketRefundedRevenueCents
+                , efsTicketPendingRevenueCents = fromInteger ticketPendingRevenueCents
+                , efsAccountsPayableCents = fromInteger accountsPayableCents
+                , efsAccountsReceivableCents = fromInteger accountsReceivableCents
+                , efsContractCommittedCents = fromInteger contractCommittedCents
+                , efsContractPaidCents = fromInteger contractPaidCents
+                , efsProcurementCommittedCents = fromInteger procurementCommittedCents
+                , efsProcurementPaidCents = fromInteger procurementPaidCents
+                , efsAssetInvestmentCents = fromInteger assetInvestmentCents
+                , efsLiabilityBalanceCents = fromInteger liabilityBalanceCents
+                , efsBudgetVarianceCents = fmap fromInteger budgetVarianceCents
                 , efsBudgetUtilizationPct = budgetUtilizationPct
                 , efsGeneratedAt = now
                 }
@@ -9288,7 +9354,7 @@ eventImageUploadFormServerError :: T.Text -> ServerError
 eventImageUploadFormServerError message =
     err400{errBody = BL.fromStrict (TE.encodeUtf8 message)}
 
-fallbackBudget :: Int -> Maybe Int
+fallbackBudget :: Integer -> Maybe Integer
 fallbackBudget plannedExpenseCents
     | plannedExpenseCents > 0 = Just plannedExpenseCents
     | otherwise = Nothing
@@ -10496,6 +10562,14 @@ budgetLineEntityToDTO eventKey mActualCents (Entity lineKey lineRec) =
         , eblCreatedAt = Just (eventBudgetLineCreatedAt lineRec)
         , eblUpdatedAt = Just (eventBudgetLineUpdatedAt lineRec)
         }
+
+-- Event DTO amounts use host Int. Arithmetic must be exact before checking
+-- both bounds: negative net, liability and budget-variance values are valid.
+checkedEventFinanceCents :: Integer -> AppM Int
+checkedEventFinanceCents exact
+    | exact < toInteger (minBound :: Int) || exact > toInteger (maxBound :: Int) =
+        throwError (financeInvariantServerError "Event finance amount exceeds the supported reporting range")
+    | otherwise = pure (fromInteger exact)
 
 financeInvariantServerError :: T.Text -> ServerError
 financeInvariantServerError message =

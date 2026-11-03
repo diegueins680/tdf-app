@@ -1662,6 +1662,93 @@
       ]
     },
     {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "ambiguity": [
+        "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
+        "Production release sequencing after the additive migration is not yet verified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+      },
+      "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
+      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
+      "observability": "No token in production receipts; retain migration identity and exact tested source.",
+      "formalModels": [],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-hq/test/integration/event_operations_http_fixture.sql",
+        "scripts/test-api-token-session-expiry-migration.sh",
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/social/test-http.sh",
+        "tdf-hq/test/integration/event_raci_browser_fixture.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "id": "ID-SESSION-004",
+      "title": "Interactive sessions expire on the server",
+      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
+      "actors": [
+        "session holder",
+        "expired or legacy session holder",
+        "service token holder"
+      ],
+      "preconditions": [
+        "Token row is active with an authenticatable label"
+      ],
+      "inputs": [
+        "Opaque bearer or cookie session token",
+        "SESSION_TOKEN_TTL_SECONDS",
+        "Database UTC clock"
+      ],
+      "state": {
+        "window": "api_token.issued_at_epoch, api_token.expires_at_epoch",
+        "time": "UTC epoch seconds; interactive expires=issued+ttl, half-open"
+      },
+      "allowedTransitions": [
+        "Login/signup/password change/recovery -> interactive token issued with window",
+        "Active token with now < expires -> authenticated",
+        "Service token without window -> authenticated"
+      ],
+      "forbiddenTransitions": [
+        "now >= expires -> authenticated",
+        "Interactive label without window -> authenticated",
+        "Expired bearer -> credential identification for password change",
+        "TTL > cookie Max-Age -> configuration accepted"
+      ],
+      "effects": [
+        "Issuance writes the window in the issuing transaction; denial has no side effects"
+      ],
+      "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
+      "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
+      "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
+      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
+      "implementation": [
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
+        "tdf-hq/sql/init_schema.sql",
+        "scripts/production-migrations.json",
+        "scripts/production-release.mjs",
+        "tdf-hq/src/TDF/Social/Session.hs"
+      ]
+    },
+    {
       "id": "SYS-BUILD-001",
       "title": "Single backend package authority",
       "statement": "Build and test the backend with the Stack-selected toolchain and hand-maintained Cabal package; the retired Hpack description must remain outside the active package.",
@@ -4701,7 +4788,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4752,7 +4839,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4821,7 +4908,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -7477,7 +7564,7 @@
       "id": "EVT-FUNNEL-001",
       "title": "Observe the public ticket funnel without exporting private ticket data",
       "domain": "EVT",
-      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority. Every backend-created hosted payment session counts as initiation, including prepared, failed and confirmed-no-charge outcomes; initiation deduplicates per order/provider. Direct event and checkout landing UTMs replace stale campaign attribution before observation, without persisting private order paths or lookup parameters; disabled analytics stores no attribution.",
+      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority. Every backend-created hosted payment session counts as initiation, including prepared, failed and confirmed-no-charge outcomes; initiation deduplicates per order/provider. Direct event and checkout landing UTMs replace stale campaign attribution before observation, without persisting private order paths or lookup parameters; disabled analytics stores no attribution. When the TDF storefront is closed for an event (no approved price policy, no tiers, sold out), public surfaces never render an empty order form: they localise the server reason and, for imported events, link to the external ticket vendor recovered from the published description.",
       "authority": "User-approved event ticketing scope sections 9, 17, 28 and 39; existing privacy analytics boundary",
       "source": "docs/events/ticket-funnel-observations.md",
       "contract": "docs/events/ticket-funnel-observations.md",
@@ -7530,13 +7617,15 @@
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/utils/externalTicketing.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/utils/externalTicketing.test.ts"
       ],
       "formalModels": [],
       "verification": "React component tests exercise actual route boundaries; helper tests cover privacy, disabled client, storage errors and local deduplication.",
@@ -8996,7 +9085,7 @@
     {
       "id": "AUTH-ENTRY-002",
       "title": "Low-friction account entry that lands on Comunidad or the interrupted intent",
-      "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies.",
+      "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies. Inside social in-app browsers (Instagram, Facebook, Messenger, TikTok and generic WebViews), where Google Sign-In cannot use passkeys and is blocked, the entry surfaces replace the Google button with a hand-off to the system browser (Safari/Chrome link, copy link) and keep email + password available in place.",
       "authority": "product owner request after real-user mobile test (2026-10-07); product owner User Value Activation Sprint privacy/public-information review requirement (2026-10-26), following an isolated before-save disclosure counterexample",
       "domain": "AUTH",
       "actors": [
@@ -9058,7 +9147,9 @@
         "tdf-hq-ui/src/utils/authErrorMessage.ts",
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth/AccountName.hs",
-        "tdf-hq/tdf-hq.cabal"
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/utils/inAppBrowser.ts",
+        "tdf-hq-ui/src/components/InAppBrowserNotice.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9073,7 +9164,8 @@
         "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
         "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
-        "scripts/verify-google-account-name.py"
+        "scripts/verify-google-account-name.py",
+        "tdf-hq-ui/src/utils/inAppBrowser.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -13648,6 +13740,804 @@
       "property": "No report content is returned without an enabled matching capability; a valid link confers read-only access to the authorized provisional snapshot only.",
       "verification": "Independent Node/OpenSSL ciphertext fixtures, Worker WebCrypto authentication and malformed-input controls, CLI disclosure checks, actual Request/Response access tests and hosted Pages verification before release.",
       "evidence": "23 focused local crypto/event/transaction tests pass with fictional fixtures; current encrypted source-bound hosted deployment evidence remains pending."
+    },
+    {
+      "id": "WEB-CONTENT-001",
+      "title": "Render authored Markdown and navigate known user identities to profiles",
+      "domain": "WEB",
+      "statement": "Display authored long-form web content as Markdown with plain-text line breaks, while rejecting raw HTML and unsafe URL schemes; clicking a known user name or avatar opens that user profile without changing anonymous identity preferences.",
+      "authority": "User request on 2026-10-28 using the Categal artist biography and Juan Diego Illescas fan entry; continued implementation and release preparation requested in the same session.",
+      "contract": "formal/system/authored-content.md",
+      "source": "formal/system/authored-content.md",
+      "actors": [
+        "Content authors",
+        "Web readers",
+        "Authenticated community members"
+      ],
+      "preconditions": [
+        "A content field contains a string. Profile navigation requires a known positive safe-integer Party identity.",
+        "Existing authentication and profile visibility rules remain authoritative."
+      ],
+      "inputs": [
+        "Authored Markdown",
+        "Plain text and Unicode content",
+        "API user identity and buyer privacy projection",
+        "Mention offsets counted in Unicode code points"
+      ],
+      "state": {
+        "display": [
+          "block Markdown",
+          "inline preview",
+          "raw editor input"
+        ],
+        "identity": [
+          "known",
+          "unavailable",
+          "anonymous"
+        ]
+      },
+      "allowedTransitions": [
+        "Authored text to safe React Markdown elements.",
+        "Known Party name/avatar click to /perfil/{partyId}.",
+        "Anonymous buyer to display without profile ID or avatar."
+      ],
+      "forbiddenTransitions": [
+        "Markdown HTML or executable URLs to active DOM content.",
+        "Nested links inside a clickable preview.",
+        "Missing, malformed or guessed identity to a fabricated profile link.",
+        "Private buyer identity to a public profile link."
+      ],
+      "effects": [
+        "Markdown display and accessible user profile navigation. No authoring writes or migrations."
+      ],
+      "authorization": "Existing route, session and server profile authorization remains required; a profile link grants no access.",
+      "privacy": "No author lookup by name or avatar. Merch buyer privacy suppresses both partyId and avatarUrl. No stored content rewrite or private values in diagnostics.",
+      "concurrency": "Rendering is read-only; existing session-generation and content visibility controls remain intact.",
+      "idempotency": "Rendering and link construction are deterministic and do not send write requests.",
+      "failure": "Unavailable IDs remain plain display content; unsafe links lose their destination; raw HTML is skipped.",
+      "recovery": "Revert the display integration and optional response fields; no data migration or content recovery is required.",
+      "observability": "Synthetic rendering/navigation regressions, real browser layout checks, and exact SQL identity projection checks. Deployment evidence is recorded separately.",
+      "property": "Authored text never evaluates raw HTML; a profile destination is constructed only from a known valid Party ID; private buyer projection omits identity fields.",
+      "implementation": [
+        "tdf-hq-ui/package.json",
+        "tdf-hq-ui/src/api/merchReputation.ts",
+        "tdf-hq-ui/src/api/reviews.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+        "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
+        "tdf-hq-ui/src/components/ArtistFansList.tsx",
+        "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
+        "tdf-hq-ui/src/components/MarkdownText.tsx",
+        "tdf-hq-ui/src/components/NotificationBell.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/UserProfileLink.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+        "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
+        "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
+        "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
+        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
+        "tdf-hq-ui/src/pages/AdsInboxPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/BrainAdminPage.tsx",
+        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+        "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "tdf-hq-ui/src/pages/ClassesPage.tsx",
+        "tdf-hq-ui/src/pages/CompaniesPage.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+        "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+        "tdf-hq-ui/src/pages/InventoryPage.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelProjectsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "tdf-hq-ui/src/pages/LeadsPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
+        "tdf-hq-ui/src/pages/MerchProductPage.tsx",
+        "tdf-hq-ui/src/pages/MerchReputationPage.tsx",
+        "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/pages/NotificationPage.tsx",
+        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/PublicProfilePage.tsx",
+        "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx",
+        "tdf-hq-ui/src/pages/RecentlyDiscoveredEventsPage.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
+        "tdf-hq-ui/src/pages/SocialPage.tsx",
+        "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
+        "tdf-hq-ui/src/pages/TeachersPage.tsx",
+        "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/utils/markdownMentions.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/reviews.yaml",
+        "tdf-hq/src/TDF/Server/MerchReputation.hs",
+        "tdf-hq/src/TDF/Server/Reviews.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/reviews.test.ts",
+        "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
+        "tdf-hq-ui/src/components/MarkdownText.test.tsx",
+        "tdf-hq-ui/src/components/UserProfileLink.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Component/browser and SQL projection evidence only. Markdown parser correctness and full implementation refinement are not formally proven.",
+      "ambiguity": [
+        "Native mobile Markdown rendering is outside this web change; only matching generated mobile API types are updated.",
+        "Existing raw code, diagnostic payloads, editing inputs and identity labels remain literal."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped empirical checks; independent review, hosted CI and deployed availability must be recorded separately. No universal parser/refinement proof."
+      },
+      "verification": "Safe Markdown/GFM/Unicode mention cases, unsafe URL/HTML controls, real name/photo navigation, compact preview validity, browser widths/themes and public/private/default buyer SQL projection checks.",
+      "evidence": "Revision-bound local logs and hosted PR checks; prior-source passes retain their original identities."
+    },
+    {
+      "id": "SYS-WORKER-COMPLETION-001",
+      "title": "Preserve close-based worker deadlines and first-failure lifecycle evidence",
+      "domain": "SYS",
+      "critical": false,
+      "statement": "The synthetic music runtime runner accepts asynchronous completion only after ChildProcess close, preserving status and full captured output. Its default completion deadline remains30000ms. A timeout remains fatal and includes the observed process/stream lifecycle and bounded output tails, distinguishing an observed exit awaiting close from no observed exit. Spawn failures remain rejected. Diagnostics never substitute process exit, stream destruction, a longer deadline or a later successful attempt for completion.",
+      "authority": "User mission sections1.2,8,9 require credible failure evidence, verification-control testing and no suppression of failing checks; existing runtime close/deadline behavior and Node24 child-process event contract.",
+      "source": "formal/system/music-worker-completion-observation.md; scripts/test-music-release-worker-runtime.mjs atmain e302; hosted40831374480/job123306367783 generic watchdog failure.",
+      "contract": "formal/system/music-worker-completion-observation.md",
+      "property": "Default deadline30000ms; success implies observed close; timeout preserves separate spawn/exit/close/stream fields and at most4000characters per output tail; error/timeout remain failures.",
+      "actors": [
+        "Synthetic worker runtime runner",
+        "CI maintainer investigating a failing worker scenario"
+      ],
+      "preconditions": [
+        "Observer attaches synchronously to a newly spawned ChildProcess with piped stdout/stderr.",
+        "Output belongs only to scrubbed synthetic local/CI fixtures; this is not a production logger."
+      ],
+      "inputs": [
+        "ChildProcess lifecycle and stream events",
+        "Completion promise and test deadline"
+      ],
+      "state": {
+        "process": [
+          "awaiting-exit",
+          "exited-awaiting-close",
+          "closed",
+          "spawn-error"
+        ],
+        "completion": [
+          "pending",
+          "closed-result",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Observed exit before output closure -> retain pending completion and exit milestone",
+        "Observed close -> preserve status/signal/full captured output",
+        "Deadline without close -> reject with bounded first-failure snapshot",
+        "Spawn error -> reject even when awaited after readiness"
+      ],
+      "forbiddenTransitions": [
+        "Exit alone -> accepted completion",
+        "Timeout -> discard all available lifecycle/output evidence",
+        "Timeout -> extend deadline or destroy streams to claim close",
+        "Missing fixture readiness -> unbounded unit-test wait preventing cleanup"
+      ],
+      "effects": [
+        "Additional synthetic diagnostics only; existing worker outcome assertions and process cleanup remain.",
+        "Root repository quality executes the real-child lifecycle regression tests."
+      ],
+      "authorization": "No provider/production authorization or deployed worker behavior change; fixtures own their child processes.",
+      "privacy": "Diagnostics include no environment or command arguments; tails are bounded synthetic fixture output, not a redaction guarantee for arbitrary production streams.",
+      "concurrency": "Exit and close milestones are observed separately; timeout snapshots reflect event delivery at the deadline and do not infer why a process is waiting.",
+      "idempotency": "Snapshots are read-only observations; successful completion retains the original result. Repeated observations cannot qualify a timed-out attempt.",
+      "failure": "Timeout and spawn errors reject; no observation is a claim of descendant quiescence or PostgreSQL/rootcause correctness.",
+      "recovery": "Investigate captured first-failure process/pipe/fixtureSQL state; preserve failed run. Actual shutdown corrections require their own counterexample and verification.",
+      "observability": "Monotonic start/spawn/exit/close/observation timestamps, PID/status/signal, stream flags, total character counts and bounded tails.",
+      "implementation": [
+        "scripts/lib/test-child-completion.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/test-child-completion.test.mjs",
+        "scripts/test-music-release-worker-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Real normal/live/exited-parent-with-held-pipe/spawn-error/missing-readiness fixtures; unchanged default timer assertion; single-guard mutations; actual music concurrency lane. Passing receipts are separate source-bound artifacts, not a mathematical proof.",
+      "evidence": "reports/music-worker-completion-2026-10-29.json when committed; original hosted failure and setup/local probe receipts retain separate scopes.",
+      "confidence": "High for scoped local lifecycle observations under tested Node/OS; hosted worker shutdown cause remains UNKNOWN.",
+      "ambiguity": [
+        "An exit awaiting close does not identify the descriptor holder; a live process does not identify its wait cause.",
+        "No claim of output redaction for nonsynthetic callers, universal process-tree cleanup or whole-worker liveness."
+      ],
+      "status": "specified and implemented",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local observation controls are executable; actual hosted first-failure rootcause, product shutdown liveness and protected integration remain separate."
+      }
+    },
+    {
+      "id": "PAY-EVENT-REPORT-RANGE-001",
+      "title": "Exact bounded event finance and budget reports",
+      "statement": "Every successfully reported event-finance and budget actual amount equals its exact mathematical aggregate and fits host Int. Reject an unreportable amount instead of wrapping, and reject a budget-line edit with an unreportable actual before its first write.",
+      "domain": "PAY",
+      "authority": "Inferred from owner financial-integrity mandate, existing event DTO/model bounds and existing canonical ticket-revenue range refusal.",
+      "source": "formal/system/event-finance-report-range.md",
+      "contract": "formal/system/event-finance-report-range.md",
+      "property": "Integer arithmetic precedes signed Int checks on all16 mandatory and2 optional summary monetary fields and budget actuals; existing supported negative balances, filters and budget fallback behavior remain.",
+      "actors": [
+        "Authorized event manager",
+        "Event budget/finance report reader"
+      ],
+      "preconditions": [
+        "Existing authorization and stored dimension/metadata validation",
+        "Rows selected by the existing read/filter boundaries"
+      ],
+      "inputs": [
+        "Host Int planned/manual/legacy ticket amounts",
+        "Int64 captured ticket revenue",
+        "Optional event budget"
+      ],
+      "state": {
+        "initial": "Selected persisted report inputs",
+        "terminal": [
+          "Exact representable response",
+          "HTTP500 range refusal before budget edit writes"
+        ]
+      },
+      "allowedTransitions": [
+        "Accumulate and subtract exact Integer amounts before narrowing",
+        "Return supported negative net, liability and variance amounts",
+        "Precheck budget actual before updating its row"
+      ],
+      "forbiddenTransitions": [
+        "Return a wrapped aggregate as successful monetary evidence",
+        "Narrow canonical subtotal before combining with legacy revenue",
+        "Commit budget fields before refusing an unreportable actual"
+      ],
+      "effects": [
+        "Read-only monetary reporting",
+        "Existing authorized budget update only after its observed actual fits"
+      ],
+      "authorization": "No change to event management, strict-admin, provider or settlement authority.",
+      "privacy": "Synthetic native handler fixtures contain no real customer/provider data.",
+      "concurrency": "Existing separate reads remain; the prewrite check concerns observed rows and does not establish a serializable financial snapshot.",
+      "idempotency": "The same selected rows give the same exact amounts; no new provider calls or retry authority.",
+      "failure": "HTTP500 supported-reporting-range refusal; no clamping or silently discarded rows. Range-refused budget updates do not begin their existing write.",
+      "recovery": "Use authorized source correction; retain original records and evidence rather than modifying financial data to hide a mismatch.",
+      "observability": "Source-bound native handler logs, baseline assertion counterexamples, mutation controls and CI source selection.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "15 native real-handler regression cases cover12 overflowing scenarios and3 compatibility cases; actual per-source execution receipts are separate. No full refinement proof.",
+      "evidence": "formal/system/event-finance-report-range.md; reports/event-finance-report-range-2026-10-29.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Source-bounded correction; runtime qualification recorded against exact commits.",
+      "ambiguity": [
+        "Production PostgreSQL reachability of every type-extreme fixture is not established.",
+        "Browser53-bit integer precision, historical currency consistency, provider finality and snapshot serialization are separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite native handler regression scope; complete implementation/refinement and production PostgreSQL/provider/deployment correspondence remain unproven."
+      }
+    },
+    {
+      "id": "MEDIA-ARTIST-CATALOG-001",
+      "title": "Shared artist catalog and identity projections",
+      "statement": "Profiles, followed feeds and Label share catalog reads and published-release presentation while retaining canonical and legacy source identity, bounded pagination, cancellation and honest partial failures. Artist links use a validated Party identity; shared subscription commands and target/account-scoped invalidation keep audience projections coherent without granting social consent.",
+      "domain": "MEDIA",
+      "actors": [
+        "Public listener",
+        "Authenticated fan",
+        "Artist",
+        "Label operator"
+      ],
+      "preconditions": [
+        "Existing public release endpoints and server subscription authorization remain authoritative. No historical rights or identity mapping is inferred."
+      ],
+      "inputs": [
+        "Positive exact Party ID or validated canonical slug",
+        "Canonical and legacy public release responses",
+        "Captured session ownership and explicit follow intent"
+      ],
+      "state": {
+        "catalog": [
+          "loading",
+          "complete",
+          "partial",
+          "unavailable",
+          "cancelled"
+        ],
+        "identity": [
+          "linked-party",
+          "unlinked-external"
+        ]
+      },
+      "allowedTransitions": [
+        "Load -> complete only after all eligible pages finish.",
+        "One source fails -> partial while retaining other available results.",
+        "Committed subscription change -> invalidate its account and target artist projections."
+      ],
+      "forbiddenTransitions": [
+        "Same title -> assume cross-source identity.",
+        "Failed or cancelled fetch -> assert an empty complete catalog.",
+        "Social artist record ID -> substitute as Party ID.",
+        "Subscription -> grant connection consent or club membership."
+      ],
+      "effects": [
+        "Reuse public release cards, bounded public catalog reads, validated profile routes and existing subscription commands."
+      ],
+      "authorization": "Public API visibility and existing server write authorization are unchanged. Shared subscription commands reject a retired session before writing.",
+      "privacy": "Only the captured viewer subscription cache is invalidated; another account list is not refreshed or adopted. No credentials or new persistent personal data are added.",
+      "concurrency": "At most four artist-level reads, with two initial source requests each; obsolete queries receive cancellation. Canonical pagination rejects repeated full pages and more than 10,000 rows.",
+      "idempotency": "Deduplicate only exact source IDs and requested artist IDs. Failed writes are not automatically replayed.",
+      "failure": "Retain partial-source diagnostics and do not render failed reads as a successful empty catalog.",
+      "recovery": "Explicit catalog retry reads current server state. Existing follow-response reconciliation remains authoritative.",
+      "observability": "Scoped catalog/identity/cache tests and existing actual-component regressions; hosted review and deployment remain separate.",
+      "source": "Explicit user instruction on 2026-10-29 to execute the proposed unifications; scoped migration and authority boundaries in docs/architecture/artist-catalog-unification.md",
+      "implementation": [
+        "tdf-hq-ui/src/api/artistCatalog.ts",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/features/fans/artistAudience.ts",
+        "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
+        "tdf-hq-ui/src/features/releases/catalogQueries.ts",
+        "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/utils/artistIdentity.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/artistCatalog.test.ts",
+        "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
+        "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/utils/artistIdentity.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped web adapter and component checks; physical migration, production correspondence and universal media ingestion remain open.",
+      "ambiguity": [
+        "Legacy-to-canonical recording provenance and physical profile conflicts require verified mappings.",
+        "Social subscription, connection and club membership retain separate semantics."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Web consolidation is implemented and tested locally; physical data migration, protected integration and production acceptance are not established."
+      },
+      "critical": false,
+      "authority": "User-authorized source consolidation, preserving existing permissions and data.",
+      "property": "Shared projections preserve source identity, cancellation, partial-failure truthfulness and account scoping.",
+      "contract": "docs/architecture/artist-catalog-unification.md",
+      "verification": "Adapter boundary tests, identity negative cases, cache scoping tests and existing profile/hub/event/label component checks.",
+      "evidence": "Local checks and current-head hosted results must be reported separately; no formal refinement proof is claimed."
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
+      "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",
+      "domain": "SYS",
+      "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
+      "source": "formal/system/container-cleanup-evidence.md",
+      "contract": "formal/system/container-cleanup-evidence.md",
+      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout and exact case-insensitive error: no such object: <inspected nonce name>. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
+      "actors": [
+        "Hosted CI upload verifier",
+        "Maintainer diagnosing a failed gate"
+      ],
+      "preconditions": [
+        "Existing isolated GitHub-hosted guard",
+        "Existing nonce ownership boundary",
+        "subprocess capture_output/text contract"
+      ],
+      "inputs": [
+        "Owned synthetic inspect CompletedProcess",
+        "Actually completed synthetic-case records"
+      ],
+      "state": {
+        "initial": "Cleanup inspect response",
+        "terminal": [
+          "Existing confirmed cleanup path",
+          "Exact inspected-container absence",
+          "Failure retaining bounded diagnostic context"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain unexpected response while refusing success",
+        "Preserve prior Python exception chain",
+        "Remove only verified owned container ID under the existing guard",
+        "Accept only the recorded Docker absence response for the exact inspected nonce name"
+      ],
+      "forbiddenTransitions": [
+        "Discard unexpected response into a constant error",
+        "Accept unknown inspect errors as absence",
+        "Remove a foreign container",
+        "Suppress an existing primary exception chain"
+      ],
+      "effects": [
+        "Bounded failure evidence and strict missing-container response classification; Docker commands and isolation unchanged"
+      ],
+      "authorization": "Existing hosted runner gate, local socket and nonce/ownership refusal unchanged.",
+      "privacy": "Only synthetic command status/streams/name/case records; no environment, host-wide inventory or private upload-content dump.",
+      "concurrency": "Existing sequential synthetic runner unchanged; no daemon/process synchronization claim.",
+      "idempotency": "No retry or new cleanup operation; successful inspection retains the existing nonce-checked ID removal.",
+      "failure": "Unexpected cleanup still fails; malformed JSON, removal errors and timeouts retain existing behavior outside new structured path.",
+      "recovery": "Review the captured response before changing classification; require fresh hosted execution before claiming actual Docker repair.",
+      "observability": "Structured error context with each stream limited to2000characters before JSONserialization and explicit truncation flags.",
+      "implementation": [
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-persistent-uploads-container-diagnostics.py"
+      ],
+      "formalModels": [],
+      "verification": "12 mocked actual-main-path tests including four recognized missing-object variants and seven nearby refusals; old classifier reproduces lowercase-response refusal and daemon-error false acceptance. Original diagnostic fault controls remain historical.",
+      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Actual hosted response identifies the later failure cause; finite actual-runner simulations pass. No local Docker or current-head hosted qualification claim.",
+      "ambiguity": [
+        "The original PR677 Docker response remains unknown; later PR679 response is retained in job123928715883.",
+        "Exact classifier covers the recorded Docker spellings, not every version or concurrent daemon state.",
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Simulated diagnostics and source preservation tested; actual hosted Docker run and complete implementation/refinement remain separate."
+      }
+    },
+    {
+      "id": "PKG-PURCHASE-EXPIRY-001",
+      "title": "Persist configured validity on new legacy package purchases",
+      "statement": "New package purchases snapshot positive product validity as stored purchase time plus elapsed days; absent validity stays nonexpiring; nonpositive configuration is refused without inserting a purchase.",
+      "domain": "ORD",
+      "authority": "docs/Manual_Usuario_TDF.md Paquetes de Clases; shipped Guitar24h120day seed; explicit owner decisions2026-10-30 purchase-time elapsed days and refuse nonpositive validity.",
+      "source": "formal/system/package-purchase-expiry.md",
+      "contract": "formal/system/package-purchase-expiry.md",
+      "property": "Positive n implies expiresAt = purchasedAt + n*86400seconds; Nothing implies no expiry; Just n<=0 implies409 and no row. Preserve existing reference/module/inactive checks and purchase fields.",
+      "actors": [
+        "Authorized legacy package operator",
+        "Package buyer"
+      ],
+      "preconditions": [
+        "Existing module authorization and reference validity",
+        "Product active",
+        "Elapsed duration fits deployed database timestamp range"
+      ],
+      "inputs": [
+        "buyerId",
+        "productId",
+        "Current product expiresDays"
+      ],
+      "state": {
+        "initial": "Validated new purchase request",
+        "terminal": [
+          "Persisted new purchase with snapshotted terms",
+          "Existing reference/permission refusal",
+          "Invalid validity configuration refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate existing references and active state",
+        "Refuse nonpositive validity before insert",
+        "Persist positive validity using stored purchasedAt",
+        "Keep absent validity nonexpiring"
+      ],
+      "forbiddenTransitions": [
+        "Discard positive product validity",
+        "Use a second clock for expiry anchor",
+        "Interpret days as seconds",
+        "Create a row while refusing invalid validity",
+        "Rewrite historical purchases to simulate correctness"
+      ],
+      "effects": [
+        "One new package purchase on successful admission; none on refusal"
+      ],
+      "authorization": "Existing ModulePackages guard unchanged; no new ownership/payment/gift policy inferred.",
+      "privacy": "Owned synthetic SQLite buyers/products only; no production financial records.",
+      "concurrency": "Existing product-read/insert transaction behavior retained; no new lock or temporal snapshot guarantee.",
+      "idempotency": "Existing duplicate purchase behavior unchanged; no new payment or retry contract.",
+      "failure": "Existing400/403/409/422 precedence retained; invalid configured validity returns409 before insert.",
+      "recovery": "Correct product configuration before retry; do not rewrite historical purchases under this change.",
+      "observability": "Native typed-handler/persisted-row regressions and controlled source mutations.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real pooled SQLite Handler cases, source fault controls and canonical Stack full-suite qualification; no complete proof.",
+      "evidence": "formal/system/package-purchase-expiry.md; reports/package-purchase-expiry-2026-10-30.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Actual finite-term omission reproduced; exact timing and invalid-term handling explicitly owner-authorized.",
+      "ambiguity": [
+        "Database timestamp-range admission for extremely large durations remains separate.",
+        "Payment/actor/gift/redemption and historical records unchanged.",
+        "No production PostgreSQL trigger/authenticatedHTTP/deployment guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite Handler tests; complete implementation/refinement and deployment correspondence unproven."
+      }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-PRECISION-001",
+      "title": "Exact browser event-finance cents or explicit refusal",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Event-finance summary, budget and entry reads and CSV exports refuse non-null monetary values that are not JavaScript safe-integer cents. Safe signed cents display without a floating-point division by100 while preserving locale and default ISO currency fraction rounding.",
+      "authority": "Owner financial-integrity mandate; existing cents DTO contracts, signed finance balances, locale formatter and CSV raw-cent columns. Existing UI authoring already requires safe integer inputs.",
+      "source": "formal/system/event-finance-browser-precision.md",
+      "contract": "formal/system/event-finance-browser-precision.md",
+      "property": "For every admitted non-null Cents field x, Number.isSafeInteger(x). For signed safe cents c, display is locale currency formatting of the exact rational c/100 rounded to the currency default fraction digits. No lossy monetary value reaches a successful finance read or CSV row. CSV requires successful independent list data; failed/pending lists cannot silently become empty report inputs.",
+      "actors": [
+        "Authorized event manager",
+        "Browser finance report reader"
+      ],
+      "preconditions": [
+        "Existing event API authorization and integer-cent backend contract",
+        "Modern supported browsers provide Intl.NumberFormat BigInt formatToParts",
+        "Finance DTO monetary fields retain their Cents suffix; optional null/undefined retain existing meanings"
+      ],
+      "inputs": [
+        "Decoded summary, budget and finance-entry DTO monetary fields",
+        "Signed safe integer cents, optional values, configured locale and ISO currency"
+      ],
+      "state": {
+        "read": "Decoded transport or cached finance data",
+        "terminal": [
+          "Validated finance data / exact display / CSV rows",
+          "Query failure, unavailable amount or export error"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate each finance read before exposing it",
+        "Validate cached monetary data before building CSV rows",
+        "Separate integer whole and fraction units before locale presentation"
+      ],
+      "forbiddenTransitions": [
+        "Display or export rounded unsafe decoded cents as valid monetary evidence",
+        "Divide safe cent magnitudes by100 in binary floating point before display",
+        "Export a partial CSV after monetary precision refusal"
+      ],
+      "effects": [
+        "Read-only report presentation and CSV export; no backend financial restriction or monetary wire migration"
+      ],
+      "authorization": "Existing event authorization unchanged; validation grants no additional access.",
+      "privacy": "Synthetic fixtures only; no provider or customer data in receipts.",
+      "concurrency": "Validate each returned/cached object independently; no serializable multi-query financial snapshot claim.",
+      "idempotency": "No provider calls or automatic mutation retries. Equal values and locale/currency inputs produce equal report formatting.",
+      "failure": "Unsafe finance data rejects the query or export; existing query warnings and explicit export feedback remain. Unrepresentable displayed prices show Monto no disponible. Missing prices retain Gratis.",
+      "recovery": "Correct source values through authorized workflows or implement an independently reviewed exact monetary wire/client migration. Never clamp or rewrite financial records to make the UI accept them.",
+      "observability": "Retain baseline assertion failures, targeted/full UI logs, independent source faults, source fingerprints and exact-commit evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven Jest tests of actual API getters, extracted unchanged CSV builder and formatter; finite locale/currency differential checks, actual source-fault controls, UI type/lint/build and CI. TESTED, no complete refinement proof.",
+      "evidence": "formal/system/event-finance-browser-precision.md; exact-source execution reports remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped executable evidence; no complete implementation proof or deployed acceptance claim.",
+      "ambiguity": [
+        "Foreign currency attribution and backend aggregation/transaction consistency are independent obligations.",
+        "Safe values already rounded by an upstream producer cannot be detected without a wire migration.",
+        "Production exposure of extreme amounts and all browser/locale combinations remain unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite implementation tests; complete refinement and deployed browser/API correspondence remain unproven."
+      }
+    },
+    {
+      "id": "SYS-WEBTORRENT-BROWSER-001",
+      "title": "Preserve browser playback while removing unused Node torrent dependencies",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker",
+        "Music listener"
+      ],
+      "preconditions": [
+        "Use the reviewed WebTorrent 2.8.5 official browser artifact and committed npm v3 workspace lock.",
+        "Trust official npm archive integrity metadata and the publisher-supplied source map; exact upstream build resolution and compiler version remain unknown."
+      ],
+      "inputs": [
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "package-lock.json",
+        "audit-ci.jsonc"
+      ],
+      "state": {
+        "boundary": "formal/system/webtorrent-browser.md"
+      },
+      "allowedTransitions": [
+        "Reviewed official artifact update with matching provenance, preserved notices, finite compatibility checks and fresh advisory evidence."
+      ],
+      "forbiddenTransitions": [
+        "Reintroduce unused Node WebTorrent/discovery/tracker/ip packages or npm aliases.",
+        "Extend the expired ip exception or lower the production audit threshold.",
+        "Omit mapped package candidate versions or supplied license notices.",
+        "Treat candidate-version advisory results as complete binary provenance or vulnerability clearance."
+      ],
+      "effects": [
+        "Reject invalid browser artifact, missing source/notice/advisory coverage or applicable low-or-higher browser advisories before integration."
+      ],
+      "authorization": "This dependency repair does not authorize real torrent/peer traffic, provider operations or deployment.",
+      "privacy": "Advisory requests contain public package names and candidate versions only; do not send registry credentials or application data.",
+      "concurrency": "Check immutable committed candidate files; do not run installers during source-bound qualification.",
+      "idempotency": "Static checks are deterministic; live advisory checks depend on the registry feed at execution time.",
+      "failure": "Reject integrity, policy, inventory and live scan failures without renewing audit exemptions.",
+      "recovery": "Restore the reviewed browser artifact and complete evidence; preserve review and required CI controls.",
+      "observability": "Record candidate commit, bundle and lock hashes, commands, actual exits and explicit provenance limitations.",
+      "source": "Existing torrentAudio browser-only entry; failed Safe Install after 2026-10-31 exception expiry; GHSA-2p57-rm9w-gvfp; user security and verification requirements.",
+      "contract": "formal/system/webtorrent-browser.md",
+      "implementation": [
+        "scripts/check-browser-vendor.mjs",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci-safe-install.yml",
+        "third_party/webtorrent/browser.json",
+        "third_party/webtorrent/bundled-provenance.json",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+        "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "package-lock.json",
+        "audit-ci.jsonc",
+        "tdf-hq-ui/jest.config.cjs"
+      ],
+      "tests": [
+        "scripts/__tests__/browser-vendor.test.mjs",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "e2e/web/webtorrent-browser.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite deterministic rejection and browser compatibility tests; partial upstream build identity and advisory coverage.",
+      "ambiguity": [
+        "Source-map presence does not prove executed statements or unique package versions.",
+        "Nine matching archives lack standalone notice files; exact webpack compiler version is unknown."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite regression controls implemented; source-bound UI/browser/CI evidence is separate and exact upstream build identity remains qualified."
+      },
+      "authority": "approved",
+      "property": "The reviewed browser artifact and supplied notices remain bound to a complete conservative mapped package inventory; Node torrent packages are absent; invalid static evidence and applicable live advisories reject.",
+      "verification": "Deterministic file/lock/inventory checks and negative controls, live npm bulk advisory scan, UI checks and isolated actual browser lifecycle probes; no mathematical proof.",
+      "evidence": "scripts/__tests__/browser-vendor.test.mjs; candidate-commit qualification receipts (separately published)."
+    },
+    {
+      "id": "SYS-UI-TEST-WORKER-001",
+      "title": "Serial UI qualification recycles retained worker heap and preserves every test result",
+      "domain": "SYS",
+      "critical": true,
+      "authority": "Required UI quality execution and observed hosted heap abort; pinned Jest worker contract",
+      "contract": "formal/system/ui-test-worker-memory.md",
+      "source": "formal/system/ui-test-worker-memory.md",
+      "status": "specified and implemented",
+      "confidence": "Controlled actual-command tests plus full local UI qualification; no hard process/single-file memory bound or universal proof",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "WorkerUIcomponent has hostedNode22 5guards/328suites/3799tests PASS on8b. Newjointsource includesquiet-outputguardfollowup verifiedlocally inordinary/quietenvironments; fulljoinedhostedqualification pending."
+      },
+      "statement": "The default UI qualification command must run selected test files serially through one recyclable worker slot, preserve selection/assertions/timeouts, and report failure for any failed assertion or unrecoverable worker execution.",
+      "actors": [
+        "Repository contributor",
+        "UI quality runner",
+        "Jest worker"
+      ],
+      "preconditions": [
+        "Pinned Jest dependencies are installed.",
+        "Default CI test command runs without explicit in-band/debug overrides."
+      ],
+      "inputs": [
+        "Workspace test command",
+        "Jest configuration",
+        "Selected test files",
+        "Worker execution/memory observations"
+      ],
+      "state": {
+        "validation": [
+          "queued",
+          "running",
+          "passed",
+          "failed"
+        ],
+        "worker": [
+          "idle",
+          "executing",
+          "recycled",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Run every selected file serially through worker slot1.",
+        "Recycle an over-budget worker between files while preserving completed results.",
+        "Report failed assertions and exhausted worker failures as failed qualification."
+      ],
+      "forbiddenTransitions": [
+        "Force default CI in-band execution that bypasses idle worker recycling.",
+        "Skip selected files or relax assertions/timeouts to obtain green evidence.",
+        "Treat unresolved worker failure or an incomplete final suite as passing evidence."
+      ],
+      "effects": [
+        "Complete failure-aware test results and source-bound qualification evidence"
+      ],
+      "authorization": "Only the normal test harness executes synthetic local fixtures; no provider or production financial operation is part of this requirement.",
+      "privacy": "Jest capture may include private reporter options: capture/parse errors must never echo stdout, stderr or JSON snippets; only typed worker-policy fields are exposed to assertions. Test with synthetic markers, never a real credential.",
+      "concurrency": "One worker slot preserves serial suite scheduling; a recycled process may replace it between files.",
+      "idempotency": "Separate attempts retain independent source/outcome evidence; retries are not earlier passing evidence.",
+      "failure": "Failed assertions, exhausted worker startup/process retries and incomplete final results block qualification. Pinned Jest may retry unexpected worker crashes; no first-fault/transient-crash theorem is claimed.",
+      "recovery": "Repair source/configuration and requalify changed inputs while retaining failed evidence.",
+      "observability": "Record source SHA, actual command, exit code, selected/completed counts, worker slot/PID controls and limitations.",
+      "verification": "Actual defaultCLI configuration, controlled PID fixtures, forced-in-band negative control, productionidlelimit removal mutation, deliberate failed assertion and persistent worker crash; unchangedfull UI suite and fresh hosted qualification. Defaultconfiguration capture must work with both ordinary npm banners and silent JSON output. Confidentiality faults cover failed capture, missing/malformed JSON and invalid typedworker fields.",
+      "property": "A completed over-budget worker is not reused for the next file; all selected files have terminal results; failed assertions and exhausted worker failures yield nonzero exit.",
+      "implementation": [
+        "tdf-hq-ui/package.json",
+        "tdf-hq-ui/jest.config.cjs",
+        "scripts/quality-ui.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/ui-worker-memory.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "The1GiBidle budget is an operational choice, not a theorem or business requirement.",
+        "The worker boundary does not bound single-file/parent/OS memory or identify the underlying retention source.",
+        "Pinned Jest permits up to3 retries after unexpected worker crashes. Transientcrash first-attempt failure is not established; persistentcrash control requires terminalfailure and otherfiles complete."
+      ],
+      "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending. Followupquietmodecounterexample on8b:4PASS/1configparserFAIL; header-independent reader and explicitnotice/silent variants pass all5guards with both ordinary and quietparent environments. Product/workerconfig unchanged; joinedheadhostedqualificationpending. The8bquietfailure echoedasyntheticreporter token. Followup parser emitsgenericerrors and returns onlytypedworkersettings; sixguardcases include confidentiality faults. No realcredentialorreporter service was used in this probe."
     },
     {
       "id": "PAY-DATAFAST-001",

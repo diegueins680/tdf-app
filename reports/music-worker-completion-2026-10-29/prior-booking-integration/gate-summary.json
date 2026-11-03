@@ -1,0 +1,132 @@
+{
+  "head": "959cf3bc31cc794717e1786b7d133b2907f79322",
+  "base": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "required20": [
+    {
+      "context": "quality",
+      "kind": "check",
+      "id": 123559416811,
+      "completedAt": "2026-10-29T15:50:54Z"
+    },
+    {
+      "context": "api-contracts",
+      "kind": "check",
+      "id": 123546891278,
+      "completedAt": "2026-10-29T15:29:49Z"
+    },
+    {
+      "context": "production-migrations",
+      "kind": "check",
+      "id": 123546890805,
+      "completedAt": "2026-10-29T15:29:48Z"
+    },
+    {
+      "context": "specification-contracts",
+      "kind": "check",
+      "id": 123546428730,
+      "completedAt": "2026-10-29T15:32:33Z"
+    },
+    {
+      "context": "verify",
+      "kind": "check",
+      "id": 123546428753,
+      "completedAt": "2026-10-29T15:38:59Z"
+    },
+    {
+      "context": "postgres-foundation",
+      "kind": "check",
+      "id": 123546428882,
+      "completedAt": "2026-10-29T15:29:50Z"
+    },
+    {
+      "context": "postgres-api",
+      "kind": "check",
+      "id": 123546428115,
+      "completedAt": "2026-10-29T15:29:33Z"
+    },
+    {
+      "context": "postgres-task-commit",
+      "kind": "check",
+      "id": 123546428831,
+      "completedAt": "2026-10-29T15:29:27Z"
+    },
+    {
+      "context": "postgres-task-read",
+      "kind": "check",
+      "id": 123546428591,
+      "completedAt": "2026-10-29T15:29:34Z"
+    },
+    {
+      "context": "postgres-task-revision",
+      "kind": "check",
+      "id": 123546428996,
+      "completedAt": "2026-10-29T15:29:23Z"
+    },
+    {
+      "context": "postgres-task-revisioned-read",
+      "kind": "check",
+      "id": 123546429074,
+      "completedAt": "2026-10-29T15:29:35Z"
+    },
+    {
+      "context": "postgres-raci-reassignment",
+      "kind": "check",
+      "id": 123546428951,
+      "completedAt": "2026-10-29T15:30:10Z"
+    },
+    {
+      "context": "postgres-raci-editor-context",
+      "kind": "check",
+      "id": 123546428877,
+      "completedAt": "2026-10-29T15:29:53Z"
+    },
+    {
+      "context": "postgres-task-completion",
+      "kind": "check",
+      "id": 123546428765,
+      "completedAt": "2026-10-29T15:30:36Z"
+    },
+    {
+      "context": "postgres-complete-schema",
+      "kind": "check",
+      "id": 123546428758,
+      "completedAt": "2026-10-29T15:29:32Z"
+    },
+    {
+      "context": "main-integration-admission",
+      "kind": "status",
+      "id": 57586441766,
+      "observedAt": "2026-10-29T15:29:16Z"
+    },
+    {
+      "context": "models-and-postgres",
+      "kind": "check",
+      "id": 123546428773,
+      "completedAt": "2026-10-29T15:32:19Z"
+    },
+    {
+      "context": "social-client",
+      "kind": "check",
+      "id": 123546428253,
+      "completedAt": "2026-10-29T15:30:05Z"
+    },
+    {
+      "context": "postgres-properties",
+      "kind": "check",
+      "id": 123546428454,
+      "completedAt": "2026-10-29T15:29:52Z"
+    },
+    {
+      "context": "hardcoded-list-audit",
+      "kind": "check",
+      "id": 123546428764,
+      "completedAt": "2026-10-29T15:31:13Z"
+    }
+  ],
+  "mergeableState": "clean",
+  "exactHeadIndependentReview": "tdfrecords APPROVED",
+  "strictBaseProtectionUnchanged": true,
+  "selectedFIFO": 638,
+  "scope": "Bookingphase qualified; priorgallerycontrast counterexample remainsunrepaired/queued648651 despitecurrentrunpass. Notwholeplatformproof.",
+  "state": "PREMERGE_GATES_QUALIFIED_PENDING_FINAL_RECHECK_AND_NORMAL_MERGE"
+}

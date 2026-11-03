@@ -510,7 +510,7 @@ publicReviewsSql =
   <> "'comment',revision.comment,'createdAt',page.created_at,'updatedAt',revision.submitted_at,"
   <> "'status',page.status,'verifiedPurchase',true,'badge','Compra verificada',"
   <> "'author',CASE WHEN coalesce(privacy.show_public_identity,true) THEN jsonb_build_object("
-  <> "'name',author.display_name,'avatarUrl',fan.avatar_url) ELSE jsonb_build_object('name','Comprador verificado') END,"
+  <> "'partyId',author.id,'name',author.display_name,'avatarUrl',fan.avatar_url) ELSE jsonb_build_object('name','Comprador verificado') END,"
   <> "'dimensions',(SELECT coalesce(jsonb_object_agg(rating.dimension_code,rating.rating),'{}'::jsonb) "
   <> "FROM merch_review_dimension_rating rating WHERE rating.revision_id=revision.id),"
   <> "'images',(SELECT coalesce(jsonb_agg(jsonb_build_object('assetId',image.media_asset_id,"

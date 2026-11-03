@@ -49,10 +49,15 @@ provider transport does not itself retry POSTs. Privileged SQL changes, restorin
 an older database, old binaries serving traffic and manual provider operations
 are outside this guarantee.
 
+Completion admission is specified separately in
+[legacy-stripe-refund-completion.md](legacy-stripe-refund-completion.md): a
+provider ID is retained as correlation while successful status and exact request
+binding are required for completion. Its receipt supplies the new verification
+scope; the original execution-fence receipts keep their historical identity.
+
 Remaining risks: legacy partial refunds still use the historical whole-order
-ticket/inventory projection; a parsed provider refund ID is not sufficient
-evidence of success or exact payment binding; legacy tickets remain issued while
-an outcome is uncertain. No query/reconciliation operation for held legacy Stripe
+ticket/inventory projection; legacy tickets remain issued while an outcome is
+uncertain. No query/reconciliation operation for held legacy Stripe
 refunds is introduced here. These are recorded as separate unresolved issues in
 `reports/correctness-cycle-2026-10-28.json`. An uncertain request must not be reset
 to pending to recover it. Historical uncertain attempts still marked pending

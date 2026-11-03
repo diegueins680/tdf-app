@@ -1,0 +1,44 @@
+ACCEPT — scoped independent ROOT range qualification/harness review; zero blocking findings remain.
+
+Source 0cce032ffbb489ef8839610c7ab3c89e2cc08b08; main 234ff6f7faf1aecf347c8e92a374228f4ec07aaa; normal old parent 1ffa7818204e46f9aa92e1657a12efe4a5ebd2c6. This range preparation, qualifier, seal and packaging were authored by ROOT; my review is independent of their authorship.
+
+Raw current canonical Stack build returned 0 using --force-dirty. Raw targeted Handler execution reports15 examples/0failures/0pending; full native execution reports4060/0/21 inheritedpending. I checked the actual binary SHA feab347bcef02083efec7e2fbdefc919a43278043a0568d819bedee27e7a2b99 and test Version.o SHA 26a61257ecb6e2f4c9be7faca5198f26bf55b15b482d770e1b2284705614dc34 against both receipts and current bytes. Both contain the exact0cce source literal, and the actual build log shows TDF.Version compilation. These are current native test artifacts; no serving executable or PostgreSQL extreme-reachability execution is claimed.
+
+Independently rehashed all 1430 registered FS/Git/Mobile bindings, all 987 backend inputs independently enumerated from Git, and all 52 assurance artifacts. The whole backend equals1ffa; only the two owned handler/test paths differ from main and both remain exactold. UI/scripts/workflows/dependencies/Mobile remain main. The preserved parent report/evidence bindings are1681 old-parent and1686 main paths (overlapping sets, not test counts). Current root QA/admission/catalogue8 receipts record zero exits; historical15-case baseline12failures and two source faults/three assertions remain explicitly historical and were not rerun or relabeled.
+
+The review identified that the initial extracted range binder accepted a missing actualExits map; current real execution receipts were complete and no invalid report had been published. ROOT retained the actual counterexample, hardened exact native build/targeted/full keys and qualified phase plus exact root-quality/admission/catalogue keys/source/cleanup, and expanded controls to 13. Current source-correspondence uses that hardened binder. The final13 controls report intended assertion rejection with valid-before/restored-after and disk bytes unchanged. The earlier 9 controls are historical. A first added-control callback returned 0 as replacement bytes and caused a setup failure; ROOT retained that history and corrected the callback to returnNone. The later19814 controls actually returned 0 with 13 cases. Seal session 8832's seal returned normally, but its following callback setup failed; the receipt does not misstate the overall8832 driver as zero. No product/native rerun was needed for these evidence-only corrections.
+
+The generic range report now retains explicit openCrossLayerDefect/FAILED_IN_THIS_BRANCH and seal limitations for JavaScript53-bit reporting/display precision. UI683 remains a separate unmerged correction, not imported. This closes the identified report-risk omission without claiming production exposure or refuting the narrower host-Int requirement. The range contract retains mixed-currency, snapshot and finite owned SQLite assumptions.
+
+Both candidates preserve all 159 new protected-main normative objects and the exact owned requirement for 160 total, explicitly taking main's authorized PAY-CHECKOUT-001/003 amendments rather than claiming every old-parent object stayed unchanged. Historical reports/evidence from both parents retain their Git blob identities. Auth/recovery source-context assumptions remain unchanged. Fresh assurance provenance agrees with rehashed sources and all 52 evidence artifacts, with 160 whole requirements and320 implementation/refinement obligations still UNPROVEN, eleven inherited conditional SMT claims and release BLOCKED/executionAllowed false. No new complete proof is claimed.
+
+The reviewed generic report-only packager preserves the source commit, requires actual receipts and manual reading of this receipt, archives owned qualification files without following symlinks, adds exactly four report paths, commits a normal report-only child, then invokes a verifier that checks all four Git/FS blobs and every unique safe archive member against its manifest. These packaging/commit/archive checks are future operations, not already completed claims in this review. The ACCEPT marker is a manual packaging precondition, not GitHub approval. Fresh current-head hosted checks, independent approval, strict main ancestry, FIFO and protection remain required; no old approval is borrowed. The next child is673 for range and684 for browser precision.
+
+No independent tests, compiler/build, AST controls, browser, database, Docker, provider or production runtime was executed by this reviewer. I performed source/artifact reads, Git identity comparisons and cryptographic rehashing only. No code, metadata, refs, PR/readiness/auto-merge/review state or remote state was changed. No serving executable, deployment, global correctness or universal cleanup guarantee is established. Unrelated gallery/worker counterexamples remain unrepaired and their causes are not inferred from successful samples.
+
+Companion independent checks: /private/tmp/tdf-main643-final-independent-checks-20261030T2302.json
+SHA256: 749b1ac69c1df48f2fc7fe2e71e2838304e98f0482e2d52728be783aabf560aa
+
+Exact source/raw receipt/harness SHA256:
+05e18eac486ba5028dceb78c3b35f0c5975d131d0d6e27d9af6a8dd086786828  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/preparation-state.json
+248ab0043f806e0f480261283765f01ebe7378863b153c1d81c31c4371584ca4  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/source-correspondence.json
+d6315cb955b64bba3c6c64f7e397121f3b97521812fc694ebd1225dbc100cd8b  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/seal-binding-controls.json
+b86ed98e7a4affe88157a7d311946ecbdd590fb7dbda053729080bb960170f47  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/seal-execution.json
+0a8995127d11d366024d9e1d0e4a2267f9735e72699d6bc00f0b46faf16cbaf7  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/assurance-committed/report.json
+f5b76b8f61174b087404ced77d7bca617f6dbc3d87943efa75e9fcb06912085c  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/assurance-committed/sources.json
+721bc95d6c3ef4da34d8c427cd6db6b90cd049fcf55d74b50f5417c08141f071  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/native-quality.json
+52e04280994b4c93c06e38f3cee9d74e54550488988f7692c53cf14a9e4d0011  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/native-qualified-inputs.json
+b46d62f72df7d81036285efbc11a3ce752e4c817d315230260b6a45d7a9e4a78  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/native-force-dirty-confirmed.json
+fa24cf92a6b490c8fe305ff00dc974f38ab147b9a4266571c7d63937ba6fe4c9  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/qualified-build.log
+bf6ff2eeb4ab772c67be037b7e72f071b2b77a39332fff5bfc57f0bd2b435b3d  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/qualified-targeted.log
+4b514b036282d04f3c7628fbb20e9709cc22ba560238ceb334eb77f31758884f  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/qualified-full.log
+2d77391751948b42010a16f250e44df23d5492ea681d80f3ae908e9916135e0c  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/root-quality-result.json
+54a17cd88084e16feb29a959dbff69a34fc256188bb6405c90ebe9b8baadd7a3  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/initial-range-binder-missing-exits-counterexample.json
+f60cc1a3a1986ab90b8ce54991a74baf19d741a7195bb0b0d569062ce68cc95d  /private/tmp/tdf-event-finance-range-main643-qualification-20261030T2302/initial-controls-callback-history.json
+cad7b84b585db8d9f32daa50eeeb3ba6cf67956155010151eb0555737328080f  /private/tmp/tdf-event-finance-range-main643-seal-20261030T2302.py
+4db693bb1664716d6acd6837f9e6afaf2a5ed0237c30a5b2c663830cc01bdee9  /private/tmp/tdf-event-finance-range-main643-seal-controls-20261030T2302.py
+31b055269c3a21305bcaac7559fe51421df603ac7d67cdc2f319e0bf97fb7ddd  /private/tmp/tdf-main643-package-20261030T2302.py
+27d9f59e9475295fe59ae9546b5452495279ae20bbd75b1a9338ff8ddb043514  /private/tmp/tdf-verify-report-archive-20261030.py
+18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf  /private/tmp/tdf-event-finance-range-main643-20261030T2302/formal/system/event-finance-report-range.md
+
+Reviewed at UTC 2026-10-30T23:34:44.049663+00:00
