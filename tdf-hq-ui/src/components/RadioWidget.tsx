@@ -57,7 +57,6 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
-import { shouldHideRadioForRoute } from '../utils/radioRouteVisibility';
 import {
   createTorrentAudioSession,
   isMagnetLink,
@@ -179,8 +178,6 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
-  const hideRadioForRoute = shouldHideRadioForRoute(location.pathname, location.hash);
-  const radioEnabled = !hideRadioForRoute;
   const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
@@ -353,7 +350,6 @@ export default function RadioWidget() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: false,
-    enabled: radioEnabled,
   });
   const genresQuery = useQuery({
     queryKey: ['catalog', 'genres', 'es', 'radio'],
@@ -361,7 +357,6 @@ export default function RadioWidget() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: false,
-    enabled: radioEnabled,
   });
   const autoStopOptionsQuery = useQuery({
     queryKey: ['radio-auto-stop-options', 'es'],
@@ -369,7 +364,6 @@ export default function RadioWidget() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: false,
-    enabled: radioEnabled,
   });
   const autoStopOptions = useMemo(
     () => autoStopOptionsQuery.data?.options ?? [],
@@ -506,7 +500,6 @@ export default function RadioWidget() {
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: false,
-    enabled: radioEnabled,
   });
   const refetchStreams = radioSearch.refetch;
   const streamsFetching = radioSearch.isFetching;
@@ -781,7 +774,7 @@ export default function RadioWidget() {
 
   // Opening the panel or changing its contents can make a saved position too low.
   useEffect(() => {
-    if (hideRadioForRoute || miniBarVisible || miniBarDismissed || compactMiniBar) return;
+    if (miniBarVisible || miniBarDismissed || compactMiniBar) return;
     const keepInBounds = () => setPosition((p) => {
       const next = clampPosition(p.x, p.y);
       return next.x === p.x && next.y === p.y ? p : next;
@@ -790,7 +783,7 @@ export default function RadioWidget() {
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(keepInBounds);
     if (containerRef.current) observer?.observe(containerRef.current);
     return () => observer?.disconnect();
-  }, [clampPosition, compactMiniBar, expanded, hideRadioForRoute, miniBarDismissed, miniBarVisible, panelSize]);
+  }, [clampPosition, compactMiniBar, expanded, miniBarDismissed, miniBarVisible, panelSize]);
   const resetPosition = useCallback(() => {
     if (typeof window === 'undefined') return;
     const width = window.innerWidth;
@@ -1079,7 +1072,6 @@ export default function RadioWidget() {
 
   // Publish presence so other perfiles can see current stream.
   useEffect(() => {
-    if (!radioEnabled) return undefined;
     if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
       void RadioAPI.clearPresence().catch(() => undefined);
       return undefined;
@@ -1096,7 +1088,7 @@ export default function RadioWidget() {
     return () => {
       clearTimeout(timer);
     };
-  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isActiveTorrent, isPlaying, radioEnabled]);
+  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isActiveTorrent, isPlaying]);
 
   const fetchNowPlaying = useCallback(async () => {
     if (!activeStation.streamUrl || isActiveTorrent) {
@@ -1116,10 +1108,6 @@ export default function RadioWidget() {
   }, [activeStation.streamUrl, isActiveTorrent]);
 
   useEffect(() => {
-    if (!radioEnabled) {
-      setNowPlayingTitle(null);
-      return;
-    }
     if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
       setNowPlayingTitle(null);
       return;
@@ -1130,7 +1118,7 @@ export default function RadioWidget() {
       void fetchNowPlaying();
     }, 30000);
     return () => window.clearInterval(interval);
-  }, [activeStation.streamUrl, fetchNowPlaying, isActiveTorrent, isPlaying, radioEnabled]);
+  }, [activeStation.streamUrl, fetchNowPlaying, isActiveTorrent, isPlaying]);
 
   useEffect(() => {
     const handleLoadStream = (event: Event) => {
@@ -1849,7 +1837,7 @@ export default function RadioWidget() {
   );
 
   const shouldInlineMiniBar = false; // always docked at bottom, even on login
-  const dockedBarVisible = !hideRadioForRoute && !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
+  const dockedBarVisible = !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
 
   // Publish the docked bar's height (and reserve it on <body>) so the last
   // form fields and submit buttons can scroll above it instead of under it.
@@ -1864,9 +1852,9 @@ export default function RadioWidget() {
         left: 0,
         right: 0,
         bottom: shouldInlineMiniBar ? 'auto' : ABOVE_GLOBAL_PLAYER,
-        // appBar (1100) stays below MUI modals (1300), so enrollment and
-        // other dialogs always render above the docked bar.
-        zIndex: (theme) => shouldInlineMiniBar ? 'auto' : theme.zIndex.appBar,
+        // Keep playback controls above the sidebar (drawer), while dialogs
+        // retain their modal layer above both.
+        zIndex: (theme) => shouldInlineMiniBar ? 'auto' : theme.zIndex.drawer + 1,
         display: 'flex',
         justifyContent: 'center',
         px: 0,
@@ -1995,10 +1983,6 @@ export default function RadioWidget() {
   );
   const miniBarContent =
     shouldInlineMiniBar && loginMiniBarHost ? createPortal(miniBarNode, loginMiniBarHost) : miniBarNode;
-
-  if (hideRadioForRoute) {
-    return null;
-  }
 
   return (
     <>
