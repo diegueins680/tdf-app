@@ -80,6 +80,8 @@ class HttpBoundaryTests(unittest.TestCase):
   self.assertEqual(self.req('/assets/'+aid)[0],404)
   with self.store.db() as d:self.assertEqual(d.execute('SELECT reserved FROM assets WHERE id=?',(aid,)).fetchone()[0],0)
  def test_video_library_anonymous_read_drafts_hidden_scope_and_revocation(self):
+  self.assertEqual(self.req('/videos?artist_id=invalid')[0],400)
+  self.assertEqual(self.req('/public/videos?artist_id=invalid',who='bad')[0],400)
   cid=self.create();data={'artist_id':1,'campaign':cid,'title':'Session','source_url':'https://youtu.be/uRNyIMLiqU8'}
   with patch('videos.authorize_artist') as authority:
    status,body,_=self.req('/videos',data);self.assertEqual(status,201);row=json.loads(body);authority.assert_called_once()

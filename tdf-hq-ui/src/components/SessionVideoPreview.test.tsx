@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, jest } from '@jest/globals';
 import SessionVideoPreview from './SessionVideoPreview';
 
 describe('inline video playback boundary', () => {
+  beforeEach(() => { jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {}); });
+  afterEach(() => { jest.restoreAllMocks(); });
   it('loads no external frame before intent and stops/removes the old source on navigation', () => {
     const { container, rerender } = render(<SessionVideoPreview url="https://youtu.be/uRNyIMLiqU8" title="Session" />);
     expect(container.querySelector('iframe')).toBeNull();
@@ -23,5 +26,11 @@ describe('inline video playback boundary', () => {
     const { container } = render(<SessionVideoPreview url="javascript:alert(1)" title="Unsafe" />);
     expect(container.querySelector('iframe')).toBeNull();
     expect(container.querySelector('a')).toBeNull();
+  });
+  it('explicitly pauses direct media when leaving the player', () => {
+    const view = render(<SessionVideoPreview url="https://media.example.org/real.mp4" title="Session" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
+    view.unmount();
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1);
   });
 });

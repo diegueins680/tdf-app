@@ -106,7 +106,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
   actor=self.actor(method not in ('GET','HEAD'))
   if path=='/videos' and method in ('GET','POST'):
    import videos
-   data=self.read_json() if method=='POST' else {'artist_id':int(urllib.parse.parse_qs(url.query).get('artist_id',['0'])[0])}
+   if method=='POST':data=self.read_json()
+   else:
+    try:data={'artist_id':int(urllib.parse.parse_qs(url.query).get('artist_id',['0'])[0])}
+    except ValueError:raise Denied('Artista inválido.') from None
    videos.authorize_artist(actor,data.get('artist_id'),self.headers,cfg)
    if method=='POST':self.respond(201,videos.save(s,actor,data));return
    with s.db() as d:

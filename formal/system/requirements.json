@@ -14780,7 +14780,10 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Source implementation prepared; hosted CI, independent review, protected deployment and public playback/device qualification still required. No whole-program refinement claim."
-      }
+      },
+      "property": "No public draft or stale version, unauthorized artist/campaign mutation, implicit follow, duplicated provider-source identity or iframe-load watch claim.",
+      "verification": "Finite source and HTTP/UI tests; actual local embed preview and Metro bundles recorded separately from protected deploy and device qualification.",
+      "evidence": "Current-run receipts are private; source checks do not claim production deployment, external-provider progress SDK qualification or physical-device playback."
     }
   ]
 }
