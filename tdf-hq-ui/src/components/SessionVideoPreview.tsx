@@ -9,7 +9,7 @@ export interface SessionVideoPreviewProps { url: string; title: string; poster?:
 /** Shared by artist pages and Records. A page/iframe load is never counted as a video view. */
 export default function SessionVideoPreview(props: SessionVideoPreviewProps) {
   // A new source remounts the player, stopping the previous media and clearing consent/errors.
-  return <Player key={`${props.analyticsContext?.artistId ?? ''}:${props.analyticsContext?.videoId ?? ''}:${props.url}`} {...props} />;
+  return <Player key={`${props.analyticsContext?.artistId ?? ''}:${resolveVideoSource(props.url)?.src ?? props.url}`} {...props} />;
 }
 
 function Player({ url, title, poster, analyticsContext }: SessionVideoPreviewProps) {

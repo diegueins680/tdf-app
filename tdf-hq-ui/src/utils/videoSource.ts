@@ -1,5 +1,17 @@
 export interface VideoSource { provider: 'youtube' | 'vimeo' | 'instagram' | 'tiktok' | 'file'; src: string; url: string; vertical: boolean }
 
+/** Public source identity for a durable session link, never an arbitrary URL from a query. */
+export function videoSourceKey(value: string): string | null {
+  const source = resolveVideoSource(value);
+  if (!source) return null;
+  if (source.provider === 'file') {
+    const id = /^\/campaign-platform\/public\/videos\/([0-9a-f]{32})\/media$/.exec(new URL(source.src).pathname)?.[1];
+    return id ? `file:${id}` : null;
+  }
+  const parts = new URL(source.src).pathname.split('/').filter(Boolean);
+  return `${source.provider}:${source.provider === 'instagram' ? parts[1] : parts.at(-1)}`;
+}
+
 /** Parse known public URLs; never render supplied HTML, follow shorteners or fetch oEmbed on the server. */
 export function resolveVideoSource(value: string): VideoSource | null {
   let url: URL;

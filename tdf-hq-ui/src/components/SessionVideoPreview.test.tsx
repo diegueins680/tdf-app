@@ -33,4 +33,11 @@ describe('inline video playback boundary', () => {
     view.unmount();
     expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1);
   });
+  it('keeps the same source playing when its library metadata finishes loading', () => {
+    const { container, rerender } = render(<SessionVideoPreview url="https://youtu.be/uRNyIMLiqU8" title="Session" analyticsContext={{ artistId: 520, videoId: 'featured' }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
+    const frame = container.querySelector('iframe');
+    rerender(<SessionVideoPreview url="https://www.youtube.com/watch?v=uRNyIMLiqU8" title="Session with credits" analyticsContext={{ artistId: 520, videoId: 'library-metadata-id' }} />);
+    expect(container.querySelector('iframe')).toBe(frame);
+  });
 });

@@ -14706,12 +14706,14 @@
         "Current authenticated session",
         "Official provider URL or finished same-campaign asset",
         "Exact video version and rights/technical confirmations",
-        "Explicit viewer play/follow action"
+        "Explicit viewer play/follow action",
+        "Optional exact published session or matching approved featured-provider identity"
       ],
       "state": {
         "video": "Private version or exact published version",
         "follow": "Existing canonical fan relationship; no new implicit state",
-        "media": "Existing quota-reserved assets and unchanged originals"
+        "media": "Existing quota-reserved assets and unchanged originals",
+        "selection": "Requested session bound to this canonical artist; changing featured video cannot substitute a different shared session."
       },
       "allowedTransitions": [
         "Own artist or current manager plus campaign editor saves private version",
@@ -14727,7 +14729,8 @@
         "Publish TDF scope without current TDF admin",
         "Create followers on playback or signup",
         "Replay existing external publications or change approved schedule times",
-        "Count iframe load as actual watch time"
+        "Count iframe load as actual watch time",
+        "Replace a requested unavailable session with another featured video or interpret a query as an arbitrary player URL"
       ],
       "effects": [
         "Versioned video metadata and audit in existing SQLite",
@@ -14773,7 +14776,8 @@
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
         "tdf-mobile/__tests__/ArtistPublicUrl.test.ts",
-        "tdf-mobile/__tests__/DeepLinks.test.ts"
+        "tdf-mobile/__tests__/DeepLinks.test.ts",
+        "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -14783,7 +14787,7 @@
         "classification": "PARTIAL",
         "reason": "Source implementation prepared; hosted CI, independent review, protected deployment and public playback/device qualification still required. No whole-program refinement claim."
       },
-      "property": "No public draft or stale version, unauthorized artist/campaign mutation, implicit follow, duplicated provider-source identity or iframe-load watch claim.",
+      "property": "No public draft or stale version, unauthorized artist/campaign mutation, implicit follow, duplicated provider-source identity or iframe-load watch claim. Shared-session links preserve canonical artist/source identity, credits and playback continuity across metadata resolution; Mobile retains only bounded public acquisition fields.",
       "verification": "Finite source and HTTP/UI tests; actual local embed preview and Metro bundles recorded separately from protected deploy and device qualification.",
       "evidence": "Current-run receipts are private; source checks do not claim production deployment, external-provider progress SDK qualification or physical-device playback."
     }

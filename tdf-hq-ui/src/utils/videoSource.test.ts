@@ -1,6 +1,13 @@
-import { resolveVideoSource } from './videoSource';
+import { resolveVideoSource, videoSourceKey } from './videoSource';
 
 describe('public video URL boundary', () => {
+  it('derives a stable public identity without copying an unlisted hash or arbitrary query', () => {
+    expect(videoSourceKey('https://youtu.be/uRNyIMLiqU8')).toBe('youtube:uRNyIMLiqU8');
+    expect(videoSourceKey('https://vimeo.com/123456789/privatehash')).toBe('vimeo:123456789');
+    expect(videoSourceKey('https://www.instagram.com/reel/DfGMOaVDhJ9/')).toBe('instagram:DfGMOaVDhJ9');
+    expect(videoSourceKey('https://www.tiktok.com/@tdf.records.label/video/7703720333777325330')).toBe('tiktok:7703720333777325330');
+    expect(videoSourceKey('https://media.example.org/real.mp4')).toBeNull();
+  });
   it.each([
     ['https://youtu.be/uRNyIMLiqU8', 'youtube', '/embed/uRNyIMLiqU8'],
     ['https://www.youtube.com/shorts/pUtIlM8Bic4', 'youtube', '/embed/pUtIlM8Bic4'],
