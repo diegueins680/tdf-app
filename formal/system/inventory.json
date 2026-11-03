@@ -15814,7 +15814,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "bf3f28d4330f759be112ed7d2c6c70774d0023d92a0f07e2c9b690add9421c0d",
+      "sha256": "74e60d48f6944fc93543a5a4c842b1891652f6ea7bc1c857621e85afc8552d1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16282,7 +16282,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "20cb4deffffb051b13eb31f791f61e37d027c8081609d31765535ad6cb70e6d3",
+      "sha256": "de3398ed2034f4da7c595091706f5c68921fd23df6ce95b0251e3f0dd3434945",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28052,6 +28052,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-ticket-final-amount.md",
+      "sha256": "8557565e0d0569ffdacd366aa7e01a5550c9f165c4ff799e2a3ac734a6a5055d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-ticket-inventory.md",
       "sha256": "fb67951de48dcd4fb52e5c5c457b45ac9e110f4c4e629a7aa9edf05efd2c0929",
       "authority": "inferred",
@@ -28438,7 +28445,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d34c40cbe2e397653610d83ef5150da16bb78c05e30fe7368d83fce5154bffa3",
+      "sha256": "11eea5f0f216adfbc89ef69dd4b0d38c10bdcb1d3eb793f01fe2d87703b396f4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
