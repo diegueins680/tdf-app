@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-03T04:26:54.924Z",
+  "generatedAt": "2026-11-03T05:31:24.848Z",
   "repositoryRoot": ".",
   "filesScanned": 2505,
   "candidateCount": 1372,
@@ -55990,7 +55990,7 @@
       "lines": [
         269
       ],
-      "consumerCount": 38,
+      "consumerCount": 39,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -56000,6 +56000,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/EventOrganizerSpec.hs",
         "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
         "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
@@ -153183,7 +153184,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1767,
+      "line": 1768,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -153194,7 +153195,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1767
+        1768
       ],
       "consumerCount": 88,
       "backendConsumers": [
@@ -155586,7 +155587,7 @@
       "lines": [
         30
       ],
-      "consumerCount": 156,
+      "consumerCount": 157,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
