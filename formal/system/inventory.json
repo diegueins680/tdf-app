@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "64e236505a0ff54bb628c8d47eb514f97a1f1dbb",
+  "mobileRevision": "85b50f9f1926dbd192687f82fa1203a86aa4edbb",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -916,6 +916,7 @@
       "tdf-hq-ui/src/components/ArtistFansList.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+      "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
       "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
       "tdf-hq-ui/src/components/AssetDialogs.tsx",
       "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
@@ -8225,9 +8226,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-52978cc467763ee4",
+      "path": "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
+      "sha256": "5dcab0089505cd3c7a6e207e40a966f64804f40d8dfe4310bc1357ff525d4a6f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-57b1a4ec1eee9541",
       "path": "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
-      "sha256": "8cdd6a5fa709362f88e04643f2c3144f75a9fe13dd4df47feb1a55ad17ecc258",
+      "sha256": "a97a1b7695787cc77ed55c94fe3ece8dbe877394f882c1cf9114dba7284f15fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8533,13 +8540,13 @@
     {
       "id": "SURFACE-2d575081440ad9a8",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-      "sha256": "c6860a5f700184eaf51449756c2c3025d5927dc917bec6929792b8ec84b3e528",
+      "sha256": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a64f86cb6be0afe2",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-      "sha256": "487cdc4c2301113fe6a1012bce2e43fc0322a829623600f6b05a483f3eb8201b",
+      "sha256": "64c1e06b51b85af822c807a6878524bb22a063339dda0fcfa909529df50961b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9793,19 +9800,19 @@
     {
       "id": "SURFACE-feace0cde60c7f70",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-      "sha256": "ace8b67c3391736605ace8d1a41410228923a104396fbc8bdc0c46474c81abd3",
+      "sha256": "e165c6b8ec50ec1711cc07396a59148722e0a8763fe9305a6408ef7fb26edc2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-67734f5e4107b4c6",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
-      "sha256": "7e537b013a74c5b1ce6f3b1908618ab1b4c6eb46512422126f0ffbcbb08f5ad5",
+      "sha256": "20cbbe57539aa20052609f409fe28ebd85d7e7a574d4b2cb51ef7c315c0eef70",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "839d779ba26e014a4f8cf894c3a385829356a8c96848c6d9fbc81d5c0a4f9840",
+      "sha256": "c94da75b6d5f928c88877f6530d651d30a7e3c7280c8c88cea362a89116a4362",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11575,7 +11582,7 @@
     {
       "id": "SURFACE-82c93d101af35fb3",
       "path": "tdf-hq-ui/src/utils/artistFollowIntent.ts",
-      "sha256": "8077586ebdf5e74094bff753c78297378baa3147a42414b6bb985bf3410a89d2",
+      "sha256": "ce8141f4e08a7c6334db684dc85c15a9202a1e40877029da2e12f8c3b5b00cc7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12169,13 +12176,13 @@
     {
       "id": "SURFACE-33e8ab09eb16f28c",
       "path": "tdf-hq-ui/src/utils/videoSource.test.ts",
-      "sha256": "15707038206dec589268260e4b95697c80de31e46130c27cf0fdd9e77e7b1879",
+      "sha256": "25de3e8d4d4c7ccbc796883f6e841a57905884f51612ec926e4166cbf673bdea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e52d4966809bc086",
       "path": "tdf-hq-ui/src/utils/videoSource.ts",
-      "sha256": "15782bd8d172c357faacd7d2003d6ac13fc57c59136fa834a5aafda44983ef9a",
+      "sha256": "93c12314e6f0009ea067553ab7b96b6c97d0c19e3b87a75ff3cfac1668d4cebc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17779,7 +17786,7 @@
     {
       "id": "SURFACE-c6554ae5e139a2fe",
       "path": "tdf-mobile/__tests__/ArtistPublicUrl.test.ts",
-      "sha256": "926c5db006666430c2ac21f2bb05eec11b3a808490690e0e2f9a5768f66c035d",
+      "sha256": "244a8f8525a35562eb95f383b92130fbdb8b592cf30a02d76c3f6576fc163df5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18397,7 +18404,7 @@
     {
       "id": "SURFACE-fe6dc0239b67e1d7",
       "path": "tdf-mobile/app/artistPublic.tsx",
-      "sha256": "e128215c41e368ad8720d82b8bcf18f39319e66f187eebe105ca7403b21655ba",
+      "sha256": "924d5d2a0e6ac97c3aac02ff525d24a0e14120698e2abbec19a3a1623fe22c32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19465,7 +19472,7 @@
     {
       "id": "SURFACE-e06836eb10e528cb",
       "path": "tdf-mobile/src/lib/artistPublicUrl.ts",
-      "sha256": "6f39f93337c260a3baedf2980929dcf2a7a2f57d93e909037744f86f0df47668",
+      "sha256": "d7170dc06355c9a47ff3c9d6d26f5eafb6c96d848caa2a877f1ae798869f5d03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20656,7 +20663,7 @@
     },
     {
       "path": "docs/artists/platform-videos.md",
-      "sha256": "512c9d3cf5b7cc455c240dc21b81bf5feb736c248ec4e8818f7456d6ad1b42bf",
+      "sha256": "39875820593b4bda6b0bc579be73562007d0a768ab38fb0d38dcd155af85b530",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28888,7 +28895,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "60d0863725366248a8fa9ff009d0a59adef04eb94db4dde8b149256a83f06b25",
+      "sha256": "a09de2d5f88c04e727c49a8664f3dd72998c229f1f3e90a576bac5593162e9c6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
