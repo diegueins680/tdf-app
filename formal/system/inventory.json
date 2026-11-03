@@ -194,6 +194,7 @@
       "scripts/__tests__/music-test-database.test.mjs",
       "scripts/__tests__/music-track-search-model.test.mjs",
       "scripts/__tests__/music-worker-build.test.mjs",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -2855,7 +2856,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "ecaa05e8a74e3b97149f8580d2da5294662d8d40cb36af1150468cfd2894978b",
+      "sha256": "d5f7e50faca1e6283fedf42253584967e2ad9164af97477f3bc9e3fd492a5476",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3861,6 +3862,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6545235ef8b425c",
+      "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c8ab8af4db77fc7",
       "path": "scripts/__tests__/music-worker-timing.test.mjs",
       "sha256": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
@@ -4007,7 +4014,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
+      "sha256": "feebc6a2fd08487f8fd5e8d87b4a2020cd74faec4e39b9867bd7e369860843b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4925,7 +4932,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "6171954f6314882c0d68232a7fbd1e1faf080d1555bfdfdde70e38cf888bdcf1",
+      "sha256": "9faf88d379052251460752e225d8f9c28e471bd8044c3f70791f0de02396611d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5003,7 +5010,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15821,7 +15828,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "c2d7ab6cd9a02369b1c77e6936aa79cc0de8a393bff2fee2621e2f3c02fabbea",
+      "sha256": "ddacfbaee9230369a7d1490d44e6ce47bf32ef3d0fd561ea29b3f38c58806e83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16289,7 +16296,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
+      "sha256": "f655267e5f30c9b0c9e31e6fce03965610c0f3ebee93d4cdc958029cbff832b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28010,6 +28017,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-refund-inventory.md",
+      "sha256": "4d4cac202a7dcf05bf7c84f9d1c07640d59285bbf9dcefeda4c624da70f4131b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-release-playback.md",
       "sha256": "3a98924b03c94913d8aa90f67a4bace35034dff00230924a87ad14cbf416f792",
       "authority": "inferred",
@@ -28201,6 +28215,13 @@
     {
       "path": "formal/system/music-worker-completion-observation.md",
       "sha256": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-worker-heartbeat-shutdown.md",
+      "sha256": "94e3d66490bc334092ae4ae8160ae688be56b9128621c20dce1f0dc393022a28",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28403,7 +28424,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "33e5eb5d43f881628b081e25a8868657bf7b507feffeb04d0badbde4e0ce0f0d",
+      "sha256": "f6120066d712c3520e23a7a08df9f9ba27096e91d34e4e5c68088ef5f374c6c5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
