@@ -4282,6 +4282,148 @@ legacyStripeRefundSpec = describe "legacy Stripe ticket refund execution fence" 
       readIORef calls `shouldReturn` 1
       assertLegacyStripeRefundState pool fixture "approved" "refunded" 0 "refunded"
 
+  forM_ ([(sold,3) | sold <- [-1,0,1,2]] <>
+    [(3,quantity) | quantity <- [0,-3,minBound :: Int64]]) $ \(sold,quantity) ->
+    it ("holds invalid legacy inventory without completion: sold=" <> show sold <>
+        ", quantity=" <> show quantity) $ \pool -> do
+      fixture@(eventKey,orderKey,refundKey) <- legacyStripeRefundFixture pool 12515
+      env <- legacyStripeRefundEnv pool True
+      calls <- newIORef (0 :: Int)
+      let provider _ paymentIntent amount = do
+            atomicModifyIORef' calls (\count -> (count+1,()))
+            pure (Right (A.object ["id" A..= ("re_synthetic_inventory" :: Text)
+              ,"object" A..= ("refund" :: Text),"status" A..= ("succeeded" :: Text)
+              ,"amount" A..= amount,"currency" A..= ("usd" :: Text)
+              ,"payment_intent" A..= paymentIntent]))
+          (approve,_) = legacyStripeRefundHandlers provider
+          action = runHandler (runReaderT
+            (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+          setSnapshot counter count = runSqlPool (do
+            rawExecute "UPDATE event_ticket_tier SET quantity_sold=? WHERE id=\
+              \(SELECT tier_id FROM event_ticket_order WHERE id=?)"
+              [PersistInt64 counter,PersistInt64 (fromSqlKey orderKey)]
+            rawExecute "UPDATE event_ticket_order SET quantity=? WHERE id=?"
+              [PersistInt64 count,PersistInt64 (fromSqlKey orderKey)]) pool
+      bracket (setSnapshot sold quantity) (\_ -> setSnapshot 3 3) $ \_ -> do
+        result <- action
+        case result of
+          Left failure -> errHTTPCode failure `shouldBe` 502
+          Right _ -> expectationFailure "Invalid inventory must not authorize refund completion"
+        assertLegacyStripeRefundState pool fixture "processing" "paid" sold "issued"
+        runSqlPool (rawSql
+          "SELECT stripe_refund_id,processed_at FROM ticket_refund_request WHERE id=?"
+          [PersistInt64 (fromSqlKey refundKey)]) pool
+          `shouldReturn` [(Single (Just ("re_synthetic_inventory" :: Text)),Single (Nothing :: Maybe UTCTime))]
+        action >>= assertLegacyRefundDenied
+        readIORef calls `shouldReturn` 1
+
+  it "holds a refund whose tier belongs to a different event" $ \pool -> do
+    fixture@(eventKey,orderKey,refundKey) <- legacyStripeRefundFixture pool 12515
+    (otherEvent,_,_) <- legacyStripeRefundFixture pool 12515
+    env <- legacyStripeRefundEnv pool True
+    calls <- newIORef (0 :: Int)
+    let provider _ paymentIntent amount = do
+          atomicModifyIORef' calls (\count -> (count+1,()))
+          pure (Right (A.object ["id" A..= ("re_synthetic_foreign_tier" :: Text)
+            ,"object" A..= ("refund" :: Text),"status" A..= ("succeeded" :: Text)
+            ,"amount" A..= amount,"currency" A..= ("usd" :: Text)
+            ,"payment_intent" A..= paymentIntent]))
+        (approve,_) = legacyStripeRefundHandlers provider
+        action = runHandler (runReaderT
+          (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+        setEvent :: TM.SocialEventId -> IO ()
+        setEvent target = runSqlPool (rawExecute
+          "UPDATE event_ticket_tier SET event_id=?,code=? WHERE id=\
+          \(SELECT tier_id FROM event_ticket_order WHERE id=?)"
+          [PersistInt64 (fromSqlKey target),PersistText (if target == eventKey then "test"
+            else "synthetic-foreign-tier-" <> keyText (fromSqlKey orderKey)),
+           PersistInt64 (fromSqlKey orderKey)]) pool
+    bracket (setEvent otherEvent) (\_ -> setEvent eventKey) $ \_ -> do
+      result <- action
+      case result of
+        Left failure -> errHTTPCode failure `shouldBe` 502
+        Right _ -> expectationFailure "A foreign-event tier must not release inventory"
+      assertLegacyStripeRefundState pool fixture "processing" "paid" 3 "issued"
+      action >>= assertLegacyRefundDenied
+      readIORef calls `shouldReturn` 1
+
+  forM_ [4,maxBound :: Int64] $ \sold ->
+    it ("releases exactly the positive order quantity from sold=" <> show sold) $ \pool -> do
+      fixture@(eventKey,orderKey,refundKey) <- legacyStripeRefundFixture pool 12515
+      env <- legacyStripeRefundEnv pool True
+      let provider _ paymentIntent amount = pure (Right (A.object
+            ["id" A..= ("re_synthetic_inventory_boundary" :: Text)
+            ,"object" A..= ("refund" :: Text),"status" A..= ("succeeded" :: Text)
+            ,"amount" A..= amount,"currency" A..= ("usd" :: Text)
+            ,"payment_intent" A..= paymentIntent]))
+          (approve,_) = legacyStripeRefundHandlers provider
+          setCounter counter = runSqlPool (rawExecute
+            "UPDATE event_ticket_tier SET quantity_sold=? WHERE id=\
+            \(SELECT tier_id FROM event_ticket_order WHERE id=?)"
+            [PersistInt64 counter,PersistInt64 (fromSqlKey orderKey)]) pool
+      -- Keep the deliberately extreme stock snapshot local to this fixture.
+      -- Successful full retirement leaves zero sold tickets after assertions;
+      -- failure also cleans up only this fixture's counter.
+      bracket (setCounter sold) (\_ -> setCounter 0) $ \_ -> do
+        result <- runHandler (runReaderT
+          (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env) >>= requireRight
+        TD.refundStatus result `shouldBe` "approved"
+        assertLegacyStripeRefundState pool fixture "approved" "refunded" (sold-3) "refunded"
+
+  forM_ [3,6 :: Int64] $ \sold ->
+    it ("serializes distinct legacy refunds sharing a tier with sold=" <> show sold) $ \pool -> do
+      first@(eventKey,orderKey,_) <- legacyStripeRefundFixture pool 12515
+      (_,otherOrder,otherRefund) <- legacyStripeRefundFixture pool 12515
+      let second = (eventKey,otherOrder,otherRefund)
+      runSqlPool (do
+        [Single unusedTier] <- rawSql "SELECT tier_id FROM event_ticket_order WHERE id=?"
+          [PersistInt64 (fromSqlKey otherOrder)]
+        rawExecute "UPDATE event_ticket_order SET event_id=?,tier_id=\
+          \(SELECT tier_id FROM event_ticket_order WHERE id=?) WHERE id=?"
+          [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey orderKey),PersistInt64 (fromSqlKey otherOrder)]
+        rawExecute "UPDATE event_ticket SET event_id=?,tier_ref_id=\
+          \(SELECT tier_id FROM event_ticket_order WHERE id=?) WHERE order_ref_id=?"
+          [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey orderKey),PersistInt64 (fromSqlKey otherOrder)]
+        -- Relocate this fixture's stock along with its order and tickets;
+        -- the original tier is now empty and must not retain phantom stock.
+        cleared <- rawSql "UPDATE event_ticket_tier SET quantity_sold=0 WHERE id=?\
+          \ AND NOT EXISTS(SELECT 1 FROM event_ticket_order WHERE tier_id=?)\
+          \ AND NOT EXISTS(SELECT 1 FROM event_ticket WHERE tier_ref_id=?) RETURNING id"
+          (replicate 3 (PersistInt64 unusedTier))
+        unless (cleared == [Single unusedTier]) $ fail "Only the fixture's empty tier may be cleared"
+        rawExecute "UPDATE event_ticket_tier SET quantity_sold=? WHERE id=\
+          \(SELECT tier_id FROM event_ticket_order WHERE id=?)"
+          [PersistInt64 sold,PersistInt64 (fromSqlKey orderKey)]) pool
+      env <- legacyStripeRefundEnv pool True
+      ready <- newEmptyMVar
+      calls <- newIORef (0 :: Int)
+      let provider _ paymentIntent amount = do
+            arrived <- atomicModifyIORef' calls (\count -> (count+1,count+1))
+            when (arrived == 2) $ putMVar ready ()
+            both <- Timeout.timeout 5000000 (readMVar ready)
+            unless (both == Just ()) $ fail "Both distinct refunds must reach provider IO"
+            pure (Right (A.object ["id" A..= ("re_" <> paymentIntent)
+              ,"object" A..= ("refund" :: Text),"status" A..= ("succeeded" :: Text)
+              ,"amount" A..= amount,"currency" A..= ("usd" :: Text)
+              ,"payment_intent" A..= paymentIntent]))
+          (approve,_) = legacyStripeRefundHandlers provider
+          action :: LegacyStripeRefundFixture -> IO (Either ServerError TD.RefundDTO)
+          action (_,_,refundKey) = runHandler (runReaderT
+            (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+      results <- concurrently (map action [first,second])
+      length (rights results) `shouldBe` fromIntegral (sold `div` 3)
+      readIORef calls `shouldReturn` 2
+      forM_ (zip [first,second] results) $ \(fixture, result) -> do
+        case result of
+          Right response -> do
+            TD.refundStatus response `shouldBe` "approved"
+            assertLegacyStripeRefundState pool fixture "approved" "refunded" 0 "refunded"
+          Left failure -> do
+            errHTTPCode failure `shouldBe` 502
+            assertLegacyStripeRefundState pool fixture "processing" "paid" 0 "issued"
+        action fixture >>= assertLegacyRefundDenied
+      readIORef calls `shouldReturn` 2
+
 type LegacyStripeRefundFixture = (TM.SocialEventId,TM.EventTicketOrderId,TM.TicketRefundRequestId)
 
 legacyStripeRefundFixture :: ConnectionPool -> Int64 -> IO LegacyStripeRefundFixture
