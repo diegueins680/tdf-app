@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
+import { inspectReviewPaint } from './helpers/review-paint.mjs';
 
 // Synthetic API/browser integration. Only local documents and static assets
 // may reach the preview server; every API is fulfilled here and external
@@ -189,6 +190,19 @@ test('studio photos open with keyboard, fit small screens and restore focus @cri
   await expect(dialog).toBeVisible();
   await expect.poll(() => dialog.getByRole('img').evaluate(image => image.complete && image.naturalWidth === 1280)).toBe(true);
   await expect(dialog.getByRole('status')).toHaveCount(0);
+  await testInfo.attach('studio-photo-paint-before', {
+    body: JSON.stringify(await dialog.evaluate(inspectReviewPaint), null, 2), contentType: 'application/json',
+  });
+  // Visibility and image decoding do not establish that WebKit finished the
+  // dialog fade. Reuse the RACI guard; stuck opacity must still fail, and axe
+  // runs once with the same contrast rules after computed paint is ready.
+  try {
+    await expect.poll(async () => (await dialog.evaluate(inspectReviewPaint)).ready).toBe(true);
+  } finally {
+    await testInfo.attach('studio-photo-paint-final', {
+      body: JSON.stringify(await dialog.evaluate(inspectReviewPaint), null, 2), contentType: 'application/json',
+    });
+  }
   await expectAccessible(page, testInfo, 'studio-photo-dialog');
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);

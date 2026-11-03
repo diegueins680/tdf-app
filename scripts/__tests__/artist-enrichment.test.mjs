@@ -460,6 +460,46 @@ test('scheduled enrichment targets canonical production and retains publication 
   assert.equal(workflow.concurrency['cancel-in-progress'], false);
 });
 
+for (const imageStatus of [200, 404]) {
+  test(`external image HTTP ${imageStatus} keeps network validation separate from media rights`, async () => {
+    const savedFetch = globalThis.fetch;
+    const savedToken = process.env.ADMIN_TOKEN;
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), 'tdf-image-audit-'));
+    const sources = [];
+    globalThis.fetch = async (rawUrl, options = {}) => {
+      const url = new URL(rawUrl);
+      if (url.origin === 'https://images.example.test') {
+        assert.equal(options.method, 'HEAD');
+        return new Response(null, { status: imageStatus });
+      }
+      assert.equal(url.origin, 'https://api.tdfrecords.net');
+      let data = { aerId: 1, aerRunKey: 'synthetic-image-audit', aerStatus: 'completed' };
+      if (url.pathname === '/admin/artists/profiles') data = [{ apArtistId: 7, apDisplayName: 'Synthetic artist', apHeroImageUrl: 'https://images.example.test/photo.jpg' }];
+      else if (url.pathname === '/admin/artists/enrichment/overview') data = { aeoProfiles: [], aeoInventory: [], aeoSources: [], aeoSuggestions: [], aeoChanges: [], aeoRuns: [], aeoIdentityCandidates: [], aeoMedia: [] };
+      else if (url.pathname === '/admin/artists/enrichment/sources') {
+        sources.push(JSON.parse(options.body)); data = { arsId: sources.length };
+      } else assert.match(url.pathname, /^\/admin\/artists\/enrichment\/runs(?:\/1)?$/);
+      return new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json' } });
+    };
+    try {
+      process.env.ADMIN_TOKEN = 'synthetic-image-audit';
+      await runPipeline({ mode: 'production', scope: 'audit', artistId: 7, batchSize: 1, concurrency: 1, autoPublish: false, resume: false, checkpoint: path.join(tempDir, 'checkpoint.json'), report: path.join(tempDir, 'report.json') });
+      assert.equal(sources.length, 2);
+      assert.equal(sources[0].arscSourceType, imageStatus === 200 ? 'link_validation_valid' : 'link_validation_broken');
+      assert.equal(sources[1].arscSourceType, 'media_rights_review');
+      assert.equal(JSON.parse(sources[1].arscAttribution).rightsStatus, 'unconfirmed');
+      assert.equal(JSON.parse(sources[0].arscAttribution).httpStatus, imageStatus);
+      assert.equal(isTdfManagedImageUrl('https://www.tdfrecords.net/assets/artist.webp'), true);
+      assert.equal(isTdfManagedImageUrl('https://tdfrecords.net/assets/artist.webp'), true);
+      assert.equal(isTdfManagedImageUrl('https://www.tdfrecords.net.evil.test/photo.jpg'), false);
+    } finally {
+      globalThis.fetch = savedFetch;
+      if (savedToken == null) delete process.env.ADMIN_TOKEN; else process.env.ADMIN_TOKEN = savedToken;
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+}
+
 test('manual enrichment uses the current API while retaining both explicit overrides', async () => {
   const savedFetch = globalThis.fetch;
   const keys = ['ADMIN_TOKEN', 'TDF_API_BASE', 'API_BASE'];

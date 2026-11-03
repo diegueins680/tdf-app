@@ -1,0 +1,308 @@
+{
+  "recordedAt": "2026-10-26T21:05:58.287475+00:00",
+  "status": "PASS-conditional-published-interface",
+  "mergeCommit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "sourceHead": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+  "stats": {
+    "startTime": "2026-10-26T21:04:32.307Z",
+    "duration": 13560.023000000001,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "project": "chromium-desktop",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "status": "passed",
+      "durationMs": 2933,
+      "boundary": {
+        "providerUrl": "https://open.spotify.com/track/synthetic-release",
+        "releaseReads": 1,
+        "unexpectedMutations": [],
+        "deniedExternal": [
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "script"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          },
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/array/phc_zk6HKwWGxVNb2v4mQgfKbagpZXdWBjyFh9MQQjpexQXW/config"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          },
+          {
+            "origin": "https://open.spotify.com",
+            "resourceType": "document"
+          }
+        ],
+        "providerNavigations": [
+          {
+            "url": "https://open.spotify.com/track/synthetic-release",
+            "referer": null
+          }
+        ],
+        "declaredReconciliations": [
+          "/session/onboarding/reconcile"
+        ],
+        "loadedEntries": [
+          "https://www.tdfrecords.net/assets/index-DZRmmD0l.js"
+        ],
+        "observed": {
+          "commands": [],
+          "takeovers": [
+            2426.600000023842
+          ]
+        },
+        "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+      }
+    },
+    {
+      "project": "chromium-desktop",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "status": "passed",
+      "durationMs": 2289,
+      "boundary": {
+        "providerUrl": "https://www.youtube.com/channel/synthetic-artist",
+        "releaseReads": 1,
+        "unexpectedMutations": [],
+        "deniedExternal": [
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "script"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          },
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/array/phc_zk6HKwWGxVNb2v4mQgfKbagpZXdWBjyFh9MQQjpexQXW/config"
+          }
+        ],
+        "providerNavigations": [],
+        "declaredReconciliations": [
+          "/session/onboarding/reconcile"
+        ],
+        "loadedEntries": [
+          "https://www.tdfrecords.net/assets/index-DZRmmD0l.js"
+        ],
+        "observed": {
+          "commands": [],
+          "takeovers": []
+        },
+        "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+      }
+    },
+    {
+      "project": "chromium-phone",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "status": "passed",
+      "durationMs": 3089,
+      "boundary": {
+        "providerUrl": "https://open.spotify.com/track/synthetic-release",
+        "releaseReads": 1,
+        "unexpectedMutations": [],
+        "deniedExternal": [
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "script"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          },
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/array/phc_zk6HKwWGxVNb2v4mQgfKbagpZXdWBjyFh9MQQjpexQXW/config"
+          },
+          {
+            "origin": "https://open.spotify.com",
+            "resourceType": "document"
+          }
+        ],
+        "providerNavigations": [
+          {
+            "url": "https://open.spotify.com/track/synthetic-release",
+            "referer": null
+          }
+        ],
+        "declaredReconciliations": [
+          "/session/onboarding/reconcile"
+        ],
+        "loadedEntries": [
+          "https://www.tdfrecords.net/assets/index-DZRmmD0l.js"
+        ],
+        "observed": {
+          "commands": [],
+          "takeovers": [
+            2468.5999999046326
+          ]
+        },
+        "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+      }
+    },
+    {
+      "project": "chromium-phone",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "status": "passed",
+      "durationMs": 2484,
+      "boundary": {
+        "providerUrl": "https://www.youtube.com/channel/synthetic-artist",
+        "releaseReads": 1,
+        "unexpectedMutations": [],
+        "deniedExternal": [
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "script"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          },
+          {
+            "origin": "https://api.frankfurter.dev",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/v1/latest"
+          },
+          {
+            "origin": "https://eu-assets.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "GET",
+            "path": "/array/phc_zk6HKwWGxVNb2v4mQgfKbagpZXdWBjyFh9MQQjpexQXW/config"
+          },
+          {
+            "origin": "https://eu.i.posthog.com",
+            "resourceType": "fetch",
+            "method": "POST",
+            "path": "/flags/"
+          }
+        ],
+        "providerNavigations": [],
+        "declaredReconciliations": [
+          "/session/onboarding/reconcile"
+        ],
+        "loadedEntries": [
+          "https://www.tdfrecords.net/assets/index-DZRmmD0l.js"
+        ],
+        "observed": {
+          "commands": [],
+          "takeovers": []
+        },
+        "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+      }
+    }
+  ],
+  "entry": {
+    "recordedAt": "2026-10-26T21:04:30.747210+00:00",
+    "expectedCommit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "htmlFile": "/private/tmp/tdf-legacy-published-html-20261026.html",
+    "bundleUrl": "https://www.tdfrecords.net/assets/index-DZRmmD0l.js",
+    "bundleSha256": "12becefdc380f08afdd3ea4f503bb4fc2f0028272209857877c76d01a854bbf6",
+    "commitPresent": true,
+    "originalSpecSha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
+    "executedSpecSha256": "fab22e991746a624cb4c91be9f6973d69633277bf8a94469a0fa8993d6e7692c",
+    "changes": [
+      "Import resolves exact existing Playwright dependency",
+      "Public production baseURL; no local build/server",
+      "Every loaded entry must contain exact merge commit",
+      "Only same-origin GET/HEAD static requests pass through; all fetch/xhr/provider/external requests synthetic or blocked"
+    ],
+    "limitations": [
+      "Synthetic session/account/catalog/provider destination",
+      "No external playback or real audio decoder",
+      "No physical device, real production media/CDN/rights, accessibility certification or SLO claim"
+    ],
+    "revision": 2,
+    "priorAttempt": {
+      "packet": "/private/tmp/tdf-legacy-published-verification-20261026",
+      "result": "4 failures after all functional assertions, blocked external POST /flags/ incorrectly counted as business write",
+      "observedOrigin": "https://eu.i.posthog.com",
+      "externalRequestsTransmitted": false
+    },
+    "fixtureCorrection": "Block and record all non-TDF fetch/xhr before business API dispatch. Original assertions/timeouts unchanged; all first-party writes remain blocked/intercepted."
+  },
+  "firstAttemptRetained": true,
+  "productionBusinessWrites": false,
+  "actualProviderRequests": false,
+  "actualMediaDecodingTested": false,
+  "limitation": "Actual published static client; all account/catalog/API/provider responses synthetic or blocked. Chromium desktop and Pixel7 web emulation, no physical-device, external audio, production catalog/rights, backend deployment, AA or SLO claim. First attempt blocked analytics misclassified as business write; v2 adds strict external fetch/xhr abort before business routing. All original assertions/timeouts retained."
+}

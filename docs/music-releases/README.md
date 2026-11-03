@@ -3,6 +3,7 @@
 Estado documentado: 2026-09-16. Esta carpeta describe el nuevo dominio canónico de audio, su operación y las puertas que todavía deben cerrarse antes de producción.
 
 - [Auditoría inicial](initial-audit-2026-09-12.md)
+- [Inventario vivo agregado, legado y puertas de migración/activación (2026-10-26)](live-catalog-inventory-2026-10-26.md)
 - [Arquitectura, modelo y ADR](architecture-and-data-model.md)
 - [API y configuración](api-and-configuration.md)
 - [Identidad, reintentos y atomicidad de analítica](playback-identity.md)

@@ -1,0 +1,51 @@
+{
+  "recordedAt": "2026-10-27T01:16:43.005990+00:00",
+  "head": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+  "files": {
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "77f1879c1dd6c027d9287d366964564866849c37c8842c2a59df9329f6e8e06b",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "6fdc3d208026d790280581350c98cae409f024ef31da68798313fae7dd19033c"
+  },
+  "state": "FROZEN_SOURCE_LOCAL_UNITS_LINT_APP_TYPES_PASS_WEBKIT_UNVERIFIED",
+  "baseline": {
+    "rootProvidedLog": "baseline.log",
+    "exitCode": 1,
+    "selectedTests": 3,
+    "failed": 2,
+    "passed": 1
+  },
+  "finalTests": {
+    "log": "qualified-player-identity-suites.log",
+    "exitCode": 0,
+    "tests": 115,
+    "suites": 7
+  },
+  "finalLint": {
+    "log": "final-lint.log",
+    "exitCode": 0
+  },
+  "webKit": "PENDING_UNCHANGED_HOSTED_NATIVE_ADVANCING_CLOCK_ASSERTION",
+  "limits": [
+    "Deterministic mocked-media unit/event tests do not prove the observed WebKit freeze is repaired.",
+    "No native/e2e/assertion/timeout/gate changes by this increment.",
+    "No metadata/source compilation/production actions."
+  ],
+  "finalAppTypecheck": {
+    "log": "final-app-typecheck.log",
+    "exitCode": 0
+  },
+  "scopedDiffCheck": {
+    "exitCode": 0
+  },
+  "logHashes": {
+    "player-suites.log": "de82649620c19bdf372892fcdbe6b6ac8f94e4f32dad990fb386d0a062625b25",
+    "final-app-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "lint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "baseline.log": "00805004c582fbee1f66ea70a9518c8088de5576ea24726ef66fc9cf5c8cec22",
+    "qualified-player-identity-suites.log": "3047122a8c93ecf84ececcd30ae3797fa996bbcf2366aa2dabd27a412afe85a0",
+    "first-correction.log": "539f8d0fa33c8fe8c6cb3b224b675104d4a1614d4a9ebe3d3ae0cdc482c65562",
+    "final-player-identity-suites.log": "3c90d2683b53dde6d4412abbc8d38d500a518f91db5f417c2e54eb5081df37f3",
+    "final-lint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sourceUnchangedAfterChecks": true
+}

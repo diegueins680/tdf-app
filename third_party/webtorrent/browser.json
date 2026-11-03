@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 1,
+  "component": {
+    "name": "webtorrent",
+    "version": "2.8.5"
+  },
+  "asset": {
+    "path": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+    "sha256": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+    "bytes": 218115
+  },
+  "sourceArchive": {
+    "url": "https://registry.npmjs.org/webtorrent/-/webtorrent-2.8.5.tgz",
+    "integrity": "sha512-oIjpuBrypApJ+RCZ8RRaHEncVSkt2cd25/I4Trb2sk9nlaEF92Dg1u8BCwqA4eJR7wIZQM95GyO7Wo4QTbrUUA==",
+    "sha256": "8ba103e9ec0d5950ad218d2ec26265c8ddb28f93dca98b1acb9768300828c1e3",
+    "gitHead": "bef8a0ccd73235077412dd85483f35912eae606f",
+    "sourceMapSha256": "a48e9e5d69bc844b8ea7fbd5cc2722782b82e9f5f479b8a7451979cecefbdc2b"
+  },
+  "inventory": {
+    "path": "third_party/webtorrent/bundled-provenance.json",
+    "sha256": "82971c29f4d319e78318ff66b933ddbfdbf30bc8d8ba83739a804a488722bede"
+  },
+  "notices": {
+    "path": "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt",
+    "sha256": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246"
+  },
+  "advisoryPackages": [
+    {
+      "name": "@thaunknown/simple-peer",
+      "versions": [
+        "10.0.12",
+        "10.0.13",
+        "10.1.2"
+      ]
+    },
+    {
+      "name": "@thaunknown/simple-websocket",
+      "versions": [
+        "9.1.3",
+        "9.1.5"
+      ]
+    },
+    {
+      "name": "@thaunknown/thirty-two",
+      "versions": [
+        "1.0.6"
+      ]
+    },
+    {
+      "name": "addr-to-ip-port",
+      "versions": [
+        "2.0.0"
+      ]
+    },
+    {
+      "name": "base64-arraybuffer",
+      "versions": [
+        "1.0.2"
+      ]
+    },
+    {
+      "name": "bencode",
+      "versions": [
+        "2.0.3",
+        "4.0.1"
+      ]
+    },
+    {
+      "name": "bep53-range",
+      "versions": [
+        "2.0.1"
+      ]
+    },
+    {
+      "name": "bitfield",
+      "versions": [
+        "4.2.0"
+      ]
+    },
+    {
+      "name": "bittorrent-protocol",
+      "versions": [
+        "4.1.21"
+      ]
+    },
+    {
+      "name": "bittorrent-tracker",
+      "versions": [
+        "11.2.3"
+      ]
+    },
+    {
+      "name": "block-iterator",
+      "versions": [
+        "1.1.1",
+        "1.1.2"
+      ]
+    },
+    {
+      "name": "cache-chunk-store",
+      "versions": [
+        "3.2.2"
+      ]
+    },
+    {
+      "name": "chunk-store-iterator",
+      "versions": [
+        "1.0.4"
+      ]
+    },
+    {
+      "name": "cpus",
+      "versions": [
+        "1.0.3"
+      ]
+    },
+    {
+      "name": "create-torrent",
+      "versions": [
+        "6.1.3"
+      ]
+    },
+    {
+      "name": "cross-fetch-ponyfill",
+      "versions": [
+        "1.0.3"
+      ]
+    },
+    {
+      "name": "debug",
+      "versions": [
+        "4.3.4",
+        "4.4.3"
+      ]
+    },
+    {
+      "name": "end-of-stream",
+      "versions": [
+        "1.4.5"
+      ]
+    },
+    {
+      "name": "err-code",
+      "versions": [
+        "2.0.3",
+        "3.0.1"
+      ]
+    },
+    {
+      "name": "escape-html",
+      "versions": [
+        "1.0.3"
+      ]
+    },
+    {
+      "name": "events",
+      "versions": [
+        "2.1.0",
+        "3.3.0"
+      ]
+    },
+    {
+      "name": "fast-fifo",
+      "versions": [
+        "1.3.2"
+      ]
+    },
+    {
+      "name": "fast-readable-async-iterator",
+      "versions": [
+        "2.0.0"
+      ]
+    },
+    {
+      "name": "filename-reserved-regex",
+      "versions": [
+        "3.0.0"
+      ]
+    },
+    {
+      "name": "fsa-chunk-store",
+      "versions": [
+        "1.3.0"
+      ]
+    },
+    {
+      "name": "immediate-chunk-store",
+      "versions": [
+        "2.2.0"
+      ]
+    },
+    {
+      "name": "inherits",
+      "versions": [
+        "2.0.4"
+      ]
+    },
+    {
+      "name": "join-async-iterator",
+      "versions": [
+        "1.1.1"
+      ]
+    },
+    {
+      "name": "junk",
+      "versions": [
+        "4.0.1"
+      ]
+    },
+    {
+      "name": "limiter",
+      "versions": [
+        "1.1.5"
+      ]
+    },
+    {
+      "name": "lru",
+      "versions": [
+        "3.1.0"
+      ]
+    },
+    {
+      "name": "lt_donthave",
+      "versions": [
+        "2.0.5",
+        "2.0.6",
+        "2.0.7"
+      ]
+    },
+    {
+      "name": "magnet-uri",
+      "versions": [
+        "7.0.10"
+      ]
+    },
+    {
+      "name": "memory-chunk-store",
+      "versions": [
+        "1.3.5"
+      ]
+    },
+    {
+      "name": "mime",
+      "versions": [
+        "3.0.0"
+      ]
+    },
+    {
+      "name": "ms",
+      "versions": [
+        "2.1.2",
+        "2.1.3"
+      ]
+    },
+    {
+      "name": "once",
+      "versions": [
+        "1.4.0"
+      ]
+    },
+    {
+      "name": "parse-torrent",
+      "versions": [
+        "11.0.24"
+      ]
+    },
+    {
+      "name": "path-esm",
+      "versions": [
+        "1.0.0"
+      ]
+    },
+    {
+      "name": "piece-length",
+      "versions": [
+        "2.0.1"
+      ]
+    },
+    {
+      "name": "pump",
+      "versions": [
+        "3.0.4"
+      ]
+    },
+    {
+      "name": "queue-microtask",
+      "versions": [
+        "1.2.3"
+      ]
+    },
+    {
+      "name": "random-iterate",
+      "versions": [
+        "1.0.1"
+      ]
+    },
+    {
+      "name": "range-parser",
+      "versions": [
+        "1.2.1",
+        "1.3.0"
+      ]
+    },
+    {
+      "name": "rc4",
+      "versions": [
+        "0.1.5"
+      ]
+    },
+    {
+      "name": "run-parallel",
+      "versions": [
+        "1.2.0"
+      ]
+    },
+    {
+      "name": "run-parallel-limit",
+      "versions": [
+        "1.1.0"
+      ]
+    },
+    {
+      "name": "speed-limiter",
+      "versions": [
+        "1.0.2"
+      ]
+    },
+    {
+      "name": "streamx",
+      "versions": [
+        "2.22.1",
+        "2.28.0"
+      ]
+    },
+    {
+      "name": "text-decoder",
+      "versions": [
+        "1.2.0",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.2.7"
+      ]
+    },
+    {
+      "name": "throughput",
+      "versions": [
+        "1.0.2"
+      ]
+    },
+    {
+      "name": "torrent-discovery",
+      "versions": [
+        "11.0.21"
+      ]
+    },
+    {
+      "name": "torrent-piece",
+      "versions": [
+        "3.0.2"
+      ]
+    },
+    {
+      "name": "uint8-util",
+      "versions": [
+        "2.2.5",
+        "2.2.6",
+        "2.3.2"
+      ]
+    },
+    {
+      "name": "unordered-array-remove",
+      "versions": [
+        "1.0.2"
+      ]
+    },
+    {
+      "name": "ut_metadata",
+      "versions": [
+        "4.0.3"
+      ]
+    },
+    {
+      "name": "webrtc-polyfill",
+      "versions": [
+        "1.2.2"
+      ]
+    },
+    {
+      "name": "webtorrent",
+      "versions": [
+        "2.8.5"
+      ]
+    },
+    {
+      "name": "wrappy",
+      "versions": [
+        "1.0.2"
+      ]
+    }
+  ],
+  "advisoryCoverage": "Unionofintegrity-verified matching-sourcecandidates andallpre-removalapp-lockversions foreverymappednpmpackage plusWebTorrent. CandidateversionsareNOTuniquelyprovenupstreambuildversions. Webpackgeneratedruntimecompiler versionUNKNOWN; upstreammapisnotbinaryproof. No completebrowser-vulnerabilitycertification.",
+  "licenseCoverage": "Fullprovidedpublishedlicense/noticefiles andsourceattributionspreserved.9packagesdeclareMITwithoutstandaloneLICENSE; no copyrightyears/hardversionidentityfabricated."
+}

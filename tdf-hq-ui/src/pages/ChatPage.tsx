@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -176,7 +177,7 @@ function MessageBubble({ message, myPartyId }: MessageBubbleProps) {
           wordBreak: 'break-word',
         }}
       >
-        <Typography variant="body2">{message.cmBody}</Typography>
+        <MarkdownText variant="body2">{message.cmBody}</MarkdownText>
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, textAlign: mine ? 'right' : 'left' }}>
         {formatTimestamp(message.cmCreatedAt)}

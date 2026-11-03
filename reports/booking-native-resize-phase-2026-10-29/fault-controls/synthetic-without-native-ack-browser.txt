@@ -1,0 +1,45 @@
+
+Running 1 test using 1 worker
+
+[1A[2K(node:27400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:27400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/1] [chromium-phone] › synthetic-without-native-ack.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow
+[1A[2K  1) [chromium-phone] › synthetic-without-native-ack.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mtrue[39m
+    Received: [31mfalse[39m
+
+      310 |         body: Buffer.from(JSON.stringify(resizeAcknowledgement, null, 2)), contentType: 'application/json',
+      311 |       });
+    > 312 |       expect(resizeAcknowledgement.delivered).toBe(true);
+          |                                               ^
+      313 |       expect(resizeAcknowledgement.trusted).toBe(true);
+      314 |       expect(resizeAcknowledgement.clientWidth).toBeGreaterThan(0);
+      315 |       expect(resizeAcknowledgement.clientWidth).toBeLessThanOrEqual(320);
+        at /private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.spec.mjs:312:47
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  1 failed
+    [chromium-phone] › synthetic-without-native-ack.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 

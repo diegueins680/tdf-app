@@ -1,0 +1,11 @@
+# Evidencia de capacidad de CI
+
+El código propuesto es `9e6f0c5d8942b54a80343d708584115ade2f3660`, sobre el main protegido `c66a65a10a8e5e48f89172d61f6f57fb81697896`. Es una propuesta de concurrencia, no una explicación demostrada ni una corrección ya verificada de los fallos de WebKit. Los dos jobs completos fallidos de7bed y el primer fallo socialfd5 permanecen diferenciados. No se pide otra repetición de esos heads.
+
+El archivo de ejecuciones conserva logs originales, trazas y capturas sintéticas seleccionadas, además del primer error del control local y su corrección. Los hashes identifican cada miembro; se excluyen los reportes JSON completos con metadatos de autor. Las API de negocio/sesiones de las trazas son fixtures; no hay personas ni pagos reales. El escaneo de formatos fuertes de credenciales es un control acotado, no una prueba universal de ausencia.
+
+Se cargaron ambas configuraciones con la CLI real de Playwright1.59.1: las602identidades de prueba coinciden. Listar no es ejecutar. El control de política rechaza la configuración anterior; el conjunto final pasa50controles sin omitidos. Los27controles de metadatos y las1341entradas estrictasJSON/CSV pasan. El primer control interpretó mal los descriptores `defaultBrowserType`; sus49PASS/1FAIL se conservan y no califican el candidato.
+
+Reproducción local: Node22, `node --test scripts/__tests__/playwright-image.test.mjs scripts/__tests__/ci-pipeline.test.mjs`; `node node_modules/playwright/cli.js test --list --reporter=json`; los verificadores canónicos de inventario/trazabilidad/admisión y catálogo. La ejecución completa requiere el contenedor Noble fijado del workflow y los mismos602casos, rollout y discovery. macOS12 no admite este WebKit: no se fuerza plataforma ni se presenta Chromium local como equivalente.
+
+El único requisito modificado es el contrato inferidoSYS-CI-BROWSER-001: se amplía su asociación de implementación y se explicita el límite por proyecto WebKit. Se mantienen los147objetos completos restantes, las223migraciones y todos los bytes de aplicación/backend/e2e/dependencias/operaciones/Mobile de main. La admisión actual enumera cuatro superficies; el config raíz queda mapeado y verificado explícitamente. CI Linux del nuevo head, revisión independiente, main final y FIFO siguen pendientes.

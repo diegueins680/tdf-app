@@ -1,0 +1,14 @@
+{
+  "base": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "head": "fe6d2eb768137c3fe8b274a98c5e53d2dd2cc8c1",
+  "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mappedChangedSurfaces": [
+    "scripts/__tests__/ci-change-scope.test.mjs",
+    "scripts/ci-change-scope.mjs",
+    "scripts/quality-repo.sh",
+    "scripts/test-checkout-money-verifier.py",
+    "scripts/verify-checkout-money.py"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

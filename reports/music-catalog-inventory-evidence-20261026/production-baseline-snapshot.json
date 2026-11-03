@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "sourceReceiptSha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+  "sourceObservationAt": "2026-10-26T07:06:13.603Z",
+  "inspectorSourceRevision": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+  "inspectorSourceDirty": false,
+  "inspectorSha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+  "publicBackendCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+  "appliedMigrationCount": 213,
+  "musicReleaseFlags": {
+    "music_releases.authoring": false,
+    "music_releases.commerce": false,
+    "music_releases.ddex_export": false,
+    "music_releases.processing": false,
+    "music_releases.public": false
+  },
+  "scope": "Sanitized excerpt of separate earlier runtime observation. Not the same transaction/time as live catalog aggregation; no deployment,activation or migration execution is inferred."
+}

@@ -1,0 +1,6 @@
+.............
+----------------------------------------------------------------------
+Ran 13 tests in 0.014s
+
+OK
+{"status": "PASS_OFFLINE_ONLY", "reviewedManifestSha256": "cf359cf1f9a704b052e17cf5c2e423e66aa346a440a6de094dff751bd38fb046", "observedLiveAggregateFamiliesArchived": 9, "fakePureLocalTests": 13, "pythonAstSyntax": "PASS", "javascriptSyntax": "PASS", "sshDockerSqlOrStorageExecutedByVerifier": false}

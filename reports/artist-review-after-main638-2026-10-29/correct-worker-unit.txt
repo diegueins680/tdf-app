@@ -1,0 +1,44 @@
+{"timestamp":"2026-10-29T18:49:31.949Z","level":"warn","event":"external_provider_temporarily_unavailable","provider":"musicbrainz","failureClass":"http_503"}
+✔ normaliza capitalización, acentos y espacios para comparar sin alterar el nombre guardado (2.818002ms)
+✔ exige dos señales independientes y rechaza homónimos (1.401868ms)
+✔ bloquea variantes probables para revisión antes de crear otro perfil (0.749167ms)
+✔ calcula backoff exponencial acotado (0.341697ms)
+✔ aplica jitter determinista y respeta Retry-After con un límite estricto (0.562063ms)
+✔ reinicia el contador de errores al reanudar y conserva el historial (0.382301ms)
+✔ rota lotes diarios para no dejar perfiles posteriores al límite sin procesar (1.404081ms)
+✔ permite ampliar de forma segura el timeout de la API de TDF (0.960721ms)
+✔ redacta imágenes inline de los reportes sin alterar enlaces externos (0.614812ms)
+✔ bloquea ingestión de imágenes sin derechos y atribución explícitos (0.718472ms)
+✔ reintenta límites de proveedor y se recupera sin duplicar la solicitud exitosa (36.576198ms)
+✔ clasifica una caída transitoria de proveedor como evidencia degradada sin ocultar fallos permanentes (4.233026ms)
+✔ no atribuye resultados vacíos a proveedores que no estuvieron disponibles (0.842919ms)
+✔ ambas rutas de investigación conservan la clasificación de indisponibilidad (19.595668ms)
+✔ conserva como error una caída de red después de agotar el reintento acotado (0.815112ms)
+✔ propaga fallos del proxy de Google Drive sin incluir el token en el error (3862.982553ms)
+✔ no publica una URL de Drive cuando la política rechaza compartir el archivo (2.640728ms)
+✔ valida la firma real de imágenes y no confunde cualquier contenedor ISO con AVIF (0.476794ms)
+✔ rechaza una ejecución solapada con heartbeat reciente (2.052233ms)
+{"timestamp":"2026-10-29T18:49:35.848Z","level":"info","event":"artist_completed","artistId":7,"reliable":null,"suggestions":0,"media":0}
+{"timestamp":"2026-10-29T18:49:35.852Z","level":"info","event":"run_completed","runId":1,"artists":1,"errors":0,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-enrichment-test-6s9csf/report.json"}
+✔ audita, persiste checkpoints y finaliza el run sin consultar proveedores externos (12.677399ms)
+✔ genera WebP y AVIF decodificables dentro de dimensiones y presupuestos (4302.001204ms)
+{"timestamp":"2026-10-29T18:49:40.690Z","level":"error","event":"artist_failed","artistId":7,"message":"TDF API POST /admin/artists/enrichment/sources failed (400): {\"error\":\"synthetic source persistence rejection\"}"}
+{"timestamp":"2026-10-29T18:49:40.692Z","level":"error","event":"run_failed","runId":1,"artists":0,"errors":1,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-enrichment-failure-vl6tmz/report.json"}
+✔ a single failed item below the stop threshold records failure and rejects the worker result (537.638586ms)
+✔ scheduled enrichment targets canonical production and retains publication opt-in (25.857207ms)
+{"timestamp":"2026-10-29T18:49:40.724Z","level":"info","event":"artist_completed","artistId":7,"reliable":null,"suggestions":0,"media":0}
+{"timestamp":"2026-10-29T18:49:40.726Z","level":"info","event":"run_completed","runId":1,"artists":1,"errors":0,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-image-audit-Al5sNb/report.json"}
+✔ external image HTTP 200 keeps network validation separate from media rights (9.249494ms)
+{"timestamp":"2026-10-29T18:49:40.732Z","level":"info","event":"artist_completed","artistId":7,"reliable":null,"suggestions":0,"media":0}
+{"timestamp":"2026-10-29T18:49:40.734Z","level":"info","event":"run_completed","runId":1,"artists":1,"errors":0,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-image-audit-xRzyvf/report.json"}
+✔ external image HTTP 404 keeps network validation separate from media rights (6.656186ms)
+✔ manual enrichment uses the current API while retaining both explicit overrides (1.578751ms)
+✔ managed image recognition includes the canonical API without trusting lookalike hosts (0.332016ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9051.684442

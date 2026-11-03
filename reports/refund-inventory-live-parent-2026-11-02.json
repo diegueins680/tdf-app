@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-02T22:45:30.311410+00:00",
+  "sourceCommit": "d3457280684a587ac04145767e6f667caa10a59c",
+  "baseline654": "4da23338d48f7449867919e5e8523d0274611251",
+  "parent652": "95674321bbd59d8d6d372bb30e80932c3f044edb",
+  "main": "0bc79e03f5dfe0c86bb38f53566eab9327eaf7e6",
+  "pullRequest": 654,
+  "status": "Prepared normal feature-branch update; fresh exact-head hosted qualification and required review remain separate gates.",
+  "problem": "Unconditional legacy completion decrements allowed negative stock, nonpositive quantity and foreign-event tier release.",
+  "invariant": {
+    "id": "EVT-LEGACY-REFUND-INVENTORY-001",
+    "requirement": "EVT-TICKET-001",
+    "statement": "Positive captured quantity and one event/tier-bound atomic conditional decrement with sufficient sold stock; refused release rolls back completion while retaining processing/observed ID and denying another provider POST.",
+    "contract": "formal/system/legacy-refund-inventory.md",
+    "assurance": "TESTED on previous4da; current-composition runtime PENDING"
+  },
+  "sourceBinding": {
+    "source": "d3457280684a587ac04145767e6f667caa10a59c",
+    "parent652": "95674321bbd59d8d6d372bb30e80932c3f044edb",
+    "baseline654": "4da23338d48f7449867919e5e8523d0274611251",
+    "main": "0bc79e03f5dfe0c86bb38f53566eab9327eaf7e6",
+    "allThreeResidualStockPatchesExactQualified4da": true,
+    "criticalSHA256": {
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "ddacfbaee9230369a7d1490d44e6ce47bf32ef3d0fd561ea29b3f38c58806e83",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "f655267e5f30c9b0c9e31e6fce03965610c0f3ebee93d4cdc958029cbff832b9",
+      "scripts/__tests__/ticket-admission-model.test.mjs": "feebc6a2fd08487f8fd5e8d87b4a2020cd74faec4e39b9867bd7e369860843b5"
+    },
+    "all169OtherParentNormObjectsExact": true,
+    "requirements": 170,
+    "allParentCatalogObjectsExact": true,
+    "catalogDecisions": 1371,
+    "UIWorkflowsLocksCabalStackAndSQLTreesExactQualifiedParent": true,
+    "contractChange": "Onlyhistorical227schemadateclarification; acceptanceandverificationclausesunchanged",
+    "contractSHA256": "4d4cac202a7dcf05bf7c84f9d1c07640d59285bbf9dcefeda4c624da70f4131b",
+    "currentManifestEntries": 228,
+    "scope": "Sourcebindingandmodelassurance; newcompositionactualStack/PostgreSQL/runtime stillpending",
+    "compositionCommit": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+    "metadataOnlyFollowup": [
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+      "docs/catalog-persistence/reports/static-list-inventory.json",
+      "formal/system/inventory.json",
+      "formal/system/traceability.json"
+    ],
+    "allApplicationTestAndContractInputsExactComposedSource": true
+  },
+  "correctionPreserved": "All three stock handler/test/model patches exactly match qualified4da; only contract introductory wording clarifies historical schema evidence. Acceptance criteria are unchanged.",
+  "historicalCounterexample": {
+    "baseline": "d0301b96e2dfc2106758013b33b60058ea98856b",
+    "handlerCases": 67,
+    "failures": 9,
+    "consequences": "Stock including-3, nonpositive quantities and foreign-event releases",
+    "scope": "Historical actual-handler counterexample; no new red execution on current main claimed."
+  },
+  "previousHeadActualHostedEvidence": {
+    "head": "4da23338d48f7449867919e5e8523d0274611251",
+    "run": 41396635189,
+    "backendJob": 125119894392,
+    "actualCheckout": {
+      "sha": "aa0dc901599dce93f402945cd97a3ac3f1f84166",
+      "tree": "71101c69b2ffec1a0c8407aa930a5d66ed39a212",
+      "parents": [
+        "26d8c1082d8fec217d350c7cca941731266301e9",
+        "4da23338d48f7449867919e5e8523d0274611251"
+      ]
+    },
+    "checkoutTreeEqualsHead": true,
+    "fullPackage": {
+      "examples": 4078,
+      "failures": 0,
+      "pending": 21
+    },
+    "dedicatedProviderGroup": {
+      "examples": 384,
+      "failures": 0,
+      "caseMatches": {
+        "allows only one provider call across eight approvals and later retries [\u2714]": 1,
+        "retains the durable claim after transport exception [\u2714]": 1,
+        "retains the durable claim after invalid JSON [\u2714]": 1,
+        "denies rejection and another approval while the provider response is outstanding [\u2714]": 1,
+        "rejects a stale rejection after waiting for the refund execution claim to commit [\u2714]": 1,
+        "never calls the provider for a rejected request [\u2714]": 1,
+        "leaves a request pending when Stripe configuration is unavailable [\u2714]": 1,
+        "holds unverified Stripe completion evidence: id-only response [\u2714]": 1,
+        "holds unverified Stripe completion evidence: missing object type [\u2714]": 1,
+        "holds unverified Stripe completion evidence: null object type [\u2714]": 1,
+        "holds unverified Stripe completion evidence: wrong object type [\u2714]": 1,
+        "holds unverified Stripe completion evidence: non-text object type [\u2714]": 1,
+        "holds unverified Stripe completion evidence: missing status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: null status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: non-text status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: pending status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: requires-action status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: failed status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: canceled status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: unknown status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: uppercase success status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: padded success status [\u2714]": 1,
+        "holds unverified Stripe completion evidence: missing amount [\u2714]": 1,
+        "holds unverified Stripe completion evidence: null amount [\u2714]": 1,
+        "holds unverified Stripe completion evidence: text amount [\u2714]": 1,
+        "holds unverified Stripe completion evidence: fractional minor-unit amount [\u2714]": 1,
+        "holds unverified Stripe completion evidence: zero amount [\u2714]": 1,
+        "holds unverified Stripe completion evidence: negative amount [\u2714]": 1,
+        "holds unverified Stripe completion evidence: different amount [\u2714]": 1,
+        "holds unverified Stripe completion evidence: amount outside signed storage [\u2714]": 1,
+        "holds unverified Stripe completion evidence: missing currency [\u2714]": 1,
+        "holds unverified Stripe completion evidence: null currency [\u2714]": 1,
+        "holds unverified Stripe completion evidence: non-text currency [\u2714]": 1,
+        "holds unverified Stripe completion evidence: different currency [\u2714]": 1,
+        "holds unverified Stripe completion evidence: uppercase currency [\u2714]": 1,
+        "holds unverified Stripe completion evidence: padded currency [\u2714]": 1,
+        "holds unverified Stripe completion evidence: short currency [\u2714]": 1,
+        "holds unverified Stripe completion evidence: missing payment intent [\u2714]": 1,
+        "holds unverified Stripe completion evidence: null payment intent [\u2714]": 1,
+        "holds unverified Stripe completion evidence: non-text payment intent [\u2714]": 1,
+        "holds unverified Stripe completion evidence: different payment intent [\u2714]": 1,
+        "holds unverified Stripe completion evidence: unexpected expanded payment intent [\u2714]": 1,
+        "holds unverified Stripe completion evidence: missing refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: null refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: non-text refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: empty refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: padded refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: control character in refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: non-ASCII refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: oversized refund id [\u2714]": 1,
+        "holds unverified Stripe completion evidence: non-object response [\u2714]": 1,
+        "preserves a conflicting observed provider id without completing or posting again [\u2714]": 1,
+        "retains observed evidence and rolls back completion after a synthetic bigint projection failure [\u2714]": 1,
+        "releases inventory once for a successful full refund and denies replay [\u2714]": 1,
+        "accepts exactly 128 visible ASCII refund-id characters without assuming a prefix [\u2714]": 1,
+        "holds invalid legacy inventory without completion: sold=-1, quantity=3 [\u2714]": 1,
+        "holds invalid legacy inventory without completion: sold=0, quantity=3 [\u2714]": 1,
+        "holds invalid legacy inventory without completion: sold=1, quantity=3 [\u2714]": 1,
+        "holds invalid legacy inventory without completion: sold=2, quantity=3 [\u2714]": 1,
+        "holds invalid legacy inventory without completion: sold=3, quantity=0 [\u2714]": 1,
+        "holds invalid legacy inventory without completion: sold=3, quantity=-3 [\u2714]": 1,
+        "holds invalid legacy inventory without completion: sold=3, quantity=-9223372036854775808 [\u2714]": 1,
+        "holds a refund whose tier belongs to a different event [\u2714]": 1,
+        "releases exactly the positive order quantity from sold=4 [\u2714]": 1,
+        "releases exactly the positive order quantity from sold=9223372036854775807 [\u2714]": 1,
+        "serializes distinct legacy refunds sharing a tier with sold=3 [\u2714]": 1,
+        "serializes distinct legacy refunds sharing a tier with sold=6 [\u2714]": 1
+      },
+      "allExpectedCasesMatchedExactlyOnce": 67
+    },
+    "standaloneSummaries": [
+      "4078 examples, 0 failures, 21 pending",
+      "25 examples, 0 failures",
+      "10 examples, 0 failures",
+      "22 examples, 0 failures",
+      "4 examples, 0 failures",
+      "15 examples, 0 failures",
+      "4 examples, 0 failures",
+      "1 example, 0 failures",
+      "21 examples, 0 failures",
+      "1 example, 0 failures",
+      "18 examples, 0 failures",
+      "1148 examples, 0 failures",
+      "110 examples, 0 failures",
+      "1 example, 0 failures",
+      "8 examples, 0 failures",
+      "11 examples, 0 failures",
+      "13 examples, 0 failures",
+      "12 examples, 0 failures",
+      "9 examples, 0 failures",
+      "4 examples, 0 failures",
+      "22 examples, 0 failures",
+      "9 examples, 0 failures",
+      "6 examples, 0 failures",
+      "384 examples, 0 failures",
+      "10 examples, 0 failures",
+      "11 examples, 0 failures",
+      "14 examples, 0 failures",
+      "26 examples, 0 failures",
+      "13 examples, 0 failures",
+      "2 examples, 0 failures",
+      "15 examples, 0 failures",
+      "8 examples, 0 failures",
+      "10 examples, 0 failures",
+      "8 examples, 0 failures",
+      "11 examples, 0 failures",
+      "6 examples, 0 failures",
+      "6 examples, 0 failures",
+      "32 examples, 0 failures"
+    ],
+    "backendLogSHA256": "21d5b7c4f3f91a798cc4bd76beeb3c849c22a74596430af907c42001a56e152c",
+    "personaSummaryAnchors": [
+      "682 passed (28.5m)"
+    ],
+    "personaLogSHA256": "bc0b596b62a4539ddfc7c8ff564e4b0f7e3a57a93baabc17ebdfa4f54361e408",
+    "assurance": "TESTED actualhostedStack/PostgreSQL callbacks; no liveprovider or futurecomposition claim",
+    "recordedAt": "2026-11-02T21:51:08.660584+00:00"
+  },
+  "parentCurrentHeadHostedUIAndSchema": {
+    "head": "95674321bbd59d8d6d372bb30e80932c3f044edb",
+    "run": 41535505232,
+    "actualCheckout": {
+      "sha": "eaccd812fe36cfe933d5949a9b9e5b48c6186af8",
+      "tree": "9c0c9e197f6eb95b3000104671d749ca4e9f1b06",
+      "parents": [
+        "0bc79e03f5dfe0c86bb38f53566eab9327eaf7e6",
+        "95674321bbd59d8d6d372bb30e80932c3f044edb"
+      ]
+    },
+    "checkoutTreeEqualsHead": true,
+    "UI": {
+      "job": 125586610708,
+      "status": "SUCCESS",
+      "suites": 338,
+      "tests": 3916,
+      "failures": 0,
+      "sixGuardMatches": {
+        "the default UI command enables serial worker recycling with the configured idle budget": 1,
+        "configuration errors do not expose captured private reporter settings": 1,
+        "the real UI command recycles its worker after the controlled per-file memory threshold": 1,
+        "forcing the old in-band command defeats the recycling probe": 1,
+        "worker recycling preserves a failing assertion and still executes every file": 1,
+        "a persistently crashing file fails after worker retries and other files still complete": 1
+      },
+      "logSHA256": "0d8f8874b6e3ec9323175e5ce0d37360a9298c290b04c738c5b174dc5476ec84"
+    },
+    "migration": {
+      "job": 125586610304,
+      "status": "SUCCESS",
+      "manifestEntries": 228,
+      "applyReplayAndMusicRollbackReapply": true,
+      "logSHA256": "2013a5dfade74e327863a3937d39d3361016ede7cc114879c8650b3e6e0c9a2c"
+    },
+    "scope": "Actualnew956Node22UIandmigrationjobs; backend/browser/approvalstillpending. No wholeCIpassclaimed.",
+    "recordedAt": "2026-11-02T22:44:35.407698+00:00"
+  },
+  "localVerification": {
+    "modelTests": 15,
+    "catalogControls": 8,
+    "strictJSONCSVInventoryConformance": "PASS",
+    "repositoryQuality": "PASS",
+    "sourceAdmissionAgainstActualParent": "PASS",
+    "UI": "All UI/config/dependency/workflow inputs exact locally qualified parent338suites/3916tests and six guards; no redundant child UI execution or new backend/browser integration credit.",
+    "setup": "Owned exact Mobilec3b and unchanged borrowed owned dependencies/native fallback disabled; no fresh canonical install or local Stack/PostgreSQL claim."
+  },
+  "formalProperties": {
+    "assurance": "BOUNDED_VERIFIED",
+    "inventoryInputs": 800,
+    "states": 3214,
+    "transitions": 3200,
+    "violations": 0,
+    "bounds": "Two actors; initial sold-1..6; quantities-1..3; four event-binding pairs",
+    "controlsDetected": [
+      "Stale precheck permits negative stock",
+      "Omitted event binding releases foreign stock",
+      "Omitted positivity releases nonpositive quantity"
+    ],
+    "scope": "Finite design model; no Haskell/SQL/provider refinement proof."
+  },
+  "wholeSystemAssurance": {
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 170,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 153,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 170,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 170,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "releaseDecision": "BLOCKED",
+    "scope": "170 full implementation and170 refinement obligations UNPROVEN/UNKNOWN;11 inherited conditional SMT lemmas do not establish this workflow."
+  },
+  "checks": {
+    "composed-model": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "9fef39b16be016cde89f5e0a383586c9cdae39dcb9044c02dd0348a63383f896"
+    },
+    "catalog-controls": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "bf0284e3d58b9604b4f891378ef65ab096e63e493ad25ce81b110d120268e5c6"
+    },
+    "final-admission": {
+      "exitCode": 0,
+      "sourceAtStart": "d3457280684a587ac04145767e6f667caa10a59c",
+      "sourceAtFinish": "d3457280684a587ac04145767e6f667caa10a59c",
+      "logSha256": "956a5c1186a19477ce53759b47cee428c3cbd3a1aadf758a60c8aac3b751de02"
+    },
+    "final-assurance": {
+      "exitCode": 0,
+      "sourceAtStart": "d3457280684a587ac04145767e6f667caa10a59c",
+      "sourceAtFinish": "d3457280684a587ac04145767e6f667caa10a59c",
+      "logSha256": "5ef46a4e2075c87021a1fb53fe855850cd059282b091df5bfb7d6b59cad0a872"
+    },
+    "final-repo-qa": {
+      "exitCode": 0,
+      "sourceAtStart": "d3457280684a587ac04145767e6f667caa10a59c",
+      "sourceAtFinish": "d3457280684a587ac04145767e6f667caa10a59c",
+      "logSha256": "8d33f408a9eaf2c1c88b89293594cc0f3d330082f9fd291494d39d7b77c9bbd9"
+    },
+    "metadata-0": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "metadata-1": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "metadata-2": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5"
+    },
+    "metadata-3": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6"
+    },
+    "metadata-4": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d"
+    },
+    "metadata-5": {
+      "exitCode": 0,
+      "sourceAtStart": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "sourceAtFinish": "3dacc0f0a1d9c5ec52aa7338130c11511c55c20a",
+      "logSha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e"
+    }
+  },
+  "integration": {
+    "branch": "fix/legacy-refund-inventory-20261028",
+    "base": "fix/legacy-stripe-refund-evidence-20261028",
+    "mode": "Normal fast-forward only after live source/review/policy preflight",
+    "readiness": "Ready for normal review after localqualification/publication; auto-merge off",
+    "freshCI": "PENDING",
+    "freshApproval": "PENDING",
+    "protectedMainMerged": false,
+    "messagesOrReviewerRequests": 0,
+    "manualProductionOperations": 0
+  },
+  "remainingRisks": [
+    "Historical negative counters and other inventory writers are not repaired or constrained",
+    "Captured actor/order changes across provider I/O, global capacity, uncertain-refund admission and recovery remain separate",
+    "Legacy arbitrary partial-money-to-ticket allocation remains unresolved and unchanged",
+    "Current manifest is228 entries; old227-entry qualification is historical",
+    "Parent652 and child require their actual composed checkout tests, required reviews and protected-main admission before integration"
+  ],
+  "next": "Run fresh hosted Stack/PostgreSQL on this exact published composition, match all67 handler cases in their dedicated group and qualify228 migrations; review source and integrate through ordinary controls.",
+  "evidence": {
+    "archive": "reports/refund-inventory-live-parent-2026-11-02/evidence.tar.gz",
+    "sha256": "12416b76073e267e2a7a40198ca1bbc2835d5bc7c897a438cef727c227f6d5d0",
+    "regularFiles": 84,
+    "manifestEntries": 83
+  }
+}
