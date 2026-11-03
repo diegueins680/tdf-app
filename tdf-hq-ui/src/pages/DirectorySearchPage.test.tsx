@@ -45,6 +45,10 @@ const removeFavoriteMock = jest.fn(async () => undefined);
 const captureFirstValueOnceMock = jest.fn(async () => true);
 const analyticsCaptureMock = jest.fn();
 
+jest.unstable_mockModule('../api/musicReleases', () => ({
+  musicReleases: { searchTracks: jest.fn(async () => []) },
+}));
+
 jest.unstable_mockModule('../api/directory', () => ({
   Directory: {
     search: searchMock,

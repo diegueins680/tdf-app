@@ -6,7 +6,6 @@ import AppErrorBoundary from './routes/AppErrorBoundary';
 import RouteLoadingFallback from './routes/RouteLoadingFallback';
 import { useSession } from './session/SessionContext';
 import OnboardingRecovery from './session/OnboardingRecovery';
-import { PlayerProvider } from './player/PlayerProvider';
 import { lazyWithReload } from './utils/lazyWithReload';
 import { shouldRenderRadioWidget } from './utils/radioRouteVisibility';
 
@@ -29,18 +28,16 @@ export default function App() {
   const location = useLocation();
   return (
     <AppErrorBoundary resetKey={location.pathname}>
-      {/* Playback outlives route transitions, so the provider wraps the routes. */}
-      <PlayerProvider>
-        <NavigationScrollRestoration />
-        <OnboardingRecovery />
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <AppRoutes />
-        </Suspense>
-        <Suspense fallback={null}>
-          <GlobalPlayer />
-        </Suspense>
-        <RoutedRadioWidget />
-      </PlayerProvider>
+      {/* The session-owned player outlives route and query-cache transitions. */}
+      <NavigationScrollRestoration />
+      <OnboardingRecovery />
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <AppRoutes />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GlobalPlayer />
+      </Suspense>
+      <RoutedRadioWidget />
     </AppErrorBoundary>
   );
 }

@@ -1,0 +1,33 @@
+{
+  "status": "PASS_AST_PURE_GUARDS_AND_READ_ONLY_FULL975_SOURCE_ADMISSION",
+  "sourceRevision": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "sourceManifestSha256": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3",
+  "httpAllowedCases": 3,
+  "httpDeniedCases": 9,
+  "redirectRefused": true,
+  "strictBackendPathSetPositiveCases": 1,
+  "unknownMissingOrExceptionPathSetsRejected": 6,
+  "startupFakeClockCases": [
+    {
+      "success": true,
+      "syntheticElapsedSeconds": 1,
+      "maximumTimeout": 10,
+      "passed": true
+    },
+    {
+      "success": false,
+      "syntheticElapsedSeconds": 90.0,
+      "maximumTimeout": 10,
+      "passed": true
+    }
+  ],
+  "all975RawGitPathBlobModeAndSourceManifestHashesExact": true,
+  "unicodeTemplateIncluded": true,
+  "committedOpenApiIncludedNoExtraException": true,
+  "all7RuntimeHelpersPinned": true,
+  "actualProductionManifestEntries": 223,
+  "functionalCheckCallsPreserved": 35,
+  "changedCheckCallsOnly": "Ledger223 equality/label and expected-version label; all105 prior runtime assertion coverage retained",
+  "runSha256": "d90823cf526654b0fe90f2119c820d593a10723757b778a48642a595410de1b6",
+  "fullDriverFixtureSqlApiPgBrowserNetworkExecuted": false
+}

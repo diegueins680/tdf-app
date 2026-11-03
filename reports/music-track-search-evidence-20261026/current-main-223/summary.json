@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_LOCAL_B8A_FULL223_METADATA_HTTP_RELEASE_GATES_PENDING",
+  "checkpoint": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "protectedMainBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "stackedParent": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+  "canonicalBuild": {
+    "actualExitCode": 0,
+    "rootSession": 56020,
+    "logSha256": "f74eb25dd46cb342e8f2069c6116f42fa19008abe224f4306a869a73516f7808"
+  },
+  "compiledHttp": {
+    "status": "PASS-real-compiled-track-search-http-synthetic-metadata-only",
+    "rootSession": 61918,
+    "actualExitCode": 0,
+    "schemaEntries": 223,
+    "assertions": 105,
+    "steps": 66,
+    "backendFilesVerified": 975,
+    "manifestCapturedBeforeBuild": true,
+    "manifestSha256": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3",
+    "actualVersion": {
+      "buildTime": "2026-10-27T00:01:20Z",
+      "commit": "b8a13e66fb40613250c047df92b6775a04eebf67",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "binarySha256": "8df6e58359fe29ec2a841d232094106038be08f703abb5a698eeb23eb6cb51cb",
+    "resultsSha256": "9930a5c59146176348426fe7efedb170b213ec8fcc5dede190c3cd146f5bfbe9",
+    "cleanup": {
+      "backendStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "frontendMetadataChangedDuringRun": false,
+    "wholeCheckoutCleanClaimed": false
+  },
+  "compiledPayloadRegressions": {
+    "examples": 10,
+    "failures": 0,
+    "actualExitCode": 0,
+    "boundary": "Pure ContentSpec compatibility, not a full backend suite or search HTTP substitute"
+  },
+  "compiledApi": {
+    "status": "PASS_DECLARATION_SNAPSHOT_COMPARISON_NOT_CONFORMANCE_APPROVAL",
+    "operations": 906,
+    "rawMounts": 2,
+    "undocumented": 400,
+    "previousUndocumentedDebt": 399,
+    "newUndocumentedOperation": "GET /music/search",
+    "cause": "Standalone music-search.yaml is not referenced by canonical api.yaml; clean contract integration under separate review. This packet changes no YAML or types.",
+    "documentedWithoutTypedRoute": 25,
+    "statusDifferences": 8,
+    "competing": 0,
+    "boundary": "Typed declarations and existing policies; not all runtime JSON/auth conformance or a general API green result"
+  },
+  "sourceAdmission": {
+    "status": "PASS",
+    "base": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+    "head": "b8a13e66fb40613250c047df92b6775a04eebf67",
+    "mappedMaterialPaths": 22
+  },
+  "metadata": {
+    "cases": 36,
+    "suites": [
+      9,
+      6,
+      10,
+      11
+    ],
+    "ciContractCases": 47,
+    "activeDecisions": 1343,
+    "requirements": 150,
+    "schemaEntries": 223,
+    "boundary": "Parent-refresh receipt and logs retained; no freshness regeneration by this evidence packaging task"
+  },
+  "nativeConfigurationDiscovery": {
+    "executionsListed": 14,
+    "projects": 7,
+    "webkitIphoneListed": 2,
+    "boundary": "--list only, not hosted or additional native execution"
+  },
+  "historicalOldPacket": {
+    "leavesPreserved": 29,
+    "manifest": "reports/music-track-search-evidence-20261026/artifact-hashes.json",
+    "preservedExactly": true,
+    "scope": "Historical c88/full222, frontend and local three-project native evidence remains original-source-bound"
+  },
+  "scope": "Actual local compiled GET/HEAD metadata using fresh owned PostgreSQL16/full223 and synthetic publication fixtures. No HTTP mutation/signup/login, object/media/signing/production journey, SLO or physical-device qualification.",
+  "release": {
+    "draftPr": "https://github.com/diegueins680/tdf-app/pull/640",
+    "basePr": 626,
+    "hostedExactHeadCi": "PENDING",
+    "independentReview": "PENDING",
+    "protectedMerge": "PENDING",
+    "deployment": "NOT_PERFORMED",
+    "productionFlagsChanged": false,
+    "fullMissionComplete": false
+  },
+  "archive": {
+    "path": "local-current223-execution-evidence.tar.gz",
+    "bytes": 342096,
+    "sha256": "eb780d168da2d23c4852d0407249055913e44849f553097500b2af5026c1e73f",
+    "members": 60
+  }
+}

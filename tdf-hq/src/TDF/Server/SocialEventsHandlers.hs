@@ -73,6 +73,7 @@ module TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateSocialEventsListOffset,
     validateSocialEventsListFilter,
+    validateArtistPartyIdFilter,
     postgresVisibleImportedMetadataClause,
     validateDiscoverySourceWrite,
     validateVenueCreateUpdateFields,
@@ -158,6 +159,7 @@ import Data.Char (
     isAsciiLower,
     isAsciiUpper,
     isControl,
+    isDigit,
     isHexDigit,
  )
 import Data.Int (Int64)
@@ -332,16 +334,20 @@ import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
 
-publicUpcomingEventsServer :: Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
-publicUpcomingEventsServer mCity mStartAfter mLimit = do
+publicUpcomingEventsServer :: Maybe T.Text -> Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
+publicUpcomingEventsServer mCity mArtistPartyId mStartAfter mLimit = do
     Env{..} <- ask
     now <- liftIO getCurrentTime
+    -- Artist profile carousels read through this public projection so every
+    -- anonymous-listing predicate (public-listable state, public metadata and
+    -- no suppressed external reference) applies to them as well.
+    artistPartyFilter <- either throwError pure (validateArtistPartyIdFilter mArtistPartyId)
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
     liftIO $
         runSqlPool
             ( do
-                rows <- selectPublicUpcomingSocialEvents mCity startAfter limit
+                rows <- selectPublicUpcomingSocialEvents mCity artistPartyFilter startAfter limit
                 catMaybes
                     <$> mapM
                         (\(eventEntity, Single canonicalCity) ->
@@ -356,17 +362,34 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
 -- complete future-event table when a city has few or no matches.
 selectPublicUpcomingSocialEvents ::
     Maybe T.Text ->
+    Maybe T.Text ->
     UTCTime ->
     Int ->
     SqlPersistT IO [(Entity SocialEvent, Single (Maybe T.Text))]
-selectPublicUpcomingSocialEvents mCity startAfter limit = do
+selectPublicUpcomingSocialEvents mCity mArtistPartyId startAfter limit = do
     eventTable <- getEscapedRawName "social_event"
     eventIdField <- getEscapedRawName "id"
     eventStartField <- getEscapedRawName "start_time"
     eventMetadataField <- getEscapedRawName "metadata"
     publicEventView <- getEscapedRawName "directory_public_event"
+    eventArtistTable <- getEscapedRawName "event_artist"
+    artistProfileTable <- getEscapedRawName "social_artist_profile"
     backendName <- T.toCaseFold <$> getRDBMS
     let eventIdColumn = eventTable <> "." <> eventIdField
+        -- Exact Party equality through the event/artist link; the view above
+        -- already restricts the candidate events, so this only narrows them.
+        (artistClause, artistValues) = case mArtistPartyId of
+            Nothing -> ("", [])
+            Just partyIdText ->
+                ( " AND EXISTS (SELECT 1 FROM "
+                    <> eventArtistTable
+                    <> " AS artist_link INNER JOIN "
+                    <> artistProfileTable
+                    <> " AS artist_profile ON artist_profile.id=artist_link.artist_id WHERE artist_link.event_id="
+                    <> eventIdColumn
+                    <> " AND artist_profile.party_id=?)"
+                , [PersistText partyIdText]
+                )
         eventStartColumn = eventTable <> "." <> eventStartField
         eventMetadataColumn = eventTable <> "." <> eventMetadataField
         metadataClause = visibleImportedMetadataClause backendName eventMetadataColumn
@@ -394,13 +417,14 @@ selectPublicUpcomingSocialEvents mCity startAfter limit = do
                 <> ">=? AND "
                 <> metadataClause
                 <> cityClause
+                <> artistClause
                 <> " ORDER BY "
                 <> eventStartColumn
                 <> " ASC,"
                 <> eventIdColumn
                 <> " ASC"
     query <- getConnLimitOffset (limit, 0) orderedQuery
-    rawSql query (toPersistValue startAfter : cityValues)
+    rawSql query (toPersistValue startAfter : cityValues ++ artistValues)
 
 collectMatchingRows ::
     Monad m =>
@@ -1990,6 +2014,19 @@ validateSocialEventsListOffset (Just rawOffset)
 maxSocialEventsListOffset :: Int
 maxSocialEventsListOffset = 10000
 
+-- | Party identifiers are rendered as decimal Int64 keys; accept only that shape
+-- so a filter cannot become a wildcard or a scan over unrelated text values.
+validateArtistPartyIdFilter :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateArtistPartyIdFilter mRaw = do
+    cleaned <- validateSocialEventsListFilter "partyId" mRaw
+    case cleaned of
+        Nothing -> Right Nothing
+        Just value
+            | T.length value <= 19 && T.all isDigit value && not (T.isPrefixOf "0" value) ->
+                Right (Just value)
+            | otherwise ->
+                Left err400{errBody = "partyId must be a positive integer party identifier"}
+
 validateSocialEventsListFilter :: T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
 validateSocialEventsListFilter _ Nothing = Right Nothing
 validateSocialEventsListFilter fieldName (Just rawFilter) =
@@ -3461,8 +3498,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             :<|> followArtist
             :<|> unfollowArtist
 
-    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
-    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mLimit mOffset = do
+    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
+    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mPartyIdFilter mLimit mOffset = do
         Env{..} <- ask
         when (isJust mLegacyGenreFilter) $
             throwError err400{errBody = "genre is obsolete; use the canonical genreId UUID parameter"}
@@ -3471,12 +3508,17 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         nameFilter <-
             either throwError pure $
                 fmap T.toCaseFold <$> validateSocialEventsListFilter "name" mNameFilter
+        -- Party relationship lookup is an exact indexed equality, so callers never
+        -- have to page through the whole catalog (bounded by the offset cap) to
+        -- find the one profile that belongs to a Party.
+        partyFilter <- either throwError pure (validateArtistPartyIdFilter mPartyIdFilter)
         let hasFilter = isJust nameFilter || isJust mGenreIdFilter
+            partyCondition = maybe [] (\partyIdText -> [ArtistProfilePartyId ==. Just partyIdText]) partyFilter
         rows <-
             liftIO $
                 runSqlPool
                     ( selectList
-                        []
+                        partyCondition
                         ( [Desc ArtistProfileCreatedAt]
                             ++ if hasFilter
                                 then [LimitTo 1000]
@@ -6280,20 +6322,16 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 runSqlPool
                     (selectList [EventFinanceEntryEventId ==. eventKey, EventFinanceEntryStatus ==. "posted"] [])
                     envPool
-        pure $
-            map
-                ( \lineEnt@(Entity lineKey lineRec) ->
-                    let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
-                        actualCents =
-                            sum
-                                [ eventFinanceEntryAmountCents entry
-                                | Entity _ entry <- postedEntries
-                                , eventFinanceEntryBudgetLineId entry == Just lineKey
-                                , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                                ]
-                     in budgetLineEntityToDTO eventKey (Just actualCents) lineEnt
-                )
-                budgetRows
+        forM budgetRows $ \lineEnt@(Entity lineKey lineRec) -> do
+            let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
+                exactActualCents = sum
+                    [ toInteger (eventFinanceEntryAmountCents entry)
+                    | Entity _ entry <- postedEntries
+                    , eventFinanceEntryBudgetLineId entry == Just lineKey
+                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                    ]
+            actualCents <- checkedEventFinanceCents exactActualCents
+            pure (budgetLineEntityToDTO eventKey (Just actualCents) lineEnt)
 
     createBudgetLine :: T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
     createBudgetLine eventIdStr dto = do
@@ -6351,6 +6389,24 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 | existingKey /= lineKey ->
                     throwError err409{errBody = "budget line code already exists for this event"}
             _ -> pure ()
+        postedEntries <-
+            liftIO $
+                runSqlPool
+                    ( selectList
+                        [ EventFinanceEntryEventId ==. eventKey
+                        , EventFinanceEntryBudgetLineId ==. Just lineKey
+                        , EventFinanceEntryStatus ==. "posted"
+                        ]
+                        []
+                    )
+                    envPool
+        let exactActualCents =
+                sum
+                    [ toInteger (eventFinanceEntryAmountCents entry)
+                    | Entity _ entry <- postedEntries
+                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                    ]
+        actualCents <- checkedEventFinanceCents exactActualCents
         liftIO $
             runSqlPool
                 ( update
@@ -6365,24 +6421,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     ]
                 )
                 envPool
-        postedEntries <-
-            liftIO $
-                runSqlPool
-                    ( selectList
-                        [ EventFinanceEntryEventId ==. eventKey
-                        , EventFinanceEntryBudgetLineId ==. Just lineKey
-                        , EventFinanceEntryStatus ==. "posted"
-                        ]
-                        []
-                    )
-                    envPool
         mUpdated <- liftIO $ runSqlPool (getEntity lineKey) envPool
-        let actualCents =
-                sum
-                    [ eventFinanceEntryAmountCents entry
-                    | Entity _ entry <- postedEntries
-                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                    ]
         maybe
             (throwError err500{errBody = "Could not update budget line"})
             (pure . budgetLineEntityToDTO eventKey (Just actualCents))
@@ -6576,17 +6615,17 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
 
         let plannedIncomeCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "income"
                     ]
             plannedExpenseCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "expense"
                     ]
-            entryAmount (amountCents, _, _, _) = amountCents
+            entryAmount (amountCents, _, _, _) = toInteger amountCents
             entryDirection (_, directionVal, _, _) = directionVal
             entrySource (_, _, sourceVal, _) = sourceVal
             entryStatus (_, _, _, statusVal) = statusVal
@@ -6610,20 +6649,20 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     , entryDirection entry == "expense"
                     ]
             ticketPaidRevenueCents =
-                fromInteger canonicalGross + sum
-                    [ amountCents
+                canonicalGross + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "paid"
                     ]
             ticketRefundedRevenueCents =
-                fromInteger canonicalRefunded + sum
-                    [ amountCents
+                canonicalRefunded + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "refunded"
                     ]
             ticketPendingRevenueCents =
                 sum
-                    [ amountCents
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "pending"
                     ]
@@ -6697,7 +6736,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             actualIncomeCents = manualIncomeCents + ticketPaidRevenueCents
             actualExpenseCents = manualExpenseCents + ticketRefundedRevenueCents
             netCents = actualIncomeCents - actualExpenseCents
-            budgetCentsVal = budgetOverride <|> fallbackBudget plannedExpenseCents
+            budgetCentsVal = fmap toInteger budgetOverride <|> fallbackBudget plannedExpenseCents
             budgetVarianceCents = fmap (\budgetCap -> budgetCap - actualExpenseCents) budgetCentsVal
             budgetUtilizationPct =
                 case budgetCentsVal of
@@ -6706,28 +6745,40 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                             Just ((fromIntegral actualExpenseCents / fromIntegral budgetCap) * 100)
                     _ -> Nothing
 
+        -- All sums and differences above are Integer. Validate every monetary
+        -- output before constructing the bounded DTO; no wrapped value is sent.
+        forM_ (
+            [ plannedIncomeCents, plannedExpenseCents, actualIncomeCents, actualExpenseCents
+            , netCents, ticketPaidRevenueCents, ticketRefundedRevenueCents, ticketPendingRevenueCents
+            , accountsPayableCents, accountsReceivableCents, contractCommittedCents, contractPaidCents
+            , procurementCommittedCents, procurementPaidCents, assetInvestmentCents, liabilityBalanceCents
+            ]
+            ++ maybe [] pure budgetCentsVal
+            ++ maybe [] pure budgetVarianceCents
+            ) checkedEventFinanceCents
+
         pure
             EventFinanceSummaryDTO
                 { efsEventId = renderKeyText eventKey
                 , efsCurrency = eventCurrencyVal
-                , efsBudgetCents = budgetCentsVal
-                , efsPlannedIncomeCents = plannedIncomeCents
-                , efsPlannedExpenseCents = plannedExpenseCents
-                , efsActualIncomeCents = actualIncomeCents
-                , efsActualExpenseCents = actualExpenseCents
-                , efsNetCents = netCents
-                , efsTicketPaidRevenueCents = ticketPaidRevenueCents
-                , efsTicketRefundedRevenueCents = ticketRefundedRevenueCents
-                , efsTicketPendingRevenueCents = ticketPendingRevenueCents
-                , efsAccountsPayableCents = accountsPayableCents
-                , efsAccountsReceivableCents = accountsReceivableCents
-                , efsContractCommittedCents = contractCommittedCents
-                , efsContractPaidCents = contractPaidCents
-                , efsProcurementCommittedCents = procurementCommittedCents
-                , efsProcurementPaidCents = procurementPaidCents
-                , efsAssetInvestmentCents = assetInvestmentCents
-                , efsLiabilityBalanceCents = liabilityBalanceCents
-                , efsBudgetVarianceCents = budgetVarianceCents
+                , efsBudgetCents = fmap fromInteger budgetCentsVal
+                , efsPlannedIncomeCents = fromInteger plannedIncomeCents
+                , efsPlannedExpenseCents = fromInteger plannedExpenseCents
+                , efsActualIncomeCents = fromInteger actualIncomeCents
+                , efsActualExpenseCents = fromInteger actualExpenseCents
+                , efsNetCents = fromInteger netCents
+                , efsTicketPaidRevenueCents = fromInteger ticketPaidRevenueCents
+                , efsTicketRefundedRevenueCents = fromInteger ticketRefundedRevenueCents
+                , efsTicketPendingRevenueCents = fromInteger ticketPendingRevenueCents
+                , efsAccountsPayableCents = fromInteger accountsPayableCents
+                , efsAccountsReceivableCents = fromInteger accountsReceivableCents
+                , efsContractCommittedCents = fromInteger contractCommittedCents
+                , efsContractPaidCents = fromInteger contractPaidCents
+                , efsProcurementCommittedCents = fromInteger procurementCommittedCents
+                , efsProcurementPaidCents = fromInteger procurementPaidCents
+                , efsAssetInvestmentCents = fromInteger assetInvestmentCents
+                , efsLiabilityBalanceCents = fromInteger liabilityBalanceCents
+                , efsBudgetVarianceCents = fmap fromInteger budgetVarianceCents
                 , efsBudgetUtilizationPct = budgetUtilizationPct
                 , efsGeneratedAt = now
                 }
@@ -9328,7 +9379,7 @@ eventImageUploadFormServerError :: T.Text -> ServerError
 eventImageUploadFormServerError message =
     err400{errBody = BL.fromStrict (TE.encodeUtf8 message)}
 
-fallbackBudget :: Int -> Maybe Int
+fallbackBudget :: Integer -> Maybe Integer
 fallbackBudget plannedExpenseCents
     | plannedExpenseCents > 0 = Just plannedExpenseCents
     | otherwise = Nothing
@@ -10536,6 +10587,14 @@ budgetLineEntityToDTO eventKey mActualCents (Entity lineKey lineRec) =
         , eblCreatedAt = Just (eventBudgetLineCreatedAt lineRec)
         , eblUpdatedAt = Just (eventBudgetLineUpdatedAt lineRec)
         }
+
+-- Event DTO amounts use host Int. Arithmetic must be exact before checking
+-- both bounds: negative net, liability and budget-variance values are valid.
+checkedEventFinanceCents :: Integer -> AppM Int
+checkedEventFinanceCents exact
+    | exact < toInteger (minBound :: Int) || exact > toInteger (maxBound :: Int) =
+        throwError (financeInvariantServerError "Event finance amount exceeds the supported reporting range")
+    | otherwise = pure (fromInteger exact)
 
 financeInvariantServerError :: T.Text -> ServerError
 financeInvariantServerError message =

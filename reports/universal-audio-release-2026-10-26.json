@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "preparedAt": "2026-10-26T18:13:00.388205+00:00",
+  "scope": "Mission-level acceptance register; implementation, protected integration, conditional published-client checks, and actual production availability are distinct. No AC is declared fully met.",
+  "baseline": {
+    "initial": "b732efd65de23e5b97f3f619a2242397c64965c3",
+    "mainObserved": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "canonicalMigrationCount": 222
+  },
+  "missionComplete": false,
+  "acceptance": [
+    {
+      "id": "AC-001",
+      "requirement": "Supported authorized upload",
+      "status": "UNVERIFIED",
+      "evidenceAndLimit": "Existing canonical upload API and multipart/processing tooling were inspected. No real production upload or newly qualified full upload journey in this increment."
+    },
+    {
+      "id": "AC-002",
+      "requirement": "Accurate processing readiness",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Existing processing/publication models and CI remain; live canonical upload and job counts are zero. Empty counts do not exercise transitions."
+    },
+    {
+      "id": "AC-003",
+      "requirement": "Authorized universal discovery",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "622 adds authorized recording-title matching and pagination to release catalog; universal /buscar and non-release/historical coverage remain incomplete. Production public flag was observed disabled. Exact5f compiled HTTP checks now verify actual handler query/bindings with synthetic published fixtures.",
+      "compiledHttpEvidence": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json"
+    },
+    {
+      "id": "AC-004",
+      "requirement": "Selection reaches correct global player",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "620 selected-asset and supersession regressions and real decoder browser fixtures passed; published-client probe used synthetic API/media responses. Actual production catalog journey unverified. Merged624 published2e additionally verifies explicit provider dialog/link handoff and artist-context labeling with four synthetic-service UI cases; no provider playback claim.",
+      "publishedClientEvidence": "reports/universal-audio-release-evidence-20261026/published-client-conditional-results.json"
+    },
+    {
+      "id": "AC-005",
+      "requirement": "Startup SLO",
+      "status": "UNVERIFIED",
+      "evidenceAndLimit": "No representative cold/warm p95 or production playback-start success baseline has been established. Browser test timeouts and bundle budgets are not startup measurements."
+    },
+    {
+      "id": "AC-006",
+      "requirement": "Route continuity",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "620 real AAC/FLAC deterministic browser tests and published-client synthetic-service probe preserve the element/clock on tested routes; physical devices and all routes unverified.",
+      "publishedClientEvidence": "reports/universal-audio-release-evidence-20261026/published-client-conditional-results.json"
+    },
+    {
+      "id": "AC-007",
+      "requirement": "Single active playback",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "One global engine and event arbitration are tested in scoped flows. Independent radio/provider surfaces and cross-tab ownership remain outside complete verification. Merged624 separates external provider navigation from native media commands and pauses global playback only on actual external-link activation; published synthetic UI verifies command boundaries."
+    },
+    {
+      "id": "AC-008",
+      "requirement": "Queue and transport",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Existing queue/transport tests pass in focused and hosted suites. 629 pending integration adds listener-scoped restoration. All long-form/device scenarios not qualified."
+    },
+    {
+      "id": "AC-009",
+      "requirement": "Transient recovery",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "620 implements and tests bounded retries, generation rejection, pause cancellation and same-recording fallback. Actual expired production credentials and mobile network handoffs unverified."
+    },
+    {
+      "id": "AC-010",
+      "requirement": "Private and restricted isolation",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Canonical SQL authorization controls and permission-removal mutants pass. 626 source projection fix is approved but unmerged; storage-layer target evidence remains required. Exact5f compiled HTTP signing rejects synthetic private, withdrawn and territory-inaccessible sources and original masters.",
+      "compiledHttpEvidence": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json"
+    },
+    {
+      "id": "AC-011",
+      "requirement": "Revocation and removal at delivery",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Existing signing policy and finite credential expiry inspected. Fresh-sign denial checks do not establish object ACLs, stale-token enforcement, caches or byte revocation in production. Compiled HTTP checks verify 300-second signing and immediate denial of new source credentials after withdrawal; actual response lacks Cache-Control, tracked for a separate fix. Draft633 now implements private, no-store and has45 compiled tests plus54 real HTTP assertions on source43b with222-migration fixture. This is not yet merged/deployed or object revocation evidence.",
+      "compiledHttpEvidence": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json"
+    },
+    {
+      "id": "AC-012",
+      "requirement": "Historical catalog coverage",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Live aggregate inventory observed 65 legacy releases, 8 nonempty primary references and zero canonical assets/releases. No rights-reviewed import/backfill performed. Other audio contexts and storage inventory remain unobserved."
+    },
+    {
+      "id": "AC-013",
+      "requirement": "Desktop and mobile support matrix",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Hosted supported desktop/mobile-web browser projects run; local installed Chromium/Pixel7-web/Firefox tests are scoped. Physical Android/iOS and OS interruptions unverified."
+    },
+    {
+      "id": "AC-014",
+      "requirement": "Media Session",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "620 guards partial MediaSession implementations and tests handlers; actual supported OS lock-screen/headphone integration unverified."
+    },
+    {
+      "id": "AC-015",
+      "requirement": "WCAG 2.2 AA",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Touched controls have labels, keyboard operation and 44px targets with scoped checks. Whole player AA, screen-reader and manual contrast/motion acceptance not established."
+    },
+    {
+      "id": "AC-016",
+      "requirement": "Derivative quality and masters",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Existing pipeline preserves masters and creates derivatives; current normalization is not optional. No new listening/quality acceptance or universal format support qualification."
+    },
+    {
+      "id": "AC-017",
+      "requirement": "Invariant status",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Scoped playback and catalog/authorization models have explicit bounds, assumptions and implementation mappings. No implementation theorem/refinement proof or whole-system verification."
+    },
+    {
+      "id": "AC-018",
+      "requirement": "Exact release CI",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "620 and 622 exact candidates passed protected integration; 622 required one unchanged-head failed-job repeat after recorded cart timeout. Other candidate checks/approvals do not transfer to future composed heads."
+    },
+    {
+      "id": "AC-019",
+      "requirement": "Critical regression gate",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Known listener-state account-boundary defect has candidate629 but is not integrated. Full production authorization/storage and catalog gaps prevent mission-level release acceptance."
+    },
+    {
+      "id": "AC-020",
+      "requirement": "Production observability",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Existing playback telemetry was preserved/extended. End-to-end processing/index discrepancy dashboards, production error SLOs and alert verification not established here."
+    },
+    {
+      "id": "AC-021",
+      "requirement": "Ownership and relationship preservation",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "No production catalog mutation or migration was performed. Legacy data and original masters untouched; historical import still needs stable provenance, rights and relationship verification."
+    },
+    {
+      "id": "AC-022",
+      "requirement": "Rollback and mitigation",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Existing full-schema migration/recovery tests run in CI; feature changes are targeted/revertible. Tested coordinated production database/media recovery and backend release prerequisites remain separate blockers."
+    },
+    {
+      "id": "AC-023",
+      "requirement": "Reachable UI",
+      "status": "PARTIAL",
+      "evidenceAndLimit": "Merged catalog/player changes are reachable in tested built-client journeys. Canonical production feature flags were disabled at last observation; synthetic browser data is not actual production content availability. Published2e legacy provider UI passed four desktop/Pixel7 web synthetic-service checks; no real provider media or physical-device claim."
+    }
+  ],
+  "performance": {
+    "coldStartupP95Ms": null,
+    "warmStartupP95Ms": null,
+    "searchP95Ms": null,
+    "playbackStartSuccessRate": null,
+    "rebufferRatio": null,
+    "status": "UNVERIFIED",
+    "reason": "No representative defined reference sample measured; no SLO pass or before/after improvement claimed."
+  },
+  "production": {
+    "apiObservedCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+    "migrationLedgerObserved": 213,
+    "musicFlagsObserved": "all five disabled",
+    "canonicalInventory": {
+      "assets": 0,
+      "releases": 0,
+      "versions": 0,
+      "uploadSessions": 0,
+      "processingJobs": 0
+    },
+    "legacyInventory": {
+      "releaseRows": 65,
+      "nonemptyPrimaryReferenceRows": 8
+    },
+    "mutationsByThisWork": false,
+    "realProductionUploadToPlaybackVerified": false,
+    "flagsObservationTimestamps": [
+      "2026-10-26T07:06:13.603Z",
+      "2026-10-26T17:19:22.889Z"
+    ],
+    "flagsPath": "snapshot.database.revenueFlags entries music_releases.authoring/commerce/ddex_export/processing/public"
+  },
+  "nextActions": [
+    "Integrate remaining listener privacy and source-projection fixes through current protected FIFO; compose new main and qualify exact published heads. Legacy link PR624 is merged and its published conditional UI checked.",
+    "Complete protected CI/review/integration of draft633 credential private/no-store policy. Exactsource43b has45 compiled and54 actual HTTP checks; no production cache purge or object-delivery claim.",
+    "Satisfy existing backend deployment, private storage, coordinated recovery and operational activation gates before enabling canonical music.",
+    "Review the eight legacy primary references for ownership, rights, actual media type and availability; use private idempotent provenance-preserving import, never automatic public publication.",
+    "Implement remaining non-release catalog/search projections, reconciliation, privacy-safe operational measurements and real supported-device acceptance."
+  ],
+  "integration": {
+    "merged": [
+      {
+        "pr": 620,
+        "head": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+        "merge": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+        "ciRun": 40284481007
+      },
+      {
+        "pr": 622,
+        "head": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+        "merge": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+        "mergedAt": "2026-10-26T18:04:41Z",
+        "ciRun": 40363971868,
+        "controlledFailedJobRepeat": true,
+        "firstFailureRetained": true
+      },
+      {
+        "pr": 624,
+        "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+        "merge": "2e01bbe1263e8761fa2692bd951f828c01142449",
+        "mergedAt": "2026-10-26T20:53:17Z",
+        "all20NativeRequiredChecksPassed": true,
+        "freshExactHeadReview": "tdfrecords APPROVED 2026-10-26T20:36:33Z",
+        "treeMatchesTestedCandidate": true,
+        "receipt": "reports/universal-audio-release-evidence-20261026/legacy-published/protected-merge.json"
+      }
+    ],
+    "pending": [
+      {
+        "pr": 626,
+        "head": "ac396190351fc8b26279cc1f2611c1eff34ce271",
+        "reviewedAt": "2026-10-26T17:11:46Z"
+      },
+      {
+        "pr": 629,
+        "head": "2dc5c6a8308c8a8eeac1cf08d4d75788f179544b",
+        "reviewedAt": "2026-10-26T17:11:09Z"
+      }
+    ],
+    "pendingHeadStatus": "626 and629 historical approved remote heads shown; local current-main compositions are being qualified. Fresh published heads require exact-head CI/review and protected FIFO. 633 draft separately qualifies credential Cache-Control; not merged or deployed.",
+    "latestProtectedBaseline": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "latestReconciliationScope": "Normal merge of actual protected main2e after PR624. All147 main requirement objects, complete1341-decision catalog and222-entry migration manifest retained. Original5f HTTP/P0 client identities remain unchanged. New published2e legacy interface verification is conditional, synthetic-services only."
+  },
+  "inventoryEvidence": "reports/music-catalog-inventory-evidence-20261026/observation.json",
+  "evidencePacket": "reports/universal-audio-release-evidence-20261026",
+  "evidencePacketHashes": {
+    "discovery-first-failure.json": "dd743a3ccc5a35e6fc4c57b728cf9fd3c48a180fb0910cc366c0547219128699",
+    "discovery-controlled-repeat.json": "31dd3e6dcf5541512f66ece73e0f860f3f3492ebc504737af32687eb17f991a1",
+    "discovery-protected-merge.json": "bacbb85a0735adfbb3aee750401e59eb687ee1209dd8b1bc9dd21b6f7f62451b",
+    "published-client-conditional-results.json": "91bf5f4d9a874adb03a34702dff82ad60b3b80506f01f3ee8cfc581d14e4d36f",
+    "published-client-harness-provenance.json": "7ca55d00bffad7da031200441c490ab6f2e1a7e875d9ebebfe48611336f6b12b"
+  },
+  "compiledHttpQualification": {
+    "source": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+    "sourceTree": "dabd64ad893e2959fd21226206488121eaad8a24",
+    "binarySha256": "e68a97c3496ee8d0e3b8ad1689e299f410c089a5c15f128dbc677e80da189332",
+    "actualVersion": {
+      "buildTime": "2026-10-26T18:24:44Z",
+      "commit": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "status": "PASS-real-compiled-http-synthetic-metadata-only",
+    "receipt": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json",
+    "receiptSha256": "7cbb0532d9651840b6476c4bedaa7a6572becfdf09ea6daf2f62e7713c5be1fd",
+    "summary": "reports/universal-audio-release-evidence-20261026/compiled-http/qualification-summary.json",
+    "assertionsPassed": 34,
+    "stepsRecorded": 54,
+    "fullSchemaMigrationsRehearsed": 222,
+    "cleanup": {
+      "backendStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "scope": "Real Stack-compiled HTTP/catalog SQL bindings, session and signing handlers with owned PostgreSQL222 and synthetic publishable asset metadata. No actual object delivery, browser playback, upload processing, production environment or performance SLO claim.",
+    "firstTwoHarnessSetupFailuresRetained": true,
+    "missingCacheControlObserved": true
+  },
+  "evidenceCorrections": [
+    {
+      "artifact": "reports/universal-audio-release-evidence-20261026/discovery-protected-merge.json",
+      "field": "originalFailure.sha256",
+      "issue": "Adjacent receipt names the diagnosis JSON, while this historical field contains the original browser ZIP digest. Original packet bytes are preserved.",
+      "diagnosisReceiptSha256": "dd743a3ccc5a35e6fc4c57b728cf9fd3c48a180fb0910cc366c0547219128699",
+      "browserZipSha256": "852e30d3a099976e89db574069784cefc57b56b5beb3ed3e380b0909e2e9c044",
+      "browserArtifactId": 12671562371
+    }
+  ],
+  "publishedClientQualification": {
+    "receipt": "reports/universal-audio-release-evidence-20261026/published-client-conditional-results.json",
+    "sha256": "91bf5f4d9a874adb03a34702dff82ad60b3b80506f01f3ee8cfc581d14e4d36f",
+    "expectedPublishedMerge": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "observedAt": "2026-10-26T15:26:20.006Z",
+    "entry": "/assets/index-BbZYQAQh.js",
+    "entrySha256": "c26ca054054eb8f7e03a19c37e608bb02c9733dea22dd0b83128abdae431878c",
+    "realDecoder": true,
+    "allApiAuthCatalogAndMediaResponsesSynthetic": true,
+    "productionBusinessWrites": false,
+    "scope": "Conditional published P0 client check in desktop Chromium and Pixel7 web; not production catalog, storage, rights or upload-to-playback acceptance."
+  },
+  "updatedAt": "2026-10-26T21:05:58.287475+00:00",
+  "legacyPublishedQualification": {
+    "summary": "reports/universal-audio-release-evidence-20261026/legacy-published/qualification-summary.json",
+    "summarySha256": "e81e4fea0c83de0e0280f9893fd818aad33ea721c270ffafd8df45f150af1be7",
+    "observedAt": "2026-10-26T21:04:32.307Z",
+    "status": "PASS-conditional-published-interface",
+    "passed": 4,
+    "skipped": 0,
+    "retries": 0,
+    "entry": "https://www.tdfrecords.net/assets/index-DZRmmD0l.js",
+    "entrySha256": "12becefdc380f08afdd3ea4f503bb4fc2f0028272209857877c76d01a854bbf6",
+    "expectedMerge": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "actualMediaDecodingTested": false,
+    "allBusinessAndProviderResponsesSynthetic": true,
+    "productionBusinessWrites": false,
+    "firstHarnessFailureRetained": true
+  }
+}

@@ -1,0 +1,347 @@
+{
+  "additional-checks/compiled-content-tests.exit": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-content-tests-20261026.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "additional-checks/compiled-content-tests.log": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-content-tests-20261026.log",
+    "bytes": 954,
+    "sha256": "8e3375c4deac53b124810a0afaea89607ebecbc53c206340f03230331ba273d4"
+  },
+  "additional-checks/final-ci-tests.exit": {
+    "originalPath": "/private/tmp/tdf-track-search-final-ci-tests-20261026.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "additional-checks/final-ci-tests.log": {
+    "originalPath": "/private/tmp/tdf-track-search-final-ci-tests-20261026.log",
+    "bytes": 9457,
+    "sha256": "3127b631eb78a02a73e2905ecbbc4447584a7fad628e5f0966d45b9fc1378bd3"
+  },
+  "additional-checks/final-scope-tests.exit": {
+    "originalPath": "/private/tmp/tdf-track-search-final-scope-tests-20261026.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "additional-checks/final-scope-tests.log": {
+    "originalPath": "/private/tmp/tdf-track-search-final-scope-tests-20261026.log",
+    "bytes": 3793,
+    "sha256": "d47326dc62dba01742c393b8ddccd4ac7415a0a6315e3d8f2b1a8814f6f6d12d"
+  },
+  "canonical-build/backend-committed-inputs-original972.json": {
+    "originalPath": "/private/tmp/tdf-track-search-build-20261026/backend-committed-inputs-original972.json",
+    "bytes": 120313,
+    "sha256": "84faa0c11f28849754e480323a43de3aca508a3d1a3094550b2dbb0f558ad731"
+  },
+  "canonical-build/backend-committed-inputs.json": {
+    "originalPath": "/private/tmp/tdf-track-search-build-20261026/backend-committed-inputs.json",
+    "bytes": 120776,
+    "sha256": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e"
+  },
+  "canonical-build/initial-disk-failure-stack-build.exit": {
+    "originalPath": "/private/tmp/tdf-track-search-build-20261026/initial-disk-failure-stack-build.exit",
+    "bytes": 2,
+    "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+  },
+  "canonical-build/initial-disk-failure-stack-build.log": {
+    "originalPath": "/private/tmp/tdf-track-search-build-20261026/initial-disk-failure-stack-build.log",
+    "bytes": 108713,
+    "sha256": "6502d38446ea13044f4f6036cff2e04b988fb1c2e898350d5f59ec2e730e5050"
+  },
+  "canonical-build/initial-empty-input-capture.json": {
+    "originalPath": "/private/tmp/tdf-track-search-build-20261026/initial-empty-input-capture.json",
+    "bytes": 285,
+    "sha256": "67fb52be3eb105d8af12c9cf67c5b34a80b8a7a565718ab46030b380fac93fd4"
+  },
+  "canonical-build/stack-build.exit": {
+    "originalPath": "/private/tmp/tdf-track-search-build-20261026/stack-build.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "canonical-build/stack-build.log": {
+    "originalPath": "/private/tmp/tdf-track-search-build-20261026/stack-build.log",
+    "bytes": 992,
+    "sha256": "9c7bb40c4331fc714862e4515d28b6b262f483d21c5aef0f85899d4f97eb85c2"
+  },
+  "compiled-http/harness/backend-committed-inputs.json": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/backend-committed-inputs.json",
+    "bytes": 120776,
+    "sha256": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e"
+  },
+  "compiled-http/harness/fixture.mjs": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/fixture.mjs",
+    "bytes": 1573,
+    "sha256": "e151f6b975fd11027f638fa6bdefdb28e27fac4039290fb3654ac8dbbb5faaa1"
+  },
+  "compiled-http/harness/loopback-bind.c": {
+    "originalPath": "/private/tmp/tdf-universal-music-search-20261026/reports/welcome-club-integration-evidence-20261026/loopback-bind.c",
+    "bytes": 1079,
+    "sha256": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "compiled-http/harness/review-manifest-v1.json": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/review-manifest-v1.json",
+    "bytes": 5378,
+    "sha256": "ecd9a453ad82a846d3dadc654236ed445aec7cea1e2be02fab405839b5d9f871"
+  },
+  "compiled-http/harness/review-manifest-v2.json": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/review-manifest-v2.json",
+    "bytes": 6399,
+    "sha256": "473dcf608d3d961376c9d3da12545b76ed569ebee0f7bb958339e1e862def59f"
+  },
+  "compiled-http/harness/review-manifest-v3.json": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/review-manifest-v3.json",
+    "bytes": 7276,
+    "sha256": "2cbffcf33765359f3788ba58d419b67703b8c3f853731b683a5dddec09cdb09b"
+  },
+  "compiled-http/harness/review-manifest.json": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/review-manifest.json",
+    "bytes": 8677,
+    "sha256": "a39e99237387f74bf45ea740f0300581eb95c3d690c84fde47c0db4659e4bc31"
+  },
+  "compiled-http/harness/run-v1.py": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/run-v1.py",
+    "bytes": 24907,
+    "sha256": "a4891193a635bff5ee238ba753b132c82c0a59b95232e3b5a4049efe0d4d57bd"
+  },
+  "compiled-http/harness/run-v2.py": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/run-v2.py",
+    "bytes": 26095,
+    "sha256": "ba65952b90d29c31085c09579bdffbf9bdd9f870ff1f86bf33fd64d0d7e914a2"
+  },
+  "compiled-http/harness/run-v3.py": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/run-v3.py",
+    "bytes": 27272,
+    "sha256": "f0583c2c9b85705650e1f34027494a08e04f544ac869dda7822d399bec42f340"
+  },
+  "compiled-http/harness/run.py": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/run.py",
+    "bytes": 27273,
+    "sha256": "e074113c7e06780178c2786cde0e240e31672e4ecb00245c8cce3affe1c00a85"
+  },
+  "compiled-http/harness/syntax-and-pure-safety.json": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/syntax-and-pure-safety.json",
+    "bytes": 1170,
+    "sha256": "feb8e81ccc7b3731e252dd7087f6bcbbaa0ccbcb2053bd74f338f0467b6a2df2"
+  },
+  "compiled-http/root-execution.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-20261026/root-execution.log",
+    "bytes": 6292,
+    "sha256": "a5a1b44babb8670aefef3c8ff8fddbfdf2f2d2a23346cb6ffba15e81ba9035d4"
+  },
+  "compiled-http/runtime/backend.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/backend.log",
+    "bytes": 137,
+    "sha256": "1f7731826c28662a976778861da9718578a4b7145ad044e87250f560bdea9ac7"
+  },
+  "compiled-http/runtime/compile-bind-adapter.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/compile-bind-adapter.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "compiled-http/runtime/create-owned-db.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/create-owned-db.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "compiled-http/runtime/drop-owned-db.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/drop-owned-db.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "compiled-http/runtime/egress-denied-positive-control.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/egress-denied-positive-control.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "compiled-http/runtime/fixture.sql": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/fixture.sql",
+    "bytes": 9957,
+    "sha256": "cb2cdfd46728b80f7e98d687434847b1ce04e92b09df2da045ebb266536b706b"
+  },
+  "compiled-http/runtime/full222-production-schema.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/full222-production-schema.log",
+    "bytes": 151,
+    "sha256": "70397fe5bc79af747f9d1b4aec59082d258ba6e13baf6ebd3dc03ef7770731d2"
+  },
+  "compiled-http/runtime/generate-exact-authoritative-fixture.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/generate-exact-authoritative-fixture.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "compiled-http/runtime/initdb.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/initdb.log",
+    "bytes": 882,
+    "sha256": "03b8563d1e5710655ec279a22590b55ffb6a3f4444dcc98886c851c9b0cee9bf"
+  },
+  "compiled-http/runtime/node-version.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/node-version.log",
+    "bytes": 9,
+    "sha256": "7703fd79909af9b17df6395137bee2b07c3f3b27b6e96e18c909f433cce84f19"
+  },
+  "compiled-http/runtime/postgres.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/postgres.log",
+    "bytes": 37490,
+    "sha256": "687bb8a6c2eaefa39aceeada28ae0bb027e5c4f64a500140deb621f10fe34b69"
+  },
+  "compiled-http/runtime/results.json": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/results.json",
+    "bytes": 24383,
+    "sha256": "82d74e2e5df61e25814b610d680abbc32eacc018e741384b2eab104e8a00fa05"
+  },
+  "compiled-http/runtime/start-pg.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/start-pg.log",
+    "bytes": 52,
+    "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+  },
+  "compiled-http/runtime/stop-owned-pg.log": {
+    "originalPath": "/private/tmp/tdf-track-search-http-c88-42wi25ud/stop-owned-pg.log",
+    "bytes": 56,
+    "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+  },
+  "full-ui/results.json": {
+    "originalPath": "/private/tmp/tdf-track-search-full-ui-20261026/results.json",
+    "bytes": 1558519,
+    "sha256": "0fbbc7916f14a43bc67afae2a88ae1ab14bd4d85819a0725c31d26318335d2c3"
+  },
+  "full-ui/run.log": {
+    "originalPath": "/private/tmp/tdf-track-search-full-ui-20261026/run.log",
+    "bytes": 1351688,
+    "sha256": "88306901517a2dec7965873c0a9465e1521aa9e02c1d8be22403c0125ceea99d"
+  },
+  "native/current-observations.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v4-observations-20261026.json",
+    "bytes": 13373,
+    "sha256": "47bd9d5b0321ea7a3cde65d5c4cc3e4eadbc3d45a5fa28f27f7d6631855e09a4"
+  },
+  "native/current-receipt.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v4-qualified-receipt-20261026.json",
+    "bytes": 24570,
+    "sha256": "ec31c1c7781965eb24c1f8f486616e6f081cc112ddfa7736fa892e89fe907f79"
+  },
+  "native/execution/0-results.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-qualified-v4-20261026/results.json",
+    "bytes": 64688,
+    "sha256": "f61cffc45c6456e23944f36d482fc2f24902c5c0a929156fbdf3b9d69f9826fd"
+  },
+  "native/execution/1-index.html": {
+    "originalPath": "/private/tmp/tdf-music-search-native-qualified-v4-20261026/html/index.html",
+    "bytes": 557944,
+    "sha256": "7395b2c4bae34e45ecd88d796e6789b4c0ebb717f3a3349b4cd8bd034cf49373"
+  },
+  "native/execution/2-.last-run.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-qualified-v4-20261026/test-results/.last-run.json",
+    "bytes": 45,
+    "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+  },
+  "native/execution/3-source-before.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v4-20261026/source-before.json",
+    "bytes": 2432,
+    "sha256": "b23c0b4b762af2470083a341cb3c8cf9c8b9ffadd935743da5e75fbd234c277a"
+  },
+  "native/execution/4-source-after.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v4-20261026/source-after.json",
+    "bytes": 2432,
+    "sha256": "fa99b12d21c4501a16797264fced14580b9967995aa8e526ead82989314e3232"
+  },
+  "native/execution/5-root-execution.exit": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v4-20261026/root-execution.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "native/execution/6-root-launch.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v4-20261026/root-launch.json",
+    "bytes": 179,
+    "sha256": "276e26f8321f5d1150465641bb7a5cbdd4235833b01b8b95fa7c48850534d7f3"
+  },
+  "native/execution/7-run-plan.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v4-20261026/run-plan.json",
+    "bytes": 3333,
+    "sha256": "be7c5ffdb5450e79d2176a3e1e1085dd09bf1c502a694ff39b13736206159622"
+  },
+  "native/execution/8-tdf-music-search-native-qualified-v4-20261026.log": {
+    "originalPath": "/private/tmp/tdf-music-search-native-qualified-v4-20261026.log",
+    "bytes": 5127,
+    "sha256": "a17ee8190ba9f4a3e1b524824cccb5b0b1447d8e5e382fb0fd0d54455c714baa"
+  },
+  "native/v3-failed-case-trace.zip": {
+    "originalPath": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/test-results/music-search-native--criti-f17b4-r-across-release-navigation-firefox-critical/trace.zip",
+    "bytes": 14867,
+    "sha256": "5498204a1b2b9f5695dd5428677ef2a2ab7a6eaceeacf4127a11a8c4df60516c"
+  },
+  "native/v3-failed-execution/0-tdf-music-search-native-qualified-v3-20261026.log": {
+    "originalPath": "/private/tmp/tdf-music-search-native-qualified-v3-20261026.log",
+    "bytes": 8157,
+    "sha256": "31f3ad937c6b1830aac33c8d7bf6bcf9d80d762a8d72343790951e51adfed869"
+  },
+  "native/v3-failed-execution/1-results.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-qualified-v3-20261026/results.json",
+    "bytes": 53307,
+    "sha256": "5812ae549157e75142234c47a6331392dae19ca8befd5a0ddf0d7c9971b9689b"
+  },
+  "native/v3-failed-execution/2-source-after.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v3-20261026/source-after.json",
+    "bytes": 2432,
+    "sha256": "01da0ba1f8f8fc0e7ce9ca27a1efe0f98bdff7e2a2b76d85374df6bdab81823b"
+  },
+  "native/v3-failed-execution/3-tdf-music-search-native-v3-failure-summary-20261026.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v3-failure-summary-20261026.json",
+    "bytes": 11209,
+    "sha256": "503d6e08420d0d62050dc725b3cc714243be1bd03a7b6299e1559899472b1f33"
+  },
+  "native/v3-failed-execution/4-failed-trace-availability.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v3-20261026/failed-trace-availability.json",
+    "bytes": 16038,
+    "sha256": "0bc2a27e2471c876d987708807d7609bea9cf5d1a9ab079adcb98f6148d1d60d"
+  },
+  "native/v3-failure-receipt.json": {
+    "originalPath": "/private/tmp/tdf-music-search-native-v3-failure-receipt-20261026.json",
+    "bytes": 40383,
+    "sha256": "4cf2c7e38487e3fcd3a5e7daf84f36f4585b5084510f6235247dbf975a26fc10"
+  },
+  "reflection/additive-api-review.json": {
+    "originalPath": "/private/tmp/tdf-track-search-additive-api-review-20261026.json",
+    "bytes": 1097,
+    "sha256": "b16c3481661e33fdafcd731826da6481603ad578db8777279442f366d6e238cb"
+  },
+  "reflection/first/availability.json": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-api-first-20261026/availability.json",
+    "bytes": 1365,
+    "sha256": "2d489dccce84dea7fc110caea009d11304a2d816ec98c2907755f0b9073fe27c"
+  },
+  "reflection/first/compiled-types.json": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-api-first-20261026/compiled-types.json",
+    "bytes": 1251065,
+    "sha256": "be8334d547ab4b792c285267a2c08454160ad64fa0c50f8d39a6450555570943"
+  },
+  "reflection/first/contract-candidate.json": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-api-first-20261026/contract-candidate.json",
+    "bytes": 1390259,
+    "sha256": "78a29260682555262ccf7d498d6192b7354935c653030473b9789d6721ecf0c9"
+  },
+  "reflection/first/exit": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-api-first-20261026.exit",
+    "bytes": 2,
+    "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+  },
+  "reflection/first/response-status.json": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-api-first-20261026/response-status.json",
+    "bytes": 532,
+    "sha256": "036b7e6e10f356618935aa888efb0e0083d8785f0762bf427da5e1225ac5ffe9"
+  },
+  "reflection/first/run.log": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-api-first-20261026.log",
+    "bytes": 1212,
+    "sha256": "fa7f7abb4bdba54102a8aa4fe69245d978eb652771cee3ac1d81760ff01336b4"
+  },
+  "reflection/first/surface.json": {
+    "originalPath": "/private/tmp/tdf-track-search-compiled-api-first-20261026/surface.json",
+    "bytes": 1301584,
+    "sha256": "6f2b74fe3dc0e872996a003cf3e0af317296154959c91dbba0c6e9e949d4d67a"
+  },
+  "source/backend-full973-supplemental-review.json": {
+    "originalPath": "/private/tmp/tdf-track-search-contract-20261026/backend-full973-supplemental-review.json",
+    "bytes": 293392,
+    "sha256": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4"
+  }
+}

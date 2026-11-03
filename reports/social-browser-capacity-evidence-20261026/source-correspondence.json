@@ -1,0 +1,26 @@
+{
+  "codeCommit": "9e6f0c5d8942b54a80343d708584115ade2f3660",
+  "protectedBase": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "wholeTree": "2ea05a5ca78f1290f57afab6fa8018b9480a8f1d",
+  "materialSha256": {
+    ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
+    "scripts/verify-playwright-image.mjs": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
+    "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
+    "scripts/__tests__/ci-pipeline.test.mjs": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
+    "playwright.config.mjs": "3b3298f30ef87aaac997a92d3fa0def4bd0a907bb41dff89dc3712210b32a957"
+  },
+  "requirements": 148,
+  "other147WholeObjectsExact": true,
+  "explicitChangedCiFields": [
+    "concurrency",
+    "implementation"
+  ],
+  "previousConcurrencyClause": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+  "proposedConcurrencyClause": "The global CI limit remains two workers; each WebKit project admits one worker, while Chromium/Firefox scheduling, fixture isolation and simultaneous operations within a test remain unchanged. The container retains the official shared-memory recommendation.",
+  "inferredCiRequirementAuthority": "inferred",
+  "allProductBackendSqlApiOperationsDependenciesAndMobileExactToProtectedBase": true,
+  "allBrowserTestAndFixtureBytesExactToProtectedBase": true,
+  "gatedMaterialSurfaces": 4,
+  "explicitlyMappedRootConfig": "playwright.config.mjs",
+  "admissionScopeLimit": "Existing surface admission lists four changed paths; root Playwright config is explicitly mapped in the CI requirement and checked by actual configuration loading and full602-case discovery."
+}

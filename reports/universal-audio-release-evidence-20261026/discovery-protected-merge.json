@@ -1,0 +1,188 @@
+{
+  "kind": "PR622-preserved-first-failure-controlled-replay-and-merge-evidence",
+  "capturedAtUtc": "2026-10-26T18:09:26.491983+00:00",
+  "PR": 622,
+  "githubMerge": {
+    "merge": {
+      "sha": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+      "tree": "dabd64ad893e2959fd21226206488121eaad8a24",
+      "parents": [
+        "78fa351b469c1d2031df3232204dd722ac480e3b",
+        "5f45677588bd8494226e00fd51d81c134b84bdd6"
+      ],
+      "message": "Merge pull request #622 from diegueins680/fix/music-catalog-discovery-20261025\n\nFind music by track title and browse beyond 24 releases",
+      "committerDate": "2026-10-26T18:04:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/e05d003669a930d54b4fe7dd71d72d09335c11ae"
+    },
+    "tested": {
+      "sha": "23215675cad7520b99f6208296e3f441914da158",
+      "tree": "dabd64ad893e2959fd21226206488121eaad8a24",
+      "parents": [
+        "78fa351b469c1d2031df3232204dd722ac480e3b",
+        "5f45677588bd8494226e00fd51d81c134b84bdd6"
+      ],
+      "message": "Merge 5f45677588bd8494226e00fd51d81c134b84bdd6 into 78fa351b469c1d2031df3232204dd722ac480e3b"
+    },
+    "pr": {
+      "number": 622,
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-10-26T18:04:41Z",
+      "merge_commit_sha": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+      "head": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+      "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "url": "https://github.com/diegueins680/tdf-app/pull/622"
+    }
+  },
+  "testedTreeEqualsMergedTree": true,
+  "attempt2Qualification": {
+    "receipt": "/private/tmp/tdf-622-attempt2-qualified-20261026.json",
+    "sha256": "31dd3e6dcf5541512f66ece73e0f860f3f3492ebc504737af32687eb17f991a1",
+    "summary": "566personaPASS+22unchangeddeclaredSKIP,defaultoff10PASS,discovery25PASS; same588cases/timeouts/expectedstatuses as originalattempt1"
+  },
+  "originalFailure": {
+    "receipt": "/private/tmp/tdf-discovery-5f-persona-diagnosis-20261026.json",
+    "sha256": "852e30d3a099976e89db574069784cefc57b56b5beb3ed3e380b0909e2e9c044",
+    "allOriginalReferencedHashesStillMatch": true,
+    "artifactId": 12671562371,
+    "zip": "/private/tmp/tdf-discovery-5f-persona-artifact-20261026.zip",
+    "outcome": "Original565PASS/22declaredSKIP/1WebKittimeout retained; never replaced by replay result."
+  },
+  "replayArtifacts": [
+    {
+      "id": 12674246484,
+      "name": "discovery-web-e2e-40363971868",
+      "createdAt": "2026-10-26T18:01:33Z",
+      "sizeBytes": 3050,
+      "zipPath": "/private/tmp/tdf-622-attempt2-discovery-12674246484.zip",
+      "sha256": "3756f6e2a76d04dd97292d87e99b7013c1c695a515f0fed12c1e7683fc4dd424"
+    },
+    {
+      "id": 12673478788,
+      "name": "persona-web-e2e-40363971868",
+      "createdAt": "2026-10-26T18:01:32Z",
+      "sizeBytes": 66488387,
+      "zipPath": "/private/tmp/tdf-622-attempt2-persona-12673478788.zip",
+      "sha256": "1e30508f8dd6a808fcb13c20d09bfb4755bb67a67eb4d23129e36e6bf15e92ca"
+    }
+  ],
+  "unchangedTestControls": {
+    "caseIdentities": 588,
+    "timeoutsChanged": 0,
+    "expectedStatusesChanged": 0,
+    "newSkips": 0,
+    "assertionEditsByMonitor": 0,
+    "repoEditsByMonitor": 0,
+    "rerunsByMonitor": 0
+  },
+  "remainingRisk": {
+    "webkitCartReplayMs": 28912,
+    "unchangedWholeCaseLimitMs": 30000,
+    "headroomMs": 1088,
+    "rendererOrHostRootCause": "UNVERIFIED",
+    "interpretation": "Passing replay with small timing margin does not establish a deterministic timing repair. Both attempt outcomes remain visible."
+  },
+  "canonicalProductionObservationHistory": [
+    {
+      "receipt": "/private/tmp/tdf-audio-production-readonly-20261026-v1.json",
+      "sha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+      "observedAtUtc": "2026-10-26T07:06:13.603Z",
+      "publicBackend": {
+        "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "migrationRows": 213,
+      "explicitFlags": [
+        {
+          "index": 50,
+          "enabled": false,
+          "flag": "music_releases.authoring"
+        },
+        {
+          "index": 51,
+          "enabled": false,
+          "flag": "music_releases.commerce"
+        },
+        {
+          "index": 52,
+          "enabled": false,
+          "flag": "music_releases.ddex_export"
+        },
+        {
+          "index": 53,
+          "enabled": false,
+          "flag": "music_releases.processing"
+        },
+        {
+          "index": 54,
+          "enabled": false,
+          "flag": "music_releases.public"
+        }
+      ],
+      "publicFlagSourcePath": "snapshot.database.revenueFlags[54]",
+      "notFreshAt18Utc": true
+    },
+    {
+      "receipt": "/private/tmp/tdf-activation-follow-production-main222-20261026.json",
+      "sha256": "13379f407f4c4daaa912c7e20dcba0cf1ece34c0c1d8505920552603d46175d4",
+      "observedAtUtc": "2026-10-26T17:19:22.889Z",
+      "publicBackend": {
+        "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "migrationRows": 213,
+      "explicitFlags": [
+        {
+          "index": 50,
+          "enabled": false,
+          "flag": "music_releases.authoring"
+        },
+        {
+          "index": 51,
+          "enabled": false,
+          "flag": "music_releases.commerce"
+        },
+        {
+          "index": 52,
+          "enabled": false,
+          "flag": "music_releases.ddex_export"
+        },
+        {
+          "index": 53,
+          "enabled": false,
+          "flag": "music_releases.processing"
+        },
+        {
+          "index": 54,
+          "enabled": false,
+          "flag": "music_releases.public"
+        }
+      ],
+      "publicFlagSourcePath": "snapshot.database.revenueFlags[54]",
+      "notFreshAt18Utc": true
+    }
+  ],
+  "productionDistinction": "GitHub integration is confirmed and matches the tested tree. These are historical read-only API/flag observations at their original07:06 and17:19 timestamps, not new18Zchecks. music_releases.public and other music flags were false in those snapshots; public canonical API was4dac with213ledger rows. No canonicalbackend deployment or production upload/search/playback verification performed by this monitor.",
+  "inventoryOnlyReference": {
+    "receipt": "/private/tmp/tdf-audio-live-catalog-observation-20261026.json",
+    "sha256": "57164d673611d3af3eaadda84384b93319bb953e386c167d0ab6064172e59295",
+    "observedAtUtc": "2026-10-26T17:47:23.742Z",
+    "scope": "Nine-family aggregate inventory only, not byte delivery, rights or end-to-end acceptance."
+  },
+  "actionsByThisMonitor": [
+    "Read-only GitHub status,logs and artifact downloads",
+    "Local artifact digest checks,trace analysis and evidence receipts"
+  ],
+  "excludedActions": [
+    "No rerun",
+    "No source/test/timeout/skip edits",
+    "No merge or review request",
+    "No deployment",
+    "No duplicate published client probe"
+  ],
+  "integrationOwner": "Separate integration operator performed final admission and merge.",
+  "sourceLookupCorrection": "An initial ad-hoc extraction truncated revenueFlags to15items and missed music flags50\u201354; corrected by reading the complete nested list. Only explicit verified flags above support the final packet.",
+  "mergeApiStateSha256": "4691020d52b7cf659a535f9f25a6a0102759a1cedbf2d314dfa163a12fd05a60"
+}
