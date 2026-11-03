@@ -60,6 +60,7 @@ import { captureGrowthEvent } from '../analytics/growthAttribution';
 import { deriveSignupDisplayName, validateSignupFields } from '../utils/signupFields';
 import { reportClientError } from '../analytics/errorReporting';
 import { env } from '../utils/env';
+import { InAppBrowserNotice, useInAppBrowser } from '../components/InAppBrowserNotice';
 import { persistOnboardingIntentWithRetry } from '../session/onboardingIntentRecovery';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
@@ -200,8 +201,11 @@ export default function LoginPage() {
   const location = useLocation();
   const artistInvitation = useMemo(() => readArtistInvitation(location.search), [location.search]);
   const analytics = useAnalytics();
-  const passwordHint = t('authEntry.passwordHint');
+  const passwordHint = t('authEntry.signupPasswordHint');
   const googleClientId = env.read('VITE_GOOGLE_CLIENT_ID') ?? '';
+  // Social in-app browsers (Instagram, Facebook…) cannot complete Google
+  // Sign-In with passkeys, so there we offer the system browser instead.
+  const inAppBrowser = useInAppBrowser();
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
@@ -1074,7 +1078,10 @@ export default function LoginPage() {
                   </Alert>
                 )}
 
-                {googleClientId && !servicePreparing && (
+                {googleClientId && !servicePreparing && inAppBrowser && (
+                  <InAppBrowserNotice host={inAppBrowser} context="login" />
+                )}
+                {googleClientId && !servicePreparing && !inAppBrowser && (
                   <Stack spacing={1} alignItems="center">
                     <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                       {t('authEntry.googleContinue')}
@@ -1545,7 +1552,10 @@ export default function LoginPage() {
                 {t('authEntry.claimReviewAfterSignup')}
               </Alert>
             )}
-            {googleClientId && claimArtistId === null && (
+            {googleClientId && claimArtistId === null && inAppBrowser && (
+              <InAppBrowserNotice host={inAppBrowser} context="signup" />
+            )}
+            {googleClientId && claimArtistId === null && !inAppBrowser && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   {t('authEntry.googleCreateEnter')}

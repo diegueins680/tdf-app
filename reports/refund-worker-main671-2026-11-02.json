@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-02T05:39:13.889161+00:00",
+  "sourceCommit": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+  "baselineParent652": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+  "protectedMain": "1b6e970fccc3c505dac0fadfa0e4c32025ebf23d",
+  "qualifiedWorker696": "8becefda256f747bfce46511cb4221ef34f2d838",
+  "status": "Prepared for normal fast-forward publication to existing draft652; no protected-main merge or joined hosted qualification claimed.",
+  "problem": "Financial completion repair was blocked by UI heap exhaustion. Qualifying worker recycling also exposed two defects in its new verification guard.",
+  "classification": [
+    "Confirmed financial completion defect carried from652",
+    "Confirmed CI reliability defect: forced in-band Jest heap exhaustion",
+    "Confirmed guard defects: quiet configuration rejected and raw configuration echoed on failure"
+  ],
+  "correction": [
+    "One serial Jest worker, file-boundary idle recycling at1GiB; assertions, timeouts and discovery preserved",
+    "Accept configuration JSON at byte zero and banner-prefixed output",
+    "Typed worker-only parser with generic errors; captured reporter settings excluded",
+    "Compose protected-main671 range correction without changing its SQL, refund test/model, or qualified UI source"
+  ],
+  "sourceBinding": {
+    "source": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+    "main": "1b6e970fccc3c505dac0fadfa0e4c32025ebf23d",
+    "worker696Head": "8becefda256f747bfce46511cb4221ef34f2d838",
+    "backendPreparation16b": "16b46af7a532984076fbfb61b8a4799b8c52b1e1",
+    "requirements": 165,
+    "all162OtherMainNormsExact": true,
+    "UIProductTestsConfigExactHostedQualified8b": true,
+    "backendTreeExact16b": true,
+    "SQLTreeExactProtectedMain": true,
+    "scriptChangesFrom8b": [
+      "scripts/__tests__/ui-worker-memory.test.mjs"
+    ],
+    "onlyGuardDocTraceFollowupAfterComposition": true,
+    "all16PositiveGuardInputsBound": {
+      "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
+      "package-lock.json": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
+      "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
+      "tdf-hq-ui/package.json": "63cc9005b5071062ed1bcbb19ffb8e9b257ee4b022f810ae5829364b9ecc2450",
+      "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+      "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+      "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
+      "formal/system/requirements.json": "2f138242acc0fbc933494e913a6497cef59b9fb14aad9477f3f62d13124b7b9e",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "c2d7ab6cd9a02369b1c77e6936aa79cc0de8a393bff2fee2621e2f3c02fabbea",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
+      "scripts/__tests__/ticket-admission-model.test.mjs": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
+      "tdf-hq/tdf-hq.cabal": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a",
+      "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+      "tdf-hq-ui/jest.config.cjs": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
+      "scripts/quality-ui.sh": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
+      "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183"
+    },
+    "sixGuardsNoticeAndSilent": "PASS",
+    "privacyMutationDetected": true,
+    "parentFeaturePlan": "Aftercomplete696CI, ifremote652stillb560 normalFFjoinedheadcontains8b andfixes canfoldchildatomically. Ifanyremotehead/rules/reviewchanged,reconcilefirst. MainneedsfreshCI20contexts+review+admission.",
+    "scope": "UNPUBLISHED joinedsource; childactualNode22UI andbackend evidence remainscomponent-specific, notfreshjoinedqualification."
+  },
+  "counterexamples": {
+    "heap": {
+      "head": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+      "run": 41378484355,
+      "job": 125064289764,
+      "exit": 134,
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/41378484355/job/125064289764",
+      "logSHA256": "273de45ca472ac6cc60c1a24c0cd61f376c9f019903402b16dc8677ad9ac7579"
+    },
+    "quiet": {
+      "source": "8becefda256f747bfce46511cb4221ef34f2d838",
+      "pass": 4,
+      "fail": 1,
+      "cause": "Newline-only JSON start search"
+    },
+    "privacy": {
+      "source": "8becefda256f747bfce46511cb4221ef34f2d838",
+      "syntheticMarkerEchoed": true,
+      "realCredentialUsed": false,
+      "showConfigExitsBeforeReporterExecution": true
+    },
+    "privacyMutation": {
+      "failureDetected": true,
+      "restored": true,
+      "scope": "Replacing a generic command failure with raw stdout must fail the privacy guard"
+    },
+    "historicalRefund": {
+      "baseline": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
+      "cases": 48,
+      "failures": 40,
+      "falseCompletions": 36,
+      "scope": "Historical routed-handler probe; not re-executed on new main"
+    }
+  },
+  "componentHostedEvidence": {
+    "head": "8becefda256f747bfce46511cb4221ef34f2d838",
+    "run": 41387406096,
+    "workflowsPassed": 7,
+    "actualCheckout": "779ec70c2a7bcd9acb72c8322b727cbf082dfa9e",
+    "checkoutTreeEqualsHead": true,
+    "UI": {
+      "suites": 328,
+      "tests": 3799,
+      "failures": 0,
+      "guards": 5,
+      "job": 125091567175,
+      "logSHA256": "d7fb1c47a3c3c4e213a4727171cb4abcc149a1672d0b80908ca427bc4fa5fb82"
+    },
+    "backend": {
+      "examples": 4063,
+      "failures": 0,
+      "pending": 21,
+      "job": 125091567161,
+      "dedicatedProviderExamples": 372,
+      "all55RefundCasesMatchedInDedicatedGroup": true,
+      "logSHA256": "caf3fa5b63b0a1226b4467bca41b55a8ded8da487b0ce982203c94e76b889bbb"
+    },
+    "scope": "Actual Node22 CI component qualification, not a substitute for fresh hosted execution on this composition."
+  },
+  "localVerification": {
+    "sixGuardsNoticeAndSilent": "PASS",
+    "strictCatalogAndGeneratedMetadata": "PASS",
+    "immutableSpecificationAdmission": "PASS",
+    "repositoryQuality": "PASS",
+    "setup": "Node24.13.1 macOS; borrowed unchanged owned dependencies with exact official native supplement, fallback disabled. No fresh canonical install or local Stack/PostgreSQL claim."
+  },
+  "formalProperties": {
+    "TESTED": [
+      "PAY-STRIPE-REFUND-COMPLETION-001",
+      "PAY-STRIPE-REFUND-OBSERVATION-001",
+      "PAY-STRIPE-REFUND-ATOMIC-COMPLETION-001",
+      "SYS-UI-WORKER-RECYCLE-001",
+      "SYS-UI-WORKER-FAILURE-001",
+      "SYS-UI-CONFIG-PRIVACY-001"
+    ],
+    "BOUNDED_VERIFIED": {
+      "model": "scripts/__tests__/ticket-admission-model.test.mjs",
+      "tests": 13,
+      "inputs": 224,
+      "states": 560,
+      "transitions": 896,
+      "unsafeControlsDetected": 8,
+      "scope": "Finite refund evidence design model; no refinement proof to Haskell/SQL/provider"
+    },
+    "wholePlatformAssurance": {
+      "metrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 165,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 148,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 165,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 165,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "releaseDecision": "BLOCKED",
+      "scope": "165 implementation and165 refinement obligations remain UNPROVEN (UNKNOWN);11 inherited conditional SMT lemmas do not prove the new memory/privacy or whole workflow properties."
+    }
+  },
+  "checks": {
+    "final-admission": {
+      "exitCode": 0,
+      "sourceAtStart": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "sourceAtFinish": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "logSha256": "4f535e40ddc3d9223c3026f9c6beceb6e6a6825aff44b358ac6bb5dcd2da8167"
+    },
+    "final-assurance": {
+      "exitCode": 0,
+      "sourceAtStart": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "sourceAtFinish": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "logSha256": "d7592e9e254e8c9f57a4841fa622309d1c5bc300871c16e5206f2b5327031e77"
+    },
+    "final-repo-qa": {
+      "exitCode": 0,
+      "sourceAtStart": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "sourceAtFinish": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "logSha256": "81a75efc7f549a57f9a3e8ec258dadc08267dadd3b76540ebf6386ed18b8a35e"
+    },
+    "final-model": {
+      "exitCode": 0,
+      "sourceAtStart": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "sourceAtFinish": "7f6535dc65eb836c55b1223dd2b3ce313e3a3f77",
+      "logSha256": "e017f9e4f50cd8c332aa4a257c38a03247d298a1bc37fd3fddf08057ebed0dbc"
+    },
+    "final-six-guards": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "c4b79f1a194cdd577808805ce654e32e589900a9d6c409b2dd3d3fadc26f06dd"
+    },
+    "final-six-guards-quiet": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "8503cc6e553a013024f041825b6aeac48faf83a9f2a16f18484a064419f199cd"
+    },
+    "privacy-diagnostics-mutation": {
+      "exitCode": 1,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "5c3ec4a27db9763343a7917d6f5a18f68409154d6ac355cb2a26370b4dfdb625"
+    },
+    "privacy-fix-metadata-0": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "privacy-fix-metadata-1": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "privacy-fix-metadata-2": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5"
+    },
+    "privacy-fix-metadata-3": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6"
+    },
+    "privacy-fix-metadata-4": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d"
+    },
+    "privacy-fix-metadata-5": {
+      "exitCode": 0,
+      "sourceAtStart": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "sourceAtFinish": "05298fc3d7d09b489385f771e0bf4d86cd1b8098",
+      "logSha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e"
+    }
+  },
+  "scorecard": {
+    "selectedConfirmedDefects": 4,
+    "correctionsPrepared": 4,
+    "integratedIntoProtectedMain": 0,
+    "criticalRefundRegressions": 55,
+    "workerGuards": 6,
+    "freshJoinedHostedCI": "PENDING",
+    "freshJoinedRequiredReview": "PENDING"
+  },
+  "remainingRisks": [
+    "Worker budget is checked between files, not a hard bound on parent, individual test, or OS memory",
+    "Pinned Jest can retry unexpected worker failures three times; no first-attempt transient-crash guarantee",
+    "Actual provider account/environment authenticity, post-I/O actor/order fencing, partial allocation and held-order recovery remain separate obligations",
+    "New composition requires fresh20 protected-main contexts, exact-head approval and current-main admission",
+    "Concurrent672 heap-cap flag must be preserved if it enters main before integration;693 WebKit contrast failure is separate and retained"
+  ],
+  "integration": {
+    "PR652": "Existing draft; auto-merge disabled; feature branch normal fast-forward only",
+    "PR696": "Ready,7 workflows passed; independent quiet-output review finding addressed in this composition",
+    "main": "No merge/deploy, protection waiver or production operation",
+    "messagesOrReviewerRequestsSent": 0
+  },
+  "next": "Recheck live main/feature heads, reviews and rules; publish this verified source normally, inspect fresh CI and seek only already-authorized integration when all controls actually permit.",
+  "evidence": {
+    "archive": "reports/refund-worker-main671-2026-11-02/evidence.tar.gz",
+    "sha256": "2691719c3d29c2fdf7efa5684c8e98a962d7103c1c00b8ef24959bf6e9288d14",
+    "regularFiles": 92,
+    "manifestEntries": 91
+  }
+}

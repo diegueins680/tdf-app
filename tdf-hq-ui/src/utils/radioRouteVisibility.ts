@@ -25,6 +25,8 @@ export const shouldHideRadioForRoute = (pathname: string, hash = '') => (
   )
 );
 
+// Initial discovery policy. Once opened, RoutedRadioWidget retains playback
+// across these routes until the authenticated session ends.
 export const shouldRenderRadioWidget = (
   pathname: string,
   hash: string,

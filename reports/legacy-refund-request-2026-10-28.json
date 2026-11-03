@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-legacy-refund-request-creation",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "3be9e5ec8c3c02064632fb33ec062c480e2cf9f8",
+  "sourceCommit": "6be0157c2781dfdcddd86632038f5f55f20e8bd2",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-04",
+    "previousClassification": "hypothesis in earlier cycles",
+    "priority": "P0",
+    "category": "reliability / authorization / financial integrity",
+    "consequence": "Concurrent legacy submissions create two pending requests for one order; stale paid state, buyer, amount and organizer can authorize insertion after their committed change. Each request is an independent later execution identity.",
+    "status": "corrected-tested-awaiting-protected-integration"
+  },
+  "invariants": [
+    {
+      "id": "PAY-LEGACY-REFUND-REQUEST-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "Participating legacy submissions serialize absence and insertion, refusing an existing request.",
+      "assurance": "TESTED",
+      "evidence": "reports/legacy-refund-request-2026-10-28/handler-cases.txt"
+    },
+    {
+      "id": "AUTH-LEGACY-REFUND-REQUEST-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "Current locked organizer/buyer authority remains valid through the legacy insert, without an unrelated-admin override.",
+      "assurance": "TESTED",
+      "evidence": "reports/legacy-refund-request-2026-10-28/handler-cases.txt"
+    },
+    {
+      "id": "PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "Creation validates current paid event/order and amount and returns current currency; routing classification is re-observed and changed classifications refuse insertion.",
+      "assurance": "TESTED",
+      "evidence": "reports/legacy-refund-request-2026-10-28/handler-cases.txt"
+    }
+  ],
+  "contract": "formal/system/legacy-refund-request-creation.md",
+  "implementation": [
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "regressionTests": [
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+  ],
+  "formalModels": [
+    "scripts/__tests__/ticket-admission-model.test.mjs"
+  ],
+  "authority": [
+    "Existing legacy duplicate/eligibility checks and canonical event-to-order lock ordering",
+    "https://www.postgresql.org/docs/16/transaction-iso.html",
+    "https://hackage-content.haskell.org/package/persistent-2.17.1.0/docs/Database-Persist-Sql.html#v:runSqlPoolWithIsolation"
+  ],
+  "verification": {
+    "baseline": {
+      "initialRace": {
+        "examples": 1,
+        "failures": 1,
+        "observedRequests": 2
+      },
+      "finalRegressions": {
+        "examples": 80,
+        "failures": 5,
+        "allFailuresConfirmed": true
+      },
+      "limit": "Two later organizer-authorization compatibility cases are additional green coverage; do not relabel the baseline as82 cases. Initial authority-fixture run did not separate buyer1 from organizer1; corrected to organizer2/buyer1 before the genuine80/5 red run."
+    },
+    "initialCorrected": {
+      "examples": 82,
+      "failures": 0
+    },
+    "adversarialIsolation": {
+      "databaseSessionDefault": "repeatable read",
+      "requestCreationRaceExamples": 1,
+      "failures": 0,
+      "handlerIsolation": "explicit ReadCommitted",
+      "scope": "Actual handler/PG concurrency under an adversarial session default, not global database serializability",
+      "finalSourceRetested": true
+    },
+    "boundedModel": {
+      "assurance": "BOUNDED_VERIFIED",
+      "inputs": 4,
+      "states": 168,
+      "transitions": 203,
+      "actors": 2,
+      "eligibilityMutator": 1,
+      "priorRequestCounts": [
+        0,
+        1
+      ],
+      "initialEligibility": [
+        false,
+        true
+      ],
+      "nonvacuityAsserted": true,
+      "nodeSuiteTests": 17,
+      "failures": 0,
+      "unsafeControls": {
+        "omitLock": {
+          "states": 244,
+          "transitions": 356,
+          "violations": [
+            "one-request-per-order",
+            "current-eligibility"
+          ]
+        },
+        "staleSnapshot": {
+          "states": 166,
+          "transitions": 202,
+          "violations": [
+            "one-request-per-order"
+          ]
+        },
+        "staleEligibility": {
+          "states": 154,
+          "transitions": 195,
+          "violations": [
+            "current-eligibility"
+          ]
+        }
+      },
+      "scope": "Finite design abstraction; no Haskell/SQL refinement or complete financial workflow proof"
+    },
+    "tests": [
+      {
+        "name": "17 bounded-model tests/nonvacuity/negative controls",
+        "result": "PASS"
+      },
+      {
+        "name": "repository quality",
+        "result": "PASS",
+        "retainedPlatformSkips": 11,
+        "note": "Final backend-aware syntax compatibility was additionally verified by the complete Stack/PostgreSQL/SQLite suite."
+      },
+      {
+        "name": "catalog JSON and CSV auditors",
+        "result": "PASS",
+        "parentNormativeDecisionsPreserved": 1352,
+        "newDecisions": 0
+      },
+      {
+        "name": "specification inventory and conformance --check",
+        "result": "PASS",
+        "generation": "Sequential inventory then conformance after final source changes"
+      },
+      {
+        "name": "compiled API declaration snapshot",
+        "result": "PASS",
+        "operations": 913,
+        "rawMounts": 2,
+        "undocumented": 396,
+        "documentedWithoutTypedRoute": 25,
+        "competing": 0,
+        "statusDifferences": 8,
+        "scope": "Snapshot consistency; existing full API conformance gaps retained"
+      },
+      {
+        "name": "immutable new-source admission",
+        "base": "3be9e5ec8c3c02064632fb33ec062c480e2cf9f8",
+        "head": "6be0157c2781dfdcddd86632038f5f55f20e8bd2",
+        "mappedChangedMaterialSurfaces": 3,
+        "result": "PASS"
+      }
+    ],
+    "sourceHashes": {
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "ef0b6635c345a9b2c4518b09f000bbadd96886906fba1d3f35a3d58cdd27d33b",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "d5e6206932b71d56365af00d5d35d3402f195f6e2a1725bb8fe9eec4dc464300",
+      "scripts/__tests__/ticket-admission-model.test.mjs": "15f35c2886244d7bb30173c950a909768699b1845c78f843edabed1ee7f7be3b"
+    },
+    "independentReview": "reports/legacy-refund-request-2026-10-28/independent-review.txt",
+    "firstFullRun": {
+      "examples": 4444,
+      "failures": 1,
+      "pending": 21,
+      "cause": "New unconditional FOR UPDATE syntax broke the existing SQLite imported-event visibility test. PostgreSQL82 cases passed; no passing full result is claimed.",
+      "correction": "Reuse established backend-aware lock suffix; PostgreSQL still executes both FOR UPDATE locks. Existing SQLite assertions remain unchanged.",
+      "receipt": "development diagnostics archive",
+      "finalRecheck": "PASS4444/0/21 on a new fresh full227 database after compatibility correction"
+    },
+    "fullBackend": {
+      "command": "TDF_PROVIDER_RETRY_DATABASE_URL=<owned-fresh-local-db> stack test tdf-hq --jobs 2 --test-arguments='--seed=20261028 +RTS -N2 -RTS'",
+      "toolchain": "Stack lts-24.42 / GHC9.10.3",
+      "cwd": "tdf-hq",
+      "examples": 4444,
+      "failures": 0,
+      "pending": 21,
+      "legacyHandlerCases": 82,
+      "fullMigrationsAppliedAndReplayed": 227,
+      "freshUtf8Database": true,
+      "sourceFrozen": true,
+      "exitCode": 0,
+      "pendingNotPostgresPass": true
+    },
+    "sourceDigest": "52d45cece8409255afdd9ab53e837f5769b5a8f80c67dfc516855906dbb07661",
+    "registeredSourceInputs": 1408,
+    "completeSourceManifest": "reports/legacy-refund-request-2026-10-28/execution-sources.json",
+    "evidenceArchives": {
+      "execution-receipts.tar.gz": "8993f7c168a11d65dbf84cbdef9f88edfec9d3e2d0fbf19a76dbaa6a9deb33bb",
+      "committed-source-assurance.tar.gz": "cfe7aa7797916e6425b8b53adad16e4f4a9b4ec75906c726bc87641b5f039878",
+      "handler-cases.txt": "5dc41214d8add686f7d31086a931cb2764c608420e207643182ad12aa8b88eb0",
+      "execution-sources.json": "6d65ba0ef303369c67041cb86981ff946aa20a5541766266718aaa00e32e151d",
+      "source-seal.json": "9e7856d9c868982642280fae44e38ac860b4f423ead0dc085c6b204d17895046",
+      "independent-review.txt": "8eb9328f9268c41509e8e0152e59df733a19e0ed5489b9f8a743f3ae4dcef326",
+      "development-diagnostics.tar.gz": "12a539e10a5e3ede390d2fc64bbf6f74f36deda8759d97e07c082fa54705c584",
+      "assurance-receipts.tar.gz": "61537ef740a60f1bd1d22b63e4440c0cf6115fa1e31fed639a43a89f5d195cb1"
+    },
+    "proofs": {
+      "newWholeHandlerProofs": 0,
+      "existingConditionalSmtClaims": {
+        "PROVEN": 11,
+        "scope": "Existing trusted arithmetic4/authorization3/recovery4 translators, not this request handler"
+      },
+      "fullRequirements": {
+        "UNPROVEN": 154
+      },
+      "fullImplementationAndRefinement": {
+        "UNPROVEN": 308
+      },
+      "release": "BLOCKED"
+    },
+    "regressionProtection": {
+      "actualHandlers": ".github/workflows/ci.yml creates the provider-retry database and runs scripts/test-provider-retry-runtime.sh; provider-retry-runtime match includes these82 cases",
+      "sqliteVisibility": "Existing whole Hspec suite retains the imported-event visibility assertions",
+      "model": ".github/workflows/ci.yml backend explicitly runs node --test scripts/__tests__/ticket-admission-model.test.mjs",
+      "unchangedOtherRequirements": 153,
+      "unchangedParentCatalogNormativeRows": 1352,
+      "verificationWeakened": false
+    },
+    "committedSourceSeal": "reports/legacy-refund-request-2026-10-28/source-seal.json",
+    "sourceBinding": "All1408 registered source inputs match immutable source6be0 and Mobile7000; the new contract independently matches its discovery hash. Clean committed-source replay and immutable source admission pass. Native build Git metadata may name execution parent3be9; source correspondence is not reproducible-build attestation."
+  },
+  "assumptions": [
+    "PostgreSQL and pinned Persistent2.17.1.0 explicit ReadCommitted transaction runner",
+    "Participating legacy/canonical wrappers use the event-to-order lock protocol; direct SQL and old writers are outside this guarantee",
+    "Stored paid legacy order is the request money authority; no original provider-payment authenticity is established",
+    "Authentication identity is already supplied by the server; current stored organizer/buyer checks do not establish session revocation handling"
+  ],
+  "remainingRisks": [
+    {
+      "id": "TDF-CORRECTNESS-20261028-02",
+      "priority": "P0",
+      "finding": "confirmed legacy behavior / unresolved Stripe allocation specification",
+      "statement": "Partial Stripe money still has no reviewed ticket-allocation mapping; user clarification remains pending and existing partial amount support is preserved."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-06",
+      "priority": "P0",
+      "finding": "confirmed source",
+      "statement": "Legacy admission/transfer fencing while refunds are uncertain remains a separate correction."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-04-HISTORY",
+      "priority": "P0",
+      "finding": "scope limitation",
+      "statement": "Existing duplicate requests and old/direct writers are not migrated or constrained by a new unique index. No production history was changed."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-ROUTING",
+      "priority": "P0",
+      "finding": "scope limitation",
+      "statement": "Runtime/attempt routing rows are re-observed, not locked; the comparison detects a changed visible classification, not every same-provider payment/merchant mutation or a universal provider-state freeze."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-07-SCHEMA",
+      "priority": "P0",
+      "finding": "confirmed existing scope limitation",
+      "statement": "Other inventory writers and absent database nonnegative CHECK remain separate from the parent legacy completion guard."
+    }
+  ],
+  "precedingInvestigation": {
+    "galleryFailureJob": 122908030408,
+    "exactArtifactId": 12828798514,
+    "artifactSha256": "01a3310e97c05707debd106d9582d1bcdbcf4606c3f83a1ddee190fcab422754",
+    "existingCorrectionPullRequest": 648,
+    "existingCorrectionHead": "b0d192f38b4aa33b5359722c2c999e7d0cd745a3",
+    "browserInputsMatchCurrentExceptExisting14LineGuard": true,
+    "historicalLinuxQualification": {
+      "run": 40520512742,
+      "passed": 622,
+      "skipped": 22,
+      "failed": 0
+    },
+    "originalFailureCause": "UNPROVEN; contemporaneous computed opacity not recorded",
+    "action": "Reuse the existing queued draft; no duplicate patch, assertion weakening or hosted rerun."
+  },
+  "integration": {
+    "state": "stacked-draft-awaiting-parent-integration-current-main-composition-hosted-CI-and-required-review",
+    "baseBranch": "fix/legacy-refund-inventory-20261028",
+    "parentPullRequest": 654,
+    "pullRequest": 657,
+    "draftPlanned": true,
+    "merged": false,
+    "productionDeployed": false,
+    "queuePreserved": true,
+    "observedMain": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+    "parentQueueWait": "PR636"
+  },
+  "scorecard": {
+    "method": "Counts scoped defects and assurance levels, not test/PR volume",
+    "confirmedDefectsCorrected": 1,
+    "confirmedDefectsIntegrated": 0,
+    "criticalInvariantsSpecified": 3,
+    "pullRequestsCreated": 1,
+    "pullRequestsMerged": 0,
+    "criticalInvariantsByAssurance": {
+      "TESTED": 3
+    },
+    "boundedDesignProperties": 2,
+    "newWholeWorkflowProofs": 0
+  },
+  "nextTask": "Prevent provider execution for ambiguous historical duplicate legacy request identities, preserving all history and canonical allocated refunds."
+}
