@@ -8674,9 +8674,9 @@
       "title": "Single persistent web player and public music pages",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. The legacy radio widget is hidden on /musica routes; playback analytics use a stable identity with retry-safe ingestion.",
+      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694)",
       "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
@@ -8750,7 +8750,8 @@
         "playwright.music-native.config.mjs",
         ".github/workflows/ci.yml",
         "scripts/run-native-audio-tests.sh",
-        "tdf-hq-ui/src/session/SessionProviders.tsx"
+        "tdf-hq-ui/src/session/SessionProviders.tsx",
+        "playwright.config.mjs"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8775,9 +8776,11 @@
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
         "e2e/web/fixtures/native-music-setup.mjs",
-        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "e2e/web/radio-navigation.spec.mjs"
       ],
-      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified.",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
@@ -9353,7 +9356,7 @@
     {
       "id": "SYS-WEB-LAYOUT-001",
       "title": "Public mobile layouts stay usable at 360px",
-      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player.",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player. The radio bar stays above the sidebar so its controls receive clicks, while modal dialogs remain above both.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "SYS",
       "actors": [
@@ -9394,7 +9397,7 @@
       "failure": "Layout degrades by wrapping rather than overflow.",
       "recovery": "Not applicable.",
       "observability": "Browser layout assertions in mobile-flow projects.",
-      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; user mobile radio minimization defect report 2026-10-28",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; user mobile radio minimization defect report 2026-10-28; user radio navigation defect report 2026-11-01 (PR #694)",
       "implementation": [
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -9410,7 +9413,8 @@
         "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
         "e2e/web/mobile-layout-regressions.spec.mjs",
-        "tdf-hq-ui/src/utils/bottomDock.test.tsx"
+        "tdf-hq-ui/src/utils/bottomDock.test.tsx",
+        "e2e/web/radio-navigation.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
