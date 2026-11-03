@@ -15,3 +15,10 @@ Assumptions: GitHub reports upstream job results faithfully; the path classifier
 Verification is TESTED finite component behavior, not mathematical implementation equivalence or an end-to-end GitHub proof. Tests enumerate all64 scope vectors, both native selections and all128 quality success/skip vectors (16,384 combinations), plus768 contract/migration combinations and representative malformed, missing, failed and cancelled inputs. Actual parsed workflow bodies execute the CLI and retain historical false-accept controls. Run `npm run test:ci-pipeline`. Native Android condition wiring and the original persona dependency check remain regression-protected.
 
 Recovery: correct the failed upstream validation or selection contract and obtain fresh revision-bound checks and review. Do not convert a selected validation to an optional skip to pass admission. Deployment authority remains outside this gate.
+
+
+## Owned fixture termination
+
+A selected fixture must finish cleanup after its assertions. An already terminated child must not be mistaken for a live process solely because its `exitCode` is null: a signal termination is represented by `signalCode`, as documented by [Node child-process exit status](https://nodejs.org/api/child_process.html#subprocessexitcode). The experiment HTTP fixture checks both fields before sending a signal or waiting for another exit event. It still closes its log descriptors and preserves an existing assertion failure. The database-host restriction, feature-flag states, real HTTP/SQL assertions, concurrency checks and aggregate admission conditions are unchanged.
+
+The regression executes this actual finalizer with real child processes. Restoring its exact historical guards reproduces Node exit 13; the correction finishes cleanup and retains the original functional failure when one is injected. This local check does not establish a new whole HTTP/PostgreSQL run, and it does not alter any selected-job failure or skip policy. See `reports/campaign-platform-ci-cleanup-2026-10-30.json`.

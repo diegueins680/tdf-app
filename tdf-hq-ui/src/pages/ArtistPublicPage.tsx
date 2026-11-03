@@ -3,6 +3,8 @@ import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/a
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { loadArtistCatalog } from '../api/artistCatalog';
 import MarkdownText from '../components/MarkdownText';
+import SessionVideoPreview from '../components/SessionVideoPreview';
+import ArtistVideoLibrary from '../components/ArtistVideoLibrary';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -531,6 +533,12 @@ export default function ArtistPublicPage() {
               </Alert>
             )}
 
+            {artist.apFeaturedVideoUrl && <Box component="section" aria-labelledby="artist-session">
+              <Typography component="h2" variant="h6" id="artist-session" fontWeight={800} gutterBottom>Video destacado</Typography>
+              <SessionVideoPreview url={artist.apFeaturedVideoUrl} title={`Video de ${artist.apDisplayName}`} poster={artist.apHeroImageUrl} analyticsContext={{ artistId: artist.apArtistId, videoId: 'featured' }} />
+            </Box>}
+
+            <ArtistVideoLibrary artistId={artist.apArtistId} featuredUrl={artist.apFeaturedVideoUrl} />
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography component="h2" variant="h6" fontWeight={800}>

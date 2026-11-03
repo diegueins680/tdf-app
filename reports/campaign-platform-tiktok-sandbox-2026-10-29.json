@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "kind": "isolated_tiktok_sandbox_qualification",
+  "at": "2026-10-30T04:58:00.999244+00:00",
+  "qualifiedParent": "f4854de439635838a5622487d5600b73516cf44a",
+  "productionRuntimeUnchanged": "49032779d0c53f0fdca5",
+  "sandboxRuntime": "8f3a3d16de56b89287f4",
+  "sandboxUrl": "https://api.tdfrecords.net/campaign-platform-sandbox/",
+  "serviceFilesSha256": {
+    "backup.py": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
+    "backup_control.py": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
+    "backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
+    "deploy.py": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
+    "domain.py": "fcbc5b19bce6fdcaa61dfcb08ab983c3471f3eb26e3b3a163955cec8240fbbcf",
+    "drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
+    "facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
+    "graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+    "import_rojo.py": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+    "media.py": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+    "model_check.py": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+    "monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+    "notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
+    "planning.py": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
+    "providers.py": "8a573e1a1d38acce1cc43271c2cb0bd0f4621329c2b406bacb0c23c6f00eaa20",
+    "qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+    "requirements.txt": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
+    "schema.sql": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
+    "server.py": "c1f18b484bad0da2e8d7a1296b6d4c94c1e5af2f5499cc30a6c0c4a95b042e65",
+    "stream_backup_object.py": "4c12c6d15fb8a656e350a341c3840ab08fad59525f277b0f55a4b863c4ed611c",
+    "tdf-campaign-api.service": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
+    "tdf-campaign-backup-request.service": "c7de57347a940bce347d2b09b57af48ce86f9dcd1a77da01fe8baa828b75ea71",
+    "tdf-campaign-backup-request.timer": "c0b20d73362c8138c3b217b2c5d99347b3f19441b0c67c3d76424c86bb8c65e6",
+    "tdf-campaign-backup.service": "467d499ec9c0091c612ec1448dca9c39d5eaffbde3b213fb28d853e3cb0a0ae6",
+    "tdf-campaign-backup.timer": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
+    "tdf-campaign-monitor.service": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
+    "tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
+    "tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
+    "tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
+    "tests/test_domain.py": "b7f065e5304d1d6b3227f4d02a6bccce8150ad17f6b1c7473ba17d41f6dd59f1",
+    "tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
+    "tests/test_http.py": "3048528c17bf1ca8b467e8b75695d8a913be178f9bd9fa0e734990f389b26bda",
+    "tests/test_tiktok.py": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
+    "tests/test_tiktok_sandbox.py": "254a538f696625f9a6a9b8f1cf442b763c52243347f08a41e6b390314fd3e71d",
+    "tiktok.py": "b66fa94ec5e2c2fb7d6887cc0a1971bad6b9f51ea399fe6e80e2151c4cd39ead",
+    "tiktok_environment.py": "db040535b85b198a4bb4153d95ca4c6336bbc83f127e61dcc93a7ed34b83a4c3",
+    "tiktok_token.py": "58d634247f9e327db9333ca61b6f2df6ca7bc74eac894b2ff500901dc89b6a35",
+    "ui/app.js": "209b9bb08f0a2d67d2fa9b3e46494780716091257af1d802178ebf228937e2e0",
+    "ui/index.html": "6a8832b2c47a8752e94990578477727d5c570b87fcc1ed38b2fa8901ed9f57dc",
+    "ui/style.css": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
+    "ui/tdf-logo.png": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
+    "ui/tdf-logo.svg": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+    "ui/tiktok.js": "2f810ccb4c4d8723a1e81aa0f86da761ce11291c5e58987c4ee779b75814f26d",
+    "verify_drive_backup.py": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
+    "worker.py": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
+    "youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f"
+  },
+  "nativeDomainVerification": {
+    "production": true,
+    "sandbox": true
+  },
+  "nativeTargetUsername": "tdf.records.label",
+  "serverOAuthAndExactCreatorUsernameVerified": true,
+  "storageIsolation": {
+    "separateOsUser": true,
+    "separateDatabaseAssetsAndEncryptionKeys": true,
+    "designatedStrictAdminOnly": true,
+    "productionAuditFlagUnchanged": true,
+    "sandboxAuditFlag": false,
+    "privateOnly": "SELF_ONLY must be explicitly selected; no visibility fallback or automatic profile privacy change"
+  },
+  "tests": {
+    "localPython": {
+      "passed": 92,
+      "failed": 0
+    },
+    "hostBeforeSandboxActivation": {
+      "passed": 92,
+      "failed": 0
+    },
+    "actualPlainJavaScriptForm": {
+      "passed": 5,
+      "failed": 0
+    },
+    "sandboxNegativeControls": [
+      {
+        "mutated_guard": "private_choice",
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "detected": true,
+        "network": "mocked; no provider calls"
+      },
+      {
+        "mutated_guard": "binding",
+        "tests": 1,
+        "failures": 0,
+        "errors": 1,
+        "detected": true,
+        "network": "mocked; no provider calls"
+      }
+    ],
+    "model": "1024 bounded abstract states; not a refinement proof"
+  },
+  "realMedia": {
+    "recordingSource": "Approved Roj(o) master, preserved unchanged",
+    "masterStartSeconds": 142,
+    "masterEndSeconds": 152,
+    "sampleSeconds": 10,
+    "dimensions": [
+      1280,
+      720
+    ],
+    "audioVideoStartSeconds": 0,
+    "audioVideoDurationSeconds": 10,
+    "addedBrandingOrWatermarks": false
+  },
+  "actualPrivateAttempt": {
+    "attempts": 1,
+    "privacy": "SELF_ONLY",
+    "interactions": false,
+    "musicOriginalityPreviewAndExactTdfVersionApproved": true,
+    "providerResponse": "HTTP 403",
+    "publishIdReturned": false,
+    "recordedState": "unknown / Resultado por verificar",
+    "automaticallyResent": false,
+    "successfulPrivatePublicationClaimed": false,
+    "successfulPublicPublicationClaimed": false,
+    "cause": "Provider error detail unavailable in the retained response. A private account is a documented unaudited-client requirement, not established as the specific 403 cause."
+  },
+  "demoArtifact": {
+    "kind": "Actual own-tab screencast; no simulated response",
+    "status": "Attempt and failure evidence; not a successful end-to-end qualification",
+    "seconds": 201.533333,
+    "bytes": 2664497,
+    "sha256": "57d20cde9973a6dd2e4876912476e05a5cb979b8a034770373a9a3a02b4dcfa9",
+    "credentialsOrDesktopCaptured": false,
+    "audioCaptured": false,
+    "submittedForProviderReview": false
+  },
+  "pending": [
+    "Private test-account eligibility and real successful sandbox flow",
+    "Provider review and audit before public TikTok activation",
+    "Facebook Page selection",
+    "Exact new-head independent review and protected main integration"
+  ],
+  "sourceScope": "No core API, PostgreSQL, protected main merge or production queue migration. Production campaign and prior publications not replayed."
+}

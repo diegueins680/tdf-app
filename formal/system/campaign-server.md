@@ -1,0 +1,55 @@
+# CAMP-SERVER-001 — Durable musical campaign authority
+
+Authority: Diego's explicit 2026-10-29 implementation instruction, including any registered user, own accounts, TDF-admin approval, all four networks with truthful capabilities, 5 GB Free and proposed paid tiers, server execution, scoped notifications, no spend. This is a new scoped requirement, not a proof of whole-system conformance.
+
+The canonical TDF session supplies actor id and strict administrator status. No campaign data are returned to another actor without explicit membership. OAuth state is single-use, expires in ten minutes and is bound to the current actor and administrative authority. Tokens are encrypted at rest; signed provider media URLs carry only an expiring capability.
+
+Campaign/piece approval is bound to the current versions. Changing material content invalidates approval. A TDF destination needs its own current admin approval; DMs need separate consent. A transaction claims at most one local job. Every final supported provider publication boundary rechecks active state and approvals. Pausing cannot undo an already admitted external effect. A crash or timeout after admission is uncertain and cannot automatically start a second publication. The provider is not assumed transactional with SQLite.
+
+YouTube uploads remain private until HD is confirmed and the authorized reviewer records Studio checks against the exact uploaded video id/version. Studio restrictions are not inferred from a successful API upload. Unsupported native operations remain explicit assisted actions. Provider acknowledgments do not by themselves establish independent public playback; `verified_at` remains unset for those responses.
+
+FFmpeg derivatives preserve musical time and originals. Automated RMS selection is a draft, not semantic recognition of songs or lyrics. Rendered media attach only to the corresponding unapproved draft. Reservations serialize per-user quota and global unfilled reservations; finite host disk capacity can block an otherwise permitted tier. Deleted media retain audit metadata and cannot be removed while referenced. Generating a plan does not schedule publications.
+
+Evidence: actual SQLite concurrency/HTTP boundary tests, OAuth identity readback, isolated real-media server qualification, client-disconnected jobs and restart observations, snapshot restore test. The bounded model explores 1024 abstract states and three counterexamples; it is **not** a refinement proof of HTTP, Python, SQLite, FFmpeg, OAuth, provider behavior, operating system, backups or arbitrary interleavings. Local tests and server qualification retain their actual source manifests; CI and protected frontend integration are separate gates.
+
+External prerequisites remain Google app verification, Meta/TikTok account and app approvals, unsupported native operations, optional notification channels, full-host failover and capacity provision before selling large tiers. Operational details: [operations](../../docs/campaign-platform/operations.md).
+
+
+## Private off-host campaign backup
+
+The custodian must be a current strict TDF administrator and the original configured owner. Drive authorization uses `drive.file`, verifies the TDF account identity, checks already available capacity before writes, and accepts only an owner-only private folder. Neither a different administrator nor a non-administrator receives backup credentials or recovery controls. Private-key possession is established by a short-lived, one-use RSA-PSS signature computed locally; the private key is never sent to the server.
+
+Each immutable object is encrypted in authenticated blocks under a fresh AES-256 key, wrapped with RSA-3072 OAEP/SHA256. Versioned headers, block index and length are authenticated; truncation, reordering, altered source blocks and incorrect keys are rejected by finite tests. Persisted resumable state is itself encrypted and binds source hash, size, recipient and transfer. Source blocks are rechecked before reuse of a nonce. Completed objects discard local symmetric transfer material. This is a cryptographic implementation tested with the declared library, not an independent cryptographic audit.
+
+An independent resource-limited systemd process uploads a consistent campaign SQLite snapshot, service configuration and every ready asset, then an encrypted manifest as the commit marker. Acknowledged Drive ranges resume without restarting the master; revocation or disablement stops subsequent chunks. Three process interruptions block the request for review. Uploading/partial assets are explicitly excluded. Remote metadata verification and actual independent decryption/restore have separate receipts. A successful campaign restore does not establish core PostgreSQL recovery or production failover; restored publication queues must remain stopped pending reconciliation.
+
+## Facebook publication boundary
+
+Text/link, single/multiple photos, normal video and native Reels have protocol implementations. Video/Reel stages retain durable provider identity, wait for readiness, recheck exact-version and TDF authority, and record a final-publication intent before the write. Readiness alone never means publication. An uncertain final request is quarantined and never replayed; the read-only verifier can inspect it. These stages have controlled protocol/SQLite tests; no connected Facebook Page or live publication qualification is claimed. Known configured TDF identities cannot be relabeled as personal accounts to bypass admin approval.
+
+
+## TikTok publication boundary
+
+Production TikTok publishing remains disabled until the operator supplies real client credentials, records provider audit approval and configures the exact verified server media prefix. These local configuration assertions cannot substitute for TikTok approval. Server media use only `PULL_FROM_URL`; there is no private-visibility fallback or local-upload workaround.
+
+The actual creator profile and current privacy/interactions are queried before review and again before publication. Privacy has no default, interactions start unchecked and disabled creator options remain disabled. Explicit music, preview, original-content and applicable brand-policy consent binds the exact text, account, due date, selected asset hashes and publication settings. A short-lived actor/campaign/account context creates one consent, which binds transactionally to one piece and version. Edited or replayed consent cannot authorize another publication. TDF admin approval remains independently necessary. Video duration/codec/size and photo formats are probed against the actual immutable file before submission.
+
+An encrypted initialization intent precedes the single external initialization. A timeout, crash or uncertain response cannot reinitialize automatically. Follow-up jobs only read the original publish identity; completion without a public id remains pending for public content. Nonpublic completion is explicitly restricted, and no public URL or independent playback verification is invented. Refresh-token rotation is serialized across API/worker processes, checks account identity and rechecks revocation before credential replacement.
+
+Evidence is 83 finite Python tests (19 TikTok-specific), four tests executing the actual plain-JavaScript form and two guard-removal controls. Tests use controlled provider responses and a mocked format probe, not a live TikTok app, upload, moderation decision, policy approval or full provider refinement. Approved campaign graphics retain the required official TDF logo; eligibility of those branded graphics under TikTok's developer guidelines needs review and is not inferred from consent.
+
+
+## Provider calendar and least-privilege authorization
+
+TikTok authorization requests only `user.info.basic` and `video.publish`, which identify the connected account and implement the reviewed Direct Post flow. No video-list access is requested for metrics that are not implemented. A protocol-boundary test checks the actual authorization URL and persisted actor/scope state without contacting the provider.
+
+YouTube Analytics date bounds use `America/Los_Angeles`, including daylight-saving changes, for both the publication timestamp and collection time. Missing, naive or invalid publication timestamps cannot silently select an invented window. Collection checkpoints and provider calendar-day coverage remain distinct; missing rows remain unavailable, not zero. An initial observation captured with the previous UTC-date query is retained unchanged, and a separately timestamped read-only reconciliation records corrected bounds. Finite tests cover the real launch-day crossing, winter UTC offset and the spring daylight-saving boundary; they do not prove provider freshness or causal attribution.
+
+
+## Isolated TikTok sandbox
+
+A sandbox is explicitly configured at `/campaign-platform-sandbox`, under a separate state directory named `tdf-campaign-platform-sandbox`, dedicated operating-system user and separate encryption/media keys and SDK credentials. It cannot assert production audit approval. Only the designated strict administrator may enter its authenticated API. OAuth permits only the configured TikTok account scope and checks the actual creator username against the configured target before storing a connection. A personal private test identity retains its owner scope; the official TDF identity cannot be configured as personal. Other networks cannot be connected or dispatched from the sandbox. Production defaults and its existing audit requirement remain unchanged.
+
+The sandbox offers only a real `SELF_ONLY` option returned by TikTok, with no default selection, and rejects every other privacy value at consent and initialization. It never makes the creator account private or promotes a restricted post to public. Review contexts, content consents, initialization records and newly connected credentials bind the environment, SDK client, service URL, authorized test username and account scope; a different client/environment cannot reuse those approvals or cached tokens. Legacy untagged production credentials retain compatibility, while sandbox credentials always need their binding. Current TDF admin approval and ordinary version, preview, rights and music consent remain required. Real provider refusal remains a blocker; local configuration is not provider approval.
+
+Qualification of this extension: 94 finite Python tests, including isolated HTTP/admin/prefix, real authorization-URL construction, target-username verification before account storage, private-only initialization, client changes and restricted completion; six tests execute the actual plain-JavaScript UI. Protocol fixtures do not establish actual moderation, public publication or full refinement. Actual native domain verification, sandbox configuration, OAuth/creator observations and any subsequent private send have separate timestamped receipts. The production Roj(o) campaign and protected frontend rollout are not migrated by this isolated deployment.
