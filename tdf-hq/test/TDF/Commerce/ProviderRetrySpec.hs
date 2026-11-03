@@ -421,6 +421,7 @@ spec = do
         ticketLedgerSpec
         ticketAllocationSpec
         legacyStripeRefundSpec
+        ticketTierCapacitySpec
         latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
@@ -3938,11 +3939,299 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
       results <- concurrently [reserve,scan]
       length (filter id results) `shouldBe` 1
 
+ticketTierCapacitySpec :: SpecWith ConnectionPool
+ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency" $ do
+  forM_ [False,True] $ \viaCheckout -> forM_ [False,True] $ \purchaseFirst ->
+    it ("serializes a tier reduction against a valid purchase: checkout=" <> show viaCheckout <>
+        ", purchaseFirst=" <> show purchaseFirst) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      env <- ticketInventoryEnv pool
+      let user key = AuthedUser (toSqlKey key) [] mempty Nothing Nothing
+          (edit,_,_) = ticketInventoryHandlers (user 1)
+          (_,buy,checkout) = ticketInventoryHandlers (user 2)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          tier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 0 "USD"
+            1 0 Nothing Nothing True Nothing
+          editAction = fmap (fmap (const ())) $ runHandler (runReaderT
+            (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) tier) env)
+          buyAction = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) request) env)
+          firstAction = if purchaseFirst then buyAction else editAction
+          secondAction = if purchaseFirst then editAction else buyAction
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      holderFinished <- newEmptyMVar
+      firstFinished <- newEmptyMVar
+      secondFinished <- newEmptyMVar
+      let holdTier = runSqlPool (do
+            _ <- rawSql "SELECT id FROM event_ticket_tier WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey tierKey)] :: SqlPersistT IO [Single Int64]
+            liftIO $ putMVar locked ()
+            liftIO $ takeMVar release) pool
+          releaseTier = do
+            _ <- tryPutMVar release ()
+            pure ()
+      bracket (forkFinally holdTier (putMVar holderFinished)) (\worker ->
+        releaseTier >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+        Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+        bracket (forkFinally firstAction (putMVar firstFinished)) (\worker ->
+          releaseTier >> awaitLegacyRefundWorker worker firstFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 1 100) `shouldReturn` Just True
+          bracket (forkFinally secondAction (putMVar secondFinished)) (\worker ->
+            releaseTier >> awaitLegacyRefundWorker worker secondFinished) $ \_ -> do
+            Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 2 100) `shouldReturn` Just True
+            releaseTier
+            firstResult <- Timeout.timeout 5000000 (readMVar firstFinished)
+            secondResult <- Timeout.timeout 5000000 (readMVar secondFinished)
+            -- Both writes are real handlers. The barrier only locks an unchanged
+            -- tier; no test-side inventory update creates the counterexample.
+            let expectedTotal = if purchaseFirst then 20 else 1
+                expectedSold = if purchaseFirst then 3 else 0
+            runSqlPool (rawSql
+              "SELECT quantity_total,quantity_sold FROM event_ticket_tier WHERE id=?"
+              [PersistInt64 (fromSqlKey tierKey)]) pool
+              `shouldReturn` [(Single (expectedTotal :: Int64),Single (expectedSold :: Int64))]
+            firstResult `shouldSatisfy` maybe False (either (const False) isRight)
+            case secondResult of
+              Just (Right (Left failure)) -> errHTTPCode failure `shouldBe` 409
+              other -> expectationFailure ("Conflicting inventory mutation was accepted: " <> show other)
+            runSqlPool (rawSql
+              "SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=? AND status='paid'"
+              [PersistInt64 (fromSqlKey eventKey)]) pool
+              `shouldReturn` [Single (if purchaseFirst then 1 else 0 :: Int64)]
+            runSqlPool (rawSql
+              "SELECT count(*)::bigint FROM event_ticket WHERE event_id=? AND status='issued'"
+              [PersistInt64 (fromSqlKey eventKey)]) pool
+              `shouldReturn` [Single expectedSold]
+
+  forM_ [False,True] $ \viaCheckout ->
+    it ("preserves empty, exact-sold and increased tier capacity: checkout=" <> show viaCheckout) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      env <- ticketInventoryEnv pool
+      let (edit,_,_) = ticketInventoryHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+          (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          editTotal total = runHandler (runReaderT
+            (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey))
+              (TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 0 "USD"
+                total 0 Nothing Nothing True Nothing)) env)
+          request quantity = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey))
+            quantity Nothing Nothing Nothing
+          purchase quantity = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO (request quantity) Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) (request quantity)) env)
+      empty <- editTotal 0 >>= requireRight
+      TD.ticketTierQuantityTotal empty `shouldBe` 0
+      TD.ticketTierQuantitySold empty `shouldBe` 0
+      purchase 1 >>= assertTicketInventoryConflict
+      _ <- editTotal 3 >>= requireRight
+      purchase 3 >>= requireRight
+      denied <- editTotal 2
+      either errHTTPCode (const 200) denied `shouldBe` 400
+      exact <- editTotal 3 >>= requireRight
+      TD.ticketTierQuantitySold exact `shouldBe` 3
+      increased <- editTotal 4 >>= requireRight
+      TD.ticketTierQuantityTotal increased `shouldBe` 4
+      TD.ticketTierQuantitySold increased `shouldBe` 3
+
+  forM_ [False,True] $ \viaCheckout -> forM_ [Nothing,Just 2,Just 3] $ \capacity ->
+    it ("preserves event capacity boundaries: checkout=" <> show viaCheckout <>
+        ", capacity=" <> show capacity) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      runSqlPool (rawExecute "UPDATE social_event SET capacity=? WHERE id=?"
+        [maybe PersistNull PersistInt64 capacity,PersistInt64 (fromSqlKey eventKey)]) pool
+      env <- ticketInventoryEnv pool
+      let (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          action = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) request) env)
+          allowed = capacity /= Just 2
+      result <- action
+      if allowed then requireRight result else assertTicketInventoryConflict result
+      runSqlPool (rawSql "SELECT quantity_sold FROM event_ticket_tier WHERE id=?"
+        [PersistInt64 (fromSqlKey tierKey)]) pool
+        `shouldReturn` [Single (if allowed then 3 else 0 :: Int64)]
+      runSqlPool (rawSql "SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=?"
+        [PersistInt64 (fromSqlKey eventKey)]) pool
+        `shouldReturn` [Single (if allowed then 1 else 0 :: Int64)]
+
+assertTicketInventoryConflict :: Either ServerError value -> Expectation
+assertTicketInventoryConflict result = case result of
+  Left failure -> errHTTPCode failure `shouldBe` 409
+  Right _ -> expectationFailure "Unavailable ticket inventory must not create an order"
+
+ticketInventoryEnv :: ConnectionPool -> IO Env
+ticketInventoryEnv pool = do
+  config <- Config.loadConfig
+  pure (Env pool (config {Config.emailConfig=Nothing,Config.defaultCurrency="USD",
+    Config.stripeSecretKey=Nothing,Config.stripeWebhookSecret=Nothing}))
+
+freeTicketTierFixture :: SqlPersistT IO (TM.SocialEventId,TM.EventTicketTierId)
+freeTicketTierFixture = do
+  [Single eventKey] <- rawSql
+    "INSERT INTO social_event(organizer_party_id,title,event_type_id,workflow_state_id,start_time,end_time,capacity)\
+    \ VALUES ('1','Synthetic tier concurrency',(SELECT id FROM event_type WHERE code='concert'),\
+    \ (SELECT state.id FROM workflow_state state JOIN workflow_definition workflow ON workflow.id=state.workflow_id\
+    \ WHERE workflow.code='social-event-lifecycle' AND state.code='on_sale'),\
+    \ now()+interval '1 day',now()+interval '2 days',20) RETURNING id" []
+  [Single tierKey] <- rawSql
+    "INSERT INTO event_ticket_tier(event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active)\
+    \ VALUES (?,'test','Synthetic free ticket',0,'USD',20,0,true) RETURNING id"
+    [PersistInt64 (fromSqlKey eventKey)]
+  pure (eventKey,tierKey)
+
+ticketInventoryHandlers :: AuthedUser
+  -> (Text -> Text -> TD.TicketTierDTO -> ReaderT Env Handler TD.TicketTierDTO,
+      Text -> TD.TicketPurchaseRequestDTO -> ReaderT Env Handler TD.TicketOrderDTO,
+      TD.TicketPurchaseWithPromoDTO -> ReaderT Env Handler TD.StripePaymentIntentDTO)
+ticketInventoryHandlers user = case Social.socialEventsServer user of
+  _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> tickets :<|> _ ->
+    case tickets of
+      _ :<|> _ :<|> edit :<|> _ :<|> _ :<|> buy :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> checkout :<|> _ ->
+        (edit,buy,checkout)
+
+waitForTicketInventoryWaiters :: ConnectionPool -> Int64 -> Int -> IO Bool
+waitForTicketInventoryWaiters _ _ 0 = pure False
+waitForTicketInventoryWaiters pool expected remaining = do
+  rows <- runSqlPool (rawSql
+    "SELECT count(*)::bigint FROM pg_stat_activity\
+    \ WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock'\
+    \ AND (lower(query) LIKE '%event_ticket_tier%' OR lower(query) LIKE '%social_event%')"
+    []) pool :: IO [Single Int64]
+  if rows == [Single expected] then pure True else do
+    threadDelay 25000
+    waitForTicketInventoryWaiters pool expected (remaining-1)
+
 -- Exercise the actual legacy HTTP handlers against the same complete schema as
 -- canonical refunds. The injected callback never contacts Stripe; it models an
 -- accepted POST whose response is lost, concurrent approvers and invalid JSON.
 legacyStripeRefundSpec :: SpecWith ConnectionPool
 legacyStripeRefundSpec = describe "legacy Stripe ticket refund execution fence" $ do
+  it "rechecks historical identities committed while approval waits for the order lock" $ \pool -> do
+    fixture@(eventKey,orderKey,refundKey) <- legacyStripeRefundFixture pool 1000
+    env <- legacyStripeRefundEnv pool True
+    calls <- newIORef (0 :: Int)
+    locked <- newEmptyMVar
+    release <- newEmptyMVar
+    holderFinished <- newEmptyMVar
+    approvalFinished <- newEmptyMVar
+    let provider _ _ _ = atomicModifyIORef' calls (\count -> (count+1,()))
+          >> pure (Left "synthetic uncertain provider response")
+        (approve,_) = legacyStripeRefundHandlers provider
+        action = runHandler (runReaderT
+          (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+        holdHistory = runSqlPool (do
+          _ <- rawSql "SELECT id FROM social_event WHERE id=? FOR UPDATE"
+            [PersistInt64 (fromSqlKey eventKey)] :: SqlPersistT IO [Single Int64]
+          _ <- rawSql "SELECT id FROM event_ticket_order WHERE id=? FOR UPDATE"
+            [PersistInt64 (fromSqlKey orderKey)] :: SqlPersistT IO [Single Int64]
+          rawExecute "INSERT INTO ticket_refund_request(order_id,amount_cents,status) VALUES (?,1000,'pending')"
+            [PersistInt64 (fromSqlKey orderKey)]
+          liftIO $ putMVar locked ()
+          liftIO $ takeMVar release) pool
+        releaseHistory = do
+          _ <- tryPutMVar release ()
+          pure ()
+    bracket (forkFinally holdHistory (putMVar holderFinished)) (\worker ->
+      releaseHistory >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+      Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+      bracket (forkFinally action (putMVar approvalFinished)) (\worker ->
+        releaseHistory >> awaitLegacyRefundWorker worker approvalFinished) $ \_ -> do
+        Timeout.timeout 5000000 (waitForLegacyRequestWaiters pool 1 100)
+          `shouldReturn` Just True
+        releaseHistory
+        result <- Timeout.timeout 5000000 (readMVar approvalFinished)
+        case result of
+          Just (Right response) -> assertLegacyRefundDenied response
+          other -> expectationFailure (show other)
+        readIORef calls `shouldReturn` 0
+        assertLegacyStripeRefundState pool fixture "pending" "paid" 3 "issued"
+        runSqlPool (rawSql
+          "SELECT status FROM ticket_refund_request WHERE order_id=? ORDER BY id"
+          [PersistInt64 (fromSqlKey orderKey)]) pool
+          `shouldReturn` replicate 2 (Single ("pending" :: Text))
+
+  it "keeps canonical successive partial refund replay outside the legacy history guard" $ \pool -> do
+    (payment,eventKey,orderKey,_) <- ticketAllocationFixture pool
+    let now = Checkout.vpOccurredAt payment
+        (approve,_) = legacyStripeRefundHandlers (\_ _ _ -> fail "Canonical replay cannot call Stripe")
+    forM_ [4172,8343] $ \amount -> do
+      request <- runSqlPool (TicketRefund.requestTicketRefundForOrder "1" eventKey orderKey
+        (Just amount) Nothing now) pool
+      Just ref <- runSqlPool (TicketRefund.loadTicketRefundReference (entityKey request)) pool
+      _ <- runSqlPool (Refund.approveRefundForProcessing ref 2 now) pool >>= requireRight
+      _ <- runSqlPool (TicketRefund.completeTicketRefund
+        (Refund.VerifiedRefund ref ("R-" <> Refund.refundReferenceId ref)
+          (fromIntegral amount) "USD" now "synthetic-history-replay")) pool
+      response <- runHandler (runReaderT
+        (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey (entityKey request))))
+        (Env pool (error "Completed canonical replay cannot read Stripe configuration"))) >>= requireRight
+      TD.refundStatus response `shouldBe` "approved"
+    runSqlPool (rawSql "SELECT count(*)::bigint FROM ticket_refund_request WHERE order_id=?"
+      [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (2 :: Int64)]
+
+  forM_ [False,True] $ \simultaneous ->
+    it ("refuses both historical duplicate refund identities before provider execution: concurrent=" <>
+        show simultaneous) $ \pool -> do
+      fixture@(eventKey,orderKey,firstKey) <- legacyStripeRefundFixture pool 1000
+      secondKey <- legacyStripeDuplicateRefund pool firstKey
+      env <- legacyStripeRefundEnv pool True
+      calls <- newIORef (0 :: Int)
+      let provider _ _ _ = atomicModifyIORef' calls (\count -> (count+1,()))
+            >> pure (Left "synthetic uncertain provider response")
+          (approve,_) = legacyStripeRefundHandlers provider
+          action :: TM.TicketRefundRequestId -> IO (Either ServerError TD.RefundDTO)
+          action key = runHandler (runReaderT
+            (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey key))) env)
+          snapshots = legacyStripeRequestHistory pool orderKey
+      historyBefore <- snapshots
+      results <- if simultaneous then concurrently (map action [firstKey,secondKey])
+        else mapM action [firstKey,secondKey]
+      readIORef calls `shouldReturn` 0
+      mapM_ assertLegacyRefundDenied results
+      snapshots `shouldReturn` historyBefore
+      assertLegacyStripeRefundState pool fixture "pending" "paid" 3 "issued"
+
+  forM_ ["pending","rejected","processing","approved"] $ \otherStatus ->
+    it ("counts all legacy history when refusing an ambiguous approval: other=" <> T.unpack otherStatus) $ \pool -> do
+      fixture@(eventKey,orderKey,targetKey) <- legacyStripeRefundFixture pool 1000
+      otherKey <- legacyStripeDuplicateRefund pool targetKey
+      runSqlPool (rawExecute
+        "UPDATE ticket_refund_request SET status=?,stripe_refund_id=\
+        \ CASE WHEN ? IN ('processing','approved') THEN 're_synthetic_historical_observation' ELSE NULL END,\
+        \ processed_at=CASE WHEN ?='approved' THEN now() ELSE NULL END WHERE id=?"
+        [PersistText otherStatus,PersistText otherStatus,PersistText otherStatus,
+         PersistInt64 (fromSqlKey otherKey)]) pool
+      when (otherStatus == "approved") $ runSqlPool (do
+        -- Legacy partial completion retired the whole order; preserve that
+        -- historical snapshot without claiming its allocation is correct.
+        rawExecute "UPDATE event_ticket_order SET status='refunded' WHERE id=?"
+          [PersistInt64 (fromSqlKey orderKey)]
+        rawExecute "UPDATE event_ticket SET status='refunded' WHERE order_ref_id=?"
+          [PersistInt64 (fromSqlKey orderKey)]
+        rawExecute "UPDATE event_ticket_tier SET quantity_sold=0 WHERE id=\
+          \(SELECT tier_id FROM event_ticket_order WHERE id=?)"
+          [PersistInt64 (fromSqlKey orderKey)]) pool
+      env <- legacyStripeRefundEnv pool True
+      calls <- newIORef (0 :: Int)
+      let provider _ _ _ = atomicModifyIORef' calls (\count -> (count+1,()))
+            >> pure (Left "synthetic unavailable response")
+          (approve,_) = legacyStripeRefundHandlers provider
+      historyBefore <- legacyStripeRequestHistory pool orderKey
+      result <- runHandler (runReaderT
+        (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey targetKey))) env)
+      readIORef calls `shouldReturn` 0
+      assertLegacyRefundDenied result
+      legacyStripeRequestHistory pool orderKey `shouldReturn` historyBefore
+      let retired = otherStatus == "approved"
+      assertLegacyStripeRefundState pool fixture "pending"
+        (if retired then "refunded" else "paid") (if retired then 0 else 3)
+        (if retired then "refunded" else "issued")
+
   it "serializes simultaneous legacy refund request creation for one order" $ \pool -> do
     (eventKey,orderKey) <- runSqlPool legacyStripeRefundOrderFixture pool
     locked <- newEmptyMVar
@@ -4596,6 +4885,19 @@ legacyStripeRefundSpec = describe "legacy Stripe ticket refund execution fence" 
       readIORef calls `shouldReturn` 2
 
 type LegacyStripeRefundFixture = (TM.SocialEventId,TM.EventTicketOrderId,TM.TicketRefundRequestId)
+
+legacyStripeDuplicateRefund :: ConnectionPool -> TM.TicketRefundRequestId -> IO TM.TicketRefundRequestId
+legacyStripeDuplicateRefund pool originalKey = runSqlPool (do
+  [Single key] <- rawSql
+    "INSERT INTO ticket_refund_request(order_id,requested_by_party_id,reason,amount_cents,status)\
+    \ SELECT order_id,requested_by_party_id,reason,amount_cents,'pending' FROM ticket_refund_request\
+    \ WHERE id=? RETURNING id" [PersistInt64 (fromSqlKey originalKey)]
+  pure key) pool
+
+legacyStripeRequestHistory :: ConnectionPool -> TM.EventTicketOrderId -> IO [Single Text]
+legacyStripeRequestHistory pool key = runSqlPool (rawSql
+  "SELECT row_to_json(request)::text FROM ticket_refund_request request WHERE order_id=? ORDER BY id"
+  [PersistInt64 (fromSqlKey key)]) pool
 
 legacyStripeRefundFixture :: ConnectionPool -> Int64 -> IO LegacyStripeRefundFixture
 legacyStripeRefundFixture pool amount = runSqlPool (do

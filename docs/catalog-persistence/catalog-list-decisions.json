@@ -3143,6 +3143,13 @@
         ]
       },
       "scope": "Current main review objects remain exact. Older line/count observations are retained as historical source-specific evidence, not refreshed current observations."
+    },
+    "legacyRefundHistorySourceReview": {
+      "sourceRevision": "1667d586b3901f9470baaedb6024a34e6e388118",
+      "oldParent": "4d48e13556f3fb1a2756b30099f09a5992682ad3",
+      "preservedIncomingDecisions": 1371,
+      "reusedOriginalDecision": "edc4bc7cc2815c51a093",
+      "scope": "Original reviewed test-only status-history consumer, unchanged values and identity. Historical line/count observations are retained; generated reports record this composition. No production catalog values or rules changed."
     }
   },
   "decisions": [
@@ -22552,6 +22559,32 @@
         "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "edc4bc7cc2815c51a093",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Finite verification inputs mirror existing ticket_refund_request status history; test-only consumer, with no new selectable values or runtime authority. The history guard counts all identities independent of status.",
+      "reviewed": true,
+      "reviewMethod": "manual-bounded-fixture-review",
+      "reviewBatch": "legacy-refund-history-20261028",
+      "evidence": {
+        "file": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "line": 563,
+        "kind": "array",
+        "name": "statuses",
+        "valueCount": 4,
+        "consumerCount": 309,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": [
+          "67a832e9fad8b0ede0bb",
+          "dc3e03a3731e9ec343bb",
+          "1925bc5bf3a9d578b16b"
+        ]
       }
     },
     {
