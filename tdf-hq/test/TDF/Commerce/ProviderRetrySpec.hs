@@ -3943,6 +3943,177 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
 -- accepted POST whose response is lost, concurrent approvers and invalid JSON.
 legacyStripeRefundSpec :: SpecWith ConnectionPool
 legacyStripeRefundSpec = describe "legacy Stripe ticket refund execution fence" $ do
+  it "serializes simultaneous legacy refund request creation for one order" $ \pool -> do
+    (eventKey,orderKey) <- runSqlPool legacyStripeRefundOrderFixture pool
+    locked <- newEmptyMVar
+    release <- newEmptyMVar
+    holderFinished <- newEmptyMVar
+    firstFinished <- newEmptyMVar
+    secondFinished <- newEmptyMVar
+    let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
+        action = runHandler (runReaderT
+          (request (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey orderKey))
+            (TD.RefundRequestDTO (Just "Simultaneous synthetic request") (Just 12515)))
+          (Env pool (error "Refund request creation must not contact a provider")))
+        holdInserts = runSqlPool (do
+          rawExecute "LOCK TABLE ticket_refund_request IN SHARE MODE" []
+          liftIO $ putMVar locked ()
+          liftIO $ takeMVar release) pool
+        releaseInserts = do
+          _ <- tryPutMVar release ()
+          pure ()
+    -- Pool size is four: one lock holder, two handlers and one observer.
+    -- Old handlers both read absence and then wait on INSERT. With the order
+    -- lock, the second handler waits before its existence check instead.
+    bracket (forkFinally holdInserts (putMVar holderFinished)) (\worker ->
+      releaseInserts >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+      Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+      bracket (forkFinally action (putMVar firstFinished)) (\worker ->
+        releaseInserts >> awaitLegacyRefundWorker worker firstFinished) $ \_ -> do
+        bracket (forkFinally action (putMVar secondFinished)) (\worker ->
+          releaseInserts >> awaitLegacyRefundWorker worker secondFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForLegacyRequestWaiters pool 2 100)
+            `shouldReturn` Just True
+          releaseInserts
+          results <- forM [firstFinished,secondFinished] $ \finished -> do
+            outcome <- Timeout.timeout 5000000 (readMVar finished)
+            case outcome of
+              Just (Right value) -> pure value
+              Just (Left failure) -> expectationFailure (show failure) >> fail "Request worker failed"
+              Nothing -> expectationFailure "Request worker did not finish" >> fail "Request worker timed out"
+          length (rights results) `shouldBe` 1
+          length [() | Left failure <- results, errHTTPCode failure == 409] `shouldBe` 1
+          forM_ (rights results) $ \response -> do
+            TD.refundStatus response `shouldBe` "pending"
+            TD.refundAmountCents response `shouldBe` 12515
+          runSqlPool (rawSql
+            "SELECT status,amount_cents,stripe_refund_id,processed_at FROM ticket_refund_request\
+            \ WHERE order_id=? ORDER BY id"
+            [PersistInt64 (fromSqlKey orderKey)]) pool
+            `shouldReturn` [(Single ("pending" :: Text),Single (12515 :: Int64),
+              Single (Nothing :: Maybe Text),Single (Nothing :: Maybe UTCTime))]
+
+  forM_ [("paid state",0,400),("buyer",1,403),("amount",2,400),("organizer",3,403)] $
+    \(scenario,mutation,expectedStatus) ->
+    it ("rechecks the current " <> scenario <> " before inserting a legacy refund request") $ \pool -> do
+      (eventKey,orderKey) <- runSqlPool legacyStripeRefundOrderFixture pool
+      -- Buyer1 and organizer2 must be independent authority paths. Otherwise
+      -- changing the buyer would still leave actor1 authorized as organizer.
+      runSqlPool (rawExecute "UPDATE social_event SET organizer_party_id='2' WHERE id=?"
+        [PersistInt64 (fromSqlKey eventKey)]) pool
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      holderFinished <- newEmptyMVar
+      requestFinished <- newEmptyMVar
+      let actor = if mutation == (3 :: Int) then 2 else 1
+          (_,request) = socialRefundHandlers (AuthedUser (toSqlKey actor) [Admin] mempty Nothing Nothing)
+          action = runHandler (runReaderT
+            (request (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey orderKey))
+              (TD.RefundRequestDTO (Just "Synthetic stale snapshot") (Just 12515)))
+            (Env pool (error "Refund request must not contact a provider")))
+          holdMutation = runSqlPool (do
+            _ <- rawSql "SELECT id FROM social_event WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey eventKey)] :: SqlPersistT IO [Single Int64]
+            _ <- rawSql "SELECT id FROM event_ticket_order WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey orderKey)] :: SqlPersistT IO [Single Int64]
+            case mutation of
+              0 -> rawExecute "UPDATE event_ticket_order SET status='refunded' WHERE id=?"
+                [PersistInt64 (fromSqlKey orderKey)]
+              1 -> rawExecute "UPDATE event_ticket_order SET buyer_party_id='2' WHERE id=?"
+                [PersistInt64 (fromSqlKey orderKey)]
+              2 -> rawExecute "UPDATE event_ticket_order SET amount_cents=10000 WHERE id=?"
+                [PersistInt64 (fromSqlKey orderKey)]
+              _ -> rawExecute "UPDATE social_event SET organizer_party_id='1' WHERE id=?"
+                [PersistInt64 (fromSqlKey eventKey)]
+            rawExecute "LOCK TABLE ticket_refund_request IN SHARE MODE" []
+            liftIO $ putMVar locked ()
+            liftIO $ takeMVar release) pool
+          releaseMutation = do
+            _ <- tryPutMVar release ()
+            pure ()
+      bracket (forkFinally holdMutation (putMVar holderFinished)) (\worker ->
+        releaseMutation >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+        Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+        bracket (forkFinally action (putMVar requestFinished)) (\worker ->
+          releaseMutation >> awaitLegacyRefundWorker worker requestFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForLegacyRequestWaiters pool 1 100)
+            `shouldReturn` Just True
+          releaseMutation
+          result <- Timeout.timeout 5000000 (readMVar requestFinished)
+          case result of
+            Just (Right (Left failure)) -> errHTTPCode failure `shouldBe` expectedStatus
+            Just (Right (Right _)) -> expectationFailure "A stale request snapshot authorized an insertion"
+            Just (Left failure) -> expectationFailure (show failure)
+            Nothing -> expectationFailure "Request did not finish after mutation committed"
+          runSqlPool (rawSql "SELECT count(*)::bigint FROM ticket_refund_request WHERE order_id=?"
+            [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (0 :: Int64)]
+
+  forM_ [False,True] $ \organizesEvent ->
+    it ("preserves legacy organizer authority without an administrator ownership bypass: " <>
+        show organizesEvent) $ \pool -> do
+      (eventKey,orderKey) <- runSqlPool legacyStripeRefundOrderFixture pool
+      when organizesEvent $ runSqlPool (rawExecute
+        "UPDATE social_event SET organizer_party_id='2' WHERE id=?"
+        [PersistInt64 (fromSqlKey eventKey)]) pool
+      let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 2) [Admin] mempty Nothing Nothing)
+      result <- runHandler (runReaderT
+        (request (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey orderKey))
+          (TD.RefundRequestDTO (Just "Synthetic organizer support request") (Just 1000)))
+        (Env pool (error "Request authority checks must not contact a provider")))
+      if organizesEvent then do
+        response <- requireRight result
+        TD.refundStatus response `shouldBe` "pending"
+        TD.refundAmountCents response `shouldBe` 1000
+      else case result of
+        Left failure -> errHTTPCode failure `shouldBe` 403
+        Right _ -> expectationFailure "An unrelated administrator cannot request a legacy buyer's refund"
+
+  forM_ [Nothing,Just 1000,Just 12515] $ \amount ->
+    it ("preserves legacy request amounts including full default and partial: " <> show amount) $ \pool -> do
+      (eventKey,orderKey) <- runSqlPool legacyStripeRefundOrderFixture pool
+      let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
+      response <- runHandler (runReaderT
+        (request (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey orderKey))
+          (TD.RefundRequestDTO Nothing amount))
+        (Env pool (error "Request creation does not need provider configuration"))) >>= requireRight
+      TD.refundStatus response `shouldBe` "pending"
+      TD.refundAmountCents response `shouldBe` maybe 12515 id amount
+
+  forM_ [-1,0,12516] $ \amount ->
+    it ("rejects an invalid legacy refund request amount without insertion: " <> show amount) $ \pool -> do
+      (eventKey,orderKey) <- runSqlPool legacyStripeRefundOrderFixture pool
+      let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
+      result <- runHandler (runReaderT
+        (request (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey orderKey))
+          (TD.RefundRequestDTO Nothing (Just amount)))
+        (Env pool (error "Invalid requests must not contact a provider")))
+      case result of
+        Left failure -> errHTTPCode failure `shouldBe` 400
+        Right _ -> expectationFailure "Invalid refund amount inserted a request"
+      runSqlPool (rawSql "SELECT count(*)::bigint FROM ticket_refund_request WHERE order_id=?"
+        [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (0 :: Int64)]
+
+  forM_ [False,True] $ \rejected ->
+    it ("preserves refusal of a prior legacy request, rejected=" <> show rejected) $ \pool -> do
+      (eventKey,orderKey,refundKey) <- legacyStripeRefundFixture pool 12515
+      let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
+      when rejected $ do
+        let (_,reject) = legacyStripeRefundHandlers (\_ _ _ -> fail "Rejection cannot call a provider")
+        _ <- runHandler (runReaderT
+          (reject (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))
+            (TD.RejectionReasonDTO "Synthetic rejection before another request"))
+          (Env pool (error "Rejection cannot need provider configuration"))) >>= requireRight
+        pure ()
+      result <- runHandler (runReaderT
+        (request (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey orderKey))
+          (TD.RefundRequestDTO Nothing (Just 12515)))
+        (Env pool (error "Duplicate request cannot contact a provider")))
+      case result of
+        Left failure -> errHTTPCode failure `shouldBe` 409
+        Right _ -> expectationFailure "A prior legacy request must prevent another insertion"
+      runSqlPool (rawSql "SELECT count(*)::bigint FROM ticket_refund_request WHERE order_id=?"
+        [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (1 :: Int64)]
+
   it "allows only one provider call across eight approvals and later retries" $ \pool -> do
     fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 1000
     env <- legacyStripeRefundEnv pool True
@@ -4428,6 +4599,15 @@ type LegacyStripeRefundFixture = (TM.SocialEventId,TM.EventTicketOrderId,TM.Tick
 
 legacyStripeRefundFixture :: ConnectionPool -> Int64 -> IO LegacyStripeRefundFixture
 legacyStripeRefundFixture pool amount = runSqlPool (do
+  (eventKey,orderKey) <- legacyStripeRefundOrderFixture
+  [Single refundKey] <- rawSql
+    "INSERT INTO ticket_refund_request(order_id,requested_by_party_id,reason,amount_cents,status)\
+    \ VALUES (?,'1','Synthetic legacy Stripe request',?,'pending') RETURNING id"
+    [PersistInt64 (fromSqlKey orderKey),PersistInt64 amount]
+  pure (eventKey,orderKey,refundKey)) pool
+
+legacyStripeRefundOrderFixture :: SqlPersistT IO (TM.SocialEventId,TM.EventTicketOrderId)
+legacyStripeRefundOrderFixture = do
   -- This is a legacy order snapshot: its stored paid total is 12515 even though
   -- three current tier prices sum to 12516. No canonical runtime is attached,
   -- and this execution-fence regression does not reprice historical orders.
@@ -4442,11 +4622,7 @@ legacyStripeRefundFixture pool amount = runSqlPool (do
     \ VALUES (?,?,?,?,'issued','1','1',now(),now())"
     [PersistInt64 (fromSqlKey eventKey),PersistInt64 (tierKey :: Int64),PersistInt64 (fromSqlKey orderKey),
      PersistText ("legacy-stripe-" <> keyText (fromSqlKey orderKey) <> "-" <> T.pack (show index))]
-  [Single refundKey] <- rawSql
-    "INSERT INTO ticket_refund_request(order_id,requested_by_party_id,reason,amount_cents,status)\
-    \ VALUES (?,'1','Synthetic legacy Stripe request',?,'pending') RETURNING id"
-    [PersistInt64 (fromSqlKey orderKey),PersistInt64 amount]
-  pure (eventKey,orderKey,refundKey)) pool
+  pure (eventKey,orderKey)
 
 legacyStripeRefundEnv :: ConnectionPool -> Bool -> IO Env
 legacyStripeRefundEnv pool configured = do
@@ -4497,6 +4673,20 @@ waitForLegacyRefundLock pool holderPid remaining = do
   if rows == [Single True] then pure True else do
     threadDelay 25000
     waitForLegacyRefundLock pool holderPid (remaining-1)
+
+waitForLegacyRequestWaiters :: ConnectionPool -> Int64 -> Int -> IO Bool
+waitForLegacyRequestWaiters _ _ 0 = pure False
+waitForLegacyRequestWaiters pool expected remaining = do
+  rows <- runSqlPool (rawSql
+    "SELECT count(*)::bigint FROM pg_stat_activity\
+    \ WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock'\
+    \ AND (lower(query) LIKE '%ticket_refund_request%'\
+    \ OR ((lower(query) LIKE '%event_ticket_order%' OR lower(query) LIKE '%social_event%')\
+    \ AND lower(query) LIKE '%for update%'))"
+    []) pool :: IO [Single Int64]
+  if rows == [Single expected] then pure True else do
+    threadDelay 25000
+    waitForLegacyRequestWaiters pool expected (remaining-1)
 
 assertLegacyStripeRefundState
   :: ConnectionPool -> LegacyStripeRefundFixture -> Text -> Text -> Int64 -> Text -> Expectation
