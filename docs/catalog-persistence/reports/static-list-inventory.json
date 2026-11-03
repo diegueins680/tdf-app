@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-03T01:52:09.187Z",
+  "generatedAt": "2026-11-03T03:32:11.873Z",
   "repositoryRoot": ".",
   "filesScanned": 2505,
   "candidateCount": 1371,
@@ -7337,14 +7337,14 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "refunds",
-      "line": 122,
+      "line": 211,
       "values": [
         "none"
       ],
       "valueCount": 1,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        122
+        211
       ],
       "consumerCount": 70,
       "backendConsumers": [
@@ -7459,7 +7459,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "statuses",
-      "line": 353,
+      "line": 442,
       "values": [
         "pending",
         "requires_action",
@@ -7472,7 +7472,7 @@
       "valueCount": 7,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        353
+        442
       ],
       "consumerCount": 191,
       "backendConsumers": [
@@ -126963,7 +126963,7 @@
       "lines": [
         489
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -126996,6 +126996,7 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
@@ -130965,7 +130966,7 @@
       "lines": [
         816
       ],
-      "consumerCount": 90,
+      "consumerCount": 91,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -130993,6 +130994,7 @@
         "tdf-hq/test/EventOperationsHttpMain.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -152942,7 +152944,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1765,
+      "line": 1767,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -152953,7 +152955,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1765
+        1767
       ],
       "consumerCount": 88,
       "backendConsumers": [
