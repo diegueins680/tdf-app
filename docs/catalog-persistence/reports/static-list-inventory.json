@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-03T04:16:02.983Z",
+  "generatedAt": "2026-11-03T05:32:12.558Z",
   "repositoryRoot": ".",
   "filesScanned": 2512,
   "candidateCount": 1372,
@@ -4198,7 +4198,7 @@
       "lines": [
         126
       ],
-      "consumerCount": 321,
+      "consumerCount": 322,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -8033,7 +8033,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 253,
+      "consumerCount": 254,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -8563,7 +8563,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 250,
+      "consumerCount": 251,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -14513,7 +14513,7 @@
       "lines": [
         140
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -15073,7 +15073,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 211,
+      "consumerCount": 212,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -15291,7 +15291,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 255,
+      "consumerCount": 256,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -21728,7 +21728,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -27484,7 +27484,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1014,
+      "consumerCount": 1015,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -54811,7 +54811,7 @@
       "lines": [
         332
       ],
-      "consumerCount": 1057,
+      "consumerCount": 1058,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -56158,7 +56158,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 522,
+      "line": 523,
       "values": [
         "drive",
         "walk",
@@ -56190,7 +56190,7 @@
       "valueCount": 26,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        522
+        523
       ],
       "consumerCount": 18,
       "backendConsumers": [
@@ -69776,7 +69776,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 262,
+      "line": 258,
       "values": [
         "media",
         "audio",
@@ -69785,7 +69785,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        262
+        258
       ],
       "consumerCount": 35,
       "backendConsumers": [
@@ -69871,7 +69871,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1014,
+      "consumerCount": 1015,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -81193,7 +81193,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 204,
+      "consumerCount": 205,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
