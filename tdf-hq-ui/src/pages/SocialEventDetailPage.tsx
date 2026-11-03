@@ -32,9 +32,14 @@ import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicke
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
   if (!value) return '';
   const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? value
-    : date.toLocaleString(locale, { timeZone: timezone, dateStyle: 'medium', timeStyle: 'short' });
+  if (Number.isNaN(date.getTime())) return value;
+  try {
+    return date.toLocaleString(locale, { timeZone: timezone, dateStyle: 'medium', timeStyle: 'short' });
+  } catch {
+    // A stored zone Intl rejects (e.g. a fixed offset) must not blank the page;
+    // fall back to the viewer's zone rather than throwing during render.
+    return date.toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
+  }
 };
 
 const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m4v)(?:$|[?#])/i.test(url) ? 'video' : 'image';

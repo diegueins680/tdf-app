@@ -52,6 +52,16 @@ export interface CollaborativeEventCreationResult {
 const LOCAL_DATE_TIME_FORMAT = "yyyy-LL-dd'T'HH:mm";
 const MAX_DURATION_MINUTES = 7 * 24 * 60;
 
+/** Intl rejects fixed-offset zones such as "UTC+5" that Luxon tolerates. */
+const isIntlTimeZone = (zone: string): boolean => {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const errorMessage = (reason: unknown) =>
   reason instanceof Error ? reason.message : 'No se pudo conceder acceso.';
 
@@ -120,7 +130,10 @@ export function buildCollaborativeEventPayload(
   }
 
   const timezone = draft.timezone.trim();
-  if (!timezone || !DateTime.now().setZone(timezone).isValid) {
+  // Luxon accepts fixed-offset zones such as "UTC+5" that Intl.DateTimeFormat
+  // rejects, and the event detail page formats dates through Intl. Require both
+  // so a saved event can always be rendered.
+  if (!timezone || !DateTime.now().setZone(timezone).isValid || !isIntlTimeZone(timezone)) {
     throw new Error('Selecciona una zona horaria válida, por ejemplo America/Guayaquil.');
   }
   const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT, { zone: timezone });

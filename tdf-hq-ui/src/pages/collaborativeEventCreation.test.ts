@@ -68,6 +68,9 @@ describe('collaborative event creation', () => {
       .toBe('2026-11-28T23:00:00.000Z');
     expect(() => buildCollaborativeEventPayload({ ...draft(), timezone: 'Invalid/Zone' }))
       .toThrow('Selecciona una zona horaria válida');
+    // Luxon accepts fixed-offset zones but Intl (used to render the event) does not.
+    expect(() => buildCollaborativeEventPayload({ ...draft(), timezone: 'UTC+5' }))
+      .toThrow('Selecciona una zona horaria válida');
     for (const startAt of ['2026-03-08T02:30', '2026-11-01T01:30']) {
       expect(() => buildCollaborativeEventPayload({ ...draft(), timezone: 'America/New_York', startAt }))
         .toThrow('horario de verano');
