@@ -1,3 +1,4 @@
+import UserProfileLink from '../components/UserProfileLink';
 import { useTranslation } from 'react-i18next';
 import SocialWorkspace from '../features/social/SocialWorkspace';
 import { logger } from '../utils/logger';
@@ -580,7 +581,7 @@ function LegacySocialPage() {
                   return (
                     <Stack key={`suggestion-${suggestion.sfPartyId}`} direction="row" justifyContent="space-between" alignItems="center">
                       <Box>
-                        <Typography variant="subtitle1" fontWeight={700}>{label}</Typography>
+                        <UserProfileLink partyId={suggestion.sfPartyId}><Typography variant="subtitle1" fontWeight={700}>{label}</Typography></UserProfileLink>
                         <Typography variant="body2" color="text.secondary">
                           ID #{suggestion.sfPartyId}
                         </Typography>
@@ -645,7 +646,7 @@ function LegacySocialPage() {
                     return (
                       <Stack key={`${activeTab}-${row.pfFollowerId}-${row.pfFollowingId}`} direction="row" justifyContent="space-between" alignItems="center">
                         <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>{label}</Typography>
+                          <UserProfileLink partyId={targetId}><Typography variant="subtitle1" fontWeight={700}>{label}</Typography></UserProfileLink>
                           <Typography variant="body2" color="text.secondary">
                             ID #{targetId} · Desde {since}
                           </Typography>

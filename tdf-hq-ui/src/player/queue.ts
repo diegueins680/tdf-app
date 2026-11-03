@@ -8,6 +8,7 @@ export interface QueueState {
 }
 
 export type QueueAction =
+  | { type: 'restore'; queue: QueueState }
   | { type: 'replace'; tracks: PlayerTrack[]; currentTrackId?: string }
   | { type: 'enqueue'; tracks: PlayerTrack[] }
   | { type: 'select'; index: number }
@@ -31,6 +32,8 @@ const clampIndex = (index: number, length: number): number => {
 
 export function queueReducer(state: QueueState, action: QueueAction): QueueState {
   switch (action.type) {
+    case 'restore':
+      return action.queue;
     case 'replace': {
       const requestedIndex = action.currentTrackId
         ? action.tracks.findIndex((track) => track.id === action.currentTrackId)

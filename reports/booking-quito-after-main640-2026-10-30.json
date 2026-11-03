@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "source": "58212d80a1b04f77c5dcb4fd854158a5bd1897a8",
+  "actualProtectedMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "runtimeEquivalentQualifiedPreparation": "4c6783be01e3a1440231fbec02476d457df2d6bd",
+  "recordedAt": "2026-10-30T05:18:20.731843+00:00",
+  "behavior": "Physical studio opening/closing is Quito08:00–22:00 America/Guayaquil, independent of visitor/global UI timezone. Input remains visitor-local; submitted instant remains UTC. Repeated suggestions preserve the physical Quito day.",
+  "ownerAuthority": "Existing direct owner confirmation retained; no new hours/timezone assumption introduced.",
+  "preservation": {
+    "all158IncomingNormativeObjectsExact": true,
+    "currentNormativeObjects": 159,
+    "backendNativeWorkflowsDependenciesExactActualMain": true,
+    "mainCatalogDecisionAndHistoryFileByteExact": true,
+    "incomingCatalogRecoveryAndGalleryPaintGuardsRetained": true,
+    "wholeRuntimeAndBookingTestInputsExactPriorQualified4c": true
+  },
+  "validation": {
+    "currentFocusedCases": 18,
+    "failed": 0,
+    "currentSourcePathsChecked": true,
+    "repositoryQuality": "PASS, original platform skips retained",
+    "typesAndLint": "PASS on runtime-identical preparation",
+    "browser": {
+      "passed": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "recordedExecution": {
+        "startTime": "2026-10-29T23:07:24.764Z",
+        "duration": 82181.43400000001,
+        "expected": 6,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "scope": "UTC and Europe/Madrid visitors on Chrome desktop, Chrome phone emulation and Firefox; synthetic APIs and refused409 booking POST only. Opening/closing, repeated suggestions, UTC, contact retention and truthful error are checked. No local pinnedWebKit or physical-device result claimed.",
+      "sourceBinding": "Prior4c preparation and current582 have byte-identical whole client/backend/dependency/native and booking browser-test trees. This execution is retained under its original date, not relabelled a new run."
+    },
+    "catalog": "Fresh strict auditPASS:1354 reviewed entries, zero unreviewed; history unchanged",
+    "canonicalInventoryAndConformance": "PASS"
+  },
+  "receiptSha256": {
+    "tdf-report-642-final-focused-20261030.json": "29322094f6178dac45b421c05c269090edf9272644852b3f668dce09c7aa1274",
+    "tdf-report-642-final-repo-quality-20261030.log": "b51b96012636f4d0001376829f89d431fd78d1d14f23eb781b3ca1d6b347d3c0",
+    "results.json": "c1cb40de896ba07d8c6f49b9f6ddbdbf1ce3b1da857ff516f6fea151e0b352d6",
+    "tdf-report-642-current640-lint-20261029.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+    "tdf-report-642-final-catalog-20261030.json": "1cfc60c865fff35ca7f5c005b5bd9641ab11c15ccce78d2a5bbfa02bc2ed427d"
+  },
+  "limits": [
+    "No actual booking, payment, provider or ledger write",
+    "Fresh current-head hosted CI and independent review remain required",
+    "Strict main/FIFO and all protections remain",
+    "No canonical deployment or complete requirement/refinement proof claimed"
+  ]
+}

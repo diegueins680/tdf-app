@@ -1,0 +1,44 @@
+{
+  "qualifiedIntegrationBaseline": "1129112f89d3c00d33b8c86043a6bd197031dcff",
+  "privacyParent": "3de0406ff241c03a1878810f718b2e587ee4ad8b",
+  "sourceFiles": {
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": {
+      "bytes": 35436,
+      "sha256": "7ccf9982a287ff7f7f3125f87a2b95aab80a10baa00598f8e4b77180757e997c"
+    },
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": {
+      "bytes": 25772,
+      "sha256": "0cf881b0228da9a69f8699e618deb53cbdd73af28e2242750fb75a47833dccc4"
+    },
+    "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": {
+      "bytes": 20200,
+      "sha256": "1194d26ed369572fb3eeace97fb54f925a4b0af6c5e72b2f52064f1dca5e9810"
+    },
+    "tdf-hq-ui/src/App.tsx": {
+      "bytes": 1571,
+      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7"
+    },
+    "tdf-hq-ui/src/session/SessionProviders.tsx": {
+      "bytes": 1109,
+      "sha256": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4"
+    },
+    "tdf-hq-ui/src/player/queue.ts": {
+      "bytes": 5146,
+      "sha256": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f"
+    },
+    "e2e/web/music-player-native.spec.mjs": {
+      "bytes": 33318,
+      "sha256": "07867224cb447a4a34b986eb84a5147f775c9529b5c75188a16d709541556319"
+    },
+    "e2e/web/fixtures/native-music-setup.mjs": {
+      "bytes": 3959,
+      "sha256": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365"
+    },
+    "scripts/process-music-release-audio.sh": {
+      "bytes": 8499,
+      "sha256": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505"
+    }
+  },
+  "nativeRuntimeInputCount": 491,
+  "scope": "Only one unmount disposal block changes runtime from privacy parent. No search/readiness imported. Metadata/commit identity checked separately."
+}

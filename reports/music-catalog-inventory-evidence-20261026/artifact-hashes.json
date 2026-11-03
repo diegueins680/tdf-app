@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "files": {
+    "README.md": "c9071e8c71459990c9c24fcceacd6aa62345c2ee2668ce6f8a4297a7bce471a0",
+    "collector/README.md": "76d818eed7cc695d113ada814487c4cfd60998739d9271f93fb345742b9ddc01",
+    "collector/build-review.py": "3a912bcff8f935acc23ccce350404ce0c403ee8ca9337f928ba514adf87bbfcb",
+    "collector/canonical-inspect-runtime.py": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+    "collector/collect.py": "3371d1b42b630432647ba7b964101268097c78f53ab34a9203c212914c27c049",
+    "collector/fixed-queries.sql": "c2796dc0e498177b2b31983d802c2099317e1d3c690cad765291f6ff83b3a6cd",
+    "collector/launch.mjs": "c1a8fbc3f2efdc4f1b1c1b1dc084ab22aae3b9bf6238a84849310e2f189af9ee",
+    "collector/prepare-spec.py": "86ca617eced7031f9495d9a2c30d629185075d78667b38b55b8ae54c6db8944c",
+    "collector/query-spec.json": "b2abda92b0803032ad56aa46bf8153b5c967fca902e2f0f60cb3c182c615ec6c",
+    "collector/remote-payload.py": "24d235a1487f50f333a4ceb49ec200ede3d4d4aa77c3434ac3df00129858cbc8",
+    "collector/review-manifest.json": "cf359cf1f9a704b052e17cf5c2e423e66aa346a440a6de094dff751bd38fb046",
+    "collector/self-test.log": "0d5f8346517fbbc9f8c76001a173ca4ace78dc0d43bc08446621d0299d7dcd04",
+    "collector/source-provenance.json": "97eb23fd851e869e763a9d4e8e9b27ad6052e154a621c6f16d106e334b68d978",
+    "collector/test_collect.py": "da379bea133f0eb00cf4d3122bd705b66e2ef330ad4371552ace43becd7c94d5",
+    "metadata-conformance.log": "dbac6ab81dd872193a4f1e9191a519fae042397665345437bda0c4df62109faf",
+    "metadata-declarations.log": "5684d13977a1f6829bcd5f644c72b35ab6f8d42951d571a5f230c4cc35a359f3",
+    "metadata-inventory.log": "8a1e0fb4496e78a3ced9ae64fcb21728ab79bd1a35de5212d86e153a5f8efe00",
+    "metadata-surfaces.log": "04d3ba75bc8767be52975637e6fcd4320e4d803a5a0880d87a69a1741f14b6a8",
+    "observation.json": "57164d673611d3af3eaadda84384b93319bb953e386c167d0ab6064172e59295",
+    "offline-replay.log": "e0e145c7a2d34fd0667b745c846f775fd6772a805c1f683ddba6506b130031ee",
+    "production-baseline-snapshot.json": "3360972cdfb21dd0fbd07d5c61f047251b8f588bbfd452d54159c0f33162c535",
+    "sanitization-review.json": "1258cb1e299477c62d52fec45fe47484956b40766752d2ca6ce7050951b01dc2",
+    "verify-archive.py": "caa0604e6526370e876121c76a45aaba659637e39b6239b94f99fce08bc90dd4"
+  },
+  "scope": "Archive bytes only;this manifest is excluded from its own digest table. Existing reviewed collector manifest remains byte-exact."
+}

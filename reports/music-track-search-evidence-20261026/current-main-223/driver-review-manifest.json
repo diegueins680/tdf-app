@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "status": "PREPARED_SEALED_ROOT_REVIEW_REQUIRED_ACTUAL_BUILD_EXIT0_BEFORE_EXECUTION",
+  "expectedBackendCommit": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "expectedBackendFiles": 975,
+  "schemaEntries": 223,
+  "buildDirectory": "/private/tmp/tdf-track-search-build-223-20261026",
+  "root": "/private/tmp/tdf-universal-music-search-20261026",
+  "allowedAdditionalBackendDocumentation": {},
+  "knownCommittedDocumentation": {
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "frozenRuntimeHelperInputs": {
+    "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
+    "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
+    "scripts/production-migrations.json": "2ef157906e6bc8f922fd5f3f838b5daca8b1ef60f5943f5f7b136ec3f9225699",
+    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+    "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
+    "reports/welcome-club-integration-evidence-20261026/loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "frozenBaseDriverSha256": "e074113c7e06780178c2786cde0e240e31672e4ecb00245c8cce3affe1c00a85",
+  "frozenBaseFixtureSha256": "e151f6b975fd11027f638fa6bdefdb28e27fac4039290fb3654ac8dbbb5faaa1",
+  "files": {
+    "run.py": "d90823cf526654b0fe90f2119c820d593a10723757b778a48642a595410de1b6",
+    "fixture.mjs": "fdcfa690af75650db695acbf8fe7919d1e1df98f9a51e63d0d666f7a2d80215b",
+    "backend-committed-inputs.json": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3",
+    "changes-from-c88.diff": "0decb6927a767184bc6d8ad116df9f7995a8345de802463cc7b8730e962d80d2",
+    "syntax-and-pure-safety.json": "65fda1993d6dd287e12192cb527743c3c3b0c856317be80c37c23b7a69b8503d"
+  },
+  "unchangedSafety": [
+    "ExactGETHEAD3pathallowlist,noredirect,noproxy,cleanenv",
+    "allcommittedblob/mode/pathchecks,no extra-path exception",
+    "freshownedPG/serverports,fullschema,no reuse",
+    "sandbox+LANegresscontrols,loopbackbindadapter",
+    "actualversion/actualcanonicalbuild0/newlinkedbinary",
+    "bounded90sstartup+10srequest+readyguard",
+    "PASSafterallthreecleanupflags only"
+  ],
+  "history": "Original c88 packet/harness untouched;223 qualification requires exact integrated checkpoint and fresh full975 manifest/build/version. No223 execution yet.",
+  "runtimeResultPrefix": "tdf-track-search-http-223-run-; distinct from fixed preparation directory",
+  "backendGitTree": "aec2a9853dd53f868a684de9d20ae62233cce47b",
+  "completeBeforeBuildManifest": {
+    "path": "backend-committed-inputs.json",
+    "sha256": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3",
+    "sourcePath": "/private/tmp/tdf-track-search-build-223-20261026/backend-committed-inputs.json",
+    "captureTiming": "Complete975 committed raw Git paths/blobs/modes captured before new canonical build; no Unicode path omission or extra backend document exception.",
+    "capturedAt": "2026-10-26T23:59:38.793000+00:00",
+    "captureScriptSha256": "6a506a4b4406984004089c75c166622962bce4a45398a24027b8f3a199512d43"
+  },
+  "pendingDraftPreserved": {
+    "run-pending-root-checkpoint.py": "63285435b12a6a820ba65fa78233c8a67dc3ad97f78b5a8fac56fc07f7a9d22d",
+    "review-manifest-pending-root-checkpoint.json": "3a9dad6949cbfa9686fcf80fc36df62301b1154094525c93b4724be3830482c4",
+    "syntax-and-pure-safety-pending-root-checkpoint.json": "b03ec2ab8cc573b44a54745bd6c2ffa40e6d4da286a3eb22e12d284374261516"
+  },
+  "sourceGuardBoundary": "All975 committed backend paths/raw blobs/executable modes; no staged/untracked extra backend path allowed. OpenAPI YAML is an original committed input, not an exception.",
+  "buildGuard": "Require actual stack-build.exit0 in fresh223build directory and newly linked binary after before-build capture, then actual /version exactb8a; no runtime revision override.",
+  "runtimeOutputPrefix": "tdf-track-search-http-223-run-",
+  "qualificationBoundary": "Fresh integrated b8a/full223 qualification prepared only. Original c88/full222105assertions stay historical in frozen original packet; no runtime/CI/production pass inferred.",
+  "pureAndSourceAdmission": {
+    "status": "PASS_AST_PURE_GUARDS_AND_READ_ONLY_FULL975_SOURCE_ADMISSION",
+    "sourceRevision": "b8a13e66fb40613250c047df92b6775a04eebf67",
+    "sourceManifestSha256": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3",
+    "httpAllowedCases": 3,
+    "httpDeniedCases": 9,
+    "redirectRefused": true,
+    "strictBackendPathSetPositiveCases": 1,
+    "unknownMissingOrExceptionPathSetsRejected": 6,
+    "startupFakeClockCases": [
+      {
+        "success": true,
+        "syntheticElapsedSeconds": 1,
+        "maximumTimeout": 10,
+        "passed": true
+      },
+      {
+        "success": false,
+        "syntheticElapsedSeconds": 90.0,
+        "maximumTimeout": 10,
+        "passed": true
+      }
+    ],
+    "all975RawGitPathBlobModeAndSourceManifestHashesExact": true,
+    "unicodeTemplateIncluded": true,
+    "committedOpenApiIncludedNoExtraException": true,
+    "all7RuntimeHelpersPinned": true,
+    "actualProductionManifestEntries": 223,
+    "functionalCheckCallsPreserved": 35,
+    "changedCheckCallsOnly": "Ledger223 equality/label and expected-version label; all105 prior runtime assertion coverage retained",
+    "runSha256": "d90823cf526654b0fe90f2119c820d593a10723757b778a48642a595410de1b6",
+    "fullDriverFixtureSqlApiPgBrowserNetworkExecuted": false
+  },
+  "finalOwnedPorts": {
+    "postgres": 55586,
+    "api": 18836
+  },
+  "actualFullDriverExecution": "NOT_EXECUTED; root must review sealed hashes and require actual fresh build exit0 before services"
+}
