@@ -14600,7 +14600,8 @@
         "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
         "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
         "tdf-hq-ui/src/utils/eventTicketPricing.ts",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/utils/dateTime.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
@@ -14609,7 +14610,8 @@
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
         "tdf-hq/test/Spec.hs",
-        "scripts/__tests__/event-planning-ux-model.test.mjs"
+        "scripts/__tests__/event-planning-ux-model.test.mjs",
+        "tdf-hq-ui/src/utils/dateTime.test.ts"
       ],
       "formalModels": [
         "scripts/event-planning-ux-model.mjs"
@@ -14627,7 +14629,7 @@
       "authority": "approved",
       "property": "Explicit wall-clock interpretation and saved logistics timezone precedence; integer-cent estimate conservation; no duplicate confirmed upload or stale editor success.",
       "verification": "Finite deterministic callback model with three negative controls; actual React regressions and 100001 fee inputs; Haskell test execution pending pinned Stack.",
-      "evidence": "scripts/__tests__/event-planning-ux-model.test.mjs; tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/utils/eventTicketPricing.test.ts; tdf-hq/test/Spec.hs"
+      "evidence": "scripts/__tests__/event-planning-ux-model.test.mjs; tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/utils/eventTicketPricing.test.ts; tdf-hq/test/Spec.hs; tdf-hq-ui/src/utils/dateTime.test.ts"
     }
   ]
 }
