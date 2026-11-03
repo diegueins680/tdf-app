@@ -4789,7 +4789,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence. Legacy refund request creation must serialize the absence check and insertion with current event/order authority and paid amount, preserving one-request rejection on the legacy route and canonical successive allocations.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4840,7 +4840,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001); formal/system/legacy-refund-request-creation.md (PAY-LEGACY-REFUND-REQUEST-001, AUTH-LEGACY-REFUND-REQUEST-001, PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4909,7 +4909,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee. Legacy request creation: actual-handler table-lock races and committed paid-state, buyer, amount and organizer changes; compatibility for default/full/partial amounts, invalid amounts, prior requests and organizer authority; a bounded two-requester model exposes missing locks, stale snapshots and stale eligibility. The transaction explicitly selects READ COMMITTED; source-bound receipts retain exact scope and isolation evidence.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -8675,9 +8675,9 @@
       "title": "Single persistent web player and public music pages",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. The legacy radio widget is hidden on /musica routes; playback analytics use a stable identity with retry-safe ingestion.",
+      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694)",
       "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
@@ -8751,7 +8751,8 @@
         "playwright.music-native.config.mjs",
         ".github/workflows/ci.yml",
         "scripts/run-native-audio-tests.sh",
-        "tdf-hq-ui/src/session/SessionProviders.tsx"
+        "tdf-hq-ui/src/session/SessionProviders.tsx",
+        "playwright.config.mjs"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8776,9 +8777,11 @@
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
         "e2e/web/fixtures/native-music-setup.mjs",
-        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "e2e/web/radio-navigation.spec.mjs"
       ],
-      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified.",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
@@ -9354,7 +9357,7 @@
     {
       "id": "SYS-WEB-LAYOUT-001",
       "title": "Public mobile layouts stay usable at 360px",
-      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player.",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player. The radio bar stays above the sidebar so its controls receive clicks, while modal dialogs remain above both.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "SYS",
       "actors": [
@@ -9395,7 +9398,7 @@
       "failure": "Layout degrades by wrapping rather than overflow.",
       "recovery": "Not applicable.",
       "observability": "Browser layout assertions in mobile-flow projects.",
-      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; user mobile radio minimization defect report 2026-10-28",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; user mobile radio minimization defect report 2026-10-28; user radio navigation defect report 2026-11-01 (PR #694)",
       "implementation": [
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -9411,7 +9414,8 @@
         "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
         "e2e/web/mobile-layout-regressions.spec.mjs",
-        "tdf-hq-ui/src/utils/bottomDock.test.tsx"
+        "tdf-hq-ui/src/utils/bottomDock.test.tsx",
+        "e2e/web/radio-navigation.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -14811,7 +14815,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "149473fbb907ef92ccf1dd6decb578d20e3b9309638a07a15b22819bffe97195",
+    "docs/catalog-persistence/catalog-list-decisions.json": "057e2fd98cf88b7d88f94d9551782c4064e5a8cac331e2720a0b90ccef83fb00",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14843,6 +14847,7 @@
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "fdef41e789e2df22b64a134bcfe5f91ca1a39780dfd8252aa6da756110e395a6",
     "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
+    "e2e/web/radio-navigation.spec.mjs": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -15178,9 +15183,9 @@
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
     "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
-    "playwright.config.mjs": "dd221d9df87a88b7644c19ccf6e714ea07452a056cb63537d7d4f0c8a47ae4b5",
+    "playwright.config.mjs": "19a4a8d502af0e952e61e29c6716fa1b87cb5204d7a5025401352cd4abc32262",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
-    "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+    "playwright.music-native.config.mjs": "097ce4df9e2759ec6c2d5bbbd352a8555b5aa3da606913e5121d2d3cc0f880fe",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
@@ -15233,7 +15238,7 @@
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
     "scripts/__tests__/migration-batch-postgres.mjs": "198271c553feb4278eed494aa3bf01da43343b86c67901028eecfc41407e797d",
     "scripts/__tests__/mobile-distribution-expiry.test.mjs": "df4e0604abc1dabbc377f14f80a2c598c1e4eaf0c638244bfe7e7b88e2d1e521",
-    "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
+    "scripts/__tests__/music-browser-config.test.mjs": "2a3c464d094671845d92968a2230aca06da67fbe07adc046e45d0ce6d5578d6d",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
     "scripts/__tests__/music-preview-pipeline.test.mjs": "d0079ede38108f4c1a39a070a319b6ff3a5c2f1c78f3b3f6554e7dea9b678d42",
@@ -15257,7 +15262,7 @@
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
     "scripts/__tests__/test-child-completion.test.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
-    "scripts/__tests__/ticket-admission-model.test.mjs": "feebc6a2fd08487f8fd5e8d87b4a2020cd74faec4e39b9867bd7e369860843b5",
+    "scripts/__tests__/ticket-admission-model.test.mjs": "15f35c2886244d7bb30173c950a909768699b1845c78f843edabed1ee7f7be3b",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
@@ -15546,7 +15551,7 @@
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
-    "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+    "tdf-hq-ui/src/App.tsx": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
@@ -15637,13 +15642,14 @@
     "tdf-hq-ui/src/components/PublicBranding.tsx": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "0f61ba07e4d1c71af5f550af67ada13232f96b00104a7a6f353582991353db61",
-    "tdf-hq-ui/src/components/RadioWidget.tsx": "45fd9f08f7ab9a1e2b7cacc770541dc8e9de76a87ea5a1ba6d846588e603f573",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "0dee9eea31b4c0550c930568b3f9794f141d0d021e5d0f6aa9741efba97e2dac",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
     "tdf-hq-ui/src/components/RouteErrorBoundary.tsx": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
-    "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+    "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+    "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
     "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "64c1e06b51b85af822c807a6878524bb22a063339dda0fcfa909529df50961b8",
@@ -15936,8 +15942,8 @@
     "tdf-hq-ui/src/utils/phone.ts": "eb558c757e4f79a86c7ca3df1da08f98df111d8944c57206e85ea9bb5e1f6ff1",
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
-    "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
-    "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
+    "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "7fb6b584f959ca10e07759f679d267c82c92639f96283a46498091ddaad74ec0",
+    "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "b28ee7c14daea0b4dcadd1121bf77bcc2658e00c88a74cb9cf3e9d894288c717",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
     "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
@@ -16168,7 +16174,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "ddacfbaee9230369a7d1490d44e6ce47bf32ef3d0fd561ea29b3f38c58806e83",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "5cb09890661547ab2328e631b4702794dc26445650db6006eff4dc3e6e265910",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -16206,7 +16212,7 @@
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "f655267e5f30c9b0c9e31e6fce03965610c0f3ebee93d4cdc958029cbff832b9",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "d5e6206932b71d56365af00d5d35d3402f195f6e2a1725bb8fe9eec4dc464300",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -23052,6 +23058,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "SYS-CI-BROWSER-001",
         "relationship": "implementation"
       },
@@ -25275,6 +25285,22 @@
       },
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/radio-navigation.spec.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-WEB-LAYOUT-001",
         "relationship": "tests"
       }
     ],
@@ -29989,6 +30015,22 @@
       ]
     },
     {
+      "id": "SURFACE-ca746d31fe23acf5",
+      "path": "e2e/web/radio-navigation.spec.mjs",
+      "sha256": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
       "sha256": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
@@ -31378,7 +31420,7 @@
     {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
-      "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
+      "sha256": "2a3c464d094671845d92968a2230aca06da67fbe07adc046e45d0ce6d5578d6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31772,7 +31814,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "feebc6a2fd08487f8fd5e8d87b4a2020cd74faec4e39b9867bd7e369860843b5",
+      "sha256": "15f35c2886244d7bb30173c950a909768699b1845c78f843edabed1ee7f7be3b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37470,7 +37512,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "sha256": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39710,7 +39752,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "45fd9f08f7ab9a1e2b7cacc770541dc8e9de76a87ea5a1ba6d846588e603f573",
+      "sha256": "0dee9eea31b4c0550c930568b3f9794f141d0d021e5d0f6aa9741efba97e2dac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39824,9 +39866,21 @@
       ]
     },
     {
+      "id": "SURFACE-30ea18f2f9ded258",
+      "path": "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+      "sha256": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d9960955f95c03fb",
       "path": "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
-      "sha256": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+      "sha256": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46108,7 +46162,7 @@
     {
       "id": "SURFACE-a415ee89925f5e2f",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
-      "sha256": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
+      "sha256": "7fb6b584f959ca10e07759f679d267c82c92639f96283a46498091ddaad74ec0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46120,7 +46174,7 @@
     {
       "id": "SURFACE-ee5ba63310165c5c",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
-      "sha256": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
+      "sha256": "b28ee7c14daea0b4dcadd1121bf77bcc2658e00c88a74cb9cf3e9d894288c717",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52757,7 +52811,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "ddacfbaee9230369a7d1490d44e6ce47bf32ef3d0fd561ea29b3f38c58806e83",
+      "sha256": "5cb09890661547ab2328e631b4702794dc26445650db6006eff4dc3e6e265910",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53733,7 +53787,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "f655267e5f30c9b0c9e31e6fce03965610c0f3ebee93d4cdc958029cbff832b9",
+      "sha256": "d5e6206932b71d56365af00d5d35d3402f195f6e2a1725bb8fe9eec4dc464300",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61485,7 +61539,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9a6396277c9631a5fe8634d41d6809804029a60dfe7338554f1037ff8b225f59",
+      "sourceSha256": "d57ecab535d6eff51d8f0c9cd53b5d13ca495057052e8143b428375dbfc7eb3f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -61513,7 +61567,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9a6396277c9631a5fe8634d41d6809804029a60dfe7338554f1037ff8b225f59",
+      "sourceSha256": "d57ecab535d6eff51d8f0c9cd53b5d13ca495057052e8143b428375dbfc7eb3f",
       "definition": {
         "states": [
           "absent",
@@ -61543,7 +61597,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9a6396277c9631a5fe8634d41d6809804029a60dfe7338554f1037ff8b225f59",
+      "sourceSha256": "d57ecab535d6eff51d8f0c9cd53b5d13ca495057052e8143b428375dbfc7eb3f",
       "definition": {
         "export": [
           "queued",

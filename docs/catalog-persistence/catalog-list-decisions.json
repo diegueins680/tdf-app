@@ -4069,6 +4069,13 @@
       "all169OtherCurrentMainRequirementsExact": true,
       "incomingNonGeneratedSourceAndEvidenceFilesExact": 28,
       "note": "Normal merge preserves current main financial/heartbeat source and evidence without modification, retains both independent quality commands, and regenerates derived metadata. Current-head CI, independent review and normal admission/deployment remain required; prior-head evidence is historical."
+    },
+    "artistVideoCurrentMainC44d20261103": {
+      "main": "c44d32816821051cf7a97096779c99bc1614e7fc",
+      "previousQualifiedHead": "a78c7d560d6ccadad22859be285c5a9b94a5c325",
+      "composition": "b864dc181",
+      "scope": "Normal local composition preserves all29 incoming non-generated sources/evidence,169 other canonical requirements and1371 main decision objects exactly in active/history. Only generated reports conflicted. Existing artist source and Mobile85 unchanged. Previously approved head retains its own CI scope; fresh head requires current hosted CI and independent review.",
+      "integrationAdmission": "Waiting for existing PR658; do not change ordering or status manually."
     }
   },
   "decisions": [
