@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { resolveApiBase } from '../config/apiBase';
 import { useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
@@ -1231,7 +1232,7 @@ export default function LabelAssetsPage() {
                       <TableCell>{formatDate(h.checkedOutAt)}</TableCell>
                       <TableCell>{h.returnedAt ? formatDate(h.returnedAt) : '—'}</TableCell>
                       <TableCell>{h.targetKind}</TableCell>
-                      <TableCell>{h.notes ?? '—'}</TableCell>
+                      <TableCell><MarkdownText>{h.notes ?? '—'}</MarkdownText></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-26T23:39:06.401034+00:00",
+  "source": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "qualifiedProtectedBaseline": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "fullUiSuite": {
+    "result": "PASS",
+    "tests": 3544,
+    "suites": 312,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0,
+    "node": "22.14.0",
+    "operatorReportedExitCode": 0,
+    "operatorSession": 84760,
+    "resultsSha256": "0fbbc7916f14a43bc67afae2a88ae1ab14bd4d85819a0725c31d26318335d2c3",
+    "logSha256": "88306901517a2dec7965873c0a9465e1521aa9e02c1d8be22403c0125ceea99d",
+    "boundary": "Jest UI suite; synthetic API/media doubles remain distinct from native decoder and compiled HTTP evidence"
+  },
+  "canonicalBuild": {
+    "result": "PASS_RETRY_EXIT0",
+    "source": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+    "firstAttemptExit": 1,
+    "firstAttemptCause": "ENOSPC during install/strip after compile/link",
+    "firstAttemptLogSha256": "6502d38446ea13044f4f6036cff2e04b988fb1c2e898350d5f59ec2e730e5050",
+    "retryExit": 0,
+    "retryOperatorSession": 48298,
+    "retryLogSha256": "9c7bb40c4331fc714862e4515d28b6b262f483d21c5aef0f85899d4f97eb85c2",
+    "sourceUnchanged": true,
+    "command": "Same canonical retry per root operator; no command reconstruction from log",
+    "binarySha256": "b10f2a0ab3ec8a0c5f42ede90e5bc8bacb80cceafd2cd95042ce9cb7e68cbd8b",
+    "actualVersion": {
+      "buildTime": "2026-10-26T23:17:40Z",
+      "commit": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "backendTestExecution": "Build compiles test executable; separate10 payload cases only, not full backend suite"
+  },
+  "compiledHttp": {
+    "result": "PASS-real-compiled-track-search-http-synthetic-metadata-only",
+    "source": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+    "schemaEntries": 222,
+    "assertions": 105,
+    "steps": 66,
+    "resultsSha256": "82d74e2e5df61e25814b610d680abbc32eacc018e741384b2eab104e8a00fa05",
+    "binarySha256": "b10f2a0ab3ec8a0c5f42ede90e5bc8bacb80cceafd2cd95042ce9cb7e68cbd8b",
+    "cleanup": {
+      "backendStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "frontendMetadataChangedDuringRun": false,
+    "backendSourceFiles": 973,
+    "wholeCheckoutCleanClaimed": false,
+    "boundary": "Actual compiled GET/HEAD search on owned PostgreSQL16/full222schema and synthetic publication fixtures. No signup/login, HTTP mutation, S3/signing/media/object/browser/production/SLO claim.",
+    "rootExecutionSession": 77655
+  },
+  "finalCiScopeTests": {
+    "result": "PASS",
+    "tests": 47,
+    "logSha256": "3127b631eb78a02a73e2905ecbbc4447584a7fad628e5f0966d45b9fc1378bd3",
+    "narrowerSeparateSelection": {
+      "tests": 19,
+      "logSha256": "d47326dc62dba01742c393b8ddccd4ac7415a0a6315e3d8f2b1a8814f6f6d12d"
+    }
+  },
+  "compiledPayloadRegressions": {
+    "result": "PASS",
+    "examples": 10,
+    "source": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+    "logSha256": "8e3375c4deac53b124810a0afaea89607ebecbc53c206340f03230331ba273d4",
+    "boundary": "Pure ContentSpec payload compatibility; no DB or search-HTTP claim"
+  },
+  "sourceCapture": {
+    "completeFiles": 973,
+    "completeManifestSha256": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e",
+    "supplementalReviewSha256": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4",
+    "captureTiming": "During active build; original empty/972 captures preserved; never a before-build snapshot claim",
+    "knownNonruntimeDocException": {
+      "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+    }
+  },
+  "reflectedApi": {
+    "status": "PASS_ADDITIVE_COMPILED_DECLARATION_REVIEW_NOT_RUNTIME_CONFORMANCE",
+    "source": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+    "binarySha256": "b10f2a0ab3ec8a0c5f42ede90e5bc8bacb80cceafd2cd95042ce9cb7e68cbd8b",
+    "existingOperationDeclarationsUnchangedIgnoringOrdinal": 905,
+    "added": [
+      {
+        "method": "GET",
+        "path": "/music/search"
+      }
+    ],
+    "removed": [],
+    "rawMountsUnchangedIgnoringOrdinal": 2,
+    "rawOrdinalChanges": [
+      {
+        "path": "/inventory",
+        "before": 904,
+        "after": 905
+      },
+      {
+        "path": "/assets/serve",
+        "before": 905,
+        "after": 906
+      }
+    ],
+    "oldSnapshotSource": "git:c88e3849f33f52619f786bf7f6ef4d2819b26fab:formal/system/compiled-api-surface.json",
+    "firstInspectorExit": 1,
+    "firstInspectorFailure": "Expected declaration-snapshot drift retained; no handler runtime failure established.",
+    "canonicalSnapshotByteExactReflectedCandidate": true,
+    "limitations": "Typed declarations only; existing undocumented/unmounted/status debt remains. No final merged candidate/current223schema compile/test claim."
+  },
+  "nativeAnnotationSuccessor": {
+    "result": "PASS_LOCAL_THREE_PROJECTS",
+    "localCases": 6,
+    "passed": 6,
+    "failed": 0,
+    "exitCode": 0,
+    "receiptSha256": "ec31c1c7781965eb24c1f8f486616e6f081cc112ddfa7736fa892e89fe907f79",
+    "specSha256": "74b1f2c2f0d521efc31e20fbf6a015fcf4f7eb80b4c93e2ba7cfeb9701927042",
+    "change": "Two titles add @mobile-flow only; same timeout/retries/assertions/config; prior receipt/archive unchanged",
+    "sourcePrePost20Exact": true,
+    "priorV2SixPassesSource": "385d8a55f51ff61cb75cf5cb8c769ef9e5f2cbc859cf433db881472700520695",
+    "hostedDiscoveries": 14,
+    "hostedProjects": 7,
+    "hostedWebKitExecution": "UNVERIFIED",
+    "localWebKit": "UNSUPPORTED_MACOS12_7_6_NO_BYPASS",
+    "retry": "One root-authorized identical full v4 run after explicit >2GiB capacity preflight; no source/assertion/timeout/retry/config changes; hosted current CI still must pass",
+    "priorV3": {
+      "result": "PARTIAL_ENVIRONMENT",
+      "passed": 5,
+      "failed": 1,
+      "exitCode": 1,
+      "failure": "Firefox happy-path afterEach artifact/trace ENOSPC after functional body; failed case remains FAILED",
+      "receiptSha256": "4cf2c7e38487e3fcd3a5e7daf84f36f4585b5084510f6235247dbf975a26fc10",
+      "traceBytes": 14867,
+      "traceMembers": 2,
+      "traceCrc": "PASS"
+    }
+  },
+  "integrationAdvance": {
+    "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "mainRequirements": 148,
+    "newRequirement": "PAY-DOMAIN-BINDING-001",
+    "migrationEntries": 223,
+    "status": "PENDING_ROOT_NORMAL_MERGE_AND_FRESH_GATES",
+    "qualifiedSchemaStill": 222,
+    "boundary": "No current-main integration, 223-schema execution, hosted CI, merge, deployment or production acceptance is claimed"
+  },
+  "postRunSummaryProbe": "Root operator corrected a short status-literal assertion after completed HTTP exit0; no harness rerun/source or predicate change; no fabricated raw probe log",
+  "archive": {
+    "path": "reports/music-track-search-evidence-20261026/post-qualification-evidence.tar.gz",
+    "sha256": "4e497059822e72cff6d64cf9d2d5ef13551d906f616b57708ba382535d7152e7",
+    "members": 69,
+    "clusterDataIncluded": false,
+    "original42MemberArchiveUnchanged": true,
+    "losslessRoundTripVerified": true
+  }
+}

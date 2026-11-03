@@ -6,9 +6,12 @@ Requirement: `EVT-TICKET-001`. Invariant:
 The canonical completion in `TDF.Ticketing.Refund.completeTicketRefund` releases
 inventory only from the order's event and tier, with a conditional decrement
 that refuses insufficient sold stock. The legacy Stripe completion must respect
-the same inventory safety boundary. The complete 227-migration test schema has
-no nonnegative CHECK on `event_ticket_tier.quantity_sold`; a plain decrement can
-persist negative stock without any SQL error.
+the same inventory safety boundary. The original 227-migration handler probe
+demonstrated that a plain decrement could persist negative stock without any
+SQL error: that schema had no nonnegative CHECK on
+`event_ticket_tier.quantity_sold`. A composed revision must be qualified against
+its current complete migration manifest; the historical 227-entry result does
+not qualify a newer schema.
 
 Acceptance criteria:
 

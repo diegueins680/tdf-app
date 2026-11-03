@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-ci-selected-current-main",
+  "observedAt": "2026-10-28T23:53:14.111890+00:00",
+  "repository": "diegueins680/tdf-app",
+  "pullRequest": 637,
+  "publishedHeadBefore": "3450e6033ad132c0457794c4a82bab8dbab74558",
+  "baselineMain": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+  "sourceCommit": "0964e3ec11a52d97511c9f0197250d891c29452a",
+  "sourceTree": "3bb15504cb75854462fe5ab8c91bc99b674925b7",
+  "reusedPreparation": "89d929c732107f7ab93e6458b153fb859e1d6c2d",
+  "problem": {
+    "requirement": "SYS-CI-SELECTED-001",
+    "status": "previously-corrected-source-now-reconciled-with-actual-main",
+    "confirmedComponentDefect": "Three former aggregate shell contracts accepted skipped selected dependencies. Retained injected needs/result counterexamples expose that false acceptance.",
+    "historicalGitHubReachability": "UNKNOWN; no historical selected-skip incident is asserted.",
+    "currentIntegrationProblem": "Approved public3450 head was DIRTY against protected main002343fc and could not integrate."
+  },
+  "correction": "Reuse the existing qualified selected-job source and normal-merge the actual protected booking-recovery main. No new application or gate-policy rewrite.",
+  "preservation": {
+    "protectedMainApplicationObjects": {
+      "tdf-hq": "ae5c962e2447322b86ddcae2e0eee1674523ffb2",
+      "tdf-hq-ui": "12011eef081f9b3aba1d2337265438ee2140627b",
+      "tdf-mobile": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "ops": "86c3e0e7dc70ea510968977e87df094da5d07639",
+      "package-lock.json": "7800d461b89474b779b0ed8753b7b128d3cc2db3",
+      "scripts/production-migrations.json": "14d89d59e927fb261ad0c1cbd97f83def423a185"
+    },
+    "mainRequirementObjectsPreserved": 155,
+    "combinedRequirements": 156,
+    "addedRequirement": "SYS-CI-SELECTED-001",
+    "mainCatalogDecisionObjectsPreserved": 1351,
+    "combinedCatalogDecisions": 1352,
+    "onlyAddedCatalogDecision": "Original individually reviewed technical CI dispatch plan",
+    "eightMaterialSourceBlobsMatchPriorPreparation": true,
+    "historicalReceiptsKeepOriginalSHAs": true,
+    "requiredStatusNamesAndProtectionsUnchanged": true
+  },
+  "verification": {
+    "assurance": "TESTED",
+    "freshPipelineTests": 55,
+    "pipelineFailures": 0,
+    "qualitySuccessSkipVectors": 16384,
+    "contractMigrationVectors": 768,
+    "controls": [
+      "Actual current workflow CLI execution",
+      "Missing/failed/cancelled/ambiguous/unmapped evidence",
+      "Private-output non-disclosure",
+      "Guard removal requires three failed properties"
+    ],
+    "repositoryQuality": "PASS",
+    "existingPlatformSkips": 11,
+    "strictCatalogCandidates": 1352,
+    "unreviewed": 0,
+    "freshJSONSemanticMatch": "Exact except generation clock; preserve historical tracked timestamp and retain current audit separately.",
+    "freshCSVByteMatch": true,
+    "sequentialInventoryThenConformance": "PASS",
+    "immutableMaterialSurfaces": 8,
+    "cleanCommittedAssurance": "PASS",
+    "registeredGitBlobInputsVerified": 1413,
+    "sourceDigest": "3329353367f2479f5156fabeb1e99f96dca18a0986d8c8b876e95860df3e5551",
+    "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "independentReadOnlyReviewBlockers": 0,
+    "newApplicationNativeRuntimeExecutionClaimed": false,
+    "sourceDerivedConditionalSMTClaims": 11,
+    "fullRequirementsUnproven": 156,
+    "implementationAndRefinementObligationsUnproven": 312,
+    "fullGitHubOrchestrationRefinement": "UNPROVEN",
+    "release": "BLOCKED"
+  },
+  "integration": {
+    "targetPR": 637,
+    "remoteBranch": "fix/ci-selected-job-admission-20261026",
+    "mainAncestryEstablished": true,
+    "oldPublicSourceAncestryEstablished": true,
+    "publication": "guarded normal fast-forward planned after evidence commit",
+    "requiredRemoteHeadBeforePush": "3450e6033ad132c0457794c4a82bab8dbab74558",
+    "freshHostedCI": "pending",
+    "freshExactHeadIndependentReview": "required; old3450 approval is not reused",
+    "merged": false,
+    "productionOperation": false,
+    "policy": "Retain all20 required contexts, strict base, independent1review/stale dismissal, conversation resolution and admin enforcement. No FIFO reprioritization, bypass, source closure or force push."
+  },
+  "verificationLimitations": [
+    "The first local repository run lacked workspace React resolution; matching root lock/UI package caches were attached through owned aliases, then removed after qualification. No tests or assertions changed.",
+    "An attempted per-UI lock comparison failed before alias setup: this repository uses the root workspace lock. Correct root authority was checked.",
+    "Immutable admission correctly rejected an abbreviated revision; rerun with the full source SHA passed.",
+    "No Node22 installation was found locally; fresh local tests used Node24. Historical unchanged-source runner receipts retain their original identity, and fresh hosted qualification remains required.",
+    "No new Haskell/mobile/app execution is claimed from unchanged protected-main source identity."
+  ],
+  "scorecard": {
+    "newProductDefectsClaimed": 0,
+    "existingCriticalVerificationCorrectionReconciled": 1,
+    "aggregateContractsHardenedByExistingCorrection": 3,
+    "focusedAuthoritativeGateHelper": "scripts/ci-job-admission.mjs",
+    "currentSourceEvidence": "0964e3ec11a52d97511c9f0197250d891c29452a",
+    "newWholeSystemProofs": 0,
+    "protectedIntegrationsThisCycle": 0
+  },
+  "next": "Publish this exact source plus evidence to the existing selected FIFO PR only if its remote head remains3450; obtain fresh current-head independent approval and all required CI before a normal protected merge.",
+  "evidenceDirectory": "reports/ci-selected-current-main-2026-10-28"
+}

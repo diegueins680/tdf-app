@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-10-27T00:25:10.531976+00:00",
+  "head": "3206faad3999f85d610360175e05389e0a7addf2",
+  "qualifiedBase": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "actualCheckout": "8a40665add3d4630479e7ae4631b3e1915e2a642",
+  "wholeTreeEqualsHead": true,
+  "tree": "54c25a492e89b5ad49627547e02df59571dd2b1d",
+  "persona": {
+    "job": 121913587138,
+    "startedAt": "2026-10-26T23:40:17Z",
+    "completedAt": "2026-10-27T00:01:20Z",
+    "passed": 580,
+    "explicitSkips": 22,
+    "failures": 0,
+    "deletionRolloutPassed": 10,
+    "discoveryPassed": 25
+  },
+  "quality": {
+    "job": 121924840705,
+    "conclusion": "success"
+  },
+  "logsSha256": {
+    "634-3206-persona-success.log": "7ff8a69e9f803da0e6fae1b7bf6eb3dc68eba15611263a22cfb7c3ea800a11f0",
+    "634-3206-quality-success.log": "3fd8d3bb3e67bcf7cb37f3becb2a287866f3869419c7a353ea4ce0dab18ad6f8"
+  },
+  "sourceBoundWorkerPolicy": "Each WebKit project1; global2. Same602 identities,30s/8s/0retry; no exclusions.",
+  "formerFailuresRetained": true,
+  "rootCause": "UNPROVEN; fresh observed success supports bounded capacity, not a deterministic root-cause proof.",
+  "main63CompositionQualified": false,
+  "merge": false,
+  "deployment": false
+}

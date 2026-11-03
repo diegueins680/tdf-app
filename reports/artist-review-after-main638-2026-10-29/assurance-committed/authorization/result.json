@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 1,
+  "executionPassed": true,
+  "obligations": [
+    {
+      "id": "strict-admin",
+      "requirementId": "AUTH-ARTIST-INVITE-001",
+      "claim": "Strict admission iff positive party ID, unique roles, Admin present and all roles in Admin/Fan/Customer.",
+      "implementation": "hasStrictAdminAccess",
+      "category": "source-derived-authorization-SMT",
+      "risk": "P0",
+      "method": "Z3 QF_LIA UNSAT of inequality; SAT admission and denial witnesses; source mutation controls; serialized replay",
+      "mapping": "Role multiplicities, signed 64-bit party identity and module membership; reviewed restricted translation of exact pinned source",
+      "assumptions": [
+        "Total finite RoleEnum list with length <= 2^63-1; defined PartyId and Set inputs",
+        "64-bit Int and Int64 PartyId representation",
+        "Standard Prelude/Data.Set/Persistent semantics and correct source translator",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Conditional predicate proof only. No machine-checked translation, compiler, session, canonical database grant, revocation, endpoint dispatch/effects or full refinement proof.",
+      "specification": "formal/system/auth-predicates.md",
+      "status": "PROVEN",
+      "artifact": "strict-admin.smt2"
+    },
+    {
+      "id": "module-access",
+      "requirementId": "AUTH-REGISTRY-001",
+      "claim": "Module admission iff positive party ID, unique roles and requested module membership.",
+      "implementation": "hasModuleAccess",
+      "category": "source-derived-authorization-SMT",
+      "risk": "P0",
+      "method": "Z3 QF_LIA UNSAT of inequality; SAT admission and denial witnesses; source mutation controls; serialized replay",
+      "mapping": "Role multiplicities, signed 64-bit party identity and module membership; reviewed restricted translation of exact pinned source",
+      "assumptions": [
+        "Total finite RoleEnum list with length <= 2^63-1; defined PartyId and Set inputs",
+        "64-bit Int and Int64 PartyId representation",
+        "Standard Prelude/Data.Set/Persistent semantics and correct source translator",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Conditional predicate proof only. No machine-checked translation, compiler, session, canonical database grant, revocation, endpoint dispatch/effects or full refinement proof.",
+      "specification": "formal/system/auth-predicates.md",
+      "status": "PROVEN",
+      "artifact": "module-access.smt2"
+    },
+    {
+      "id": "ingestion-admission",
+      "requirementId": "AUTH-REGISTRY-001",
+      "claim": "The requireAdmin guard admits iff the strict policy and Admin module membership both hold.",
+      "implementation": "recordsIngestionServer.requireAdmin",
+      "category": "source-derived-authorization-SMT",
+      "risk": "P0",
+      "method": "Z3 QF_LIA UNSAT of inequality; SAT admission and denial witnesses; source mutation controls; serialized replay",
+      "mapping": "Role multiplicities, signed 64-bit party identity and module membership; reviewed restricted translation of exact pinned source",
+      "assumptions": [
+        "Total finite RoleEnum list with length <= 2^63-1; defined PartyId and Set inputs",
+        "64-bit Int and Int64 PartyId representation",
+        "Standard Prelude/Data.Set/Persistent semantics and correct source translator",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Conditional predicate proof only. No machine-checked translation, compiler, session, canonical database grant, revocation, endpoint dispatch/effects or full refinement proof.",
+      "specification": "formal/system/auth-predicates.md",
+      "status": "PROVEN",
+      "artifact": "ingestion-admission.smt2"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "cardinality-nonnegative",
+      "file": "cardinality-nonnegative.smt2",
+      "sha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "cardinality-zero",
+      "file": "cardinality-zero.smt2",
+      "sha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "cardinality-sum",
+      "file": "cardinality-sum.smt2",
+      "sha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "strict-admin",
+      "file": "strict-admin.smt2",
+      "sha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "strict-admin-witness-true",
+      "file": "strict-admin-witness-true.smt2",
+      "sha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Customer = 0,\n party = 1,\n count_Fan = 0,\n count_Songwriter = 0,\n count_Producer = 0,\n count_Photographer = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Publicist = 0,\n count_Student = 0,\n count_RoadCrew = 0,\n count_Teacher = 0,\n count_Reception = 0,\n count_DJ = 0,\n count_Agency = 0,\n count_Engineer = 0,\n count_LabelRep = 0,\n count_TourManager = 0,\n count_ReadOnly = 0,\n count_Promoter = 0,\n count_Webmaster = 0,\n count_LiveSessionsProducer = 0,\n count_Maintenance = 0,\n count_AandR = 0,\n count_StudioManager = 0,\n count_Promotor = 0,\n count_Accounting = 0,\n count_Intern = 0,\n count_Vendor = 0,\n count_Artista = 0,\n count_Artist = 0,\n count_Manager = 0]"
+    },
+    {
+      "id": "strict-admin-witness-false",
+      "file": "strict-admin-witness-false.smt2",
+      "sha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 1,\n count_Artist = 1,\n count_Artista = 1,\n count_Vendor = 1,\n count_Intern = 1,\n count_Fan = 2,\n count_Accounting = 1,\n party = 1,\n count_Promotor = 1,\n count_StudioManager = 1,\n count_AandR = 1,\n count_Maintenance = 1,\n count_LiveSessionsProducer = 1,\n count_Webmaster = 1,\n count_Promoter = 1,\n count_ReadOnly = 1,\n count_TourManager = 1,\n count_LabelRep = 1,\n count_Engineer = 1,\n count_Agency = 1,\n count_DJ = 1,\n count_Reception = 1,\n count_Teacher = 1,\n count_RoadCrew = 1,\n count_Student = 1,\n count_Publicist = 1,\n count_Admin = 0,\n count_StageManager = 1,\n count_Photographer = 1,\n count_Customer = 2,\n count_Producer = 1,\n count_Songwriter = 1]"
+    },
+    {
+      "id": "module-access",
+      "file": "module-access.smt2",
+      "sha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "module-access-witness-true",
+      "file": "module-access-witness-true.smt2",
+      "sha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Artist = 0,\n count_Accounting = 0,\n count_Artista = 0,\n count_Agency = 0,\n count_Manager = 0,\n count_Webmaster = 0,\n count_Intern = 0,\n party = 1,\n count_Songwriter = 0,\n count_StudioManager = 0,\n count_LiveSessionsProducer = 0,\n count_Promotor = 0,\n count_TourManager = 0,\n count_DJ = 0,\n count_Engineer = 0,\n count_Admin = 0,\n count_Promoter = 0,\n count_Reception = 0,\n count_Publicist = 0,\n count_Teacher = 0,\n count_Producer = 0,\n count_Maintenance = 0,\n count_Fan = 0,\n count_Customer = 0,\n count_ReadOnly = 0,\n count_Vendor = 0,\n count_Student = 0,\n count_AandR = 0,\n count_Photographer = 0,\n count_RoadCrew = 0,\n count_StageManager = 0,\n count_LabelRep = 0,\n requested_module_grant = True]"
+    },
+    {
+      "id": "module-access-witness-false",
+      "file": "module-access-witness-false.smt2",
+      "sha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 2,\n count_Artist = 2,\n count_Artista = 2,\n count_Vendor = 2,\n count_Intern = 2,\n count_Fan = 2,\n count_Accounting = 2,\n party = 1,\n count_Promotor = 2,\n count_StudioManager = 2,\n count_AandR = 2,\n count_Maintenance = 2,\n count_LiveSessionsProducer = 2,\n count_Webmaster = 2,\n count_Promoter = 2,\n count_ReadOnly = 2,\n count_TourManager = 2,\n count_LabelRep = 2,\n count_Engineer = 2,\n count_Agency = 2,\n count_DJ = 2,\n count_Reception = 2,\n count_Teacher = 2,\n count_RoadCrew = 2,\n count_Student = 2,\n requested_module_grant = True,\n count_Publicist = 2,\n count_Admin = 2,\n count_StageManager = 2,\n count_Photographer = 2,\n count_Customer = 2,\n count_Producer = 2,\n count_Songwriter = 2]"
+    },
+    {
+      "id": "ingestion-admission",
+      "file": "ingestion-admission.smt2",
+      "sha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "ingestion-admission-witness-true",
+      "file": "ingestion-admission-witness-true.smt2",
+      "sha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Customer = 0,\n party = 1,\n count_Fan = 0,\n count_Songwriter = 0,\n count_Producer = 0,\n count_Photographer = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Publicist = 0,\n admin_module_grant = True,\n count_Student = 0,\n count_RoadCrew = 0,\n count_Teacher = 0,\n count_Reception = 0,\n count_DJ = 0,\n count_Agency = 0,\n count_Engineer = 0,\n count_LabelRep = 0,\n count_TourManager = 0,\n count_ReadOnly = 0,\n count_Promoter = 0,\n count_Webmaster = 0,\n count_LiveSessionsProducer = 0,\n count_Maintenance = 0,\n count_AandR = 0,\n count_StudioManager = 0,\n count_Promotor = 0,\n count_Accounting = 0,\n count_Intern = 0,\n count_Vendor = 0,\n count_Artista = 0,\n count_Artist = 0,\n count_Manager = 0]"
+    },
+    {
+      "id": "ingestion-admission-witness-false",
+      "file": "ingestion-admission-witness-false.smt2",
+      "sha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 1,\n admin_module_grant = True,\n count_Artist = 1,\n count_Artista = 1,\n count_Vendor = 1,\n count_Intern = 1,\n count_Fan = 2,\n count_Accounting = 1,\n party = 1,\n count_Promotor = 1,\n count_StudioManager = 1,\n count_AandR = 1,\n count_Maintenance = 1,\n count_LiveSessionsProducer = 1,\n count_Webmaster = 1,\n count_Promoter = 1,\n count_ReadOnly = 1,\n count_TourManager = 1,\n count_LabelRep = 1,\n count_Engineer = 1,\n count_Agency = 1,\n count_DJ = 1,\n count_Reception = 1,\n count_Teacher = 1,\n count_RoadCrew = 1,\n count_Student = 1,\n count_Publicist = 1,\n count_Admin = 0,\n count_StageManager = 1,\n count_Photographer = 1,\n count_Customer = 2,\n count_Producer = 1,\n count_Songwriter = 1]"
+    },
+    {
+      "id": "control-drop-coherence",
+      "file": "control-drop-coherence.smt2",
+      "sha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 1,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 1,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 0,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]"
+    },
+    {
+      "id": "control-admit-operational-role",
+      "file": "control-admit-operational-role.smt2",
+      "sha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 1,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 1,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]"
+    },
+    {
+      "id": "control-allow-zero-identity",
+      "file": "control-allow-zero-identity.smt2",
+      "sha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 0,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]"
+    },
+    {
+      "id": "control-drop-module-grant",
+      "file": "control-drop-module-grant.smt2",
+      "sha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 0,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 2,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n requested_module_grant = True,\n count_Admin = 0,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]"
+    },
+    {
+      "id": "control-module-implies-admin",
+      "file": "control-module-implies-admin.smt2",
+      "sha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n admin_module_grant = False,\n party = 1,\n count_StudioManager = 0,\n count_Promotor = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]"
+    }
+  ],
+  "startedAt": "2026-10-29T19:16:23.277133+00:00",
+  "error": null,
+  "provenance": {
+    "revision": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+    "worktreeDirty": false,
+    "files": {
+      ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+      "formal/system/auth-predicates.json": "adc2b5d44c5d5b5be6fb64884a54b0cbd7a0b14af3ec87ff1979f9872e06d71a",
+      "formal/system/auth-predicates.md": "378d0b82b31965b2299ad681fe115a58837f183ae233ba4968da2ee28f376b04",
+      "formal/system/requirements.json": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
+      "scripts/test-auth-predicates.py": "d84c51fe21419d6dc1ad6136be88b4231c4c53177c011be084444babb939c30b",
+      "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
+      "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+      "tdf-hq/src/TDF/Models.hs": "92315ba9a595e5d6a106c5430371433927c3923535e2aebfc939f00442c9b45e",
+      "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
+      "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+      "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+      "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27"
+    },
+    "digest": "9d83bcc63ca89e4e7de848445e26d84748afd8d137d1566075cb68ee5c7133bc"
+  },
+  "toolchain": {
+    "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "z3": "4.13.3.0"
+  },
+  "supportingLemmas": [
+    {
+      "id": "cardinality-nonnegative",
+      "claim": "For count >= 0, count - indicator(count > 0) >= 0.",
+      "status": "PROVEN",
+      "artifact": "cardinality-nonnegative.smt2",
+      "category": "supporting-algebra",
+      "assumptions": [
+        "Z3 soundness"
+      ],
+      "limitation": "Algebra only; composition with the source translator remains trusted."
+    },
+    {
+      "id": "cardinality-zero",
+      "claim": "For count >= 0, count - indicator(count > 0) = 0 iff count <= 1.",
+      "status": "PROVEN",
+      "artifact": "cardinality-zero.smt2",
+      "category": "supporting-algebra",
+      "assumptions": [
+        "Z3 soundness"
+      ],
+      "limitation": "Algebra only; composition with the source translator remains trusted."
+    },
+    {
+      "id": "cardinality-sum",
+      "claim": "A sum over all RoleEnum constructors of nonnegative excesses is zero iff every excess is zero.",
+      "status": "PROVEN",
+      "artifact": "cardinality-sum.smt2",
+      "category": "supporting-algebra",
+      "assumptions": [
+        "Z3 soundness"
+      ],
+      "limitation": "Algebra only; composition with the source translator remains trusted."
+    }
+  ],
+  "finishedAt": "2026-10-29T19:16:24.078885+00:00"
+}

@@ -1,0 +1,7 @@
+{
+  "originalSource": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "originalComponentSha256": "495911682a5a165839906d23f3ed5581be3b950b961a777ebc6eeec23893653c",
+  "correctedComponentSha256": "aeb624a89657704d18aa3bbcee879ffd4caf87823416be55b88c924b656d8881",
+  "originalExitCode": 1,
+  "expectedAssertionFailure": true
+}

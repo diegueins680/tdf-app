@@ -1,0 +1,60 @@
+Independent final review: exact event finance and budget reporting
+Date: 2026-10-29
+Qualified source M: eab96f0c861ee7aeecf2855141dffed3fe7f60e6
+Baseline protected main: 6197b87326a437350dca239ee64902e78da6964c
+Result: zero blocking defects identified within the reviewed correction and evidence scope.
+
+Actual review scope:
+I inspected the applied Haskell source, all 15 real-handler regressions, their Servant extractor shapes and SQLite fixtures, the normative contract and new requirement, source correspondence, baseline/native qualification logs, controlled mutation driver, actual mutation assertion outputs and final restoration. I independently rehashed filesystem and Git inputs after the controller completed. I did not independently execute tests, builds, databases, servers, provider requests, deployments or remote GitHub actions. This receipt is not a required GitHub approval, mathematical proof, production PostgreSQL attestation or merge authorization.
+
+Source and semantic conclusions:
+The correction computes report sums and differences in Integer before signed host Int checks. Planned/manual/legacy inputs are converted before summing; captured canonical sums stay Integer through combination. All 16 mandatory summary monetary outputs and both optional budget/variance outputs are checked before narrowing. Budget actuals are checked for both list and update; update's check precedes its first write. Signed bounds retain valid negative net, liability overpayment and budget variance. Existing posted/draft/void, source/direction, canonical exclusion, explicit/fallback budget and positive-budget utilization rules remain. No unrelated production handler was changed.
+
+Baseline versus corrected runtime evidence:
+The baseline had a successful native build and 15 actual handler examples: 12 assertion failures with wrapped -9223372036854775808 amounts, plus 3 supported compatibility passes. Early wrong-extractor compilation and PATH/setup failures are separately retained and are not product counterexamples. In the baseline budget update, the Right response includes planned 99, but the later stored-row assertion was not reached because rangeReject failed first. The receipt does not claim that baseline performed that later read.
+At committed M, native-quality.json and raw logs agree on actual build exit 0, targeted 15 examples / 0 failures / 0 pending, and full 4060 examples / 0 failures / 21 pending. The binary is the canonical Cabal test target under Stack/GHC 9.10.3, with SHA256 cfaac0bfeffd5e0590d2b890cbd5fbb421340714ef280eceb35e4dfc9eea5d56. The qualification deliberately uses SQLite and no provider credentials/test DSNs; it does not establish the skipped PostgreSQL/provider scenarios. This supports TESTED assurance only.
+
+Controlled fault sensitivity and restoration:
+The first optional bytecode experiment hit a retained GHC 9.10.3 StgToByteCode panic before test execution or mutation application. The initial driver's own exit 1 is retained; its compiler exit was not captured separately. It is neither a financial test failure nor a passing control.
+The replacement controller uses the same canonical GHC version to build a separate native -O0 runner importing the real FollowHandlerSpec. It leaves the qualified Cabal binary untouched. The correct isolated runner completed 15/0/0. There were TWO source mutation variants, not three independently executed variants:
+1. One variant omitted the contractCommitted and procurementCommitted fields from the final checked-output list. All 15 cases ran; exactly the two named source-aggregate cases failed with actual wrapped -9223372036854775808 totals while payable stayed 1 and actual expense stayed maxBound. This verifies that these tests expose the intended omitted guards rather than an unrelated earlier overflow check.
+2. One variant moved the budget actual check after the existing UPDATE. All 15 cases ran; exactly the budget-update case failed at the persisted-state assertion expected Just 7, got Just 99. This confirms sensitivity to an after-write range refusal, beyond merely checking HTTP500.
+Thus two variants produced three intended actual assertion failures, with completed native builds and real Hspec summaries. Missing compilation or generic process exit 1 could not satisfy the controller's explicit checks. All 15 cases passed again in the restored isolated native runner, and the original qualified Cabal binary separately passed all 15 afterward. The binary hash remains cfaac0bf... unchanged. This demonstrates finite sensitivity to these selected faults, not exhaustive mutation completeness or refinement.
+
+Independent final correspondence checks:
+All 1413 registered filesystem hashes and corresponding Git blobs match committed M: 1313 main blobs plus 100 Mobile blobs at gitlink 7000df1da934aa467e443ad267c0a8caa1e9cb72. All 986 backend tracked input hashes in native-qualified-inputs.json also match current files and M Git blobs. The Markdown contract, excluded from the global source fingerprint, is separately byte-bound to Git and its discovery hash. The final worktree is clean, with no extra source edits after the eight selected paths. All 156 incoming requirement objects remain structurally unchanged; the complete 1352-row historical catalog decision file is byte-identical to main6197. Current test content preserves all baseline assertions; only one trailing EOF newline was removed after the baseline capture.
+Global source digest: 47add1a1f1ec1661e6cf017b7437601fda25fb90bceed30ecd2e264debd353f0.
+Root-quality/admission/catalog unit receipts report exit 0, with 8 catalog cases. CI source selection activates backend and repository lanes and no UI/mobile/contracts/migration lanes. The clean-source assurance runner executes successfully while correctly leaving 157 whole requirements and 314 implementation/refinement obligations UNPROVEN, 11 inherited conditional SMT obligations, and release BLOCKED. Those inherited algebra checks do not prove this new finance implementation.
+
+Remaining limits and separate findings:
+No production schema proof establishes that every Int-extreme test fixture is reachable from every production writer. The correction retains separate report reads and budget update writes; it provides no serializable snapshot guarantee. JavaScript 53-bit transport precision, existing currency consistency, provider finality and settlement are outside this patch. A separate source investigation found that explicit foreign-currency manual entries are supported while current summary reporting discards their currency; that candidate is documented separately and is neither repaired nor concealed by the exact-range claim. No source values were clamped, dropped or rewritten to achieve passing tests.
+
+Reviewed source hashes:
+- tdf-hq/src/TDF/Server/SocialEventsHandlers.hs: e840df1d1d7f817e71c610eb70d03165c3b83bf986466549de87703028cc9677
+- tdf-hq/test/TDF/Social/FollowHandlerSpec.hs: 19a0db7097e58f322ca2215c10cdd9e203e289b99c9a6221f9f98d287e3d5225
+- formal/system/event-finance-report-range.md: 18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf
+- formal/system/requirements.json: ee5b2e070a5d3097ed9b93a26ee5828cf56afc0929bf95b48141e62c6015fff3
+
+Individual receipt/log SHA256 values (artifact root /private/tmp/tdf-event-finance-range-qualification-20261029):
+- baseline-inputs.json: e83309fb3c667f29708e22d1e41b6973cee90ed5eb0b73f093e7566ccbe86f98
+- baseline-confirmed.json: 0d3801125a576a711d850d761bf4519fab63f5db5297887d80bfa5aa684627a9
+- baseline-handler-tests.log: 11987039a43341b702e192e0969132a71f12b16166ef8b74a63009456295994e
+- native-qualified-inputs.json: e8d4a083deaa9f9c73c0d14a08c81fb1e22b735715928a84cf298cc0eda5ee3d
+- native-quality.json: 21c2ac7fc633c0a3a4e25b53de732062645396e9e339037fd6e00fcf9b08aed7
+- qualified-build.log: 8f29da01bb3c0fbf060424626d9921df3ae9d923878634d8c245d39e7b63451b
+- qualified-targeted.log: 3188c8ad3cb42053a79f3caa6fefa022663d2380ab1c78029a243d66797bc351
+- qualified-full.log: 4a0d43ad1cc2017a9555402f4e5869637b1f54d91474de4faabe874969232e36
+- mutations.json: 44d75b4fe879f539e0441acfcd27dcce5b2538883593f3c0a2e1702c1d403194
+- mutation-correct-native-control.log: 42a1729f337f2f85cd014a9c2d67c569a57da769f6c125ee1c1159cc5f4da24f
+- mutation-omitted-source-aggregates.log: 22578cda9e929ce7d5085c50e63b8bd42eb6e36b602bfc22c98b1eb9d4070e42
+- mutation-late-budget-check.log: bc5b5ce056b0b3b851ebf3535eef28ef5e4defce0f4e4798cc7112a66ac752e9
+- mutation-restored-native-control.log: 9a420dca410c7ebe81c731b998711596e555753bed24d4aab58648732e3fbe92
+- mutation-restored-native.log: e9e02f4012a50859e9440ee2428c2b86a9c6a2cbf9a206df97adb97d9803d1ea
+- mutation-bytecode-harness-history.json: dac6cee8b41960f12f53d88b230d9062e7ae65cd95716fa50c63a32e5860bb9c
+- mutation-correct-interpreter.log: e2ff0e7c918c094f13ac6152e1c9593d6cd3d641281a1c9a45ba17c4cbd831b4
+- ci-source-selection.json: cb123d41da3298e87c8a7c1291ed507851a63c9c06a28698520d6f2517ed2ba8
+- source-correspondence.json: 60df857f3d3e54d4352ea1cd025363c4d9bc3e8c5d9dbf4026a64ad07e2320aa
+- root-quality-result.json: f2d4233f2a6c7a373d537b01f9571eda60281164f6d0557ddffe151792193bdb
+- assurance-committed/report.json: 324e8e2dcb5709f624bd893681c6c644eb25603c9e60fc06c65adcaa123d5318
+- native mutation controller: 2a62140352d0685ba709a53482b8ec1de5a20f03b95cd3fddff455ad658e8c83
+- isolated Hspec main: 80c9f5ccfd161b35865703988e7300243cc2d7727df351fd71c07a8d345911da
