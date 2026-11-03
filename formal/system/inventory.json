@@ -4055,7 +4055,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "be9d037455a0e8c249e025aa5e7a8786b95f444458d05db06dfff6079d5195d2",
+      "sha256": "357f2737da9c4481ee29dc1ddcd1bc2361dfb4441d7b05be31f6cd8f987e1b0e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16037,7 +16037,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "9f980a040fd66f6c7cb2fb7f4ca0f70258e553284a5268aa43e59ceb8f6682a5",
+      "sha256": "02b64fbb33c36bc4ee9a8e72881945aff989afaade9f436083b98fb988428f59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16559,7 +16559,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "112c7cc796fe6d38ee37ec2d181bd88a48a112c79f2e81d94c3f6d9730f21041",
+      "sha256": "8d471fe31c3c7edb9c8e8508c17e7d668ea547e8a6087ce749cb34a226037945",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28472,6 +28472,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-ticket-inventory.md",
+      "sha256": "fb67951de48dcd4fb52e5c5c457b45ac9e110f4c4e629a7aa9edf05efd2c0929",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/logical-backup.md",
       "sha256": "6e9a051e06010386e846bfbce451fa3f229c273cb10f7f9953423c0be77779ac",
       "authority": "inferred",
@@ -28851,7 +28858,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e65e5f0f6ef5211091c557a17504d2747765895919db16e1bd6e73ac4fc0c235",
+      "sha256": "d803b2690382c915e41448387055b5160e62d515ba9ed72b98bc7ad30dfcc75e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
