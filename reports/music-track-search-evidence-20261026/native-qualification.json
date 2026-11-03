@@ -1,0 +1,643 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-10-26T22:13:02Z",
+  "worktree": "/private/tmp/tdf-universal-music-search-20261026",
+  "scope": "New search browser regression and native config inclusion only; no application/backend/formal changes by QA agent",
+  "implementation": {
+    "files": [
+      "e2e/web/music-search-native.spec.mjs",
+      "playwright.music-native.config.mjs"
+    ],
+    "specSha256": "385d8a55f51ff61cb75cf5cb8c769ef9e5f2cbc859cf433db881472700520695",
+    "configSha256": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+    "testIds": [
+      "PW-MUSIC-SEARCH-NATIVE-01",
+      "PW-MUSIC-SEARCH-NATIVE-02"
+    ],
+    "timeoutsAndRetries": "Existing native configuration unchanged:90s per case, retries0; no old native cases edited"
+  },
+  "sourceBinding": {
+    "dirtyHead": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+    "pre": {
+      "observedAt": "2026-10-26T22:08:45.645035+00:00",
+      "head": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+      "files": {
+        "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+        "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+        "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+        "playwright.config.mjs": "0576069d58c4deb2a53222843ea01ebcaa3d636e8327253746b09a5b9fe96df7",
+        "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+        "e2e/web/music-search-native.spec.mjs": "385d8a55f51ff61cb75cf5cb8c769ef9e5f2cbc859cf433db881472700520695",
+        "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+        "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
+        "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+        "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+        "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+      }
+    },
+    "post": {
+      "observedAt": "2026-10-26T22:13:00.280276+00:00",
+      "head": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+      "files": {
+        "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+        "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+        "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+        "playwright.config.mjs": "0576069d58c4deb2a53222843ea01ebcaa3d636e8327253746b09a5b9fe96df7",
+        "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+        "e2e/web/music-search-native.spec.mjs": "385d8a55f51ff61cb75cf5cb8c769ef9e5f2cbc859cf433db881472700520695",
+        "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+        "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
+        "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+        "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+        "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+      }
+    },
+    "all20FingerprintsIdentical": true,
+    "sourceFilesCommitted": false,
+    "qualificationBoundary": "Exact file hashes identify uncommitted runtime/test/config candidate on dirtyHEADc88; unrelated formal/docs/route-registry changes by root are outside these20inputs"
+  },
+  "execution": {
+    "executedBy": "Root unrestricted environment after child sandbox bind rejection",
+    "actualExitCode": 0,
+    "actualExitConfirmedByRoot": true,
+    "port": 4187,
+    "reuseExistingServer": false,
+    "node": "22.14.0",
+    "command": "env PATH=/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin:/private/tmp/tdf-feature-menu-tools-20261025:/usr/local/bin:/usr/bin:/bin PLAYWRIGHT_PORT=4187 PLAYWRIGHT_ARTIFACT_DIR=/private/tmp/tdf-music-search-native-qualified-v2-20261026 node node_modules/@playwright/test/cli.js test --config=playwright.music-native.config.mjs e2e/web/music-search-native.spec.mjs --project=chromium-desktop --project=chromium-phone --project=firefox-critical",
+    "stats": {
+      "startTime": "2026-10-26T22:09:25.161Z",
+      "duration": 95243.978,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "caseExecutions": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0,
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone (Pixel7 web emulation)",
+      "firefox-critical"
+    ],
+    "evidence": [
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v2-20261026.log",
+        "sha256": "12a1554e2c216d09d15be95c398355309c3e602fd3b43c8c318d0c9a31500b3e"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v2-20261026/results.json",
+        "sha256": "23382a7544b2d6c21686be0898d01c491078edb3dded26ae0ceebd649ae48f34"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v2-pre-20261026.json",
+        "sha256": "c15fd93be69be321ffb7bb5e0774a588c9a961ea06ac1fdf55e594bc86c3ad6e"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v2-post-20261026.json",
+        "sha256": "666aee2641470850b1bbe424033f71b7d18598a687c3013eacda4300892a1463"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-v2-artifact-manifest-20261026.json",
+        "sha256": "484b700e40e76f95e95a8353284aaf11eb277f8173e2a6cb23c7042b0b59f89a"
+      }
+    ]
+  },
+  "verifiedJourneys": {
+    "exactSearchSelection": "A is the intro at index0 of release; query hits distinct B. Only B track UUID and deferred assets dispatched, no first-track substitution.",
+    "noAutoplay": "Search metadata arrival, query changes, release-link navigation and back before explicit Play caused no selection/signing/media download.",
+    "nativePlayback": {
+      "executionsWithActualDecodedMedia": 3,
+      "formats": [
+        "AAC high m4a",
+        "FLAC lossless"
+      ],
+      "controls": "Real keyboard Enter selects B; real media clock advances; client release navigation preserves element/currentSrc/clock; quality selection loads B FLAC on same element.",
+      "mutatedMediaMethodsOrClocks": false
+    },
+    "denial": {
+      "executions": 3,
+      "scenario": "B asset permission revoked after hit is rendered and before Play; all3B rendition candidates403",
+      "result": "B remains selected, explicit bounded unavailable state, no A signing, no media URL requests, empty paused native element."
+    },
+    "queryRace": {
+      "executions": 3,
+      "scenario": "A response held; B returns; select/revoke B; release A",
+      "observed": "All3A browser requests completed requestfailed (cancellation), even though Playwright route.fulfill accepted. B actionable row and selected session remained B.",
+      "deliveredStaleResponseProof": false,
+      "limitation": "Native run checks cancellation/visible-selection behavior; it does not force a delivered stale response after a lost abort. Separate frontend unit out-of-order test exists; its55-test execution/evidence is frontend/root-owned, not asserted as run by this QA agent."
+    }
+  },
+  "observations": [
+    {
+      "project": "chromium-desktop",
+      "title": "@critical PW-MUSIC-SEARCH-NATIVE-01 plays the exact matched recording and retains its real decoder across release navigation",
+      "status": "passed",
+      "duration": 7227,
+      "assetAccess": [
+        "75000000-0000-4000-8000-000000000021",
+        "75000000-0000-4000-8000-000000000022"
+      ],
+      "mediaPaths": [
+        "/media/second/high",
+        "/media/second/lossless"
+      ],
+      "queryACompletion": null,
+      "lateAResponse": null,
+      "selectedIds": [
+        "73000000-0000-4000-8000-000000000002"
+      ],
+      "nativeClockMax": 3.39833,
+      "trustedPlayingSources": [
+        "http://127.0.0.1:65414/media/second/high",
+        "http://127.0.0.1:65414/media/second/lossless"
+      ],
+      "audio": [
+        {
+          "source": "http://127.0.0.1:65414/media/second/lossless",
+          "time": 3.42159,
+          "paused": false,
+          "error": null
+        }
+      ],
+      "pageErrors": [],
+      "unexpectedWrites": [],
+      "provenance": {
+        "masterSha256": "f5cec656cd37a82538f3cadecc321c450fbac5e1adedc28e3b1d9f34b09f4849",
+        "files": {
+          "low": {
+            "sha256": "4defc631f5af2af2be2795f261c59e0c96186d189c232e8e4cffd3e31b2d70ae",
+            "byteSize": 293890,
+            "mediaType": "audio/mp4"
+          },
+          "high": {
+            "sha256": "86c540938a93de1c777e9fe9d895d9d7c98009184ddae958e6429849411638c9",
+            "byteSize": 725994,
+            "mediaType": "audio/mp4"
+          },
+          "lossless": {
+            "sha256": "1df1d115d194e681ef0779e7974cc058f6cf4e7e441a9294c32cab24954ff2f1",
+            "byteSize": 4478143,
+            "mediaType": "audio/flac"
+          }
+        },
+        "identityBoundary": "first/second URLs share the existing generated master; track identity is verified by exact UUID, authorized asset IDs and source URL, not audible song recognition."
+      }
+    },
+    {
+      "project": "chromium-desktop",
+      "title": "@critical PW-MUSIC-SEARCH-NATIVE-02 late query A cannot replace B and revoked B never plays the release intro",
+      "status": "passed",
+      "duration": 2546,
+      "assetAccess": [
+        "75000000-0000-4000-8000-000000000021",
+        "75000000-0000-4000-8000-000000000020",
+        "75000000-0000-4000-8000-000000000022"
+      ],
+      "mediaPaths": [],
+      "queryACompletion": "requestfailed",
+      "lateAResponse": "fulfilled",
+      "selectedIds": [
+        "73000000-0000-4000-8000-000000000002"
+      ],
+      "nativeClockMax": 0,
+      "trustedPlayingSources": [],
+      "audio": [
+        {
+          "source": "",
+          "time": 0,
+          "paused": true,
+          "error": null
+        }
+      ],
+      "pageErrors": [],
+      "unexpectedWrites": [],
+      "provenance": {
+        "masterSha256": "f5cec656cd37a82538f3cadecc321c450fbac5e1adedc28e3b1d9f34b09f4849",
+        "files": {
+          "low": {
+            "sha256": "4defc631f5af2af2be2795f261c59e0c96186d189c232e8e4cffd3e31b2d70ae",
+            "byteSize": 293890,
+            "mediaType": "audio/mp4"
+          },
+          "high": {
+            "sha256": "86c540938a93de1c777e9fe9d895d9d7c98009184ddae958e6429849411638c9",
+            "byteSize": 725994,
+            "mediaType": "audio/mp4"
+          },
+          "lossless": {
+            "sha256": "1df1d115d194e681ef0779e7974cc058f6cf4e7e441a9294c32cab24954ff2f1",
+            "byteSize": 4478143,
+            "mediaType": "audio/flac"
+          }
+        },
+        "identityBoundary": "first/second URLs share the existing generated master; track identity is verified by exact UUID, authorized asset IDs and source URL, not audible song recognition."
+      }
+    },
+    {
+      "project": "chromium-phone",
+      "title": "@critical PW-MUSIC-SEARCH-NATIVE-01 plays the exact matched recording and retains its real decoder across release navigation",
+      "status": "passed",
+      "duration": 7957,
+      "assetAccess": [
+        "75000000-0000-4000-8000-000000000021",
+        "75000000-0000-4000-8000-000000000022"
+      ],
+      "mediaPaths": [
+        "/media/second/high",
+        "/media/second/lossless"
+      ],
+      "queryACompletion": null,
+      "lateAResponse": null,
+      "selectedIds": [
+        "73000000-0000-4000-8000-000000000002"
+      ],
+      "nativeClockMax": 3.402681,
+      "trustedPlayingSources": [
+        "http://127.0.0.1:65414/media/second/high",
+        "http://127.0.0.1:65414/media/second/lossless"
+      ],
+      "audio": [
+        {
+          "source": "http://127.0.0.1:65414/media/second/lossless",
+          "time": 3.448673,
+          "paused": false,
+          "error": null
+        }
+      ],
+      "pageErrors": [],
+      "unexpectedWrites": [],
+      "provenance": {
+        "masterSha256": "f5cec656cd37a82538f3cadecc321c450fbac5e1adedc28e3b1d9f34b09f4849",
+        "files": {
+          "low": {
+            "sha256": "4defc631f5af2af2be2795f261c59e0c96186d189c232e8e4cffd3e31b2d70ae",
+            "byteSize": 293890,
+            "mediaType": "audio/mp4"
+          },
+          "high": {
+            "sha256": "86c540938a93de1c777e9fe9d895d9d7c98009184ddae958e6429849411638c9",
+            "byteSize": 725994,
+            "mediaType": "audio/mp4"
+          },
+          "lossless": {
+            "sha256": "1df1d115d194e681ef0779e7974cc058f6cf4e7e441a9294c32cab24954ff2f1",
+            "byteSize": 4478143,
+            "mediaType": "audio/flac"
+          }
+        },
+        "identityBoundary": "first/second URLs share the existing generated master; track identity is verified by exact UUID, authorized asset IDs and source URL, not audible song recognition."
+      }
+    },
+    {
+      "project": "chromium-phone",
+      "title": "@critical PW-MUSIC-SEARCH-NATIVE-02 late query A cannot replace B and revoked B never plays the release intro",
+      "status": "passed",
+      "duration": 2661,
+      "assetAccess": [
+        "75000000-0000-4000-8000-000000000021",
+        "75000000-0000-4000-8000-000000000020",
+        "75000000-0000-4000-8000-000000000022"
+      ],
+      "mediaPaths": [],
+      "queryACompletion": "requestfailed",
+      "lateAResponse": "fulfilled",
+      "selectedIds": [
+        "73000000-0000-4000-8000-000000000002"
+      ],
+      "nativeClockMax": 0,
+      "trustedPlayingSources": [],
+      "audio": [
+        {
+          "source": "",
+          "time": 0,
+          "paused": true,
+          "error": null
+        }
+      ],
+      "pageErrors": [],
+      "unexpectedWrites": [],
+      "provenance": {
+        "masterSha256": "f5cec656cd37a82538f3cadecc321c450fbac5e1adedc28e3b1d9f34b09f4849",
+        "files": {
+          "low": {
+            "sha256": "4defc631f5af2af2be2795f261c59e0c96186d189c232e8e4cffd3e31b2d70ae",
+            "byteSize": 293890,
+            "mediaType": "audio/mp4"
+          },
+          "high": {
+            "sha256": "86c540938a93de1c777e9fe9d895d9d7c98009184ddae958e6429849411638c9",
+            "byteSize": 725994,
+            "mediaType": "audio/mp4"
+          },
+          "lossless": {
+            "sha256": "1df1d115d194e681ef0779e7974cc058f6cf4e7e441a9294c32cab24954ff2f1",
+            "byteSize": 4478143,
+            "mediaType": "audio/flac"
+          }
+        },
+        "identityBoundary": "first/second URLs share the existing generated master; track identity is verified by exact UUID, authorized asset IDs and source URL, not audible song recognition."
+      }
+    },
+    {
+      "project": "firefox-critical",
+      "title": "@critical PW-MUSIC-SEARCH-NATIVE-01 plays the exact matched recording and retains its real decoder across release navigation",
+      "status": "passed",
+      "duration": 10921,
+      "assetAccess": [
+        "75000000-0000-4000-8000-000000000021",
+        "75000000-0000-4000-8000-000000000022"
+      ],
+      "mediaPaths": [
+        "/media/second/high",
+        "/media/second/lossless"
+      ],
+      "queryACompletion": null,
+      "lateAResponse": null,
+      "selectedIds": [
+        "73000000-0000-4000-8000-000000000002"
+      ],
+      "nativeClockMax": 3.246609,
+      "trustedPlayingSources": [
+        "http://127.0.0.1:65414/media/second/high",
+        "http://127.0.0.1:65414/media/second/lossless"
+      ],
+      "audio": [
+        {
+          "source": "http://127.0.0.1:65414/media/second/lossless",
+          "time": 3.462135,
+          "paused": false,
+          "error": null
+        }
+      ],
+      "pageErrors": [],
+      "unexpectedWrites": [],
+      "provenance": {
+        "masterSha256": "f5cec656cd37a82538f3cadecc321c450fbac5e1adedc28e3b1d9f34b09f4849",
+        "files": {
+          "low": {
+            "sha256": "4defc631f5af2af2be2795f261c59e0c96186d189c232e8e4cffd3e31b2d70ae",
+            "byteSize": 293890,
+            "mediaType": "audio/mp4"
+          },
+          "high": {
+            "sha256": "86c540938a93de1c777e9fe9d895d9d7c98009184ddae958e6429849411638c9",
+            "byteSize": 725994,
+            "mediaType": "audio/mp4"
+          },
+          "lossless": {
+            "sha256": "1df1d115d194e681ef0779e7974cc058f6cf4e7e441a9294c32cab24954ff2f1",
+            "byteSize": 4478143,
+            "mediaType": "audio/flac"
+          }
+        },
+        "identityBoundary": "first/second URLs share the existing generated master; track identity is verified by exact UUID, authorized asset IDs and source URL, not audible song recognition."
+      }
+    },
+    {
+      "project": "firefox-critical",
+      "title": "@critical PW-MUSIC-SEARCH-NATIVE-02 late query A cannot replace B and revoked B never plays the release intro",
+      "status": "passed",
+      "duration": 3989,
+      "assetAccess": [
+        "75000000-0000-4000-8000-000000000021",
+        "75000000-0000-4000-8000-000000000020",
+        "75000000-0000-4000-8000-000000000022"
+      ],
+      "mediaPaths": [],
+      "queryACompletion": "requestfailed",
+      "lateAResponse": "fulfilled",
+      "selectedIds": [
+        "73000000-0000-4000-8000-000000000002"
+      ],
+      "nativeClockMax": 0,
+      "trustedPlayingSources": [],
+      "audio": [
+        {
+          "source": "",
+          "time": 0,
+          "paused": true,
+          "error": null
+        }
+      ],
+      "pageErrors": [],
+      "unexpectedWrites": [],
+      "provenance": {
+        "masterSha256": "f5cec656cd37a82538f3cadecc321c450fbac5e1adedc28e3b1d9f34b09f4849",
+        "files": {
+          "low": {
+            "sha256": "4defc631f5af2af2be2795f261c59e0c96186d189c232e8e4cffd3e31b2d70ae",
+            "byteSize": 293890,
+            "mediaType": "audio/mp4"
+          },
+          "high": {
+            "sha256": "86c540938a93de1c777e9fe9d895d9d7c98009184ddae958e6429849411638c9",
+            "byteSize": 725994,
+            "mediaType": "audio/mp4"
+          },
+          "lossless": {
+            "sha256": "1df1d115d194e681ef0779e7974cc058f6cf4e7e441a9294c32cab24954ff2f1",
+            "byteSize": 4478143,
+            "mediaType": "audio/flac"
+          }
+        },
+        "identityBoundary": "first/second URLs share the existing generated master; track identity is verified by exact UUID, authorized asset IDs and source URL, not audible song recognition."
+      }
+    }
+  ],
+  "provenance": {
+    "fixture": "Existing e2e/web/fixtures/native-music-setup.mjs; production scripts/process-music-release-audio.sh; generated24s440Hz master with manifest-verified AAC/FLAC derivatives",
+    "masterAndDerivativeHashes": {
+      "masterSha256": "f5cec656cd37a82538f3cadecc321c450fbac5e1adedc28e3b1d9f34b09f4849",
+      "files": {
+        "low": {
+          "sha256": "4defc631f5af2af2be2795f261c59e0c96186d189c232e8e4cffd3e31b2d70ae",
+          "byteSize": 293890,
+          "mediaType": "audio/mp4"
+        },
+        "high": {
+          "sha256": "86c540938a93de1c777e9fe9d895d9d7c98009184ddae958e6429849411638c9",
+          "byteSize": 725994,
+          "mediaType": "audio/mp4"
+        },
+        "lossless": {
+          "sha256": "1df1d115d194e681ef0779e7974cc058f6cf4e7e441a9294c32cab24954ff2f1",
+          "byteSize": 4478143,
+          "mediaType": "audio/flac"
+        }
+      },
+      "identityBoundary": "first/second URLs share the existing generated master; track identity is verified by exact UUID, authorized asset IDs and source URL, not audible song recognition."
+    },
+    "sameMasterForAAndB": true,
+    "identityScope": "Track UUID/asset ID/delivery URL verified; shared test tone is not audible content-recognition evidence.",
+    "syntheticApiAndPermissions": true,
+    "externalHttpRequestsBlocked": true,
+    "serviceWorkersBlocked": true,
+    "businessMutationsOutsideSyntheticAnalytics": 0,
+    "productionBackendOrAccountsAccessed": false
+  },
+  "artifacts": {
+    "manifest": [
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v2-20261026/results.json",
+        "size": 64664,
+        "sha256": "23382a7544b2d6c21686be0898d01c491078edb3dded26ae0ceebd649ae48f34"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v2-20261026/html/index.html",
+        "size": 557868,
+        "sha256": "577f355bac7cb5d663bf90017b95c8f09e716320db0404a9c1b43c94dc60bc8e"
+      },
+      {
+        "path": "/private/tmp/tdf-music-search-native-qualified-v2-20261026/test-results/.last-run.json",
+        "size": 45,
+        "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+      }
+    ],
+    "builtBundle": [
+      {
+        "path": "tdf-hq-ui/dist/index.html",
+        "sha256": "27bd003d25dc1f65cd253c6037077e9209888d22590533ad26927c223d6f4fb6"
+      },
+      {
+        "path": "tdf-hq-ui/dist/assets/index-CIReC7V2.js",
+        "size": 170412,
+        "sha256": "b5e22e95813b205cf25f396a0469a5c6f66fabca3284656f44944b29c72b9b9d"
+      }
+    ]
+  },
+  "retainedPriorOutcomes": {
+    "sandboxSetup": {
+      "exitCode": 1,
+      "testsExecuted": 0,
+      "cause": "Vite listen127.0.0.1:4187 EPERM in child sandbox after successful build",
+      "log": "/private/tmp/tdf-music-search-native-20261026.log",
+      "sha256": "c640be8f98374501fef865b120b2787cee4c4b4bc06fb66bff7b4e590fb2cef0"
+    },
+    "firstNativeExecution": {
+      "actualExitCode": 1,
+      "rootExitConfirmedAt": "2026-10-26T22:07:50Z",
+      "stats": {
+        "startTime": "2026-10-26T22:05:27.879Z",
+        "duration": 119066.828,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 3,
+        "flaky": 0
+      },
+      "passed": 3,
+      "failed": 3,
+      "cause": "Test-only evaluator ReferenceError losslessStart not defined in browser context; actual AAC/navigation/FLAC assertions preceding it passed.",
+      "sourcePre": {
+        "observedAt": "2026-10-26T22:03:07.903903+00:00",
+        "head": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+        "files": {
+          "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+          "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+          "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+          "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+          "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+          "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+          "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+          "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+          "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+          "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+          "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+          "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+          "playwright.config.mjs": "0576069d58c4deb2a53222843ea01ebcaa3d636e8327253746b09a5b9fe96df7",
+          "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+          "e2e/web/music-search-native.spec.mjs": "aa734213c781366bd2518d0a05f22808bf9551a522eecc0b52ca88c2da201dc8",
+          "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+          "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
+          "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+          "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+          "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+        }
+      },
+      "sourcePost": {
+        "observedAt": "2026-10-26T22:08:24.688906+00:00",
+        "head": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+        "files": {
+          "tdf-hq-ui/src/api/musicReleases.ts": "9a2a33d5b96fc26ba5e4b419dbb69e44fa689e9e41ac9a52f92319dd151a6e43",
+          "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
+          "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
+          "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "5134cbcbbe5e8c89df602844ef7faff7a3c8e55888384c01c0f24bde4cc776fd",
+          "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+          "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "f3c1ea9c84dc653634695737344c95f76fd1557976a229f9101490069d24e408",
+          "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+          "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
+          "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
+          "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
+          "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
+          "tdf-hq-ui/src/api/musicReleases.search.test.ts": "c60baab718aabcea982234194ac2ef092a6117c3d95fa2919cca9f58b3ac4177",
+          "playwright.config.mjs": "0576069d58c4deb2a53222843ea01ebcaa3d636e8327253746b09a5b9fe96df7",
+          "playwright.music-native.config.mjs": "a1c0b1615e3ea11350588dd796c210c92ec4eeb991883b698a5bf3eb95618958",
+          "e2e/web/music-search-native.spec.mjs": "aa734213c781366bd2518d0a05f22808bf9551a522eecc0b52ca88c2da201dc8",
+          "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+          "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
+          "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+          "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+          "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+        }
+      },
+      "all20FingerprintsIdentical": true,
+      "log": {
+        "path": "/private/tmp/tdf-music-search-native-qualified-20261026.log",
+        "sha256": "caa922f346557e2f13e7e7d8b9810c8cdc6bc050ac5ee298cf70269d26a4c8ff"
+      },
+      "rawResults": {
+        "path": "/private/tmp/tdf-music-search-native-qualified-20261026/results.json",
+        "sha256": "19ceafcea48f324350ee1d69687da2f1e0454e2020c85dae8200a1149f0997d0"
+      },
+      "artifactAndCaseReceipt": {
+        "path": "/private/tmp/tdf-music-search-native-first-failure-20261026.json",
+        "sha256": "1c90e26af1430d72d5bde3c3ab76d55cc9603d0d3d32e39020d9ed78de8f149d"
+      }
+    },
+    "correction": {
+      "changedFiles": [
+        "e2e/web/music-search-native.spec.mjs"
+      ],
+      "change": "Pass Node-side losslessStart as explicit locator.evaluate argument; keep currentTime>start+0.3 predicate",
+      "applicationChanges": 0,
+      "assertionsRelaxed": 0,
+      "timeoutsChanged": 0,
+      "skipOrRetryChanges": 0
+    }
+  },
+  "remainingLimits": [
+    "No local WebKit/new hosted CI qualification yet; existing full native suites were not rerun by this targeted command.",
+    "No physical Android/iOS/background/OS control claim.",
+    "No actual PostgreSQL search or media-delivery authorization proof; separate backend tests owned by backend agent/root.",
+    "No production deployment or authorized production upload/search/playback verified.",
+    "No SLO/p95 or cache-latency performance claim.",
+    "Not mathematical proof or complete universal-source catalog coverage."
+  ],
+  "delivery": {
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "merged": false,
+    "deployed": false
+  }
+}

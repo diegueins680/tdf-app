@@ -1,0 +1,30 @@
+Independent final read-only booking diagnostic review
+
+Working parent: 21628cdc8523bfd5ff4bd3259648400c0d1ed34d. Final diagnostic test hash64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87. UI hash3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3, compiled UI source a5535c59e49064fec535daa3682a4a1dc31c68f4. This review inspects source and existing receipts; no independent browser/server/test/build/database execution or process inspection. It is not required GitHub approval or a WebKit repair claim.
+
+Blocking findings: 0 within this observation and local-control scope.
+
+The added truncation flag, MutationObserver oldValue, original-positioner connection and same-node fields make earlier diagnostic limits observable. They do not call Popper, read layout inside event callbacks, alter the product or change acceptance. Mutation batching remains explicit and the observer does not follow remounts. A full/truncated event buffer or node mismatch cannot support an absence-of-update conclusion. Listener cleanup and initial immutable guard preservation remain as previously reviewed. The written contract still marks21628's hosted initial overlay behavior FAILED and does not reinterpret a later fit as acceptance.
+
+Independently reconstructed the complete final executed test from working source by only its two package-import substitutions. The resulting SHA256efb3a3c77cc99998a154f9d41255e73a96b59abd16ea61a99fc3bc916360fb14 equals both the final matrix fixture and root-option-removal fixture, byte for byte. The helper-only fixture differs solely by a clearly labeled synthetic stylesheet injection before the measurement; no original assertion is altered. This is diagnostic fault injection, not a proposed product style repair.
+
+All three final raw Playwright result files report3 expected/0 unexpected/0 skipped/0 flaky. Matrix cleanup receipts record separate Chromium desktop, Chromium phone and Firefox CLI/browser exit0 with no retries, totaling9 local passes. This qualifies the new diagnostic test body against unchanged C2 UI artifacts in those local engines, not current Linux WebKit or a fresh production UI build of the working diagnostic head.
+
+Both negative controls report exactly one unexpected failure and include the unconditional initial attachment plus the four-sample later geometry attachment. The helper-only control fails the original edge predicate at right366.046875 >320.3333333333333 while initial root/client/inner all remain320 and scale1. The sole-product-option removal fails the original root predicate at client320/scroll362, scale about0.8864. Initial metadata in both records says untruncated, original positioner connected and same node. Thus the helper-only branch is exercised independently from root overflow, and observation does not mask the known root mutant. A generic CLI1, setup failure or later convergence is not accepted as control detection. The supplied controls receipt records source/dist restoration and owned-server/alias cleanup; this review did not independently inspect running processes or rehash every distribution artifact.
+
+These receipts do not establish native WebKit event ordering, whether its original helper rectangle was painted/clipped, the cause of the stale transform, eventual convergence or every intermediate Popper update. Actual hosted diagnostic event data is still needed before another product correction or explicit specification change. Current21628's two overlay contract failures and the separate gallery contrast failure remain unresolved; approved gallery work stays separate. No no-overflow guard, helper tolerance, focus/keyboard/scroll requirement or timeout is waived by this review.
+
+Reviewed SHA256 values:
+/private/tmp/tdf-provider-evidence-actualmain-20261028/e2e/web/booking-catalog-recovery.spec.mjs: 64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87
+/private/tmp/tdf-provider-evidence-actualmain-20261028/formal/system/booking-tooltip-viewport.md: 12aeb6aec7a6379dd95b30c47abafb6f26cb01a1ba1e985c292f1e22e41e8254
+/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/src/pages/PublicBookingPage.tsx: 3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3
+/private/tmp/tdf-booking-resize-observation-final-matrix-20261029/matrix.json: 8cb321a7a96df85565bccc8d650c7d3a020fde22a01776b9c22273e241b000e6
+/private/tmp/tdf-booking-resize-observation-final-matrix-20261029/inputs.json: 0aeafe68cd9b0cad8bab30ca5af5a98b780102d8067f6ac31df87e0e5b3e17bf
+/private/tmp/tdf-booking-resize-observation-final-matrix-20261029/final-chromium-desktop.json: ab5bd2b46ab9f610896979c4a926aa99084f45915d21ae4b0955817b21ad84f1
+/private/tmp/tdf-booking-resize-observation-final-matrix-20261029/final-chromium-phone.json: a154160c70b52cca12e0941232a034860eceaeffa52ebe7b7c14dd6e8be3357f
+/private/tmp/tdf-booking-resize-observation-final-matrix-20261029/final-firefox.json: a77190a6f633b69dcc182852e6154f93dd0fd7083a13d7426535c4caf69c8b38
+/private/tmp/tdf-booking-resize-observation-controls-20261029/controls.json: 4586557a67e3256d89bfc462e691b92a30e8edc67966f25c464cbc91f80d3ef6
+/private/tmp/tdf-booking-resize-observation-controls-20261029/helper-only-fault.json: 319ca26bdc6bc9e548594f9e2218d6469d3aa11f8f7099f657ca17a57dfd5f08
+/private/tmp/tdf-booking-resize-observation-controls-20261029/helper-only-fault-geometry.json: 7761f53d2c7837b4a0060b7b892e4a04ad4869d3421627fdafe099f59e5fc827
+/private/tmp/tdf-booking-resize-observation-controls-20261029/root-option-removal.json: b433ae1d1206cbb65f4ec28a30bf339b9cb8c42a42acd0f3c58a205ccaf56ad8
+/private/tmp/tdf-booking-resize-observation-controls-20261029/root-option-removal-geometry.json: 8337540ef3f638d8a9df9c8a5123b8cba6c7903451690e95a500a777453e8f5f

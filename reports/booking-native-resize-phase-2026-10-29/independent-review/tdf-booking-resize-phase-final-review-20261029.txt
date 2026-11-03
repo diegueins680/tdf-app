@@ -1,0 +1,37 @@
+Independent final read-only qualification review: booking resize observation phase
+
+Reviewed source test SHA256deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f, contract3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba, and exact supplied matrix/control files below. Unchanged UI hash3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3 was compiled at C2 a5535c59e49064fec535daa3682a4a1dc31c68f4. No independent browser/server/test/build/database execution or process inspection. This is evidence/source review, not current-head GitHub approval, new product repair or a proof.
+
+Blocking findings: 0 within the local phase-correction/control qualification scope.
+
+Independently reconstructed the normal executed fixture by the two package-import path substitutions only: SHA256cb0e8c06e80d1c65cefaad186397fb7db0e3a0d55f8c6cd953e1960c1ed3c668. Its complete bytes equal both the final matrix fixture and root-option control fixture. The uninstrumented copy differs only by replacing the diagnostic observer call with an omission comment, SHA256a2dfeb232b242e64424812bc32dada09acad92653b17562204c322de1896002a. Its native acknowledgment and all root/scale/helper/focus/scroll assertions remain unchanged. This controls for the diagnostic observer, not for the indispensable event acknowledgment itself.
+
+Raw result files in each separate matrix show three expected/zero unexpected/zero skipped/zero flaky for Chromium desktop, Chromium phone and Firefox. Each matrix therefore records9 local passes with CLI/browser0 and no retries. These are two executions of the same three fixture cases across three profiles under two observer modes, not18 distinct product requirements or hosted WebKit qualification. They execute new test bodies against unchanged C2 UI artifacts, not a newly compiled product feature.
+
+Helper-only fault: the control adds only a labeled persistent stylesheet injection AFTER the real acknowledgment. The attachment records delivered/trusted true at10978, following task10989 and helper measurement11082. Initial and post-event root dimensions remain320/320/320, scale1; forced helper right366.046875 exceeds320.3333333333333. Raw failure is exactly resizedViewport.tooltip.right, proving the helper guard is still active independently of root overflow. No original assertion is altered.
+
+Root control: deleting only the fixed-position product option reconstructs the recorded mutant UI hash2d6f240e0db0525d25ddf34dfaad885d9b150e4e1cdbd6f4e7746b4738f606e4. Its full test body is exact. Initial inner/client/scroll362/320/362 and scale about0.8864 fail the original viewportMeasurement.overflow predicate BEFORE native-gate acceptance. Later convergence cannot heal this failure.
+
+Synthetic/missing acknowledgment control: its explicit input adaptation registers the same callback under a fixture-only event name and dispatches that untrusted event at target dimensions, preventing a real native resize from satisfying the fixture listener. The trust/dimension checks and eight-second timer are unchanged. The recorded result is delivered false, reason native resize not delivered within8s; raw failure is the original delivered assertion. This meaningfully exercises rejection of the supplied synthetic input and lack of a native acknowledgment. It is an adapted control, not a byte-identical native positive fixture, not a separately executed sole-isTrusted-removal mutation and not an engine event-conformance proof.
+
+All three controls have actual exit1 with one unexpected/zero expected/zero skipped/zero flaky, at the intended assertions rather than generic setup/CLI failure. Their execution receipts bind the reviewed diagnostic hash and record stopped owned servers and removed aliases. Aggregate receipt records correct source/C2 distribution restoration. This review reads those cleanup receipts but does not independently inspect process state or rehash every generated distribution artifact.
+
+The preceding source/design reviews still apply: immutable immediate root/scale remain first, no fit polling/forceUpdate, one trusted requested-resize acknowledgment plus following task precedes the strict helper observation, and finally cleanup handles early failures. Historical21628/a909 literal pre-notification-overlay failures remain FAILED historical results and are not relabeled as green. Actual a909 timing/primary specifications support the explicit revised phase; they do not prove painted clipping never occurred or every internal update step.
+
+Qualification remains TESTED locally for the bounded fixtures only. Revised-phase hosted Linux WebKit, current-head independent approval, current-main composition, gallery/FIFO sequencing and protected CI/integration remain pending. No product listener, financial behavior, backend/server or deployment is changed by this harness/specification correction.
+
+Reviewed SHA256 values:
+/private/tmp/tdf-provider-evidence-actualmain-20261028/e2e/web/booking-catalog-recovery.spec.mjs: deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f
+/private/tmp/tdf-provider-evidence-actualmain-20261028/formal/system/booking-tooltip-viewport.md: 3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba
+/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/src/pages/PublicBookingPage.tsx: 3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3
+/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/matrix.json: caa42b92ce4854cd78aea1bcda58fc69612acb73fac323b5a38359c4249870ff
+/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/matrix.json: 4b5a6eb290a2fac3d2cfd8b8086514d09f410e6da78ef2509b3b984394e54405
+/private/tmp/tdf-booking-resize-phase-final-matrix-20261029/booking.spec.mjs: cb0e8c06e80d1c65cefaad186397fb7db0e3a0d55f8c6cd953e1960c1ed3c668
+/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/booking.spec.mjs: a2dfeb232b242e64424812bc32dada09acad92653b17562204c322de1896002a
+/private/tmp/tdf-booking-resize-phase-controls-20261029/controls.json: 5e05913720464558ccf0218bc3acf683e2d5fe39ea198f2233d930d605a9a844
+/private/tmp/tdf-booking-resize-phase-controls-20261029/helper-only-fault.json: 7b980a6e3b67d02f087f6b53f09b45c9dca54dceefa520e60b6e8c9938ac7467
+/private/tmp/tdf-booking-resize-phase-controls-20261029/helper-only-fault-geometry.json: bc42d113ed12801fa47718496a1a80a3f1e4d165c28e648f80438dbfc19400f7
+/private/tmp/tdf-booking-resize-phase-controls-20261029/root-option-removal.json: e88e6347b5180781a76a4b195fca709c71a8aef359cad62cbd488e335daee89c
+/private/tmp/tdf-booking-resize-phase-controls-20261029/root-option-removal-geometry.json: 3396aa103fd91d73a21bdc4db1e0f98b0e96504177865e8af66b511eca3eb580
+/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.json: e8af633d11fed67a0748bc9696a54dae8fbcc16c5bb80d4325efa894cfc64a00
+/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack-geometry.json: 050376e42133697454eb3fee630ff33530a7f73d285dda98d941a4ae3bcd6bb6

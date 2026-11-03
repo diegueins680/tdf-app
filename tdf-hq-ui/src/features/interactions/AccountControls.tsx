@@ -1,3 +1,5 @@
+import UserProfileLink from '../../components/UserProfileLink';
+import MarkdownText from '../../components/MarkdownText';
 import { useState } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, Typography } from '@mui/material';
@@ -44,7 +46,7 @@ export function AccountControls({ scope, canModerate }: { scope: string; canMode
           {blocks.isError && <Alert severity="error" action={<Button onClick={() => void blocks.refetch()}>Reintentar</Button>}>No se pudo cargar la lista.</Alert>}
           {blocks.data?.pages.every((page) => page.items.length === 0) && <Typography>No has bloqueado cuentas.</Typography>}
           {blocks.data?.pages.flatMap((page) => page.items).map((person) => <Stack direction="row" key={person.partyId} alignItems="center" justifyContent="space-between">
-            <Typography>{person.displayName}</Typography><Button disabled={pending} onClick={() => { void perform(() => Interactions.block(person.partyId, false, person.version, crypto.randomUUID())); }}>Desbloquear</Button>
+            <UserProfileLink partyId={person.partyId}><Typography>{person.displayName}</Typography></UserProfileLink><Button disabled={pending} onClick={() => { void perform(() => Interactions.block(person.partyId, false, person.version, crypto.randomUUID())); }}>Desbloquear</Button>
           </Stack>)}
           {blocks.hasNextPage && <Button disabled={blocks.isFetchingNextPage} onClick={() => void blocks.fetchNextPage()}>Ver más cuentas</Button>}
         </>}
@@ -53,10 +55,10 @@ export function AccountControls({ scope, canModerate }: { scope: string; canMode
           {reports.isError && <Alert severity="error" action={<Button onClick={() => void reports.refetch()}>Reintentar</Button>}>No se pudieron cargar los reportes.</Alert>}
           {reports.data?.pages.every((page) => page.items.length === 0) && <Typography>No hay reportes pendientes.</Typography>}
           {reports.data?.pages.flatMap((page) => page.items).map((comment) => <Stack key={comment.id}>
-            <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{comment.moderationBody}</Typography>
+            <MarkdownText sx={{ overflowWrap: 'anywhere' }}>{comment.moderationBody}</MarkdownText>
             {!!comment.reportReasons?.length && <Stack component="section" aria-label="Motivos de los reportes" spacing={1}>
               <Typography variant="caption">Motivos recientes ({comment.reportReasons.length} de {comment.openReports ?? 0})</Typography>
-              {comment.reportReasons.map((text, index) => <Typography key={index} sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{text}</Typography>)}
+              {comment.reportReasons.map((text, index) => <MarkdownText key={index} sx={{ overflowWrap: 'anywhere' }}>{text}</MarkdownText>)}
             </Stack>}
             <Button component={RouterLink} to={discussionLink('comment', comment.id)} onClick={() => setOpen(false)}>Revisar {comment.openReports} reportes en la conversación</Button>
           </Stack>)}

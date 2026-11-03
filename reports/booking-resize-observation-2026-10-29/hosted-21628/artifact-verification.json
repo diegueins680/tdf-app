@@ -1,0 +1,12 @@
+{
+  "head": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+  "run": 40824696334,
+  "job": 123285127676,
+  "artifact": 12877535620,
+  "bytes": 118630708,
+  "sha256": "141e00d191127a8676342b0212c6f1d6539e372d9e84f2758af5c6909cc9c0d2",
+  "hostDigestIndependentlyMatched": true,
+  "hostResult": "640pass/3fail/22skip; twoWebKithelperedge andonegallerycontrast",
+  "originalRootAndScaleAssertionsBeforeEdgePassed": true,
+  "UIRepairNotFullyQualified": true
+}

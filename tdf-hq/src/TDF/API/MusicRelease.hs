@@ -6,6 +6,8 @@
 module TDF.API.MusicRelease
   ( MusicReleasePublicAPI
   , MusicReleaseProtectedAPI
+  , MusicPublicTrackSearchHit(..)
+  , MusicPublicTrackSearchSource(..)
   , MusicReleaseCreateRequest(..)
   , MusicReleaseDraftSaveRequest(..)
   , MusicReleaseContentRequest(..)
@@ -74,6 +76,11 @@ type MusicReleasePublicAPI = "music" :>
          :> Header "CF-IPCountry" Text :> Get '[JSON] Value
   :<|> "playback-events" :> Header "CF-IPCountry" Text
          :> ReqBody '[JSON] MusicPlaybackEventRequest :> Post '[JSON] NoContent
+  :<|> "search" :> Header "CF-IPCountry" Text
+         :> QueryParam "q" Text
+         :> QueryParam "limit" Int
+         :> QueryParam "offset" Int
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
   )
 
 type MusicReleaseProtectedAPI = "music" :>
@@ -602,3 +609,35 @@ musicEventOptions = (musicOptions 10)
       "musicEventType" -> "eventType"
       _ -> fieldLabelModifier (musicOptions 10) field
   }
+
+-- | Public search deliberately projects only selection metadata. Asset IDs are
+-- reauthorized by the existing access endpoint when a listener selects a hit.
+data MusicPublicTrackSearchHit = MusicPublicTrackSearchHit
+  { musicSearchTrackId :: UUID
+  , musicSearchRecordingId :: UUID
+  , musicSearchReleaseId :: UUID
+  , musicSearchReleaseVersionId :: UUID
+  , musicSearchReleaseSlug :: Text
+  , musicSearchReleaseTitle :: Text
+  , musicSearchTitle :: Text
+  , musicSearchDisplayArtist :: Text
+  , musicSearchDurationMs :: Maybe Int64
+  , musicSearchSources :: [MusicPublicTrackSearchSource]
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON MusicPublicTrackSearchHit where
+  parseJSON = genericParseJSON (musicOptions 11)
+instance ToJSON MusicPublicTrackSearchHit where
+  toJSON = genericToJSON (musicOptions 11)
+
+data MusicPublicTrackSearchSource = MusicPublicTrackSearchSource
+  { musicSearchSourceAssetId :: UUID
+  , musicSearchSourceRole :: Text
+  , musicSearchSourceMediaType :: Text
+  , musicSearchSourceTechnicalMetadata :: Value
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON MusicPublicTrackSearchSource where
+  parseJSON = genericParseJSON (musicOptions 17)
+instance ToJSON MusicPublicTrackSearchSource where
+  toJSON = genericToJSON (musicOptions 17)
