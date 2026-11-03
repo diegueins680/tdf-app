@@ -4059,6 +4059,16 @@
         "49d1c72ba174118670bf"
       ],
       "activeMainObjectsUnchanged": 1370
+    },
+    "artistVideoFinalMain261d20261103": {
+      "protectedMain": "261d10dff011529dfaa93bc139cb53af5280bcdc",
+      "campaignSource": "013c7d2a21c6fb109433ae02e17fec4ab298b03c",
+      "normalMerge": "e032de15fb429295aaa015bcea64142c8185872c",
+      "mobileHead": "85b50f9f1926dbd192687f82fa1203a86aa4edbb",
+      "all1371CurrentMainDecisionObjectsExactInActiveOrHistory": true,
+      "all169OtherCurrentMainRequirementsExact": true,
+      "incomingNonGeneratedSourceAndEvidenceFilesExact": 28,
+      "note": "Normal merge preserves current main financial/heartbeat source and evidence without modification, retains both independent quality commands, and regenerates derived metadata. Current-head CI, independent review and normal admission/deployment remain required; prior-head evidence is historical."
     }
   },
   "decisions": [
