@@ -25,6 +25,7 @@ import { EventMemoryInvitations } from '../api/eventMemoryInvitations';
 import { getAuthSessionEpoch } from '../session/authEvents';
 import { useOwnedSessionDraft } from '../session/useOwnedSessionDraft';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { formatInEventTimeZone } from '../utils/dateTime';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import EventPreparationPanel from '../components/events/EventPreparationPanel';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
@@ -32,14 +33,9 @@ import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicke
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
   if (!value) return '';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  try {
-    return date.toLocaleString(locale, { timeZone: timezone, dateStyle: 'medium', timeStyle: 'short' });
-  } catch {
-    // A stored zone Intl rejects (e.g. a fixed offset) must not blank the page;
-    // fall back to the viewer's zone rather than throwing during render.
-    return date.toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
-  }
+  return Number.isNaN(date.getTime())
+    ? value
+    : formatInEventTimeZone(date, locale, timezone, { dateStyle: 'medium', timeStyle: 'short' });
 };
 
 const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m4v)(?:$|[?#])/i.test(url) ? 'video' : 'image';

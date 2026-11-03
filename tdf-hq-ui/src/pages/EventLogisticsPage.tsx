@@ -35,6 +35,7 @@ import { firstNonEmptyString } from '../utils/stringValues';
 
 import PageShell from '../components/PageShell';
 import { GOOGLE_MAPS_BROWSER_API_KEY } from '../config/appConfig';
+import { formatInEventTimeZone } from '../utils/dateTime';
 import {
   SocialEventsAPI,
   type EventLogisticsActivityDTO,
@@ -648,7 +649,7 @@ export default function EventLogisticsPage() {
             const routeUrl = origin && destination ? `https://www.google.com/maps/dir/?api=1&origin=${origin.elpLatitude},${origin.elpLongitude}&destination=${destination.elpLatitude},${destination.elpLongitude}` : '';
             return <Card key={activity.eacId} variant="outlined" sx={{ outline: String(activity.eacId) === notificationActivity ? '3px solid' : undefined, outlineColor: 'primary.main', borderLeft: 5, borderLeftColor: activity.eacPriority === 'critical' ? 'error.main' : activity.eacPriority === 'high' ? 'warning.main' : 'primary.main' }}><CardContent><Stack spacing={1}>
               <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
-                <Box><Typography variant="caption" color="text.secondary">{new Date(activity.eacStart).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}{activity.eacEnd ? ` – ${new Date(activity.eacEnd).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}` : ''}</Typography><Typography variant="h6">{activity.eacTitle}</Typography></Box>
+                <Box><Typography variant="caption" color="text.secondary">{formatInEventTimeZone(new Date(activity.eacStart), locale, plan?.elgSettings.elsTimezone ?? timezone)}{activity.eacEnd ? ` – ${formatInEventTimeZone(new Date(activity.eacEnd), locale, plan?.elgSettings.elsTimezone ?? timezone)}` : ''}</Typography><Typography variant="h6">{activity.eacTitle}</Typography></Box>
                 <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap><Chip size="small" label={{ task: 'Tarea', milestone: 'Hito', wait: 'Espera', travel: 'Traslado' }[activity.eacType]} /><Chip size="small" label={{ planned: 'Planificado', confirmed: 'Confirmado', in_progress: 'En curso', completed: 'Completado', cancelled: 'Cancelado' }[activity.eacStatus]} /><Chip size="small" label={{ low: 'Baja', normal: 'Normal', high: 'Alta', critical: 'Crítica' }[activity.eacPriority]} /></Stack>
               </Stack>
               {activity.eacType === 'travel' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}><DirectionsCarIcon color="action" /><Typography>{origin?.elpLabel ?? 'Origen'} → {destination?.elpLabel ?? 'Destino'}</Typography>{routeUrl && <Link href={routeUrl} target="_blank" rel="noreferrer">Abrir ruta</Link>}</Stack>}
