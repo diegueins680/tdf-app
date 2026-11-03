@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "3309a62925a63e6912bd497f05164e3153518d63",
+  "mobileRevision": "64e236505a0ff54bb628c8d47eb514f97a1f1dbb",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -17737,7 +17737,7 @@
     {
       "id": "SURFACE-8b8075b14e77947f",
       "path": "tdf-mobile/.github/workflows/interaction-simulator.yml",
-      "sha256": "62a1ef12799f7f8118d0788db55eaec551034b2f5fdefad364f7b9f0b1df226e",
+      "sha256": "4932ccd534c7186429af7ea3b1c515264f2eeb750b3e6e6d542816453ca56f87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20656,7 +20656,7 @@
     },
     {
       "path": "docs/artists/platform-videos.md",
-      "sha256": "e0bf33ba39b8d81bb7dd8368299314eef48e19fea178ec4784ec5b3c2cec65b8",
+      "sha256": "512c9d3cf5b7cc455c240dc21b81bf5feb736c248ec4e8818f7456d6ad1b42bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28888,7 +28888,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b39770732278c32c9a78e433ffe453e752a68c6db7c7aab50de806164b45d7ee",
+      "sha256": "60d0863725366248a8fa9ff009d0a59adef04eb94db4dde8b149256a83f06b25",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

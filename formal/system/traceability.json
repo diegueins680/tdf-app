@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "3309a62925a63e6912bd497f05164e3153518d63",
+  "mobileRevision": "64e236505a0ff54bb628c8d47eb514f97a1f1dbb",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -14761,7 +14761,9 @@
         "tdf-mobile/src/components/ArtistPublicWebView.web.tsx",
         "tdf-mobile/src/lib/artistPublicUrl.ts",
         "tdf-mobile/src/navigation/deepLinks.ts",
-        "tdf-mobile/package.json"
+        "tdf-mobile/package.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/.github/workflows/interaction-simulator.yml"
       ],
       "tests": [
         "services/campaign-platform/tests/test_videos.py",
@@ -14803,7 +14805,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "927030d77348aa60f407332a55b997240925035e32dd97d50a660da648af3b0e",
+    "docs/catalog-persistence/catalog-list-decisions.json": "fac7552edfd8e89678342706168f432656f6be3e640f9c3e03d355c0dd5ced44",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -16278,6 +16280,7 @@
     "tdf-hq/test/sql/music_resource_graph_validation.sql": "87506fe49731e3eacddf2814a6bec9515fec89c67811ce43568207703a746af9",
     "tdf-mobile/.github/workflows/android-release-build.yml": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
     "tdf-mobile/.github/workflows/datadog-synthetics.yml": "76b3d379a25c9cffadfbe142a91b3a2e55fe54f6163b6547b8a8017ba341ff94",
+    "tdf-mobile/.github/workflows/interaction-simulator.yml": "4932ccd534c7186429af7ea3b1c515264f2eeb750b3e6e6d542816453ca56f87",
     "tdf-mobile/.github/workflows/ios-release-build.yml": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
     "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
     "tdf-mobile/__tests__/ArtistPublicUrl.test.ts": "926c5db006666430c2ac21f2bb05eec11b3a808490690e0e2f9a5768f66c035d",
@@ -16332,6 +16335,7 @@
     "tdf-mobile/app/ticketCheckout.tsx": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
+    "tdf-mobile/ios/Podfile.lock": "0f43d338ff4431521b63dc5531568a282afe04815e6ded97c7ffb5188902d798",
     "tdf-mobile/package-lock.json": "e60a878cc3c53107cf3ec372ae38a1ca792996888c1d12776b632a098e0c6dfa",
     "tdf-mobile/package.json": "5d29e967ab5d49562373fdbc3dd1152d841423f8ea646c3c969aa212b6103e4b",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
@@ -29150,6 +29154,18 @@
       }
     ],
     "tdf-mobile/src/navigation/deepLinks.ts": [
+      {
+        "requirement": "ART-VIDEO-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/ios/Podfile.lock": [
+      {
+        "requirement": "ART-VIDEO-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/.github/workflows/interaction-simulator.yml": [
       {
         "requirement": "ART-VIDEO-001",
         "relationship": "implementation"
@@ -55431,9 +55447,14 @@
     {
       "id": "SURFACE-8b8075b14e77947f",
       "path": "tdf-mobile/.github/workflows/interaction-simulator.yml",
-      "sha256": "62a1ef12799f7f8118d0788db55eaec551034b2f5fdefad364f7b9f0b1df226e",
+      "sha256": "4932ccd534c7186429af7ea3b1c515264f2eeb750b3e6e6d542816453ca56f87",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-VIDEO-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4d083e586c68746a",
@@ -59962,7 +59983,6 @@
     "SURFACE-a9181c3d1f2e9fa0",
     "SURFACE-5a64e0ed1f9e7c79",
     "SURFACE-d84c1fc5d701e2cc",
-    "SURFACE-8b8075b14e77947f",
     "SURFACE-d7fd396a0e21292f",
     "SURFACE-dfdc76c7f5afe8f6",
     "SURFACE-57fb42409e4fe3c1",
@@ -61410,7 +61430,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b39770732278c32c9a78e433ffe453e752a68c6db7c7aab50de806164b45d7ee",
+      "sourceSha256": "60d0863725366248a8fa9ff009d0a59adef04eb94db4dde8b149256a83f06b25",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -61438,7 +61458,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b39770732278c32c9a78e433ffe453e752a68c6db7c7aab50de806164b45d7ee",
+      "sourceSha256": "60d0863725366248a8fa9ff009d0a59adef04eb94db4dde8b149256a83f06b25",
       "definition": {
         "states": [
           "absent",
@@ -61468,7 +61488,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b39770732278c32c9a78e433ffe453e752a68c6db7c7aab50de806164b45d7ee",
+      "sourceSha256": "60d0863725366248a8fa9ff009d0a59adef04eb94db4dde8b149256a83f06b25",
       "definition": {
         "export": [
           "queued",
