@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-02T05:53:01.205683+00:00",
+  "sourceCommit": "069e2486560df09f726bdc5ace0d94d99931f85a",
+  "baseline654": "3be9e5ec8c3c02064632fb33ec062c480e2cf9f8",
+  "parent652": "26d8c1082d8fec217d350c7cca941731266301e9",
+  "protectedMainAtComposition": "1b6e970fccc3c505dac0fadfa0e4c32025ebf23d",
+  "pullRequest": 654,
+  "latestMainObservedBeforePublication": "2c0b011c1d36a3ce6d0c292d005c4ddf1f858a37",
+  "latestMainContainedInThisComposition": false,
+  "status": "Reconciled existing correction; prepared for normal feature-branch fast-forward. Fresh hosted Haskell/PostgreSQL qualification and required review remain pending.",
+  "problem": "Legacy completion unconditionally decremented sold stock, allowing negative counters, nonpositive quantities and releases from foreign-event tiers.",
+  "invariant": {
+    "id": "EVT-LEGACY-REFUND-INVENTORY-001",
+    "requirement": "EVT-TICKET-001",
+    "statement": "Completion requires positive quantity and one event/tier-bound atomic decrement with sufficient current sold stock. Refused release rolls back completion while retaining processing and observed provider evidence.",
+    "implementationAssurance": "TESTED historically on original repair; new composition runtime PENDING",
+    "contract": "formal/system/legacy-refund-inventory.md"
+  },
+  "historicalCounterexample": {
+    "baseline": "d0301b96e2dfc2106758013b33b60058ea98856b",
+    "handlerCases": 67,
+    "failures": 9,
+    "observed": "Negative sold stock including -3, invalid quantity and foreign-event release",
+    "limitation": "Historical routed-handler probe, not a new execution on current parent. Original fixture setup failures are not counted as counterexamples.",
+    "report": "reports/legacy-refund-inventory-2026-10-28.json"
+  },
+  "repair": "Existing16-line replacement preserved exactly; no new financial business rule, schema, dependency, application test timeout or assertion relaxation.",
+  "sourceBinding": {
+    "source": "069e2486560df09f726bdc5ace0d94d99931f85a",
+    "parent652": "26d8c1082d8fec217d350c7cca941731266301e9",
+    "baseline654": "3be9e5ec8c3c02064632fb33ec062c480e2cf9f8",
+    "originalRepairSource": "b14320e815cbbba82fa1af8e924ea2bcd98e2496",
+    "allThreeResidualSourcePatchesExactOriginal654": true,
+    "criticalSHA256": {
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "ddacfbaee9230369a7d1490d44e6ce47bf32ef3d0fd561ea29b3f38c58806e83",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "f655267e5f30c9b0c9e31e6fce03965610c0f3ebee93d4cdc958029cbff832b9",
+      "scripts/__tests__/ticket-admission-model.test.mjs": "feebc6a2fd08487f8fd5e8d87b4a2020cd74faec4e39b9867bd7e369860843b5"
+    },
+    "all164OtherNormObjectsExactParent": true,
+    "EVTOnlyAppendsToThreeExistingFields": true,
+    "allParentHistoricalCatalogDecisionsExact": true,
+    "allUIAndDependencyAndWorkflowSQLTreesExactParent": true,
+    "contractExactOriginal654": true,
+    "historicalCatalogConsumerCountMutationNotReintroduced": true,
+    "scope": "Source correspondence and finite model/guard evidence only; fresh Haskell/PostgreSQL oncomposition pending",
+    "compositionCommit": "0710c42659b175dc3930048c138875b0fae7a844",
+    "finalGeneratedMetadataOnlyFollowup": [
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+      "docs/catalog-persistence/reports/static-list-inventory.json",
+      "formal/system/inventory.json",
+      "formal/system/traceability.json"
+    ],
+    "canonicalMetadataSixChecks": "PASS"
+  },
+  "localVerification": {
+    "modelTests": 15,
+    "workerGuards": 6,
+    "catalogControls": 8,
+    "strictJSONCSVAndGeneratedMetadata": "PASS",
+    "immutableAdmission": "PASS",
+    "repositoryQuality": "PASS",
+    "setup": "Owned exact Mobilec3b clone and unchanged borrowed owned dependencies; official native supplement, fallback disabled. No fresh canonical install, local Stack or local PostgreSQL qualification claimed."
+  },
+  "formalProperties": {
+    "assurance": "BOUNDED_VERIFIED",
+    "inventoryInputs": 800,
+    "inventoryStates": 3214,
+    "inventoryTransitions": 3200,
+    "violations": 0,
+    "bounds": "Two actors; initial sold -1..6; both quantities -1..3; all four event-binding pairs",
+    "controlsDetected": [
+      "Stale precheck permits sold=-1 after two actors consume the same capacity",
+      "Omitted event binding permits foreign-tier release",
+      "Omitted positivity permits nonpositive release"
+    ],
+    "scope": "Finite design model, not a refinement proof to Haskell, PostgreSQL or provider."
+  },
+  "wholeSystemAssurance": {
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 165,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 148,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 165,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 165,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "releaseDecision": "BLOCKED",
+    "scope": "165 implementation and165 refinement obligations remain UNPROVEN/UNKNOWN;11 inherited conditional SMT lemmas do not establish this inventory workflow."
+  },
+  "checks": {
+    "inventory-model": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "6e3df91f3a70c0dc357d8855ddcc2141639199dfe0f47f63178220e6758ed60e"
+    },
+    "inventory-guards": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "ed6c268bcb39b828ceb4044cda24c4f2e8bc184cd6c37acf6d40a1e1ed2669ce"
+    },
+    "catalog-controls": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "3edb03fea09fedb789a32927b62432d462635865c51c62e82ddfb6a6f8c2a2c4"
+    },
+    "final-admission": {
+      "exitCode": 0,
+      "sourceAtStart": "069e2486560df09f726bdc5ace0d94d99931f85a",
+      "sourceAtFinish": "069e2486560df09f726bdc5ace0d94d99931f85a",
+      "logSha256": "473dd316f2736aaf2e77d1cc06645cd89cced14bc6f1429add1346101cc5f243"
+    },
+    "final-assurance": {
+      "exitCode": 0,
+      "sourceAtStart": "069e2486560df09f726bdc5ace0d94d99931f85a",
+      "sourceAtFinish": "069e2486560df09f726bdc5ace0d94d99931f85a",
+      "logSha256": "5a9c80e09a72293f81bdc626d02f55346b9ae77f8205f43374a6d096502fd1ff"
+    },
+    "final-repo-qa": {
+      "exitCode": 0,
+      "sourceAtStart": "069e2486560df09f726bdc5ace0d94d99931f85a",
+      "sourceAtFinish": "069e2486560df09f726bdc5ace0d94d99931f85a",
+      "logSha256": "97f6533dbbb5e58c32dda919841616bc69e920d4d0247dccc4438df12cffe7f8"
+    },
+    "metadata-0": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "metadata-1": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "metadata-2": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5"
+    },
+    "metadata-3": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6"
+    },
+    "metadata-4": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d"
+    },
+    "metadata-5": {
+      "exitCode": 0,
+      "sourceAtStart": "0710c42659b175dc3930048c138875b0fae7a844",
+      "sourceAtFinish": "0710c42659b175dc3930048c138875b0fae7a844",
+      "logSha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e"
+    }
+  },
+  "scorecard": {
+    "confirmedExistingInventoryDefects": 1,
+    "originalRepairReconciled": true,
+    "newDuplicatePRs": 0,
+    "inventoryModelUnsafeControlsDetected": 3,
+    "protectedMainMerges": 0,
+    "freshComposedHandlerQualification": "PENDING"
+  },
+  "remainingRisks": [
+    "Pre-existing negative counters and other inventory writers are not repaired or constrained",
+    "Captured order snapshot and actor authority across provider I/O remain separate obligations",
+    "Legacy arbitrary partial-money-to-ticket allocation remains unresolved and unchanged",
+    "No claim of global capacity, held-order recovery or live authenticated provider correctness",
+    "Parent652 freshCI, reviews and protected-main admission remain independent gates",
+    "Main advanced during final preflight to2c0 (#672). Parent652 must reconcile it, preserving its compatible6144MiB heap flag. This draft qualifies against its actual feature base26d8, not that newer protected main."
+  ],
+  "integration": {
+    "branch": "fix/legacy-refund-inventory-20261028",
+    "base": "fix/legacy-stripe-refund-evidence-20261028",
+    "mode": "Normal fast-forward only after live head/review/policy preflight; draft and auto-merge off",
+    "productionOperations": 0,
+    "messagesOrReviewerRequests": 0
+  },
+  "next": "Qualify exact published composition in hosted Stack/PostgreSQL CI; match all actual handler cases in their dedicated group, check schema227, inspect failures and obtain required review/admission before protected integration.",
+  "evidence": {
+    "archive": "reports/refund-inventory-parent26d8-2026-11-02/evidence.tar.gz",
+    "sha256": "d19c3c189438894748ebfb9f5f88ffaf5fef10112d9df5e99ea6bbacc2f433f8",
+    "regularFiles": 81,
+    "manifestEntries": 80
+  }
+}

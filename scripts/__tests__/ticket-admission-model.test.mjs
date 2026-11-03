@@ -1,6 +1,171 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+// Two requesters and one eligibility change. The event/order lock covers both
+// the current check and insert, and READ COMMITTED refreshes the existence read
+// after a waiter acquires the lock. This is a design abstraction, not SQL proof.
+function exploreLegacyRequestCreation({ omitLock = false, staleSnapshot = false,
+  staleEligibility = false } = {}) {
+  let inputs = 0, states = 0, transitions = 0;
+  const violations = new Set();
+  let counterexample;
+  for (const initialCount of [0, 1]) {
+    for (const initiallyEligible of [false, true]) {
+      inputs++;
+      const queue = [{ count: initialCount, eligible: initiallyEligible, mutated: false,
+        lock: null, phase: [0, 0], snapshot: [null, null], eligibility: [null, null],
+        readCount: [null, null], readEligibility: [null, null], unauthorized: 0, trace: [] }];
+      const seen = new Set();
+      while (queue.length) {
+        const current = queue.shift();
+        const { trace, ...identity } = current;
+        const key = JSON.stringify(identity);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const invalid = [];
+        if (current.count > Math.max(initialCount, 1)) invalid.push('one-request-per-order');
+        if (current.unauthorized) invalid.push('current-eligibility');
+        for (const failure of invalid) violations.add(failure);
+        if (invalid.length && !counterexample) counterexample = { initialCount, initiallyEligible, ...current };
+        const push = (next, action) => {
+          transitions++;
+          next.trace = [...trace, action];
+          queue.push(next);
+        };
+        if (!current.mutated && current.lock === null) {
+          push({ ...structuredClone(current), eligible: false, mutated: true }, 'eligibility-changed');
+        }
+        for (let actor = 0; actor < 2; actor++) {
+          const next = structuredClone(current);
+          const phase = current.phase[actor];
+          if (phase === 0) {
+            next.snapshot[actor] = current.count;
+            next.eligibility[actor] = current.eligible;
+            next.phase[actor] = current.eligible ? 1 : 4;
+            push(next, `${actor}:initial-read`);
+          } else if (phase === 1 && (omitLock || current.lock === null)) {
+            if (!omitLock) next.lock = actor;
+            next.phase[actor] = 2;
+            push(next, `${actor}:acquire-lock`);
+          } else if (phase === 2) {
+            next.readCount[actor] = staleSnapshot ? current.snapshot[actor] : current.count;
+            next.readEligibility[actor] = staleEligibility ? current.eligibility[actor] : current.eligible;
+            next.phase[actor] = 3;
+            push(next, `${actor}:current-check`);
+          } else if (phase === 3) {
+            if (current.readCount[actor] === 0 && current.readEligibility[actor]) {
+              next.count++;
+              if (!current.eligible) next.unauthorized++;
+            }
+            if (current.lock === actor) next.lock = null;
+            next.phase[actor] = 4;
+            push(next, `${actor}:insert-or-refuse`);
+          }
+        }
+      }
+      states += seen.size;
+    }
+  }
+  return { inputs, states, transitions, violations: [...violations].sort(), counterexample };
+}
+
+test('bounded legacy request creation serializes absence, eligibility and insertion', t => {
+  const result = exploreLegacyRequestCreation();
+  assert.equal(result.inputs, 4);
+  assert.equal(result.states, 168);
+  assert.equal(result.transitions, 203);
+  assert.deepEqual(result.violations, []);
+  t.diagnostic(JSON.stringify({ model: 'legacy-request-creation', ...result }));
+});
+
+test('legacy request controls expose absent locks, stale snapshots and stale eligibility', t => {
+  for (const [control, options, violation] of [
+    ['omit-request-lock', { omitLock: true }, 'one-request-per-order'],
+    ['stale-request-snapshot', { staleSnapshot: true }, 'one-request-per-order'],
+    ['stale-request-eligibility', { staleEligibility: true }, 'current-eligibility'],
+  ]) {
+    const result = exploreLegacyRequestCreation(options);
+    assert.ok(result.violations.includes(violation));
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});
+
+// Two distinct legacy requests release one shared tier. A deliberate stale
+// precheck models why stock must be tested by the UPDATE that decrements it.
+// This finite design check is not a Haskell/SQL refinement proof.
+function exploreLegacyInventory({ stalePrecheck = false, omitEvent = false,
+  omitPositiveQuantity = false } = {}) {
+  let inputs = 0, states = 0, transitions = 0;
+  const violations = new Set();
+  let counterexample;
+  for (let initial = -1; initial <= 6; initial++) {
+    for (let first = -1; first <= 3; first++) {
+      for (let second = -1; second <= 3; second++) {
+        for (let mask = 0; mask < 4; mask++) {
+          inputs++;
+          const quantities = [first, second];
+          const matches = [Boolean(mask & 1), Boolean(mask & 2)];
+          const queue = [{ sold: initial, phase: [0, 0], trace: [] }];
+          const seen = new Set();
+          while (queue.length) {
+            const current = queue.shift();
+            const key = JSON.stringify([current.sold, current.phase]);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const invalid = [];
+            if (initial >= 0 && current.sold < 0) invalid.push('nonnegative');
+            if (current.phase.some((phase, index) => phase === 2 && !matches[index])) invalid.push('event-scoped');
+            if (current.phase.some((phase, index) => phase === 2 && quantities[index] <= 0)) invalid.push('positive-release');
+            const released = quantities.reduce((sum, quantity, index) =>
+              sum + (current.phase[index] === 2 ? quantity : 0), 0);
+            assert.equal(current.sold, initial - released);
+            for (const failure of invalid) violations.add(failure);
+            if (invalid.length && !counterexample) counterexample = { initial, quantities, matches, ...current };
+            for (let actor = 0; actor < 2; actor++) {
+              const phase = current.phase[actor];
+              if (phase >= 2) continue;
+              const quantity = quantities[actor];
+              const allowed = (omitPositiveQuantity || quantity > 0)
+                && (omitEvent || matches[actor]) && current.sold >= quantity;
+              const next = { sold: current.sold, phase: [...current.phase],
+                trace: [...current.trace, `${actor}:${phase === 1 ? 'release-after-precheck' : 'conditional-release'}`] };
+              if (phase === 1 || allowed) {
+                next.phase[actor] = stalePrecheck && phase === 0 ? 1 : 2;
+                if (next.phase[actor] === 2) next.sold -= quantity;
+              } else next.phase[actor] = 3;
+              transitions++;
+              queue.push(next);
+            }
+          }
+          states += seen.size;
+        }
+      }
+    }
+  }
+  return { inputs, states, transitions, violations: [...violations].sort(), counterexample };
+}
+
+test('bounded atomic legacy inventory releases remain positive, event-scoped and nonnegative', t => {
+  const result = exploreLegacyInventory();
+  assert.equal(result.inputs, 800);
+  assert.equal(result.states, 3214);
+  assert.equal(result.transitions, 3200);
+  assert.deepEqual(result.violations, []);
+  t.diagnostic(JSON.stringify({ model: 'legacy-inventory-release', ...result }));
+});
+
+test('legacy inventory controls expose stale stock reads, foreign tiers and nonpositive quantities', t => {
+  for (const [control, options, violation] of [
+    ['stale-precheck', { stalePrecheck: true }, 'nonnegative'],
+    ['omit-event', { omitEvent: true }, 'event-scoped'],
+    ['omit-positive-quantity', { omitPositiveQuantity: true }, 'positive-release'],
+  ]) {
+    const result = exploreLegacyInventory(options);
+    assert.ok(result.violations.includes(violation));
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});
+
 // Finite abstraction of one ticket, two scanners and a cancellation/refund.
 // This checks design invariants, not refinement of Haskell or PostgreSQL.
 function explore({ allowReplay = false, allowOutsider = false, omitAudit = false } = {}) {
@@ -389,4 +554,82 @@ test('legacy completion control detects a second POST while evidence is held', t
   assert.equal(result.witnesses.NoSecondPost.trace.at(-1), 'retry:POST');
   t.diagnostic(JSON.stringify({ control: 'retry-held-POST', states: result.states,
     transitions: result.transitions, counterexample: result.witnesses.NoSecondPost }));
+});
+
+// Historical identities are immutable inputs here. Creation uses the same order
+// lock and refuses existing history; direct writers and canonical allocations
+// are outside this abstraction. Claim commits before an uncertain provider POST.
+function exploreLegacyRefundHistory({ omitHistory = false, pendingOnly = false } = {}) {
+  const statuses = ['pending', 'rejected', 'processing', 'approved'];
+  const inputs = [...statuses.map(status => [status]),
+    ...statuses.flatMap(first => statuses.map(second => [first, second]))];
+  let states = 0, transitions = 0;
+  const coverage = new Set();
+  const witnesses = {};
+  for (const history of inputs) {
+    const queue = [{ rows: history, phase: [0, 0], posts: [0, 0], trace: [] }];
+    const seen = new Set();
+    while (queue.length) {
+      const current = queue.shift();
+      const { trace, ...identity } = current;
+      const key = JSON.stringify(identity);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const posts = current.posts.reduce((sum, count) => sum + count, 0);
+      if (history.length > 1 && posts) witnesses.AmbiguousHistoryNeverPosts ??= { history, trace };
+      if (posts > 1) witnesses.AtMostOnePost ??= { history, trace };
+      for (let actor = 0; actor < 2; actor++) {
+        const target = history.length === 1 ? 0 : actor;
+        const next = structuredClone(current);
+        let action;
+        if (current.phase[actor] === 0) {
+          const visible = pendingOnly ? current.rows.filter(status => status === 'pending').length
+            : current.rows.length;
+          const eligible = current.rows[target] === 'pending' && (omitHistory || visible === 1);
+          next.phase[actor] = eligible ? 1 : 3;
+          if (eligible) next.rows[target] = 'processing';
+          action = eligible ? 'claim' : 'refuse';
+        } else if (current.phase[actor] === 1) {
+          next.posts[actor]++;
+          next.phase[actor] = 2;
+          action = 'POST-response-lost';
+        } else if (current.phase[actor] === 2) {
+          next.phase[actor] = 3;
+          action = 'retry-refused';
+        } else continue;
+        coverage.add(action);
+        transitions++;
+        next.trace = [...trace, `${actor}:${action}`];
+        queue.push(next);
+      }
+    }
+    states += seen.size;
+  }
+  return { inputs: inputs.length, states, transitions, coverage: [...coverage].sort(),
+    violations: Object.keys(witnesses).sort(), witnesses };
+}
+
+test('bounded legacy approval refuses every ambiguous historical identity before POST', t => {
+  const result = exploreLegacyRefundHistory();
+  assert.equal(result.inputs, 20);
+  assert.equal(result.states, 89);
+  assert.equal(result.transitions, 92);
+  assert.deepEqual(result.violations, []);
+  assert.deepEqual(result.coverage, ['POST-response-lost', 'claim', 'refuse', 'retry-refused']);
+  t.diagnostic(JSON.stringify({ model: 'legacy-refund-history', ...result }));
+});
+
+test('legacy history controls detect omitted history and pending-only filtering', t => {
+  const omitted = exploreLegacyRefundHistory({ omitHistory: true });
+  assert.equal(omitted.states, 125);
+  assert.equal(omitted.transitions, 148);
+  assert.deepEqual(omitted.violations, ['AmbiguousHistoryNeverPosts', 'AtMostOnePost']);
+  assert.equal(omitted.witnesses.AtMostOnePost.trace.filter(step => step.endsWith('POST-response-lost')).length, 2);
+  const filtered = exploreLegacyRefundHistory({ pendingOnly: true });
+  assert.equal(filtered.states, 113);
+  assert.equal(filtered.transitions, 128);
+  assert.deepEqual(filtered.violations, ['AmbiguousHistoryNeverPosts']);
+  for (const [control, result] of [['omit-history', omitted], ['pending-only', filtered]]) {
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
 });

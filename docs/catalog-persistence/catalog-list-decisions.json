@@ -788,7 +788,7 @@
               "9abc4f655fdb20e98b03"
             ],
             "selectedHistoricalPreservedCount": 1206,
-            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87→88 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
+            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87\u219288 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
           }
         }
       },
@@ -3197,6 +3197,13 @@
         ]
       },
       "scope": "Current main review objects remain exact. Older line/count observations are retained as historical source-specific evidence, not refreshed current observations."
+    },
+    "legacyRefundHistorySourceReview": {
+      "sourceRevision": "1667d586b3901f9470baaedb6024a34e6e388118",
+      "oldParent": "4d48e13556f3fb1a2756b30099f09a5992682ad3",
+      "preservedIncomingDecisions": 1371,
+      "reusedOriginalDecision": "edc4bc7cc2815c51a093",
+      "scope": "Original reviewed test-only status-history consumer, unchanged values and identity. Historical line/count observations are retained; generated reports record this composition. No production catalog values or rules changed."
     }
   },
   "decisions": [
@@ -8635,7 +8642,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -10261,7 +10268,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -17539,7 +17546,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
@@ -17554,7 +17561,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -17569,7 +17576,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -23647,6 +23654,32 @@
         "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "edc4bc7cc2815c51a093",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Finite verification inputs mirror existing ticket_refund_request status history; test-only consumer, with no new selectable values or runtime authority. The history guard counts all identities independent of status.",
+      "reviewed": true,
+      "reviewMethod": "manual-bounded-fixture-review",
+      "reviewBatch": "legacy-refund-history-20261028",
+      "evidence": {
+        "file": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "line": 563,
+        "kind": "array",
+        "name": "statuses",
+        "valueCount": 4,
+        "consumerCount": 309,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": [
+          "67a832e9fad8b0ede0bb",
+          "dc3e03a3731e9ec343bb",
+          "1925bc5bf3a9d578b16b"
+        ]
       }
     }
   ]

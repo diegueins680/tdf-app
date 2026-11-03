@@ -63,6 +63,7 @@
       "e2e/web/persona-public.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
       "e2e/web/public-welcome.spec.mjs",
+      "e2e/web/radio-navigation.spec.mjs",
       "e2e/web/records-thumbnails.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
@@ -193,6 +194,7 @@
       "scripts/__tests__/music-test-database.test.mjs",
       "scripts/__tests__/music-track-search-model.test.mjs",
       "scripts/__tests__/music-worker-build.test.mjs",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -913,6 +915,7 @@
       "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
       "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
       "tdf-hq-ui/src/components/RouteErrorBoundary.tsx",
+      "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
       "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
       "tdf-hq-ui/src/components/SessionGate.tsx",
       "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
@@ -2894,7 +2897,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "5507e89419444a27b6df4d765de1637b8d5628eabeb00fd0180020b10352d533",
+      "sha256": "e3066fb6a9720b4947165c572580597f7f7c401dde5bdb0db5e4576e689a005c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3183,6 +3186,12 @@
       "id": "SURFACE-a2826b2994431e77",
       "path": "e2e/web/public-welcome.spec.mjs",
       "sha256": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ca746d31fe23acf5",
+      "path": "e2e/web/radio-navigation.spec.mjs",
+      "sha256": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3842,7 +3851,7 @@
     {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
-      "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
+      "sha256": "2a3c464d094671845d92968a2230aca06da67fbe07adc046e45d0ce6d5578d6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3891,6 +3900,12 @@
       "id": "SURFACE-523809a7dcf5c848",
       "path": "scripts/__tests__/music-worker-build.test.mjs",
       "sha256": "48ed0c6d1a7308dae7e8d1c6370d2ce14243bd7a1caf80f6b07b1bf5a6e62dcf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d6545235ef8b425c",
+      "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4040,7 +4055,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
+      "sha256": "be9d037455a0e8c249e025aa5e7a8786b95f444458d05db06dfff6079d5195d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4976,7 +4991,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "6171954f6314882c0d68232a7fbd1e1faf080d1555bfdfdde70e38cf888bdcf1",
+      "sha256": "9faf88d379052251460752e225d8f9c28e471bd8044c3f70791f0de02396611d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5054,7 +5069,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6806,7 +6821,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "sha256": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8132,7 +8147,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "45fd9f08f7ab9a1e2b7cacc770541dc8e9de76a87ea5a1ba6d846588e603f573",
+      "sha256": "0dee9eea31b4c0550c930568b3f9794f141d0d021e5d0f6aa9741efba97e2dac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8190,9 +8205,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-30ea18f2f9ded258",
+      "path": "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+      "sha256": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d9960955f95c03fb",
       "path": "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
-      "sha256": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+      "sha256": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11714,13 +11735,13 @@
     {
       "id": "SURFACE-a415ee89925f5e2f",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
-      "sha256": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
+      "sha256": "7fb6b584f959ca10e07759f679d267c82c92639f96283a46498091ddaad74ec0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ee5ba63310165c5c",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
-      "sha256": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
+      "sha256": "b28ee7c14daea0b4dcadd1121bf77bcc2658e00c88a74cb9cf3e9d894288c717",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16016,7 +16037,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "55f3c180ee7eda0e1befa30f9dbe5561e87f459252d8bda088e941897ea07ae1",
+      "sha256": "9f980a040fd66f6c7cb2fb7f4ca0f70258e553284a5268aa43e59ceb8f6682a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16538,7 +16559,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "0873102b8db9a7f31b3863575acef0431ab9a46f4f86790a82bee12bc5b74476",
+      "sha256": "112c7cc796fe6d38ee37ec2d181bd88a48a112c79f2e81d94c3f6d9730f21041",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28409,6 +28430,27 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-refund-history.md",
+      "sha256": "9957d1dc5550ae031d91978e8ef395f48f1dee027a8dbcefb61f63b934819722",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-refund-inventory.md",
+      "sha256": "4d4cac202a7dcf05bf7c84f9d1c07640d59285bbf9dcefeda4c624da70f4131b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-refund-request-creation.md",
+      "sha256": "64d2baa61de0b56918d4ff9eda7d61f542831b33dc295014ddb0911dcd9ba801",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-release-playback.md",
       "sha256": "3a98924b03c94913d8aa90f67a4bace35034dff00230924a87ad14cbf416f792",
       "authority": "inferred",
@@ -28494,7 +28536,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "f3310c0937814a94d95e9f879a7b3402e6a055f13d56d6b5d65ed03b9d2983ee",
+      "sha256": "d5997cfed6cae6fd93e2961fd9a3ed08476c58f83f1601f7bced5cebf95b6f99",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28605,6 +28647,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-worker-heartbeat-shutdown.md",
+      "sha256": "94e3d66490bc334092ae4ae8160ae688be56b9128621c20dce1f0dc393022a28",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-aux-write.md",
       "sha256": "2d8dee259c38886c7de44bb20df7085d406984d16647b2c41659792806e8f391",
       "authority": "inferred",
@@ -28697,7 +28746,7 @@
     },
     {
       "path": "formal/system/player-session.md",
-      "sha256": "1b42df5d646e6c417de273e4b3e3ddd38017a5142becda4fe40dd772e267b2a0",
+      "sha256": "03510ba14584b6be7077f0860aa5b806e28c6686eac3c8b9c09c237802ec09a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28802,7 +28851,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "44d0a8795d6675e083f9f322926e2eb1bde26129037c4f0f7465f1feef2562ac",
+      "sha256": "e65e5f0f6ef5211091c557a17504d2747765895919db16e1bd6e73ac4fc0c235",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
