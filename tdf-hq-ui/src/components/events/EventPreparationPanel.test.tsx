@@ -32,6 +32,22 @@ it('confirms the poster attachment and exposes the preparation destinations', as
   expect(upload).toHaveBeenCalledWith('216', expect.any(File));
   expect(readEvent).toHaveBeenCalledWith('216');
   expect(screen.getByRole('link', { name: 'Cronograma y equipo' }).getAttribute('href')).toBe('/social/eventos/216/logistica');
+  // No campaign frontend is served for organizers yet, so no dead link is offered.
+  expect(screen.queryByRole('link', { name: 'Abrir campañas' })).toBeNull();
+});
+it('confirms an attachment served from a supported http asset base', async () => {
+  const httpUrl = 'http://localhost:8080/assets/psique.png';
+  upload.mockResolvedValueOnce({ eiuPublicUrl: httpUrl });
+  readEvent.mockResolvedValueOnce({ ...event, eventImageUrl: httpUrl });
+  setup(); savePoster();
+  await screen.findByText('Afiche guardado.');
+  expect(upload).toHaveBeenCalledTimes(1);
+});
+it('rejects an upload URL with embedded credentials', async () => {
+  upload.mockResolvedValueOnce({ eiuPublicUrl: 'https://user:secret@api.example.test/assets/psique.png' });
+  setup(); savePoster();
+  await screen.findByText(/No se pudo confirmar la carga/);
+  expect(readEvent).not.toHaveBeenCalled();
 });
 it('retries verification without uploading the same file twice', async () => {
   readEvent.mockRejectedValueOnce(new Error('Conexión interrumpida'));

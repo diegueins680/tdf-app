@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { SocialEventsAPI, type SocialEventDTO } from '../../api/socialEvents';
-import { resolveApiBase } from '../../config/apiBase';
 import { useOwnedSessionDraft } from '../../session/useOwnedSessionDraft';
 
 interface PosterAttempt { file: File; isCurrentOwner: () => boolean }
@@ -35,7 +34,9 @@ export default function EventPreparationPanel({ event, ownerId }: { event: Socia
         ensureOwner();
         try {
           const parsed = new URL(result.eiuPublicUrl);
-          if (parsed.protocol !== 'https:' || parsed.username || parsed.password) throw new Error();
+          // The backend accepts http(s) asset bases (HQ_ASSETS_BASE_URL); the URL is
+          // only compared with the saved poster, never rendered from here.
+          if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error();
           url = parsed.toString();
         } catch {
           throw new Error('No se pudo confirmar la carga. Conservamos la imagen para reintentar.');
@@ -86,7 +87,6 @@ export default function EventPreparationPanel({ event, ownerId }: { event: Socia
           if (draft.draft) mutation.mutate({ file: draft.draft, isCurrentOwner: draft.isCurrentOwner });
         }}>{mutation.isPending ? <><CircularProgress size={16} sx={{ mr: 1 }} color="inherit" />Guardando afiche…</> : mutation.isError ? 'Reintentar afiche' : 'Guardar afiche'}</Button>
         <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`}>Cronograma y equipo</Button>
-        <Button component="a" href={`${resolveApiBase()}/campaign-platform/#campanas`} target="_blank" rel="noopener noreferrer">Abrir campañas</Button>
       </Stack>
     </Stack></CardContent>
   </Card>;

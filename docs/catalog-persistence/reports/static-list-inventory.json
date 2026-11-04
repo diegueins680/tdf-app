@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-04T18:08:37.585Z",
+  "generatedAt": "2026-11-04T18:14:25.894Z",
   "repositoryRoot": ".",
   "filesScanned": 2556,
   "candidateCount": 1381,
@@ -83450,7 +83450,7 @@
       "lines": [
         3221
       ],
-      "consumerCount": 253,
+      "consumerCount": 252,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -83523,7 +83523,6 @@
         "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
-        "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
@@ -83553,7 +83552,8 @@
         "tdf-hq-ui/src/pages/SocialInboxPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts"
+        "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts",
+        "tdf-hq-ui/src/routes/AppShell.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
