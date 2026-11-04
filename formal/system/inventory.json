@@ -15535,7 +15535,7 @@
     {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
-      "sha256": "c0de372f48975c867471934c900cac9bc830a327ebf756e4233b2b441ef881ab",
+      "sha256": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16711,7 +16711,7 @@
     {
       "id": "SURFACE-83dc1bd4fe1e5da0",
       "path": "tdf-hq/test/TDF/Contracts/StoreSpec.hs",
-      "sha256": "a6b9cd6dbc08accd23ab805fb321684b1b95dcd4baa80d828d399af801c232b3",
+      "sha256": "302ab1c3c85ff1bfa9b3b514ed4373d13197df7bc1f12b78283b3a24cbf23579",
       "semanticConformance": "not-established-by-discovery"
     },
     {

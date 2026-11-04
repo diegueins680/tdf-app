@@ -16,6 +16,8 @@ import           Database.Persist (Entity (..), selectList)
 import           Database.Persist.Sql (ConnectionPool, rawExecute, runSqlPool)
 import           Database.Persist.Sqlite (createSqlitePool)
 import           Servant (ServerError (..), (:<|>) (..), runHandler)
+import           System.Directory (createDirectoryIfMissing, getTemporaryDirectory, removeDirectoryRecursive, withCurrentDirectory)
+import           System.FilePath ((</>))
 import           Test.Hspec
 
 import           TDF.Contracts.Server
@@ -108,3 +110,18 @@ spec = describe "Contract store and send (CONTRACT-STORE-001, CONTRACT-SEND-001)
     result <- send d "550e8400-e29b-41d4-a716-446655440000"
     fmap errHTTPCode (either Just (const Nothing) result) `shouldBe` Just 404
     length <$> deliveries pool `shouldReturn` 0
+
+  it "imports a valid legacy file-store contract once, even when read again" $ withPool $ \pool -> do
+    tmp <- getTemporaryDirectory
+    let dir = tmp </> "tdf-contract-legacy-spec"
+        cid = "550e8400-e29b-41d4-a716-446655440000"
+    createDirectoryIfMissing True (dir </> "contracts" </> "store")
+    BL.writeFile (dir </> "contracts" </> "store" </> "550e8400-e29b-41d4-a716-446655440000.json")
+      "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+    withCurrentDirectory dir $ do
+      let _ :<|> pdfH :<|> _ = server (deps pool Nothing)
+      runHandler (pdfH cid) `shouldReturn` Right "%PDF-1.4 fake"
+      runHandler (pdfH cid) `shouldReturn` Right "%PDF-1.4 fake"
+    removeDirectoryRecursive dir
+    rows <- runSqlPool (selectList [] []) pool :: IO [Entity ME.Contract]
+    map (ME.contractKind . entityVal) rows `shouldBe` ["generic"]

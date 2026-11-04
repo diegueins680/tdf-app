@@ -18,7 +18,7 @@ import           Control.Exception (SomeException, displayException, try)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Maybe (fromMaybe)
 import           Database.Persist (get, insert, insertKey, update, (=.))
-import           Database.Persist.Sql (ConnectionPool, SqlPersistT, fromSqlKey, runSqlPool)
+import           Database.Persist.Sql (ConnectionPool, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toPersistValue)
 import           TDF.Models (PartyId)
 import qualified TDF.ModelsExtra as ME
 import qualified Data.Aeson as A
@@ -204,16 +204,18 @@ loadContract pool cid =
               pure (Right (Just stored))
             other -> pure other
   where
-    importLegacy uuid stored = do
-      existing <- get (ME.ContractKey uuid)
-      case existing of
-        Just _ -> pure ()
-        Nothing -> insertKey (ME.ContractKey uuid) ME.Contract
-          { ME.contractKind = scKind stored
-          , ME.contractPayload = encodeContractPayload (scPayload stored)
-          , ME.contractCreatedByPartyId = Nothing
-          , ME.contractCreatedAt = scCreatedAt stored
-          }
+    -- One statement, so concurrent first reads of the same legacy contract
+    -- cannot both pass a check and then collide on the primary key.
+    importLegacy :: UUID.UUID -> StoredContract -> SqlPersistT IO ()
+    importLegacy uuid stored =
+      rawExecute
+        "INSERT INTO contract (id, kind, payload, created_by_party_id, created_at)\
+        \ VALUES (?,?,?,NULL,?) ON CONFLICT (id) DO NOTHING"
+        [ toPersistValue (ME.ContractKey uuid)
+        , toPersistValue (scKind stored)
+        , toPersistValue (encodeContractPayload (scPayload stored))
+        , toPersistValue (scCreatedAt stored)
+        ]
 
 storedFromRecord :: Text -> ME.Contract -> Either Text StoredContract
 storedFromRecord cid record =
