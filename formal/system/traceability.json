@@ -15631,7 +15631,8 @@
         "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
@@ -15672,7 +15673,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f80c35188f9246bfeec95b377bc455adf5a62857ce0eb425f303f2f0eb336d00",
+    "docs/catalog-persistence/catalog-list-decisions.json": "47debbdb6904594f3f36f0a37e1fd036b8c7dab7544601b51768e5f30e70373e",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
@@ -16027,7 +16028,7 @@
     "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "93ec231c7af9e9d9ec8861a43c307da6e42810275662af2c4253d9cc308e2730",
+    "formal/system/recovery-expiry-arithmetic.json": "e1f29fe4a6bfdfcbdba09b21b68c150b3352c23074946316513e44d141c8bcc9",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -16395,7 +16396,7 @@
     "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
     "tdf-hq-ui/src/App.tsx": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
     "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
-    "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
+    "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
@@ -26882,6 +26883,10 @@
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": [
       {
         "requirement": "MKT-CART-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
         "relationship": "tests"
       }
     ],
@@ -38684,11 +38689,15 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
+      "sha256": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-CART-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-STORAGE-001",
           "relationship": "tests"
         }
       ]
@@ -63574,7 +63583,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f055cf5fbe79fb4909b0981e1bcff9ac46faa1c0c188f86fad061b35cf0ed45c",
+      "sourceSha256": "bcb7f8753c41e85ce019b660ed401a3676a348fff2e0370a34bc5e485ccc78c3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -63602,7 +63611,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f055cf5fbe79fb4909b0981e1bcff9ac46faa1c0c188f86fad061b35cf0ed45c",
+      "sourceSha256": "bcb7f8753c41e85ce019b660ed401a3676a348fff2e0370a34bc5e485ccc78c3",
       "definition": {
         "states": [
           "absent",
@@ -63632,7 +63641,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f055cf5fbe79fb4909b0981e1bcff9ac46faa1c0c188f86fad061b35cf0ed45c",
+      "sourceSha256": "bcb7f8753c41e85ce019b660ed401a3676a348fff2e0370a34bc5e485ccc78c3",
       "definition": {
         "export": [
           "queued",

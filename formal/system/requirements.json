@@ -15630,7 +15630,8 @@
         "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
