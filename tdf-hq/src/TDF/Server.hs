@@ -13408,8 +13408,18 @@ generateInvoiceForSession user sessionId payload = do
   sessionEnt <- liftIO $ flip runSqlPool pool $ getEntity sessionKey
   session <- maybe (throwError err404 { errBody = "Session not found" }) pure sessionEnt
   customerKey <- resolveSessionInvoiceCustomer session req
+  -- Everything the SRI script would reject is checked before a key is reserved
+  -- or an invoice created, so a correctable input error (for example a customer
+  -- without RUC) answers 400 and leaves the key reusable.
+  mSriRequest <-
+    if issuesSri
+      then do
+        customer <- loadCustomerForSri customerKey
+        let sriRequest = toSriScriptRequest customer req
+        either throwBadRequest (const (pure (Just sriRequest))) (Sri.validateSriScriptRequest sriRequest)
+      else pure Nothing
   case mIssueKey of
-    Nothing -> snd <$> generateSessionInvoiceOnce user sessionId sessionKey customerKey req (pure ())
+    Nothing -> snd <$> generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest (pure ())
     Just issueKey -> do
       now <- liftIO getCurrentTime
       let fingerprint = SessionIssue.issueFingerprint sessionId req
@@ -13434,7 +13444,7 @@ generateInvoiceForSession user sessionId payload = do
         SessionIssue.IssueReserved reservationId -> do
           let release = liftIO $ flip runSqlPool pool $ SessionIssue.releaseIssue reservationId
           (invoiceKey, response) <-
-            generateSessionInvoiceOnce user sessionId sessionKey customerKey req release
+            generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest release
           completedAt <- liftIO getCurrentTime
           liftIO $ flip runSqlPool pool $
             SessionIssue.completeIssue completedAt reservationId (Just invoiceKey)
@@ -13446,9 +13456,10 @@ generateInvoiceForSession user sessionId payload = do
 -- SRI document can have been issued yet, so a reservation may be released.
 -- Once the SRI script starts, failures are reported in the response instead.
 generateSessionInvoiceOnce
-  :: AuthedUser -> Text -> Key ME.Session -> Key Party -> GenerateSessionInvoiceReq -> AppM ()
+  :: AuthedUser -> Text -> Key ME.Session -> Key Party -> GenerateSessionInvoiceReq
+  -> Maybe Sri.SriScriptRequest -> AppM ()
   -> AppM (Key Invoice, Value)
-generateSessionInvoiceOnce user sessionId sessionKey customerKey req beforeSri = do
+generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest beforeSri = do
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   invoiceKey <- (do
@@ -13464,10 +13475,9 @@ generateSessionInvoiceOnce user sessionId sessionKey customerKey req beforeSri =
       pure createdKey)
     `catchError` \err -> beforeSri >> throwError err
   sriValue <-
-    if fromMaybe True (gsiIssueSri req)
-      then do
-        customer <- loadCustomerForSri customerKey
-        sriResult <- liftIO (Sri.runSriInvoiceScript (toSriScriptRequest customer req))
+    case mSriRequest of
+      Just sriRequest -> do
+        sriResult <- liftIO (Sri.runSriInvoiceScript sriRequest)
         case sriResult of
           Left err ->
             pure (object ["ok" .= False, "error" .= err])
@@ -13480,7 +13490,7 @@ generateSessionInvoiceOnce user sessionId sessionKey customerKey req beforeSri =
                   , InvoiceNumber =. sirInvoiceNumber result
                   ]
             pure (toJSON result)
-      else pure Null
+      Nothing -> pure Null
   refreshed <- loadInvoiceDTOOr404 invoiceKey
   pure
     ( invoiceKey

@@ -1,4 +1,4 @@
-import { nextInvoiceIssueAttempt, type GenerateSessionInvoiceInput } from './invoices';
+import { invoiceIssueSettled, nextInvoiceIssueAttempt, type GenerateSessionInvoiceInput } from './invoices';
 
 const payload: GenerateSessionInvoiceInput = {
   customerId: 9,
@@ -44,5 +44,21 @@ describe('nextInvoiceIssueAttempt (PAY-INVOICE-ISSUE-001)', () => {
     expect(edited.key).not.toBe(first.key);
     const otherSession = nextInvoiceIssueAttempt(edited, 'session-2', payload, newKey);
     expect(otherSession.key).not.toBe(edited.key);
+  });
+});
+
+describe('invoiceIssueSettled (PAY-INVOICE-ISSUE-001)', () => {
+  const base = { ok: true, sessionId: 's', invoice: {} as never };
+
+  it('settles when SRI was not requested or reported the document as issued', () => {
+    expect(invoiceIssueSettled({ ...base, sri: null })).toBe(true);
+    expect(invoiceIssueSettled({ ...base })).toBe(true);
+    expect(invoiceIssueSettled({ ...base, sri: { ok: true, status: 'issued' } })).toBe(true);
+  });
+
+  it('keeps the attempt open after an SRI error or an unconfirmed status', () => {
+    expect(invoiceIssueSettled({ ...base, sri: { ok: false, error: 'No se pudo leer la confirmación' } })).toBe(false);
+    expect(invoiceIssueSettled({ ...base, sri: { ok: true, status: 'received' } })).toBe(false);
+    expect(invoiceIssueSettled({ ...base, sri: { ok: false, status: 'issued' } })).toBe(false);
   });
 });

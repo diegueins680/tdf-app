@@ -102,3 +102,18 @@ export function nextInvoiceIssueAttempt(
   const fingerprint = JSON.stringify([sessionId, rest]);
   return previous?.fingerprint === fingerprint ? previous : { fingerprint, key: newKey() };
 }
+
+/**
+ * Whether a session invoice response settles the attempt, so its idempotency
+ * key may be dropped: SRI was not requested, or SRI reported the document as
+ * issued. Any other SRI outcome (an error, or a status other than issued) is
+ * uncertain: the portal may have issued the document, so the key is kept and
+ * resubmitting the same request replays the stored answer instead of issuing
+ * again.
+ */
+export function invoiceIssueSettled(response: GenerateSessionInvoiceResponse): boolean {
+  const sri = response.sri;
+  if (sri == null) return true;
+  if ('error' in sri) return false;
+  return sri.ok === true && sri.status === 'issued';
+}

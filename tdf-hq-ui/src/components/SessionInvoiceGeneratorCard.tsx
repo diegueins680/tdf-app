@@ -30,6 +30,7 @@ import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Invoices,
+  invoiceIssueSettled,
   nextInvoiceIssueAttempt,
   type GenerateSessionInvoiceInput,
   type GenerateSessionInvoiceResponse,
@@ -204,7 +205,11 @@ export default function SessionInvoiceGeneratorCard() {
       return Invoices.generateForSession(selectedSession.sessionId, payload);
     },
     onSuccess: async (response) => {
-      issueAttempt.current = null;
+      // Keep the key after an uncertain SRI outcome: the portal may have issued
+      // the document, so resubmitting must replay rather than issue again.
+      if (invoiceIssueSettled(response)) {
+        issueAttempt.current = null;
+      }
       setResult(response);
       setFormError(null);
       await qc.invalidateQueries({ queryKey: ['session-invoices', selectedSession?.sessionId ?? 'none'] });
@@ -601,6 +606,26 @@ export default function SessionInvoiceGeneratorCard() {
                 </Typography>
               ) : (
                 <Typography variant="body2">SRI no ejecutado.</Typography>
+              )}
+              {!invoiceIssueSettled(result) && (
+                <>
+                  <Typography variant="body2">
+                    La emisión SRI no quedó confirmada. Volver a generar con los mismos datos repite esta respuesta sin
+                    emitir otra factura. Si confirmas en el portal del SRI que no se emitió, inicia un nuevo intento.
+                  </Typography>
+                  <Box>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        issueAttempt.current = null;
+                        setResult(null);
+                      }}
+                    >
+                      Verifiqué el portal: nuevo intento
+                    </Button>
+                  </Box>
+                </>
               )}
             </Stack>
           </Alert>
