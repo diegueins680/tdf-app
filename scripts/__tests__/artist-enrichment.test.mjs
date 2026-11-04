@@ -9,6 +9,10 @@ import { promisify } from 'node:util';
 
 import {
   apiRequestTimeoutMs,
+  authorizedArtistImageSource,
+  verifiedArtistBiography,
+  automaticFieldFillAllowed,
+  internalArtistMedia,
   automaticMatchAllowed,
   artistNameAliasCandidate,
   detectImageMime,
@@ -545,4 +549,126 @@ test('managed image recognition includes the canonical API without trusting look
     'https://untrusted.example/artist.jpg',
     'not a URL',
   ]) assert.equal(isTdfManagedImageUrl(url), false, url);
+});
+
+
+test('fills empty fields while leaving artist content for human review', () => {
+  assert.equal(automaticFieldFillAllowed('bio', null), true);
+  assert.equal(automaticFieldFillAllowed('bio', 'My approved bio'), false);
+  assert.equal(automaticFieldFillAllowed('heroImageUrl', '/artist-fallback.svg'), true);
+  assert.equal(automaticFieldFillAllowed('heroImageUrl', 'https://artist.example/photo.jpg'), false);
+  assert.equal(parseArgs(['--scope', 'profiles']).scope, 'profiles');
+});
+
+test('internal images require the exact artist, explicit rights and a managed public asset', () => {
+  const profile = { apArtistId: 7, apHeroImageUrl: null };
+  const asset = { amaId: 42, amaArtistId: 7, amaAssetKind: 'landscape',
+    amaRightsStatus: 'authorized', amaSourceAttribution: 'Artist-approved press kit',
+    amaSourceUrl: 'https://artist.example/press.jpg',
+    amaPublicUrl: 'https://api.tdfrecords.net/assets/serve/press.webp' };
+  assert.equal(internalArtistMedia(profile, [asset])[0].assetId, 42);
+  for (const changed of [{ amaArtistId: 8 }, { amaRightsStatus: 'unconfirmed' },
+    { amaPublicUrl: 'https://unknown.example/press.jpg' }, { amaSourceAttribution: '' }]) {
+    assert.deepEqual(internalArtistMedia(profile, [{ ...asset, ...changed }]), []);
+  }
+  assert.deepEqual(internalArtistMedia({ ...profile, apHeroImageUrl: 'https://artist.example/current.jpg' }, [asset])
+    .filter(item => item.field === 'heroImageUrl'), []);
+  assert.deepEqual(internalArtistMedia(profile, [asset], [{ aesArtistId: 7, aesStatus: 'rejected',
+    aesFieldName: 'heroImageUrl', aesProposedValue: asset.amaPublicUrl }])
+    .filter(item => item.field === 'heroImageUrl'), []);
+});
+
+test('registered authorized images are reused before external providers and without uploads', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'tdf-internal-media-'));
+  const previousFetch = globalThis.fetch;
+  const previousToken = process.env.ADMIN_TOKEN;
+  process.env.ADMIN_TOKEN = 'synthetic-test-token';
+  const writes = [];
+  const media = { amaId: 42, amaArtistId: 7, amaAssetKind: 'landscape',
+    amaRightsStatus: 'licensed', amaSourceAttribution: 'Reviewed artist press kit',
+    amaSourceUrl: 'https://official.example/press.jpg',
+    amaPublicUrl: 'https://api.tdfrecords.net/assets/serve/artist-7.webp' };
+  globalThis.fetch = async (url, options = {}) => {
+    const route = new URL(url).pathname;
+    let result = {};
+    if (options.method === 'POST' && route.endsWith('/runs')) result = { aerId: 1, aerRunKey: 'fixture', aerStatus: 'completed' };
+    else if (route === '/admin/artists/profiles') result = [{ apArtistId: 7, apDisplayName: 'Fixture Artist' }];
+    else if (route.endsWith('/overview')) result = { aeoProfiles: [], aeoInventory: [], aeoSuggestions: [], aeoIdentityCandidates: [], aeoMedia: [media] };
+    else if (route.endsWith('/suggestions')) {
+      const body = JSON.parse(options.body); writes.push(body);
+      result = { aesId: writes.length, aesAutoPublish: body.aescAutoPublish, aesStatus: 'pending' };
+    } else if (options.method === 'PATCH' && route.includes('/suggestions/')) result = { aesStatus: 'approved' };
+    else if (!(options.method === 'PATCH' && route.includes('/runs/'))) throw new Error(`Unexpected provider or upload: ${url}`);
+    return { ok: true, status: 200, text: async () => JSON.stringify(result) };
+  };
+  try {
+    const report = await runPipeline(parseArgs(['--mode', 'production', '--scope', 'media', '--auto-publish',
+      '--checkpoint', path.join(tempDir, 'checkpoint.json'), '--report', path.join(tempDir, 'report.json')]));
+    assert.equal(report.artists[0].internalMedia[0].status, 'approved');
+    assert.equal(writes[0].aescArtistId, 7);
+    assert.equal(writes[0].aescAutoPublish, true);
+    assert.equal(report.artists[0].media.length, 0);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousToken == null) delete process.env.ADMIN_TOKEN; else process.env.ADMIN_TOKEN = previousToken;
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+
+test('external rights are scoped to the exact artist and reviewed source bytes', () => {
+  const source = { arsId: 1, arsArtistId: 7, arsSourceType: 'authorized_artist_image',
+    arsSourceUrl: 'https://official.example/portrait.jpg', arsContentHash: 'a'.repeat(64),
+    arsAttribution: JSON.stringify({ rights: 'licensed', attribution: 'Reviewed press kit permission' }) };
+  assert.equal(authorizedArtistImageSource({ apArtistId: 7 }, [source]).contentHash, 'a'.repeat(64));
+  assert.equal(authorizedArtistImageSource({ apArtistId: 8 }, [source]), null);
+  assert.equal(authorizedArtistImageSource({ apArtistId: 7 }, [{ ...source, arsContentHash: null }]), null);
+  assert.equal(authorizedArtistImageSource({ apArtistId: 7 }, [{ ...source, arsAttribution: '{}' }]), null);
+  assert.equal(authorizedArtistImageSource({ apArtistId: 7, apHeroImageUrl: 'https://artist.example/current.jpg' }, [source]), null);
+});
+
+test('biography synthesis uses supplied verified facts without inventing achievements', () => {
+  assert.equal(verifiedArtistBiography({ name: 'Roj(o)' }), null);
+  assert.equal(verifiedArtistBiography({ name: 'Roj(o)', city: 'Quito', genres: ['Rock'], releases: [{ title: 'Ritual' }] }),
+    'Roj(o) Ubicación: Quito. Géneros: Rock. Lanzamientos: Ritual.');
+});
+
+
+test('existing-profile batch enumerates first and never starts global discovery', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'tdf-existing-only-'));
+  const savedFetch = globalThis.fetch;
+  const savedToken = process.env.ADMIN_TOKEN;
+  process.env.ADMIN_TOKEN = 'fixture';
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push([new URL(url).pathname, options.method]);
+    assert.equal(options.method, 'GET');
+    assert.equal(new URL(url).pathname, '/admin/artists/profiles');
+    return new Response('[]', { status: 200 });
+  };
+  try {
+    const report = await runPipeline(parseArgs(['--scope', 'profiles', '--mode', 'production',
+      '--checkpoint', path.join(tempDir, 'checkpoint.json'), '--report', path.join(tempDir, 'report.json')]));
+    assert.equal(calls.length, 1);
+    assert.deepEqual(report.artists, []);
+    assert.deepEqual(report.possibleDuplicates, []);
+  } finally {
+    globalThis.fetch = savedFetch;
+    if (savedToken == null) delete process.env.ADMIN_TOKEN; else process.env.ADMIN_TOKEN = savedToken;
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+
+test('internal derivatives cannot silently replace an artist-chosen portrait', () => {
+  const profile = { apArtistId: 7, apHeroImageUrl: 'https://api.tdfrecords.net/assets/current.webp' };
+  const oldSquare = { amaId: 2, amaArtistId: 7, amaAssetKind: 'square', amaRightsStatus: 'authorized',
+    amaSourceAttribution: 'Reviewed', amaSourceContentHash: 'old-hash',
+    amaPublicUrl: 'https://api.tdfrecords.net/assets/old-square.webp' };
+  assert.deepEqual(internalArtistMedia(profile, [oldSquare]), []);
+  const current = { ...oldSquare, amaId: 3, amaAssetKind: 'landscape', amaSourceContentHash: 'new-hash', amaPublicUrl: profile.apHeroImageUrl };
+  const newSquare = { ...oldSquare, amaId: 4, amaSourceContentHash: 'new-hash', amaPublicUrl: 'https://api.tdfrecords.net/assets/current-square.webp' };
+  const proposals = internalArtistMedia(profile, [oldSquare, current, newSquare]);
+  assert.equal(proposals.find(item => item.field === 'heroSquareUrl').assetId, 4);
+  assert.equal(proposals.some(item => item.proposed === oldSquare.amaPublicUrl), false);
 });
