@@ -30,6 +30,7 @@ import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Invoices,
+  forgetInvoiceIssueAttempt,
   invoiceIssueSettled,
   nextInvoiceIssueAttempt,
   type GenerateSessionInvoiceInput,
@@ -208,6 +209,7 @@ export default function SessionInvoiceGeneratorCard() {
       // Keep the key after an uncertain SRI outcome: the portal may have issued
       // the document, so resubmitting must replay rather than issue again.
       if (invoiceIssueSettled(response)) {
+        forgetInvoiceIssueAttempt(issueAttempt.current);
         issueAttempt.current = null;
       }
       setResult(response);
@@ -618,6 +620,7 @@ export default function SessionInvoiceGeneratorCard() {
                       size="small"
                       variant="outlined"
                       onClick={() => {
+                        forgetInvoiceIssueAttempt(issueAttempt.current);
                         issueAttempt.current = null;
                         setResult(null);
                       }}

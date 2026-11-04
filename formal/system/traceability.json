@@ -15509,7 +15509,7 @@
       "authority": "Formal audit 2026-10-31 finding F-03 (Invoice/SRI without requirement) and the owner decision of 2026-11-04 to require an idempotency key; formal/system/audit-2026-10-31-phase1.md section 40.",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "contract": "formal/system/audit-2026-10-31-phase1.md",
-      "property": "For each (session, idempotencyKey) at most one invoice is created and at most one SRI script run starts: the reservation row is inserted with ON CONFLICT DO NOTHING before any invoice or SRI work. Replay returns the stored response when the SHA-256 fingerprint of (session, decoded request without key and certificate password) matches; a mismatch is 409; a reservation without a response is 409. A reservation is released only when creating or linking the invoice failed, before the SRI script started. Without SRI the key is optional. Before reserving, the SRI customer is loaded and the whole SRI script request validated, so a correctable input error is a 400 that leaves the key reusable. The web client drops the key only when SRI was not requested or reported the document as issued; after an SRI error or an unconfirmed status it keeps the key, so resubmitting replays, and a new attempt needs an explicit action after checking the portal.",
+      "property": "For each (session, idempotencyKey) at most one invoice is created and at most one SRI script run starts: the reservation row is inserted with ON CONFLICT DO NOTHING before any invoice or SRI work. Replay returns the stored response when the SHA-256 fingerprint of (session, decoded request without key and certificate password) matches; a mismatch is 409; a reservation without a response is 409. A reservation is released only when creating or linking the invoice failed, before the SRI script started. Without SRI the key is optional. Before reserving, the SRI customer is loaded and the whole SRI script request validated, so a correctable input error is a 400 that leaves the key reusable. The web client drops the key only when SRI was not requested or reported the document as issued; after an SRI error or an unconfirmed status it keeps the key, so resubmitting replays, and a new attempt needs an explicit action after checking the portal. Unresolved attempts are also kept in browser storage by fingerprint (without the certificate password), so a reload or navigation followed by the same request reuses the key; they are removed when the outcome settles or staff start a new attempt.",
       "actors": [
         "Staff user with the invoicing module",
         "Web invoice generator",
@@ -16599,8 +16599,8 @@
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
-    "tdf-hq-ui/src/api/invoices.test.ts": "c6cf28b79f419326bf69196828acf4d6b3ee20a3ad0009361c2f27d2f0c3095e",
-    "tdf-hq-ui/src/api/invoices.ts": "965e1baf1e7caafdd5411635dac3ec806cccdf3a1d0b3489a741932caa7711c0",
+    "tdf-hq-ui/src/api/invoices.test.ts": "9b7dc9996a2f5b01c4d783a1b3ab23781884f3417fe819f1a90905c7e96778d6",
+    "tdf-hq-ui/src/api/invoices.ts": "f9e3a2ab9197252b69dccdd457d6e3667b710f22a721b1c53390e3e1c543423a",
     "tdf-hq-ui/src/api/logoutIntent.test.ts": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
     "tdf-hq-ui/src/api/merchReputation.ts": "bfffe41b92b69806b4721ff6148e3b5d1427e8b695751552734bf9eb7355b9d5",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
@@ -16653,7 +16653,7 @@
     "tdf-hq-ui/src/components/RouteErrorBoundary.tsx": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
     "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
-    "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx": "ddb54bda7bfc9f50732566cb5ddbbcbe5765d07fe93ba97e4635221a250dac27",
+    "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx": "c0299713acc87986a37a2f475d4ea3cfbb9b1d4e987e2e3383494e0f5a72840c",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SidebarNav.test.tsx": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
@@ -39574,7 +39574,7 @@
     {
       "id": "SURFACE-09824a09519e957e",
       "path": "tdf-hq-ui/src/api/invoices.test.ts",
-      "sha256": "c6cf28b79f419326bf69196828acf4d6b3ee20a3ad0009361c2f27d2f0c3095e",
+      "sha256": "9b7dc9996a2f5b01c4d783a1b3ab23781884f3417fe819f1a90905c7e96778d6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39586,7 +39586,7 @@
     {
       "id": "SURFACE-8954d786b64d481b",
       "path": "tdf-hq-ui/src/api/invoices.ts",
-      "sha256": "965e1baf1e7caafdd5411635dac3ec806cccdf3a1d0b3489a741932caa7711c0",
+      "sha256": "f9e3a2ab9197252b69dccdd457d6e3667b710f22a721b1c53390e3e1c543423a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40899,7 +40899,7 @@
     {
       "id": "SURFACE-dbd54bd3d14b1e80",
       "path": "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
-      "sha256": "ddb54bda7bfc9f50732566cb5ddbbcbe5765d07fe93ba97e4635221a250dac27",
+      "sha256": "c0299713acc87986a37a2f475d4ea3cfbb9b1d4e987e2e3383494e0f5a72840c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63274,7 +63274,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ba212c5ea0a1f346f6d22edc5b4b48e531365504dc1d3510c7ade14ee86b035b",
+      "sourceSha256": "57e2a9f0315c8846ccc63ed2efb1baf22d4faffd403730d9edde51029bbb08cf",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -63302,7 +63302,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ba212c5ea0a1f346f6d22edc5b4b48e531365504dc1d3510c7ade14ee86b035b",
+      "sourceSha256": "57e2a9f0315c8846ccc63ed2efb1baf22d4faffd403730d9edde51029bbb08cf",
       "definition": {
         "states": [
           "absent",
@@ -63332,7 +63332,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ba212c5ea0a1f346f6d22edc5b4b48e531365504dc1d3510c7ade14ee86b035b",
+      "sourceSha256": "57e2a9f0315c8846ccc63ed2efb1baf22d4faffd403730d9edde51029bbb08cf",
       "definition": {
         "export": [
           "queued",
