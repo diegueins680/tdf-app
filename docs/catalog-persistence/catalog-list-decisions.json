@@ -23912,6 +23912,68 @@
           "1925bc5bf3a9d578b16b"
         ]
       }
+    },
+    {
+      "id": "dfa2c8d481b04e779a23",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Forward successor of reviewed decision e585e4c6d12725f26152 (directory_review.status in 2026-08-14_music_directory_core.sql). Audit F-09 removes the unreachable 'pending' state from both the declared review machine (docs/music-directory/formal-model.yaml#review) and this CHECK; the remaining values are exactly the states the code creates and moderation reaches, and check-state-machines --static ties them to the model. The disposition of the predecessor is carried over unchanged.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-phase3-20261104",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+        "line": 17,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 3,
+        "predecessorDecision": "e585e4c6d12725f26152",
+        "requirement": "SYS-STATE-001"
+      }
+    },
+    {
+      "id": "d9ffbdeaf1ff30e2275b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Rollback of 2026-11-04_directory_review_status_without_pending: it restores exactly the four-state CHECK reviewed as e585e4c6d12725f26152 and introduces no new value. It runs only to undo the forward migration.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-phase3-20261104",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql",
+        "line": 7,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 4,
+        "predecessorDecision": "e585e4c6d12725f26152",
+        "requirement": "SYS-STATE-001"
+      }
+    },
+    {
+      "id": "46f44cbe05d5ee91971e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the set changes which Haskell calls the advisory audit:formal resource rule reports; it has no runtime effect.",
+      "justification": "Names of Haskell library functions that return a handle or connection needing explicit release (System.IO, postgresql-simple, resource-pool). They are matched against source code by the advisory formal audit (F-11, SYS-VERIFY-AUDIT-SIGNAL-001) and are not user-selectable or business data.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-phase3-20261104",
+      "evidence": {
+        "file": "scripts/lib/formal-methods-audit.mjs",
+        "line": 31,
+        "kind": "array",
+        "name": "HASKELL_RESOURCE_ACQUISITIONS",
+        "valueCount": 6,
+        "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001"
+      }
     }
   ]
 }
