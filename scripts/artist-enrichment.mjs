@@ -697,6 +697,14 @@ export function verifiedArtistBiography({ name, city, country, genres = [], rele
   return parts.length > 1 ? parts.join(' ') : null;
 }
 
+/**
+ * An operator-supplied image (--image-source-url with --artist) replaces any
+ * automatic internal reuse for that artist: publishing old internal media first
+ * would move the profile baseline and supersede the requested image.
+ */
+export const explicitImageRequested = (profile, options) =>
+  Boolean(options?.imageSourceUrl) && options.artistId === profile?.apArtistId;
+
 async function reuseInternalArtistMedia(api, profile, options) {
   const proposals = internalArtistMedia(profile, options.internalMedia, options.existingSuggestions);
   for (const proposal of proposals) {
@@ -1139,7 +1147,9 @@ async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyTo
 
 async function researchArtist(api, profile, enrichment, spotifyToken, options) {
   // Inspect registered, rights-bearing same-artist assets before any provider search.
-  const internalMedia = await reuseInternalArtistMedia(api, profile, options);
+  const internalMedia = explicitImageRequested(profile, options)
+    ? []
+    : await reuseInternalArtistMedia(api, profile, options);
   const reviewedImage = internalMedia.length === 0 && !options.imageSourceUrl
     ? authorizedArtistImageSource(profile, options.existingSources) : null;
   let reviewedMedia = [];

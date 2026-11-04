@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-04T22:47:52.037Z",
+  "generatedAt": "2026-11-04T22:57:36.800Z",
   "repositoryRoot": ".",
   "filesScanned": 2570,
   "candidateCount": 1386,
@@ -4195,7 +4195,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "options",
-      "line": 130,
+      "line": 131,
       "values": [
         "--mode",
         "production",
@@ -4213,7 +4213,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        130
+        131
       ],
       "consumerCount": 326,
       "backendConsumers": [
@@ -4458,7 +4458,7 @@
       "domain": "inventory-operations",
       "kind": "object-registry",
       "name": "asset",
-      "line": 565,
+      "line": 566,
       "values": [
         "amaId",
         "amaArtistId",
@@ -4471,7 +4471,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        565
+        566
       ],
       "consumerCount": 267,
       "backendConsumers": [

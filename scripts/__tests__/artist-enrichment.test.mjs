@@ -9,6 +9,7 @@ import { promisify } from 'node:util';
 
 import {
   apiRequestTimeoutMs,
+  explicitImageRequested,
   authorizedArtistImageSource,
   verifiedArtistBiography,
   automaticFieldFillAllowed,
@@ -671,4 +672,12 @@ test('internal derivatives cannot silently replace an artist-chosen portrait', (
   const proposals = internalArtistMedia(profile, [oldSquare, current, newSquare]);
   assert.equal(proposals.find(item => item.field === 'heroSquareUrl').assetId, 4);
   assert.equal(proposals.some(item => item.proposed === oldSquare.amaPublicUrl), false);
+});
+
+test('an explicit image for the artist skips automatic internal media reuse', () => {
+  const profile = { apArtistId: 7 };
+  assert.equal(explicitImageRequested(profile, { imageSourceUrl: 'https://example.test/a.jpg', artistId: 7 }), true);
+  assert.equal(explicitImageRequested(profile, { imageSourceUrl: null, artistId: 7 }), false);
+  assert.equal(explicitImageRequested(profile, { imageSourceUrl: 'https://example.test/a.jpg', artistId: 8 }), false);
+  assert.equal(explicitImageRequested(profile, {}), false);
 });

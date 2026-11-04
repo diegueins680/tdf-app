@@ -16383,7 +16383,7 @@
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
-    "scripts/__tests__/artist-enrichment.test.mjs": "35834a7d58ae39bfd91f70f0fd19bae5d7b6f3f79178bd74cc0583841074de0d",
+    "scripts/__tests__/artist-enrichment.test.mjs": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
     "scripts/__tests__/artist-image-download.test.mjs": "fe0af2d7a4754bfaeadeec4000974c2d3ebaa8642d2197ae5471989f679352de",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
@@ -16459,7 +16459,7 @@
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
-    "scripts/artist-enrichment.mjs": "8173feb83e4f35d47fc923c18147ea763c0a415f3afdeb86457b7e264e44511e",
+    "scripts/artist-enrichment.mjs": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
     "scripts/artist-image-download.mjs": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/audit-formal-methods.mjs": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
@@ -32322,7 +32322,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "35834a7d58ae39bfd91f70f0fd19bae5d7b6f3f79178bd74cc0583841074de0d",
+      "sha256": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33711,7 +33711,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "8173feb83e4f35d47fc923c18147ea763c0a415f3afdeb86457b7e264e44511e",
+      "sha256": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

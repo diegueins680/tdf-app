@@ -3479,7 +3479,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "35834a7d58ae39bfd91f70f0fd19bae5d7b6f3f79178bd74cc0583841074de0d",
+      "sha256": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4193,7 +4193,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "8173feb83e4f35d47fc923c18147ea763c0a415f3afdeb86457b7e264e44511e",
+      "sha256": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
