@@ -42,6 +42,7 @@
       "e2e/web/directory-entry.spec.mjs",
       "e2e/web/directory-favorite-recovery.spec.mjs",
       "e2e/web/directory-language.spec.mjs",
+      "e2e/web/event-discovery-filters.spec.mjs",
       "e2e/web/event-memories.spec.mjs",
       "e2e/web/event-raci-editor.spec.mjs",
       "e2e/web/event-rsvp-sharing.spec.mjs",
@@ -500,6 +501,7 @@
       "scripts/test-distribution-product-seeds-migration.sh",
       "scripts/test-domo-deposit-policy-validator.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
+      "scripts/test-event-discovery-postgres.mjs",
       "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-memories-http.py",
       "scripts/test-event-memories.sh",
@@ -951,6 +953,9 @@
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
       "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
+      "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
       "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
@@ -1325,6 +1330,7 @@
       "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
       "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventWorkspacePage.tsx",
+      "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
       "tdf-hq-ui/src/pages/SocialInboxPage.test.tsx",
@@ -1360,6 +1366,8 @@
       "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
       "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
       "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts",
+      "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
+      "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
       "tdf-hq-ui/src/pages/inscripcion/InscripcionPage.tsx",
       "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts",
       "tdf-hq-ui/src/pages/internAuditPlanLogic.ts",
@@ -2035,6 +2043,7 @@
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
+      "tdf-hq/sql/queries/social-event-city-match.sql",
       "tdf-hq/sql/test_admin_operations_control_center.sql",
       "tdf-hq/src/TDF/API.hs",
       "tdf-hq/src/TDF/API/Admin.hs",
@@ -2917,7 +2926,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3a0398866bd5bdacd49ec3ce8cc8c1bbe78f2107826cb7bfa965244332e5159b",
+      "sha256": "6eafaa42f1c74749b566e36ed22a87553ef90d3ca4122ca17d3ba04d97e2d640",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3080,6 +3089,12 @@
       "id": "SURFACE-2d19f45e5f75f841",
       "path": "e2e/web/directory-language.spec.mjs",
       "sha256": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a759d468f3ebc8d5",
+      "path": "e2e/web/event-discovery-filters.spec.mjs",
+      "sha256": "aeb55ef24e6eda34000b6cfd90266664c2bac31fd152ac2d30dc0636a3c04e94",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5759,6 +5774,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-20704f2f782006b7",
+      "path": "scripts/test-event-discovery-postgres.mjs",
+      "sha256": "45bab4bd40d7f7676b202ca619e9b46036abb54713ebcbb3ce4724b4c3b6a745",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c83ef025ca87e555",
       "path": "scripts/test-event-ingestion-boundaries.sh",
       "sha256": "af6508ef47a91f986f3cee51f85c97e1e8ae7e2fc1be2d40b706172ad838e4cc",
@@ -7807,13 +7828,13 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "d306604d54bc95a83026d8b170dd4bb59ab941b4f4edc66094fe8dd778074274",
+      "sha256": "123a111c061f4eb77f37e7c27c57d1263290d9c008ff74daeff91db90cbd2e02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "40dfc3c37ebb11f0cb8135042524ae4059b4507cf16b5345add14ea22349575c",
+      "sha256": "2fa01d0f5390a62361f4b9c4de75c531ad571778e297408f06f7332bdde51536",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8438,6 +8459,24 @@
       "id": "SURFACE-615a78e009691805",
       "path": "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
       "sha256": "bb66b7c21afaae45254cdd5170537c61aaf8f47477f4e3a80d356fdab207179c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8817f81a71124ed7",
+      "path": "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
+      "sha256": "264576414ab6a66abf0bcd72895b2b3c6637735ff26e42f4274c38c03a75652c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fd09e79d1d37127d",
+      "path": "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
+      "sha256": "c2e431d781b24e39486495dcd188d81512280806a5c68e4577fe5c5d7d8dda5a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9396233292cd60a3",
+      "path": "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
+      "sha256": "4dcf4793fb9ab956c0f72dc2591e090fd660ad8c9fe85bcfe9d6c601cca7791c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10669,7 +10708,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "3417cb970648efc1d1634a24792e9b69aeb441d9d1eb76ea7de7e7b135ef6985",
+      "sha256": "6fc938a7d1da5c62778ac38c1f0742b120207273d71d42301bfda33419ac9b69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10685,6 +10724,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c4651b845e2e6ad1",
+      "path": "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
+      "sha256": "2a9b117eac17b2fe811bc1274a284c65850386c614e2b1b3118a1c97889a56b4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cc037b60c52e8931",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
       "sha256": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
@@ -10693,7 +10738,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "bb4ae7f8482085191592cf9878f9ee547ae5f088c1f26c32486c77c28dc5f82c",
+      "sha256": "f66a5571b1bb5a76754145baa670aa36e8bb991bdea6fc05b1b8d03029143641",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10789,13 +10834,13 @@
     {
       "id": "SURFACE-d4bbd15313dd4547",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-      "sha256": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
+      "sha256": "c6cedd57956d15064bd06ef0ef34446c7b23649b97b4bab8e395ec23d55e5f5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d8426c3557e41bc4",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-      "sha256": "430333d10523c16fae08cd4c186c67251ae6c9bd7731e60caadd7e9d6f2c4496",
+      "sha256": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10892,6 +10937,18 @@
       "id": "SURFACE-63750719a03d72c2",
       "path": "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts",
       "sha256": "672ddd5387f1118b6911b446a62815a9494cfdded2200967efde2a1141117aa5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6cbe7c311d07b3f3",
+      "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
+      "sha256": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a310967cb09cdd87",
+      "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
+      "sha256": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14933,6 +14990,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-899edc9d6319a93c",
+      "path": "tdf-hq/sql/queries/social-event-city-match.sql",
+      "sha256": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1c1ef431782f3c8d",
       "path": "tdf-hq/sql/test_admin_operations_control_center.sql",
       "sha256": "639d37d4dd0ee56546d6547d13cf5675b80cc265ee1ed6943878efc5544311aa",
@@ -16165,7 +16228,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "b7c1b4c93bd301a1a91af4e4807e70149fa57b9628cf2950a14f533afe6c4e2a",
+      "sha256": "2c29e3ec47211c0393b94670ac1b9b2aa20c34409278986199bd40a74a5d5a9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16507,7 +16570,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
+      "sha256": "0ad432ae63df95570343809ec585e90de2da1cda2cdde9f60116fcc336fbcd2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16579,7 +16642,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ac179aeb72660514a19e29c61add1d3ec44cbb5f12ed94d77cc0e0177352ff62",
+      "sha256": "f655b4a7dcc0468e705e972d2d9f84dd90e5a3223d31de76ab9c64a700c70b78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28416,6 +28479,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-discovery-filtering.md",
+      "sha256": "8897a9d0678300084809419af7c66e50811ec4ff27ae4998c4df895f08bdb092",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-finance-browser-precision.md",
       "sha256": "1fb729d2150589ce5074884f77f9747b5b79ca6ad717ba7e6c72c733e24a65c5",
       "authority": "inferred",
@@ -29005,7 +29075,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "80d5779fb0306ad66d49e0d6c5b7d814719bb3e6ea48c892fe5796791b36c391",
+      "sha256": "7953f2661ccbab4077ea77b1f0a2f1772a76a19fec0a086c122bf65ecef0d923",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -35368,6 +35438,33 @@
             "ID": "F-22",
             "Sev.": "info",
             "Hallazgo": "El informe de garantía (`verification-report.py`) marcaba las obligaciones SMT de autorización y recuperación como `UNPROVEN` por \"Receipt source fingerprint mismatch\": sus recibos fijan el hash de `tdf-hq.cabal`, que esta rama cambia solo por registrar siete módulos nuevos. `Auth.hs`, `Models.hs`, `RecordsIngestion.hs`, `ServerAuth.hs`, el SQL de expiración y Stack/lock son idénticos a `main`. **Resuelto**: revisión de fuente añadida a ambos recibos según el procedimiento de `auth-predicates.md` y pin refrescado; el informe vuelve a demostrar las 11 obligaciones (`executionPassed: true`, release sigue `BLOCKED` por diseño)."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-EVT-DISCOVERY-FILTER-001-4F697E6F",
+      "declaredId": "EVT-DISCOVERY-FILTER-001",
+      "statement": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results.",
+      "source": "formal/system/event-discovery-filtering.md",
+      "line": 9,
+      "sourceSha256": "8897a9d0678300084809419af7c66e50811ec4ff27ae4998c4df895f08bdb092",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "EVT-DISCOVERY-FILTER-001",
+        "Rule": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 9,
+          "statement": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results.",
+          "columns": {
+            "ID": "EVT-DISCOVERY-FILTER-001",
+            "Rule": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results."
           }
         }
       ],

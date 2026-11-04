@@ -91,6 +91,12 @@ describe('SocialEventsAPI', () => {
     );
   });
 
+  it('forwards canonical multi-artist filters, paging and cancellation without changing single-ID callers', async () => {
+    const controller = new AbortController();
+    await SocialEventsAPI.listEvents({ city: 'New York', artistIds: ['7', '8', '7'], limit: 51, offset: 50, signal: controller.signal });
+    expect(getMock).toHaveBeenLastCalledWith('/social-events/events?city=New%20York&artistId=7%2C8&limit=51&offset=50', { signal: controller.signal });
+  });
+
   it('deletes events through an encoded event path', async () => {
     await SocialEventsAPI.deleteEvent('event 7/quito');
 
