@@ -1203,6 +1203,21 @@
       "id": "2026-11-04_domo_quote_deposit_policy_validator",
       "path": "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
       "introducedBy": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5"
+    },
+    {
+      "id": "2026-11-04_directory_review_status_without_pending",
+      "path": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+      "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
+    },
+    {
+      "id": "2026-11-04_session_invoice_issue",
+      "path": "tdf-hq/sql/2026-11-04_session_invoice_issue.sql",
+      "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
+    },
+    {
+      "id": "2026-11-04_contract_store",
+      "path": "tdf-hq/sql/2026-11-04_contract_store.sql",
+      "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
     }
   ]
 }
