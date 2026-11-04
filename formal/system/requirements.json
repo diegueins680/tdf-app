@@ -15425,6 +15425,93 @@
       "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending. Followupquietmodecounterexample on8b:4PASS/1configparserFAIL; header-independent reader and explicitnotice/silent variants pass all5guards with both ordinary and quietparent environments. Product/workerconfig unchanged; joinedheadhostedqualificationpending. The8bquietfailure echoedasyntheticreporter token. Followup parser emitsgenericerrors and returns onlytypedworkersettings; sixguardcases include confidentiality faults. No realcredentialorreporter service was used in this probe."
     },
     {
+      "id": "EVT-PLANNING-UX-001",
+      "title": "Explicit event clocks, visible ticket fee estimates and recoverable poster preparation",
+      "statement": "Event preparation preserves the selected timezone, presents the standard ticket price estimate before submission, and confirms poster attachment without replaying uploads or updating unrelated event fields.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Event organizer",
+        "Event logistics editor",
+        "Ticket buyer"
+      ],
+      "preconditions": [
+        "An authenticated existing organizer prepares its event; existing server authorization remains authoritative.",
+        "The upload endpoint attaches the image and the event API exposes its stored URL."
+      ],
+      "inputs": [
+        "Local event start and timezone",
+        "Base ticket amount",
+        "Poster file and current auth epoch"
+      ],
+      "state": {
+        "boundary": "formal/system/event-planning-ux.md"
+      },
+      "allowedTransitions": [
+        "Explicit wall-clock input to UTC instants and stored event timezone",
+        "New logistics plan inherits the event timezone; saved settings take precedence",
+        "Upload then confirm; retry a failed confirmation using the cached upload"
+      ],
+      "forbiddenTransitions": [
+        "Silently shift nonexistent or ambiguous DST input",
+        "Represent a standard fee estimate as a live checkout quote",
+        "Continue a stale editor after owner/session revocation or unmount",
+        "Replay a confirmed upload merely because confirmation failed",
+        "Grant organizer permissions through this UI change"
+      ],
+      "effects": [
+        "Show preparation status and poster/campaign destinations",
+        "Show activities and dependencies by human-readable names"
+      ],
+      "authorization": "Existing organizer-only event preparation and logistics owner/editor roles remain enforced; delegated event administration is out of scope.",
+      "privacy": "No new event visibility or account permissions; poster attachment uses the existing event endpoint.",
+      "concurrency": "Upload endpoint retains its event lock; frontend session guards stop late continuation. Concurrent poster replacement may require refreshing before retry.",
+      "idempotency": "A confirmed upload is reused for confirmation retries within the same editor and selected file.",
+      "failure": "Preserve selected files and surface malformed response, invalid time/amount and confirmation failure; do not report success without a matching stored image URL.",
+      "recovery": "Retry the retained poster or correct the explicit date, zone or amount.",
+      "observability": "Preparation status, estimated checkout/proceeds, specific validation and retry feedback.",
+      "source": "User requested implementation of event-planning UX findings observed while preparing Psique; explicit request to preserve changes in a pull request.",
+      "contract": "formal/system/event-planning-ux.md",
+      "implementation": [
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
+        "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
+        "tdf-hq-ui/src/utils/eventTicketPricing.ts",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/utils/dateTime.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/utils/eventTicketPricing.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
+        "tdf-hq/test/Spec.hs",
+        "scripts/__tests__/event-planning-ux-model.test.mjs",
+        "tdf-hq-ui/src/utils/dateTime.test.ts"
+      ],
+      "formalModels": [
+        "scripts/event-planning-ux-model.mjs"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Finite callback model with three negative controls and UI regression tests; backend precedence tests require pinned Stack.",
+      "ambiguity": [
+        "Live checkout policy may differ from the explicitly labeled standard estimate.",
+        "Logistics editing is not full delegated event administration."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "UI tests, model, typecheck and build run locally; backend tests and deployed behavior require CI and deployment validation."
+      },
+      "authority": "approved",
+      "property": "Explicit wall-clock interpretation and saved logistics timezone precedence; integer-cent estimate conservation; no duplicate confirmed upload or stale editor success.",
+      "verification": "Finite deterministic callback model with three negative controls; actual React regressions and 100001 fee inputs; Haskell test execution pending pinned Stack.",
+      "evidence": "scripts/__tests__/event-planning-ux-model.test.mjs; tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/utils/eventTicketPricing.test.ts; tdf-hq/test/Spec.hs; tdf-hq-ui/src/utils/dateTime.test.ts"
+    },
+    {
       "id": "ART-PROFILE-MEDIA-001",
       "title": "Named artist avatars and conservative existing-profile enrichment",
       "statement": "Every affected public web artist view has a stable named provisional avatar when its photo is missing or fails. Existing-profile research reuses authorized same-artist media before provider research, preserves populated artist content and terminal decisions, and admits external photo bytes only through bounded public-network ingestion.",

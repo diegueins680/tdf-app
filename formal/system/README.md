@@ -9,6 +9,8 @@ Historical green results are not current-candidate evidence.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
+- [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks, with delegated management still pending.
+
 - [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence and explicit blocked release decision.
 - [receipt-admission.md](receipt-admission.md): source-bound consumer replay for every SMT suite, false-proof/refutation controls and an auditable synthetic counterexample.
 

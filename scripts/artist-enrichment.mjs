@@ -1371,9 +1371,11 @@ async function runExistingProfileBatch(options) {
     .sort((a, b) => Number(!isPlaceholderArtistImage(a.apHeroImageUrl)) - Number(!isPlaceholderArtistImage(b.apHeroImageUrl)) || a.apArtistId - b.apArtistId);
   const selected = selectRunBatch(candidates, options.batchSize, nowIso().slice(0, 10), options.rotateBatches);
   const artists = [];
+  let attempted = 0;
   // Each discovery request is scoped to a known existing Party. A global
   // production discovery can create missing profiles, so it is never used here.
   for (const profile of selected) {
+    attempted += 1;
     try {
       const result = await runPipeline({ ...options, artistId: profile.apArtistId, batchSize: 1,
         checkpoint: `${options.checkpoint}.artists/${profile.apArtistId}.json`,
@@ -1385,7 +1387,7 @@ async function runExistingProfileBatch(options) {
     }
     checkpoint.completedArtists = [...completed].sort((a, b) => a - b);
     await writeJson(options.checkpoint, checkpoint);
-    if (checkpoint.errors.length >= 3) break;
+    if (checkpoint.errors.length >= 3 || (attempted >= 5 && checkpoint.errors.length / attempted > 0.1)) break;
   }
   const duplicates = new Map();
   for (const profile of profiles) {

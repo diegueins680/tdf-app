@@ -888,7 +888,8 @@
       "productionWebBuild": "passed",
       "initialGzipJavascriptBytes": 389649,
       "backendCompiledTests": "not run: Stack/GHC unavailable locally",
-      "generatedClientIdentity": "passed against exact Mobile f4c7aba45dc153db8809dbe194bc826ff615ef88"
+      "generatedClientIdentity": "passed against exact Mobile f4c7aba45dc153db8809dbe194bc826ff615ef88",
+      "initialSourceCommit": "cda3c077b0c43af44e50af57bcf90159b09d3147"
     },
     "productionBackfill": "not run: ADMIN_TOKEN/API_TOKEN unavailable",
     "productionDeployment": "not performed",
@@ -900,6 +901,16 @@
       "Complete internal event/upload-photo discovery",
       "Event-driven research after profile creation",
       "Fresh hosted backend checks and protected review/deployment"
-    ]
+    ],
+    "integration": {
+      "main": "5c710e5d433747e5ffbce1ffd3320bf8d9df6139",
+      "webTests": 86,
+      "webSuites": 7,
+      "eventModelTests": 2,
+      "description": "Normal source merge; shared requirement and catalog records retained semantically.",
+      "productionWebBuild": "passed",
+      "initialGzipJavascriptBytes": 389654,
+      "catalogCandidates": 1383
+    }
   }
 }
