@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/Auth.hs": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
@@ -239,6 +239,15 @@
       "change": "Merge of protected main dd9adc5d (PR #686, api_token session validity window) into the formal audit branch 644a3303 (PR #691). Git merged tdf-hq/tdf-hq.cabal without textual conflict: main's hunks and the audit's hunks touch disjoint regions (the cabal file was rebuilt on main's new library layout with the audit's modules registered in exposed-modules and the test suite).",
       "semanticReview": "The merged file equals protected main's version (9ddd4662b265d1cb...) plus exactly the audit's previously reviewed additions; neither side's hunks were altered. Main's pinned value for this file was 9ddd4662b265d1cb29e88339707318dd1a60b0cda2b173293bdf870973a2e8d3.",
       "qualification": "Merge-of-main pin refresh: this record only binds the merged snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "reviewedAgainst": "1976242a72541ecfff90a54c72659df42f7bd085",
+      "previousSha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+      "currentSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "change": "Formal audit follow-up F-10 on protected main 1976242a: one export-list line and one new top-level function, secretTokenMatches, which compares the SHA-256 digests of a presented and a configured shared secret with constEq. The seed-token guards in Server.hs and ServerAdmin.hs call it instead of (/=).",
+      "semanticReview": "Removing the added export line and the eight added lines (comment, signature and definition of secretTokenMatches) reproduces protected main's Auth.hs byte for byte. The six translated definitions, apiTokenWithinValidity, sessionClockEpoch, hasModuleAccess, validateModuleAccess and requireAdmin are unchanged, and no translated predicate calls the new function; it reads no user, role, session or module state.",
+      "qualification": "Additive pin refresh: this record only binds the reviewed snapshot and proves nothing about secretTokenMatches, which is covered by ServerAdminSpec. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
     }
   ]
 }
