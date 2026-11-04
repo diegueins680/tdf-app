@@ -15548,7 +15548,7 @@
       ],
       "authorization": "Unchanged: requireModule ModuleInvoicing.",
       "privacy": "The certificate password is excluded from the fingerprint and never stored; the stored response is the same JSON already returned to the staff caller.",
-      "concurrency": "The unique (session_id, idempotency_key) constraint and ON CONFLICT DO NOTHING make the reservation atomic; a concurrent duplicate observes the winner's row and gets 409 until it completes.",
+      "concurrency": "The unique (session_id, idempotency_key) constraint and ON CONFLICT DO NOTHING make the reservation atomic; a concurrent duplicate observes the winner's row and gets 409 until it completes. The sibling check and the reservation run in one transaction after pg_advisory_xact_lock on (session, request fingerprint), so two concurrent requests with different keys for the same invoice cannot both reserve.",
       "idempotency": "Same key and same request replays the stored response; the web client keeps the key while the request is unchanged and uses a new key after any edit or success.",
       "failure": "Invalid key: 400. Different request with the key, or unanswered reservation: 409. SRI script failures are part of the stored response (ok=false), not retried automatically.",
       "recovery": "An unanswered reservation means the request was interrupted, possibly after SRI issued the document. Staff check the SRI portal for the session before retrying with a new key.",

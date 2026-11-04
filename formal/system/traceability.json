@@ -15549,7 +15549,7 @@
       ],
       "authorization": "Unchanged: requireModule ModuleInvoicing.",
       "privacy": "The certificate password is excluded from the fingerprint and never stored; the stored response is the same JSON already returned to the staff caller.",
-      "concurrency": "The unique (session_id, idempotency_key) constraint and ON CONFLICT DO NOTHING make the reservation atomic; a concurrent duplicate observes the winner's row and gets 409 until it completes.",
+      "concurrency": "The unique (session_id, idempotency_key) constraint and ON CONFLICT DO NOTHING make the reservation atomic; a concurrent duplicate observes the winner's row and gets 409 until it completes. The sibling check and the reservation run in one transaction after pg_advisory_xact_lock on (session, request fingerprint), so two concurrent requests with different keys for the same invoice cannot both reserve.",
       "idempotency": "Same key and same request replays the stored response; the web client keeps the key while the request is unchanged and uses a new key after any edit or success.",
       "failure": "Invalid key: 400. Different request with the key, or unanswered reservation: 409. SRI script failures are part of the stored response (ok=false), not retried automatically.",
       "recovery": "An unanswered reservation means the request was interrupted, possibly after SRI issued the document. Staff check the SRI portal for the session before retrying with a new key.",
@@ -17182,7 +17182,7 @@
     "tdf-hq/src/TDF/Invoice/Datil.hs": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Invoice/SRI.hs": "a757e956d8fcee132cf93ec5716936b09500d74dc9ade36bb74178ca61e7142f",
-    "tdf-hq/src/TDF/Invoice/SessionIssue.hs": "0ac9adf40f8e693e406849d95d12901da509e03812f9e8623ce73cc5425b2567",
+    "tdf-hq/src/TDF/Invoice/SessionIssue.hs": "7d9c5eec1de591fe91659ea8c8eb05386abc8cde4d254407cbf9b4a43110ea3f",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/ModelsExtra.hs": "7246fb944ac8f5057100d4f98b88d136f829af0853c0e4c5e1242d73cc86d6a8",
@@ -17205,7 +17205,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "f9c6360540c55126858a1efe6344198f5901c2c230bb15295bea8e3a9deb5150",
+    "tdf-hq/src/TDF/Server.hs": "725af567739792f5f0d4a1747f5246700466046e365414cf67ded49272a870d7",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
@@ -17295,7 +17295,7 @@
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
-    "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs": "5307b3e31d9c24384fc8b67ed485e8c47bb9ea45a444306f51ded32d3487123b",
+    "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs": "378e7827e24ff0ff2d4d66b0947d74a584d8df47dc21986a23dc83d74af4351a",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
     "tdf-hq/test/TDF/LedgerPostingSpec.hs": "b709ea453c050a6af2df6c14f61c3d490a5923cc2d90e6935f9d6a3b91b1d28e",
@@ -53415,7 +53415,7 @@
     {
       "id": "SURFACE-f85df2cd606d32e8",
       "path": "tdf-hq/src/TDF/Invoice/SessionIssue.hs",
-      "sha256": "0ac9adf40f8e693e406849d95d12901da509e03812f9e8623ce73cc5425b2567",
+      "sha256": "7d9c5eec1de591fe91659ea8c8eb05386abc8cde4d254407cbf9b4a43110ea3f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53857,7 +53857,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "f9c6360540c55126858a1efe6344198f5901c2c230bb15295bea8e3a9deb5150",
+      "sha256": "725af567739792f5f0d4a1747f5246700466046e365414cf67ded49272a870d7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55858,7 +55858,7 @@
     {
       "id": "SURFACE-aa67c20f02cbb260",
       "path": "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
-      "sha256": "5307b3e31d9c24384fc8b67ed485e8c47bb9ea45a444306f51ded32d3487123b",
+      "sha256": "378e7827e24ff0ff2d4d66b0947d74a584d8df47dc21986a23dc83d74af4351a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63275,7 +63275,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "757d4ca7ac8d53e28cbfe861fe2729dc068da9aafe1fd8c1ef773b6bfae1ce94",
+      "sourceSha256": "45dc19aeb299422ae25de1aeeb4ebc95f0df322c6a5ba2c02261d6a808702723",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -63303,7 +63303,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "757d4ca7ac8d53e28cbfe861fe2729dc068da9aafe1fd8c1ef773b6bfae1ce94",
+      "sourceSha256": "45dc19aeb299422ae25de1aeeb4ebc95f0df322c6a5ba2c02261d6a808702723",
       "definition": {
         "states": [
           "absent",
@@ -63333,7 +63333,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "757d4ca7ac8d53e28cbfe861fe2729dc068da9aafe1fd8c1ef773b6bfae1ce94",
+      "sourceSha256": "45dc19aeb299422ae25de1aeeb4ebc95f0df322c6a5ba2c02261d6a808702723",
       "definition": {
         "export": [
           "queued",

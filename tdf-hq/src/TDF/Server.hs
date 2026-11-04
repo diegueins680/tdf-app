@@ -13426,19 +13426,21 @@ generateInvoiceForSession user sessionId payload = do
           portalVerified = gsiSriPortalVerified req == Just True
       -- A new key for a request whose earlier attempt is unresolved could issue
       -- a duplicate legal invoice (for example after the browser lost the key).
-      siblingUnresolved <-
-        if issuesSri && not portalVerified
-          then liftIO $ flip runSqlPool pool $
-            SessionIssue.unresolvedSiblingAttempt sessionKey fingerprint issueKey
-          else pure False
-      when siblingUnresolved $
-        throwError err409
-          { errBody =
-              "An earlier attempt to issue this invoice to SRI is unresolved. Check the SRI portal; \
-              \if nothing was issued, retry confirming the portal was verified."
-          }
-      reservation <- liftIO $ flip runSqlPool pool $
-        SessionIssue.reserveIssue now sessionKey issueKey fingerprint
+      -- The check and the reservation share one transaction and a lock on
+      -- (session, request), so two concurrent new keys cannot both pass.
+      guarded <- liftIO $ flip runSqlPool pool $
+        SessionIssue.reserveIssueGuarded
+          (SessionIssue.issueAdvisoryLock sessionKey fingerprint)
+          (issuesSri && not portalVerified)
+          now sessionKey issueKey fingerprint
+      reservation <- case guarded of
+        SessionIssue.SiblingUnresolved ->
+          throwError err409
+            { errBody =
+                "An earlier attempt to issue this invoice to SRI is unresolved. Check the SRI portal; \
+                \if nothing was issued, retry confirming the portal was verified."
+            }
+        SessionIssue.Guarded r -> pure r
       case reservation of
         SessionIssue.IssueExisting (SessionIssue.IssueReplayStored stored) ->
           maybe

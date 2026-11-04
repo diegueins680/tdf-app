@@ -180,6 +180,21 @@ spec = describe "Session invoice issuance idempotency (PAY-INVOICE-ISSUE-001)" $
       done <- reserveIssue now sessionA key1 "f" >>= expectReserved
       completeIssue now done Nothing "{\"ok\":true,\"sri\":{\"ok\":true,\"status\":\"issued\"}}"
       unresolvedSiblingAttempt sessionA "f" key2 >>= liftIO . (`shouldBe` False)
+
+    it "refuses a second key for an unsettled request inside the guarded reservation" $ withDb $ do
+      first <- reserveIssueGuarded (pure ()) True now sessionA key1 "f"
+      liftIO $ case first of
+        Guarded (IssueReserved _) -> pure ()
+        other -> expectationFailure ("expected a reservation, got " <> show other)
+      second <- reserveIssueGuarded (pure ()) True now sessionA key2 "f"
+      liftIO $ case second of
+        SiblingUnresolved -> pure ()
+        other -> expectationFailure ("expected a sibling refusal, got " <> show other)
+      -- with portal verification the check is skipped and the new key reserves
+      verified <- reserveIssueGuarded (pure ()) False now sessionA key2 "f"
+      liftIO $ case verified of
+        Guarded (IssueReserved _) -> pure ()
+        other -> expectationFailure ("expected a verified reservation, got " <> show other)
   where
     isConflict (IssueConflict _) = True
     isConflict _ = False

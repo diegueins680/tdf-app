@@ -20,6 +20,9 @@ module TDF.Invoice.SessionIssue
   , releaseIssue
   , responseSettled
   , unresolvedSiblingAttempt
+  , GuardedReservation (..)
+  , reserveIssueGuarded
+  , issueAdvisoryLock
   ) where
 
 import           Control.Monad.IO.Class (MonadIO)
@@ -166,3 +169,39 @@ unresolvedSiblingAttempt sessionKey fingerprint key = do
     , ME.SessionInvoiceIssueIdempotencyKey !=. key
     ] []
   pure (any (maybe True (not . responseSettled) . ME.sessionInvoiceIssueResponse . entityVal) siblings)
+
+data GuardedReservation
+  = SiblingUnresolved
+    -- ^ another key's attempt for the same request is unsettled; refuse
+  | Guarded IssueReservation
+  deriving (Show)
+
+-- | The sibling check and the reservation, run in one transaction after the
+-- given lock. Without a lock shared by both requests, two concurrent requests
+-- with different keys could both pass the check before either reservation is
+-- committed, and both would issue. Pass 'issueAdvisoryLock' on PostgreSQL;
+-- the second request then waits for the first to commit its reservation, sees
+-- it as an unsettled sibling, and is refused.
+reserveIssueGuarded
+  :: MonadIO m
+  => SqlPersistT m ()  -- ^ lock on (session, fingerprint)
+  -> Bool              -- ^ refuse when an unsettled sibling exists
+  -> UTCTime -> ME.SessionId -> Text -> Text
+  -> SqlPersistT m GuardedReservation
+reserveIssueGuarded takeLock checkSiblings now sessionKey key fingerprint = do
+  takeLock
+  sibling <-
+    if checkSiblings
+      then unresolvedSiblingAttempt sessionKey fingerprint key
+      else pure False
+  if sibling
+    then pure SiblingUnresolved
+    else Guarded <$> reserveIssue now sessionKey key fingerprint
+
+-- | PostgreSQL transaction-scoped advisory lock on (session, fingerprint),
+-- released at commit or rollback.
+issueAdvisoryLock :: MonadIO m => ME.SessionId -> Text -> SqlPersistT m ()
+issueAdvisoryLock sessionKey fingerprint =
+  rawExecute
+    "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))"
+    [toPersistValue (T.pack (show sessionKey) <> ":" <> fingerprint)]
