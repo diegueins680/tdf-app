@@ -22713,6 +22713,114 @@
         "name": "CHECK IN",
         "valueCount": 6
       }
+    },
+    {
+      "id": "2b4caba9e22f62c920c8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes can break document codecs, account isolation, protocol rendering or navigation tests.",
+      "justification": "Synthetic isolated test fixture with document field names and fabricated actors only. It is consumed by API and account-switch regressions, never selectable production catalog data or an actual agreement.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "event-agreements-2026-11-03",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/eventWorkspace.fixture.ts",
+        "line": 5,
+        "kind": "object-registry",
+        "name": "plan"
+      }
+    },
+    {
+      "id": "f4be444b13582f3086d8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes can break document codecs, account isolation, protocol rendering or navigation tests.",
+      "justification": "Closed wire-protocol states exactly mirror the SQL CHECK and transition guards; changes require coordinated server, codec and client revisions. This union is not a user-maintained category list.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "event-agreements-2026-11-03",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/eventWorkspace.ts",
+        "line": 19,
+        "kind": "literal-union",
+        "name": "AgreementState"
+      }
+    },
+    {
+      "id": "0b56e6ee7d6dc787dd7f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes can break document codecs, account isolation, protocol rendering or navigation tests.",
+      "justification": "Authenticated HTTP adapter method names bind the workspace read, command and protected-document operations to the server contract. No user-selectable business catalog or authorization grant is encoded.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "event-agreements-2026-11-03",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/eventWorkspace.ts",
+        "line": 79,
+        "kind": "object-registry",
+        "name": "EventWorkspaceAPI"
+      }
+    },
+    {
+      "id": "95f4af1daaf6cf1c8db3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes can break document codecs, account isolation, protocol rendering or navigation tests.",
+      "justification": "Empty structured form defaults mirror the required plan schema. The initial budget and pending arrays are empty, cap unknown, and the actual business content is entered and persisted by the authorized organizer.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "event-agreements-2026-11-03",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+        "line": 17,
+        "kind": "object-registry",
+        "name": "emptyPlan"
+      }
+    },
+    {
+      "id": "4a686510f308c8e34c98",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes can break document codecs, account isolation, protocol rendering or navigation tests.",
+      "justification": "Spanish presentation labels for the closed persisted acceptance protocol, with all six SQL states handled. Labels cannot create transitions or grant acceptance and are not configurable business categories.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "event-agreements-2026-11-03",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+        "line": 19,
+        "kind": "object-registry",
+        "name": "states"
+      }
+    },
+    {
+      "id": "fcddf805e688ed32ae26",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes can break document codecs, account isolation, protocol rendering or navigation tests.",
+      "justification": "Two local workspace tab identities select the plan or agreement panel. They are presentation routing constants, not business data or a persisted selectable catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "event-agreements-2026-11-03",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+        "line": 94,
+        "kind": "jsx-option-values",
+        "name": "JSX value attributes"
+      }
     }
   ]
 }

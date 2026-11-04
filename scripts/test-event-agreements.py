@@ -91,6 +91,9 @@ class AgreementDatabaseTests(unittest.TestCase):
         self.assertEqual(self.read(2)['agreements'], [])
         self.assertEqual(self.call(1, self.command(agreement, 'approve'))['status'], 409)
         self.assertEqual(self.call(1, self.command(agreement, 'send'))['status'], 409)
+        before = self.db.execute('SELECT count(*) FROM notification').fetchone()[0]
+        self.assertNotIn('error', self.call(1, self.command(agreement, 'comment', comment='Private draft note')))
+        self.assertEqual(self.db.execute('SELECT count(*) FROM notification').fetchone()[0], before)
         self.assertIn('error', self.call(2, self.command(agreement, 'accept', acceptedName='Synthetic recipient', consent=True)))
 
     def test_recipient_and_owner_permissions(self):
@@ -125,6 +128,15 @@ class AgreementDatabaseTests(unittest.TestCase):
         self.assertEqual(len(self.read(2)['agreements'][-1]['versions']), 1)
         self.assertEqual(self.call(2, self.command(agreement, 'accept', acceptedName='Synthetic recipient', consent=True))['status'], 409)
         self.assertEqual(self.call(1, self.command(revised, 'send'))['status'], 409)
+        self.assertNotIn('error', self.call(1, self.command(revised, 'approve')))
+        sent = self.call(1, self.command(revised, 'send'))['agreements'][-1]
+        rejected = self.call(2, self.command(sent, 'reject', comment='Decline this proposal'))['agreements'][-1]
+        self.assertEqual(rejected['state'], 'rejected')
+        self.assertEqual(self.call(2, self.command(rejected, 'accept', acceptedName='Synthetic recipient', consent=True))['status'], 409)
+        replacement = self.call(1, self.command(rejected, 'revise', content=self.content))['agreements'][-1]
+        self.assertEqual(replacement['current_version'], 3)
+        self.assertIsNone(replacement['versions'][-1]['approved_at'])
+
 
     def test_accepted_evidence_and_annex_are_immutable(self):
         agreement = self.sent()
@@ -157,6 +169,7 @@ class AgreementDatabaseTests(unittest.TestCase):
         self.assertNotIn('error', self.call(2, comment))
         self.assertNotIn('error', self.call(1, {'action': 'plan.save', 'version': 1, 'recipientPartyId': '3', 'content': self.plan}))
         self.assertEqual(self.call(2, comment)['status'], 403)
+        self.assertFalse(any(item.get('comment') == 'Private comment' for item in self.read(3)['planComments']))
 
     def test_inactive_recipient_blocks_assignment_and_send(self):
         self.db.execute('UPDATE user_credential SET active=FALSE WHERE party_id=2')

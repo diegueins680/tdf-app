@@ -678,12 +678,12 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "040c32c5b44ceadb2dde",
-      "reason": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
-      "previousReplacementId": "a2bb0e828d5b94c1cb31",
+      "replacementId": "c297e413bd876ff21c24",
+      "reason": "Preserve all 228 reviewed migration entries and append only the additive event-agreement migration introduced by f226bd7b56abcc6a5c26b12f07d1bd3b54606e77. The manifest is a technical deployment execution registry, not permission to deploy, accept a real contract, select a recipient or approve a budget. Prior review graph is retained.",
+      "previousReplacementId": "040c32c5b44ceadb2dde",
       "currentResolution": {
-        "id": "040c32c5b44ceadb2dde",
-        "valueCount": 228,
+        "id": "c297e413bd876ff21c24",
+        "valueCount": 229,
         "sourceParents": [
           "5875e60701465f9512fad1628b64c0d59a53f049",
           "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
@@ -978,9 +978,20 @@
         "a70a9a4dd05ce44e950b",
         "f48c34252ff8930b3d74",
         "2634b239375f2ad309ba",
-        "a2bb0e828d5b94c1cb31"
+        "a2bb0e828d5b94c1cb31",
+        "040c32c5b44ceadb2dde"
       ],
-      "previousReason": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
+      "previousReason": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
+      "previousResolution": {
+        "id": "040c32c5b44ceadb2dde",
+        "valueCount": 228,
+        "sourceParents": [
+          "5875e60701465f9512fad1628b64c0d59a53f049",
+          "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+          "234ff6f7faf1aecf347c8e92a374228f4ec07aaa"
+        ],
+        "justification": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
+      }
     }
   ]
 }

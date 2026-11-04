@@ -83,7 +83,7 @@ eventWorkspaceServer user ev = readH :<|> writeH :<|> planPdf :<|> agreementPdf 
     agreement <- findAgreement agreementId state
     version <- maybe (throwError err404) pure $ F.find (\v -> (field "version" v >>= resultInt) == Just revision) (arrayField "versions" agreement)
     content <- requireField "content" version
-    renderPdf "acuerdo-evento.pdf" (agreementLines content <> metadataLines version)
+    renderPdf "acuerdo-evento.pdf" (agreementLines content <> ["Metadatos de la propuesta"] <> metadataLines version)
   acceptancePdf agreementId = do
     state <- readValue
     agreement <- findAgreement agreementId state
@@ -95,8 +95,8 @@ eventWorkspaceServer user ev = readH :<|> writeH :<|> planPdf :<|> agreementPdf 
       ["Constancia de aceptación del acuerdo", "Evento: "<>T.pack(show ev), "Acuerdo: "<>UUID.toText agreementId
       ,"Versión: "<>T.pack(show revision),"Cuenta aceptante: "<>textField "accepted_by" acceptance
       ,"Nombre: "<>textField "accepted_name" acceptance,"Fecha UTC: "<>documentTimestamp (textField "accepted_at" acceptance)
-      ,"Huella SHA-256: "<>textField "document_hash" acceptance
-      ,"Aceptación registrada desde la cuenta TDF del destinatario.", ""] <> agreementLines content <> metadataLines version
+      ] <> hashLines acceptance <>
+      ["Aceptación registrada desde la cuenta TDF del destinatario.", ""] <> agreementLines content <> ["Metadatos de la propuesta"] <> metadataLines version
   renderPdf :: Text -> [Text] -> AppM WorkspacePDF
   renderPdf name linesValue = do
     let latex = T.unlines (["\\documentclass[a4paper,11pt]{article}","\\usepackage[utf8]{inputenc}","\\usepackage[T1]{fontenc}","\\usepackage[margin=22mm]{geometry}","\\usepackage{parskip}","\\begin{document}"]
@@ -124,21 +124,28 @@ arrayField :: Text -> A.Value -> [A.Value]
 arrayField key value = case field key value of Just (A.Array values) -> F.toList values; _ -> []
 
 metadataLines :: A.Value -> [Text]
-metadataLines value = ["Versión: "<>textField "version" value<>textField "revision" value
- ,"Huella SHA-256: "<>textField "document_hash" value,"Fecha UTC: "<>documentTimestamp (textField "created_at" value)]
+metadataLines value = ["Versión: "<>textField "version" value<>textField "revision" value]
+ <> hashLines value <> ["Fecha UTC: "<>documentTimestamp (textField "created_at" value)]
+hashLines :: A.Value -> [Text]
+hashLines value = ["Huella SHA-256 (unir ambas líneas):"] <> T.chunksOf 32 (textField "document_hash" value)
 documentTimestamp :: Text -> Text
 documentTimestamp raw = maybe raw (T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S UTC") (iso8601ParseM (T.unpack raw) :: Maybe UTCTime)
 agreementLines :: A.Value -> [Text]
 agreementLines value = [textField "title" value]<>T.lines(textField "body" value)
- <>["Anexo: plan del evento"]<>maybe [] (workspaceDocumentLines . fromMaybe A.Null . field "content") (field "plan" value)
+ <>maybe [] (\plan -> ["Anexo: plan del evento"] <> workspaceDocumentLines (fromMaybe A.Null (field "content" plan)) <> ["Metadatos del plan anexo"] <> metadataLines plan) (field "plan" value)
+
+moneyCents :: A.Value -> Text
+moneyCents value = case A.fromJSON value :: A.Result Integer of
+ A.Success cents -> T.pack(show (cents `div` 100))<>"."<>T.justifyRight 2 '0' (T.pack(show (cents `mod` 100)))
+ A.Error _ -> "Por cotizar"
 
 workspaceDocumentLines :: A.Value -> [Text]
 workspaceDocumentLines value = [textField "title" value]<>T.lines(textField "overview" value)
  <>["Cronograma y responsables"]<>concatMap (\a->[textField "start" a<>" - "<>textField "end" a<>" | "<>textField "title" a,"Responsable: "<>textField "responsible" a,textField "notes" a]) (arrayField "activities" value)
  <>["Presupuesto ("<>textField "currency" value<>")"]<>map (\b->textField "label" b<>" | "<>case field "amountCents" b of
-      Just (A.Number n) -> T.pack(show (n/100))<>" | "<>textField "basis" b
+      Just amount@(A.Number _) -> moneyCents amount<>" | "<>textField "basis" b
       _ -> "Por cotizar | "<>textField "basis" b) (arrayField "budget" value)
- <>["Máximo recuperable (centavos): "<>case field "budgetCapCents" value of Just A.Null->"Pendiente de aprobación"; _->textField "budgetCapCents" value]
+ <>["Máximo recuperable ("<>textField "currency" value<>"): "<>case field "budgetCapCents" value of Just A.Null->"Pendiente de aprobación"; Just amount->moneyCents amount; _->"Pendiente de aprobación"]
  <>["Entregables"]<>map valueText (arrayField "deliverables" value)
  <>["Pendientes"]<>map valueText (arrayField "pending" value)
  where valueText (A.String text)=text; valueText _=""

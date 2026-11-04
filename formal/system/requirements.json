@@ -14571,7 +14571,8 @@
         ".github/workflows/event-agreements.yml",
         ".github/workflows/event-operations-formal.yml",
         "scripts/production-migrations.json",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "formal/system/state-machine-bindings.json"
       ],
       "verification": "Actual isolated PostgreSQL migration tests, web response/session regressions, Haskell document and delivery tests in Stack CI, bounded TLC baseline and five negative configurations.",
       "evidence": "Event agreement persistence CI; web focused tests; account acceptance TLC output; Stack CI. Deployment is independent.",
@@ -14593,7 +14594,39 @@
       ],
       "state": {
         "boundary": "formal/system/event-agreements.md",
-        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn"
+        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn",
+        "states": [
+          "draft",
+          "sent",
+          "changes_requested",
+          "accepted",
+          "rejected",
+          "withdrawn"
+        ],
+        "initial": "draft",
+        "transitions": {
+          "draft": [
+            "sent",
+            "withdrawn"
+          ],
+          "sent": [
+            "changes_requested",
+            "accepted",
+            "rejected",
+            "withdrawn"
+          ],
+          "changes_requested": [
+            "draft",
+            "withdrawn"
+          ],
+          "rejected": [
+            "draft"
+          ],
+          "withdrawn": [
+            "draft"
+          ],
+          "accepted": []
+        }
       },
       "allowedTransitions": [
         "Organizer saves versioned plan and proposals; approves exact complete document and cap; sends it. Recipient accepts, rejects or requests changes. Accepted agreements require a separate amendment."
@@ -14619,7 +14652,8 @@
         "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
-        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs"
+        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/EventAgreement.tla",

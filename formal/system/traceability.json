@@ -14572,7 +14572,8 @@
         ".github/workflows/event-agreements.yml",
         ".github/workflows/event-operations-formal.yml",
         "scripts/production-migrations.json",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "formal/system/state-machine-bindings.json"
       ],
       "verification": "Actual isolated PostgreSQL migration tests, web response/session regressions, Haskell document and delivery tests in Stack CI, bounded TLC baseline and five negative configurations.",
       "evidence": "Event agreement persistence CI; web focused tests; account acceptance TLC output; Stack CI. Deployment is independent.",
@@ -14594,7 +14595,39 @@
       ],
       "state": {
         "boundary": "formal/system/event-agreements.md",
-        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn"
+        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn",
+        "states": [
+          "draft",
+          "sent",
+          "changes_requested",
+          "accepted",
+          "rejected",
+          "withdrawn"
+        ],
+        "initial": "draft",
+        "transitions": {
+          "draft": [
+            "sent",
+            "withdrawn"
+          ],
+          "sent": [
+            "changes_requested",
+            "accepted",
+            "rejected",
+            "withdrawn"
+          ],
+          "changes_requested": [
+            "draft",
+            "withdrawn"
+          ],
+          "rejected": [
+            "draft"
+          ],
+          "withdrawn": [
+            "draft"
+          ],
+          "accepted": []
+        }
       },
       "allowedTransitions": [
         "Organizer saves versioned plan and proposals; approves exact complete document and cap; sends it. Recipient accepts, rejects or requests changes. Accepted agreements require a separate amendment."
@@ -14620,7 +14653,8 @@
         "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
-        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs"
+        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/EventAgreement.tla",
@@ -14652,7 +14686,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f8bf582c6f61061e3d6e944f9b1a094a2df3813be871c64ec127d3f43de0f654",
+    "docs/catalog-persistence/catalog-list-decisions.json": "6eb9eed2c8cd070a81e72f479f041b80b92a22fa8640211ce051878fd51ae9c8",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14991,7 +15025,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "cae4ef93b662b57a1217de99b6cb4105f26e90641bf2e5f8541b271f95a0573f",
-    "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
+    "formal/system/state-machine-bindings.json": "b0f2cb5053f8e44644cb2e06de50a2f933a50bef9b106b011edb90c70d3e0574",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
@@ -15033,7 +15067,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "e860622f83683770401c1f2ea94b89cf1a5a0ebfa9dcb8291833fe4c86819edc",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "6549b7c3435df9b4278e499913a8b179122683373cbe0a4c52e2f9213fa1d5f0",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -15212,7 +15246,7 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
-    "scripts/test-event-agreements.py": "3b4f1c6ebe298e31fb4e732b4cba3140957c618a372a63e08b43a0affde85461",
+    "scripts/test-event-agreements.py": "a692a9f540174989b0e4d177edf7f3cd21cfa1cd10a0554865567a73b657dd3f",
     "scripts/test-event-memories-http.py": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
@@ -15860,7 +15894,7 @@
     "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql": "f12c7a3de7c62ec9cce3bd4a21969de40b7993b39889ee3d1704a1b56ac86d1f",
     "tdf-hq/sql/2026-10-25_ledger_posted_header.sql": "63e84df8458ee3bf522fc4ce0c8bfa355d9e2b1236ccd2bee31437af23a3ad70",
     "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql": "9ccf9c628a161f706d6392984c66cfe722e06de5e4cca10ab2d89ee3453aece4",
-    "tdf-hq/sql/2026-11-03_event_agreements.sql": "aa0dbb13be0d7f0f1c05ba6e9ea17b7819dad0292adad37ece7b6a60d6eb5108",
+    "tdf-hq/sql/2026-11-03_event_agreements.sql": "e6447771c6bd5db946d4133f32d6743b55f090cd537600a46f208d8c11814145",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -15898,7 +15932,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "18085ab24c01e2fdf4320d904a4e7f4d6c8eb32e51d76c95c5b1cd8074ba5fd2",
-    "tdf-hq/src/TDF/Contracts/EventWorkspace.hs": "38bb94e8c8741f43cbc3de4c38e96a1a50674b2b3cf787170aeca66a74211ed2",
+    "tdf-hq/src/TDF/Contracts/EventWorkspace.hs": "a826e9b927d825cf81e6561ef48c369986713207ab90226acad656b0b15c1b67",
     "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs": "028fd057c9706d9786ee649b0adf9d9b2630244a1ebf2392757487c995f91ba1",
     "tdf-hq/src/TDF/Contracts/Server.hs": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
@@ -17473,6 +17507,10 @@
       {
         "requirement": "SYS-TRACE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
       }
     ],
     "scripts/check-state-machines.py": [
@@ -17484,6 +17522,10 @@
     "formal/system/state-machine-bindings.json": [
       {
         "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -30038,11 +30080,15 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "e860622f83683770401c1f2ea94b89cf1a5a0ebfa9dcb8291833fe4c86819edc",
+      "sha256": "6549b7c3435df9b4278e499913a8b179122683373cbe0a4c52e2f9213fa1d5f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-TRACE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -34102,7 +34148,7 @@
     {
       "id": "SURFACE-b0e9ec5e2aad95e6",
       "path": "scripts/test-event-agreements.py",
-      "sha256": "3b4f1c6ebe298e31fb4e732b4cba3140957c618a372a63e08b43a0affde85461",
+      "sha256": "a692a9f540174989b0e4d177edf7f3cd21cfa1cd10a0554865567a73b657dd3f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49172,7 +49218,7 @@
     {
       "id": "SURFACE-59f86d2323262f88",
       "path": "tdf-hq/sql/2026-11-03_event_agreements.sql",
-      "sha256": "aa0dbb13be0d7f0f1c05ba6e9ea17b7819dad0292adad37ece7b6a60d6eb5108",
+      "sha256": "e6447771c6bd5db946d4133f32d6743b55f090cd537600a46f208d8c11814145",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50219,7 +50265,7 @@
     {
       "id": "SURFACE-d96f97b9cdae89c5",
       "path": "tdf-hq/src/TDF/Contracts/EventWorkspace.hs",
-      "sha256": "38bb94e8c8741f43cbc3de4c38e96a1a50674b2b3cf787170aeca66a74211ed2",
+      "sha256": "a826e9b927d825cf81e6561ef48c369986713207ab90226acad656b0b15c1b67",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60258,7 +60304,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f5847fff526cd0e1bbb631e232105f00d0e51be63ce46b45c6d2200f7cb1107c",
+      "sourceSha256": "6879699fe60fdfd6555708d8ca0cad9074ed149ac6579f1d82a69e61fb3f9c45",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -60286,7 +60332,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f5847fff526cd0e1bbb631e232105f00d0e51be63ce46b45c6d2200f7cb1107c",
+      "sourceSha256": "6879699fe60fdfd6555708d8ca0cad9074ed149ac6579f1d82a69e61fb3f9c45",
       "definition": {
         "states": [
           "absent",
@@ -60316,7 +60362,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f5847fff526cd0e1bbb631e232105f00d0e51be63ce46b45c6d2200f7cb1107c",
+      "sourceSha256": "6879699fe60fdfd6555708d8ca0cad9074ed149ac6579f1d82a69e61fb3f9c45",
       "definition": {
         "export": [
           "queued",
@@ -60367,6 +60413,48 @@
           "failed": []
         },
         "authority": "music_ddex_export.status and music_processing_job.status; transitions are enforced by the worker's conditional UPDATEs under the lease guard, not by a trigger"
+      },
+      "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
+    },
+    {
+      "id": "EVT-AGREEMENT-001",
+      "source": "formal/system/requirements.json",
+      "sourceSha256": "6879699fe60fdfd6555708d8ca0cad9074ed149ac6579f1d82a69e61fb3f9c45",
+      "definition": {
+        "boundary": "formal/system/event-agreements.md",
+        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn",
+        "states": [
+          "draft",
+          "sent",
+          "changes_requested",
+          "accepted",
+          "rejected",
+          "withdrawn"
+        ],
+        "initial": "draft",
+        "transitions": {
+          "draft": [
+            "sent",
+            "withdrawn"
+          ],
+          "sent": [
+            "changes_requested",
+            "accepted",
+            "rejected",
+            "withdrawn"
+          ],
+          "changes_requested": [
+            "draft",
+            "withdrawn"
+          ],
+          "rejected": [
+            "draft"
+          ],
+          "withdrawn": [
+            "draft"
+          ],
+          "accepted": []
+        }
       },
       "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
     }

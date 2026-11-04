@@ -3463,7 +3463,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "e860622f83683770401c1f2ea94b89cf1a5a0ebfa9dcb8291833fe4c86819edc",
+      "sha256": "6549b7c3435df9b4278e499913a8b179122683373cbe0a4c52e2f9213fa1d5f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5665,7 +5665,7 @@
     {
       "id": "SURFACE-b0e9ec5e2aad95e6",
       "path": "scripts/test-event-agreements.py",
-      "sha256": "3b4f1c6ebe298e31fb4e732b4cba3140957c618a372a63e08b43a0affde85461",
+      "sha256": "a692a9f540174989b0e4d177edf7f3cd21cfa1cd10a0554865567a73b657dd3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14683,7 +14683,7 @@
     {
       "id": "SURFACE-59f86d2323262f88",
       "path": "tdf-hq/sql/2026-11-03_event_agreements.sql",
-      "sha256": "aa0dbb13be0d7f0f1c05ba6e9ea17b7819dad0292adad37ece7b6a60d6eb5108",
+      "sha256": "e6447771c6bd5db946d4133f32d6743b55f090cd537600a46f208d8c11814145",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15277,7 +15277,7 @@
     {
       "id": "SURFACE-d96f97b9cdae89c5",
       "path": "tdf-hq/src/TDF/Contracts/EventWorkspace.hs",
-      "sha256": "38bb94e8c8741f43cbc3de4c38e96a1a50674b2b3cf787170aeca66a74211ed2",
+      "sha256": "a826e9b927d825cf81e6561ef48c369986713207ab90226acad656b0b15c1b67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28564,7 +28564,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f5847fff526cd0e1bbb631e232105f00d0e51be63ce46b45c6d2200f7cb1107c",
+      "sha256": "6879699fe60fdfd6555708d8ca0cad9074ed149ac6579f1d82a69e61fb3f9c45",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

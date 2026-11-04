@@ -663,3 +663,15 @@ index 3bdee54..e6069f5 100644
 +    "aliases": []
    }
  ] as const;
+diff --git a/src/navigation/notificationTarget.ts b/src/navigation/notificationTarget.ts
+index bea7053..b01b0aa 100644
+--- a/src/navigation/notificationTarget.ts
++++ b/src/navigation/notificationTarget.ts
+@@ -20,6 +20,7 @@ export function notificationTargetPath(notification: NotificationDTO): string |
+     case 'feature_access_request': return id ? `/solicitudes-acceso?request=${id}` : null;
+     case 'event_memories': return id && key ? `/social/eventos/${id}?compose=1&invitation=${key}#momentos` : null;
+     case 'event_logistics': return id ? `/social/eventos/${id}/logistica${activity ? `?activity=${activity}` : ''}` : null;
++    case 'event_agreement': return id ? `/social/eventos/${id}/acuerdos${key ? `?agreement=${key}` : ''}` : null;
+     case 'intern_audit_plan': return key ? `/practicas/auditorias/${key}` : null;
+     case 'internal_feedback_report': return key ? `/feedback/interno/${key}` : null;
+     case 'directory_application': return key ? `/mis-clasificados?application=${key}` : null;

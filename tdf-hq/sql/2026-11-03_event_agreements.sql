@@ -152,7 +152,7 @@ BEGIN
     'acceptance',(SELECT to_jsonb(ac) FROM event_agreement_acceptance ac WHERE ac.agreement_id=a.id),
     'actions',COALESCE((SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) FROM event_workspace_action x WHERE x.agreement_id=a.id AND (owner=actor::text OR EXISTS(SELECT 1 FROM event_agreement_version z WHERE z.agreement_id=a.id AND z.version=x.version AND z.sent_at IS NOT NULL))),'[]'::jsonb)) ORDER BY a.created_at)
     FROM event_agreement a WHERE a.event_id=ev AND (owner=actor::text OR (a.recipient_party_id=actor AND EXISTS(SELECT 1 FROM event_agreement_version v WHERE v.agreement_id=a.id AND v.sent_at IS NOT NULL)))),'[]'::jsonb),
-  'planComments',COALESCE((SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) FROM event_workspace_action x WHERE x.event_id=ev AND x.agreement_id IS NULL AND (owner=actor::text OR plan.recipient_party_id=actor)),'[]'::jsonb)) INTO result;
+  'planComments',COALESCE((SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) FROM event_workspace_action x WHERE x.event_id=ev AND x.agreement_id IS NULL AND (owner=actor::text OR (plan.recipient_party_id=actor AND EXISTS(SELECT 1 FROM event_workspace_plan p WHERE p.event_id=x.event_id AND p.revision=x.version AND p.recipient_party_id=actor)))),'[]'::jsonb)) INTO result;
  RETURN result;
 END $$;
 
@@ -289,10 +289,12 @@ BEGIN
     UPDATE event_agreement SET state=CASE action WHEN 'agreement.reject' THEN 'rejected' ELSE 'changes_requested' END WHERE event_agreement.id=agreement_key; notify:=owner::bigint;
    ELSIF action='agreement.withdraw' THEN
     IF agreement.state NOT IN ('sent','draft','changes_requested') THEN RETURN jsonb_build_object('error','Este acuerdo ya no se puede retirar','status',409); END IF;
-    UPDATE event_agreement SET state='withdrawn' WHERE event_agreement.id=agreement_key; notify:=agreement.recipient_party_id;
+    UPDATE event_agreement SET state='withdrawn' WHERE event_agreement.id=agreement_key;
+    IF version.sent_at IS NOT NULL THEN notify:=agreement.recipient_party_id; END IF;
    ELSIF action='agreement.comment' THEN
+    IF actor<>owner::bigint AND version.sent_at IS NULL THEN RETURN jsonb_build_object('error','La propuesta está en revisión; espera la nueva versión enviada','status',409); END IF;
     IF note IS NULL OR length(note) NOT BETWEEN 1 AND 4000 THEN RETURN jsonb_build_object('error','Escribe un comentario','status',400); END IF;
-    notify:=CASE WHEN owner=actor::text THEN agreement.recipient_party_id ELSE owner::bigint END;
+    IF version.sent_at IS NOT NULL THEN notify:=CASE WHEN owner=actor::text THEN agreement.recipient_party_id ELSE owner::bigint END; END IF;
    ELSE RETURN jsonb_build_object('error','Operación del acuerdo desconocida','status',400);
    END IF;
   END IF;
