@@ -1081,7 +1081,10 @@
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Types.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs"
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+        "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql",
+        "docs/music-directory/formal-model.yaml"
       ],
       "tests": [
         "scripts/test-state-machines.py",
@@ -10910,7 +10913,8 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
-      }
+      },
+      "critical": false
     },
     {
       "domain": "MSG",
@@ -12010,7 +12014,8 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Navigation implementation and local validation; independent review, hosted checks and production publication remain separate gates."
-      }
+      },
+      "critical": false
     },
     {
       "id": "DIR-SAVED-SEARCH-001",
@@ -13431,7 +13436,7 @@
       "title": "Separate artist verification, profile completeness and image-rights review",
       "statement": "Artist review distinguishes supported identity verification from optional missing profile data, and distinguishes actual link availability failures from permission to ingest externally hosted images. Legacy hotlink-rights observations must not hide real network failures or label working images as broken.",
       "authority": "Explicit product owner request, 2026-10-26: explain artist verification and repair Verde70 issues.",
-      "domain": "Artist enrichment",
+      "domain": "ID",
       "source": "docs/artist-enrichment-runbook.md",
       "contract": "docs/artist-enrichment-runbook.md",
       "actors": [
@@ -13495,7 +13500,8 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Bounded worker/UI correction; approval policy, external image rights and source publication remain separate obligations."
-      }
+      },
+      "critical": true
     },
     {
       "id": "MEDIA-MUSIC-TRACK-SEARCH-001",

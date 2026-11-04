@@ -374,3 +374,12 @@ Diez hilos sin resolver, todos sobre código de esta auditoría. Ocho eran defec
 | Reembolsos de cancelación Domo sin ruta de aprobación ni ejecución | el manejador compartido de aprobación de reembolsos PayPal reconoce los reembolsos ligados a `domo_quote_cancellation`, exige además el módulo Admin, enlaza el reembolso con la captura PayPal verificada del depósito y ejecuta el mismo flujo; sin cambio de contrato (no exige regenerar clientes ni otro PR móvil). Datafast sigue sin adaptador de reembolso (503) |
 
 El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, decisión `438668da`, documento `formal-audit-phase2-domo-deposit-validator-reconciliation-20261104.json`).
+
+## 38. Integración del PR #691 y cierre de F-07, F-08, F-09 y F-10 (2026-11-04)
+
+- El PR #691 se fusionó en `main` (`1976242a`) con los nueve workflows en verde; la rama de trabajo se reinició desde `main` para el trabajo posterior.
+- **F-10** (`requireSeedToken` y `ensureAdminSeedToken` comparaban el token con `/=`): nueva función `TDF.Auth.secretTokenMatches`, que compara los resúmenes SHA-256 de ambos valores con `constEq`; el tiempo no depende del contenido ni de la longitud del secreto. Ambos guardas la usan; pruebas de igualdad, prefijo, sufijo, vacío y mayúsculas.
+- **F-09** (`music-directory#review`: `pending` inalcanzable): el código solo crea reseñas `published` (una interacción verificada, I09) y la moderación las pasa a `hidden` o `removed`. Se elimina `pending` del modelo y del CHECK de `directory_review.status` con la migración `2026-11-04_directory_review_status_without_pending` (+ rollback), que se niega a ejecutarse si existe alguna reseña `pending`. Mapeada a `SYS-STATE-001`; gate estático de máquinas de estado verde.
+- **F-08** (registro): `DISCOVERY-NAV-001` y `NAV-MENU-COVERAGE-001` pasan a `critical: false` (navegación); `ART-ENRICH-REVIEW-001` pasa a `critical: true` y dominio `ID` (verificación de identidad de artistas). Los 9 identificadores cuyo prefijo difiere del dominio se conservan: son referencias estables usadas por especificaciones y pruebas, y renombrarlos rompería la trazabilidad sin ganancia semántica.
+- **F-07** queda cerrado por lo ya hecho: las escrituras de resultado detrás de la deduplicación son `UPDATE … WHERE` condicionales, demostradas idempotentes por `formal/payments/StripeIntentOutcome.tla` (Apalache, hasta seis entregas concurrentes); un doble despacho no cambia el estado.
+- Registro de listas: sucesión del manifiesto (236 → 237, decisión `ef3b8933`).

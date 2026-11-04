@@ -161,6 +161,7 @@ import           TDF.DTO
 import qualified TDF.DTO as DTO
 import           TDF.Auth
   ( AuthedUser(..)
+  , secretTokenMatches
   , ModuleAccess(..)
   , authContext
   , hasAiToolingAccess
@@ -1078,7 +1079,7 @@ requireSeedToken rawToken = do
   token <- maybe missingHeader pure rawToken
   when (T.null (T.strip token)) missingHeader
   when (token /= T.strip token || T.any invalidTokenChar token) malformed
-  when (token /= secret) invalid
+  unless (secretTokenMatches token secret) invalid
   pure ()
 
 fanPublicServer :: ServerT FanPublicAPI AppM

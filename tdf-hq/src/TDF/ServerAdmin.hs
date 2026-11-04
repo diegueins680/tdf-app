@@ -146,6 +146,7 @@ import           TDF.Auth               ( AuthedUser
                                         , hasStrictAdminAccess
                                         , validateModuleAccess
                                         , moduleName
+                                        , secretTokenMatches
                                         )
 import           TDF.DB                 (Env(..))
 import           TDF.Catalog.Security   (loadCanonicalPartyRoles)
@@ -243,7 +244,7 @@ ensureAdminSeedToken rawToken = do
   token <- maybe missingHeader pure rawToken
   when (T.null (T.strip token)) missingHeader
   when (token /= T.strip token || T.any invalidTokenChar token) malformed
-  when (token /= secret) invalid
+  unless (secretTokenMatches token secret) invalid
 
 adminServer
   :: ( MonadReader Env m

@@ -54,7 +54,7 @@ import TDF.API.Types
     , UserAccountDTO
     , UserAccountUpdate (..)
     )
-import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Auth (AuthedUser (..), modulesForRoles, secretTokenMatches)
 import TDF.Config (defaultLocale, defaultTimezone, loadConfig, seedTriggerToken)
 import TDF.DB (Env (..))
 import TDF.DTO
@@ -1058,6 +1058,13 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right NoContent ->
                     expectationFailure
                         "Expected malformed Admin seed access to be rejected"
+
+        it "compares seed tokens by digest (F-10): equal only for identical secrets" $ do
+            secretTokenMatches "correct-seed-token-123" "correct-seed-token-123" `shouldBe` True
+            secretTokenMatches "correct-seed-token-124" "correct-seed-token-123" `shouldBe` False
+            secretTokenMatches "correct-seed-token-12" "correct-seed-token-123" `shouldBe` False
+            secretTokenMatches "" "correct-seed-token-123" `shouldBe` False
+            secretTokenMatches "Correct-seed-token-123" "correct-seed-token-123" `shouldBe` False
 
         it "requires a configured seed token even for strict Admin seed requests" $ do
             cfg <- loadConfig

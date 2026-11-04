@@ -14,6 +14,7 @@ module TDF.Auth
   , hasSocialInboxAccess
   , hasModuleAccess
   , validateModuleAccess
+  , secretTokenMatches
   , moduleName
   , moduleRegistryCode
   , moduleFromRegistryCode
@@ -206,6 +207,14 @@ authContext env = mkAuthHandler (authWithToken env) :. EmptyContext
 hasModuleAccess :: ModuleAccess -> AuthedUser -> Bool
 hasModuleAccess moduleTag user@AuthedUser{..} =
   hasCoherentRoleGrants user && moduleTag `Set.member` auModules
+
+-- | Compare a presented shared secret with the configured one without leaking
+-- timing (audit F-10). Both values are reduced to SHA-256 digests first, so the
+-- comparison is constant-time and independent of either value's length.
+secretTokenMatches :: Text -> Text -> Bool
+secretTokenMatches presented configured =
+  (hash (TE.encodeUtf8 presented) :: Digest SHA256)
+    `constEq` (hash (TE.encodeUtf8 configured) :: Digest SHA256)
 
 validateModuleAccess :: ModuleAccess -> AuthedUser -> Either ServerError ()
 validateModuleAccess moduleTag user@AuthedUser{..}
