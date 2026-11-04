@@ -678,20 +678,18 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "040c32c5b44ceadb2dde",
-      "reason": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
-      "previousReplacementId": "a2bb0e828d5b94c1cb31",
+      "replacementId": "438668da134480da0a9e",
+      "reason": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "previousReplacementId": "27def070486792cad395",
       "currentResolution": {
-        "id": "040c32c5b44ceadb2dde",
-        "valueCount": 228,
+        "id": "438668da134480da0a9e",
+        "valueCount": 236,
         "sourceParents": [
-          "5875e60701465f9512fad1628b64c0d59a53f049",
-          "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
-          "234ff6f7faf1aecf347c8e92a374228f4ec07aaa"
+          "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5"
         ],
-        "justification": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
+        "justification": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
       },
-      "change": "Preserve the complete227-entry protected main234ff6f7 migration prefix, every applied SQL byte and every introduction ancestor unchanged, and append exactly one additive migration, 2026-10-31_api_token_session_expiry, which adds nullable api_token validity-window columns, a check constraint and a partial index without backfilling legacy interactive sessions. Retain the exact227-entry review graph and every distinct historical review variant. This228-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
+      "change": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -947,14 +945,59 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
-          "sourceRevision": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+          "sourceRevision": "df3417afcd9095d570d7be683eef5ab3382361d1",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d77611df46eacc8332e2f64b3358448fc5d480ccdd0929838398497d4449e541",
+          "sourceFileSha256": "08f6e44ccd5ce830bee7363c0e66639cc9081be85e7b7c487d8b2089336cf062",
           "sourceEntry": {
             "id": "a2bb0e828d5b94c1cb31"
           },
           "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "979001b3f6bedf6eba7b3a125f243b680c120c81a722286b7faaee25e5ba49a1",
+          "sourceEntry": {
+            "id": "903e61463c0222f30d9b"
+          },
+          "sourceEntryCanonicalSha256": "9adad9f469eb233e58e2cbfac22651f797d7aba5e438d1f10ce880c436e0566c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "644a3303bc938cabac5673a9940850e1bb124566",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "18ab55179d6524a8aa50b1f5d4d309e2201d7e9171844172ac8d4d57f382faa0",
+          "sourceEntry": {
+            "id": "d9468b767dadec9cf3d8"
+          },
+          "sourceEntryCanonicalSha256": "61cbf1e27157b704dcad31fb8800df2d3498c2b57efb3dbc519f63f8b38e1c18",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "dc58f1432d87069b5c371863e0fa86edf58ce30b32ceada8080847ef5c56a3af",
+          "sourceEntry": {
+            "id": "040c32c5b44ceadb2dde"
+          },
+          "sourceEntryCanonicalSha256": "e863458f044f4994d17134c7cd04ae00e8d48c95c2f59f23f076c6d27cfcf85e",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "0b9536229569ebb50323855af3125b46747fb6098eacd8d5e644fd225aee6f8a",
+          "sourceEntry": {
+            "id": "27def070486792cad395"
+          },
+          "sourceEntryCanonicalSha256": "085659be48eed02b09860767b22855e80f1fe17bddca460289a6ab13504fca03",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
         }
       ],
       "previousReplacementIds": [
@@ -978,9 +1021,13 @@
         "a70a9a4dd05ce44e950b",
         "f48c34252ff8930b3d74",
         "2634b239375f2ad309ba",
-        "a2bb0e828d5b94c1cb31"
+        "a2bb0e828d5b94c1cb31",
+        "903e61463c0222f30d9b",
+        "d9468b767dadec9cf3d8",
+        "040c32c5b44ceadb2dde",
+        "27def070486792cad395"
       ],
-      "previousReason": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
+      "previousReason": "Reconcile two concurrent successors of the 227-entry memory/provider review a2bb0e82: protected main dd9adc5d (PR #686, 228 entries, decision 040c32c5b44ceadb2dde) appends 2026-10-31_api_token_session_expiry, and the formal audit branch 644a3303 (PR #691, 234 entries, decision d9468b767dadec9cf3d8) appends seven audit migrations and records one compatible applied checksum. The merged 235-entry manifest keeps main's 228-entry review as its exact prefix (canonical sha256 94bd4e11130835ca3b26b1298abfa21fc294a11bcf67faf5f3f42c759bb43196) and places the seven audit migrations after it in their reviewed order, so the audit's 234-entry view (the manifest without main's entry, canonical sha256 7f387a707d441c2adad76971b0635ff288d152f64f638ccf3c3165ee7a2f2dd1) is unchanged byte for byte; both parent reviews and their entire graphs are retained by canonical hash. The migrations are independent (api_token validity window versus commerce, social, directory and identity objects). This technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the merged head, independent review and protected integration remain required."
     }
   ]
 }

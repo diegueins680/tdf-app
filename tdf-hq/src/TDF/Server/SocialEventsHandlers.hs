@@ -1448,17 +1448,20 @@ markCourseRegistrationStatus now newStatus piId mMarketplaceOrderId = do
                 (translateToArtistTipStatus newStatus)
                 piId
                 mMarketplaceOrderId
-        Just (Entity regKey reg) -> do
-            when (ME.courseRegistrationStatus reg == "pending_payment") $
-                liftIO $
-                    runSqlPool
-                        ( update
-                            regKey
-                            [ ME.CourseRegistrationStatus =. newStatus
-                            , ME.CourseRegistrationUpdatedAt =. now
-                            ]
-                        )
-                        envPool
+        Just (Entity regKey _) -> do
+            -- Conditional update: concurrent or reordered deliveries can
+            -- never replace a recorded outcome (formal/payments/StripeIntentOutcome.tla).
+            liftIO $
+                runSqlPool
+                    ( updateWhere
+                        [ ME.CourseRegistrationId ==. regKey
+                        , ME.CourseRegistrationStatus ==. "pending_payment"
+                        ]
+                        [ ME.CourseRegistrationStatus =. newStatus
+                        , ME.CourseRegistrationUpdatedAt =. now
+                        ]
+                    )
+                    envPool
             pure NoContent
 
 {- | Webhook fallback for artist tip PaymentIntents. Same shape as
@@ -1480,17 +1483,19 @@ markArtistTipStatus now newStatus piId mMarketplaceOrderId = do
                 (translateToMarketplaceOrderStatus newStatus)
                 piId
                 mMarketplaceOrderId
-        Just (Entity tipKey tip) -> do
-            when (ME.artistTipStatus tip == "pending") $
-                liftIO $
-                    runSqlPool
-                        ( update
-                            tipKey
-                            [ ME.ArtistTipStatus =. newStatus
-                            , ME.ArtistTipUpdatedAt =. now
-                            ]
-                        )
-                        envPool
+        Just (Entity tipKey _) -> do
+            -- Conditional update (PAY-TIP-001; formal/payments/StripeIntentOutcome.tla).
+            liftIO $
+                runSqlPool
+                    ( updateWhere
+                        [ ME.ArtistTipId ==. tipKey
+                        , ME.ArtistTipStatus ==. "pending"
+                        ]
+                        [ ME.ArtistTipStatus =. newStatus
+                        , ME.ArtistTipUpdatedAt =. now
+                        ]
+                    )
+                    envPool
             pure NoContent
 
 {- | Webhook fallback for marketplace Stripe PaymentIntents. Idempotent: only
@@ -1506,19 +1511,22 @@ markMarketplaceOrderStatus now newStatus piId mOrderId = do
                 envPool
     case mOrder of
         Just (Entity orderKey order) -> do
-            when (ME.marketplaceOrderStatus order `elem` ["stripe_pending", "pending"]) $
-                liftIO $
-                    runSqlPool
-                        ( update
-                            orderKey
-                            [ ME.MarketplaceOrderStatus =. newStatus
-                            , ME.MarketplaceOrderPaymentProvider =. Just "stripe"
-                            , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
-                            , ME.MarketplaceOrderPaidAt =. if newStatus == "paid" then Just now else ME.marketplaceOrderPaidAt order
-                            , ME.MarketplaceOrderUpdatedAt =. now
-                            ]
-                        )
-                        envPool
+            -- Conditional update, like the recovery branch below
+            -- (formal/payments/StripeIntentOutcome.tla).
+            liftIO $
+                runSqlPool
+                    ( updateWhere
+                        [ ME.MarketplaceOrderId ==. orderKey
+                        , ME.MarketplaceOrderStatus <-. ["stripe_pending", "pending"]
+                        ]
+                        [ ME.MarketplaceOrderStatus =. newStatus
+                        , ME.MarketplaceOrderPaymentProvider =. Just "stripe"
+                        , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
+                        , ME.MarketplaceOrderPaidAt =. if newStatus == "paid" then Just now else ME.marketplaceOrderPaidAt order
+                        , ME.MarketplaceOrderUpdatedAt =. now
+                        ]
+                    )
+                    envPool
             pure NoContent
         Nothing -> do
             mOrderByMetadata <-

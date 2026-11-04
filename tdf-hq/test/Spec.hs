@@ -121,6 +121,16 @@ import TDF.Merch.Reputation
       commercialStoreScore, initialCommercialFormula, roundPublicRating, temporalWeight,
       validateCommercialFormula )
 import qualified TDF.APITypesSpec as APITypesSpec
+import qualified TDF.Commerce.ArtistTipSpec as ArtistTipSpec
+import qualified TDF.Commerce.DomoQuotePropertiesSpec as DomoQuotePropertiesSpec
+import qualified TDF.Commerce.ProviderAdapterBindingSpec as ProviderAdapterBindingSpec
+import qualified TDF.MetaWebhookSignatureSpec as MetaWebhookSignatureSpec
+import qualified TDF.CorsPropertiesSpec as CorsPropertiesSpec
+import qualified TDF.Commerce.DomoCancellationSpec as DomoCancellationSpec
+import qualified TDF.Commerce.ArtistTipStoreSpec as ArtistTipStoreSpec
+import qualified TDF.Social.AccountOwnershipStoreSpec as AccountOwnershipStoreSpec
+import qualified TDF.Commerce.DepositPolicySpec as DepositPolicySpec
+import qualified TDF.Social.AccountOwnershipSpec as AccountOwnershipSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import qualified TDF.CorsSpec as CorsSpec
@@ -17969,6 +17979,16 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ArtistTipSpec.spec
+    DomoQuotePropertiesSpec.spec
+    ProviderAdapterBindingSpec.spec
+    MetaWebhookSignatureSpec.spec
+    CorsPropertiesSpec.spec
+    DomoCancellationSpec.spec
+    ArtistTipStoreSpec.spec
+    AccountOwnershipStoreSpec.spec
+    DepositPolicySpec.spec
+    AccountOwnershipSpec.spec
     ProviderRetrySpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec

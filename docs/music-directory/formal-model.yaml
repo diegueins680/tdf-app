@@ -59,9 +59,10 @@ state_machines:
       submitted: [under_review, withdrawn]
       under_review: [approved, rejected, more_evidence_requested, withdrawn]
       more_evidence_requested: [submitted, withdrawn]
-      approved: []
+      approved: [revoked]
       rejected: [submitted]
       withdrawn: []
+      revoked: []
   moderation_case:
     initial: open
     transitions:
@@ -116,6 +117,9 @@ invariants:
   I11_claim_approval_owns:
     statement: A claim creates no manager grant before the approved transition commits.
     enforcement: approval transaction and negative transition test
+  I17_revocation_withdraws_grants:
+    statement: Revoking an approved claim (AUTHORITY-097) deactivates every manager grant the claim created in the same transaction, requires a stated reason and a reviewer distinct from the claimant, and is terminal; the claimant may submit a new claim.
+    enforcement: status CHECK requiring reviewer and reason, immediate trigger refusing revocation while a grant from the claim is active, handler transaction and HTTP tests
   I12_idempotent_alerts_and_invites:
     statement: Repeating an alert match or invitation request with the same scope/key returns the original resource; a different payload conflicts.
     enforcement: unique scope plus request fingerprint
@@ -170,6 +174,11 @@ preconditions:
   approve_claim:
     - reviewer has claims.approve permission
     - reviewer differs from claimant where policy requires
+  revoke_claim:
+    - reviewer has Admin role and Admin module and differs from the claimant
+    - claim is approved
+    - a non-empty reason is stated
+    - grants created by the claim are deactivated before the status changes
     - evidence decision is recorded
   create_review:
     - caller is authenticated and has an active edit grant over author_profile_id

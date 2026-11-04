@@ -1071,9 +1071,12 @@ ArtistTip
     stripePaymentIntentId Text Maybe
     status                Text default='pending'
     message               Text Maybe
+    idempotencyKey        Text Maybe
+    requestSha256         Text Maybe
     createdAt             UTCTime default=now()
     updatedAt             UTCTime default=now()
     UniqueArtistTipStripePaymentIntent stripePaymentIntentId !force
+    UniqueArtistTipIdempotency artistProfileId idempotencyKey !force
     deriving Show Generic
 
 ServiceStorefrontPackage
