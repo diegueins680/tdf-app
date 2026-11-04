@@ -13,11 +13,11 @@
     },
     {
       "historicalReplacementId": "74f76e178df15df54768",
-      "currentId": "34210b76e81fd04cffae",
+      "currentId": "afc970c544841f583bdc",
       "file": "tdf-hq-ui/src/api/socialEvents.ts",
       "kind": "object-registry",
       "name": "SocialEventsAPI",
-      "valueCount": 75,
+      "valueCount": 77,
       "change": "Combine protected receipt read with memory edit/delete and scoped media upload; transport methods retain server authorization. Both parent reviews are preserved in the active classification decision.",
       "previousResolution": {
         "historicalReplacementId": "74f76e178df15df54768",
@@ -62,7 +62,9 @@
             }
           }
         }
-      }
+      },
+      "previousCurrentId": "34210b76e81fd04cffae",
+      "reason": "The 77 transport method keys retain the complete prior 75-method decision as previousDecision and add reads of existing authenticated social artist list/detail endpoints. Artist data remains persisted; dispatch keys remain technical constants."
     },
     {
       "historicalReplacementId": "c7c31a11cdb3859ae4bb",
