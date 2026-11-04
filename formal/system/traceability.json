@@ -15430,6 +15430,76 @@
         "Pinned Jest permits up to3 retries after unexpected worker crashes. Transientcrash first-attempt failure is not established; persistentcrash control requires terminalfailure and otherfiles complete."
       ],
       "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending. Followupquietmodecounterexample on8b:4PASS/1configparserFAIL; header-independent reader and explicitnotice/silent variants pass all5guards with both ordinary and quietparent environments. Product/workerconfig unchanged; joinedheadhostedqualificationpending. The8bquietfailure echoedasyntheticreporter token. Followup parser emitsgenericerrors and returns onlytypedworkersettings; sixguardcases include confidentiality faults. No realcredentialorreporter service was used in this probe."
+    },
+    {
+      "id": "SYS-VERIFY-AUDIT-SIGNAL-001",
+      "title": "The heuristic formal audit reports semantic findings apart from style debt",
+      "statement": "npm run audit:formal must report contract, state and resource findings by default, keep style debt countable per rule without listing it, and must not raise resource findings from comments, string literals or SQL text.",
+      "domain": "SYS",
+      "authority": "Formal audit 2026-10-31 finding F-11 (12,918 findings on main 1976242a, 529 resource warnings almost all false positives); formal/system/audit-2026-10-31-phase1.md section 39.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "Every rule has a category; an uncategorised rule is semantic. --scope semantic|style|all selects findings; the report carries outOfScope and per-rule counts over all scopes, and the fail threshold applies to the selected scope. The resource rule matches only named handle or connection acquisitions on Haskell code with comments and string or character literals blanked, keeping line numbers, and is satisfied by bracket*, with*, finally, allocate, onException or resourceForkIO within the following lines.",
+      "actors": [
+        "Maintainer reading the audit",
+        "CI or reviewer invoking audit:formal"
+      ],
+      "preconditions": [
+        "Tracked JS/TS and Haskell sources",
+        "git ls-files available"
+      ],
+      "inputs": [
+        "Repository working tree",
+        "--scope, --fail-on and --max-findings options"
+      ],
+      "state": {
+        "initial": "Collected heuristic findings",
+        "terminal": [
+          "Report for the selected scope",
+          "Refusal of an unknown scope or threshold"
+        ]
+      },
+      "allowedTransitions": [
+        "Select findings by rule category",
+        "Count every finding per rule",
+        "Mask Haskell comments and literals before the resource rule"
+      ],
+      "forbiddenTransitions": [
+        "Hide an uncategorised rule",
+        "Report a resource finding from prose, a message or SQL text",
+        "Accept an unknown --scope value"
+      ],
+      "effects": [
+        "Read-only report on standard output; exit status 1 only when a finding in scope meets the fail threshold"
+      ],
+      "authorization": "Local read-only tool; no network or credentials.",
+      "privacy": "Reports repository paths and short code snippets only.",
+      "concurrency": "Single sequential scan.",
+      "idempotency": "The same tree and options give the same findings apart from generatedAt.",
+      "failure": "Unknown options fail with a message and exit status 1.",
+      "recovery": "Rerun with --scope all to inspect style debt or confirm totals.",
+      "observability": "Summary, scope, outOfScope and byRule in text and --json output.",
+      "implementation": [
+        "scripts/lib/formal-methods-audit.mjs",
+        "scripts/audit-formal-methods.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/formal-methods-audit.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "npm run test:formal: 8 tests covering masking (nested block comments, escaped strings, a quote character literal, primed identifiers, the --> operator), the resource rule on prose, SQL, a leaked handle and a finally-released handle, categories and scope selection, and the CLI default, style, all and unknown scopes.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 39",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Unit and CLI tests pass; the audit remains a lexical heuristic, not a proof.",
+      "ambiguity": [
+        "The masker is lexical: Haskell quasi-quotes and CPP are not parsed.",
+        "Rule categories are a reviewed judgement, not derived from the rules."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Tested lexical tooling; heuristic rules carry no soundness claim."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -15866,6 +15936,7 @@
     "scripts/__tests__/fixtures/event-report.mjs": "3a289551a7c9f95d1811bd50ec60d292be48097a881e61a2895d30dc3043d7b8",
     "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
+    "scripts/__tests__/formal-methods-audit.test.mjs": "130513a03b99243c8992dc830b3f27ada4ec3e19faaa36422c815f6fd2382baa",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
@@ -15914,6 +15985,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
+    "scripts/audit-formal-methods.mjs": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/check-admin-guards.py": "6b44713f4518a4bee3cb8c6aa8b309cc2b66e71dc3716b0facc5cb0bdfeacf8b",
@@ -15945,6 +16017,7 @@
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+    "scripts/lib/formal-methods-audit.mjs": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "a4db80638b54d44886f9a6391aae355caa875002ad13a7aa0ad7b17ec179ac9c",
@@ -30086,6 +30159,24 @@
         "requirement": "SYS-UI-TEST-WORKER-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/lib/formal-methods-audit.mjs": [
+      {
+        "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/audit-formal-methods.mjs": [
+      {
+        "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/formal-methods-audit.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -31869,9 +31960,14 @@
     {
       "id": "SURFACE-d09bf04096bd6964",
       "path": "scripts/__tests__/formal-methods-audit.test.mjs",
-      "sha256": "8c2234cb42c2d631ef9523eb9d15b52908d28b98a8499c7e3e7a79119a2745bc",
+      "sha256": "130513a03b99243c8992dc830b3f27ada4ec3e19faaa36422c815f6fd2382baa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-72598558c8c25494",
@@ -32745,9 +32841,14 @@
     {
       "id": "SURFACE-d112ef0e073bf0c4",
       "path": "scripts/audit-formal-methods.mjs",
-      "sha256": "7690517d3d5923af926d7b441ed815d093adbb011670536dd74d13c60066895b",
+      "sha256": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-efc90f2c7a0252ce",
@@ -33458,9 +33559,14 @@
     {
       "id": "SURFACE-16c0274ca9b29448",
       "path": "scripts/lib/formal-methods-audit.mjs",
-      "sha256": "c3585c015a51d155a06adda4740ac42fd8ee3dfa1930a8febcae06c60e30afb9",
+      "sha256": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a952b047ad5b4bd3",
@@ -59563,7 +59669,6 @@
     "SURFACE-46aeee723adfa6c5",
     "SURFACE-ee1bb502b120babb",
     "SURFACE-713c65ca95c0680d",
-    "SURFACE-d09bf04096bd6964",
     "SURFACE-20231ef140c7dd90",
     "SURFACE-aaf6250f3ecffcca",
     "SURFACE-e12f540d456f8d56",
@@ -59591,7 +59696,6 @@
     "SURFACE-33fdad1340b42ae6",
     "SURFACE-2685e984e33eb792",
     "SURFACE-33c36559cee9f889",
-    "SURFACE-d112ef0e073bf0c4",
     "SURFACE-efc90f2c7a0252ce",
     "SURFACE-3dfd6f173e84edf1",
     "SURFACE-7972d2e7d13940a5",
@@ -59634,7 +59738,6 @@
     "SURFACE-596444d6be3be153",
     "SURFACE-5d55ff4fc614658c",
     "SURFACE-6f9017626e33d004",
-    "SURFACE-16c0274ca9b29448",
     "SURFACE-a38198fb9ee3c45e",
     "SURFACE-49f6227b405af138",
     "SURFACE-ee642d6d6fafaf64",
@@ -62266,7 +62369,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6b785e10f4b1be880fc48b1e34d7790b43fbb8afebe9b6f11b7a00590e9f05b0",
+      "sourceSha256": "bee3070c24ae69e7e70dd66e9b1811f5635f3c87e945f2eb430011479411295c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -62294,7 +62397,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6b785e10f4b1be880fc48b1e34d7790b43fbb8afebe9b6f11b7a00590e9f05b0",
+      "sourceSha256": "bee3070c24ae69e7e70dd66e9b1811f5635f3c87e945f2eb430011479411295c",
       "definition": {
         "states": [
           "absent",
@@ -62324,7 +62427,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6b785e10f4b1be880fc48b1e34d7790b43fbb8afebe9b6f11b7a00590e9f05b0",
+      "sourceSha256": "bee3070c24ae69e7e70dd66e9b1811f5635f3c87e945f2eb430011479411295c",
       "definition": {
         "export": [
           "queued",
@@ -84845,7 +84948,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 181,
+    "PARTIAL": 182,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

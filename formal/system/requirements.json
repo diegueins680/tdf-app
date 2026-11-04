@@ -15429,6 +15429,76 @@
         "Pinned Jest permits up to3 retries after unexpected worker crashes. Transientcrash first-attempt failure is not established; persistentcrash control requires terminalfailure and otherfiles complete."
       ],
       "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending. Followupquietmodecounterexample on8b:4PASS/1configparserFAIL; header-independent reader and explicitnotice/silent variants pass all5guards with both ordinary and quietparent environments. Product/workerconfig unchanged; joinedheadhostedqualificationpending. The8bquietfailure echoedasyntheticreporter token. Followup parser emitsgenericerrors and returns onlytypedworkersettings; sixguardcases include confidentiality faults. No realcredentialorreporter service was used in this probe."
+    },
+    {
+      "id": "SYS-VERIFY-AUDIT-SIGNAL-001",
+      "title": "The heuristic formal audit reports semantic findings apart from style debt",
+      "statement": "npm run audit:formal must report contract, state and resource findings by default, keep style debt countable per rule without listing it, and must not raise resource findings from comments, string literals or SQL text.",
+      "domain": "SYS",
+      "authority": "Formal audit 2026-10-31 finding F-11 (12,918 findings on main 1976242a, 529 resource warnings almost all false positives); formal/system/audit-2026-10-31-phase1.md section 39.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "Every rule has a category; an uncategorised rule is semantic. --scope semantic|style|all selects findings; the report carries outOfScope and per-rule counts over all scopes, and the fail threshold applies to the selected scope. The resource rule matches only named handle or connection acquisitions on Haskell code with comments and string or character literals blanked, keeping line numbers, and is satisfied by bracket*, with*, finally, allocate, onException or resourceForkIO within the following lines.",
+      "actors": [
+        "Maintainer reading the audit",
+        "CI or reviewer invoking audit:formal"
+      ],
+      "preconditions": [
+        "Tracked JS/TS and Haskell sources",
+        "git ls-files available"
+      ],
+      "inputs": [
+        "Repository working tree",
+        "--scope, --fail-on and --max-findings options"
+      ],
+      "state": {
+        "initial": "Collected heuristic findings",
+        "terminal": [
+          "Report for the selected scope",
+          "Refusal of an unknown scope or threshold"
+        ]
+      },
+      "allowedTransitions": [
+        "Select findings by rule category",
+        "Count every finding per rule",
+        "Mask Haskell comments and literals before the resource rule"
+      ],
+      "forbiddenTransitions": [
+        "Hide an uncategorised rule",
+        "Report a resource finding from prose, a message or SQL text",
+        "Accept an unknown --scope value"
+      ],
+      "effects": [
+        "Read-only report on standard output; exit status 1 only when a finding in scope meets the fail threshold"
+      ],
+      "authorization": "Local read-only tool; no network or credentials.",
+      "privacy": "Reports repository paths and short code snippets only.",
+      "concurrency": "Single sequential scan.",
+      "idempotency": "The same tree and options give the same findings apart from generatedAt.",
+      "failure": "Unknown options fail with a message and exit status 1.",
+      "recovery": "Rerun with --scope all to inspect style debt or confirm totals.",
+      "observability": "Summary, scope, outOfScope and byRule in text and --json output.",
+      "implementation": [
+        "scripts/lib/formal-methods-audit.mjs",
+        "scripts/audit-formal-methods.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/formal-methods-audit.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "npm run test:formal: 8 tests covering masking (nested block comments, escaped strings, a quote character literal, primed identifiers, the --> operator), the resource rule on prose, SQL, a leaked handle and a finally-released handle, categories and scope selection, and the CLI default, style, all and unknown scopes.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 39",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Unit and CLI tests pass; the audit remains a lexical heuristic, not a proof.",
+      "ambiguity": [
+        "The masker is lexical: Haskell quasi-quotes and CPP are not parsed.",
+        "Rule categories are a reviewed judgement, not derived from the rules."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Tested lexical tooling; heuristic rules carry no soundness claim."
+      }
     }
   ]
 }
