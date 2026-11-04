@@ -23942,6 +23942,100 @@
           "ef0e7a153637f0c71705"
         ]
       }
+    },
+    {
+      "id": "4f0b6bfd56465d68268c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Conflating these destination tags could send a personal upload to the wrong storage provider.",
+      "justification": "Wire discriminant for the account storage destination; it mirrors the backend's accepted values in TDF.ContentStorage (\"tdf\" | \"google_drive\"). It is a provider routing tag, not an editable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "storage-upload-recovery-2026-11-04",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/contentStorage.ts",
+        "line": 6,
+        "kind": "literal-union",
+        "name": "StorageDestination",
+        "valueCount": 2,
+        "consumerCount": 12,
+        "exactDuplicateIds": [
+          "5cebfcc5094f62a9d0d2",
+          "2aec6c04a785f3a69849"
+        ],
+        "similarCandidateIds": [
+          "5cebfcc5094f62a9d0d2",
+          "2aec6c04a785f3a69849"
+        ]
+      }
+    },
+    {
+      "id": "3678187adde3c238d5a0",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Conflating these modes would attribute an upload failure to the wrong credential and misdirect recovery.",
+      "justification": "Internal discriminant for which credential path performed an upload (the user's own provider, the server, or the assets bucket). It selects error handling, not a user-selectable or persisted business value.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "storage-upload-recovery-2026-11-04",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+        "line": 1,
+        "kind": "literal-union",
+        "name": "UploadAuthMode",
+        "valueCount": 3,
+        "consumerCount": 44,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "8d1235586c0dec84146a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Conflating these recovery actions could hide a needed reconnect or encourage an unsafe blind retry.",
+      "justification": "Internal discriminant for the recovery action the UI offers after an upload failure. It is derived from the backend error code, never persisted or edited.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "storage-upload-recovery-2026-11-04",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+        "line": 2,
+        "kind": "literal-union",
+        "name": "UploadRecovery",
+        "valueCount": 3,
+        "consumerCount": 49,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "dba5e241ba7782bae73f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
+      "justification": "Exhaustive mapping from the backend's storage error codes (raised in TDF.Server and TDF.ContentStorage) to localized user messages. The codes are an API error contract owned by the backend, not an editable catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "storage-upload-recovery-2026-11-04",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+        "line": 35,
+        "kind": "switch-cases",
+        "name": "error.code",
+        "valueCount": 9,
+        "consumerCount": 29,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
     }
   ]
 }
