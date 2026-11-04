@@ -40,7 +40,13 @@ reconnection; shared credential failure is an operator issue, not TDF logout.
 
 OAuth state binds nonce, owner and expiry; refreshes are single-flight per owner,
 and late results cannot overwrite a changed session or credential. Popup consent
-keeps the parent form and in-memory File. This is not persistence across reloads.
+keeps the parent form and in-memory File. Bounded owner/editor-scoped metadata is
+retained in sessionStorage for eight hours and cleared by existing account/session
+cleanup. Reload restores form metadata and the request identity, then asks for the
+original binary; no File bytes are persisted. Name/size/MIME prechecks are advisory;
+the server fingerprint binds the exact bytes. Storage denial is visible. A shared
+browser queue admits at most three transfers, including separate widgets and runs.
+Unmounted, changed-owner and changed-editor callbacks cannot attach or clear drafts.
 
 ## Evidence and open obligations
 
@@ -56,12 +62,14 @@ independent evidence. No production inventory has been applied.
 Web and mobile unit tests exercise recovery and session fences. The isolated
 browser fixture uses synthetic HTTP and OAuth; it cannot certify real Google
 consent or permissions. Backend compilation and hosted browser execution need
-fresh CI receipts. Header magic is checked for public passive media; full codec,
+fresh candidate-specific CI receipts. The prior hosted backend run at 7b4b825
+completed 4,184 Hspec examples with zero failures and 21 pending; those pending
+cases are not passes. Its API inspector found exactly the five new storage routes;
+`compiler-observation-20261104.json` records that compiled tree. Header magic is checked for public passive media; full codec,
 malware and playable-content verification is not established.
 
 This delivery is PARTIAL. Before production activation, complete authenticated
-receipt/attachment reader integration, reload-safe scoped form/File drafts,
-server-side encrypted delegated credential lifecycle, canonical content and
+receipt/attachment reader integration, server-side encrypted delegated credential lifecycle, canonical content and
 manifest accounting/provider routing, coordinated backup/restore and exact-image
 HTTP/provider rehearsals. The existing browser credential store is owner-scoped
 but still localStorage, not an encrypted BFF vault. Mobile changes cover the

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -28,6 +28,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PaymentCreate, PaymentDTO } from '../api/types';
 import { Payments } from '../api/payments';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import { useOptionalSession } from '../session/SessionContext';
+import { useOwnedTabDraft } from '../session/useOwnedTabDraft';
+import { parseFormMetadata } from '../session/recoverableDraft';
+import { useTranslation } from 'react-i18next';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import SessionInvoiceGeneratorCard from '../components/SessionInvoiceGeneratorCard';
@@ -72,7 +76,7 @@ const parseOptionalPositiveInt = (value: string): number | null | 'invalid' => {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 'invalid';
 };
 
-function PaymentForm({
+export function PaymentForm({
   onCreated,
   defaultParty,
   payments,
@@ -85,18 +89,50 @@ function PaymentForm({
   const { formatMoney } = useCurrency();
   const [toast, setToast] = useState<string | null>(null);
   const qc = useQueryClient();
-  const [selectedParty, setSelectedParty] = useState<PartySelectorOption | null>(defaultParty ?? null);
-  const [paidAt, setPaidAt] = useState<string>(() => toLocalDateInputValue());
-  const [amount, setAmount] = useState<string>('');
-  const [currency, setCurrency] = useState<string>(preferredCurrency);
-  const [method, setMethod] = useState<string>('Produbanco');
-  const [reference, setReference] = useState<string>('N/A');
-  const [concept, setConcept] = useState<string>('Honorarios');
-  const [period, setPeriod] = useState<string>(() => toPeriod(toLocalDateInputValue()));
-  const [attachmentUrl, setAttachmentUrl] = useState<string>('');
-  const [attachmentName, setAttachmentName] = useState<string>('');
-  const [invoiceId, setInvoiceId] = useState<string>('');
-  const [orderId, setOrderId] = useState<string>('');
+  const recoverySession = useOptionalSession();
+  const ownerId = recoverySession?.loading ? null : recoverySession?.session?.partyId ?? null;
+  const { i18n: recoveryLocale } = useTranslation();
+  const initialDraft = {
+    selectedParty: null as PartySelectorOption | null, paidAt: toLocalDateInputValue(), amount: '', currency: preferredCurrency,
+    method: 'Produbanco', reference: 'N/A', concept: 'Honorarios', period: toPeriod(toLocalDateInputValue()),
+    attachmentUrl: '', attachmentName: '', invoiceId: '', orderId: '',
+  };
+  const recovery = useOwnedTabDraft(initialDraft, {
+    ownerId, scope: `payment-composer:${defaultParty?.partyId ?? 'general'}`,
+    parse: (value) => {
+      if (!value || typeof value !== 'object') return undefined;
+      const data = value as Record<string, unknown>;
+      const partyValue = data['selectedParty'];
+      let party: PartySelectorOption | null = null;
+      if (partyValue !== null) {
+        if (!partyValue || typeof partyValue !== 'object') return undefined;
+        const p = partyValue as Record<string, unknown>;
+        const id = p['partyId'], kind = p['partyType'], name = p['displayName'], status = p['accountStatus'];
+        if (typeof id !== 'number' || !Number.isSafeInteger(id) || id <= 0 || typeof name !== 'string'
+          || (kind !== 'person' && kind !== 'organization') || (status !== 'active' && status !== 'inactive' && status !== 'no-account')) return undefined;
+        const username = p['username'], avatar = p['avatarUrl'], secondary = p['secondaryLabel'];
+        if ((username !== null && typeof username !== 'string') || (avatar !== null && typeof avatar !== 'string')
+          || (secondary !== null && typeof secondary !== 'string')) return undefined;
+        party = { partyId: id, partyType: kind, displayName: name, accountStatus: status, username, avatarUrl: avatar, secondaryLabel: secondary };
+      }
+      const fields = parseFormMetadata({ ...data, selectedParty: null }, initialDraft);
+      return fields ? { ...fields, selectedParty: party } : undefined;
+    },
+  });
+  const currentRecovery = useRef(recovery);
+  currentRecovery.current = recovery;
+  const [selectedParty, setSelectedParty] = recovery.field('selectedParty');
+  const [paidAt, setPaidAt] = recovery.field('paidAt');
+  const [amount, setAmount] = recovery.field('amount');
+  const [currency, setCurrency] = recovery.field('currency');
+  const [method, setMethod] = recovery.field('method');
+  const [reference, setReference] = recovery.field('reference');
+  const [concept, setConcept] = recovery.field('concept');
+  const [period, setPeriod] = recovery.field('period');
+  const [attachmentUrl, setAttachmentUrl] = recovery.field('attachmentUrl');
+  const [attachmentName, setAttachmentName] = recovery.field('attachmentName');
+  const [invoiceId, setInvoiceId] = recovery.field('invoiceId');
+  const [orderId, setOrderId] = recovery.field('orderId');
   const [error, setError] = useState<string | null>(null);
   const [fieldHints, setFieldHints] = useState<{ amount?: string; party?: string; date?: string }>({});
   const invoiceOptions = useMemo(
@@ -116,28 +152,47 @@ function PaymentForm({
     );
   }, [payments, selectedParty]);
 
+  const priorDefault = useRef({ ownerId, value: defaultParty });
   useEffect(() => {
-    setSelectedParty(defaultParty ?? null);
-  }, [defaultParty]);
+    const previous = priorDefault.current;
+    priorDefault.current = { ownerId, value: defaultParty };
+    if (previous.ownerId !== ownerId && previous.value === defaultParty) return;
+    if (!currentRecovery.current.restored) setSelectedParty(defaultParty ?? null);
+  }, [defaultParty, ownerId, setSelectedParty]);
 
   useEffect(() => {
-    setPeriod(toPeriod(paidAt));
-  }, [paidAt]);
+    if (!currentRecovery.current.restored) setPeriod(toPeriod(paidAt));
+  }, [paidAt, setPeriod]);
 
+  const lastPrefilledParty = useRef<number | null>(null);
   useEffect(() => {
-    if (selectedParty && lastPaymentForParty) {
+    if (!selectedParty) { lastPrefilledParty.current = null; return; }
+    if (lastPrefilledParty.current === selectedParty.partyId) return;
+    lastPrefilledParty.current = selectedParty.partyId;
+    // Background queries and reload recovery must not replace edited values.
+    // The explicit copy-last-payment action remains available below.
+    if (!currentRecovery.current.restored && lastPaymentForParty) {
       setConcept((prev) => lastPaymentForParty.payConcept ?? prev);
       setMethod(lastPaymentForParty.payMethod);
       setCurrency(lastPaymentForParty.payCurrency);
       setReference(lastPaymentForParty.payReference ?? 'N/A');
       setPeriod((prev) => lastPaymentForParty.payPeriod ?? prev);
     }
-  }, [selectedParty, lastPaymentForParty]);
+  }, [selectedParty, lastPaymentForParty, setConcept, setMethod, setCurrency, setReference, setPeriod]);
 
-  const mutation = useMutation<PaymentDTO, Error, PaymentCreate>({
-    mutationFn: (body) => Payments.create(body),
-    onSuccess: () => {
+  const mutation = useMutation<PaymentDTO, Error, { body: PaymentCreate; submittedDraft: typeof recovery.value; isCurrentOwner: () => boolean }>({
+    mutationFn: (request) => {
+      if (!request.isCurrentOwner()) throw new Error('La sesión del formulario cambió.');
+      return Payments.create(request.body);
+    },
+    onSuccess: (_, request) => {
+      if (!request.isCurrentOwner()) return;
       void qc.invalidateQueries({ queryKey: ['payments'] });
+      if (JSON.stringify(currentRecovery.current.value) !== JSON.stringify(request.submittedDraft)) {
+        setToast('Pago registrado. Conservamos tus cambios posteriores sin guardar.');
+        return;
+      }
+      recovery.discard();
       setAmount('');
       setReference('N/A');
       setAttachmentUrl('');
@@ -145,8 +200,11 @@ function PaymentForm({
       onCreated();
       setToast('Pago registrado');
     },
-    onError: (err) => setError(err.message),
+    onError: (err, request) => { if (request.isCurrentOwner()) setError(err.message); },
   });
+
+  const resetPaymentMutation = mutation.reset;
+  useEffect(() => { resetPaymentMutation(); setToast(null); }, [ownerId, defaultParty?.partyId, resetPaymentMutation]);
 
   const handleSubmit = () => {
     const parsedPartyId = selectedParty?.partyId;
@@ -193,7 +251,7 @@ function PaymentForm({
       pcPeriod: periodValue,
       pcAttachmentUrl: attachmentUrl.trim() || null,
     };
-    mutation.mutate(payload);
+    mutation.mutate({ body: payload, submittedDraft: recovery.value, isCurrentOwner: recovery.isCurrentOwner });
   };
 
   return (
@@ -341,7 +399,10 @@ function PaymentForm({
           </Grid>
           <Grid item xs={12}>
             <Stack spacing={1.5}>
+              {recovery.restored && <Alert severity="info">{recoveryLocale.language.startsWith('en') ? 'We restored your unsaved payment in this tab.' : 'Recuperamos el pago sin guardar de esta pestaña.'}</Alert>}
               <GoogleDriveUploadWidget
+                recoveryScope={`payment:${selectedParty?.partyId ?? 'new'}`}
+                formRecoveryAvailable={recovery.persistenceAvailable}
                 label={attachmentName ? `Adjunto: ${attachmentName}` : 'Subir comprobante (PDF/imagen)'}
                 helperText="Elige dónde guardar el comprobante. Los archivos de TDF conservan acceso privado."
                 accept="application/pdf,image/*"

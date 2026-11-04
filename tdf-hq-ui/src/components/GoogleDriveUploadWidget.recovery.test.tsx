@@ -11,6 +11,7 @@ jest.unstable_mockModule('../hooks/useGoogleDriveAuth', () => ({
   useGoogleDriveAuth: () => ({ status: 'idle', error: null, startAuth, ensureToken }),
 }));
 jest.unstable_mockModule('../api/drive', () => ({ uploadToDrive: upload }));
+jest.unstable_mockModule('../session/SessionContext', () => ({ useOptionalSession: () => ({ session: { partyId: 42 }, loading: false }) }));
 jest.unstable_mockModule('../api/inventory', () => ({ uploadAssetPhoto: assetUpload }));
 jest.unstable_mockModule('../api/contentStorage', () => ({
   availableStorageBytes: () => 5_000_000_000,
@@ -20,6 +21,7 @@ jest.unstable_mockModule('../api/contentStorage', () => ({
 const { default: Widget } = await import('./GoogleDriveUploadWidget');
 
 beforeEach(() => {
+  sessionStorage.clear();
   ensureToken.mockReset().mockResolvedValue({ accessToken: 'personal-access' });
   startAuth.mockReset().mockResolvedValue(undefined);
   upload.mockReset().mockResolvedValue({ id: 'file-1', name: 'cover.png', publicUrl: 'https://example.test/cover.png' });
@@ -32,7 +34,7 @@ beforeEach(() => {
 
 async function selectFile(container: HTMLElement) {
   const file = new File(['synthetic cover'], 'cover.png', { type: 'image/png' });
-  const input = container.querySelector('input[type=file]');
+  const input = container.querySelector('input[data-testid=storage-upload-select]');
   if (!input) throw new Error('Missing file input');
   await act(async () => { fireEvent.change(input, { target: { files: [file] } }); });
   return file;
@@ -96,4 +98,32 @@ it('lists owned files and asks explicitly before deleting a file', async () => {
   await waitFor(() => expect(removeFile).toHaveBeenCalledTimes(1));
   await waitFor(() => expect(screen.queryByText('owned.png')).toBeNull());
   confirm.mockRestore();
+});
+
+it('preserves an uncertain request after remount and reselects only its original file', async () => {
+  upload.mockRejectedValueOnce(new Error('network unavailable'));
+  const first = render(<Widget authMode="server" recoveryScope="artist:7" />);
+  const file = await selectFile(first.container);
+  await waitFor(() => expect(upload).toHaveBeenCalledTimes(1));
+  const key = (upload.mock.calls[0]?.[1] as { idempotencyKey: string }).idempotencyKey;
+  first.unmount();
+  const restored = render(<Widget authMode="server" recoveryScope="artist:7" />);
+  const reselect = await screen.findByRole('button', { name: 'Reseleccionar archivo' });
+  fireEvent.click(reselect);
+  const input = restored.container.querySelector('input[data-testid=storage-upload-reselect]');
+  if (!input) throw new Error('Missing recovery file input');
+  await act(async () => { fireEvent.change(input, { target: { files: [file] } }); });
+  await waitFor(() => expect(upload).toHaveBeenCalledTimes(2));
+  expect((upload.mock.calls[1]?.[1] as { idempotencyKey: string }).idempotencyKey).toBe(key);
+});
+it('does not attach a late result to a different artist editor under the same account', async () => {
+  let finish: ((value: { id: string; name: string; publicUrl: string }) => void) | undefined;
+  upload.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  const complete = jest.fn();
+  const view = render(<Widget authMode="server" recoveryScope="artist:7" onComplete={complete} />);
+  await selectFile(view.container);
+  await waitFor(() => expect(upload).toHaveBeenCalledTimes(1));
+  view.rerender(<Widget authMode="server" recoveryScope="artist:8" onComplete={complete} />);
+  await act(async () => { finish?.({ id: 'file', name: 'cover.png', publicUrl: 'https://example.test/cover.png' }); });
+  expect(complete).not.toHaveBeenCalled();
 });

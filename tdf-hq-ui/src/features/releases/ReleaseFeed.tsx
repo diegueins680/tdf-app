@@ -524,6 +524,7 @@ function ReleaseActions(props: ReleaseActionsProps) {
       )}
       {canManageReleases && (
         <GoogleDriveUploadWidget
+          recoveryScope={`artist-release:${release.arReleaseId}`}
           label={COPY.release.driveLabel}
           helperText={COPY.release.driveHelp}
           accept="audio/*"

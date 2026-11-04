@@ -36,10 +36,10 @@ test('retries a TDF outage with the same file identity and keeps the biography',
   await page.goto('/e2e/storage-upload.html');
   await page.getByLabel('Biografía').fill('Mi biografía permanece durante la carga.');
   await choose(page, 'TDF · hasta 5 GB gratis');
-  await page.locator('input[type=file]').setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: png });
+  await page.locator('input[data-testid=storage-upload-select]').setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: png });
   await expect(page.getByText(/almacenamiento de TDF no está disponible/)).toBeVisible();
   await page.getByRole('button', { name: /Reintentar cover.png/ }).click();
-  await expect(page.getByRole('status')).toHaveText('Archivo listo');
+  await expect(page.getByRole('status').filter({ hasText: /^Archivo listo$/ })).toHaveText('Archivo listo');
   await expect(page.getByLabel('Biografía')).toHaveValue('Mi biografía permanece durante la carga.');
   const key = (body) => body.match(/name="idempotencyKey"\r\n\r\n([a-f0-9]{64})/)?.[1];
   expect(uploads).toHaveLength(2); expect(key(uploads[0])).toMatch(/^[a-f0-9]{64}$/); expect(key(uploads[1])).toBe(key(uploads[0]));
@@ -48,7 +48,7 @@ test('connects personal Drive in a popup without replacing the page or using TDF
   await page.goto('/e2e/storage-upload.html');
   await page.getByLabel('Biografía').fill('Mi biografía y archivo sobreviven a OAuth.');
   await choose(page, 'Mi Google Drive · no consume espacio TDF');
-  await page.locator('input[type=file]').setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: png });
+  await page.locator('input[data-testid=storage-upload-select]').setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: png });
   await expect(page.getByRole('button', { name: /Reintentar cover.png/ })).toBeVisible();
   expect(uploads).toHaveLength(0);
   const popupPromise = page.waitForEvent('popup');
@@ -57,6 +57,23 @@ test('connects personal Drive in a popup without replacing the page or using TDF
   await popup.waitForEvent('close');
   await expect(page.getByLabel('Biografía')).toHaveValue('Mi biografía y archivo sobreviven a OAuth.');
   await page.getByRole('button', { name: /Reintentar cover.png/ }).click();
-  await expect(page.getByRole('status')).toHaveText('Archivo listo');
+  await expect(page.getByRole('status').filter({ hasText: /^Archivo listo$/ })).toHaveText('Archivo listo');
   expect(uploads).toHaveLength(1); expect(uploads[0]).toContain('google_drive');
+});
+
+test('recovers the form after reload and reselects only the original file with the same request identity', async ({ page }) => {
+  await page.goto('/e2e/storage-upload.html');
+  await page.getByLabel('Biografía').fill('Este borrador sobrevive a una recarga.');
+  await choose(page, 'TDF · hasta 5 GB gratis');
+  await page.locator('input[data-testid=storage-upload-select]').setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: png });
+  await expect(page.getByRole('button', { name: /Reintentar cover.png/ })).toBeVisible();
+  const firstKey = uploads[0].match(/name="idempotencyKey"\r\n\r\n([a-f0-9]{64})/)?.[1];
+  await page.reload();
+  await expect(page.getByLabel('Biografía')).toHaveValue('Este borrador sobrevive a una recarga.');
+  const fileChooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Reseleccionar archivo', exact: true }).click();
+  await (await fileChooser).setFiles({ name: 'cover.png', mimeType: 'image/png', buffer: png });
+  await expect(page.getByRole('status').filter({ hasText: /^Archivo listo$/ })).toHaveText('Archivo listo');
+  expect(uploads).toHaveLength(2);
+  expect(uploads[1].match(/name="idempotencyKey"\r\n\r\n([a-f0-9]{64})/)?.[1]).toBe(firstKey);
 });

@@ -23942,6 +23942,100 @@
           "ef0e7a153637f0c71705"
         ]
       }
+    },
+    {
+      "id": "4f0b6bfd56465d68268c",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence can change upload authority, safe recovery or privacy.",
+      "justification": "Type-level identities of the two implemented account storage adapters. They mirror SQL and authenticated transport authorities; adding a catalog row cannot implement or authorize a provider.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "content-storage-reload-protocol-20261104",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/contentStorage.ts",
+        "line": 6,
+        "kind": "literal-union",
+        "name": "StorageDestination",
+        "valueCount": 2,
+        "consumerCount": 12,
+        "exactDuplicateIds": [
+          "5cebfcc5094f62a9d0d2",
+          "2aec6c04a785f3a69849"
+        ],
+        "similarCandidateIds": [
+          "5cebfcc5094f62a9d0d2",
+          "2aec6c04a785f3a69849"
+        ]
+      }
+    },
+    {
+      "id": "3678187adde3c238d5a0",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence can change upload authority, safe recovery or privacy.",
+      "justification": "Closed transport authority kinds. Personal, server and corporate inventory require distinct credential paths and recovery instructions. Mutable business data must not select an authorization adapter.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "content-storage-reload-protocol-20261104",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+        "line": 1,
+        "kind": "literal-union",
+        "name": "UploadAuthMode",
+        "valueCount": 3,
+        "consumerCount": 51,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "8d1235586c0dec84146a",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence can change upload authority, safe recovery or privacy.",
+      "justification": "Closed client recovery actions chosen by sanitized transport failure handling. These are implemented UI control branches, not user-editable business states or provider permissions.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "content-storage-reload-protocol-20261104",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+        "line": 2,
+        "kind": "literal-union",
+        "name": "UploadRecovery",
+        "valueCount": 3,
+        "consumerCount": 52,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "dba5e241ba7782bae73f",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence can change upload authority, safe recovery or privacy.",
+      "justification": "Safe mapping from recognized server error codes to public recovery copy. Unknown codes keep their safe default. Mutable business catalog entries must not expose raw provider diagnostics or change credential recovery.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "content-storage-reload-protocol-20261104",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+        "line": 35,
+        "kind": "switch-cases",
+        "name": "error.code",
+        "valueCount": 9,
+        "consumerCount": 31,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
     }
   ]
 }

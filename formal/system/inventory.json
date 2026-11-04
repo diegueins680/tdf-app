@@ -863,6 +863,8 @@
       "tdf-hq-ui/src/api/types.ts",
       "tdf-hq-ui/src/api/uploadFailure.test.ts",
       "tdf-hq-ui/src/api/uploadFailure.ts",
+      "tdf-hq-ui/src/api/uploadQueue.test.ts",
+      "tdf-hq-ui/src/api/uploadQueue.ts",
       "tdf-hq-ui/src/api/whatsappConsent.ts",
       "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
       "tdf-hq-ui/src/bootSafety.tsx",
@@ -1296,6 +1298,7 @@
       "tdf-hq-ui/src/pages/PartiesPage.tsx",
       "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts",
+      "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
       "tdf-hq-ui/src/pages/PaymentsPage.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
@@ -1428,7 +1431,11 @@
       "tdf-hq-ui/src/session/logoutIntent.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.ts",
+      "tdf-hq-ui/src/session/recoverableDraft.test.ts",
+      "tdf-hq-ui/src/session/recoverableDraft.ts",
       "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
+      "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
+      "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
       "tdf-hq-ui/src/session/useSessionOwner.ts",
       "tdf-hq-ui/src/test/accessibility.ts",
       "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
@@ -2931,7 +2938,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "e1f290e6e05cf90bf2adbfa250b5a72e1ff2d6193ea8f427443770cd8c40e020",
+      "sha256": "7aa111cf72439700f6e70c01d80c4ebc4ba61314d8afa7a3f4e60c2973ae8935",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3243,7 +3250,7 @@
     {
       "id": "SURFACE-0e316b7ebb7a6b2c",
       "path": "e2e/web/storage-upload-recovery.spec.mjs",
-      "sha256": "d452f71e9efa714925e33033e130f2abb2094fd1a8e6d5770a86420acf8641af",
+      "sha256": "2929438fa40f8fce723da34a89249135ee811e72f3ba7004a955fdf22dffb90a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3555,7 +3562,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
+      "sha256": "881b8fa0370c349ee8bc734eec59b730f2103ad8b9dee267e63de0eab89da0c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6789,7 +6796,7 @@
     {
       "id": "SURFACE-8f308d59f0e073ad",
       "path": "tdf-hq-ui/e2e/storage-upload.tsx",
-      "sha256": "996ef190591fbd6c9c5077994636ea88210dc0bc559ec68a22c143e873090ba7",
+      "sha256": "db97a876b5beb240476600ccdeff7e3dfaf0dc81a628379b43e0070d3a7cf082",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7521,13 +7528,13 @@
     {
       "id": "SURFACE-4f584dc31d92ebd7",
       "path": "tdf-hq-ui/src/api/inventory.ts",
-      "sha256": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
+      "sha256": "6ae18f71871c7dfcebff6c55180ecadb1791feb220e35e6c24009f59b2030799",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4bd49968c033f10e",
       "path": "tdf-hq-ui/src/api/inventory.upload.test.ts",
-      "sha256": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
+      "sha256": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7927,6 +7934,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0d53ea9d90d3f52e",
+      "path": "tdf-hq-ui/src/api/uploadQueue.test.ts",
+      "sha256": "64a4197e7bcbf2c1c9e4a180453c4ebffbf5c109a8c9b1967f186752ff8b0e8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-106a01501a1a2d18",
+      "path": "tdf-hq-ui/src/api/uploadQueue.ts",
+      "sha256": "518ff9a043e587d3721814372de69cf238ee962d3df9b48ef369b72c5810b22e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8843dbd0dcd5f79a",
       "path": "tdf-hq-ui/src/api/whatsappConsent.ts",
       "sha256": "612191ba968e3dced6db6f7b5d8a6d06ea96e0e3ae92af92a0f9d4ecd6d6fbfb",
@@ -8085,13 +8104,13 @@
     {
       "id": "SURFACE-e0b55665797583ff",
       "path": "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
-      "sha256": "98d4a6eff10c13442eabb8c2c78b6c35e579835a90059e1e8777a7dbbc729e6c",
+      "sha256": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0918e49c017af22f",
       "path": "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
-      "sha256": "36bdf67785734f9a534803b6657624ed067dcd3d3a32fdaf11d92ab9b18352b1",
+      "sha256": "b61a8194d526d08b5f86a3bccbd9029c3666b4d9a349001498fadde1c1197958",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9195,7 +9214,7 @@
     {
       "id": "SURFACE-bed1b6650305b76c",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-      "sha256": "48afd18862f3ff12d381b0c00a86df902065dc99070a7ae996abfc34eca04cce",
+      "sha256": "e9a42c05107105e1fb5959ac88c5cb7260e72cdd665065025eb3534188e66a5a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9819,7 +9838,7 @@
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "7d6522f2584d7a97cf5e581c4b9b06dace9dee12751396cac20d50e2fbbaa963",
+      "sha256": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9981,7 +10000,7 @@
     {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "6046b1d4e60aae40e834d0f300a0d787b06cc1d1bede7428bd5f1e6f459a7089",
+      "sha256": "546c843c331c1c3fa6cde2e5ed8aec89c573b79ea428c45fa098f83dd1b2b6c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10005,13 +10024,13 @@
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
+      "sha256": "ed81c8122a6debedadbc37dd221096ea424f4c6f482bcb05ee96562704f28b7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "8f15d40d3eb7a232bfd0750ea2b8c82b5e9becdd152b09d1362ebfac09065720",
+      "sha256": "0154c040ed63474c2f551355ab12e0fa8dd2249cf881a6da97585e48886f3096",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10167,7 +10186,7 @@
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "11c502b106433a5de91b61d49efd5abc9a500f59072876089c7f00cf3d661a45",
+      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10179,7 +10198,7 @@
     {
       "id": "SURFACE-44ac4b25200a0ba1",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-      "sha256": "796d78d3f0af0b5c2627f0dbbfa05ab6762ef9e3f75250c6b65689504abb77d9",
+      "sha256": "e99b58d699ef63f0a51d91450dea034229fde9f79b2cc262d619de1ddc7f7876",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10299,7 +10318,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "1dfede490dd0a8731d5fedd8929358c8c2e4815e9106341225e6d970b4a9fda0",
+      "sha256": "a84f06a4b102f43f604bbaeb42f2386b418e1845196d73cb9929bbe74999597f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10525,9 +10544,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6e21d53461f37190",
+      "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
+      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "27ef1170f9431bac3e4db2fd91fa07004c9c2f20db5ff2096456944233de4e3b",
+      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11317,15 +11342,39 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1dcd8996debce99a",
+      "path": "tdf-hq-ui/src/session/recoverableDraft.test.ts",
+      "sha256": "74a2130d7ab7fa6b45cbcca45d8080e7dfdcb7e8379c5fd93372f8e45c99fadd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b1b44d308f8404bf",
+      "path": "tdf-hq-ui/src/session/recoverableDraft.ts",
+      "sha256": "9f3c8f793e1138da42b1d71d087a6c0f6efe34af3070f76ca2fbe0ff9436c549",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0f84d06d90d8be5b",
       "path": "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
-      "sha256": "12932fe83acc0e61f601f14444a8744909d75e9e9ae2c115f86b832e1c2bb41f",
+      "sha256": "299dfe92522c7ef2fc3b60eca92270cf5ff7987cf0b86467fccb57b2e42dd5d0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bf6c079a13281e3a",
+      "path": "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
+      "sha256": "97a7079c197f0e17bd1a8385c1819a6c5be5814975d4230301b4804761e9c3ca",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b12e0a33377148e8",
+      "path": "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
+      "sha256": "dc6ef35ba25ea48639b1f533540a6aa7592b7a0df3e0efde8bc3b63ce785af22",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-555b680c01a119b6",
       "path": "tdf-hq-ui/src/session/useSessionOwner.ts",
-      "sha256": "5259fc1b40271bb60e2c5e680e8c60bdb51d1d10f198005ffae01d8dab3af67d",
+      "sha256": "5d95885c49fe3980687031db118bfe03714cb317d5bb749c791f322abe44ef5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20843,7 +20892,7 @@
     },
     {
       "path": "docs/content-storage/rollout.md",
-      "sha256": "6b790cbcd47b09cfb2e84854f07563f75462adb78bfdeb729045ec47b51cdd6c",
+      "sha256": "b00487eb44359dc74146221c79728200243b06bd7cfc15e0ad58715c78afd7e4",
       "authority": "inferred",
       "authorityBasis": "Status: implementation candidate; production activation blocked by the open",
       "kind": "requirement-candidate"
@@ -28466,7 +28515,7 @@
     },
     {
       "path": "formal/system/content-storage.md",
-      "sha256": "2a4181653adb384986c0c5fc779ff8ad51258d95182afdfe91aa3492ea0b6e94",
+      "sha256": "d5afefe6db26b6bc497bb48bbf73e7c10157214f730a9544a4c6b631d26a53f7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29117,7 +29166,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c3446c16e612b96ccc938c08556e0ee3bc113676a75f47e901a1e570f6c7ee50",
+      "sha256": "f055cf5fbe79fb4909b0981e1bcff9ac46faa1c0c188f86fad061b35cf0ed45c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

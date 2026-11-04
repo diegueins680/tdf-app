@@ -30,5 +30,31 @@
       "uncompressedBytes": 4950579
     }
   ],
-  "snapshotEncoding": "Deterministic gzip (mtime0); exact same discovery candidate used for JSON and CSV. Historical uncompressed snapshots are retained unchanged. GitHub integration transport disconnected on the larger uncompressed blob."
+  "snapshotEncoding": "Deterministic gzip (mtime0); exact same discovery candidate used for JSON and CSV. Historical uncompressed snapshots are retained unchanged. GitHub integration transport disconnected on the larger uncompressed blob.",
+  "reloadDiscoverySnapshots": [
+    {
+      "path": "docs/catalog-persistence/reports/content-storage-reload-list-inventory-20261104.json.gz",
+      "uncompressedSha256": "2639f006388bcfda3f59c1ea7529787352f2aab654ac21a661af8eb2f7fa831f",
+      "compressedSha256": "413e6982c46a0845145a4aeadd9c575b58980458e6ae2cf2ca7f0de6ded93d2c",
+      "uncompressedBytes": 7989336
+    },
+    {
+      "path": "docs/catalog-persistence/reports/content-storage-reload-list-consumers-20261104.csv.gz",
+      "uncompressedSha256": "a6355385bcdcfc9e12c71b0f38d0c79555aefb46638ed5c07c22c476f1a37a46",
+      "compressedSha256": "5221775831fcaa4f29cf92cc7ee451c8bcd0913633a623c254d8d2d2fc5c7488",
+      "uncompressedBytes": 4966138
+    }
+  ],
+  "reloadReview": {
+    "previousActiveCount": 1385,
+    "currentActiveCount": 1389,
+    "addedProtocolIds": [
+      "4f0b6bfd56465d68268c",
+      "3678187adde3c238d5a0",
+      "8d1235586c0dec84146a",
+      "dba5e241ba7782bae73f"
+    ],
+    "preservedAllPreviousDecisions": true,
+    "scope": "Discovery scan plus four individual source reviews. No prior manifest or review graph changed; no activation authority inferred."
+  }
 }

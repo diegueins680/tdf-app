@@ -32,7 +32,9 @@ and payment attachments with every authorized reader, own-provider consent and
 revocation, shared-provider outages, duplicate concurrent requests, timeouts after
 create, ownership changes, cancellation, deletion failure and restore. Verify
 that unrelated TDF login remains valid. Complete the open credential-vault,
-form-draft and canonical content/manifest work first. Existing personal tokens
+canonical content/manifest work first. Rehearse the tab-scoped metadata recovery
+with original-file reselect on both desktop and phone; browser storage denial must
+remain visible. No binary is saved in the tab draft. Existing personal tokens
 must not be migrated between accounts or silently adopted from legacy unbound
 browser storage.
 
@@ -78,3 +80,29 @@ nonnegative decimal-string `legacyBytes` and `expectedRevision`, boolean
 `ownershipVerified` and `sizesVerified`, relative `evidenceFile` and its lower-case
 `evidenceSha256`. Evidence must stay in the input folder and be at most 50 MiB.
 The output is a new mode0600 file; assertions require operator review.
+
+## Candidate verification
+
+Hosted run 41921346038 compiled and tested source tree
+`6a0c5682a9325f8d0c084e5d94244f21d2800628` (branch head `7b4b825`).
+Hspec completed 4,184 examples, zero failures and 21 pending. The later API
+inspection step rejected the stale declaration; its compiler-derived five-route
+addition is now adopted with provenance in `compiler-observation-20261104.json`.
+Three of four synthetic browser cases passed; the fourth failed due to a strict
+status selector matching pagination as well as the upload. The selector is now
+scoped and two reload cases have been added. Those six cases require a fresh
+hosted receipt; neither synthetic OAuth nor mocks prove Google permissions.
+
+The public production version read on November 4 returned commit
+`4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`, build time
+`2026-10-24T01:24:48Z`. This is an observation of an older deployed backend, not
+a deployment of this candidate or a successful upload rehearsal.
+
+The web reload follow-up passed the production build, focused TypeScript/lint,
+626 course-administration cases, 13 profile-ownership cases, and directed
+managed-upload, payment-draft, queue, metadata and inventory transport cases.
+An initial parallel profile run hit a five-second test timeout; its isolated
+rerun passed all 13 cases without changing the assertion. These are local
+receipts, not real-provider or production acceptance. Tab drafts restore metadata
+only; original binary bytes must be reselected. Final hosted checks remain
+required for the exact integrated head.

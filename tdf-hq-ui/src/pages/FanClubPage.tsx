@@ -1,11 +1,11 @@
 import UserProfileLink from '../components/UserProfileLink';
 import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
-import { createElement, useEffect, useMemo } from 'react';
+import { createElement, useEffect, useMemo, useRef } from 'react';
 import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
+  Alert, Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
   Divider, Grid, IconButton, Stack, Tab, Tabs, TextField, Typography,
   Avatar, Tooltip, ImageList, ImageListItem, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
@@ -36,6 +36,8 @@ import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useLocalValue } from '../hooks/useLocalValue';
+import { useOwnedTabDraft } from '../session/useOwnedTabDraft';
+import { useTranslation } from 'react-i18next';
 import { firstNonEmptyString } from '../utils/stringValues';
 import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubFeedItemDTO, FanClubMemoryDTO, FanClubInboxMessageDTO } from '../api/types';
 
@@ -514,20 +516,35 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
 
 function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; posts: FanClubPostDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useLocalValue(false);
-  const [title, setTitle] = useLocalValue('');
-  const [content, setContent] = useLocalValue('');
-  const [postMediaUrls, setPostMediaUrls] = useLocalValue([] as string[]);
+  const { session, loading: recoveryLoading } = useSession();
+  const { i18n } = useTranslation();
+  const composer = useOwnedTabDraft({ open: false, title: '', content: '', postMediaUrls: [] as string[] }, {
+    ownerId: recoveryLoading ? null : session?.partyId ?? null, scope: `fan-club:${artistId}:post`,
+    parse: (value) => {
+      if (!value || typeof value !== 'object') return undefined;
+      const data = value as Record<string, unknown>;
+      if (typeof data['open'] !== 'boolean' || typeof data['title'] !== 'string' || typeof data['content'] !== 'string'
+        || !Array.isArray(data['postMediaUrls']) || data['postMediaUrls'].some((url: unknown) => typeof url !== 'string')) return undefined;
+      return { open: data['open'], title: data['title'], content: data['content'], postMediaUrls: data['postMediaUrls'] as string[] };
+    },
+  });
+  const [open, setOpen] = composer.field('open');
+  const [title, setTitle] = composer.field('title');
+  const [content, setContent] = composer.field('content');
+  const [postMediaUrls, setPostMediaUrls] = composer.field('postMediaUrls');
 
+  const latestComposer = useRef(composer);
+  latestComposer.current = composer;
   const createPost = useMutation({
-    mutationFn: () => Fans.createClubPost(artistId, { fcpReqTitle: title || null, fcpReqContent: content, fcpReqParentId: null, fcpReqMediaUrls: postMediaUrls }),
-    onSuccess: () => {
+    mutationFn: ({ draft, owns }: { draft: typeof composer.value; owns: () => boolean }) => {
+      if (!owns()) throw new Error('La sesión cambió. Revisa tu publicación antes de reintentar.');
+      return Fans.createClubPost(artistId, { fcpReqTitle: draft.title || null, fcpReqContent: draft.content, fcpReqParentId: null, fcpReqMediaUrls: draft.postMediaUrls });
+    },
+    onSuccess: (_response, { draft, owns }) => {
+      if (!owns()) return;
       void qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
       void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
-      setOpen(false);
-      setTitle('');
-      setContent('');
-      setPostMediaUrls([]);
+      if (JSON.stringify(latestComposer.current.value) === JSON.stringify(draft)) latestComposer.current.discard();
     },
   });
 
@@ -632,8 +649,11 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="Título (opcional)" value={title} onChange={e => setTitle(e.target.value)} fullWidth />
+            {composer.restored && <Alert severity="info">{i18n.language.startsWith('en') ? 'We restored your unsaved post from this tab.' : 'Recuperamos la publicación sin guardar de esta pestaña.'}</Alert>}
             <TextField label="Contenido" value={content} onChange={e => setContent(e.target.value)} multiline rows={4} fullWidth />
             <GoogleDriveUploadWidget
+              recoveryScope={`club-post:${artistId}`}
+              formRecoveryAvailable={composer.persistenceAvailable}
               label="Adjuntar fotos, audio o video"
               visibility="public"
               helperText="Elige dónde guardar tus archivos. Se insertarán como enlaces en el post."
@@ -642,7 +662,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
               dense
               onComplete={(files) => {
                 const urls = files.map(f => f.publicUrl ?? f.webContentLink ?? f.webViewLink ?? '').filter(Boolean);
-                setPostMediaUrls(prev => [...prev, ...urls]);
+                setPostMediaUrls(prev => [...new Set([...prev, ...urls])]);
               }}
             />
             {postMediaUrls.length > 0 && (
@@ -656,7 +676,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
         </DialogContent>
         <DialogActions>
           <Button onClick={() => { setOpen(false); setPostMediaUrls([]); }}>Cancelar</Button>
-          <Button variant="contained" onClick={() => createPost.mutate()} disabled={!content.trim() || createPost.isPending}>
+          <Button variant="contained" onClick={() => createPost.mutate({ draft: composer.value, owns: composer.isCurrentOwner })} disabled={!content.trim() || createPost.isPending}>
             Publicar
           </Button>
         </DialogActions>

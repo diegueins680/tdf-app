@@ -15517,41 +15517,51 @@
       "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals.",
       "property": "No personal-to-service fallback; admitted managed occupancy does not exceed entitlement; replay cannot change owner or fingerprint; unconfirmed deletion retains occupied capacity.",
       "domain": "MEDIA",
-      "authority": "User-authorized activation sprint; reproduced native cross-origin cookie omission against isolated actual API session, reusing the existing inventory upload pattern.",
+      "authority": "User-approved November 4 storage and shared upload recovery prompt.",
       "source": "User-approved November 4 storage prompt; formal/system/content-storage.md",
       "contract": "formal/system/content-storage.md",
       "actors": [
-        "Authenticated artist",
-        "Browser"
+        "Authenticated owner",
+        "Authorized domain reader",
+        "TDF administrator",
+        "Browser",
+        "Mobile client"
       ],
       "preconditions": [
-        "Valid server session and explicitly trusted configured API origin; provider permissions remain independently required."
+        "Server authentication and domain authorization remain mandatory. Existing managed usage must be reconciled before admitting growth. Personal provider consent belongs to the authenticated owner."
       ],
       "inputs": [
-        "File",
-        "Optional folder/name/provider access token",
-        "Current cookie and optional readable application bearer"
+        "Multipart file and stable request identity",
+        "Explicit destination and visibility",
+        "Current application session",
+        "Owner-bound personal provider credential when selected"
       ],
       "state": {
         "upload": [
           "selected",
-          "pending",
-          "resolved",
-          "rejected"
+          "reserved",
+          "transferring",
+          "uncertain",
+          "completed",
+          "cancelled",
+          "deletion-pending",
+          "deleted"
         ]
       },
       "allowedTransitions": [
-        "Selected -> credentialed upload to shared resolved API",
-        "Successful Drive DTO -> existing media result",
-        "Failed upload -> rejected promise -> explicit retry"
+        "Selected -> explicit destination -> authenticated reservation or provider attempt",
+        "Unknown outcome -> same identity reconciliation -> completed or explicit retry",
+        "Confirmed physical deletion -> capacity released",
+        "Owner-scoped metadata -> same-tab reload -> original-file reselect with preserved request identity"
       ],
       "forbiddenTransitions": [
-        "Cookie-only session -> silently omit cross-origin credentials",
-        "HttpOnly cookie -> readable bearer or diagnostics",
-        "Client credential option -> bypass server authorization"
+        "Personal credential absent -> service credential or folder fallback",
+        "Stale session or editor callback -> another owner or form mutation",
+        "Unknown deletion or timed-out reservation -> automatic free capacity",
+        "Unknown historical occupancy -> assume zero"
       ],
       "effects": [
-        "One selected multipart upload; no automatic retry."
+        "Bound concurrent browser transfers; persist bounded tab-scoped metadata without binary bytes; reserve exact managed bytes; sanitize provider errors."
       ],
       "implementation": [
         "tdf-hq/src/TDF/API/ContentStorage.hs",
@@ -15593,7 +15603,15 @@
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
         "tdf-hq-ui/src/session/SessionContext.tsx",
         "tdf-hq/docs/openapi/api.yaml",
-        "tdf-hq/tdf-hq.cabal"
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
+        "tdf-hq-ui/src/session/useSessionOwner.ts",
+        "tdf-hq-ui/src/api/uploadQueue.ts",
+        "tdf-hq-ui/src/session/recoverableDraft.ts",
+        "tdf-hq-ui/src/session/useOwnedTabDraft.ts"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -15605,30 +15623,37 @@
         "tdf-hq-ui/src/api/uploadFailure.test.ts",
         "tdf-hq/test/TDF/DriveReplaySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/inventory.upload.test.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/api/uploadQueue.test.ts",
+        "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
+        "tdf-hq-ui/src/session/recoverableDraft.test.ts",
+        "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
       ],
-      "verification": "Finite policy and negative controls; concurrent PostgreSQL tests; client recovery tests; backend and browser execution require hosted receipts.",
+      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits.",
       "evidence": "docs/content-storage/rollout.md; scripts/test-content-storage-postgres.mjs; exact-candidate hosted CI logs",
       "status": "specified but missing",
       "critical": true,
-      "confidence": "Bounded model and SQL/client checks only; no backend compile, production or system-wide conformance claim",
+      "confidence": "Partial implementation with bounded executable evidence; no production, real-provider, native-device or system-wide conformance claim.",
       "ambiguity": [
         "See the scoped contract for unimplemented acceptance criteria and evidence limits."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Credential vault, scoped reload-safe drafts, private attachment readers, canonical content/manifest accounting and release/restore/provider execution remain open."
+        "reason": "Private attachment readers, encrypted delegated credentials, canonical body/manifest accounting, native destination UI and exact-image release/restore/provider execution remain open. Tab-scoped metadata and original-file reselect now cover the shared web consumers, subject to hosted browser evidence."
       },
       "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
       "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
-      "concurrency": "Each selected upload owns its XHR; server and provider retain concurrent-upload behavior.",
-      "idempotency": "No new exactly-once guarantee or automatic retry; repeated user uploads may create multiple blobs.",
-      "failure": "Existing non-success response and DTO parsing failures reject; no false success is added.",
-      "recovery": "Explicit user retry under a valid session; no change to provider permissions.",
-      "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
+      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter.",
+      "idempotency": "Managed and explicit personal Drive attempts retain one owner-bound identity and byte fingerprint. Corporate inventory uploads retain their existing server semantics and are not covered by the new deduplication protocol.",
+      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login.",
+      "recovery": "Same-tab metadata expires after eight hours and is purged by account/session cleanup. Browser reload requires reselecting the original binary; successful matching uploads reconcile the original key. Storage denial warns the user to keep the tab open.",
+      "observability": "No tokens or private bodies in diagnostics; compiler observations, synthetic test receipts and production version reads identify their evidence boundary."
     }
   ]
 }
