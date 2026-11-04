@@ -342,8 +342,8 @@ function PaymentForm({
           <Grid item xs={12}>
             <Stack spacing={1.5}>
               <GoogleDriveUploadWidget
-                label={attachmentName ? `Adjunto: ${attachmentName}` : 'Subir comprobante (PDF/imagen) a Drive'}
-                helperText="Se almacenará en Drive y guardaremos el enlace público."
+                label={attachmentName ? `Adjunto: ${attachmentName}` : 'Subir comprobante (PDF/imagen)'}
+                helperText="Elige dónde guardar el comprobante. Los archivos de TDF conservan acceso privado."
                 accept="application/pdf,image/*"
                 multiple={false}
                 onComplete={(files: DriveFileInfo[]) => {

@@ -7501,7 +7501,7 @@ export default function CourseRegistrationsAdminPage() {
                           ? `Archivo listo: ${receiptForm.fileName}`
                           : 'Subir comprobante (imagen/PDF)'
                       }
-                      helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
+                      helperText="Elige dónde guardar el comprobante; conservaremos su enlace en esta inscripción."
                       accept="application/pdf,image/*"
                       multiple={false}
                       onComplete={handleReceiptUpload}

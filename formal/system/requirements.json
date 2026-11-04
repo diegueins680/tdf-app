@@ -15510,6 +15510,125 @@
       "property": "Explicit wall-clock interpretation and saved logistics timezone precedence; integer-cent estimate conservation; no duplicate confirmed upload or stale editor success.",
       "verification": "Finite deterministic callback model with three negative controls; actual React regressions and 100001 fee inputs; Haskell test execution pending pinned Stack.",
       "evidence": "scripts/__tests__/event-planning-ux-model.test.mjs; tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/utils/eventTicketPricing.test.ts; tdf-hq/test/Spec.hs; tdf-hq-ui/src/utils/dateTime.test.ts"
+    },
+    {
+      "id": "MEDIA-STORAGE-001",
+      "title": "Explicit account storage and safe upload recovery",
+      "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals.",
+      "property": "No personal-to-service fallback; admitted managed occupancy does not exceed entitlement; replay cannot change owner or fingerprint; unconfirmed deletion retains occupied capacity.",
+      "domain": "MEDIA",
+      "authority": "User-authorized activation sprint; reproduced native cross-origin cookie omission against isolated actual API session, reusing the existing inventory upload pattern.",
+      "source": "User-approved November 4 storage prompt; formal/system/content-storage.md",
+      "contract": "formal/system/content-storage.md",
+      "actors": [
+        "Authenticated artist",
+        "Browser"
+      ],
+      "preconditions": [
+        "Valid server session and explicitly trusted configured API origin; provider permissions remain independently required."
+      ],
+      "inputs": [
+        "File",
+        "Optional folder/name/provider access token",
+        "Current cookie and optional readable application bearer"
+      ],
+      "state": {
+        "upload": [
+          "selected",
+          "pending",
+          "resolved",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Selected -> credentialed upload to shared resolved API",
+        "Successful Drive DTO -> existing media result",
+        "Failed upload -> rejected promise -> explicit retry"
+      ],
+      "forbiddenTransitions": [
+        "Cookie-only session -> silently omit cross-origin credentials",
+        "HttpOnly cookie -> readable bearer or diagnostics",
+        "Client credential option -> bypass server authorization"
+      ],
+      "effects": [
+        "One selected multipart upload; no automatic retry."
+      ],
+      "implementation": [
+        "tdf-hq/src/TDF/API/ContentStorage.hs",
+        "tdf-hq/src/TDF/ContentStorage.hs",
+        "tdf-hq/src/TDF/API/Drive.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/api/contentStorage.ts",
+        "tdf-hq-ui/src/api/uploadFailure.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
+        "tdf-hq-ui/src/services/googleDrive.ts",
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts",
+        "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx",
+        "scripts/prepare-content-storage-reconciliation.mjs",
+        "tdf-hq/sql/2026-11-04_content_storage.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_accounting.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_accounting_rollback.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_delete_capacity_rollback.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_deletion.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_deletion_rollback.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_drive.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_drive_rollback.sql",
+        "tdf-hq/sql/2026-11-04_content_storage_rollback.sql",
+        "docs/content-storage/mobile-companion.patch",
+        ".github/workflows/ci.yml",
+        "scripts/content-storage-model.mjs",
+        "scripts/production-migrations.json",
+        "scripts/quality-backend.sh",
+        "scripts/test-content-storage-postgres.mjs",
+        "tdf-hq-ui/e2e/storage-upload.html",
+        "tdf-hq-ui/e2e/storage-upload.tsx",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
+        "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "tests": [
+        "scripts/__tests__/content-storage-model.test.mjs",
+        "scripts/__tests__/content-storage-reconciliation.test.mjs",
+        "scripts/test-content-storage-postgres.mjs",
+        "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
+        "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
+        "e2e/web/storage-upload-recovery.spec.mjs",
+        "tdf-hq-ui/src/api/uploadFailure.test.ts",
+        "tdf-hq/test/TDF/DriveReplaySpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [
+        "scripts/content-storage-model.mjs"
+      ],
+      "verification": "Finite policy and negative controls; concurrent PostgreSQL tests; client recovery tests; backend and browser execution require hosted receipts.",
+      "evidence": "docs/content-storage/rollout.md; scripts/test-content-storage-postgres.mjs; exact-candidate hosted CI logs",
+      "status": "specified but missing",
+      "critical": true,
+      "confidence": "Bounded model and SQL/client checks only; no backend compile, production or system-wide conformance claim",
+      "ambiguity": [
+        "See the scoped contract for unimplemented acceptance criteria and evidence limits."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Credential vault, scoped reload-safe drafts, private attachment readers, canonical content/manifest accounting and release/restore/provider execution remain open."
+      },
+      "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
+      "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
+      "concurrency": "Each selected upload owns its XHR; server and provider retain concurrent-upload behavior.",
+      "idempotency": "No new exactly-once guarantee or automatic retry; repeated user uploads may create multiple blobs.",
+      "failure": "Existing non-success response and DTO parsing failures reject; no false success is added.",
+      "recovery": "Explicit user retry under a valid session; no change to provider permissions.",
+      "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
     }
   ]
 }

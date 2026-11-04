@@ -635,7 +635,8 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
             <TextField label="Contenido" value={content} onChange={e => setContent(e.target.value)} multiline rows={4} fullWidth />
             <GoogleDriveUploadWidget
               label="Adjuntar fotos, audio o video"
-              helperText="Sube archivos a Google Drive. Se insertarán como enlaces en el post."
+              visibility="public"
+              helperText="Elige dónde guardar tus archivos. Se insertarán como enlaces en el post."
               accept="image/*,audio/*,video/*"
               multiple
               dense

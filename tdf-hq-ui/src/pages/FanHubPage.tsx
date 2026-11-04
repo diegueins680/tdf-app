@@ -1685,7 +1685,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           Portada principal (hosteada)
                         </Typography>
                         <GoogleDriveUploadWidget
-                          label="Subir portada a Drive"
+                          label="Subir portada"
+                          visibility="public"
                           helperText="Sube la portada; guardaremos el enlace servido para evitar imágenes pesadas embebidas."
                           onComplete={(files) => {
                             if (!isCurrentArtistOwner()) return;

@@ -348,6 +348,8 @@ import TDF.Server
     , validateCourseRegistrationFollowUpId
     , whatsAppConsentStatusFromRow
     , validateDriveAccess
+    , resolveDriveUploadAuthority
+    , storageProviderError
     , resolveResourcesForBooking
     , runDb
     , resolvePackagePurchaseRefs
@@ -7364,6 +7366,30 @@ spec = describe "TDF.Server helpers" $ do
                     [ "client_secret" .= ("session-secret" :: Text)
                     , "expires_after" .= object ["seconds" .= (0 :: Int)]
                     ])
+
+    describe "Drive storage failure isolation" $ do
+        it "refuses missing personal credentials instead of selecting TDF credentials" $
+            case resolveDriveUploadAuthority (Just "user") Nothing of
+                Left failure -> do
+                    errHTTPCode failure `shouldBe` 409
+                    BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+                Right _ -> expectationFailure "Personal upload selected shared credentials"
+        it "recognizes an explicit personal upload" $
+            resolveDriveUploadAuthority (Just "user") (Just "personal") `shouldBe` Right True
+        it "rejects mixed service and personal authority" $
+            case resolveDriveUploadAuthority (Just "server") (Just "personal") of
+                Left failure -> errHTTPCode failure `shouldBe` 400
+                Right _ -> expectationFailure "Mixed authority accepted"
+        it "does not turn service revocation into an expired TDF session" $ do
+            let failure = storageProviderError False (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 503
+            BL8.unpack (errBody failure) `shouldContain` "storage_service_unavailable"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
+        it "offers personal reconnection without disclosing the provider payload" $ do
+            let failure = storageProviderError True (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 409
+            BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
 
     describe "DriveUploadForm FromMultipart" $ do
         it "trims optional upload fields before handler fallback resolution" $ do

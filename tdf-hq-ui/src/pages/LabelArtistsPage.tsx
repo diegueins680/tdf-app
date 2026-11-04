@@ -1243,13 +1243,14 @@ export default function LabelArtistsPage() {
               onChange={(event) => setForm((prev) => ({ ...prev, bio: event.target.value }))}
             />
             <GoogleDriveUploadWidget
-              label="Subir portada a Drive"
-              helperText="Sube la imagen principal a Google Drive; guardaremos el enlace."
+              label="Subir portada"
+              visibility="public"
+              helperText="Elige dónde guardar la imagen pública de tu perfil."
               onComplete={(files) => {
                 const uploadedHeroImageUrl = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
                 if (uploadedHeroImageUrl) {
                   setForm((prev) => ({ ...prev, heroImageUrl: uploadedHeroImageUrl }));
-                  setHeroImageFileName('Imagen en Drive');
+                  setHeroImageFileName('Imagen cargada');
                 }
               }}
               accept="image/*"

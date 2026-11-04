@@ -228,6 +228,9 @@ jobs:
           PLAYWRIGHT_ARTIFACT_DIR: artifacts/persona-playwright/deletion-rollout-off
         run: npx playwright test e2e/web/account-deletion-rollout.spec.mjs
 
+      - name: Verify storage destination and upload recovery
+        run: node node_modules/@playwright/test/cli.js test --config=playwright.storage-upload.config.mjs
+
       - name: Verify community discovery and navigation across browser layouts
         run: node node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs
 
