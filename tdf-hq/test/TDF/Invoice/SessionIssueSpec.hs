@@ -70,6 +70,7 @@ request cents = GenerateSessionInvoiceReq
   , gsiIssueSri = Just True
   , gsiCertificatePassword = Nothing
   , gsiIdempotencyKey = Just key1
+  , gsiSriPortalVerified = Nothing
   }
 
 expectReserved :: IssueReservation -> Db ME.SessionInvoiceIssueId
@@ -95,7 +96,11 @@ spec = describe "Session invoice issuance idempotency (PAY-INVOICE-ISSUE-001)" $
   describe "issueFingerprint" $ do
     it "ignores the key and the certificate password, which a retry may re-enter" $
       issueFingerprint "s" (request 1000)
-        `shouldBe` issueFingerprint "s" ((request 1000) { gsiIdempotencyKey = Just key2, gsiCertificatePassword = Just "secret" })
+        `shouldBe` issueFingerprint "s" ((request 1000)
+          { gsiIdempotencyKey = Just key2
+          , gsiCertificatePassword = Just "secret"
+          , gsiSriPortalVerified = Just True
+          })
     it "changes with the amount, the SRI choice and the session" $ do
       issueFingerprint "s" (request 1000) `shouldNotBe` issueFingerprint "s" (request 1001)
       issueFingerprint "s" (request 1000) `shouldNotBe` issueFingerprint "s" ((request 1000) { gsiIssueSri = Just False })
@@ -115,6 +120,16 @@ spec = describe "Session invoice issuance idempotency (PAY-INVOICE-ISSUE-001)" $
     it "refuses a different request with the same key, answered or not" $ do
       decideIssueReplay "g" (Just ("f", Just "{}")) `shouldSatisfy` isConflict
       decideIssueReplay "g" (Just ("f", Nothing)) `shouldSatisfy` isConflict
+
+  describe "responseSettled" $ do
+    it "settles when SRI was not requested or reported the document as issued" $ do
+      responseSettled "{\"ok\":true,\"sri\":null}" `shouldBe` True
+      responseSettled "{\"ok\":true}" `shouldBe` True
+      responseSettled "{\"ok\":true,\"sri\":{\"ok\":true,\"status\":\"issued\"}}" `shouldBe` True
+    it "treats an SRI error, another status or an unreadable response as unsettled" $ do
+      responseSettled "{\"ok\":true,\"sri\":{\"ok\":false,\"error\":\"x\"}}" `shouldBe` False
+      responseSettled "{\"ok\":true,\"sri\":{\"ok\":true,\"status\":\"received\"}}" `shouldBe` False
+      responseSettled "not json" `shouldBe` False
 
   describe "reservation statements (SQLite)" $ do
     it "reserves once; a concurrent duplicate sees the reservation, not an error" $ withDb $ do
@@ -150,6 +165,21 @@ spec = describe "Session invoice issuance idempotency (PAY-INVOICE-ISSUE-001)" $
       releaseIssue done
       kept <- reserveIssue now sessionA key2 "f"
       liftIO $ show kept `shouldBe` show (IssueExisting (IssueReplayStored "{}"))
+
+    it "finds an unresolved attempt for the same request under another key" $ withDb $ do
+      pending <- reserveIssue now sessionA key1 "f" >>= expectReserved
+      unresolvedSiblingAttempt sessionA "f" key2 >>= liftIO . (`shouldBe` True)
+      -- the same key is a replay, not a sibling; other requests and sessions do not count
+      unresolvedSiblingAttempt sessionA "f" key1 >>= liftIO . (`shouldBe` False)
+      unresolvedSiblingAttempt sessionA "g" key2 >>= liftIO . (`shouldBe` False)
+      unresolvedSiblingAttempt sessionB "f" key2 >>= liftIO . (`shouldBe` False)
+      completeIssue now pending Nothing "{\"ok\":true,\"sri\":{\"ok\":false,\"error\":\"lost\"}}"
+      unresolvedSiblingAttempt sessionA "f" key2 >>= liftIO . (`shouldBe` True)
+
+    it "ignores attempts that settled" $ withDb $ do
+      done <- reserveIssue now sessionA key1 "f" >>= expectReserved
+      completeIssue now done Nothing "{\"ok\":true,\"sri\":{\"ok\":true,\"status\":\"issued\"}}"
+      unresolvedSiblingAttempt sessionA "f" key2 >>= liftIO . (`shouldBe` False)
   where
     isConflict (IssueConflict _) = True
     isConflict _ = False

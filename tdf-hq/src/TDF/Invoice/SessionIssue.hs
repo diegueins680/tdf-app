@@ -18,6 +18,8 @@ module TDF.Invoice.SessionIssue
   , reserveIssue
   , completeIssue
   , releaseIssue
+  , responseSettled
+  , unresolvedSiblingAttempt
   ) where
 
 import           Control.Monad.IO.Class (MonadIO)
@@ -27,7 +29,9 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime)
-import           Database.Persist (Entity (..), getBy, update, (=.))
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as KeyMap
+import           Database.Persist (Entity (..), getBy, selectList, update, (==.), (!=.), (=.))
 import           Database.Persist.Sql (Single (..), SqlPersistT, rawExecute, rawSql, toPersistValue, toSqlKey)
 
 import           TDF.DTO (GenerateSessionInvoiceReq (..))
@@ -75,7 +79,11 @@ validateIssueKey issuesSri mRawKey =
 -- request (field order, whitespace) share a fingerprint.
 issueFingerprint :: Text -> GenerateSessionInvoiceReq -> Text
 issueFingerprint sessionId req =
-  let canonical = req { gsiIdempotencyKey = Nothing, gsiCertificatePassword = Nothing }
+  let canonical = req
+        { gsiIdempotencyKey = Nothing
+        , gsiCertificatePassword = Nothing
+        , gsiSriPortalVerified = Nothing
+        }
       material = TE.encodeUtf8 (sessionId <> "\n" <> T.pack (show canonical))
   in T.pack (show (hash material :: Digest SHA256))
 
@@ -128,3 +136,33 @@ releaseIssue reservation =
   rawExecute
     "DELETE FROM session_invoice_issue WHERE id = ? AND completed_at IS NULL"
     [toPersistValue reservation]
+
+-- | Whether a stored response settles its attempt: SRI was not requested
+-- (@sri@ is null or absent), or SRI reported the document as issued. Anything
+-- else (an SRI error, another status, or an unreadable response) is unsettled,
+-- because the portal may have issued the document.
+responseSettled :: Text -> Bool
+responseSettled stored =
+  case Aeson.decodeStrict (TE.encodeUtf8 stored) of
+    Just (Aeson.Object top) -> case KeyMap.lookup "sri" top of
+      Nothing -> True
+      Just Aeson.Null -> True
+      Just (Aeson.Object sri) ->
+        KeyMap.lookup "ok" sri == Just (Aeson.Bool True)
+          && KeyMap.lookup "status" sri == Just (Aeson.String "issued")
+      Just _ -> False
+    _ -> False
+
+-- | Another key's attempt for the same session and request fingerprint that is
+-- not settled: still unanswered, or answered with an uncertain SRI outcome.
+-- Issuing under a new key while one exists could duplicate a legal invoice,
+-- so the handler refuses unless staff confirmed the portal.
+unresolvedSiblingAttempt
+  :: MonadIO m => ME.SessionId -> Text -> Text -> SqlPersistT m Bool
+unresolvedSiblingAttempt sessionKey fingerprint key = do
+  siblings <- selectList
+    [ ME.SessionInvoiceIssueSessionId ==. sessionKey
+    , ME.SessionInvoiceIssueRequestSha256 ==. fingerprint
+    , ME.SessionInvoiceIssueIdempotencyKey !=. key
+    ] []
+  pure (any (maybe True (not . responseSettled) . ME.sessionInvoiceIssueResponse . entityVal) siblings)

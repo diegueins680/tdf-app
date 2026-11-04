@@ -13423,6 +13423,20 @@ generateInvoiceForSession user sessionId payload = do
     Just issueKey -> do
       now <- liftIO getCurrentTime
       let fingerprint = SessionIssue.issueFingerprint sessionId req
+          portalVerified = gsiSriPortalVerified req == Just True
+      -- A new key for a request whose earlier attempt is unresolved could issue
+      -- a duplicate legal invoice (for example after the browser lost the key).
+      siblingUnresolved <-
+        if issuesSri && not portalVerified
+          then liftIO $ flip runSqlPool pool $
+            SessionIssue.unresolvedSiblingAttempt sessionKey fingerprint issueKey
+          else pure False
+      when siblingUnresolved $
+        throwError err409
+          { errBody =
+              "An earlier attempt to issue this invoice to SRI is unresolved. Check the SRI portal; \
+              \if nothing was issued, retry confirming the portal was verified."
+          }
       reservation <- liftIO $ flip runSqlPool pool $
         SessionIssue.reserveIssue now sessionKey issueKey fingerprint
       case reservation of

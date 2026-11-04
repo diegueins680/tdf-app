@@ -25,6 +25,13 @@ describe('nextInvoiceIssueAttempt (PAY-INVOICE-ISSUE-001)', () => {
     expect(retry.key).toBe(first.key);
   });
 
+  it('ignores the portal-verified flag, so a verified retry keeps the same request fingerprint', () => {
+    const newKey = keys();
+    const first = nextInvoiceIssueAttempt(null, 'session-1', payload, newKey, null);
+    const verified = nextInvoiceIssueAttempt(first, 'session-1', { ...payload, sriPortalVerified: true }, newKey, null);
+    expect(verified.fingerprint).toBe(first.fingerprint);
+  });
+
   it('ignores the certificate password and an already attached key', () => {
     const newKey = keys();
     const first = nextInvoiceIssueAttempt(null, 'session-1', payload, newKey, null);

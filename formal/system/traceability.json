@@ -15509,7 +15509,7 @@
       "authority": "Formal audit 2026-10-31 finding F-03 (Invoice/SRI without requirement) and the owner decision of 2026-11-04 to require an idempotency key; formal/system/audit-2026-10-31-phase1.md section 40.",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "contract": "formal/system/audit-2026-10-31-phase1.md",
-      "property": "For each (session, idempotencyKey) at most one invoice is created and at most one SRI script run starts: the reservation row is inserted with ON CONFLICT DO NOTHING before any invoice or SRI work. Replay returns the stored response when the SHA-256 fingerprint of (session, decoded request without key and certificate password) matches; a mismatch is 409; a reservation without a response is 409. A reservation is released only when creating or linking the invoice failed, before the SRI script started. Without SRI the key is optional. Before reserving, the SRI customer is loaded and the whole SRI script request validated, so a correctable input error is a 400 that leaves the key reusable. The web client drops the key only when SRI was not requested or reported the document as issued; after an SRI error or an unconfirmed status it keeps the key, so resubmitting replays, and a new attempt needs an explicit action after checking the portal. Unresolved attempts are also kept in browser storage by fingerprint (without the certificate password), so a reload or navigation followed by the same request reuses the key; they are removed when the outcome settles or staff start a new attempt. When a request fails while an SRI attempt is unresolved (including 409 for an unanswered reservation), the error offers the same verified new-attempt action.",
+      "property": "For each (session, idempotencyKey) at most one invoice is created and at most one SRI script run starts: the reservation row is inserted with ON CONFLICT DO NOTHING before any invoice or SRI work. Replay returns the stored response when the SHA-256 fingerprint of (session, decoded request without key and certificate password) matches; a mismatch is 409; a reservation without a response is 409. A reservation is released only when creating or linking the invoice failed, before the SRI script started. Without SRI the key is optional. Before reserving, the SRI customer is loaded and the whole SRI script request validated, so a correctable input error is a 400 that leaves the key reusable. The web client drops the key only when SRI was not requested or reported the document as issued; after an SRI error or an unconfirmed status it keeps the key, so resubmitting replays, and a new attempt needs an explicit action after checking the portal. Unresolved attempts are also kept in browser storage by fingerprint (without the certificate password), so a reload or navigation followed by the same request reuses the key; they are removed when the outcome settles or staff start a new attempt. When a request fails while an SRI attempt is unresolved (including 409 for an unanswered reservation), the error offers the same verified new-attempt action. Independently of the browser, the server refuses with 409 a new key for a session whose same request fingerprint already has an unsettled attempt (unanswered, or answered with an SRI error or a status other than issued), unless the request carries sriPortalVerified=true, which the web client sends only after the explicit verified new-attempt action.",
       "actors": [
         "Staff user with the invoicing module",
         "Web invoice generator",
@@ -15541,7 +15541,8 @@
         "Issue an SRI document without an idempotencyKey",
         "Run the SRI script twice for one (session, key)",
         "Replay a response for a different request",
-        "Release a reservation after the SRI script started"
+        "Release a reservation after the SRI script started",
+        "Issue under a new key while an unsettled attempt with the same fingerprint exists, without portal verification"
       ],
       "effects": [
         "One invoice, one session link and at most one SRI document per key; the response is stored for replay"
@@ -16599,8 +16600,8 @@
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
-    "tdf-hq-ui/src/api/invoices.test.ts": "2b67c617c362e8c7e967f80a39c3c6ce2e702827184dc37d3d77ece752c9e893",
-    "tdf-hq-ui/src/api/invoices.ts": "1731cd30adea44cec29fe553cfe642fd12f769a1d921d275d36be3638e4536a3",
+    "tdf-hq-ui/src/api/invoices.test.ts": "1cfc1c3eb6516b154cffe34a7f1c3823d8b3164e7b15a5e36f139b852fa76419",
+    "tdf-hq-ui/src/api/invoices.ts": "9ae14d68a08dc280f8b126b12d347377f7bed729cef316fe18849e4657e4476b",
     "tdf-hq-ui/src/api/logoutIntent.test.ts": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
     "tdf-hq-ui/src/api/merchReputation.ts": "bfffe41b92b69806b4721ff6148e3b5d1427e8b695751552734bf9eb7355b9d5",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
@@ -16653,7 +16654,7 @@
     "tdf-hq-ui/src/components/RouteErrorBoundary.tsx": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
     "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
-    "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx": "ea713133fc47f402ce4bead51037c128e01f6f86629e006bc97a8c6e28c6531b",
+    "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx": "dd071933ad6a6da93319e7c17c72e041fc9cc43e8273299805bd8e9a1d9b863a",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SidebarNav.test.tsx": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
@@ -17167,7 +17168,7 @@
     "tdf-hq/src/TDF/Cron.hs": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
-    "tdf-hq/src/TDF/DTO.hs": "73386a933bb2b27ed3175b46b0a623c3e6aa4e6b0ab3f99ee1b6bdf83d076e34",
+    "tdf-hq/src/TDF/DTO.hs": "90b7f5a64a919d401338ab13c0763fa383095edd67531888ce97075ae888844b",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
     "tdf-hq/src/TDF/Directory/Policy.hs": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
@@ -17181,7 +17182,7 @@
     "tdf-hq/src/TDF/Invoice/Datil.hs": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Invoice/SRI.hs": "a757e956d8fcee132cf93ec5716936b09500d74dc9ade36bb74178ca61e7142f",
-    "tdf-hq/src/TDF/Invoice/SessionIssue.hs": "5ce438393aa61689d5cd2168d760fdef47e2fdf608af13d07d36f8888fdf745d",
+    "tdf-hq/src/TDF/Invoice/SessionIssue.hs": "0ac9adf40f8e693e406849d95d12901da509e03812f9e8623ce73cc5425b2567",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/ModelsExtra.hs": "7246fb944ac8f5057100d4f98b88d136f829af0853c0e4c5e1242d73cc86d6a8",
@@ -17204,7 +17205,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "89297ef9211cf43b09bfb9473362379d5e227866fbeb50c603d85cfcecbe7395",
+    "tdf-hq/src/TDF/Server.hs": "f9c6360540c55126858a1efe6344198f5901c2c230bb15295bea8e3a9deb5150",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
@@ -17261,7 +17262,7 @@
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
     "tdf-hq/test/Spec.hs": "ac179aeb72660514a19e29c61add1d3ec44cbb5f12ed94d77cc0e0177352ff62",
-    "tdf-hq/test/TDF/APITypesSpec.hs": "8d28af020f9273411f18e2e02d1116125290c1335629b9102bb0fc6aed6cd55a",
+    "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
@@ -17294,7 +17295,7 @@
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
-    "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs": "81aeb704f4ea85fd95262ca2ae258aef66c5e47eae326e35ffe45450efd42514",
+    "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs": "5307b3e31d9c24384fc8b67ed485e8c47bb9ea45a444306f51ded32d3487123b",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
     "tdf-hq/test/TDF/LedgerPostingSpec.hs": "b709ea453c050a6af2df6c14f61c3d490a5923cc2d90e6935f9d6a3b91b1d28e",
@@ -39574,7 +39575,7 @@
     {
       "id": "SURFACE-09824a09519e957e",
       "path": "tdf-hq-ui/src/api/invoices.test.ts",
-      "sha256": "2b67c617c362e8c7e967f80a39c3c6ce2e702827184dc37d3d77ece752c9e893",
+      "sha256": "1cfc1c3eb6516b154cffe34a7f1c3823d8b3164e7b15a5e36f139b852fa76419",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39586,7 +39587,7 @@
     {
       "id": "SURFACE-8954d786b64d481b",
       "path": "tdf-hq-ui/src/api/invoices.ts",
-      "sha256": "1731cd30adea44cec29fe553cfe642fd12f769a1d921d275d36be3638e4536a3",
+      "sha256": "9ae14d68a08dc280f8b126b12d347377f7bed729cef316fe18849e4657e4476b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40899,7 +40900,7 @@
     {
       "id": "SURFACE-dbd54bd3d14b1e80",
       "path": "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
-      "sha256": "ea713133fc47f402ce4bead51037c128e01f6f86629e006bc97a8c6e28c6531b",
+      "sha256": "dd071933ad6a6da93319e7c17c72e041fc9cc43e8273299805bd8e9a1d9b863a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53119,7 +53120,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "73386a933bb2b27ed3175b46b0a623c3e6aa4e6b0ab3f99ee1b6bdf83d076e34",
+      "sha256": "90b7f5a64a919d401338ab13c0763fa383095edd67531888ce97075ae888844b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53414,7 +53415,7 @@
     {
       "id": "SURFACE-f85df2cd606d32e8",
       "path": "tdf-hq/src/TDF/Invoice/SessionIssue.hs",
-      "sha256": "5ce438393aa61689d5cd2168d760fdef47e2fdf608af13d07d36f8888fdf745d",
+      "sha256": "0ac9adf40f8e693e406849d95d12901da509e03812f9e8623ce73cc5425b2567",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53856,7 +53857,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "89297ef9211cf43b09bfb9473362379d5e227866fbeb50c603d85cfcecbe7395",
+      "sha256": "f9c6360540c55126858a1efe6344198f5901c2c230bb15295bea8e3a9deb5150",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55298,7 +55299,7 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "8d28af020f9273411f18e2e02d1116125290c1335629b9102bb0fc6aed6cd55a",
+      "sha256": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55857,7 +55858,7 @@
     {
       "id": "SURFACE-aa67c20f02cbb260",
       "path": "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
-      "sha256": "81aeb704f4ea85fd95262ca2ae258aef66c5e47eae326e35ffe45450efd42514",
+      "sha256": "5307b3e31d9c24384fc8b67ed485e8c47bb9ea45a444306f51ded32d3487123b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63274,7 +63275,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "467f7785afea03e6e506f8a7c0d7ad2004b42a199a2567c8136aa77d0139b1ff",
+      "sourceSha256": "757d4ca7ac8d53e28cbfe861fe2729dc068da9aafe1fd8c1ef773b6bfae1ce94",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -63302,7 +63303,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "467f7785afea03e6e506f8a7c0d7ad2004b42a199a2567c8136aa77d0139b1ff",
+      "sourceSha256": "757d4ca7ac8d53e28cbfe861fe2729dc068da9aafe1fd8c1ef773b6bfae1ce94",
       "definition": {
         "states": [
           "absent",
@@ -63332,7 +63333,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "467f7785afea03e6e506f8a7c0d7ad2004b42a199a2567c8136aa77d0139b1ff",
+      "sourceSha256": "757d4ca7ac8d53e28cbfe861fe2729dc068da9aafe1fd8c1ef773b6bfae1ce94",
       "definition": {
         "export": [
           "queued",

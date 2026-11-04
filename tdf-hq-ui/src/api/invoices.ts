@@ -27,6 +27,8 @@ export interface GenerateSessionInvoiceInput {
   certificatePassword?: string;
   /** Required when issueSri is not false: a retry with the same key and request replays instead of issuing again. */
   idempotencyKey?: string;
+  /** Staff confirmed in the SRI portal that an earlier unresolved attempt issued nothing. */
+  sriPortalVerified?: boolean;
 }
 
 export interface SriIssueBuyerDTO {
@@ -127,7 +129,12 @@ const writePendingIssues = (storage: IssueStorage | null, pending: Record<string
 
 /** Session plus request, without the certificate password and the key itself. */
 export function invoiceIssueFingerprint(sessionId: string, payload: GenerateSessionInvoiceInput): string {
-  const { certificatePassword: _password, idempotencyKey: _key, ...rest } = payload;
+  const {
+    certificatePassword: _password,
+    idempotencyKey: _key,
+    sriPortalVerified: _verified,
+    ...rest
+  } = payload;
   return JSON.stringify([sessionId, rest]);
 }
 
