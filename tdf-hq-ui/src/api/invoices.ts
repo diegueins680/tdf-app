@@ -25,6 +25,8 @@ export interface GenerateSessionInvoiceInput {
   generateReceipt?: boolean;
   issueSri?: boolean;
   certificatePassword?: string;
+  /** Required when issueSri is not false: a retry with the same key and request replays instead of issuing again. */
+  idempotencyKey?: string;
 }
 
 export interface SriIssueBuyerDTO {
@@ -78,3 +80,25 @@ export const Invoices = {
   generateForSession: (sessionId: string, payload: GenerateSessionInvoiceInput) =>
     post<GenerateSessionInvoiceResponse>(`/invoices/${encodeURIComponent(requireSessionId(sessionId))}/generate`, payload),
 };
+
+export interface InvoiceIssueAttempt {
+  fingerprint: string;
+  key: string;
+}
+
+/**
+ * PAY-INVOICE-ISSUE-001: keep the idempotency key while the request is
+ * unchanged, so a resubmission replays instead of issuing a second SRI
+ * invoice, and use a new key for any edited request. The certificate password
+ * is excluded because it is never stored and a retry may re-enter it.
+ */
+export function nextInvoiceIssueAttempt(
+  previous: InvoiceIssueAttempt | null,
+  sessionId: string,
+  payload: GenerateSessionInvoiceInput,
+  newKey: () => string,
+): InvoiceIssueAttempt {
+  const { certificatePassword: _password, idempotencyKey: _key, ...rest } = payload;
+  const fingerprint = JSON.stringify([sessionId, rest]);
+  return previous?.fingerprint === fingerprint ? previous : { fingerprint, key: newKey() };
+}

@@ -1208,6 +1208,11 @@
       "id": "2026-11-04_directory_review_status_without_pending",
       "path": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
       "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
+    },
+    {
+      "id": "2026-11-04_session_invoice_issue",
+      "path": "tdf-hq/sql/2026-11-04_session_invoice_issue.sql",
+      "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
     }
   ]
 }

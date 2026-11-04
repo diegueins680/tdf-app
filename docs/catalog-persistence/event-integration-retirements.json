@@ -678,18 +678,18 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "ef3b8933af3854450a02",
-      "reason": "Preserve the complete 236-entry manifest merged to protected main at 1976242a (canonical sha256 f7242f9fe4f8f68e2bcdad7cd241beb53fb2714366158b72e527b25e25d3701b) byte for byte and append only 2026-11-04_directory_review_status_without_pending, which removes the never-created 'pending' state from directory_review.status (audit F-09) and refuses to run if any review is pending. The entire 236-entry review graph is preserved by canonical hash. This 237-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
-      "previousReplacementId": "438668da134480da0a9e",
+      "replacementId": "050f309300a1688162fa",
+      "reason": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "previousReplacementId": "ef3b8933af3854450a02",
       "currentResolution": {
-        "id": "ef3b8933af3854450a02",
-        "valueCount": 237,
+        "id": "050f309300a1688162fa",
+        "valueCount": 238,
         "sourceParents": [
-          "1976242a72541ecfff90a54c72659df42f7bd085"
+          "084425384f01acd9db680f0d3f5178cf93b1122c"
         ],
-        "justification": "Preserve the complete 236-entry manifest merged to protected main at 1976242a (canonical sha256 f7242f9fe4f8f68e2bcdad7cd241beb53fb2714366158b72e527b25e25d3701b) byte for byte and append only 2026-11-04_directory_review_status_without_pending, which removes the never-created 'pending' state from directory_review.status (audit F-09) and refuses to run if any review is pending. The entire 236-entry review graph is preserved by canonical hash. This 237-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+        "justification": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
       },
-      "change": "Preserve the complete 236-entry manifest merged to protected main at 1976242a (canonical sha256 f7242f9fe4f8f68e2bcdad7cd241beb53fb2714366158b72e527b25e25d3701b) byte for byte and append only 2026-11-04_directory_review_status_without_pending, which removes the never-created 'pending' state from directory_review.status (audit F-09) and refuses to run if any review is pending. The entire 236-entry review graph is preserved by canonical hash. This 237-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "change": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -1009,6 +1009,17 @@
           "sourceEntryCanonicalSha256": "fae5221769f1e07714cd6160b57b8ae09146c3840d305f109d81baa176396032",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "084425384f01acd9db680f0d3f5178cf93b1122c",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "bba44fca026664f17127278ed7aa7dc69e0a121a0cc8ac6caf4279178ce5c66c",
+          "sourceEntry": {
+            "id": "ef3b8933af3854450a02"
+          },
+          "sourceEntryCanonicalSha256": "b3e101545dbce2e26e9603fbc81d735463b22f0cb486b4ae9342f724131fa145",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
         }
       ],
       "previousReplacementIds": [
@@ -1037,9 +1048,10 @@
         "d9468b767dadec9cf3d8",
         "040c32c5b44ceadb2dde",
         "27def070486792cad395",
-        "438668da134480da0a9e"
+        "438668da134480da0a9e",
+        "ef3b8933af3854450a02"
       ],
-      "previousReason": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+      "previousReason": "Preserve the complete 236-entry manifest merged to protected main at 1976242a (canonical sha256 f7242f9fe4f8f68e2bcdad7cd241beb53fb2714366158b72e527b25e25d3701b) byte for byte and append only 2026-11-04_directory_review_status_without_pending, which removes the never-created 'pending' state from directory_review.status (audit F-09) and refuses to run if any review is pending. The entire 236-entry review graph is preserved by canonical hash. This 237-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
     }
   ]
 }

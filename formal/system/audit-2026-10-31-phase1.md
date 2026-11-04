@@ -393,3 +393,21 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
 - Pruebas (`npm run test:formal`, 8): enmascarado de comentarios, cadenas, literales de carácter y operadores; la regla de recursos ignora prosa, SQL y mensajes y marca solo el handle sin liberar; categorías y selección por alcance; CLI por defecto, `--scope style`, `--scope all` y rechazo de un alcance desconocido.
 - Requisito nuevo, no crítico: `SYS-VERIFY-AUDIT-SIGNAL-001` (implementación, pruebas y propiedad de la separación y de la regla de recursos).
 - CI del PR #701: (1) `specification-contracts` rechazó el recibo SMT de autorización porque `TDF/Auth.hs` cambió (F-10); se re-fija con un registro de revisión: el cambio solo añade `secretTokenMatches` y su exportación, ningún predicado traducido la usa, y quitar esas líneas reproduce `main`. `verify-auth-predicates.py` (3 obligaciones PROVEN) y `verification-report.py` pasan con z3 4.13.3. (2) `backend-quality` falló en `test-studio-internship-audit-api-e2e.mjs`: la prueba lanza a la vez un retest y una reapertura y acepta ambos órdenes, pero luego exigía siempre 10 ejecuciones y 3 retests. Si el retest gana, registra una ejecución más (11 y 4). Ahora los conteos esperados dependen del resultado observado de la carrera; la falla no dependía de este cambio.
+
+## 40. F-03 — emisión de facturas SRI por sesión (2026-11-04)
+
+- **Hallazgo:** `POST /invoices/{sessionId}/generate` creaba una factura nueva y, por defecto, emitía un documento SRI nuevo (factura electrónica, documento legal) en cada llamada. `session_invoice` solo es única por par (sesión, factura), así que un doble clic, un reintento del cliente tras un timeout o una caída después de que el portal autorizara el documento producían facturas legales duplicadas para la misma sesión.
+- **Decisión del responsable (2026-11-04):** exigir una clave de idempotencia.
+- **Implementación (`PAY-INVOICE-ISSUE-001`, crítico):**
+  - Nuevo campo `idempotencyKey` en el cuerpo (16–128 caracteres ASCII visibles), obligatorio cuando se emite al SRI y opcional sin SRI.
+  - Antes de crear la factura, el manejador reserva `(sesión, clave)` en la nueva tabla `session_invoice_issue` (migración `2026-11-04_session_invoice_issue` + rollback) con `INSERT … ON CONFLICT DO NOTHING`, guardando el SHA-256 de la sesión y la petición decodificada, sin la clave ni la contraseña del certificado.
+  - Misma clave y misma petición: se devuelve la respuesta guardada. Otra petición con la clave: 409. Reserva sin respuesta (en curso, o interrumpida cuando el SRI pudo haber emitido): 409, sin volver a emitir. La reserva solo se libera si falla la creación o el enlace de la factura, antes de ejecutar el script SRI.
+  - El cliente web conserva la clave mientras la petición no cambia y usa una nueva tras cualquier edición o tras un éxito.
+  - `TDF/Invoice/SRI.hs` queda mapeado a este requisito, lo que cierra la mitad SRI de F-03; queda `Contracts/Server`.
+- **Observación sin cambio:** el `total` que devuelve el script es la suma sin IVA que el propio script calculó de la petición, así que la comprobación de total confirma el eco, no el cálculo del portal. Se registra como ambigüedad del requisito.
+- **Pruebas:**
+  - `SessionIssueSpec` (validación de la clave, invariancia y sensibilidad de la huella, tabla de decisión de replay, y reserva, compleción y liberación en SQLite con duplicado y ámbito por sesión): 54 ejemplos en verde junto con las pruebas SRI y del decodificador.
+  - Pruebas web del helper de clave: 3.
+  - Migración aplicada hacia delante, revertida y reaplicada dos veces sobre el esquema completo de PostgreSQL; las cuatro restricciones se probaron una a una.
+- Recibos SMT: la entrada del `.cabal` (dos líneas de módulo) se re-fija con registro de revisión en ambos recibos; `verify-auth-predicates`, `verify-recovery-expiry` y `verification-report` pasan.
+- Registro de listas: sucesión del manifiesto (237 → 238, decisión `050f3093`).

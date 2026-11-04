@@ -558,6 +558,20 @@ SessionInvoice
     UniqueSessionInvoice sessionId invoiceId
     deriving Show Generic
 
+-- PAY-INVOICE-ISSUE-001: one reservation per (session, idempotency key) before a
+-- session invoice is created or an SRI document is issued. completedAt and
+-- response are set together once the request has an answer to replay.
+SessionInvoiceIssue
+    sessionId       SessionId
+    idempotencyKey  Text
+    requestSha256   Text
+    invoiceId       InvoiceId Maybe
+    response        Text Maybe
+    createdAt       UTCTime default=now()
+    completedAt     UTCTime Maybe
+    UniqueSessionInvoiceIssue sessionId idempotencyKey
+    deriving Show Generic
+
 InputListTemplate
     Id           UUID default=gen_random_uuid()
     name         Text

@@ -406,7 +406,7 @@ spec = do
                 Left err ->
                     expectationFailure
                         ("Expected session invoice payload without customerId to decode, got: " <> err)
-                Right (DTO.GenerateSessionInvoiceReq customerIdVal currencyVal _ _ lineItemsVal _ issueSriVal _) -> do
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal currencyVal _ _ lineItemsVal _ issueSriVal _ _) -> do
                     customerIdVal `shouldBe` Nothing
                     currencyVal `shouldBe` Just "USD"
                     length lineItemsVal `shouldBe` 1
@@ -417,7 +417,7 @@ spec = do
                 Left err ->
                     expectationFailure
                         ("Expected explicit session invoice customerId to decode, got: " <> err)
-                Right (DTO.GenerateSessionInvoiceReq customerIdVal _ _ _ _ _ _ _) ->
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal _ _ _ _ _ _ _ _) ->
                     customerIdVal `shouldBe` Just 42
 
         it "rejects null customerId instead of silently using the session-client fallback" $

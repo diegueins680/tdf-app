@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PrintIcon from '@mui/icons-material/Print';
@@ -28,7 +28,14 @@ import {
 } from '@mui/material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Invoices, type GenerateSessionInvoiceInput, type GenerateSessionInvoiceResponse, type InvoiceDTO } from '../api/invoices';
+import {
+  Invoices,
+  nextInvoiceIssueAttempt,
+  type GenerateSessionInvoiceInput,
+  type GenerateSessionInvoiceResponse,
+  type InvoiceDTO,
+  type InvoiceIssueAttempt,
+} from '../api/invoices';
 import { Sessions, type SessionDTO } from '../api/sessions';
 import type { PartySelectorOption } from '../api/partySelector';
 import { PartySelector } from './party-selector/PartySelector';
@@ -179,6 +186,16 @@ export default function SessionInvoiceGeneratorCard() {
     setFormError(null);
   }, [selectedSession]);
 
+  // PAY-INVOICE-ISSUE-001: one idempotency key per distinct request. Resubmitting
+  // the same request (after a timeout or a double click) reuses the key, so the
+  // server replays its answer instead of issuing a second SRI invoice; any edit
+  // gets a new key. The certificate password is not part of the fingerprint.
+  const issueAttempt = useRef<InvoiceIssueAttempt | null>(null);
+  const idempotencyKeyFor = (sessionId: string, payload: GenerateSessionInvoiceInput) => {
+    issueAttempt.current = nextInvoiceIssueAttempt(issueAttempt.current, sessionId, payload, () => crypto.randomUUID());
+    return issueAttempt.current.key;
+  };
+
   const generateMutation = useMutation<GenerateSessionInvoiceResponse, Error, GenerateSessionInvoiceInput>({
     mutationFn: async (payload) => {
       if (!selectedSession?.sessionId) {
@@ -187,6 +204,7 @@ export default function SessionInvoiceGeneratorCard() {
       return Invoices.generateForSession(selectedSession.sessionId, payload);
     },
     onSuccess: async (response) => {
+      issueAttempt.current = null;
       setResult(response);
       setFormError(null);
       await qc.invalidateQueries({ queryKey: ['session-invoices', selectedSession?.sessionId ?? 'none'] });
@@ -222,6 +240,7 @@ export default function SessionInvoiceGeneratorCard() {
         issueSri,
         certificatePassword: toOptionalText(certificatePassword),
       };
+      payload.idempotencyKey = idempotencyKeyFor(selectedSession.sessionId, payload);
       setFormError(null);
       setResult(null);
       generateMutation.mutate(payload);

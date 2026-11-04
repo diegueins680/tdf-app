@@ -143,6 +143,7 @@ import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Operations.Server as OperationsServer
 import qualified TDF.EventOperations.Server as EventOperationsServer
 import qualified TDF.Invoice.SRI as Sri
+import qualified TDF.Invoice.SessionIssue as SessionIssue
 import           TDF.Invoice.Receipt (validateReceiptSnapshot)
 import           TDF.Models
 import qualified TDF.Models as M
@@ -13399,20 +13400,69 @@ generateInvoiceForSession user sessionId payload = do
   req <- case fromJSON payload of
     Error err -> throwBadRequest ("Invalid generate-invoice payload: " <> T.pack err)
     Success decoded -> pure decoded
+  -- PAY-INVOICE-ISSUE-001: an SRI document is a legal invoice, so issuing one
+  -- requires an idempotency key; validate it before touching the database.
+  let issuesSri = fromMaybe True (gsiIssueSri req)
+  mIssueKey <- either throwBadRequest pure (SessionIssue.validateIssueKey issuesSri (gsiIdempotencyKey req))
   Env pool _ <- ask
   sessionEnt <- liftIO $ flip runSqlPool pool $ getEntity sessionKey
   session <- maybe (throwError err404 { errBody = "Session not found" }) pure sessionEnt
   customerKey <- resolveSessionInvoiceCustomer session req
+  case mIssueKey of
+    Nothing -> snd <$> generateSessionInvoiceOnce user sessionId sessionKey customerKey req (pure ())
+    Just issueKey -> do
+      now <- liftIO getCurrentTime
+      let fingerprint = SessionIssue.issueFingerprint sessionId req
+      reservation <- liftIO $ flip runSqlPool pool $
+        SessionIssue.reserveIssue now sessionKey issueKey fingerprint
+      case reservation of
+        SessionIssue.IssueExisting (SessionIssue.IssueReplayStored stored) ->
+          maybe
+            (throwError err500 { errBody = "Stored invoice response could not be read" })
+            pure
+            (decodeStrict' (TE.encodeUtf8 stored))
+        SessionIssue.IssueExisting SessionIssue.IssueInProgress ->
+          throwError err409
+            { errBody =
+                "An invoice request with this idempotencyKey has no answer yet. Retry with the same key; \
+                \if it never completes, check the SRI portal before using a new key."
+            }
+        SessionIssue.IssueExisting (SessionIssue.IssueConflict reason) ->
+          throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 reason) }
+        SessionIssue.IssueExisting SessionIssue.IssueFresh ->
+          throwError err500 { errBody = "Invoice idempotency reservation was not recorded" }
+        SessionIssue.IssueReserved reservationId -> do
+          let release = liftIO $ flip runSqlPool pool $ SessionIssue.releaseIssue reservationId
+          (invoiceKey, response) <-
+            generateSessionInvoiceOnce user sessionId sessionKey customerKey req release
+          completedAt <- liftIO getCurrentTime
+          liftIO $ flip runSqlPool pool $
+            SessionIssue.completeIssue completedAt reservationId (Just invoiceKey)
+              (TE.decodeUtf8 (BL.toStrict (encode response)))
+          pure response
+
+-- | Create the invoice, link it to the session and, when requested, issue the
+-- SRI document. @beforeSri@ runs if creating or linking the invoice fails: no
+-- SRI document can have been issued yet, so a reservation may be released.
+-- Once the SRI script starts, failures are reported in the response instead.
+generateSessionInvoiceOnce
+  :: AuthedUser -> Text -> Key ME.Session -> Key Party -> GenerateSessionInvoiceReq -> AppM ()
+  -> AppM (Key Invoice, Value)
+generateSessionInvoiceOnce user sessionId sessionKey customerKey req beforeSri = do
+  Env pool _ <- ask
   now <- liftIO getCurrentTime
-  dto <- createInvoice user (toCreateInvoiceReq customerKey req)
-  let invoiceKey = toSqlKey (invId dto) :: Key Invoice
-  liftIO $ flip runSqlPool pool $ do
-    _ <- insertUnique ME.SessionInvoice
-      { ME.sessionInvoiceSessionId = sessionKey
-      , ME.sessionInvoiceInvoiceId = invoiceKey
-      , ME.sessionInvoiceCreatedAt = now
-      }
-    pure ()
+  invoiceKey <- (do
+      dto <- createInvoice user (toCreateInvoiceReq customerKey req)
+      let createdKey = toSqlKey (invId dto) :: Key Invoice
+      liftIO $ flip runSqlPool pool $ do
+        _ <- insertUnique ME.SessionInvoice
+          { ME.sessionInvoiceSessionId = sessionKey
+          , ME.sessionInvoiceInvoiceId = createdKey
+          , ME.sessionInvoiceCreatedAt = now
+          }
+        pure ()
+      pure createdKey)
+    `catchError` \err -> beforeSri >> throwError err
   sriValue <-
     if fromMaybe True (gsiIssueSri req)
       then do
@@ -13432,13 +13482,15 @@ generateInvoiceForSession user sessionId payload = do
             pure (toJSON result)
       else pure Null
   refreshed <- loadInvoiceDTOOr404 invoiceKey
-  pure $
-    object
-      [ "ok" .= True
-      , "sessionId" .= sessionId
-      , "invoice" .= refreshed
-      , "sri" .= sriValue
-      ]
+  pure
+    ( invoiceKey
+    , object
+        [ "ok" .= True
+        , "sessionId" .= sessionId
+        , "invoice" .= refreshed
+        , "sri" .= sriValue
+        ]
+    )
 
 getInvoicesBySession :: AuthedUser -> Text -> AppM Value
 getInvoicesBySession user sessionId = do
