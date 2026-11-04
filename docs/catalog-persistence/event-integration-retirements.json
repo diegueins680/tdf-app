@@ -678,19 +678,18 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "27def070486792cad395",
-      "reason": "Reconcile two concurrent successors of the 227-entry memory/provider review a2bb0e82: protected main dd9adc5d (PR #686, 228 entries, decision 040c32c5b44ceadb2dde) appends 2026-10-31_api_token_session_expiry, and the formal audit branch 644a3303 (PR #691, 234 entries, decision d9468b767dadec9cf3d8) appends seven audit migrations and records one compatible applied checksum. The merged 235-entry manifest keeps main's 228-entry review as its exact prefix (canonical sha256 94bd4e11130835ca3b26b1298abfa21fc294a11bcf67faf5f3f42c759bb43196) and places the seven audit migrations after it in their reviewed order, so the audit's 234-entry view (the manifest without main's entry, canonical sha256 7f387a707d441c2adad76971b0635ff288d152f64f638ccf3c3165ee7a2f2dd1) is unchanged byte for byte; both parent reviews and their entire graphs are retained by canonical hash. The migrations are independent (api_token validity window versus commerce, social, directory and identity objects). This technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the merged head, independent review and protected integration remain required.",
-      "previousReplacementId": "d9468b767dadec9cf3d8",
+      "replacementId": "438668da134480da0a9e",
+      "reason": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "previousReplacementId": "27def070486792cad395",
       "currentResolution": {
-        "id": "27def070486792cad395",
-        "valueCount": 235,
+        "id": "438668da134480da0a9e",
+        "valueCount": 236,
         "sourceParents": [
-          "dd9adc5d654033878e34107c2da4c9bf731f7980",
-          "644a3303bc938cabac5673a9940850e1bb124566"
+          "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5"
         ],
-        "justification": "Reconcile two concurrent successors of the 227-entry memory/provider review a2bb0e82: protected main dd9adc5d (PR #686, 228 entries, decision 040c32c5b44ceadb2dde) appends 2026-10-31_api_token_session_expiry, and the formal audit branch 644a3303 (PR #691, 234 entries, decision d9468b767dadec9cf3d8) appends seven audit migrations and records one compatible applied checksum. The merged 235-entry manifest keeps main's 228-entry review as its exact prefix (canonical sha256 94bd4e11130835ca3b26b1298abfa21fc294a11bcf67faf5f3f42c759bb43196) and places the seven audit migrations after it in their reviewed order, so the audit's 234-entry view (the manifest without main's entry, canonical sha256 7f387a707d441c2adad76971b0635ff288d152f64f638ccf3c3165ee7a2f2dd1) is unchanged byte for byte; both parent reviews and their entire graphs are retained by canonical hash. The migrations are independent (api_token validity window versus commerce, social, directory and identity objects). This technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the merged head, independent review and protected integration remain required."
+        "justification": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
       },
-      "change": "Reconcile two concurrent successors of the 227-entry memory/provider review a2bb0e82: protected main dd9adc5d (PR #686, 228 entries, decision 040c32c5b44ceadb2dde) appends 2026-10-31_api_token_session_expiry, and the formal audit branch 644a3303 (PR #691, 234 entries, decision d9468b767dadec9cf3d8) appends seven audit migrations and records one compatible applied checksum. The merged 235-entry manifest keeps main's 228-entry review as its exact prefix (canonical sha256 94bd4e11130835ca3b26b1298abfa21fc294a11bcf67faf5f3f42c759bb43196) and places the seven audit migrations after it in their reviewed order, so the audit's 234-entry view (the manifest without main's entry, canonical sha256 7f387a707d441c2adad76971b0635ff288d152f64f638ccf3c3165ee7a2f2dd1) is unchanged byte for byte; both parent reviews and their entire graphs are retained by canonical hash. The migrations are independent (api_token validity window versus commerce, social, directory and identity objects). This technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the merged head, independent review and protected integration remain required.",
+      "change": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -988,6 +987,17 @@
           "sourceEntryCanonicalSha256": "e863458f044f4994d17134c7cd04ae00e8d48c95c2f59f23f076c6d27cfcf85e",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "0b9536229569ebb50323855af3125b46747fb6098eacd8d5e644fd225aee6f8a",
+          "sourceEntry": {
+            "id": "27def070486792cad395"
+          },
+          "sourceEntryCanonicalSha256": "085659be48eed02b09860767b22855e80f1fe17bddca460289a6ab13504fca03",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
         }
       ],
       "previousReplacementIds": [
@@ -1014,9 +1024,10 @@
         "a2bb0e828d5b94c1cb31",
         "903e61463c0222f30d9b",
         "d9468b767dadec9cf3d8",
-        "040c32c5b44ceadb2dde"
+        "040c32c5b44ceadb2dde",
+        "27def070486792cad395"
       ],
-      "previousReason": "Preserve the complete 233-entry formal-audit manifest reviewed at 70f35ce2 (canonical sha256 e42b5bd9f2354fb6be1d1bf0af13deec8d879a8f7f02ddb04f62492e730e617f before this change) and append only 2026-11-02_identity_party_reference_refresh, which republishes the model-declared Party reference registry view and installs the archived-party write guard on the social ownership tables. The single change inside the reviewed prefix is additive metadata on 2026-09-18_identity_review_dependencies: the regenerated registry file's previous sha256 5636028805b77a1705bb364c87669e8d46983c93d9fc177da9e2187b98972f4f is recorded as a compatible applied checksum so production, which applied the previous registry, is not asked to re-run that migration; its SQL path and introduction ancestor are unchanged and the full 227-entry protected main prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) is preserved once that field is removed. This 234-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+      "previousReason": "Reconcile two concurrent successors of the 227-entry memory/provider review a2bb0e82: protected main dd9adc5d (PR #686, 228 entries, decision 040c32c5b44ceadb2dde) appends 2026-10-31_api_token_session_expiry, and the formal audit branch 644a3303 (PR #691, 234 entries, decision d9468b767dadec9cf3d8) appends seven audit migrations and records one compatible applied checksum. The merged 235-entry manifest keeps main's 228-entry review as its exact prefix (canonical sha256 94bd4e11130835ca3b26b1298abfa21fc294a11bcf67faf5f3f42c759bb43196) and places the seven audit migrations after it in their reviewed order, so the audit's 234-entry view (the manifest without main's entry, canonical sha256 7f387a707d441c2adad76971b0635ff288d152f64f638ccf3c3165ee7a2f2dd1) is unchanged byte for byte; both parent reviews and their entire graphs are retained by canonical hash. The migrations are independent (api_token validity window versus commerce, social, directory and identity objects). This technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the merged head, independent review and protected integration remain required."
     }
   ]
 }

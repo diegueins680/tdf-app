@@ -13739,8 +13739,8 @@
       ],
       "authorization": "Public intake (AUTH-PUBLIC-001 boundary public-intake); a hidden artist answers exactly like an absent one (404).",
       "privacy": "Provider error text is logged server-side only; the caller receives a fixed 502 message.",
-      "concurrency": "Webhook outcome writes are conditional UPDATE ... WHERE status='pending'; formal/payments/StripeIntentOutcome.tla proves Safe inductively for up to six concurrent deliveries with Apalache.",
-      "idempotency": "Request-level: Idempotency-Key per artist profile, unique partial index uq_artist_tip_idempotency, request fingerprint (SHA-256 of length-prefixed artist, amount, currency and optional fields) compared on replay; replay never creates a new PaymentIntent. Webhook events are deduplicated by event id and outcome writes are idempotent.",
+      "concurrency": "Webhook outcome writes are conditional UPDATE ... WHERE status='pending'; formal/payments/StripeIntentOutcome.tla proves Safe inductively for up to six concurrent deliveries with Apalache. Keyed reservation is a single INSERT ... ON CONFLICT (artist_profile_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING RETURNING id, so a concurrent duplicate observes the winner's row instead of raising a unique violation that would abort the transaction.",
+      "idempotency": "Request-level: Idempotency-Key per artist profile, unique partial index uq_artist_tip_idempotency, request fingerprint (SHA-256 of length-prefixed artist, amount, currency and optional fields) compared on replay; replay never creates a new PaymentIntent. Webhook events are deduplicated by event id and outcome writes are idempotent. A same-request replay before the PaymentIntent is stored answers in progress (retry with the same key), never 'use a new key', so a slow provider call cannot be duplicated.",
       "failure": "Unconfigured provider: 503 before any write. Provider creation error: row marked failed, fixed 502. Unparseable provider response: row stays pending without intent id.",
       "recovery": "Pending rows without an intent id or never confirmed remain auditable; no automatic charge.",
       "observability": "Tip id, artist party id and artist profile id in PaymentIntent metadata; provider errors logged with the tip id.",
@@ -14341,7 +14341,7 @@
       ],
       "authorization": "Exchange: hasSocialInboxAccess. Rebind: Admin role. Designation: strict administrator with Admin module.",
       "privacy": "Page access tokens are stored in social_sync_account.access_token.",
-      "concurrency": "Upsert by unique (platform, external id).",
+      "concurrency": "Planning and application run in separate transactions; application writes only while the plan holds: a new account is inserted with insertUnique, an existing account is updated by one conditional UPDATE ... WHERE id = ? AND party_id = <owner observed when planning>. A stale plan (concurrent rebind or first connection by someone else) writes nothing: the handler undoes the transaction and answers 409.",
       "idempotency": "Repeated exchange by the same user is idempotent per account.",
       "failure": "503 without app credentials; 400 for a mismatching redirect URI; provider errors sanitized. Archived (merged) Party identifiers are rejected on the account and its ownership events by the identity archive guard.",
       "recovery": "Not applicable.",
@@ -14391,9 +14391,9 @@
       "formalModels": [],
       "status": "specified and implemented",
       "observability": "Not applicable.",
-      "recovery": "Not applicable.",
+      "recovery": "Not applicable. A requested Domo cancellation refund is approved and executed by a different strict administrator with the Admin module through the shared PayPal refund approval (POST /admin/services/storefront/refunds/{refundId}/approve), bound to the deposit checkout's verified PayPal capture; Datafast refunds remain unsupported (503).",
       "privacy": "Not applicable.",
-      "concurrency": "The quote runtime and its checkout are locked FOR UPDATE for the whole transaction; a checkout in processing is refused so a verified payment cannot race the cancellation.",
+      "concurrency": "The quote runtime and its checkout are locked FOR UPDATE for the whole transaction; a checkout in processing is refused so a verified payment cannot race the cancellation. While nothing is collected, cancellation also refuses while any attempt on the deposit checkout is created, requires customer action or is processing; payment admission (beginPaymentAttemptGuarded with domoAttemptAdmission) locks the same checkout row and refuses a cancelled quote or a cancelled or expired checkout. Whichever transaction takes the checkout lock second observes the other, so a capture can never complete after a no-money cancellation.",
       "idempotency": "Deterministic refund key domo-cancel:<quoteId>; replaying a cancellation returns the stored record (alreadyCancelled=true) and never writes a second record or refund.",
       "id": "PAY-DOMO-CANCEL-001",
       "title": "Domo cancellation refunds follow the approved versioned policy",
@@ -14451,7 +14451,9 @@
         "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
         "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
         "tdf-hq-ui/src/api/domoQuotes.ts",
-        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx"
+        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs"
       ],
       "verification": "Z3 lemmas (refund within collected, conservation, monotonicity, full/zero retention) with witnesses and controls; QuickCheck properties on domoCancellationRefund and assessDomoCancellation; PostgreSQL probes of the policy table (single approved version, immutability, retirement) and of the cancellation record (conservation CHECKs, required record on paid cancellation, refund linkage amount, immutability, rollback refusal); runtime Hspec cases on the full reviewed schema (unpaid cancel, customer obligation then operator settlement, 10-day half retention, TDF full refund, late customer cancel, terminal refusals); admin 403/400 route tests.",
       "evidence": "formal/payments/domo_cancellation_refund.py output; tdf-hq-test DomoCancellationSpec and ServerAdminSpec runs; provider-retry-runtime gate (DomoCancellationRuntimeSpec); scripts/test-domo-quote-checkout-runtime-migration.sh output.",
@@ -14529,13 +14531,16 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql",
-        "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy_rollback.sql"
+        "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy_rollback.sql",
+        "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
+        "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql"
       ],
       "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
-        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs"
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+        "scripts/test-domo-deposit-policy-validator.sh"
       ],
       "confidence": "High for the pure rule (property-tested) and for the value plumbing (parsed and validated at load; defaults when absent); database-backed checkout tests of the composed handlers remain.",
       "ambiguity": [
@@ -15427,7 +15432,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
-    ".github/workflows/ci.yml": "e3066fb6a9720b4947165c572580597f7f7c401dde5bdb0db5e4576e689a005c",
+    ".github/workflows/ci.yml": "3a0398866bd5bdacd49ec3ce8cc8c1bbe78f2107826cb7bfa965244332e5159b",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -15436,7 +15441,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "0b9536229569ebb50323855af3125b46747fb6098eacd8d5e644fd225aee6f8a",
+    "docs/catalog-persistence/catalog-list-decisions.json": "f4534b111db59dd606d8969cc61c23dbd45943bbe681564d53f0b10a0fc46c2f",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
@@ -15832,7 +15837,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "8c75c43094cdfeb2a961a1f5d43043bb1504ca11398085121e278f1c82b47d9b",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "3181dfedc761f4feb323b3f7023405fa7c9b07344a3669db49fa035939fc25eb",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -15970,7 +15975,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "dc25abd993107a33ad178fbdb9f6b62e96bd5b3cc5ea3f4d5333292e25625832",
+    "scripts/production-migrations.json": "b41e33d7a92a66c79156376ec51d57a19482cbe0bef020d321905a4aecadc92f",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
@@ -16017,6 +16022,7 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
+    "scripts/test-domo-deposit-policy-validator.sh": "b664c8bb09120a506c27f406967a7408e326281d311fcc562f52a97a1720d509",
     "scripts/test-domo-quote-checkout-runtime-migration.sh": "8b51f9e41bcd8fa224dffc3878d24d2587fc3ccce797a67927ad8cd3f96b6680",
     "scripts/test-event-memories-http.py": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
@@ -16146,7 +16152,7 @@
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
     "tdf-hq-ui/src/App.tsx": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
-    "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "e4b65bf8ce6e5f8252a2dadfe5c6da69df450d646c373002df165d971d551456",
+    "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
@@ -16375,7 +16381,7 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "584d216cc04cbbc7bbfbc2d81fce93b342a4f9c235fa1c0eb8fa5ad406b966fc",
-    "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "cad2263edf2a20ef0a8d942e06849ef7eddb494a9dccc2b176f3a2fad088bcac",
+    "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "ce0dac04ee6d29378f3385d36a42cdac3ae7dd7e4deb4bcb4c764088f206a4f9",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
@@ -16680,6 +16686,8 @@
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
+    "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql": "097e5dbae5df96fa33c94071c5f734b84963a27187e906baf294c366f427f3f7",
+    "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql": "25e481954ec23478d7636d28754d5578f397e02094487279bedb527ba790e251",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/src/TDF/API.hs": "21206a27a841d24759917b0ad59d402971bcf45f15ef7e3537804b8e92f191f2",
     "tdf-hq/src/TDF/API/Admin.hs": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
@@ -16703,13 +16711,13 @@
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
-    "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "8a50636ce52c2003f812737b424370b5a1c8c9170b0e4260af6b11fc5046e5ce",
-    "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs": "904a12195f63b47f44286560f466e6686c97e44333f864ba2434a77003472382",
+    "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "023febe6a6fc4a1dd49f9d463a6f673572e80b08901df77f72b67f020cc60fdb",
+    "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs": "2963db1597da29ad46498dd329df42ed521f314ff091f03113d6cd6acb36e7af",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
     "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "89f7c69cf5cf176c890e0cd09f1a0e561ab0fe3e45e9f14fc738b9479a5df917",
     "tdf-hq/src/TDF/Commerce/DepositPolicy.hs": "6829fa5bf78c1d1839770e0728960967dfdbcdca62661dadd06adb2191d0a94f",
     "tdf-hq/src/TDF/Commerce/DomoCancellation.hs": "dcbc9345ad6a6c2e850c5d9a523061994e282d65edc92968dfe951797f065ca2",
-    "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs": "619db6954ecf5bdcefa59909019a54ead88c13225a8889cfbeac54c8d5297b7a",
+    "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs": "401427a5cd152d90cf83ae378c70b09e7ff1dad7dd9902212295df32eda1a3e6",
     "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": "54da88fdabb8ad1160224d3b930dfa1d44cd656cf491e74cfb0dba35c353eef4",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
@@ -16777,7 +16785,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "0195a6a9888c881caebc81348b83fc0f98c278af778fcb2d22d69c9ab82d5215",
-    "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "8259c0b2c3e661c34ad8e8d76238af00da017c3b6edee0db52ddf027022bef8b",
+    "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "b8a46a7b1be86bde7dca4fed00ac45d2404cb62e4c083c27cc298307453fd3ca",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "bfb6201b750b256d8247ef84551ff44076137fc97cff54d59b22b3a575c083ea",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "7e350af012396bb5a846a13f29c91cf2a2f6b8a0d3498f73a050aa2d1d401fd9",
@@ -16791,7 +16799,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "e999cd12e7ff20fa7622ccd86b3008663d12861156d5e2290582bff663027ed6",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "e924dc7a2a821fcc5b1a7fa4e743801c9cb4668f842228c41470c65ca2c475af",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "02b64fbb33c36bc4ee9a8e72881945aff989afaade9f436083b98fb988428f59",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
@@ -16802,12 +16810,12 @@
     "tdf-hq/src/TDF/ServerExtra.hs": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
     "tdf-hq/src/TDF/ServerFanClub.hs": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
-    "tdf-hq/src/TDF/ServerInstagramOAuth.hs": "281784ebbcd00541f402b67b1cd284d79693c935c1f4d7cab25b31bf862b436f",
+    "tdf-hq/src/TDF/ServerInstagramOAuth.hs": "e663522c1efc4eae60d077274478c68b14e6edf779c7fe083692339323fb4355",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
     "tdf-hq/src/TDF/Social/AccountOwnership.hs": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
-    "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "c3f8f3e427eee3af103b53563c2dfbddbc25869c859d1d92eff7471611a24478",
+    "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
@@ -16832,11 +16840,11 @@
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
-    "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "cfb10f13b75d4955f378f3e31c9e022bbc84b1b08d408ab4f5b8cf5c8407fc46",
-    "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "66516405eb2b4213b72be45b0b7035b8c29fe05df3f898c48e9f4b06c1732b4c",
+    "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "ad485e08cc1c0433c8cfeb343d07feff37287d4fc63143126e827580776728c6",
+    "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "821455528e37e95f4baab3ec32621766ce289b8eefd5033186d03571c0cd875f",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
-    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "ec86d1b9cfb05c08d155f266a1ba93ab963c6190c2768ea04adda8864a30cac0",
+    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "a4f7f070b8f1d569415a4e82b3a9c2671ada7dcd411e2b9ce9ddd9af9e700e8b",
     "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs": "149e170bc2b0d686ef3ea666fafafe41211206136b80bcaba9b5de63b0b49a3f",
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -16864,7 +16872,7 @@
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
     "tdf-hq/test/TDF/LedgerPostingSpec.hs": "b709ea453c050a6af2df6c14f61c3d490a5923cc2d90e6935f9d6a3b91b1d28e",
     "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "e1e1dcf22068ce44f41ea985d546235c844e468cdfe35a23ff297d6d0b8782b4",
-    "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs": "88e6b4fc291228d4ab7e99ac8f2c5e1030e437a8273741f44a6058a242fd2b55",
+    "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs": "6f440b98f7d532b31c37c1a7e22af4cf11affd21c38ce845fc49b86f50901389",
     "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
     "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "e04f6350a2e753356f043d5e961751969f33c7bf94d925881b235c73ee5b8a35",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
@@ -16883,7 +16891,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
     "tdf-hq/test/TDF/ServerSpec.hs": "e12c6566816f79f93bc0a589383891837156c9e46ff910303530cd30a3fb1701",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
-    "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "3bb7fed5db5bb1da6b772bbaf5ee3da77bf03cb33c4ab9348f5826dca0072575",
+    "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -20779,6 +20787,10 @@
       {
         "requirement": "PAY-RETRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DOMO-CANCEL-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": [
@@ -20836,6 +20848,10 @@
       },
       {
         "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "implementation"
       }
     ],
@@ -29457,7 +29473,25 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql": [
+      {
+        "requirement": "PAY-DEPOSIT-POLICY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql": [
+      {
+        "requirement": "PAY-DEPOSIT-POLICY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": [
+      {
+        "requirement": "PAY-DEPOSIT-POLICY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-domo-deposit-policy-validator.sh": [
       {
         "requirement": "PAY-DEPOSIT-POLICY-001",
         "relationship": "tests"
@@ -30101,7 +30135,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "e3066fb6a9720b4947165c572580597f7f7c401dde5bdb0db5e4576e689a005c",
+      "sha256": "3a0398866bd5bdacd49ec3ce8cc8c1bbe78f2107826cb7bfa965244332e5159b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31362,7 +31396,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "8c75c43094cdfeb2a961a1f5d43043bb1504ca11398085121e278f1c82b47d9b",
+      "sha256": "3181dfedc761f4feb323b3f7023405fa7c9b07344a3669db49fa035939fc25eb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34079,7 +34113,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "dc25abd993107a33ad178fbdb9f6b62e96bd5b3cc5ea3f4d5333292e25625832",
+      "sha256": "b41e33d7a92a66c79156376ec51d57a19482cbe0bef020d321905a4aecadc92f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35499,6 +35533,18 @@
       "sha256": "9aee4d09cabce943396f94a8d45558ad747808e189cd7d6febe6a49193c5b7a9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-9ec05a1e031f6838",
+      "path": "scripts/test-domo-deposit-policy-validator.sh",
+      "sha256": "b664c8bb09120a506c27f406967a7408e326281d311fcc562f52a97a1720d509",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DEPOSIT-POLICY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ce3ab4115ddf1e35",
@@ -37760,7 +37806,7 @@
     {
       "id": "SURFACE-9f2d7ab39b8a5348",
       "path": "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
-      "sha256": "e4b65bf8ce6e5f8252a2dadfe5c6da69df450d646c373002df165d971d551456",
+      "sha256": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42885,7 +42931,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "cad2263edf2a20ef0a8d942e06849ef7eddb494a9dccc2b176f3a2fad088bcac",
+      "sha256": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50704,6 +50750,30 @@
       ]
     },
     {
+      "id": "SURFACE-7a6c5f66e689fe76",
+      "path": "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
+      "sha256": "097e5dbae5df96fa33c94071c5f734b84963a27187e906baf294c366f427f3f7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DEPOSIT-POLICY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3c2852d7fc6bf0e3",
+      "path": "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql",
+      "sha256": "25e481954ec23478d7636d28754d5578f397e02094487279bedb527ba790e251",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DEPOSIT-POLICY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -51401,7 +51471,7 @@
     {
       "id": "SURFACE-f423f120377b48f6",
       "path": "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
-      "sha256": "8a50636ce52c2003f812737b424370b5a1c8c9170b0e4260af6b11fc5046e5ce",
+      "sha256": "023febe6a6fc4a1dd49f9d463a6f673572e80b08901df77f72b67f020cc60fdb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51413,7 +51483,7 @@
     {
       "id": "SURFACE-29114654bb1575ce",
       "path": "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
-      "sha256": "904a12195f63b47f44286560f466e6686c97e44333f864ba2434a77003472382",
+      "sha256": "2963db1597da29ad46498dd329df42ed521f314ff091f03113d6cd6acb36e7af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51501,7 +51571,7 @@
     {
       "id": "SURFACE-52b27b4edfde0af0",
       "path": "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
-      "sha256": "619db6954ecf5bdcefa59909019a54ead88c13225a8889cfbeac54c8d5297b7a",
+      "sha256": "401427a5cd152d90cf83ae378c70b09e7ff1dad7dd9902212295df32eda1a3e6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51623,6 +51693,10 @@
       "requirements": [
         {
           "requirement": "PAY-RETRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DOMO-CANCEL-001",
           "relationship": "implementation"
         }
       ]
@@ -52971,7 +53045,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "8259c0b2c3e661c34ad8e8d76238af00da017c3b6edee0db52ddf027022bef8b",
+      "sha256": "b8a46a7b1be86bde7dca4fed00ac45d2404cb62e4c083c27cc298307453fd3ca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53236,7 +53310,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "e999cd12e7ff20fa7622ccd86b3008663d12861156d5e2290582bff663027ed6",
+      "sha256": "e924dc7a2a821fcc5b1a7fa4e743801c9cb4668f842228c41470c65ca2c475af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53257,6 +53331,10 @@
         },
         {
           "requirement": "PAY-PROVIDER-INBOX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DOMO-CANCEL-001",
           "relationship": "implementation"
         }
       ]
@@ -53517,7 +53595,7 @@
     {
       "id": "SURFACE-b0f11c67be4fa672",
       "path": "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
-      "sha256": "281784ebbcd00541f402b67b1cd284d79693c935c1f4d7cab25b31bf862b436f",
+      "sha256": "e663522c1efc4eae60d077274478c68b14e6edf779c7fe083692339323fb4355",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53669,7 +53747,7 @@
     {
       "id": "SURFACE-e7cca2eec6466e79",
       "path": "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
-      "sha256": "c3f8f3e427eee3af103b53563c2dfbddbc25869c859d1d92eff7471611a24478",
+      "sha256": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54281,7 +54359,7 @@
     {
       "id": "SURFACE-4ef1e9594dedfc53",
       "path": "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
-      "sha256": "cfb10f13b75d4955f378f3e31c9e022bbc84b1b08d408ab4f5b8cf5c8407fc46",
+      "sha256": "ad485e08cc1c0433c8cfeb343d07feff37287d4fc63143126e827580776728c6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54297,7 +54375,7 @@
     {
       "id": "SURFACE-ca89e954244ca188",
       "path": "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
-      "sha256": "66516405eb2b4213b72be45b0b7035b8c29fe05df3f898c48e9f4b06c1732b4c",
+      "sha256": "821455528e37e95f4baab3ec32621766ce289b8eefd5033186d03571c0cd875f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54337,7 +54415,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "ec86d1b9cfb05c08d155f266a1ba93ab963c6190c2768ea04adda8864a30cac0",
+      "sha256": "a4f7f070b8f1d569415a4e82b3a9c2671ada7dcd411e2b9ce9ddd9af9e700e8b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54786,7 +54864,7 @@
     {
       "id": "SURFACE-6bdd1107c7329e40",
       "path": "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
-      "sha256": "88e6b4fc291228d4ab7e99ac8f2c5e1030e437a8273741f44a6058a242fd2b55",
+      "sha256": "6f440b98f7d532b31c37c1a7e22af4cf11affd21c38ce845fc49b86f50901389",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55165,7 +55243,7 @@
     {
       "id": "SURFACE-84995ad64af241c6",
       "path": "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs",
-      "sha256": "3bb7fed5db5bb1da6b772bbaf5ee3da77bf03cb33c4ab9348f5826dca0072575",
+      "sha256": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62144,7 +62222,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d803b2690382c915e41448387055b5160e62d515ba9ed72b98bc7ad30dfcc75e",
+      "sourceSha256": "32e064fb07d4c0586b7022951a4d1df2f06e10f6eac30d36dab849a84454219f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -62172,7 +62250,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d803b2690382c915e41448387055b5160e62d515ba9ed72b98bc7ad30dfcc75e",
+      "sourceSha256": "32e064fb07d4c0586b7022951a4d1df2f06e10f6eac30d36dab849a84454219f",
       "definition": {
         "states": [
           "absent",
@@ -62202,7 +62280,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d803b2690382c915e41448387055b5160e62d515ba9ed72b98bc7ad30dfcc75e",
+      "sourceSha256": "32e064fb07d4c0586b7022951a4d1df2f06e10f6eac30d36dab849a84454219f",
       "definition": {
         "export": [
           "queued",

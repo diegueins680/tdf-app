@@ -1198,6 +1198,11 @@
       "id": "2026-11-02_identity_party_reference_refresh",
       "path": "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
       "introducedBy": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f"
+    },
+    {
+      "id": "2026-11-04_domo_quote_deposit_policy_validator",
+      "path": "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
+      "introducedBy": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5"
     }
   ]
 }

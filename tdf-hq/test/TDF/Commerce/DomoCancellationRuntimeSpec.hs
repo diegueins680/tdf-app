@@ -20,6 +20,8 @@ import           Test.Hspec
 
 import           TDF.Commerce.DomoCancellation (Canceller (..))
 import           TDF.Commerce.DomoCancellationStore
+import           TDF.Commerce.RefundStore (RefundReference (..))
+import           TDF.Server.ServiceStorefront (ServicePaidCheckout (..), loadDomoCancellationRefund)
 
 data Fixture = Fixture
   { fxQuoteId    :: Text
@@ -189,6 +191,39 @@ databaseSpec = describe "Domo cancellation (PAY-DOMO-CANCEL-001)" $ do
     count <- scalar pool "SELECT count(*)::text FROM domo_quote_cancellation WHERE domo_quote_id=?::uuid" [PersistText (fxQuoteId fixture)]
     count `shouldBe` "1"
 
+  it "refuses the no-money branch while a capture is in flight, and cancels once it settles" $ \pool -> do
+    fixture <- seedQuote pool 40 False
+    attemptId <- toText <$> nextRandom
+    runSqlPool (do
+      rawExecute "UPDATE commerce_checkout_session SET status='awaiting_payment' WHERE id=?::uuid"
+        [PersistText (fxCheckoutId fixture)]
+      -- A PayPal capture admitted just before the provider call: nothing is
+      -- collected yet, but the provider may still complete it.
+      rawExecute
+        "INSERT INTO commerce_payment_attempt(id, checkout_id, provider, environment, operation, status,\
+        \ amount_minor, currency, merchant_account_ref, idempotency_key)\
+        \ VALUES (?::uuid, ?::uuid, 'paypal', 'sandbox', 'capture', 'created', ?, 'USD', 'PAYPAL-SANDBOX', ?)"
+        [ PersistText attemptId, PersistText (fxCheckoutId fixture), PersistInt64 depositMinor
+        , PersistText ("domo-cancel-inflight:" <> fxQuoteId fixture) ]
+      ) pool
+    refused <- cancel pool fixture CustomerActor CancelledByCustomer
+    case refused of
+      Left (CancellationNotAllowed _) -> pure ()
+      other -> expectationFailure ("expected refusal while a capture is in flight, got " <> show other)
+    quoteStatus <- scalar pool "SELECT quote_status FROM domo_event_quote_runtime WHERE id=?::uuid" [PersistText (fxQuoteId fixture)]
+    quoteStatus `shouldNotBe` "cancelled"
+    runSqlPool (rawExecute "UPDATE commerce_payment_attempt SET status='failed' WHERE id=?::uuid"
+      [PersistText attemptId]) pool
+    admittedBefore <- runSqlPool (domoAttemptAdmission (fxCheckoutId fixture)) pool
+    admittedBefore `shouldBe` Nothing
+    record <- cancel pool fixture CustomerActor CancelledByCustomer >>= requireRight
+    dcrQuoteStatus record `shouldBe` "cancelled"
+    dcrRefundDueMinor record `shouldBe` 0
+    -- The payment side of the fence: a capture that read the quote before the
+    -- cancellation committed is refused a new attempt afterwards.
+    admittedAfter <- runSqlPool (domoAttemptAdmission (fxCheckoutId fixture)) pool
+    admittedAfter `shouldBe` Just "This Domo quote is no longer payable"
+
   it "records a customer cancellation's full-refund obligation and lets an operator settle it exactly once" $ \pool -> do
     fixture <- seedQuote pool 40 True
     party <- operatorParty pool
@@ -237,6 +272,20 @@ databaseSpec = describe "Domo cancellation (PAY-DOMO-CANCEL-001)" $ do
     refundId <- maybe (fail "refund not linked") pure (dcrRefundId record)
     amount <- scalar pool "SELECT amount_minor::text FROM commerce_refund WHERE id=?::uuid" [PersistText refundId]
     amount `shouldBe` "100352"
+    -- The shared refund approval handler resolves this refund to its Domo quote
+    -- and binds it to the verified PayPal capture of the deposit checkout.
+    resolved <- runSqlPool (loadDomoCancellationRefund (RefundReference refundId)) pool
+    case resolved of
+      Just (quoteId, Right paid) -> do
+        quoteId `shouldBe` fxQuoteId fixture
+        spcCheckoutId paid `shouldBe` fxCheckoutId fixture
+        spcProvider paid `shouldBe` "paypal"
+        spcProviderResource paid `shouldBe` ("CAPTURE-" <> fxQuoteId fixture)
+        spcPaidMinor paid `shouldBe` depositMinor
+        spcReservedMinor paid `shouldBe` 100352
+      other -> expectationFailure ("expected the Domo refund to resolve, got " <> show (fmap (fmap (fmap spcAttemptId)) other))
+    unrelated <- runSqlPool (loadDomoCancellationRefund (RefundReference "00000000-0000-0000-0000-000000000000")) pool
+    fmap fst unrelated `shouldBe` Nothing
 
   it "a TDF cancellation two days ahead refunds the whole deposit" $ \pool -> do
     fixture <- seedQuote pool 2 True

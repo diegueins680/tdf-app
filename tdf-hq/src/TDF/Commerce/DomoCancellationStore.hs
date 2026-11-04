@@ -23,13 +23,14 @@ module TDF.Commerce.DomoCancellationStore
   , DomoCancellationRecord (..)
   , approvedCancellationPolicy
   , cancelDomoQuote
+  , domoAttemptAdmission
   , cancellationRefundIdempotencyKey
   , cancellationReasonCode
   , refundObligationExceptionType
   ) where
 
 import           Control.Monad (unless)
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe (fromMaybe, listToMaybe)
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -223,6 +224,39 @@ providerFromText raw = case raw of
   "cardano" -> Right Checkout.ProviderCardano
   _ -> Left ("Stored payment provider is invalid: " <> raw)
 
+-- | PAY-DOMO-CANCEL-001 fence for payment admission, evaluated under the
+-- deposit checkout lock in the transaction that inserts the attempt
+-- ('TDF.Commerce.PaymentRuntimeStore.beginPaymentAttemptGuarded'): a quote
+-- cancelled, or a checkout cancelled or expired, after the payment request read
+-- its context gets no new attempt, so no provider call can collect money after
+-- a no-money cancellation. Cancellation symmetrically refuses while an attempt
+-- is in flight ('inFlightAttempts').
+domoAttemptAdmission :: Text -> SqlPersistT IO (Maybe Text)
+domoAttemptAdmission checkoutId = do
+  rows <- rawSql
+    "SELECT checkout.status, runtime.quote_status\
+    \ FROM commerce_checkout_session checkout\
+    \ JOIN domo_event_quote_runtime runtime ON runtime.checkout_id = checkout.id\
+    \ WHERE checkout.id = ?::uuid FOR UPDATE OF checkout"
+    [PersistText checkoutId]
+    :: SqlPersistT IO [(Single Text, Single Text)]
+  pure $ case rows of
+    [(Single checkoutStatus, Single quoteStatus)]
+      | quoteStatus == "cancelled" || checkoutStatus `elem` ["cancelled", "expired"] ->
+          Just "This Domo quote is no longer payable"
+      | otherwise -> Nothing
+    _ -> Just "Domo deposit checkout is missing"
+
+-- | Attempts on the deposit checkout that a provider may still complete.
+inFlightAttempts :: LockedQuote -> SqlPersistT IO Int
+inFlightAttempts locked = do
+  rows <- rawSql
+    "SELECT count(*) FROM commerce_payment_attempt\
+    \ WHERE checkout_id = ?::uuid AND status IN ('created', 'requires_customer_action', 'processing')"
+    [PersistText (lqCheckoutId locked)]
+    :: SqlPersistT IO [Single Int]
+  pure (maybe 0 unSingle (listToMaybe rows))
+
 -- | The one succeeded payment attempt that paid the deposit checkout.
 loadPaidAttempt :: LockedQuote -> SqlPersistT IO (Either Text PaidAttempt)
 loadPaidAttempt locked = do
@@ -271,8 +305,17 @@ cancelDomoQuote CancellationRequest{..} = do
 
     cancelFresh locked
       | collectedMinor locked <= 0 = do
-          writeCancellation locked Nothing assessmentNoMoney "none" Nothing
-          finish
+          -- Nothing collected yet, but a provider call may be collecting right
+          -- now: an attempt still in flight must settle before the no-money
+          -- branch can be taken. Attempt admission locks the same checkout row
+          -- and refuses cancelled quotes, so the two cannot interleave.
+          inFlight <- inFlightAttempts locked
+          if inFlight > 0
+            then pure (Left (CancellationNotAllowed
+              "A deposit payment is in progress; retry once it settles"))
+            else do
+              writeCancellation locked Nothing assessmentNoMoney "none" Nothing
+              finish
       | otherwise = do
           policyResult <- approvedCancellationPolicy
           case policyResult of

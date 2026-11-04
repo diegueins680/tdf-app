@@ -29,8 +29,10 @@ schema = rawExecute
   \\"stripe_payment_intent_id\" VARCHAR NULL, \"status\" VARCHAR NOT NULL DEFAULT 'pending',\
   \\"message\" VARCHAR NULL, \"idempotency_key\" VARCHAR NULL, \"request_sha256\" VARCHAR NULL,\
   \\"created_at\" TIMESTAMP NOT NULL, \"updated_at\" TIMESTAMP NOT NULL,\
-  \CONSTRAINT \"unique_artist_tip_stripe_payment_intent\" UNIQUE (\"stripe_payment_intent_id\"),\
-  \CONSTRAINT \"unique_artist_tip_idempotency\" UNIQUE (\"artist_profile_id\", \"idempotency_key\"))" []
+  \CONSTRAINT \"unique_artist_tip_stripe_payment_intent\" UNIQUE (\"stripe_payment_intent_id\"))" []
+  -- Same partial unique index as 2026-11-01_artist_tip_idempotency.sql.
+  >> rawExecute "CREATE UNIQUE INDEX uq_artist_tip_idempotency ON artist_tip(artist_profile_id, idempotency_key)\
+                \ WHERE idempotency_key IS NOT NULL" []
 
 now :: UTCTime
 now = UTCTime (fromGregorian 2026 11 2) 0
@@ -76,12 +78,12 @@ spec = describe "Keyed artist tip reservation (PAY-TIP-001, database)" $ do
     tipKey <- case first of
       TipReserved k -> pure k
       otherwise' -> liftIO (expectationFailure ("expected reservation, got " <> show otherwise')) >> fail "stop"
-    -- Before the provider answered, the same request is refused (the stored row
-    -- has no PaymentIntent to resume), never doubled.
+    -- Before the provider answered, the same request is told to retry with the
+    -- same key (the original may still succeed), and never doubled.
     pending <- reserve artist 1500 (Just "key-one") (Just "hola")
     case pending of
-      TipConflict _ -> pure ()
-      other' -> liftIO (expectationFailure ("expected conflict while pending, got " <> show other'))
+      TipPending -> pure ()
+      other' -> liftIO (expectationFailure ("expected in-progress while pending, got " <> show other'))
     update tipKey [ME.ArtistTipStripePaymentIntentId =. Just "pi_123"]
     replay <- reserve artist 1500 (Just "key-one") (Just "hola")
     case replay of
@@ -103,6 +105,17 @@ spec = describe "Keyed artist tip reservation (PAY-TIP-001, database)" $ do
       other' -> liftIO (expectationFailure ("expected conflict, got " <> show other'))
     rows <- countRows
     liftIO (rows `shouldBe` 1)
+
+  it "inserts a keyed row atomically: a duplicate key yields Nothing, not a unique-violation error" $ withDb $ do
+    first <- insertKeyedTip (row artist 1500 (Just "atomic-key") Nothing)
+    second <- insertKeyedTip (row artist 1500 (Just "atomic-key") Nothing)
+    otherArtist <- insertKeyedTip (row other 1500 (Just "atomic-key") Nothing)
+    liftIO $ do
+      fmap (const ()) first `shouldBe` Just ()
+      second `shouldBe` Nothing
+      fmap (const ()) otherArtist `shouldBe` Just ()
+    rows <- countRows
+    liftIO (rows `shouldBe` 2)
 
   it "scopes keys per artist and never deduplicates unkeyed requests" $ withDb $ do
     a <- reserve artist 1000 (Just "shared-key") Nothing

@@ -355,3 +355,22 @@ El responsable aceptó las recomendaciones de la sección 14 y del informe de av
 - Defecto propio de la auditoría: el fixture construía el `lookup_token_hash` (64 hex) repitiendo 32 veces los dos primeros caracteres hexadecimales de un UUID aleatorio, así que solo había 256 valores posibles para una columna única; con una docena de fixtures por ejecución la probabilidad de colisión es del 23 %, coherente con la tasa observada. Corregido derivando el hash del UUID completo (`tokenHash`), tanto para `commerce_checkout_session` como para `domo_event_quote_runtime`.
 - Segundo acoplamiento del mismo fixture, visible al reejecutar la spec sobre una base ya poblada: todos los fixtures usaban la `venue_key` por defecto, así que la restricción de exclusión de ventana activa (`ex_domo_event_quote_active_window`) chocaba con cotizaciones pagadas de ejecuciones anteriores en la misma fecha. Cada fixture lleva ahora su propia `venue_key`. Con ambas correcciones la spec pasa sobre una base limpia y sobre una base con restos de ejecuciones previas (18 ejemplos).
 - La anotación de fallos añadida al paso no bastó porque el error ocurría en la siembra, antes de la sección «Failures» de hspec; el paso ahora anota también la cola de la salida del gate.
+
+## 37. Hallazgos de la revisión automática (Codex) sobre el PR #691 (2026-11-04)
+
+Diez hilos sin resolver, todos sobre código de esta auditoría. Ocho eran defectos reales; uno ya estaba corregido.
+
+| Hallazgo | Resolución |
+|---|---|
+| CI: el paso del gate de reintentos capturaba `status=$?` después de un comando que, con `errexit`, ya había terminado el paso | `status=0; … \|\| status=$?`; el informe y las anotaciones se emiten antes de devolver el fallo. Explica por qué las anotaciones de §36 salían vacías |
+| Propiedad de cabecera Meta «no hexadecimal» que a veces generaba un resumen válido | el primer carácter se sustituye siempre por `g` |
+| Generador CORS con etiquetas solo numéricas | ya corregido (las etiquetas empiezan por letra) |
+| Propina con clave: `insertUnique` no es atómico (comprobación y luego inserción) | `INSERT … ON CONFLICT (artist_profile_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING RETURNING id`; prueba SQLite con el mismo índice parcial |
+| Propina pendiente sin PaymentIntent contestada como «usa una clave nueva» | nueva decisión `TipReplayInProgress`: reintentar con la misma clave; una clave nueva duplicaría el cobro |
+| Validador SQL de cotizaciones Domo exige el depósito sin política (AUTHORITY-095) | migración `2026-11-04_domo_quote_deposit_policy_validator` (+ rollback) que replica `applyDepositPolicy` con los valores de la tarifa aprobada; sonda `scripts/test-domo-deposit-policy-validator.sh` (mínimo, umbral de pago total, valores por defecto) en CI; control: la sonda falla con el validador anterior |
+| Carrera de vinculación Instagram: plan y aplicación en transacciones separadas | escrituras condicionadas al dueño observado al planificar (`updateWhereCount … AND party_id = ?`, `insertUnique` para cuentas nuevas); un plan obsoleto no escribe nada, el manejador deshace la transacción y responde 409; dos pruebas de plan obsoleto |
+| Cancelación Domo frente a captura en vuelo | valla bilateral sobre el bloqueo de la fila del checkout: la cancelación sin dinero rechaza si hay intentos `created`/`requires_customer_action`/`processing`, y la admisión de intentos (`beginPaymentAttemptGuarded` + `domoAttemptAdmission`) rechaza cotizaciones canceladas o checkouts cancelados/vencidos; prueba con PostgreSQL de ambos lados |
+| UI: al reabrir una cotización cancelada se perdía el resultado y el aviso decía «fecha retenida, depósito sin pagar» | estado cancelado derivado del estado persistido y recuperación del resultado registrado mediante la repetición idempotente de la cancelación; prueba de página |
+| Reembolsos de cancelación Domo sin ruta de aprobación ni ejecución | el manejador compartido de aprobación de reembolsos PayPal reconoce los reembolsos ligados a `domo_quote_cancellation`, exige además el módulo Admin, enlaza el reembolso con la captura PayPal verificada del depósito y ejecuta el mismo flujo; sin cambio de contrato (no exige regenerar clientes ni otro PR móvil). Datafast sigue sin adaptador de reembolso (503) |
+
+El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, decisión `438668da`, documento `formal-audit-phase2-domo-deposit-validator-reconciliation-20261104.json`).

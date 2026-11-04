@@ -155,7 +155,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(canonicalHash(manifest.slice(0, 220)), protectedFinancialPrefixHash);
   assert.equal(financial.protectedMainManifestCanonicalSha256, protectedFinancialPrefixHash);
   assert.equal(financial.sourceMain, '5114fe95ac8e328b58162a8dcae5c9015a47ce09');
-  assert.equal(manifest.length, 235);
+  assert.equal(manifest.length, 236);
   assert.deepEqual(manifest[227], {
     id: SESSION_EXPIRY_ENTRY,
     path: 'tdf-hq/sql/2026-10-31_api_token_session_expiry.sql',
@@ -219,7 +219,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(memoryParent.evidence.valueCount, 224);
   assert.equal(finalCurrent.classification, current.classification);
   assert.equal(finalCurrent.disposition, current.disposition);
-  assert.equal(finalCurrent.evidence.valueCount, 235);
+  assert.equal(finalCurrent.evidence.valueCount, 236);
   assert.ok(!active.some(entry => entry.id === current.id || entry.id === memoryParent.id));
   const memory225 = history.find(entry => entry.id === 'cff15f30aa13965e5729');
   const header222 = history.find(entry => entry.id === '6ff395b6131079017c9d');
@@ -247,7 +247,23 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
     document.reconciliation.eventMemoryProviderMain20261026.document), 'utf8'));
   const memory226 = history.find(entry => entry.id === 'f48c34252ff8930b3d74');
   const provider223 = history.find(entry => entry.id === provider.currentDecisionId);
-  assert.equal(finalCurrent.id, '27def070486792cad395');
+  assert.equal(finalCurrent.id, '438668da134480da0a9e');
+  // Domo deposit validator (2026-11-04): one migration appended after the
+  // reconciled 235-entry review, which stays retired and hash-preserved.
+  const reconciled235 = history.find(entry => entry.id === '27def070486792cad395');
+  assert.equal(canonicalHash(reconciled235),
+    '085659be48eed02b09860767b22855e80f1fe17bddca460289a6ab13504fca03');
+  assert.equal(reconciled235.evidence.valueCount, 235);
+  assert.equal(reconciled235.reviewed, true);
+  assert.equal(finalCurrent.previousDecision.id, reconciled235.id);
+  const depositValidator = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    document.reconciliation.formalAuditPhase2DomoDepositValidator20261104.document), 'utf8'));
+  assert.equal(depositValidator.currentDecisionId, finalCurrent.id);
+  assert.equal(depositValidator.previousDecisionId, reconciled235.id);
+  assert.deepEqual(depositValidator.previousManifestDecision, reconciled235);
+  assert.equal(depositValidator.preservedPrefixCanonicalSha256, canonicalHash(rawManifest.slice(0, 235)));
+  assert.equal(depositValidator.appendedSuffixCanonicalSha256, canonicalHash(rawManifest.slice(235)));
+  assert.deepEqual(depositValidator.appendedMigrationIds, ['2026-11-04_domo_quote_deposit_policy_validator']);
   // Session-expiry integration (2026-11-02): two concurrent successors of the
   // 227-entry review are reconciled; both stay retired and hash-preserved.
   const audit234 = history.find(entry => entry.id === 'd9468b767dadec9cf3d8');
@@ -260,8 +276,8 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(sessionExpiry228.evidence.valueCount, 228);
   assert.equal(audit234.reviewed, true);
   assert.equal(sessionExpiry228.reviewed, true);
-  assert.equal(finalCurrent.previousDecision.id, audit234.id);
-  assert.deepEqual(finalCurrent.concurrentReviewHistory.map(entry => entry.id), [sessionExpiry228.id]);
+  assert.equal(reconciled235.previousDecision.id, audit234.id);
+  assert.deepEqual(reconciled235.concurrentReviewHistory.map(entry => entry.id), [sessionExpiry228.id]);
   assert.equal(sessionExpiry228.previousDecision.id, 'a2bb0e828d5b94c1cb31');
   for (const parent of [audit234, sessionExpiry228]) {
     assert.equal(finalCurrent.classification, parent.classification);
@@ -270,21 +286,23 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   }
   const sessionExpiry = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     document.reconciliation.formalAuditPhase2SessionExpiryMainIntegration20261102.document), 'utf8'));
-  assert.equal(sessionExpiry.currentDecisionId, finalCurrent.id);
+  assert.equal(sessionExpiry.currentDecisionId, reconciled235.id);
   assert.equal(sessionExpiry.previousDecisionId, audit234.id);
   assert.equal(sessionExpiry.concurrentDecisionId, sessionExpiry228.id);
   assert.deepEqual(sessionExpiry.mainManifestDecision, sessionExpiry228);
   assert.deepEqual(sessionExpiry.auditManifestDecision, audit234);
   assert.equal(sessionExpiry.interleavedIndex, 227);
-  assert.equal(rawManifest.length, 235);
+  assert.equal(rawManifest.length, 236);
   // Protected main's 228-entry review is the exact prefix of the merged manifest.
   assert.equal(sessionExpiry.protectedPrefixCanonicalSha256, canonicalHash(rawManifest.slice(0, 228)));
   // The audit's 234-entry review is the merged manifest without main's entry.
-  assert.equal(sessionExpiry.auditViewCanonicalSha256, canonicalHash(auditView(rawManifest)));
-  assert.equal(auditView(rawManifest).length, 234);
-  assert.equal(sessionExpiry.auditSuffixCanonicalSha256, canonicalHash(rawManifest.slice(228)));
-  const auditRaw = auditView(rawManifest);
-  const auditReviewed = auditView(manifest);
+  // Earlier reviews were taken over the 235-entry manifest before the deposit validator.
+  const reconciledRaw = rawManifest.slice(0, 235);
+  assert.equal(sessionExpiry.auditViewCanonicalSha256, canonicalHash(auditView(reconciledRaw)));
+  assert.equal(auditView(reconciledRaw).length, 234);
+  assert.equal(sessionExpiry.auditSuffixCanonicalSha256, canonicalHash(rawManifest.slice(228, 235)));
+  const auditRaw = auditView(reconciledRaw);
+  const auditReviewed = auditView(manifest.slice(0, 235));
   // Registry refresh (2026-11-02): one migration appended after the 233-entry
   // formal-audit review, which stays retired and preserved by canonical hash.
   const main233 = history.find(entry => entry.id === '903e61463c0222f30d9b');
@@ -359,7 +377,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   }
   const retiredParents = [...historical, current, memoryParent, memory225, header222,
     combined.headerManifestDecision, memory226, provider223, provider.providerManifestDecision, main227, main233,
-    audit234, sessionExpiry228];
+    audit234, sessionExpiry228, reconciled235];
   assert.equal(current.classification, decision220.classification);
   assert.equal(current.disposition, decision220.disposition);
   assert.deepEqual(current.sourceReviewReferences.slice(0, decision220.sourceReviewReferences.length),
@@ -368,12 +386,12 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
   assert.equal(pointer.currentId, finalCurrent.id);
-  assert.equal(pointer.valueCount, 235);
+  assert.equal(pointer.valueCount, 236);
   assert.equal(pointer.change, finalCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, finalCurrent.id);
   assert.equal(retirement.currentResolution.id, finalCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 235);
+  assert.equal(retirement.currentResolution.valueCount, 236);
   assert.equal(retirement.reason, finalCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));

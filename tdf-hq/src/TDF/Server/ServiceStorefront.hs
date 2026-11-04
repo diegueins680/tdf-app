@@ -7,6 +7,8 @@
 module TDF.Server.ServiceStorefront
   ( serviceStorefrontPublicServer
   , serviceStorefrontAdminServer
+  , ServicePaidCheckout (..)
+  , loadDomoCancellationRefund
   , validatePackageOrder
   , validateDatafastOrderResourcePath
   , validateDatafastEnvironmentBase
@@ -86,7 +88,7 @@ import           Web.PathPieces (fromPathPiece, toPathPiece)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
-import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
+import           TDF.Auth (AuthedUser(..), ModuleAccess(..), hasStrictAdminAccess, validateModuleAccess)
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
@@ -1523,9 +1525,20 @@ approveServiceRefundHandler user rawRefundId = do
   refundRef <- parseRefundReference rawRefundId
   mExisting <- liftIO $ flip runSqlPool envPool $ Refund.loadRefund refundRef
   existing <- maybe (throwError err404 { errBody = "Refund not found" }) pure mExisting
-  orderNumber <- liftIO (flip runSqlPool envPool
+  mServiceOrder <- liftIO (flip runSqlPool envPool
       (loadServiceOrderNumberForCheckout (Refund.rrCheckout existing)))
-    >>= maybe (throwError err404 { errBody = "Service order not found" }) pure
+  (orderNumber, loadPaidCheckout) <- case mServiceOrder of
+    Just serviceOrder -> pure
+      (serviceOrder, loadServicePaidCheckoutByCheckout (Refund.rrCheckout existing))
+    Nothing -> do
+      mDomo <- liftIO (flip runSqlPool envPool (loadDomoCancellationRefund refundRef))
+      case mDomo of
+        Nothing -> throwError err404 { errBody = "Service order not found" }
+        Just (quoteId, paid) -> do
+          -- Domo cancellation refunds keep the authority of Domo cancellation:
+          -- strict administrator (checked by this router) and the Admin module.
+          either throwError pure (validateModuleAccess ModuleAdmin user)
+          pure ("domo-quote:" <> quoteId, pure paid)
   unless (Refund.rrProvider existing == "paypal") $
     throwError err503
       { errBody = "Refund adapter is not enabled for this payment provider" }
@@ -1535,8 +1548,7 @@ approveServiceRefundHandler user rawRefundId = do
     Checkout.capabilityEnabledForEnvironment storedEnvironment "checkout.paypal.refunds"
   unless capabilityEnabled $
     throwError err503 { errBody = "PayPal refunds are disabled for this environment" }
-  paidCheckout <- liftIO (flip runSqlPool envPool
-      (loadServicePaidCheckoutByCheckout (Refund.rrCheckout existing)))
+  paidCheckout <- liftIO (flip runSqlPool envPool loadPaidCheckout)
     >>= either (throwError . refundLookupError) pure
   unless (spcAttemptId paidCheckout
       == Checkout.paymentAttemptReferenceId (Refund.rrPaymentAttempt existing)) $
@@ -1795,7 +1807,22 @@ loadServicePaidCheckoutBy
   :: Text
   -> [PersistValue]
   -> SqlPersistT IO (Either Text ServicePaidCheckout)
-loadServicePaidCheckoutBy predicate params = do
+loadServicePaidCheckoutBy =
+  loadPaidCheckoutVia
+    "FROM service_storefront_order service_order\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = service_order.checkout_id"
+    "mixing_mastering"
+
+-- | The verified succeeded attempt, provider resource and money totals of a
+-- paid checkout reached through @source@ (a FROM clause that binds
+-- @checkout@) in @domainType@, selected by @predicate@.
+loadPaidCheckoutVia
+  :: Text
+  -> Text
+  -> Text
+  -> [PersistValue]
+  -> SqlPersistT IO (Either Text ServicePaidCheckout)
+loadPaidCheckoutVia source domainType predicate params = do
   rows <- (rawSql
     ("SELECT checkout.id::text, attempt.id::text, attempt.provider,\
      \ attempt.environment, attempt.merchant_account_ref, checkout.paid_minor,\
@@ -1803,15 +1830,13 @@ loadServicePaidCheckoutBy predicate params = do
      \ COALESCE((SELECT SUM(refund.amount_minor) FROM commerce_refund refund\
      \   WHERE refund.checkout_id = checkout.id\
      \   AND refund.status IN ('requested','approved','processing')), 0),\
-     \ checkout.currency, binding.provider_resource_id\
-     \ FROM service_storefront_order service_order\
-     \ JOIN commerce_checkout_session checkout ON checkout.id = service_order.checkout_id\
-     \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+     \ checkout.currency, binding.provider_resource_id " <> source <>
+     " JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
      \   AND attempt.status = 'succeeded'\
      \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
      \   AND ((attempt.provider = 'paypal' AND binding.resource_type = 'capture')\
      \     OR (attempt.provider = 'datafast' AND binding.resource_type = 'payment'))\
-     \ WHERE checkout.domain_type = 'mixing_mastering' AND " <> predicate)
+     \ WHERE checkout.domain_type = '" <> domainType <> "' AND " <> predicate)
     params :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Text, Single Text
        , Single Int64, Single Int64, Single Int64, Single Text, Single Text
@@ -1847,6 +1872,30 @@ loadServiceOrderNumberForCheckout checkout = do
   pure $ case rows of
     [Single orderNumber] -> Just orderNumber
     _ -> Nothing
+
+-- | PAY-DOMO-CANCEL-001: a refund requested for a Domo cancellation is
+-- approved and executed by this shared handler. Returns the Domo quote it
+-- belongs to and its paid deposit checkout, or 'Nothing' when the refund is not
+-- a Domo cancellation refund.
+loadDomoCancellationRefund
+  :: Refund.RefundReference
+  -> SqlPersistT IO (Maybe (Text, Either Text ServicePaidCheckout))
+loadDomoCancellationRefund refundRef = do
+  quotes <- (rawSql
+    "SELECT domo_quote_id::text FROM domo_quote_cancellation WHERE refund_id = ?::uuid"
+    [PersistText (Refund.refundReferenceId refundRef)]
+    :: SqlPersistT IO [Single Text])
+  case quotes of
+    [Single quoteId] -> do
+      paid <- loadPaidCheckoutVia
+        "FROM domo_quote_cancellation cancellation\
+        \ JOIN domo_event_quote_runtime runtime ON runtime.id = cancellation.domo_quote_id\
+        \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id"
+        "domo_event_quote"
+        "cancellation.refund_id = ?::uuid"
+        [PersistText (Refund.refundReferenceId refundRef)]
+      pure (Just (quoteId, paid))
+    _ -> pure Nothing
 
 serviceRefundToDTO :: Text -> Refund.RefundRecord -> ServiceStorefrontRefundDTO
 serviceRefundToDTO orderNumber record = ServiceStorefrontRefundDTO

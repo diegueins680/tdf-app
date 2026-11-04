@@ -46,7 +46,7 @@ import           Data.Time                  (UTCTime, getCurrentTime)
 import           Data.Time.Format           (defaultTimeLocale, parseTimeM)
 import           Data.Time.Format.ISO8601   (iso8601ParseM)
 import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, (=.), (==.))
-import           Database.Persist.Sql       (fromSqlKey, runSqlPool)
+import           Database.Persist.Sql       (fromSqlKey, runSqlPool, transactionUndo)
 import           GHC.Generics               (Generic)
 import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Types.Status  (statusCode)
@@ -376,8 +376,12 @@ instagramOAuthServer user = exchangeHandler
       plan <- liftIO (flip runSqlPool envPool
           (OwnershipStore.planInstagramConnections isAdmin (auPartyId user) connectable))
         >>= either (\message -> throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure
-      _ <- liftIO $ flip runSqlPool envPool $
-        OwnershipStore.applyInstagramConnections now (auPartyId user) plan
+      liftIO (flip runSqlPool envPool $ do
+          applied <- OwnershipStore.applyInstagramConnections now (auPartyId user) plan
+          -- A stale plan writes nothing: undo the accounts applied before it.
+          either (const transactionUndo) (const (pure ())) applied
+          pure applied)
+        >>= either (\message -> throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) (const (pure ()))
 
       let pagesDto = map toPageDTO pageContexts
       (mPrimaryId, mPrimaryHandle, media) <-

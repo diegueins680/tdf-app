@@ -1013,7 +1013,11 @@ beginDomoPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginDomoPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  -- PAY-DOMO-CANCEL-001 fence: no attempt for a quote cancelled after this
+  -- request read its context (see CancellationStore.domoAttemptAdmission).
+  result <- runDB $ PaymentRuntime.beginPaymentAttemptGuarded
+    (CancellationStore.domoAttemptAdmission (Checkout.checkoutReferenceId (dpcCheckout context)))
+    Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = dpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = dpcEnvironment context

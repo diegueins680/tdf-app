@@ -83,6 +83,8 @@ data TipReplay
     -- ^ no stored tip for this key: create one
   | TipReplayIntent Text
     -- ^ same request: answer with the stored PaymentIntent
+  | TipReplayInProgress
+    -- ^ same request, still waiting for the provider: retry with the same key
   | TipReplayConflict Text
     -- ^ the key cannot be honoured; the text is the public reason
   deriving (Eq, Show)
@@ -123,5 +125,7 @@ decideTipReplay fingerprint (Just (storedFingerprint, storedIntent, storedStatus
       TipReplayConflict "The earlier attempt with this Idempotency-Key failed; use a new key"
   | otherwise = case storedIntent of
       Just intentId | not (T.null intentId) -> TipReplayIntent intentId
-      _ -> TipReplayConflict "The earlier attempt with this Idempotency-Key did not reach the payment provider; use a new key"
+      -- No PaymentIntent stored yet: the original request is still waiting
+      -- for the provider and may succeed, so a new key would double-charge.
+      _ -> TipReplayInProgress
 

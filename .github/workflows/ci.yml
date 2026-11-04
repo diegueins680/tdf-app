@@ -606,8 +606,9 @@ jobs:
           createdb -h postgres -U postgres tdf_provider_retry_test
           # The job log tail is dominated by the service container dump, so a
           # failing hspec run also surfaces its failure report as annotations.
-          sh scripts/test-provider-retry-runtime.sh > "$RUNNER_TEMP/provider-retry.log" 2>&1
-          status=$?
+          # The step shell runs with errexit, so capture the status explicitly.
+          status=0
+          sh scripts/test-provider-retry-runtime.sh > "$RUNNER_TEMP/provider-retry.log" 2>&1 || status=$?
           cat "$RUNNER_TEMP/provider-retry.log"
           if [ "$status" -ne 0 ]; then
             # hspec failure report when present, otherwise the end of the gate output.
@@ -675,6 +676,11 @@ jobs:
         env:
           TDF_MIGRATION_BATCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/migration-batch-postgres.mjs
+
+      - name: Verify the Domo deposit policy validator accepts exactly the policy deposit
+        env:
+          TDF_DOMO_VALIDATOR_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-domo-deposit-policy-validator.sh
 
       - name: Verify the startup capability-gate policy for every asserted flag state
         env:

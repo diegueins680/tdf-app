@@ -13738,8 +13738,8 @@
       ],
       "authorization": "Public intake (AUTH-PUBLIC-001 boundary public-intake); a hidden artist answers exactly like an absent one (404).",
       "privacy": "Provider error text is logged server-side only; the caller receives a fixed 502 message.",
-      "concurrency": "Webhook outcome writes are conditional UPDATE ... WHERE status='pending'; formal/payments/StripeIntentOutcome.tla proves Safe inductively for up to six concurrent deliveries with Apalache.",
-      "idempotency": "Request-level: Idempotency-Key per artist profile, unique partial index uq_artist_tip_idempotency, request fingerprint (SHA-256 of length-prefixed artist, amount, currency and optional fields) compared on replay; replay never creates a new PaymentIntent. Webhook events are deduplicated by event id and outcome writes are idempotent.",
+      "concurrency": "Webhook outcome writes are conditional UPDATE ... WHERE status='pending'; formal/payments/StripeIntentOutcome.tla proves Safe inductively for up to six concurrent deliveries with Apalache. Keyed reservation is a single INSERT ... ON CONFLICT (artist_profile_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING RETURNING id, so a concurrent duplicate observes the winner's row instead of raising a unique violation that would abort the transaction.",
+      "idempotency": "Request-level: Idempotency-Key per artist profile, unique partial index uq_artist_tip_idempotency, request fingerprint (SHA-256 of length-prefixed artist, amount, currency and optional fields) compared on replay; replay never creates a new PaymentIntent. Webhook events are deduplicated by event id and outcome writes are idempotent. A same-request replay before the PaymentIntent is stored answers in progress (retry with the same key), never 'use a new key', so a slow provider call cannot be duplicated.",
       "failure": "Unconfigured provider: 503 before any write. Provider creation error: row marked failed, fixed 502. Unparseable provider response: row stays pending without intent id.",
       "recovery": "Pending rows without an intent id or never confirmed remain auditable; no automatic charge.",
       "observability": "Tip id, artist party id and artist profile id in PaymentIntent metadata; provider errors logged with the tip id.",
@@ -14340,7 +14340,7 @@
       ],
       "authorization": "Exchange: hasSocialInboxAccess. Rebind: Admin role. Designation: strict administrator with Admin module.",
       "privacy": "Page access tokens are stored in social_sync_account.access_token.",
-      "concurrency": "Upsert by unique (platform, external id).",
+      "concurrency": "Planning and application run in separate transactions; application writes only while the plan holds: a new account is inserted with insertUnique, an existing account is updated by one conditional UPDATE ... WHERE id = ? AND party_id = <owner observed when planning>. A stale plan (concurrent rebind or first connection by someone else) writes nothing: the handler undoes the transaction and answers 409.",
       "idempotency": "Repeated exchange by the same user is idempotent per account.",
       "failure": "503 without app credentials; 400 for a mismatching redirect URI; provider errors sanitized. Archived (merged) Party identifiers are rejected on the account and its ownership events by the identity archive guard.",
       "recovery": "Not applicable.",
@@ -14390,9 +14390,9 @@
       "formalModels": [],
       "status": "specified and implemented",
       "observability": "Not applicable.",
-      "recovery": "Not applicable.",
+      "recovery": "Not applicable. A requested Domo cancellation refund is approved and executed by a different strict administrator with the Admin module through the shared PayPal refund approval (POST /admin/services/storefront/refunds/{refundId}/approve), bound to the deposit checkout's verified PayPal capture; Datafast refunds remain unsupported (503).",
       "privacy": "Not applicable.",
-      "concurrency": "The quote runtime and its checkout are locked FOR UPDATE for the whole transaction; a checkout in processing is refused so a verified payment cannot race the cancellation.",
+      "concurrency": "The quote runtime and its checkout are locked FOR UPDATE for the whole transaction; a checkout in processing is refused so a verified payment cannot race the cancellation. While nothing is collected, cancellation also refuses while any attempt on the deposit checkout is created, requires customer action or is processing; payment admission (beginPaymentAttemptGuarded with domoAttemptAdmission) locks the same checkout row and refuses a cancelled quote or a cancelled or expired checkout. Whichever transaction takes the checkout lock second observes the other, so a capture can never complete after a no-money cancellation.",
       "idempotency": "Deterministic refund key domo-cancel:<quoteId>; replaying a cancellation returns the stored record (alreadyCancelled=true) and never writes a second record or refund.",
       "id": "PAY-DOMO-CANCEL-001",
       "title": "Domo cancellation refunds follow the approved versioned policy",
@@ -14450,7 +14450,9 @@
         "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
         "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
         "tdf-hq-ui/src/api/domoQuotes.ts",
-        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx"
+        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs"
       ],
       "verification": "Z3 lemmas (refund within collected, conservation, monotonicity, full/zero retention) with witnesses and controls; QuickCheck properties on domoCancellationRefund and assessDomoCancellation; PostgreSQL probes of the policy table (single approved version, immutability, retirement) and of the cancellation record (conservation CHECKs, required record on paid cancellation, refund linkage amount, immutability, rollback refusal); runtime Hspec cases on the full reviewed schema (unpaid cancel, customer obligation then operator settlement, 10-day half retention, TDF full refund, late customer cancel, terminal refusals); admin 403/400 route tests.",
       "evidence": "formal/payments/domo_cancellation_refund.py output; tdf-hq-test DomoCancellationSpec and ServerAdminSpec runs; provider-retry-runtime gate (DomoCancellationRuntimeSpec); scripts/test-domo-quote-checkout-runtime-migration.sh output.",
@@ -14528,13 +14530,16 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql",
-        "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy_rollback.sql"
+        "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy_rollback.sql",
+        "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
+        "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql"
       ],
       "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
-        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs"
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+        "scripts/test-domo-deposit-policy-validator.sh"
       ],
       "confidence": "High for the pure rule (property-tested) and for the value plumbing (parsed and validated at load; defaults when absent); database-backed checkout tests of the composed handlers remain.",
       "ambiguity": [
