@@ -31,6 +31,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Invoices,
   forgetInvoiceIssueAttempt,
+  invoiceIssueFingerprint,
   invoiceIssueSettled,
   nextInvoiceIssueAttempt,
   type GenerateSessionInvoiceInput,
@@ -197,14 +198,16 @@ export default function SessionInvoiceGeneratorCard() {
   // example 409 because the first request never stored its answer), so the
   // verified "new attempt" action is reachable from the error as well.
   const [unresolvedAfterError, setUnresolvedAfterError] = useState(false);
-  // After the verified reset, the next submission tells the server that staff
-  // checked the SRI portal, so it may issue even though an earlier attempt for
-  // the same invoice is unresolved (the server refuses otherwise).
-  const portalVerifiedForNext = useRef(false);
+  // After the verified reset, a submission of that same invoice request tells
+  // the server that staff checked the SRI portal, so it may issue even though
+  // an earlier attempt for it is unresolved (the server refuses otherwise).
+  // The verification is bound to the request fingerprint it was given for, so
+  // it never applies to another session or an edited invoice.
+  const portalVerifiedFingerprint = useRef<string | null>(null);
   const startNewIssueAttempt = () => {
+    portalVerifiedFingerprint.current = issueAttempt.current?.fingerprint ?? null;
     forgetInvoiceIssueAttempt(issueAttempt.current);
     issueAttempt.current = null;
-    portalVerifiedForNext.current = true;
     setUnresolvedAfterError(false);
     setResult(null);
     setFormError(null);
@@ -225,7 +228,7 @@ export default function SessionInvoiceGeneratorCard() {
       // Keep the key after an uncertain SRI outcome: the portal may have issued
       // the document, so resubmitting must replay rather than issue again.
       setUnresolvedAfterError(false);
-      portalVerifiedForNext.current = false;
+      portalVerifiedFingerprint.current = null;
       if (invoiceIssueSettled(response)) {
         forgetInvoiceIssueAttempt(issueAttempt.current);
         issueAttempt.current = null;
@@ -269,7 +272,12 @@ export default function SessionInvoiceGeneratorCard() {
         certificatePassword: toOptionalText(certificatePassword),
       };
       payload.idempotencyKey = idempotencyKeyFor(selectedSession.sessionId, payload);
-      if (portalVerifiedForNext.current) payload.sriPortalVerified = true;
+      if (
+        portalVerifiedFingerprint.current !== null &&
+        portalVerifiedFingerprint.current === invoiceIssueFingerprint(selectedSession.sessionId, payload)
+      ) {
+        payload.sriPortalVerified = true;
+      }
       setFormError(null);
       setResult(null);
       generateMutation.mutate(payload);

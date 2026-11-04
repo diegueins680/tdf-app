@@ -4,8 +4,14 @@
 -- plus the reservation statements against a real (SQLite) database.
 module TDF.Invoice.SessionIssueSpec (spec) where
 
+import           Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Logger (NoLoggingT)
+import qualified Data.ByteString.Char8 as BS
+import           Data.List (isInfixOf, sort)
+import           Database.Persist.Postgresql (createPostgresqlPool)
+import           Database.Persist.Sql (ConnectionPool, runSqlPool)
+import           System.Environment (lookupEnv)
+import           Control.Monad.Logger (NoLoggingT, runNoLoggingT)
 import           Control.Monad.Trans.Resource (ResourceT)
 import           Data.Maybe (isJust)
 import qualified Data.Text as T
@@ -78,7 +84,55 @@ expectReserved (IssueReserved reservation) = pure reservation
 expectReserved other = liftIO (expectationFailure ("expected a reservation, got " <> show other)) >> fail "stop"
 
 spec :: Spec
-spec = describe "Session invoice issuance idempotency (PAY-INVOICE-ISSUE-001)" $ do
+spec = do
+  sessionIssueSpec
+  postgresSpec
+
+-- The advisory lock and the guarded reservation on a real PostgreSQL database
+-- (TDF_SESSION_ISSUE_TEST_DB, a disposable database named tdf_session_issue_test).
+postgresSpec :: Spec
+postgresSpec = describe "Session invoice issuance on PostgreSQL (PAY-INVOICE-ISSUE-001)" $ do
+  configured <- runIO (lookupEnv "TDF_SESSION_ISSUE_TEST_DB")
+  case configured of
+    Nothing -> it "requires a disposable PostgreSQL database" $
+      pendingWith "Set TDF_SESSION_ISSUE_TEST_DB to a tdf_session_issue_test database"
+    Just connection | not ("dbname=tdf_session_issue_test" `isInfixOf` connection) ->
+      it "refuses a non-disposable database" $ expectationFailure "Use a tdf_session_issue_test database"
+    Just connection -> beforeAll (setupPostgres connection) $ do
+      it "takes the advisory lock and reserves through the query API" $ \pool -> do
+        result <- runSqlPool
+          (reserveIssueGuarded (issueAdvisoryLock sessionA "pg-f") True now sessionA key1 "pg-f") pool
+        show result `shouldSatisfy` ("Guarded (IssueReserved" `isInfixOf`)
+      it "lets exactly one of two concurrent new keys for the same invoice reserve" $ \pool -> do
+        done <- newEmptyMVar
+        let attempt key pause = forkIO $ do
+              outcome <- runSqlPool
+                (reserveIssueGuarded
+                  (issueAdvisoryLock sessionB "race-f" >> liftIO (threadDelay pause))
+                  True now sessionB key "race-f")
+                pool
+              putMVar done (show outcome)
+        _ <- attempt key1 300000
+        _ <- attempt key2 0
+        outcomes <- sort <$> mapM (const (takeMVar done)) [(), ()]
+        map (take 12) outcomes `shouldBe` ["Guarded (Iss", "SiblingUnres"]
+  where
+    setupPostgres :: String -> IO ConnectionPool
+    setupPostgres connection = do
+      pool <- runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)
+      flip runSqlPool pool $ do
+        rawExecute "DROP TABLE IF EXISTS session_invoice_issue" []
+        -- Same columns, checks and unique key as 2026-11-04_session_invoice_issue.sql,
+        -- without the session and invoice foreign keys.
+        rawExecute
+          "CREATE TABLE session_invoice_issue (id BIGSERIAL PRIMARY KEY, session_id UUID NOT NULL,\
+          \ idempotency_key TEXT NOT NULL, request_sha256 TEXT NOT NULL, invoice_id BIGINT NULL,\
+          \ response TEXT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), completed_at TIMESTAMPTZ NULL,\
+          \ CONSTRAINT unique_session_invoice_issue UNIQUE (session_id, idempotency_key))" []
+      pure pool
+
+sessionIssueSpec :: Spec
+sessionIssueSpec = describe "Session invoice issuance idempotency (PAY-INVOICE-ISSUE-001)" $ do
   describe "validateIssueKey" $ do
     it "requires a key when an SRI document will be issued" $
       validateIssueKey True Nothing `shouldBe` Left "idempotencyKey is required when issuing an SRI invoice"
@@ -195,6 +249,18 @@ spec = describe "Session invoice issuance idempotency (PAY-INVOICE-ISSUE-001)" $
       liftIO $ case verified of
         Guarded (IssueReserved _) -> pure ()
         other -> expectationFailure ("expected a verified reservation, got " <> show other)
+
+    it "replays an existing newer key even while an older attempt is unresolved" $ withDb $ do
+      _ <- reserveIssueGuarded (pure ()) True now sessionA key1 "f"
+      newer <- reserveIssueGuarded (pure ()) False now sessionA key2 "f"
+      newerKey <- case newer of
+        Guarded (IssueReserved r) -> pure r
+        other -> liftIO (expectationFailure ("expected a reservation, got " <> show other)) >> fail "stop"
+      completeIssue now newerKey Nothing "{\"ok\":true,\"sri\":{\"ok\":false,\"error\":\"lost\"}}"
+      -- a retry of key2 without the verified flag must replay, not be refused
+      retry <- reserveIssueGuarded (pure ()) True now sessionA key2 "f"
+      liftIO $ show retry `shouldBe`
+        show (Guarded (IssueExisting (IssueReplayStored "{\"ok\":true,\"sri\":{\"ok\":false,\"error\":\"lost\"}}")))
   where
     isConflict (IssueConflict _) = True
     isConflict _ = False

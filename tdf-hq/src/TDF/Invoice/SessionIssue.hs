@@ -27,6 +27,7 @@ module TDF.Invoice.SessionIssue
 
 import           Control.Monad.IO.Class (MonadIO)
 import           Crypto.Hash (Digest, SHA256, hash)
+import           Data.Int (Int64)
 import           Data.Maybe (listToMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -190,8 +191,12 @@ reserveIssueGuarded
   -> SqlPersistT m GuardedReservation
 reserveIssueGuarded takeLock checkSiblings now sessionKey key fingerprint = do
   takeLock
+  -- An existing key is a retry: resolve it (replay, in progress or conflict)
+  -- before any sibling check, so retrying a newer attempt is never refused
+  -- because of an older unresolved one. Only a genuinely new key is guarded.
+  existing <- getBy (ME.UniqueSessionInvoiceIssue sessionKey key)
   sibling <-
-    if checkSiblings
+    if checkSiblings && null existing
       then unresolvedSiblingAttempt sessionKey fingerprint key
       else pure False
   if sibling
@@ -199,9 +204,13 @@ reserveIssueGuarded takeLock checkSiblings now sessionKey key fingerprint = do
     else Guarded <$> reserveIssue now sessionKey key fingerprint
 
 -- | PostgreSQL transaction-scoped advisory lock on (session, fingerprint),
--- released at commit or rollback.
-issueAdvisoryLock :: MonadIO m => ME.SessionId -> Text -> SqlPersistT m ()
-issueAdvisoryLock sessionKey fingerprint =
-  rawExecute
-    "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))"
+-- released at commit or rollback. The lock function returns a value, so it is
+-- run through the query API (the same form as the other advisory locks in
+-- TDF.Server); executing it as a statement fails on PostgreSQL.
+issueAdvisoryLock :: ME.SessionId -> Text -> SqlPersistT IO ()
+issueAdvisoryLock sessionKey fingerprint = do
+  _ <- rawSql
+    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
     [toPersistValue (T.pack (show sessionKey) <> ":" <> fingerprint)]
+    :: SqlPersistT IO [Single Int64]
+  pure ()
