@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "95f8696701ff7bd4242307b831a4212f7165b1cba0d90c0c60516e9fa431af5c",
+    "tdf-hq/tdf-hq.cabal": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
     "formal/system/identity-lifecycle.md": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440"
   },
   "obligations": [
@@ -290,6 +290,15 @@
       "currentSha256": "95f8696701ff7bd4242307b831a4212f7165b1cba0d90c0c60516e9fa431af5c",
       "change": "PAY-INVOICE-ISSUE-001 registers exactly two modules: TDF.Invoice.SessionIssue in the library's exposed-modules and TDF.Invoice.SessionIssueSpec in the test suite's other-modules.",
       "semanticReview": "Removing exactly the two added module lines reproduces the previously reviewed cabal byte for byte; dependencies, version bounds, source paths and GHC/CPP options are unchanged. The new module is the session invoice issuance reservation (pure key, fingerprint and replay decisions plus three SQL statements) and its tests; it neither imports nor redefines authorization or recovery predicates.",
+      "qualification": "Additive pin refresh: this record only binds the reviewed snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "663a127de6c99d2eb73bc204940ceb39269c30b9",
+      "previousSha256": "95f8696701ff7bd4242307b831a4212f7165b1cba0d90c0c60516e9fa431af5c",
+      "currentSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
+      "change": "CONTRACT-STORE-001 registers exactly one test module, TDF.Contracts.StoreSpec, in the test suite's other-modules.",
+      "semanticReview": "Removing exactly the added module line reproduces the previously reviewed cabal byte for byte; library modules, dependencies, version bounds, source paths and GHC/CPP options are unchanged. The new module tests the contract store and send handlers and neither imports nor redefines authorization or recovery predicates.",
       "qualification": "Additive pin refresh: this record only binds the reviewed snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
     }
   ]

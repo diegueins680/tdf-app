@@ -395,6 +395,7 @@ test-suite tdf-hq-test
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
     TDF.Invoice.SessionIssueSpec
+    TDF.Contracts.StoreSpec
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec

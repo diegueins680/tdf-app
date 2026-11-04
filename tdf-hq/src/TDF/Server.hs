@@ -15761,12 +15761,21 @@ contractsServer user =
   :<|> (\contractId -> guardContracts (pdfH contractId))
   :<|> (\contractId body -> guardContracts (sendH contractId body))
   where
-    createH :<|> pdfH :<|> sendH = Contracts.server
-
-    guardContracts :: Handler a -> AppM a
+    guardContracts :: (Contracts.ContractsDeps -> Handler a) -> AppM a
     guardContracts action = do
       either throwError pure (validateContractsAccess user)
-      lift action
+      Env pool cfg <- ask
+      let deps = Contracts.ContractsDeps
+            { Contracts.cdPool = pool
+            , Contracts.cdEmail = Email.sendContractEmail <$> emailConfig cfg
+            , Contracts.cdActor = Just (auPartyId user)
+            , Contracts.cdRenderPdf = Contracts.defaultRenderPdf
+            }
+      lift (action deps)
+
+    createH body deps = let (h :<|> _ :<|> _) = Contracts.server deps in h body
+    pdfH contractId deps = let (_ :<|> h :<|> _) = Contracts.server deps in h contractId
+    sendH contractId body deps = let (_ :<|> _ :<|> h) = Contracts.server deps in h contractId body
 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do

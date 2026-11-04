@@ -414,3 +414,24 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
 - **Revisión Codex de `a4d97f5e` (dos hallazgos, ambos corregidos):**
   - **P2:** el cliente SRI (RUC obligatorio) se cargaba después de reservar la clave y crear la factura, fuera de la liberación, así que un cliente sin RUC bloqueaba la clave para siempre. Ahora el cliente se carga y la petición SRI completa se valida (`validateSriScriptRequest`) antes de reservar nada: un error corregible es un 400 y la clave sigue disponible.
   - **P1:** el cliente web descartaba la clave tras cualquier HTTP 200, incluso con `sri.ok = false` o un estado no confirmado, cuando el portal pudo haber emitido el documento; un nuevo clic emitía con otra clave. Ahora la clave solo se descarta si no se pidió SRI o el SRI respondió `issued` (`invoiceIssueSettled`). En otro caso, repetir la misma petición reproduce la respuesta guardada, y un nuevo intento exige el botón explícito «Verifiqué el portal: nuevo intento». Se añaden 2 pruebas web.
+
+## 41. F-03 — contratos: almacenamiento y envío (2026-11-04)
+
+- **Hallazgos:**
+  - `POST /contracts/{id}/send` respondía `{"status":"sent"}` sin enviar nada; solo comprobaba que el contrato existiera.
+  - Los contratos se guardaban como JSON en `contracts/store`, una ruta relativa fuera del único volumen persistente del despliegue en Fly (`/data/assets`), así que cada redespliegue los perdía y sus PDF pasaban a dar 404.
+- **Decisiones del responsable (2026-11-04):** enviar de verdad y guardar los contratos en una tabla de la base de datos.
+- **`CONTRACT-STORE-001` (crítico):**
+  - La migración `2026-11-04_contract_store` crea la tabla `contract`, con restricciones de id no nulo, forma del `kind` y payload objeto JSON. Su rollback se niega a ejecutarse mientras haya contratos.
+  - Crear inserta la fila canónica con el creador. El PDF se sirve desde la tabla y cada lectura vuelve a validar el contenido.
+  - Un contrato que solo exista en el almacén antiguo de archivos se valida y se importa en la primera lectura.
+- **`CONTRACT-SEND-001` (crítico):**
+  - El envío valida el destinatario y carga el contrato (404). Sin configuración de correo responde 503 sin registrar nada.
+  - Después genera el PDF, inserta una fila en `contract_delivery` antes de contactar SMTP y envía el correo con el PDF adjunto (`sendContractEmail`).
+  - Si SMTP acepta, se marca `accepted_at` y se responde `sent` con `deliveryId`. Si rechaza, se registra `failed_at` con un motivo acotado y se responde 502.
+- El generador de PDF y el transporte de correo son dependencias inyectadas (`ContractsDeps`), así que las pruebas no necesitan LaTeX ni SMTP.
+- **Pruebas:**
+  - `StoreSpec` sobre SQLite: crear y leer el PDF; 503 sin registro; envío aceptado con PDF adjunto y entrega registrada; 502 con fallo registrado; 404 sin enviar.
+  - PostgreSQL: migración hacia delante, rollback y dos aplicaciones más; cada restricción probada una a una; el rollback rechazado mientras existe un contrato.
+- **Nota:** ni la web ni la app móvil llaman hoy a `send`; solo existen sus envoltorios de cliente. Con esto F-03 queda cerrado (DomoQuoteCheckout, adaptadores, ProviderEventWorker, API/Admin, ServerInstagramOAuth, SRI y contratos ya tienen requisito).
+- Recibos SMT: la entrada del `.cabal` (un módulo de prueba) se re-fija con registro de revisión. Registro de listas: sucesión del manifiesto (238 → 239, decisión `d7fc1df6`).
