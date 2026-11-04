@@ -193,6 +193,17 @@ export default function SessionInvoiceGeneratorCard() {
   // server replays its answer instead of issuing a second SRI invoice; any edit
   // gets a new key. The certificate password is not part of the fingerprint.
   const issueAttempt = useRef<InvoiceIssueAttempt | null>(null);
+  // Set when a request failed while an SRI attempt is still unresolved (for
+  // example 409 because the first request never stored its answer), so the
+  // verified "new attempt" action is reachable from the error as well.
+  const [unresolvedAfterError, setUnresolvedAfterError] = useState(false);
+  const startNewIssueAttempt = () => {
+    forgetInvoiceIssueAttempt(issueAttempt.current);
+    issueAttempt.current = null;
+    setUnresolvedAfterError(false);
+    setResult(null);
+    setFormError(null);
+  };
   const idempotencyKeyFor = (sessionId: string, payload: GenerateSessionInvoiceInput) => {
     issueAttempt.current = nextInvoiceIssueAttempt(issueAttempt.current, sessionId, payload, () => crypto.randomUUID());
     return issueAttempt.current.key;
@@ -208,6 +219,7 @@ export default function SessionInvoiceGeneratorCard() {
     onSuccess: async (response) => {
       // Keep the key after an uncertain SRI outcome: the portal may have issued
       // the document, so resubmitting must replay rather than issue again.
+      setUnresolvedAfterError(false);
       if (invoiceIssueSettled(response)) {
         forgetInvoiceIssueAttempt(issueAttempt.current);
         issueAttempt.current = null;
@@ -216,8 +228,11 @@ export default function SessionInvoiceGeneratorCard() {
       setFormError(null);
       await qc.invalidateQueries({ queryKey: ['session-invoices', selectedSession?.sessionId ?? 'none'] });
     },
-    onError: (error) => {
+    onError: (error, payload) => {
       setFormError(error.message);
+      // Keep the key for ordinary retries; offer the verified reset only for
+      // a request that issues to SRI.
+      setUnresolvedAfterError(issueAttempt.current !== null && payload.issueSri !== false);
     },
   });
 
@@ -584,7 +599,22 @@ export default function SessionInvoiceGeneratorCard() {
 
         {formError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {formError}
+            <Stack spacing={0.5}>
+              <Typography variant="body2">{formError}</Typography>
+              {unresolvedAfterError && (
+                <>
+                  <Typography variant="body2">
+                    Esta factura tiene un intento SRI sin resolver. Reintentar con los mismos datos no emite otra factura.
+                    Si confirmas en el portal del SRI que no se emitió, inicia un nuevo intento.
+                  </Typography>
+                  <Box>
+                    <Button size="small" variant="outlined" onClick={startNewIssueAttempt}>
+                      Verifiqué el portal: nuevo intento
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </Stack>
           </Alert>
         )}
 
@@ -619,11 +649,7 @@ export default function SessionInvoiceGeneratorCard() {
                     <Button
                       size="small"
                       variant="outlined"
-                      onClick={() => {
-                        forgetInvoiceIssueAttempt(issueAttempt.current);
-                        issueAttempt.current = null;
-                        setResult(null);
-                      }}
+                      onClick={startNewIssueAttempt}
                     >
                       Verifiqué el portal: nuevo intento
                     </Button>
