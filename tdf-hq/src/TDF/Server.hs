@@ -3262,6 +3262,7 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
     throwError (ContentStorage.storageError err400 "storage_visibility_invalid")
   unless (duDestination `elem` [Nothing, Just "google_drive"]) $
     throwError (ContentStorage.storageError err400 "storage_destination_invalid")
+  let sharing = resolveDriveUploadVisibility duDestination duVisibility
   providedToken <-
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
   personal <- either throwError pure (resolveDriveUploadAuthority duAuthMode providedToken)
@@ -3289,12 +3290,12 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
         Nothing -> throwError (storageProviderError True err502)
       Right values -> pure values
     bytes <- liftIO (BL.readFile (fdPayload duFile))
-    let fingerprint = effectiveDriveUploadFingerprint (auPartyId user) nameOverride mimeType folder bytes duVisibility
+    let fingerprint = effectiveDriveUploadFingerprint (auPartyId user) nameOverride mimeType folder bytes sharing
     Just <$> ContentStorage.bindExternalDriveAttempt user key fingerprint accountId proposedId
   else pure Nothing
   dtoOrErr <-
     liftIO
-      (Safe.tryAny (uploadToDrive manager (auPartyId user) accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey duVisibility stableId) ::
+      (Safe.tryAny (uploadToDrive manager (auPartyId user) accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey sharing stableId) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
     Right dto -> pure dto
@@ -3328,6 +3329,11 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
 
 -- New callers declare their chosen authority. A failed personal connection
 -- must never select TDF's credential or its configured upload folder.
+-- Explicit provider destinations default private; absent flags retain legacy callers.
+resolveDriveUploadVisibility :: Maybe Text -> Maybe Text -> Maybe Text
+resolveDriveUploadVisibility (Just "google_drive") visibility = Just (fromMaybe "private" visibility)
+resolveDriveUploadVisibility _ visibility = visibility
+
 resolveDriveUploadAuthority :: Maybe Text -> Maybe Text -> Either ServerError Bool
 resolveDriveUploadAuthority authMode token = case (authMode, token) of
   (Just "user", Nothing) -> Left (storageProviderError True err401)

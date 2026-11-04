@@ -2931,7 +2931,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3da5b7e4bdb09bbc7ba24a74b68c30da92622864ffb1940ec18c41c92ef315c6",
+      "sha256": "e1f290e6e05cf90bf2adbfa250b5a72e1ff2d6193ea8f427443770cd8c40e020",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3525,7 +3525,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3181dfedc761f4feb323b3f7023405fa7c9b07344a3669db49fa035939fc25eb",
+      "sha256": "1b9533ef2997d359c1e4eda53ab11277c9e0a032460591d8ed4a285e8fc42179",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16125,7 +16125,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "c212ee349e50dc64c7d98849ee27cb7452767432828e1bb7463365285b8c76ee",
+      "sha256": "d6449096c4ba89ceae7cb799f80ae635dc7c78d3f6713f408be55758787404d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17115,7 +17115,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "b3aa27ef67d95b9256baee1a1ae8725932b8ce96ee0da0bef37e92fa4bb5c028",
+      "sha256": "6f312967eb4b137aaf3a844e29d505d45eecce30b9610d6d32afd73dad3b66a0",
       "semanticConformance": "not-established-by-discovery"
     },
     {

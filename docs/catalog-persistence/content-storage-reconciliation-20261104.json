@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceMain": "5c710e5d433747e5ffbce1ffd3320bf8d9df6139",
+  "previousDecisionId": "438668da134480da0a9e",
+  "currentDecisionId": "255ec943da9a86e36cc7",
+  "previousDecisionCanonicalSha256": "fae5221769f1e07714cd6160b57b8ae09146c3840d305f109d81baa176396032",
+  "preservedPrefixCount": 236,
+  "currentManifestCount": 241,
+  "preservedPrefixCanonicalSha256": "f7242f9fe4f8f68e2bcdad7cd241beb53fb2714366158b72e527b25e25d3701b",
+  "appendedSuffixCanonicalSha256": "d6e117500fc12805e9e13ba17dfef36b77a4a05a6a666abd7d16babba288f81c",
+  "appendedMigrationIds": [
+    "2026-11-04_content_storage",
+    "2026-11-04_content_storage_drive",
+    "2026-11-04_content_storage_deletion",
+    "2026-11-04_content_storage_accounting",
+    "2026-11-04_content_storage_delete_capacity"
+  ],
+  "executionAllowed": false,
+  "discoverySnapshots": [
+    {
+      "path": "docs/catalog-persistence/reports/content-storage-list-inventory-20261104.json.gz",
+      "uncompressedSha256": "5ad2d6c11299b9c5cf8b0066bac233fbb5183fdffaefc3a8479ddb8e729c2132",
+      "compressedSha256": "261079c501fd1069e9b70d27ff7749aa8293878c212d47fe24049fee09e4d23f",
+      "uncompressedBytes": 7962222
+    },
+    {
+      "path": "docs/catalog-persistence/reports/content-storage-list-consumers-20261104.csv.gz",
+      "uncompressedSha256": "eeaf70acb25fb047a93eba4b9736a7683544e15dab12aae7bdecb4587d50a2b6",
+      "compressedSha256": "6aa48942696aa43c94a09e097646ffa51f64261627c1e530e8df0fa0b740abb3",
+      "uncompressedBytes": 4950579
+    }
+  ],
+  "snapshotEncoding": "Deterministic gzip (mtime0); exact same discovery candidate used for JSON and CSV. Historical uncompressed snapshots are retained unchanged. GitHub integration transport disconnected on the larger uncompressed blob."
+}

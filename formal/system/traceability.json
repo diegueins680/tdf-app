@@ -15638,7 +15638,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
-    ".github/workflows/ci.yml": "3da5b7e4bdb09bbc7ba24a74b68c30da92622864ffb1940ec18c41c92ef315c6",
+    ".github/workflows/ci.yml": "e1f290e6e05cf90bf2adbfa250b5a72e1ff2d6193ea8f427443770cd8c40e020",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -15647,7 +15647,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "0d9a9e02f24fe0b8881617d23213d4179556b31d796fcf28895751322b8d0ac8",
+    "docs/catalog-persistence/catalog-list-decisions.json": "21c9a31f4ee38ba0d11270e5e3dae093498c594c1e583e6f648af2d85f05008a",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
@@ -16045,7 +16045,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "3181dfedc761f4feb323b3f7023405fa7c9b07344a3669db49fa035939fc25eb",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "1b9533ef2997d359c1e4eda53ab11277c9e0a032460591d8ed4a285e8fc42179",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -17029,7 +17029,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "c212ee349e50dc64c7d98849ee27cb7452767432828e1bb7463365285b8c76ee",
+    "tdf-hq/src/TDF/Server.hs": "d6449096c4ba89ceae7cb799f80ae635dc7c78d3f6713f408be55758787404d0",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
@@ -17139,7 +17139,7 @@
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "5957cc34b09649f00e1d8973936621d7342969c9e4797bc739bd8d4cc1847b8f",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
-    "tdf-hq/test/TDF/ServerSpec.hs": "b3aa27ef67d95b9256baee1a1ae8725932b8ce96ee0da0bef37e92fa4bb5c028",
+    "tdf-hq/test/TDF/ServerSpec.hs": "6f312967eb4b137aaf3a844e29d505d45eecce30b9610d6d32afd73dad3b66a0",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
@@ -30749,7 +30749,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3da5b7e4bdb09bbc7ba24a74b68c30da92622864ffb1940ec18c41c92ef315c6",
+      "sha256": "e1f290e6e05cf90bf2adbfa250b5a72e1ff2d6193ea8f427443770cd8c40e020",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32026,7 +32026,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3181dfedc761f4feb323b3f7023405fa7c9b07344a3669db49fa035939fc25eb",
+      "sha256": "1b9533ef2997d359c1e4eda53ab11277c9e0a032460591d8ed4a285e8fc42179",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53954,7 +53954,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "c212ee349e50dc64c7d98849ee27cb7452767432828e1bb7463365285b8c76ee",
+      "sha256": "d6449096c4ba89ceae7cb799f80ae635dc7c78d3f6713f408be55758787404d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56299,7 +56299,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "b3aa27ef67d95b9256baee1a1ae8725932b8ce96ee0da0bef37e92fa4bb5c028",
+      "sha256": "6f312967eb4b137aaf3a844e29d505d45eecce30b9610d6d32afd73dad3b66a0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

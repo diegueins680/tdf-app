@@ -678,12 +678,12 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "438668da134480da0a9e",
-      "reason": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
-      "previousReplacementId": "27def070486792cad395",
+      "replacementId": "255ec943da9a86e36cc7",
+      "reason": "Preserve the complete 236-entry protected-main migration manifest and exact predecessor review graph, then append only the five account storage schema, Drive identity, deletion, historical-accounting and unconfirmed-deletion-capacity migrations. Their immutable introduction ancestors remain in branch history. No prior SQL, manifest entry, historical source review or catalog row is changed. This execution-registry classification grants no production deployment, quota activation, provider permission or release waiver; current checks, independent review and coordinated recovery remain required.",
+      "previousReplacementId": "438668da134480da0a9e",
       "currentResolution": {
-        "id": "438668da134480da0a9e",
-        "valueCount": 236,
+        "id": "255ec943da9a86e36cc7",
+        "valueCount": 241,
         "sourceParents": [
           "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5"
         ],
@@ -1025,9 +1025,18 @@
         "903e61463c0222f30d9b",
         "d9468b767dadec9cf3d8",
         "040c32c5b44ceadb2dde",
-        "27def070486792cad395"
+        "27def070486792cad395",
+        "438668da134480da0a9e"
       ],
-      "previousReason": "Reconcile two concurrent successors of the 227-entry memory/provider review a2bb0e82: protected main dd9adc5d (PR #686, 228 entries, decision 040c32c5b44ceadb2dde) appends 2026-10-31_api_token_session_expiry, and the formal audit branch 644a3303 (PR #691, 234 entries, decision d9468b767dadec9cf3d8) appends seven audit migrations and records one compatible applied checksum. The merged 235-entry manifest keeps main's 228-entry review as its exact prefix (canonical sha256 94bd4e11130835ca3b26b1298abfa21fc294a11bcf67faf5f3f42c759bb43196) and places the seven audit migrations after it in their reviewed order, so the audit's 234-entry view (the manifest without main's entry, canonical sha256 7f387a707d441c2adad76971b0635ff288d152f64f638ccf3c3165ee7a2f2dd1) is unchanged byte for byte; both parent reviews and their entire graphs are retained by canonical hash. The migrations are independent (api_token validity window versus commerce, social, directory and identity objects). This technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the merged head, independent review and protected integration remain required."
+      "previousReason": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "previousCurrentResolution": {
+        "id": "438668da134480da0a9e",
+        "valueCount": 236,
+        "sourceParents": [
+          "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5"
+        ],
+        "justification": "Preserve the complete 235-entry reconciled manifest reviewed at 458df5ef (canonical sha256 20070e1fee5d053eff826ecc365625d46f894ab5a86beabb11ffa38ee4a5ee41) byte for byte and append only 2026-11-04_domo_quote_deposit_policy_validator, which redefines the Domo quote runtime insert validator so the stored deposit must equal the approved rate card's deposit policy (minimum deposit and full-payment threshold) instead of the unadjusted basis points; existing rows are untouched because the trigger fires on INSERT. The entire 235-entry review graph, including both concurrent session-expiry and audit parents, is preserved by canonical hash. This 236-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+      }
     }
   ]
 }

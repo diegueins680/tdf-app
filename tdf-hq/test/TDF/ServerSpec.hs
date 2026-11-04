@@ -79,7 +79,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
+import Servant (err400, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -348,6 +348,7 @@ import TDF.Server
     , validateCourseRegistrationFollowUpId
     , whatsAppConsentStatusFromRow
     , validateDriveAccess
+    , resolveDriveUploadVisibility
     , resolveDriveUploadAuthority
     , storageProviderError
     , resolveResourcesForBooking
@@ -7368,6 +7369,10 @@ spec = describe "TDF.Server helpers" $ do
                     ])
 
     describe "Drive storage failure isolation" $ do
+        it "defaults explicit personal destinations to private without changing legacy sharing" $ do
+            resolveDriveUploadVisibility (Just "google_drive") Nothing `shouldBe` Just "private"
+            resolveDriveUploadVisibility Nothing Nothing `shouldBe` Nothing
+
         it "refuses missing personal credentials instead of selecting TDF credentials" $
             case resolveDriveUploadAuthority (Just "user") Nothing of
                 Left failure -> do

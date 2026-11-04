@@ -146,8 +146,15 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(previous.evidence.valueCount, 213);
   assert.equal(previous.reviewed, true);
   assert.ok(!active.some(entry => entry.id === previous.id));
-  const rawManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+  const currentManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'scripts/production-migrations.json'), 'utf8')).migrations;
+  const rawManifest = currentManifest.slice(0, 236); // immutable historical review scope
+  const storage = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/content-storage-reconciliation-20261104.json'), 'utf8'));
+  assert.equal(currentManifest.length, 241);
+  assert.equal(storage.preservedPrefixCanonicalSha256, canonicalHash(rawManifest));
+  assert.equal(storage.appendedSuffixCanonicalSha256, canonicalHash(currentManifest.slice(236)));
+  assert.deepEqual(storage.appendedMigrationIds, currentManifest.slice(236).map(entry => entry.id));
   const manifest = asReviewedBeforeRegistryRefresh(rawManifest);
   assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
   assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
@@ -196,7 +203,12 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(decision214.evidence.valueCount, 214);
   assert.equal(decision220.evidence.valueCount, 220);
   const pointer = successors.find(entry => entry.name === 'migrations');
-  const finalCurrent = active.find(entry => entry.id === pointer.currentId);
+  const latestCurrent = active.find(entry => entry.id === pointer.currentId);
+  assert.equal(latestCurrent?.id, storage.currentDecisionId);
+  assert.equal(latestCurrent.evidence.valueCount, 241);
+  const finalCurrent = latestCurrent.previousDecision;
+  assert.equal(canonicalHash(finalCurrent), storage.previousDecisionCanonicalSha256);
+  assert.ok(!active.some(entry => entry.id === finalCurrent.id));
   assert.equal(finalCurrent?.reviewed, true);
   const history = []; const seen = new Set();
   const visit = value => {
@@ -375,7 +387,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
     assert.equal(finalCurrent.disposition, parent.disposition);
     assert.ok(!active.some(entry => entry.id === parent.id));
   }
-  const retiredParents = [...historical, current, memoryParent, memory225, header222,
+  const retiredParents = [...historical, finalCurrent, current, memoryParent, memory225, header222,
     combined.headerManifestDecision, memory226, provider223, provider.providerManifestDecision, main227, main233,
     audit234, sessionExpiry228, reconciled235];
   assert.equal(current.classification, decision220.classification);
@@ -385,14 +397,14 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewed, true);
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
-  assert.equal(pointer.currentId, finalCurrent.id);
-  assert.equal(pointer.valueCount, 236);
-  assert.equal(pointer.change, finalCurrent.justification);
+  assert.equal(pointer.currentId, latestCurrent.id);
+  assert.equal(pointer.valueCount, 241);
+  assert.equal(pointer.change, latestCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
-  assert.equal(retirement.replacementId, finalCurrent.id);
-  assert.equal(retirement.currentResolution.id, finalCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 236);
-  assert.equal(retirement.reason, finalCurrent.justification);
+  assert.equal(retirement.replacementId, latestCurrent.id);
+  assert.equal(retirement.currentResolution.id, latestCurrent.id);
+  assert.equal(retirement.currentResolution.valueCount, 241);
+  assert.equal(retirement.reason, latestCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
     assert.ok(retirement.previousReplacementIds.includes(decision.id));
@@ -403,11 +415,11 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
     const repoDir = path.join(tempRoot, 'repo');
     await fs.mkdir(repoDir);
     await execFileAsync('git', ['init', '-b', 'main'], { cwd: repoDir });
-    await writeFile(repoDir, 'scripts/production-migrations.json', JSON.stringify({ migrations: rawManifest }));
+    await writeFile(repoDir, 'scripts/production-migrations.json', JSON.stringify({ migrations: currentManifest }));
     await execFileAsync('git', ['add', '--', 'scripts/production-migrations.json'], { cwd: repoDir });
     const decisionsPath = path.join(tempRoot, 'decisions.json');
     const args = [auditScriptPath, '--root', repoDir, '--decisions', decisionsPath, '--fail-on-unreviewed'];
-    await fs.writeFile(decisionsPath, JSON.stringify([finalCurrent]));
+    await fs.writeFile(decisionsPath, JSON.stringify([latestCurrent]));
     await execFileAsync(process.execPath, args, { cwd: repoDir });
     for (const decision of retiredParents) {
       await fs.writeFile(decisionsPath, JSON.stringify([decision]));
