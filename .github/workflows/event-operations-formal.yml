@@ -154,6 +154,11 @@ jobs:
             https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar \
             --output "${RUNNER_TEMP}/tdf-formal-tools/alloy-6.2.0.jar"
 
+      - name: Check account acceptance and mutation controls
+        env:
+          TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
+        run: node scripts/verify-event-agreements-formal.mjs
+
       - name: Check event operations models
         env:
           TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar

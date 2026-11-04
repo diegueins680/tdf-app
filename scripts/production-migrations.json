@@ -1160,6 +1160,11 @@
       "id": "2026-10-31_api_token_session_expiry",
       "path": "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
       "introducedBy": "8187065f81fad94677c8ba27760ab2cb74f58f79"
+    },
+    {
+      "id": "2026-11-03_event_agreements",
+      "path": "tdf-hq/sql/2026-11-03_event_agreements.sql",
+      "introducedBy": "f226bd7b56abcc6a5c26b12f07d1bd3b54606e77"
     }
   ]
 }

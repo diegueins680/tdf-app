@@ -14544,6 +14544,96 @@
         "Pinned Jest permits up to3 retries after unexpected worker crashes. Transientcrash first-attempt failure is not established; persistentcrash control requires terminalfailure and otherfiles complete."
       ],
       "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending. Followupquietmodecounterexample on8b:4PASS/1configparserFAIL; header-independent reader and explicitnotice/silent variants pass all5guards with both ordinary and quietparent environments. Product/workerconfig unchanged; joinedheadhostedqualificationpending. The8bquietfailure echoedasyntheticreporter token. Followup parser emitsgenericerrors and returns onlytypedworkersettings; sixguardcases include confidentiality faults. No realcredentialorreporter service was used in this probe."
+    },
+    {
+      "id": "EVT-AGREEMENT-001",
+      "statement": "Only the designated active account can accept the current sent organizer-approved event agreement; accepted content, its plan annex and evidence remain immutable.",
+      "authority": "approved",
+      "source": "User-approved event agreement workflow; formal/system/event-agreements.md",
+      "property": "authenticated authorized current version and hash with consent and matching name; one immutable acceptance and frozen annex",
+      "contract": "formal/system/event-agreements.md",
+      "implementation": [
+        "tdf-hq/sql/2026-11-03_event_agreements.sql",
+        "tdf-hq/src/TDF/Contracts/EventWorkspace.hs",
+        "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs",
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/eventWorkspace.ts",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        ".github/workflows/event-agreements.yml",
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/production-migrations.json",
+        "docs/catalog-persistence/catalog-list-decisions.json"
+      ],
+      "verification": "Actual isolated PostgreSQL migration tests, web response/session regressions, Haskell document and delivery tests in Stack CI, bounded TLC baseline and five negative configurations.",
+      "evidence": "Event agreement persistence CI; web focused tests; account acceptance TLC output; Stack CI. Deployment is independent.",
+      "status": "specified and implemented",
+      "historicalStatus": "new workflow",
+      "critical": true,
+      "title": "Private event proposal and account acceptance",
+      "domain": "EVENT",
+      "actors": [
+        "event organizer",
+        "designated recipient",
+        "unrelated account"
+      ],
+      "preconditions": [
+        "Current authenticated session; event has assigned organizer; production migration installed"
+      ],
+      "inputs": [
+        "Strict action payload; expected version and SHA-256; explicit consent and recipient legal name"
+      ],
+      "state": {
+        "boundary": "formal/system/event-agreements.md",
+        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn"
+      },
+      "allowedTransitions": [
+        "Organizer saves versioned plan and proposals; approves exact complete document and cap; sends it. Recipient accepts, rejects or requests changes. Accepted agreements require a separate amendment."
+      ],
+      "forbiddenTransitions": [
+        "Unsent, stale, unapproved, incomplete or foreign acceptance; direct artist edits; rewriting accepted evidence"
+      ],
+      "effects": [
+        "Atomic persisted commands and in-app notifications; private downloadable plan, proposal and acceptance PDF"
+      ],
+      "authorization": "Current-session check wraps each read or write. Event owner and explicitly assigned recipient only; assignment does not grant event editor rights.",
+      "privacy": "No public legal documents or comments; authenticated no-store downloads; no real artist information in fixtures.",
+      "concurrency": "Event lock before agreement lock serializes revisions, snapshots, acceptance and withdrawal. One acceptance primary key.",
+      "idempotency": "Actor/event/request-bound digest; identical retries reuse original response; clients reread current state; authorization precedes replay.",
+      "failure": "Preserve input on network/stale errors; reject malformed content and incomplete scope/cap; PDF or missing migration returns unavailable, never fake success.",
+      "recovery": "Retry same command key for same intent, refresh current truth; separate version/amendment for changed terms; reviewed SQL deployment.",
+      "observability": "Immutable action history, actor account, exact version and hash, server UTC timestamps and downloadable evidence.",
+      "tests": [
+        "scripts/test-event-agreements.py",
+        "scripts/verify-event-agreements-formal.mjs",
+        "tdf-hq-ui/src/api/eventWorkspace.test.ts",
+        "tdf-hq-ui/src/api/eventWorkspace.fixture.ts",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
+        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs"
+      ],
+      "formalModels": [
+        "formal/event-operations/EventAgreement.tla",
+        "formal/event-operations/EventAgreement.cfg"
+      ],
+      "confidence": "Bounded lifecycle and actual PostgreSQL guards tested locally; Haskell compile, deployed schema, legal sufficiency and production correspondence require independent evidence.",
+      "ambiguity": [
+        "No certified signature provider or cryptographic identity proof. No email delivery. No native acceptance UI. Document recipients and all commercial/legal scope must be verified before real send."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local SQL/UI/model checks do not establish production deployment or full-width refinement; Mobile write authorization and exact Stack CI remain prerequisites."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -14554,14 +14644,15 @@
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "d5f7e50faca1e6283fedf42253584967e2ad9164af97477f3bc9e3fd492a5476",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+    ".github/workflows/event-agreements.yml": "5b9bb929c3706131d1b6d26165403461e402548cb9cabdd369497a048f051b81",
+    ".github/workflows/event-operations-formal.yml": "b2905b0105039f275eb8deb4421eb119dcb251b8885499632b203cac86288253",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "440fa87acc8aec6ab5734aa55dd0bc1a57034fffb7cd1f223dccc8a4e3094dab",
+    "docs/catalog-persistence/catalog-list-decisions.json": "f8bf582c6f61061e3d6e944f9b1a094a2df3813be871c64ec127d3f43de0f654",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -14645,6 +14736,8 @@
     "formal/event-operations/DriveReplayLegacyAdopted.cfg": "a3fe9971114d1f19c88d5aa45c6758d40b4a1c113873f9db1cee9cea52997462",
     "formal/event-operations/DriveReplayRace.cfg": "20f5ac3591b3342afa3e432ce2e80c68c72259577688b2bc98d7f269b0c1050a",
     "formal/event-operations/DriveReplayUnchecked.cfg": "2bf51aafda6d0337f8422f35052aaecfd47c55de5e63c307906cb1623a9ce491",
+    "formal/event-operations/EventAgreement.cfg": "6e0f36b4cc56dd064cdf0b72729915501623e12c91e77de73d8ad4ced0ae2601",
+    "formal/event-operations/EventAgreement.tla": "dd6ed537b1ad03844d9c42a79f696180db5b30aa05e8742578495ceaa022a1fa",
     "formal/event-operations/EventOrganizer.cfg": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
     "formal/event-operations/EventOrganizer.tla": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
     "formal/event-operations/EventOrganizerAnyoneClaims.cfg": "87c88ff91027aa555ac04eeda4c6d98bbc92f34458a5c070bc7f70844c6d0ea5",
@@ -15075,7 +15168,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "f1c839cb65cb0e16da35bfa21f452607d498ee71a5589e50553da1294cd060ac",
+    "scripts/production-migrations.json": "5990e62826d1338669ccc116453b13e571f61ea3a43a2d830fade4de8b1355a7",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
@@ -15119,6 +15212,7 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
+    "scripts/test-event-agreements.py": "3b4f1c6ebe298e31fb4e732b4cba3140957c618a372a63e08b43a0affde85461",
     "scripts/test-event-memories-http.py": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
@@ -15211,6 +15305,7 @@
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
+    "scripts/verify-event-agreements-formal.mjs": "564e9cdb504dcf5377f1954061dc4697ff2852f422e01220e00620616191327c",
     "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
@@ -15281,10 +15376,13 @@
     "tdf-hq-ui/src/api/eventMemoryModeration.ts": "0b771dcdeb9318776a5955c1ae543d97ae2b9f06af31dc13e2f397f010bb4ed5",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a411fe9ca5267672db4db1ec3481aecd3fda6d8a19bc913c0885db2eb65ea541",
     "tdf-hq-ui/src/api/eventTickets.ts": "9ed3528a555397f16261758e2fe98aa6b57348ffbda8ed45b6ac629daeaeb736",
+    "tdf-hq-ui/src/api/eventWorkspace.fixture.ts": "714bba6fe6e96dac4422ff124896e6868189a1d6f76c2a85c8fac2b55dd992e1",
+    "tdf-hq-ui/src/api/eventWorkspace.test.ts": "9935dbff7be28a977f7560ca7281f2add4ae9418816eadf6ec429d0f7e3b277b",
+    "tdf-hq-ui/src/api/eventWorkspace.ts": "294ac70a83ea545b98afc390b069d2f480894f870ec7868153167ea9fa494b79",
     "tdf-hq-ui/src/api/fans.ts": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "129e9a2f11c82ef77ff232402d8836822d0eb7ae8255f308eb2df430207b09b8",
+    "tdf-hq-ui/src/api/generated/types.ts": "15322b54afc2649837ddd4d32ea10949c62e1de2db95cf85b173094795b9cb55",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -15372,8 +15470,8 @@
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "b787e86052e0687cdc6ab933a80467c5909c15e0719e1d52d1508581063f006c",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "33947e831f76dfba3dc1d0297afb98c27c0dffcc6975a08440a083100755ba15",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
@@ -15471,6 +15569,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "584d216cc04cbbc7bbfbc2d81fce93b342a4f9c235fa1c0eb8fa5ad406b966fc",
+    "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx": "0c5446193b3a1dd15256815690cf317bd5c003001661400a3ea72f095f0fd23b",
+    "tdf-hq-ui/src/pages/EventAgreementsPage.tsx": "c4384ac29ccef26b0322e24684928fc6d433f0bdacf17b13e50e8402d6561018",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "ce0dac04ee6d29378f3385d36a42cdac3ae7dd7e4deb4bcb4c764088f206a4f9",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
@@ -15535,7 +15635,7 @@
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "4aa48c983379b1aaabad90543eea2fd8510bf28a99aa0722c3b97d8282567fe7",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "c2bba11f658bb5593beadf3478e116ddc3d96a5b5862da7c7bcb95c9d0c33a52",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "c390990a66c591ab1f84a7c094c16a9767262971cbb2717a361f2ddeb547b4cc",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "bb4ae7f8482085191592cf9878f9ee547ae5f088c1f26c32486c77c28dc5f82c",
     "tdf-hq-ui/src/pages/SocialInboxPage.tsx": "df7168e2986e8eab0e85a8ce46a3bfa29fcbc033c95ae43fefef228d47e1bb18",
@@ -15570,7 +15670,7 @@
     "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx": "b6d064b5d995cbefe03f29c130e2acf93c562508615ddea4d180e93ca3b3025a",
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
     "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx": "d6d3fe537c86d2159ded28cdc4f56543137a55fe1002acc8eb8381bf73b5b4ef",
-    "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7841629427f2d73e5732da6c16cb8be991bbbb624c5e51d3e963c247520b71fb",
+    "tdf-hq-ui/src/routes/protectedRoutes.tsx": "a725479ee0935f335f13c87515d495d2e7b37a32189e5861c3180e538aa195dc",
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "c54a0dc6ef927f03e02245cb993c860e1cab71d1c5d89904d1aea4d0885bf8cf",
     "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx": "55ee04e76498ddf61a93df24ca0d4b6ecd47003da670706288c9b326e7790c9e",
@@ -15643,9 +15743,9 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "0930159122e545da4166de525b05449b4b22f5207f0bf645ae90d0bb7eee1e92",
+    "tdf-hq/assets/feature-registry.json": "a763890383a0a56450b12be7221c624ee0d87957574d699cf1d24ccdfadb3a5d",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
-    "tdf-hq/docs/openapi/api.yaml": "a9b98a15cfddbc2409cd79f88b5be6a528073cc7cf46e68b4d0eff44a73224fd",
+    "tdf-hq/docs/openapi/api.yaml": "cf4aa54e54b7aa7f306cfa9430c6bb431aa79c007c2a55fe4df7432c78e213cb",
     "tdf-hq/docs/openapi/directory.yaml": "39a32047148f160c16d90192eff583dc53b2854b603eea1bb1863ff4b18ffb41",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
     "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
@@ -15760,6 +15860,7 @@
     "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql": "f12c7a3de7c62ec9cce3bd4a21969de40b7993b39889ee3d1704a1b56ac86d1f",
     "tdf-hq/sql/2026-10-25_ledger_posted_header.sql": "63e84df8458ee3bf522fc4ce0c8bfa355d9e2b1236ccd2bee31437af23a3ad70",
     "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql": "9ccf9c628a161f706d6392984c66cfe722e06de5e4cca10ab2d89ee3453aece4",
+    "tdf-hq/sql/2026-11-03_event_agreements.sql": "aa0dbb13be0d7f0f1c05ba6e9ea17b7819dad0292adad37ece7b6a60d6eb5108",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -15770,7 +15871,7 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/MusicRelease.hs": "3cb60fb17c91e6d8c5ac46e02c637f88456f047fb34ce6ea3137120881e37072",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
-    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "2f0395f784b9600abf35a5b0eacce472c63f50c0ccfa55a6e7fec5189e560dd0",
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "9fa74dfed62441d867e8b2394233e06ea9c4501ee3bf7511e7f05f4006bc9eee",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
@@ -15797,6 +15898,9 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "18085ab24c01e2fdf4320d904a4e7f4d6c8eb32e51d76c95c5b1cd8074ba5fd2",
+    "tdf-hq/src/TDF/Contracts/EventWorkspace.hs": "38bb94e8c8741f43cbc3de4c38e96a1a50674b2b3cf787170aeca66a74211ed2",
+    "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs": "028fd057c9706d9786ee649b0adf9d9b2630244a1ebf2392757487c995f91ba1",
+    "tdf-hq/src/TDF/Contracts/Server.hs": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -15856,7 +15960,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "32f7880b26d86f5c7cb84cc6095ac00e4d79fc098dcd18b03a79cef9775b2bcd",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "1347dff03e8eef10e5dd4e24ea77735865b7738c87638dc4b2eb59bf1c2fe452",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -15881,13 +15985,13 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "9ddd4662b265d1cb29e88339707318dd1a60b0cda2b173293bdf870973a2e8d3",
+    "tdf-hq/tdf-hq.cabal": "08c9e09ad13525754b6dc224762d46a333a8d7ab9133d915b6dd862dc1d8fc55",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "56fc93ddf56e85bfdea9931dd659703be09d97f1c1debfc0c963a1189b0ab4a0",
+    "tdf-hq/test/Spec.hs": "3141b6465982eff0311a74aa28399b55cb179155aef7fa5db1c4d629b67d1dde",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
@@ -15898,6 +16002,8 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": "b3f74a00af466f3e7a7e00cc568a5bdd100a5b148ab0f1a2354a090ce8a3115e",
+    "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs": "9b9c99acbef578212b782d8892d267705826a4becdbfb1f654c8bcd98f315848",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
     "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
@@ -16290,6 +16396,10 @@
       },
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -17243,6 +17353,10 @@
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/api/generated/types.ts": [
@@ -17326,6 +17440,10 @@
     "docs/catalog-persistence/catalog-list-decisions.json": [
       {
         "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -17547,6 +17665,10 @@
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": [
@@ -17742,6 +17864,10 @@
       },
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -17981,6 +18107,10 @@
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/verify-recovery-expiry.py": [
@@ -18121,6 +18251,10 @@
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": [
@@ -18196,6 +18330,10 @@
       },
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -20368,6 +20506,10 @@
       },
       {
         "requirement": "PAY-EVENT-REPORT-RANGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -23071,6 +23213,10 @@
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": [
@@ -24569,6 +24715,10 @@
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/SidebarNav.tsx": [
@@ -24596,6 +24746,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -24796,6 +24950,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "tests"
       }
     ],
@@ -27407,6 +27565,10 @@
       {
         "requirement": "MEDIA-ARTIST-CATALOG-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/routes/EventCommunityEntry.tsx": [
@@ -28430,6 +28592,102 @@
         "requirement": "SYS-UI-TEST-WORKER-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/sql/2026-11-03_event_agreements.sql": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/EventWorkspace.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/Server.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventWorkspace.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventAgreementsPage.tsx": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/event-agreements.yml": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-event-agreements.py": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-event-agreements-formal.mjs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventWorkspace.test.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventWorkspace.fixture.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/EventAgreement.tla": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/EventAgreement.cfg": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -28597,9 +28855,21 @@
       ]
     },
     {
+      "id": "SURFACE-b5d2210a9e7e1bdd",
+      "path": ".github/workflows/event-agreements.yml",
+      "sha256": "5b9bb929c3706131d1b6d26165403461e402548cb9cabdd369497a048f051b81",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+      "sha256": "b2905b0105039f275eb8deb4421eb119dcb251b8885499632b203cac86288253",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28628,6 +28898,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -32437,7 +32711,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "f1c839cb65cb0e16da35bfa21f452607d498ee71a5589e50553da1294cd060ac",
+      "sha256": "5990e62826d1338669ccc116453b13e571f61ea3a43a2d830fade4de8b1355a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32486,6 +32760,10 @@
         },
         {
           "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -33820,6 +34098,18 @@
       "sha256": "0410732d3ddf4c526b0b85b95f72905c5e5929445d601c3feeb41ccbd3ebbdc8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-b0e9ec5e2aad95e6",
+      "path": "scripts/test-event-agreements.py",
+      "sha256": "3b4f1c6ebe298e31fb4e732b4cba3140957c618a372a63e08b43a0affde85461",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c83ef025ca87e555",
@@ -35430,6 +35720,18 @@
       ]
     },
     {
+      "id": "SURFACE-836dc136fcac46df",
+      "path": "scripts/verify-event-agreements-formal.mjs",
+      "sha256": "564e9cdb504dcf5377f1954061dc4697ff2852f422e01220e00620616191327c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
       "sha256": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
@@ -36853,6 +37155,42 @@
       ]
     },
     {
+      "id": "SURFACE-d636158602030625",
+      "path": "tdf-hq-ui/src/api/eventWorkspace.fixture.ts",
+      "sha256": "714bba6fe6e96dac4422ff124896e6868189a1d6f76c2a85c8fac2b55dd992e1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1993206467f2d6d7",
+      "path": "tdf-hq-ui/src/api/eventWorkspace.test.ts",
+      "sha256": "9935dbff7be28a977f7560ca7281f2add4ae9418816eadf6ec429d0f7e3b277b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c2680654755934cd",
+      "path": "tdf-hq-ui/src/api/eventWorkspace.ts",
+      "sha256": "294ac70a83ea545b98afc390b069d2f480894f870ec7868153167ea9fa494b79",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
       "sha256": "1d36c8a5f648dd3f44b7389181786dc3b603fa350570c898a091f9bf70bbd425",
@@ -36919,7 +37257,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "129e9a2f11c82ef77ff232402d8836822d0eb7ae8255f308eb2df430207b09b8",
+      "sha256": "15322b54afc2649837ddd4d32ea10949c62e1de2db95cf85b173094795b9cb55",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36956,6 +37294,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -38910,7 +39252,7 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+      "sha256": "b787e86052e0687cdc6ab933a80467c5909c15e0719e1d52d1508581063f006c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38923,6 +39265,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -38930,7 +39276,7 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+      "sha256": "33947e831f76dfba3dc1d0297afb98c27c0dffcc6975a08440a083100755ba15",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38943,6 +39289,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -41172,6 +41522,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-fac74da10964b761",
+      "path": "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
+      "sha256": "0c5446193b3a1dd15256815690cf317bd5c003001661400a3ea72f095f0fd23b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0e855839df1ec21d",
+      "path": "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+      "sha256": "c4384ac29ccef26b0322e24684928fc6d433f0bdacf17b13e50e8402d6561018",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-378a6bc30de606b4",
       "path": "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
       "sha256": "4dac7124635899687df092f6164248eab3673764ae71ed80d44bac9be0234bdf",
@@ -42640,7 +43014,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "c2bba11f658bb5593beadf3478e116ddc3d96a5b5862da7c7bcb95c9d0c33a52",
+      "sha256": "c390990a66c591ab1f84a7c094c16a9767262971cbb2717a361f2ddeb547b4cc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42661,6 +43035,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -43387,7 +43765,7 @@
     {
       "id": "SURFACE-f0dfc7a18e8b49c7",
       "path": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
-      "sha256": "7841629427f2d73e5732da6c16cb8be991bbbb624c5e51d3e963c247520b71fb",
+      "sha256": "a725479ee0935f335f13c87515d495d2e7b37a32189e5861c3180e538aa195dc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43396,6 +43774,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -44910,7 +45292,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "0930159122e545da4166de525b05449b4b22f5207f0bf645ae90d0bb7eee1e92",
+      "sha256": "a763890383a0a56450b12be7221c624ee0d87957574d699cf1d24ccdfadb3a5d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44931,6 +45313,10 @@
         },
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -45001,7 +45387,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "a9b98a15cfddbc2409cd79f88b5be6a528073cc7cf46e68b4d0eff44a73224fd",
+      "sha256": "cf4aa54e54b7aa7f306cfa9430c6bb431aa79c007c2a55fe4df7432c78e213cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45054,6 +45440,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -48780,6 +49170,18 @@
       ]
     },
     {
+      "id": "SURFACE-59f86d2323262f88",
+      "path": "tdf-hq/sql/2026-11-03_event_agreements.sql",
+      "sha256": "aa0dbb13be0d7f0f1c05ba6e9ea17b7819dad0292adad37ece7b6a60d6eb5108",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -49180,7 +49582,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "2f0395f784b9600abf35a5b0eacce472c63f50c0ccfa55a6e7fec5189e560dd0",
+      "sha256": "9fa74dfed62441d867e8b2394233e06ea9c4501ee3bf7511e7f05f4006bc9eee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49201,6 +49603,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -49811,11 +50217,40 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-d96f97b9cdae89c5",
+      "path": "tdf-hq/src/TDF/Contracts/EventWorkspace.hs",
+      "sha256": "38bb94e8c8741f43cbc3de4c38e96a1a50674b2b3cf787170aeca66a74211ed2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6222007b8d3a8c32",
+      "path": "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs",
+      "sha256": "028fd057c9706d9786ee649b0adf9d9b2630244a1ebf2392757487c995f91ba1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
-      "sha256": "000e0da46d1d410af6798ed5ef07a13b69191128225587399990097bdac7638d",
+      "sha256": "a5c60973c0142b4b2126317656333a72b5260a7193ead9a2e50c5b10770ce567",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2bac4bb831675dd6",
@@ -51141,7 +51576,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "32f7880b26d86f5c7cb84cc6095ac00e4d79fc098dcd18b03a79cef9775b2bcd",
+      "sha256": "1347dff03e8eef10e5dd4e24ea77735865b7738c87638dc4b2eb59bf1c2fe452",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51194,6 +51629,10 @@
         },
         {
           "requirement": "PAY-EVENT-REPORT-RANGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -51771,7 +52210,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "9ddd4662b265d1cb29e88339707318dd1a60b0cda2b173293bdf870973a2e8d3",
+      "sha256": "08c9e09ad13525754b6dc224762d46a333a8d7ab9133d915b6dd862dc1d8fc55",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51804,6 +52243,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -51917,7 +52360,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "56fc93ddf56e85bfdea9931dd659703be09d97f1c1debfc0c963a1189b0ab4a0",
+      "sha256": "3141b6465982eff0311a74aa28399b55cb179155aef7fa5db1c4d629b67d1dde",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51983,6 +52426,10 @@
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -52182,6 +52629,30 @@
       "requirements": [
         {
           "requirement": "OPS-WORKER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8a3bcf7db1bd362a",
+      "path": "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+      "sha256": "b3f74a00af466f3e7a7e00cc568a5bdd100a5b148ab0f1a2354a090ce8a3115e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c6ed0e5e79e54ac9",
+      "path": "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
+      "sha256": "9b9c99acbef578212b782d8892d267705826a4becdbfb1f654c8bcd98f315848",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -58168,7 +58639,6 @@
     "SURFACE-b3ab13afc655164b",
     "SURFACE-e566657be7de3ed5",
     "SURFACE-95011c3eb812e7fd",
-    "SURFACE-de7641689e63ad01",
     "SURFACE-2bac4bb831675dd6",
     "SURFACE-7774c01ac1644990",
     "SURFACE-980d517db26f5cab",
@@ -59788,7 +60258,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9f8f787cd54456be57e4604e4f3311bb5c5bfc22a0e0880384c3a16df44e422f",
+      "sourceSha256": "f5847fff526cd0e1bbb631e232105f00d0e51be63ce46b45c6d2200f7cb1107c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -59816,7 +60286,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9f8f787cd54456be57e4604e4f3311bb5c5bfc22a0e0880384c3a16df44e422f",
+      "sourceSha256": "f5847fff526cd0e1bbb631e232105f00d0e51be63ce46b45c6d2200f7cb1107c",
       "definition": {
         "states": [
           "absent",
@@ -59846,7 +60316,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9f8f787cd54456be57e4604e4f3311bb5c5bfc22a0e0880384c3a16df44e422f",
+      "sourceSha256": "f5847fff526cd0e1bbb631e232105f00d0e51be63ce46b45c6d2200f7cb1107c",
       "definition": {
         "export": [
           "queued",
@@ -68169,6 +68639,106 @@
         "400",
         "401",
         "404",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace",
+      "operationId": "getEventWorkspace",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /social-events/events/{eventId}/workspace",
+      "operationId": "mutateEventWorkspace",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace/plan.pdf",
+      "operationId": "downloadEventPlan",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace/agreements/{agreementId}/{version}/document.pdf",
+      "operationId": "downloadEventAgreement",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace/agreements/{agreementId}/acceptance.pdf",
+      "operationId": "downloadEventAgreementAcceptance",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
         "503"
       ],
       "conformance": "not-established-by-client-generation"
@@ -82326,6 +82896,94 @@
         "documentedException": "No native equivalent yet."
       },
       "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "discover",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "none",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "view",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "event-owner-or-designated-recipient",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "submit",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "event-owner-or-designated-recipient",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "export",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "event-owner-or-designated-recipient",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
     }
   ],
   "conformanceCounts": {
@@ -82333,7 +82991,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 170,
+    "PARTIAL": 171,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -337,6 +337,7 @@ export default function SocialEventDetailPage() {
       loading={eventQuery.isLoading}
       actions={<Stack direction="row" spacing={1}>
         <Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>
+        {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/acuerdos`} variant="outlined">Acuerdos y plan</Button>}
         {canShareTickets && (
           <Button
             onClick={() => { void shareTicketPurchaseLink(); }}
