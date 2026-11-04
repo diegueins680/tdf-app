@@ -16599,8 +16599,8 @@
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
-    "tdf-hq-ui/src/api/invoices.test.ts": "9b7dc9996a2f5b01c4d783a1b3ab23781884f3417fe819f1a90905c7e96778d6",
-    "tdf-hq-ui/src/api/invoices.ts": "f9e3a2ab9197252b69dccdd457d6e3667b710f22a721b1c53390e3e1c543423a",
+    "tdf-hq-ui/src/api/invoices.test.ts": "2b67c617c362e8c7e967f80a39c3c6ce2e702827184dc37d3d77ece752c9e893",
+    "tdf-hq-ui/src/api/invoices.ts": "1731cd30adea44cec29fe553cfe642fd12f769a1d921d275d36be3638e4536a3",
     "tdf-hq-ui/src/api/logoutIntent.test.ts": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
     "tdf-hq-ui/src/api/merchReputation.ts": "bfffe41b92b69806b4721ff6148e3b5d1427e8b695751552734bf9eb7355b9d5",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
@@ -39574,7 +39574,7 @@
     {
       "id": "SURFACE-09824a09519e957e",
       "path": "tdf-hq-ui/src/api/invoices.test.ts",
-      "sha256": "9b7dc9996a2f5b01c4d783a1b3ab23781884f3417fe819f1a90905c7e96778d6",
+      "sha256": "2b67c617c362e8c7e967f80a39c3c6ce2e702827184dc37d3d77ece752c9e893",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39586,7 +39586,7 @@
     {
       "id": "SURFACE-8954d786b64d481b",
       "path": "tdf-hq-ui/src/api/invoices.ts",
-      "sha256": "f9e3a2ab9197252b69dccdd457d6e3667b710f22a721b1c53390e3e1c543423a",
+      "sha256": "1731cd30adea44cec29fe553cfe642fd12f769a1d921d275d36be3638e4536a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

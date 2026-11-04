@@ -90,7 +90,6 @@ type IssueStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 /** Storage key for unresolved session invoice attempts (fingerprint to key). */
 export const PENDING_INVOICE_ISSUE_STORAGE_KEY = 'tdf.sessionInvoiceIssueAttempts.v1';
-const MAX_PENDING_INVOICE_ISSUES = 50;
 
 const defaultIssueStorage = (): IssueStorage | null => {
   try {
@@ -118,8 +117,9 @@ const readPendingIssues = (storage: IssueStorage | null): Record<string, string>
 const writePendingIssues = (storage: IssueStorage | null, pending: Record<string, string>) => {
   if (!storage) return;
   try {
-    const entries = Object.entries(pending).slice(-MAX_PENDING_INVOICE_ISSUES);
-    storage.setItem(PENDING_INVOICE_ISSUE_STORAGE_KEY, JSON.stringify(Object.fromEntries(entries)));
+    // No cap: an unresolved attempt is only forgotten when it settles or staff
+    // start a verified new attempt. Evicting one could issue a duplicate invoice.
+    storage.setItem(PENDING_INVOICE_ISSUE_STORAGE_KEY, JSON.stringify(pending));
   } catch {
     // Storage may be full or blocked; the in-memory attempt still applies.
   }

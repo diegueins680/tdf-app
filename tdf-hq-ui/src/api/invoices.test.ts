@@ -94,6 +94,16 @@ describe('unresolved attempts survive a reload (PAY-INVOICE-ISSUE-001)', () => {
     expect(next.key).toBe('second-key');
   });
 
+  it('never evicts an unresolved attempt, however many others accumulate', () => {
+    const storage = memoryStorage();
+    const first = nextInvoiceIssueAttempt(null, 'session-1', payload, () => 'oldest-key', storage);
+    for (let i = 0; i < 120; i += 1) {
+      nextInvoiceIssueAttempt(null, `session-${i + 2}`, payload, () => `key-${i}`, storage);
+    }
+    const again = nextInvoiceIssueAttempt(null, 'session-1', payload, () => 'fresh-key', storage);
+    expect(again.key).toBe(first.key);
+  });
+
   it('keeps working when storage is unavailable or unreadable', () => {
     const broken = {
       getItem: () => {
