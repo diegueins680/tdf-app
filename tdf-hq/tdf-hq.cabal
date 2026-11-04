@@ -139,6 +139,7 @@ library
     TDF.Invoice.BuyerIdentity
     TDF.Invoice.Datil
     TDF.Invoice.SRI
+    TDF.Invoice.SessionIssue
     TDF.Internationalization
     TDF.LogBuffer
     TDF.Meta
@@ -393,6 +394,8 @@ test-suite tdf-hq-test
     TDF.EmailHeadersSpec
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
+    TDF.Invoice.SessionIssueSpec
+    TDF.Contracts.StoreSpec
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec

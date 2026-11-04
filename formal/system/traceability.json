@@ -1082,7 +1082,10 @@
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Types.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs"
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+        "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql",
+        "docs/music-directory/formal-model.yaml"
       ],
       "tests": [
         "scripts/test-state-machines.py",
@@ -10911,7 +10914,8 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
-      }
+      },
+      "critical": false
     },
     {
       "domain": "MSG",
@@ -12011,7 +12015,8 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Navigation implementation and local validation; independent review, hosted checks and production publication remain separate gates."
-      }
+      },
+      "critical": false
     },
     {
       "id": "DIR-SAVED-SEARCH-001",
@@ -13432,7 +13437,7 @@
       "title": "Separate artist verification, profile completeness and image-rights review",
       "statement": "Artist review distinguishes supported identity verification from optional missing profile data, and distinguishes actual link availability failures from permission to ingest externally hosted images. Legacy hotlink-rights observations must not hide real network failures or label working images as broken.",
       "authority": "Explicit product owner request, 2026-10-26: explain artist verification and repair Verde70 issues.",
-      "domain": "Artist enrichment",
+      "domain": "ID",
       "source": "docs/artist-enrichment-runbook.md",
       "contract": "docs/artist-enrichment-runbook.md",
       "actors": [
@@ -13496,7 +13501,8 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Bounded worker/UI correction; approval policy, external image rights and source publication remain separate obligations."
-      }
+      },
+      "critical": true
     },
     {
       "id": "MEDIA-MUSIC-TRACK-SEARCH-001",
@@ -15426,6 +15432,310 @@
       "evidence": "Exactoldforcedinband command:1controlPASS/2PIDobligationsFAIL using1024bytethreshold. Repaired5guardsPASS includingdefaultconfiguration,3PIDs/workerSlot1, forcedoldcontrol, failedassertion and persistentcrash. Productionidlelimitremoval mutation isdetected; full328suites/3799tests,lint,typecheck,build/bundlePASS on5fbeb723ffa7e69249b1143546164d9763345dab. Hosted/finalcomposition pending. Followupquietmodecounterexample on8b:4PASS/1configparserFAIL; header-independent reader and explicitnotice/silent variants pass all5guards with both ordinary and quietparent environments. Product/workerconfig unchanged; joinedheadhostedqualificationpending. The8bquietfailure echoedasyntheticreporter token. Followup parser emitsgenericerrors and returns onlytypedworkersettings; sixguardcases include confidentiality faults. No realcredentialorreporter service was used in this probe."
     },
     {
+      "id": "SYS-VERIFY-AUDIT-SIGNAL-001",
+      "title": "The heuristic formal audit reports semantic findings apart from style debt",
+      "statement": "npm run audit:formal must report contract, state and resource findings by default, keep style debt countable per rule without listing it, and must not raise resource findings from comments, string literals or SQL text.",
+      "domain": "SYS",
+      "authority": "Formal audit 2026-10-31 finding F-11 (12,918 findings on main 1976242a, 529 resource warnings almost all false positives); formal/system/audit-2026-10-31-phase1.md section 39.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "Every rule has a category; an uncategorised rule is semantic. --scope semantic|style|all selects findings; the report carries outOfScope and per-rule counts over all scopes, and the fail threshold applies to the selected scope. The resource rule matches only named handle or connection acquisitions on Haskell code with comments and string or character literals blanked, keeping line numbers, and is satisfied by bracket*, with*, finally, allocate, onException or resourceForkIO within the following lines.",
+      "actors": [
+        "Maintainer reading the audit",
+        "CI or reviewer invoking audit:formal"
+      ],
+      "preconditions": [
+        "Tracked JS/TS and Haskell sources",
+        "git ls-files available"
+      ],
+      "inputs": [
+        "Repository working tree",
+        "--scope, --fail-on and --max-findings options"
+      ],
+      "state": {
+        "initial": "Collected heuristic findings",
+        "terminal": [
+          "Report for the selected scope",
+          "Refusal of an unknown scope or threshold"
+        ]
+      },
+      "allowedTransitions": [
+        "Select findings by rule category",
+        "Count every finding per rule",
+        "Mask Haskell comments and literals before the resource rule"
+      ],
+      "forbiddenTransitions": [
+        "Hide an uncategorised rule",
+        "Report a resource finding from prose, a message or SQL text",
+        "Accept an unknown --scope value"
+      ],
+      "effects": [
+        "Read-only report on standard output; exit status 1 only when a finding in scope meets the fail threshold"
+      ],
+      "authorization": "Local read-only tool; no network or credentials.",
+      "privacy": "Reports repository paths and short code snippets only.",
+      "concurrency": "Single sequential scan.",
+      "idempotency": "The same tree and options give the same findings apart from generatedAt.",
+      "failure": "Unknown options fail with a message and exit status 1.",
+      "recovery": "Rerun with --scope all to inspect style debt or confirm totals.",
+      "observability": "Summary, scope, outOfScope and byRule in text and --json output.",
+      "implementation": [
+        "scripts/lib/formal-methods-audit.mjs",
+        "scripts/audit-formal-methods.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/formal-methods-audit.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "npm run test:formal: 8 tests covering masking (nested block comments, escaped strings, a quote character literal, primed identifiers, the --> operator), the resource rule on prose, SQL, a leaked handle and a finally-released handle, categories and scope selection, and the CLI default, style, all and unknown scopes.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 39",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Unit and CLI tests pass; the audit remains a lexical heuristic, not a proof.",
+      "ambiguity": [
+        "The masker is lexical: Haskell quasi-quotes and CPP are not parsed.",
+        "Rule categories are a reviewed judgement, not derived from the rules."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Tested lexical tooling; heuristic rules carry no soundness claim."
+      }
+    },
+    {
+      "id": "PAY-INVOICE-ISSUE-001",
+      "title": "A session invoice and its SRI document are issued at most once per request",
+      "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
+      "domain": "PAY",
+      "authority": "Formal audit 2026-10-31 finding F-03 (Invoice/SRI without requirement) and the owner decision of 2026-11-04 to require an idempotency key; formal/system/audit-2026-10-31-phase1.md section 40.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "For each (session, idempotencyKey) at most one invoice is created and at most one SRI script run starts: the reservation row is inserted with ON CONFLICT DO NOTHING before any invoice or SRI work. Replay returns the stored response when the SHA-256 fingerprint of (session, decoded request without key and certificate password) matches; a mismatch is 409; a reservation without a response is 409. A reservation is released only when creating or linking the invoice failed, before the SRI script started. Without SRI the key is optional. Before reserving, the SRI customer is loaded and the whole SRI script request validated, so a correctable input error is a 400 that leaves the key reusable. The web client drops the key only when SRI was not requested or reported the document as issued; after an SRI error or an unconfirmed status it keeps the key, so resubmitting replays, and a new attempt needs an explicit action after checking the portal. Unresolved attempts are also kept in browser storage by fingerprint (without the certificate password), so a reload or navigation followed by the same request reuses the key; they are removed when the outcome settles or staff start a new attempt. When a request fails while an SRI attempt is unresolved (including 409 for an unanswered reservation), the error offers the same verified new-attempt action. Independently of the browser, the server refuses with 409 a new key for a session whose same request fingerprint already has an unsettled attempt (unanswered, or answered with an SRI error or a status other than issued), unless the request carries sriPortalVerified=true, which the web client sends only after the explicit verified new-attempt action.",
+      "actors": [
+        "Staff user with the invoicing module",
+        "Web invoice generator",
+        "SRI portal automation script"
+      ],
+      "preconditions": [
+        "ModuleInvoicing access",
+        "Existing session",
+        "Migration 2026-11-04_session_invoice_issue applied"
+      ],
+      "inputs": [
+        "sessionId path segment",
+        "GenerateSessionInvoiceReq body including idempotencyKey"
+      ],
+      "state": {
+        "initial": "No reservation for (session, key)",
+        "terminal": [
+          "Completed reservation with stored response",
+          "Released reservation after a pre-SRI failure",
+          "Unanswered reservation after an interruption once SRI may have run"
+        ]
+      },
+      "allowedTransitions": [
+        "Reserve then create invoice, link it and run the SRI script",
+        "Replay the stored response for the same request",
+        "Release an unanswered reservation when invoice creation failed before SRI"
+      ],
+      "forbiddenTransitions": [
+        "Issue an SRI document without an idempotencyKey",
+        "Run the SRI script twice for one (session, key)",
+        "Replay a response for a different request",
+        "Release a reservation after the SRI script started",
+        "Issue under a new key while an unsettled attempt with the same fingerprint exists, without portal verification"
+      ],
+      "effects": [
+        "One invoice, one session link and at most one SRI document per key; the response is stored for replay"
+      ],
+      "authorization": "Unchanged: requireModule ModuleInvoicing.",
+      "privacy": "The certificate password is excluded from the fingerprint and never stored; the stored response is the same JSON already returned to the staff caller.",
+      "concurrency": "The unique (session_id, idempotency_key) constraint and ON CONFLICT DO NOTHING make the reservation atomic; a concurrent duplicate observes the winner's row and gets 409 until it completes. The sibling check and the reservation run in one transaction after pg_advisory_xact_lock on (session, request fingerprint), so two concurrent requests with different keys for the same invoice cannot both reserve.",
+      "idempotency": "Same key and same request replays the stored response; the web client keeps the key while the request is unchanged and uses a new key after any edit or success.",
+      "failure": "Invalid key: 400. Different request with the key, or unanswered reservation: 409. SRI script failures are part of the stored response (ok=false), not retried automatically.",
+      "recovery": "An unanswered reservation means the request was interrupted, possibly after SRI issued the document. Staff check the SRI portal for the session before retrying with a new key.",
+      "observability": "session_invoice_issue rows record key, fingerprint, invoice, response and completion time.",
+      "implementation": [
+        "tdf-hq/src/TDF/Invoice/SessionIssue.hs",
+        "tdf-hq/src/TDF/Invoice/SRI.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/sql/2026-11-04_session_invoice_issue.sql",
+        "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql",
+        "tdf-hq-ui/src/api/invoices.ts",
+        "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/invoices.test.ts",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 40",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Unit and SQLite reservation tests; no end-to-end run against the SRI portal.",
+      "ambiguity": [
+        "The SRI portal itself is not idempotent: an interruption after the portal issued a document leaves an unanswered reservation that staff must reconcile by hand.",
+        "The script's reported total is the pre-tax sum it computed from the request, so its total check confirms the echo, not the portal's IVA computation.",
+        "Requests that do not issue to SRI may still omit the key and create internal invoices without replay protection."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Server-side reservation tested on SQLite and the migration on PostgreSQL; no portal or concurrent HTTP run."
+      }
+    },
+    {
+      "authority": "Formal audit 2026-10-31 finding F-03 (Contracts/Server without requirement) and the owner decisions of 2026-11-04: send contracts for real and store them in a database table; formal/system/audit-2026-10-31-phase1.md section 41.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "actors": [
+        "Staff user with operations access",
+        "Web Social Events page",
+        "Mobile contracts client"
+      ],
+      "authorization": "Unchanged: validateContractsAccess requires the operations role for create, PDF and send.",
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "implementation": [
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/Contracts/API.hs",
+        "tdf-hq/src/TDF/Contracts/Types.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/sql/2026-11-04_contract_store.sql",
+        "tdf-hq/sql/2026-11-04_contract_store_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Contracts/StoreSpec.hs"
+      ],
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41",
+      "id": "CONTRACT-STORE-001",
+      "title": "Contracts are stored durably in the database",
+      "statement": "A created contract must survive restarts and redeploys: it is stored in the contract table, read back for its PDF, and a contract that only exists in the legacy file store is imported on first read.",
+      "domain": "LEGAL",
+      "property": "POST /contracts validates and canonicalizes the payload, then inserts (id, kind, canonical payload, creating party, created_at). GET /contracts/{id}/pdf reads the table; when the row is missing, a valid legacy contracts/store/<id>.json is validated, imported with insert-if-absent and served. Stored rows are revalidated (canonical id, kind and payload) on every read.",
+      "preconditions": [
+        "Migration 2026-11-04_contract_store applied"
+      ],
+      "inputs": [
+        "Contract JSON payload",
+        "Contract id path segment"
+      ],
+      "state": {
+        "initial": "No contract row",
+        "terminal": [
+          "Stored contract row",
+          "Imported legacy contract row"
+        ]
+      },
+      "allowedTransitions": [
+        "Insert a validated contract",
+        "Import a validated legacy file once"
+      ],
+      "forbiddenTransitions": [
+        "Write contracts to the container filesystem",
+        "Serve an unvalidated stored payload"
+      ],
+      "effects": [
+        "One contract row per created contract"
+      ],
+      "privacy": "Payload is the same contract JSON staff entered; it now sits in the database and its backups.",
+      "concurrency": "Primary key on id; legacy import checks for the row before inserting.",
+      "idempotency": "Create always mints a new id; legacy import is insert-if-absent.",
+      "failure": "Invalid payload 400; unreadable stored payload 500; unknown id 404.",
+      "recovery": "The guarded rollback refuses while contracts exist.",
+      "observability": "contract rows with creator and creation time.",
+      "verification": "StoreSpec on SQLite: create stores the row and the PDF handler reads it back. Migration and constraints exercised on PostgreSQL.",
+      "confidence": "SQLite handler tests and PostgreSQL migration probes; no production data migration was needed because the old store was not persistent.",
+      "ambiguity": [
+        "Contracts written to the old relative store before a redeploy are already gone; only files still present are imported."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Handler and migration tested; no deployed run."
+      }
+    },
+    {
+      "authority": "Formal audit 2026-10-31 finding F-03 (Contracts/Server without requirement) and the owner decisions of 2026-11-04: send contracts for real and store them in a database table; formal/system/audit-2026-10-31-phase1.md section 41.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "actors": [
+        "Staff user with operations access",
+        "Web Social Events page",
+        "Mobile contracts client"
+      ],
+      "authorization": "Unchanged: validateContractsAccess requires the operations role for create, PDF and send.",
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "implementation": [
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/Contracts/API.hs",
+        "tdf-hq/src/TDF/Contracts/Types.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/sql/2026-11-04_contract_store.sql",
+        "tdf-hq/sql/2026-11-04_contract_store_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Contracts/StoreSpec.hs"
+      ],
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41",
+      "id": "CONTRACT-SEND-001",
+      "title": "A contract is reported as sent only after the mail transport accepts it",
+      "statement": "POST /contracts/{id}/send must email the contract PDF to the recipient and answer status sent only after SMTP accepted the message; without email configuration it must refuse with 503 instead of claiming success.",
+      "domain": "LEGAL",
+      "property": "Order: validate the recipient, load the contract (404), require email configuration (503, nothing recorded), render the PDF (500), insert a contract_delivery row, call the mail transport with the PDF attached, then set accepted_at (200, status sent, deliveryId) or failed_at with a bounded reason (502).",
+      "preconditions": [
+        "Migration 2026-11-04_contract_store applied",
+        "SMTP configured for delivery"
+      ],
+      "inputs": [
+        "Contract id path segment",
+        "{email} body"
+      ],
+      "state": {
+        "initial": "No delivery row",
+        "terminal": [
+          "Delivery accepted by SMTP",
+          "Delivery refused by SMTP"
+        ]
+      },
+      "allowedTransitions": [
+        "Record the request then send",
+        "Record acceptance or failure"
+      ],
+      "forbiddenTransitions": [
+        "Answer sent without SMTP acceptance",
+        "Send without a recorded request",
+        "Record both acceptance and failure"
+      ],
+      "effects": [
+        "One email with the contract PDF attached and one contract_delivery row per send request"
+      ],
+      "privacy": "The recipient address is stored on the delivery row; the failure reason is truncated to 300 characters.",
+      "concurrency": "Each request writes its own delivery row; repeated sends are separate deliveries.",
+      "idempotency": "Not idempotent by design: each request is a new email, recorded as its own delivery.",
+      "failure": "Not configured 503; transport refusal 502 with the failure recorded.",
+      "recovery": "A delivery left without outcome means the process stopped during SMTP; staff resend after checking the recipient.",
+      "observability": "contract_delivery rows plus the existing [Email] smtp_attempt and smtp_accepted logs.",
+      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id.",
+      "confidence": "Handler tests with an injected transport; no live SMTP run.",
+      "ambiguity": [
+        "SMTP acceptance is not delivery to the inbox.",
+        "Neither the web nor the mobile app currently calls send; only their client wrappers exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Handler tested with an injected transport; no live SMTP run."
+      }
+    },
+    {
       "id": "EVT-PLANNING-UX-001",
       "title": "Explicit event clocks, visible ticket fee estimates and recoverable poster preparation",
       "statement": "Event preparation preserves the selected timezone, presents the standard ticket price estimate before submission, and confirms poster attachment without replaying uploads or updating unrelated event fields.",
@@ -15511,6 +15821,74 @@
       "property": "Explicit wall-clock interpretation and saved logistics timezone precedence; integer-cent estimate conservation; no duplicate confirmed upload or stale editor success.",
       "verification": "Finite deterministic callback model with three negative controls; actual React regressions and 100001 fee inputs; Haskell test execution pending pinned Stack.",
       "evidence": "scripts/__tests__/event-planning-ux-model.test.mjs; tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/utils/eventTicketPricing.test.ts; tdf-hq/test/Spec.hs; tdf-hq-ui/src/utils/dateTime.test.ts"
+    },
+    {
+      "id": "ID-PARTY-REFERENCE-REGISTRY-001",
+      "title": "Every model-declared Party reference is published in the identity reference registry",
+      "statement": "identity_known_party_reference must list every column the persistent models declare as PartyId, so identity merges and the archived-party write guard cover it; the registry is published by forward migrations, never by rewriting an applied one.",
+      "domain": "ID",
+      "authority": "Identity reconciliation gate (scripts/test-identity-reconciliation.sh) and the formal audit, section 41: the contract tables added two Party references.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "scripts/generate-identity-party-reference-view.mjs discovers every PartyId field in persistLowerCase blocks under tdf-hq/src and writes the sorted registry between the generation markers of the newest non-rollback migration carrying them; --check fails when that block differs from the models. A migration that adds Party references carries the markers, republishes the view and installs identity_archive_reference_guard on its tables; its rollback republishes the previous registry.",
+      "actors": [
+        "Developer adding a model with a Party reference",
+        "CI identity gate"
+      ],
+      "preconditions": [
+        "2026-09-17_identity_reconciliation applied (identity_reject_archived_reference exists)"
+      ],
+      "inputs": [
+        "Persistent model declarations",
+        "Marked migrations in tdf-hq/sql"
+      ],
+      "state": {
+        "initial": "Models and registry agree",
+        "terminal": [
+          "New marked migration publishes the extended registry",
+          "Gate refuses a model change without a registry update"
+        ]
+      },
+      "allowedTransitions": [
+        "Republish the registry in a new forward migration",
+        "Install the archived-party guard on new referencing tables"
+      ],
+      "forbiddenTransitions": [
+        "Rewrite an applied migration to change the registry",
+        "Add a PartyId model field without registering it"
+      ],
+      "effects": [
+        "identity_known_party_reference lists 229 references after 2026-11-04_contract_store"
+      ],
+      "authorization": "Not applicable (schema and tooling).",
+      "privacy": "Lists table and column names only.",
+      "concurrency": "Migrations run in a transaction with lock_timeout.",
+      "idempotency": "CREATE OR REPLACE VIEW and DROP/CREATE TRIGGER are repeatable; the migration was applied twice.",
+      "failure": "The gate fails with a message naming the forward-migration remedy.",
+      "recovery": "The migration rollback republishes the previous registry (227 references).",
+      "observability": "The generator prints the reference count and the target migration.",
+      "implementation": [
+        "scripts/generate-identity-party-reference-view.mjs",
+        "tdf-hq/sql/2026-11-04_contract_store.sql",
+        "tdf-hq/sql/2026-11-04_contract_store_rollback.sql",
+        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql"
+      ],
+      "tests": [
+        "scripts/test-identity-reconciliation.sh"
+      ],
+      "formalModels": [],
+      "verification": "Generator --check against the models (229 references); test-identity-reconciliation.sh on an empty PostgreSQL database; full schema: 229 after forward, 227 after rollback, guard triggers on contract and contract_delivery.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Gate and migration exercised locally on PostgreSQL.",
+      "ambiguity": [
+        "Discovery is lexical over persistLowerCase blocks; references declared outside them are not seen."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Lexical model discovery; no proof that every SQL-only Party foreign key is modelled."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -15528,9 +15906,9 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "0d9a9e02f24fe0b8881617d23213d4179556b31d796fcf28895751322b8d0ac8",
+    "docs/catalog-persistence/catalog-list-decisions.json": "826d062b22110a61740b80a7532a091aa2546056f84628b8a73c4feeff4cd1d3",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
-    "docs/music-directory/formal-model.yaml": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+    "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -15881,7 +16259,7 @@
     "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "93ec231c7af9e9d9ec8861a43c307da6e42810275662af2c4253d9cc308e2730",
+    "formal/system/recovery-expiry-arithmetic.json": "4f8712959334e0678aa87ed49d7d7d67bbb3777c277f04d9cafd773a258b9a56",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -15924,7 +16302,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "3181dfedc761f4feb323b3f7023405fa7c9b07344a3669db49fa035939fc25eb",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "aa3ae4f73d9f6144fc71c49f7d3e85766c70d6f40ddcde0aa8274aba58ea0a18",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -15948,6 +16326,7 @@
     "scripts/__tests__/fixtures/event-report.mjs": "3a289551a7c9f95d1811bd50ec60d292be48097a881e61a2895d30dc3043d7b8",
     "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
+    "scripts/__tests__/formal-methods-audit.test.mjs": "130513a03b99243c8992dc830b3f27ada4ec3e19faaa36422c815f6fd2382baa",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
@@ -15996,6 +16375,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
+    "scripts/audit-formal-methods.mjs": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/check-admin-guards.py": "6b44713f4518a4bee3cb8c6aa8b309cc2b66e71dc3716b0facc5cb0bdfeacf8b",
@@ -16017,6 +16397,7 @@
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
     "scripts/event-planning-ux-model.mjs": "2b95df24f81b818fa00017e2a00e1a6c0397c212ebebcc3bb9af26869fc60406",
     "scripts/fetch-ddex-ern432-schema.sh": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
+    "scripts/generate-identity-party-reference-view.mjs": "980ebaec42704393878751e4dd40238f02f64ada510b3a02d60154d884b07493",
     "scripts/get-admin-token.sh": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
@@ -16028,6 +16409,7 @@
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+    "scripts/lib/formal-methods-audit.mjs": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "a4db80638b54d44886f9a6391aae355caa875002ad13a7aa0ad7b17ec179ac9c",
@@ -16064,7 +16446,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "b41e33d7a92a66c79156376ec51d57a19482cbe0bef020d321905a4aecadc92f",
+    "scripts/production-migrations.json": "628c6022c2578939884fb677f4ad7544190a20781e84ef2e7313c30a65578283",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
@@ -16126,6 +16508,7 @@
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+    "scripts/test-identity-reconciliation.sh": "7a0a057ed0d5aa4c453a7ca50ab81a644f0ff184c664b16f2c131ac577b04175",
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
@@ -16186,7 +16569,7 @@
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/test-state-machines.py": "8b04bc8695f89b092627c7a9e58c83ba4a718e12d83dfad3cd07634d0c8d8f72",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
-    "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
+    "scripts/test-studio-internship-audit-api-e2e.mjs": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
     "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
@@ -16287,7 +16670,8 @@
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
-    "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
+    "tdf-hq-ui/src/api/invoices.test.ts": "1cfc1c3eb6516b154cffe34a7f1c3823d8b3164e7b15a5e36f139b852fa76419",
+    "tdf-hq-ui/src/api/invoices.ts": "9ae14d68a08dc280f8b126b12d347377f7bed729cef316fe18849e4657e4476b",
     "tdf-hq-ui/src/api/logoutIntent.test.ts": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
     "tdf-hq-ui/src/api/merchReputation.ts": "bfffe41b92b69806b4721ff6148e3b5d1427e8b695751552734bf9eb7355b9d5",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
@@ -16340,6 +16724,7 @@
     "tdf-hq-ui/src/components/RouteErrorBoundary.tsx": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
     "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
+    "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx": "1aaae8879191fc359cbd7689c402d1bc95febad1673418a27dd30718c7b363f5",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SidebarNav.test.tsx": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
@@ -16786,8 +17171,14 @@
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
+    "tdf-hq/sql/2026-11-04_contract_store.sql": "bb78553729d9008d6773689f68f4cd6c5d179d05a0c77285313d50cdcf9bd895",
+    "tdf-hq/sql/2026-11-04_contract_store_rollback.sql": "f2d7c4f61e2083e50fe5b25dd7a631950c1f8fc5303c0e5a96e653f2cbd62b65",
+    "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql": "658b6ba4a3f537968aa0302c6272d06fa30c617edda131dbcc8d5b918bcbef2d",
+    "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql": "2985ea1ff62fb0225f48149544c863ecc88b8821cb1518eacf950dcdb6e12405",
     "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql": "097e5dbae5df96fa33c94071c5f734b84963a27187e906baf294c366f427f3f7",
     "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql": "25e481954ec23478d7636d28754d5578f397e02094487279bedb527ba790e251",
+    "tdf-hq/sql/2026-11-04_session_invoice_issue.sql": "edd0e25051291561a1fbe2cfaf37c7956c10475814fc72570a8af31af5729298",
+    "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql": "e2ae1da6c06c7d68b8a17a1b20ebf1903be36adc0c64447d8eb319dd430f3000",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/src/TDF/API.hs": "21206a27a841d24759917b0ad59d402971bcf45f15ef7e3537804b8e92f191f2",
     "tdf-hq/src/TDF/API/Admin.hs": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
@@ -16805,7 +17196,7 @@
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
-    "tdf-hq/src/TDF/Auth.hs": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
@@ -16837,6 +17228,9 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "18085ab24c01e2fdf4320d904a4e7f4d6c8eb32e51d76c95c5b1cd8074ba5fd2",
+    "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
+    "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
+    "tdf-hq/src/TDF/Contracts/Types.hs": "cd59c25f047739b58e8e6b0373b858e212665705dbd9f0ca2c2ced7c56b36a20",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -16844,10 +17238,10 @@
     "tdf-hq/src/TDF/Cron.hs": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
-    "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
+    "tdf-hq/src/TDF/DTO.hs": "90b7f5a64a919d401338ab13c0763fa383095edd67531888ce97075ae888844b",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
     "tdf-hq/src/TDF/Directory/Policy.hs": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
-    "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
+    "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
     "tdf-hq/src/TDF/Interactions/API.hs": "1c87397e99ddc44da1178cdb7e696a32966dc02760e58ea32863c162df88d58b",
@@ -16857,9 +17251,11 @@
     "tdf-hq/src/TDF/Invoice/BuyerIdentity.hs": "6d4f8227ace8821694e85016823f3e66174a9fa36bd74ab7e572f9a2fd2ca2be",
     "tdf-hq/src/TDF/Invoice/Datil.hs": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
+    "tdf-hq/src/TDF/Invoice/SRI.hs": "a757e956d8fcee132cf93ec5716936b09500d74dc9ade36bb74178ca61e7142f",
+    "tdf-hq/src/TDF/Invoice/SessionIssue.hs": "a9abe069d6ea72ca291c7d7fd28ab73c060497be4a349182b50227b28b5f842a",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "e4a48fe6160fa869ba8d5afecd5310e1c2e6124ecc59f4bebfe436e7e8f538f8",
+    "tdf-hq/src/TDF/ModelsExtra.hs": "7246fb944ac8f5057100d4f98b88d136f829af0853c0e4c5e1242d73cc86d6a8",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
     "tdf-hq/src/TDF/MusicRelease/Domain.hs": "0f22bc111131e3a52d3d68bd6d9614c4b1005dd51dae59ac9fea1b92f0b7a193",
@@ -16879,7 +17275,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "5f8b478f482f4773abe4ee5d62ee5f0037384b5b20b22e3b85404c35645c248c",
+    "tdf-hq/src/TDF/Server.hs": "725af567739792f5f0d4a1747f5246700466046e365414cf67ded49272a870d7",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
@@ -16905,7 +17301,7 @@
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
-    "tdf-hq/src/TDF/ServerAdmin.hs": "774a4f3b7f6f6732222937e1795e4430669ca968cb46fcf30110370458868fd5",
+    "tdf-hq/src/TDF/ServerAdmin.hs": "a5dcf135b5ebd9682a0029979bbe5468e5845e2fac662505a87a17db02a80a8e",
     "tdf-hq/src/TDF/ServerAuth.hs": "9666d010cc08c4755e4ba46a26f5e925c64d8af003e489cd1dccc3784bc5f0f5",
     "tdf-hq/src/TDF/ServerExtra.hs": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
     "tdf-hq/src/TDF/ServerFanClub.hs": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
@@ -16929,14 +17325,14 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+    "tdf-hq/tdf-hq.cabal": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "ac5c5c56843e068046ff0827bd86a0c5319d2430ed8b8aedddc98d7f862950fc",
-    "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
+    "tdf-hq/test/Spec.hs": "ac179aeb72660514a19e29c61add1d3ec44cbb5f12ed94d77cc0e0177352ff62",
+    "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
@@ -16953,6 +17349,7 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+    "tdf-hq/test/TDF/Contracts/StoreSpec.hs": "302ab1c3c85ff1bfa9b3b514ed4373d13197df7bc1f12b78283b3a24cbf23579",
     "tdf-hq/test/TDF/CorsPropertiesSpec.hs": "11c733a22ba58b1c482169e4e30e6726795abb29fdd2946466c3adbcd1179990",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
@@ -16968,6 +17365,7 @@
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
+    "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs": "6ef7262c00b740b6fa54ba22425d349b1f2d83d2736fdeebf85f9d3ef2113dc2",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
     "tdf-hq/test/TDF/LedgerPostingSpec.hs": "b709ea453c050a6af2df6c14f61c3d490a5923cc2d90e6935f9d6a3b91b1d28e",
@@ -16986,7 +17384,7 @@
     "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
-    "tdf-hq/test/TDF/ServerAdminSpec.hs": "5957cc34b09649f00e1d8973936621d7342969c9e4797bc739bd8d4cc1847b8f",
+    "tdf-hq/test/TDF/ServerAdminSpec.hs": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
     "tdf-hq/test/TDF/ServerSpec.hs": "e12c6566816f79f93bc0a589383891837156c9e46ff910303530cd30a3fb1701",
@@ -18041,6 +18439,18 @@
       {
         "requirement": "PKG-PURCHASE-EXPIRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -18544,6 +18954,28 @@
       },
       {
         "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/music-directory/formal-model.yaml": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
       }
     ],
@@ -19052,12 +19484,6 @@
       }
     ],
     "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql": [
-      {
-        "requirement": "ID-CLAIM-REVIEW-001",
-        "relationship": "implementation"
-      }
-    ],
-    "docs/music-directory/formal-model.yaml": [
       {
         "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
@@ -20807,6 +21233,10 @@
       {
         "requirement": "AUTH-SOCIAL-OAUTH-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/compiled-api-surface.test.mjs": [
@@ -22551,6 +22981,14 @@
       {
         "requirement": "NOTIF-TICKET-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql": [
@@ -22799,6 +23237,10 @@
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql": [
@@ -22810,6 +23252,10 @@
     "tdf-hq-ui/src/api/invoices.ts": [
       {
         "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
         "relationship": "implementation"
       }
     ],
@@ -24602,6 +25048,18 @@
       },
       {
         "requirement": "PAY-TIP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
         "relationship": "implementation"
       }
     ],
@@ -29449,6 +29907,10 @@
       {
         "requirement": "AUTH-SOCIAL-OAUTH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": [
@@ -30183,6 +30645,134 @@
         "relationship": "tests"
       }
     ],
+    "scripts/lib/formal-methods-audit.mjs": [
+      {
+        "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/audit-formal-methods.mjs": [
+      {
+        "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/formal-methods-audit.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Invoice/SessionIssue.hs": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Invoice/SRI.hs": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-04_session_invoice_issue.sql": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/invoices.test.ts": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/Server.hs": [
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/API.hs": [
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/Types.hs": [
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-04_contract_store.sql": [
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-04_contract_store_rollback.sql": [
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Contracts/StoreSpec.hs": [
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": [
       {
         "requirement": "EVT-PLANNING-UX-001",
@@ -30259,6 +30849,18 @@
       {
         "requirement": "EVT-PLANNING-UX-001",
         "relationship": "formalModels"
+      }
+    ],
+    "scripts/generate-identity-party-reference-view.mjs": [
+      {
+        "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-identity-reconciliation.sh": [
+      {
+        "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -31594,7 +32196,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3181dfedc761f4feb323b3f7023405fa7c9b07344a3669db49fa035939fc25eb",
+      "sha256": "aa3ae4f73d9f6144fc71c49f7d3e85766c70d6f40ddcde0aa8274aba58ea0a18",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32055,9 +32657,14 @@
     {
       "id": "SURFACE-d09bf04096bd6964",
       "path": "scripts/__tests__/formal-methods-audit.test.mjs",
-      "sha256": "8c2234cb42c2d631ef9523eb9d15b52908d28b98a8499c7e3e7a79119a2745bc",
+      "sha256": "130513a03b99243c8992dc830b3f27ada4ec3e19faaa36422c815f6fd2382baa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-72598558c8c25494",
@@ -32931,9 +33538,14 @@
     {
       "id": "SURFACE-d112ef0e073bf0c4",
       "path": "scripts/audit-formal-methods.mjs",
-      "sha256": "7690517d3d5923af926d7b441ed815d093adbb011670536dd74d13c60066895b",
+      "sha256": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-efc90f2c7a0252ce",
@@ -33362,9 +33974,14 @@
     {
       "id": "SURFACE-66e87273aace5273",
       "path": "scripts/generate-identity-party-reference-view.mjs",
-      "sha256": "90787b7d8ba17874a1e3940d5916e7652e5c19b0731982ab72cc1c243195fd77",
+      "sha256": "980ebaec42704393878751e4dd40238f02f64ada510b3a02d60154d884b07493",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4a87e40b74f5caa1",
@@ -33656,9 +34273,14 @@
     {
       "id": "SURFACE-16c0274ca9b29448",
       "path": "scripts/lib/formal-methods-audit.mjs",
-      "sha256": "c3585c015a51d155a06adda4740ac42fd8ee3dfa1930a8febcae06c60e30afb9",
+      "sha256": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-AUDIT-SIGNAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a952b047ad5b4bd3",
@@ -34335,7 +34957,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "b41e33d7a92a66c79156376ec51d57a19482cbe0bef020d321905a4aecadc92f",
+      "sha256": "628c6022c2578939884fb677f4ad7544190a20781e84ef2e7313c30a65578283",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36093,7 +36715,12 @@
       "path": "scripts/test-identity-reconciliation.sh",
       "sha256": "7a0a057ed0d5aa4c453a7ca50ab81a644f0ff184c664b16f2c131ac577b04175",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7842f199f23fca5a",
@@ -37080,7 +37707,7 @@
     {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
-      "sha256": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
+      "sha256": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39050,13 +39677,29 @@
       ]
     },
     {
+      "id": "SURFACE-09824a09519e957e",
+      "path": "tdf-hq-ui/src/api/invoices.test.ts",
+      "sha256": "1cfc1c3eb6516b154cffe34a7f1c3823d8b3164e7b15a5e36f139b852fa76419",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8954d786b64d481b",
       "path": "tdf-hq-ui/src/api/invoices.ts",
-      "sha256": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
+      "sha256": "9ae14d68a08dc280f8b126b12d347377f7bed729cef316fe18849e4657e4476b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "implementation"
         }
       ]
@@ -40361,9 +41004,14 @@
     {
       "id": "SURFACE-dbd54bd3d14b1e80",
       "path": "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
-      "sha256": "2683fde25d4ef574d96b2f757f72dfcd7a31970e3e1501776284d58ded446c52",
+      "sha256": "1aaae8879191fc359cbd7689c402d1bc95febad1673418a27dd30718c7b363f5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5db1e9afd0ec5152",
@@ -51058,6 +51706,10 @@
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -51069,6 +51721,70 @@
       "requirements": [
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6c176f8ee82653bf",
+      "path": "tdf-hq/sql/2026-11-04_contract_store.sql",
+      "sha256": "bb78553729d9008d6773689f68f4cd6c5d179d05a0c77285313d50cdcf9bd895",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1deb1759f1e1045f",
+      "path": "tdf-hq/sql/2026-11-04_contract_store_rollback.sql",
+      "sha256": "f2d7c4f61e2083e50fe5b25dd7a631950c1f8fc5303c0e5a96e653f2cbd62b65",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dd7c870605dfa5cd",
+      "path": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+      "sha256": "658b6ba4a3f537968aa0302c6272d06fa30c617edda131dbcc8d5b918bcbef2d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-STATE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-756ba92161ce68f1",
+      "path": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql",
+      "sha256": "2985ea1ff62fb0225f48149544c863ecc88b8821cb1518eacf950dcdb6e12405",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-STATE-001",
           "relationship": "implementation"
         }
       ]
@@ -51093,6 +51809,30 @@
       "requirements": [
         {
           "requirement": "PAY-DEPOSIT-POLICY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d42e26733ec08dae",
+      "path": "tdf-hq/sql/2026-11-04_session_invoice_issue.sql",
+      "sha256": "edd0e25051291561a1fbe2cfaf37c7956c10475814fc72570a8af31af5729298",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b0e6b6cf85f9cc7b",
+      "path": "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql",
+      "sha256": "e2ae1da6c06c7d68b8a17a1b20ebf1903be36adc0c64447d8eb319dd430f3000",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "implementation"
         }
       ]
@@ -51649,7 +52389,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52249,21 +52989,48 @@
       "path": "tdf-hq/src/TDF/Contracts/API.hs",
       "sha256": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
-      "sha256": "000e0da46d1d410af6798ed5ef07a13b69191128225587399990097bdac7638d",
+      "sha256": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2bac4bb831675dd6",
       "path": "tdf-hq/src/TDF/Contracts/Types.hs",
       "sha256": "cd59c25f047739b58e8e6b0373b858e212665705dbd9f0ca2c2ced7c56b36a20",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-057525240b5b11f7",
@@ -52469,7 +53236,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
+      "sha256": "90b7f5a64a919d401338ab13c0763fa383095edd67531888ce97075ae888844b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52478,6 +53245,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "implementation"
         }
       ]
@@ -52560,11 +53331,19 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
+      "sha256": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
           "relationship": "implementation"
         }
       ]
@@ -52742,7 +53521,24 @@
       "path": "tdf-hq/src/TDF/Invoice/SRI.hs",
       "sha256": "a757e956d8fcee132cf93ec5716936b09500d74dc9ade36bb74178ca61e7142f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f85df2cd606d32e8",
+      "path": "tdf-hq/src/TDF/Invoice/SessionIssue.hs",
+      "sha256": "a9abe069d6ea72ca291c7d7fd28ab73c060497be4a349182b50227b28b5f842a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-dd73bca7a3d77f4e",
@@ -52819,7 +53615,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "e4a48fe6160fa869ba8d5afecd5310e1c2e6124ecc59f4bebfe436e7e8f538f8",
+      "sha256": "7246fb944ac8f5057100d4f98b88d136f829af0853c0e4c5e1242d73cc86d6a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52832,6 +53628,18 @@
         },
         {
           "requirement": "PAY-TIP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
           "relationship": "implementation"
         }
       ]
@@ -53165,7 +53973,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "5f8b478f482f4773abe4ee5d62ee5f0037384b5b20b22e3b85404c35645c248c",
+      "sha256": "725af567739792f5f0d4a1747f5246700466046e365414cf67ded49272a870d7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53266,6 +54074,18 @@
         },
         {
           "requirement": "PKG-PURCHASE-EXPIRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
           "relationship": "implementation"
         }
       ]
@@ -53800,7 +54620,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "774a4f3b7f6f6732222937e1795e4430669ca968cb46fcf30110370458868fd5",
+      "sha256": "a5dcf135b5ebd9682a0029979bbe5468e5845e2fac662505a87a17db02a80a8e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54361,7 +55181,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+      "sha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54507,7 +55327,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ac5c5c56843e068046ff0827bd86a0c5319d2430ed8b8aedddc98d7f862950fc",
+      "sha256": "ac179aeb72660514a19e29c61add1d3ec44cbb5f12ed94d77cc0e0177352ff62",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54595,7 +55415,7 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
+      "sha256": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54616,6 +55436,10 @@
         },
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "tests"
         }
       ]
@@ -54901,6 +55725,22 @@
       ]
     },
     {
+      "id": "SURFACE-83dc1bd4fe1e5da0",
+      "path": "tdf-hq/test/TDF/Contracts/StoreSpec.hs",
+      "sha256": "302ab1c3c85ff1bfa9b3b514ed4373d13197df7bc1f12b78283b3a24cbf23579",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CONTRACT-STORE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "CONTRACT-SEND-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-ea1e16f4dcd7f542",
       "path": "tdf-hq/test/TDF/CorsPropertiesSpec.hs",
       "sha256": "11c733a22ba58b1c482169e4e30e6726795abb29fdd2946466c3adbcd1179990",
@@ -55127,6 +55967,18 @@
       "requirements": [
         {
           "requirement": "PAY-INVOICE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-aa67c20f02cbb260",
+      "path": "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
+      "sha256": "6ef7262c00b740b6fa54ba22425d349b1f2d83d2736fdeebf85f9d3ef2113dc2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "tests"
         }
       ]
@@ -55428,7 +56280,7 @@
     {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
-      "sha256": "5957cc34b09649f00e1d8973936621d7342969c9e4797bc739bd8d4cc1847b8f",
+      "sha256": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59847,7 +60699,6 @@
     "SURFACE-46aeee723adfa6c5",
     "SURFACE-ee1bb502b120babb",
     "SURFACE-713c65ca95c0680d",
-    "SURFACE-d09bf04096bd6964",
     "SURFACE-20231ef140c7dd90",
     "SURFACE-aaf6250f3ecffcca",
     "SURFACE-e12f540d456f8d56",
@@ -59875,7 +60726,6 @@
     "SURFACE-33fdad1340b42ae6",
     "SURFACE-2685e984e33eb792",
     "SURFACE-33c36559cee9f889",
-    "SURFACE-d112ef0e073bf0c4",
     "SURFACE-efc90f2c7a0252ce",
     "SURFACE-3dfd6f173e84edf1",
     "SURFACE-7972d2e7d13940a5",
@@ -59896,7 +60746,6 @@
     "SURFACE-0540f4b62e8a5c1d",
     "SURFACE-ee3c76cc57db7814",
     "SURFACE-d046bc8ebef81bf4",
-    "SURFACE-66e87273aace5273",
     "SURFACE-4a87e40b74f5caa1",
     "SURFACE-017df03fe878b45b",
     "SURFACE-298863fcec57d5aa",
@@ -59918,7 +60767,6 @@
     "SURFACE-596444d6be3be153",
     "SURFACE-5d55ff4fc614658c",
     "SURFACE-6f9017626e33d004",
-    "SURFACE-16c0274ca9b29448",
     "SURFACE-a38198fb9ee3c45e",
     "SURFACE-49f6227b405af138",
     "SURFACE-ee642d6d6fafaf64",
@@ -60035,7 +60883,6 @@
     "SURFACE-ec9fd51aaf4b467d",
     "SURFACE-4c3a09c813dc973b",
     "SURFACE-ec70a1725f0a44fe",
-    "SURFACE-f86d69da75ef0aa1",
     "SURFACE-180b5ac69cd86e73",
     "SURFACE-6c0e76dafbb5a45f",
     "SURFACE-434ec2aecc0c4dfc",
@@ -60213,7 +61060,6 @@
     "SURFACE-517c2af5fa3973c0",
     "SURFACE-86fcc61cfe3835da",
     "SURFACE-e24458b8f868963c",
-    "SURFACE-dbd54bd3d14b1e80",
     "SURFACE-74bc7741839fadce",
     "SURFACE-3abf257651875b52",
     "SURFACE-a208cc1febcd65bd",
@@ -60923,9 +61769,6 @@
     "SURFACE-d117ca68ab1ef0d1",
     "SURFACE-b3ab13afc655164b",
     "SURFACE-e566657be7de3ed5",
-    "SURFACE-95011c3eb812e7fd",
-    "SURFACE-de7641689e63ad01",
-    "SURFACE-2bac4bb831675dd6",
     "SURFACE-980d517db26f5cab",
     "SURFACE-b9f1acd9b5c4a2a3",
     "SURFACE-99343fbe22db2301",
@@ -60954,7 +61797,6 @@
     "SURFACE-4b41640bebd528e2",
     "SURFACE-5dc54f64fc1fc3e9",
     "SURFACE-9ff459c664205d62",
-    "SURFACE-6c4cebdeba931f44",
     "SURFACE-dd73bca7a3d77f4e",
     "SURFACE-da7dbfc9ff1416c5",
     "SURFACE-b5b5aa3bc4cc0232",
@@ -61413,6 +62255,7 @@
     "SOCIAL-EVENT-SESSION-001",
     "MEDIA-MUSIC-PRIVACY-001",
     "SYS-CI-SELECTED-001",
+    "ART-ENRICH-REVIEW-001",
     "ART-PUBLIC-VISIBILITY-001",
     "PAY-DOMO-QUOTE-001",
     "PAY-ADAPTER-BINDING-001",
@@ -61426,7 +62269,11 @@
     "PAY-EVENT-REPORT-RANGE-001",
     "PKG-PURCHASE-EXPIRY-001",
     "UI-EVENT-FINANCE-PRECISION-001",
-    "SYS-UI-TEST-WORKER-001"
+    "SYS-UI-TEST-WORKER-001",
+    "PAY-INVOICE-ISSUE-001",
+    "CONTRACT-STORE-001",
+    "CONTRACT-SEND-001",
+    "ID-PARTY-REFERENCE-REGISTRY-001"
   ],
   "stateMachines": [
     {
@@ -61979,7 +62826,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#profile",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sourceSha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -62017,7 +62864,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#classified",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sourceSha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -62066,7 +62913,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#application",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sourceSha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "definition": {
         "initial": "submitted",
         "transitions": {
@@ -62107,7 +62954,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#invitation",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sourceSha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -62141,7 +62988,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#claim",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sourceSha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -62178,7 +63025,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#moderation_case",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sourceSha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "definition": {
         "initial": "open",
         "transitions": {
@@ -62222,15 +63069,10 @@
     {
       "id": "docs/music-directory/formal-model.yaml#review",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sourceSha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "definition": {
         "initial": "published",
         "transitions": {
-          "pending": [
-            "published",
-            "hidden",
-            "removed"
-          ],
           "published": [
             "hidden",
             "removed"
@@ -62548,7 +63390,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c4f504142d5541bd5cbc4053a1a706e75d691fce758ebbf8f693699cd6c337db",
+      "sourceSha256": "80d5779fb0306ad66d49e0d6c5b7d814719bb3e6ea48c892fe5796791b36c391",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -62576,7 +63418,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c4f504142d5541bd5cbc4053a1a706e75d691fce758ebbf8f693699cd6c337db",
+      "sourceSha256": "80d5779fb0306ad66d49e0d6c5b7d814719bb3e6ea48c892fe5796791b36c391",
       "definition": {
         "states": [
           "absent",
@@ -62606,7 +63448,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c4f504142d5541bd5cbc4053a1a706e75d691fce758ebbf8f693699cd6c337db",
+      "sourceSha256": "80d5779fb0306ad66d49e0d6c5b7d814719bb3e6ea48c892fe5796791b36c391",
       "definition": {
         "export": [
           "queued",
@@ -85127,7 +85969,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 182,
+    "PARTIAL": 187,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
