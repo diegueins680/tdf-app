@@ -106,3 +106,11 @@ rerun passed all 13 cases without changing the assertion. These are local
 receipts, not real-provider or production acceptance. Tab drafts restore metadata
 only; original binary bytes must be reselected. Final hosted checks remain
 required for the exact integrated head.
+
+Protected main advanced to `8efa5afe` during implementation. The integrated
+manifest preserves that exact 239-entry prefix, then appends the five unchanged
+storage entries (244 total). The prior 241-entry storage manifest is preserved
+as a view omitting main's three independent additions. Both complete parent
+review graphs and their hashes are retained in the active successor and
+`storage-main-integration-20261104.json`. Earlier build receipts do not certify
+this newly integrated backend; fresh hosted checks are required.

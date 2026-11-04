@@ -76,9 +76,10 @@ state_machines:
       dismissed: [closed]
       closed: []
   review:
+    # Reviews reference a completed verified interaction (I09) and are published
+    # on creation; there is no pending state (audit F-09).
     initial: published
     transitions:
-      pending: [published, hidden, removed]
       published: [hidden, removed]
       hidden: [published, removed]
       removed: []

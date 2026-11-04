@@ -137,6 +137,8 @@ import qualified TDF.CorsSpec as CorsSpec
 import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import qualified TDF.ReadinessSpec as ReadinessSpec
 import qualified TDF.Invoice.ReceiptSpec as ReceiptSpec
+import qualified TDF.Invoice.SessionIssueSpec as SessionIssueSpec
+import qualified TDF.Contracts.StoreSpec as ContractStoreSpec
 import TDF.Cors
     ( corsPolicy,
       isAccountDeletionRequestAllowed,
@@ -902,6 +904,8 @@ main = hspec $ do
     FailureBoundarySpec.spec
     ReadinessSpec.spec
     ReceiptSpec.spec
+    SessionIssueSpec.spec
+    ContractStoreSpec.spec
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec

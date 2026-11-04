@@ -144,6 +144,7 @@ import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Operations.Server as OperationsServer
 import qualified TDF.EventOperations.Server as EventOperationsServer
 import qualified TDF.Invoice.SRI as Sri
+import qualified TDF.Invoice.SessionIssue as SessionIssue
 import           TDF.Invoice.Receipt (validateReceiptSnapshot)
 import           TDF.Models
 import qualified TDF.Models as M
@@ -162,6 +163,7 @@ import           TDF.DTO
 import qualified TDF.DTO as DTO
 import           TDF.Auth
   ( AuthedUser(..)
+  , secretTokenMatches
   , ModuleAccess(..)
   , authContext
   , hasAiToolingAccess
@@ -1079,7 +1081,7 @@ requireSeedToken rawToken = do
   token <- maybe missingHeader pure rawToken
   when (T.null (T.strip token)) missingHeader
   when (token /= T.strip token || T.any invalidTokenChar token) malformed
-  when (token /= secret) invalid
+  unless (secretTokenMatches token secret) invalid
   pure ()
 
 fanPublicServer :: ServerT FanPublicAPI AppM
@@ -13470,25 +13472,100 @@ generateInvoiceForSession user sessionId payload = do
   req <- case fromJSON payload of
     Error err -> throwBadRequest ("Invalid generate-invoice payload: " <> T.pack err)
     Success decoded -> pure decoded
+  -- PAY-INVOICE-ISSUE-001: an SRI document is a legal invoice, so issuing one
+  -- requires an idempotency key; validate it before touching the database.
+  let issuesSri = fromMaybe True (gsiIssueSri req)
+  mIssueKey <- either throwBadRequest pure (SessionIssue.validateIssueKey issuesSri (gsiIdempotencyKey req))
   Env pool _ <- ask
   sessionEnt <- liftIO $ flip runSqlPool pool $ getEntity sessionKey
   session <- maybe (throwError err404 { errBody = "Session not found" }) pure sessionEnt
   customerKey <- resolveSessionInvoiceCustomer session req
-  now <- liftIO getCurrentTime
-  dto <- createInvoice user (toCreateInvoiceReq customerKey req)
-  let invoiceKey = toSqlKey (invId dto) :: Key Invoice
-  liftIO $ flip runSqlPool pool $ do
-    _ <- insertUnique ME.SessionInvoice
-      { ME.sessionInvoiceSessionId = sessionKey
-      , ME.sessionInvoiceInvoiceId = invoiceKey
-      , ME.sessionInvoiceCreatedAt = now
-      }
-    pure ()
-  sriValue <-
-    if fromMaybe True (gsiIssueSri req)
+  -- Everything the SRI script would reject is checked before a key is reserved
+  -- or an invoice created, so a correctable input error (for example a customer
+  -- without RUC) answers 400 and leaves the key reusable.
+  mSriRequest <-
+    if issuesSri
       then do
         customer <- loadCustomerForSri customerKey
-        sriResult <- liftIO (Sri.runSriInvoiceScript (toSriScriptRequest customer req))
+        let sriRequest = toSriScriptRequest customer req
+        either throwBadRequest (const (pure (Just sriRequest))) (Sri.validateSriScriptRequest sriRequest)
+      else pure Nothing
+  case mIssueKey of
+    Nothing -> snd <$> generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest (pure ())
+    Just issueKey -> do
+      now <- liftIO getCurrentTime
+      let fingerprint = SessionIssue.issueFingerprint sessionId req
+          portalVerified = gsiSriPortalVerified req == Just True
+      -- A new key for a request whose earlier attempt is unresolved could issue
+      -- a duplicate legal invoice (for example after the browser lost the key).
+      -- The check and the reservation share one transaction and a lock on
+      -- (session, request), so two concurrent new keys cannot both pass.
+      guarded <- liftIO $ flip runSqlPool pool $
+        SessionIssue.reserveIssueGuarded
+          (SessionIssue.issueAdvisoryLock sessionKey fingerprint)
+          (issuesSri && not portalVerified)
+          now sessionKey issueKey fingerprint
+      reservation <- case guarded of
+        SessionIssue.SiblingUnresolved ->
+          throwError err409
+            { errBody =
+                "An earlier attempt to issue this invoice to SRI is unresolved. Check the SRI portal; \
+                \if nothing was issued, retry confirming the portal was verified."
+            }
+        SessionIssue.Guarded r -> pure r
+      case reservation of
+        SessionIssue.IssueExisting (SessionIssue.IssueReplayStored stored) ->
+          maybe
+            (throwError err500 { errBody = "Stored invoice response could not be read" })
+            pure
+            (decodeStrict' (TE.encodeUtf8 stored))
+        SessionIssue.IssueExisting SessionIssue.IssueInProgress ->
+          throwError err409
+            { errBody =
+                "An invoice request with this idempotencyKey has no answer yet. Retry with the same key; \
+                \if it never completes, check the SRI portal before using a new key."
+            }
+        SessionIssue.IssueExisting (SessionIssue.IssueConflict reason) ->
+          throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 reason) }
+        SessionIssue.IssueExisting SessionIssue.IssueFresh ->
+          throwError err500 { errBody = "Invoice idempotency reservation was not recorded" }
+        SessionIssue.IssueReserved reservationId -> do
+          let release = liftIO $ flip runSqlPool pool $ SessionIssue.releaseIssue reservationId
+          (invoiceKey, response) <-
+            generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest release
+          completedAt <- liftIO getCurrentTime
+          liftIO $ flip runSqlPool pool $
+            SessionIssue.completeIssue completedAt reservationId (Just invoiceKey)
+              (TE.decodeUtf8 (BL.toStrict (encode response)))
+          pure response
+
+-- | Create the invoice, link it to the session and, when requested, issue the
+-- SRI document. @beforeSri@ runs if creating or linking the invoice fails: no
+-- SRI document can have been issued yet, so a reservation may be released.
+-- Once the SRI script starts, failures are reported in the response instead.
+generateSessionInvoiceOnce
+  :: AuthedUser -> Text -> Key ME.Session -> Key Party -> GenerateSessionInvoiceReq
+  -> Maybe Sri.SriScriptRequest -> AppM ()
+  -> AppM (Key Invoice, Value)
+generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest beforeSri = do
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  invoiceKey <- (do
+      dto <- createInvoice user (toCreateInvoiceReq customerKey req)
+      let createdKey = toSqlKey (invId dto) :: Key Invoice
+      liftIO $ flip runSqlPool pool $ do
+        _ <- insertUnique ME.SessionInvoice
+          { ME.sessionInvoiceSessionId = sessionKey
+          , ME.sessionInvoiceInvoiceId = createdKey
+          , ME.sessionInvoiceCreatedAt = now
+          }
+        pure ()
+      pure createdKey)
+    `catchError` \err -> beforeSri >> throwError err
+  sriValue <-
+    case mSriRequest of
+      Just sriRequest -> do
+        sriResult <- liftIO (Sri.runSriInvoiceScript sriRequest)
         case sriResult of
           Left err ->
             pure (object ["ok" .= False, "error" .= err])
@@ -13501,15 +13578,17 @@ generateInvoiceForSession user sessionId payload = do
                   , InvoiceNumber =. sirInvoiceNumber result
                   ]
             pure (toJSON result)
-      else pure Null
+      Nothing -> pure Null
   refreshed <- loadInvoiceDTOOr404 invoiceKey
-  pure $
-    object
-      [ "ok" .= True
-      , "sessionId" .= sessionId
-      , "invoice" .= refreshed
-      , "sri" .= sriValue
-      ]
+  pure
+    ( invoiceKey
+    , object
+        [ "ok" .= True
+        , "sessionId" .= sessionId
+        , "invoice" .= refreshed
+        , "sri" .= sriValue
+        ]
+    )
 
 getInvoicesBySession :: AuthedUser -> Text -> AppM Value
 getInvoicesBySession user sessionId = do
@@ -15770,12 +15849,21 @@ contractsServer user =
   :<|> (\contractId -> guardContracts (pdfH contractId))
   :<|> (\contractId body -> guardContracts (sendH contractId body))
   where
-    createH :<|> pdfH :<|> sendH = Contracts.server
-
-    guardContracts :: Handler a -> AppM a
+    guardContracts :: (Contracts.ContractsDeps -> Handler a) -> AppM a
     guardContracts action = do
       either throwError pure (validateContractsAccess user)
-      lift action
+      Env pool cfg <- ask
+      let deps = Contracts.ContractsDeps
+            { Contracts.cdPool = pool
+            , Contracts.cdEmail = Email.sendContractEmail <$> emailConfig cfg
+            , Contracts.cdActor = Just (auPartyId user)
+            , Contracts.cdRenderPdf = Contracts.defaultRenderPdf
+            }
+      lift (action deps)
+
+    createH body deps = let (h :<|> _ :<|> _) = Contracts.server deps in h body
+    pdfH contractId deps = let (_ :<|> h :<|> _) = Contracts.server deps in h contractId
+    sendH contractId body deps = let (_ :<|> _ :<|> h) = Contracts.server deps in h contractId body
 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do
