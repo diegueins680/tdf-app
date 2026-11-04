@@ -12874,6 +12874,17 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
 
+    describe "event logistics timezone inheritance" $ do
+        it "inherits an event's clock instead of the server default for a new plan" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") Nothing
+                `shouldBe` "America/Guayaquil"
+        it "preserves an explicitly saved logistics timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") (Just "Europe/Berlin")
+                `shouldBe` "Europe/Berlin"
+        it "keeps the configured default for legacy events without a timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "America/Guayaquil" Nothing Nothing
+                `shouldBe` "America/Guayaquil"
+
     describe "stored discovery ownership metadata boundary" $ do
         it "accepts internal evidence without exposing it through the public projection" $ do
             let raw = "{\"isPublic\":true,\"ticketUrl\":\"https://tickets.example/event\",\"_discoveryOwned\":{\"isPublic\":true}}"
