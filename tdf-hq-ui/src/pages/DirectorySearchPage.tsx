@@ -572,6 +572,7 @@ function ResultCard({
       }}
     >
       <DirectoryPreviewImage
+        profileName={item.type === 'profile' ? item.title : undefined}
         kind={item.type}
         imageUrl={item.imageUrl}
         alt={t('directorySearch.photo', { title: item.title })}

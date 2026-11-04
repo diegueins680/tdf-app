@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ArtistProfileImage from '../ArtistProfileImage';
 import { styled, type SxProps, type Theme } from '@mui/material';
 import {
   directoryFallbackImageUrl,
@@ -12,6 +13,7 @@ const PreviewImg = styled('img')({});
 
 interface DirectoryPreviewImageProps {
   kind: DirectoryPreviewKind;
+  profileName?: string;
   imageUrl?: string | null;
   alt: string;
   fallbackAlt: string;
@@ -25,6 +27,7 @@ interface DirectoryPreviewImageProps {
 
 export default function DirectoryPreviewImage({
   kind,
+  profileName,
   imageUrl,
   alt,
   fallbackAlt,
@@ -39,6 +42,10 @@ export default function DirectoryPreviewImage({
   const [failed, setFailed] = useState(false);
   useEffect(() => { setFailed(false); }, [resolved]);
   const showFallback = !resolved || failed;
+  if (kind === 'profile' && profileName) return (
+    <ArtistProfileImage artistName={profileName} imageUrl={resolved} alt={alt}
+      width={width} height={height} sizes={sizes} eager={eager} sx={sx} />
+  );
   return (
     <PreviewImg
       src={showFallback ? fallback : resolved}
