@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211"
+    "tdf-hq/tdf-hq.cabal": "5cfa6ae42dd128664bd520b493f6d596bf325dc12033eb00a935275d0002d5f1"
   },
   "obligations": [
     {
@@ -239,6 +239,14 @@
       "change": "Merge of protected main dd9adc5d (PR #686, api_token session validity window) into the formal audit branch 644a3303 (PR #691). Git merged tdf-hq/tdf-hq.cabal without textual conflict: main's hunks and the audit's hunks touch disjoint regions (the cabal file was rebuilt on main's new library layout with the audit's modules registered in exposed-modules and the test suite).",
       "semanticReview": "The merged file equals protected main's version (9ddd4662b265d1cb...) plus exactly the audit's previously reviewed additions; neither side's hunks were altered. Main's pinned value for this file was 9ddd4662b265d1cb29e88339707318dd1a60b0cda2b173293bdf870973a2e8d3.",
       "qualification": "Merge-of-main pin refresh: this record only binds the merged snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "7b4b82519ecfdb0620ad320820d6c53b3404eb04",
+      "previousSha256": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+      "currentSha256": "5cfa6ae42dd128664bd520b493f6d596bf325dc12033eb00a935275d0002d5f1",
+      "change": "PR #703 (account storage and recoverable uploads) registers two new library modules, TDF.API.ContentStorage and TDF.ContentStorage, in exposed-modules. No other line of the cabal file changes.",
+      "semanticReview": "The change only lists new modules for compilation; it alters no build flag, dependency, language extension or existing module, and neither new module is a source of the verified predicates. The verified obligations are therefore unaffected and the pin is refreshed to the new file."
     }
   ]
 }
