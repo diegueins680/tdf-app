@@ -24396,6 +24396,38 @@
       }
     },
     {
+      "id": "bf994cad7ab5f649b6d9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these fixtures/protocol classifications can weaken artist media admission and availability diagnostics.",
+      "justification": "Bounded test-only input for exact-artist, rights-bearing media admission; no production catalog authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-04",
+      "reviewBatch": "artist-profile-media-coverage",
+      "evidence": {
+        "file": "scripts/__tests__/artist-enrichment.test.mjs",
+        "line": 565
+      }
+    },
+    {
+      "id": "e52034f3208b0d9e0f1a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these fixtures/protocol classifications can weaken artist media admission and availability diagnostics.",
+      "justification": "HTTP404 and410 are protocol outcomes for confirmed unavailable resources. Other transient/authentication outcomes remain unavailable, not automatically broken. This is transport classification, not a selectable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-04",
+      "reviewBatch": "artist-profile-media-coverage",
+      "evidence": {
+        "file": "scripts/artist-enrichment.mjs",
+        "line": 601
+      }
+    },
+    {
       "id": "316d6dcae63ef10fc332",
       "classification": "genuine-technical-constant",
       "disposition": "retain-test-fixture",

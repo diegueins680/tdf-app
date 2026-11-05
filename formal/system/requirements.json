@@ -15890,6 +15890,91 @@
       }
     },
     {
+      "id": "ART-PROFILE-MEDIA-001",
+      "title": "Named artist avatars and conservative existing-profile enrichment",
+      "statement": "Every affected public web artist view has a stable named provisional avatar when its photo is missing or fails. Existing-profile research reuses authorized same-artist media before provider research, preserves populated artist content and terminal decisions, and admits external photo bytes only through bounded public-network ingestion.",
+      "domain": "Artist profiles",
+      "authority": "Product owner instruction and approved prompt, 2026-11-04.",
+      "actors": [
+        "Artist",
+        "Public visitor",
+        "Strict administrator",
+        "Existing enrichment worker"
+      ],
+      "preconditions": [
+        "Existing artist, enrichment and authorized media records; production publication still requires normal release and strict-admin authorization."
+      ],
+      "inputs": [
+        "Profile name/photo/slug, responsive renditions, same-artist media/source rights records, field proposals and actual image responses."
+      ],
+      "state": {
+        "presentation": "Current photo/source version and failure key; deterministic initials.",
+        "persistence": "Existing proposals, field history, authorized media and run checkpoints."
+      },
+      "allowedTransitions": [
+        "Missing/failed photo -> named local initials",
+        "Same-artist authorized media -> empty/provisional image proposal",
+        "Verified metadata -> empty field publication or human-reviewed alternative",
+        "Terminal proposal replay -> unchanged reviewed evidence",
+        "Changed reviewed source bytes -> refuse ingestion"
+      ],
+      "forbiddenTransitions": [
+        "Attribute another artist media by name alone",
+        "Replace populated artist content automatically",
+        "Overwrite terminal review evidence during re-upsert",
+        "Follow image redirects into internal/private networks",
+        "Infer photo rights from public availability"
+      ],
+      "effects": [
+        "Web-only fallback presentation and existing strict-admin source/suggestion/media writes; no role grants or new API shapes."
+      ],
+      "authorization": "Existing strict-admin enrichment and artist self-edit/photo boundaries remain unchanged. Owner-facing review is an open obligation.",
+      "privacy": "No credential/personal payload is added to public audit. Image requests forward no caller credentials.",
+      "concurrency": "Source-version error isolation in the browser; existing profile lock and baseline comparison; atomic pending-only suggestion updates preserve terminal reviews.",
+      "idempotency": "Existing suggestion/asset hashes and run checkpoints. Rejected proposals remain terminal; no new profile is created in profiles scope.",
+      "failure": "Use provisional avatar; retain unavailable provider evidence; reject unsafe, excessive or changed reviewed photo bytes.",
+      "recovery": "Retain prior values and evidence; fresh explicit reviewed proposal can restore a field; field opt-out and one-action undo remain open.",
+      "observability": "Redacted batch reports and public read-only dated inventory; local checks are separate from compiled backend, hosted CI and deployment.",
+      "source": "docs/artist-enrichment-runbook.md",
+      "contract": "docs/artist-enrichment-runbook.md",
+      "implementation": [
+        "scripts/artist-enrichment.mjs",
+        "scripts/artist-image-download.mjs",
+        "tdf-hq/src/TDF/Artists/Enrichment.hs",
+        "tdf-hq-ui/src/utils/artistFallbacks.ts",
+        "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
+        "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "package.json"
+      ],
+      "tests": [
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "scripts/__tests__/artist-image-download.test.mjs",
+        "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
+        "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Deterministic helper/component checks; no universal proof or production activation claim.",
+      "ambiguity": [
+        "Full user prompt still requires owner review, field opt-outs, one-action undo and complete source discovery/production evidence."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Useful web/worker/backend preparation; full prompt controls, compiled backend qualification and production execution remain open."
+      },
+      "property": "Missing or failed artist media renders named initials; automatic publication fills only empty/provisional fields; reviewed terminal evidence is immutable; existing-profile mode creates no artist; external image download admits only public DNS-bound HTTPS and reviewed unchanged bytes.",
+      "verification": "Deterministic image/worker/component tests, actual web typecheck/build/lint; backend Hspec changes require hosted Stack compilation. No mathematical proof or deployment evidence is claimed.",
+      "evidence": "Source-bound local validation and reports/artist-profile-media-2026-11-04.json; fresh hosted checks remain required."
+    },
+    {
       "id": "EVT-DISCOVERY-FILTER-001",
       "title": "City and canonical performing-artist event filtering",
       "statement": "Apply existing event visibility and city, performing artist, type, state and effective end/start time restrictions before pagination. Selected artist IDs form an OR set; independent categories use AND. Expose multi-artist autocomplete, explicit past inclusion and coherent page/calendar results in the signed-in events workspace.",
