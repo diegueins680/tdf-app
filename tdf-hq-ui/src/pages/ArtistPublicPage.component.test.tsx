@@ -61,6 +61,7 @@ jest.unstable_mockModule('react-i18next', () => ({
     i18n: { language: 'es', resolvedLanguage: 'es' },
     t: (key: string, options?: { artist?: string }) => ({
       'artistFollow.authCta': 'Crear cuenta o ingresar para seguir',
+      'artistFollow.benefit': `Sigue a ${options?.artist ?? ''} para volver a encontrarlo en tu comunidad. Puedes ver sus videos sin crear una cuenta.`,
       'artistFollow.resumeAction': 'Seguir ahora',
       'artistFollow.resumeMessage': `Ya ingresaste. Continúa donde estabas y sigue a ${options?.artist ?? ''}.`,
       'artistFollow.resumeError': `No pudimos seguir a ${options?.artist ?? ''}. Revisa tu conexión e inténtalo de nuevo.`,
@@ -166,6 +167,7 @@ describe('ArtistPublicPage follow continuity', () => {
     const view = renderPage('/a/las-sinteticas');
 
     const follow = await screen.findByRole('link', { name: 'Crear cuenta o ingresar para seguir' });
+    expect(screen.getByText('Sigue a Las Sintéticas para volver a encontrarlo en tu comunidad. Puedes ver sus videos sin crear una cuenta.')).toBeTruthy();
     const authUrl = new URL(follow.getAttribute('href') ?? '', 'https://tdf.example.test');
     expect(authUrl.pathname).toBe('/login');
     expect(authUrl.searchParams.get('signup')).toBe('1');

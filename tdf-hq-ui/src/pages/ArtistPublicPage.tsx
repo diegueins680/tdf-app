@@ -492,6 +492,11 @@ export default function ArtistPublicPage() {
         </section>
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           <Stack spacing={2.5}>
+            {!hasToken && (
+              <Typography variant="body2" color="text.secondary">
+                {t('artistFollow.benefit', { artist: artist.apDisplayName })}
+              </Typography>
+            )}
             {resumeFollow && !isFollowing && (
               <Alert severity="info">{t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}</Alert>
             )}

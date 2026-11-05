@@ -16192,16 +16192,14 @@
         "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-        "tdf-mobile/app/artistPublic.tsx",
         "tdf-mobile/app/(tabs)/social.tsx",
-        "tdf-mobile/src/components/ArtistPublicWebView.tsx",
-        "tdf-mobile/src/components/ArtistPublicWebView.web.tsx",
-        "tdf-mobile/src/lib/artistPublicUrl.ts",
         "tdf-mobile/src/navigation/deepLinks.ts",
         "tdf-mobile/package.json",
         "tdf-mobile/ios/Podfile.lock",
         "tdf-mobile/.github/workflows/interaction-simulator.yml",
-        "tdf-hq-ui/src/utils/artistFollowIntent.ts"
+        "tdf-hq-ui/src/utils/artistFollowIntent.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts"
       ],
       "tests": [
         "services/campaign-platform/tests/test_videos.py",
@@ -16211,9 +16209,9 @@
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
-        "tdf-mobile/__tests__/ArtistPublicUrl.test.ts",
         "tdf-mobile/__tests__/DeepLinks.test.ts",
-        "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx"
+        "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
+        "e2e/web/artist-follow.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16225,7 +16223,20 @@
       },
       "property": "No public draft or stale version, unauthorized artist/campaign mutation, implicit follow, duplicated provider-source identity or iframe-load watch claim. Shared-session links preserve canonical artist/source identity, credits and playback continuity across metadata resolution; Mobile retains only bounded public acquisition fields.",
       "verification": "Finite source and HTTP/UI tests; actual local embed preview and Metro bundles recorded separately from protected deploy and device qualification.",
-      "evidence": "Current-run receipts are private; source checks do not claim production deployment, external-provider progress SDK qualification or physical-device playback."
+      "evidence": "Current-run receipts are private; source checks do not claim production deployment, external-provider progress SDK qualification or physical-device playback.",
+      "pendingPairedMobileWork": {
+        "pullRequest": "https://github.com/diegueins680/tdf-mobile/pull/177",
+        "scope": "Separate unmerged Mobile work, absent from the preserved main Mobile pin. These references are pending, not current implementation evidence.",
+        "implementation": [
+          "tdf-mobile/app/artistPublic.tsx",
+          "tdf-mobile/src/components/ArtistPublicWebView.tsx",
+          "tdf-mobile/src/components/ArtistPublicWebView.web.tsx",
+          "tdf-mobile/src/lib/artistPublicUrl.ts"
+        ],
+        "tests": [
+          "tdf-mobile/__tests__/ArtistPublicUrl.test.ts"
+        ]
+      }
     }
   ]
 }
