@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "0ad432ae63df95570343809ec585e90de2da1cda2cdde9f60116fcc336fbcd2e",
+    "tdf-hq/tdf-hq.cabal": "bf99bf6443094d872bc470129c43e4256ae69d8efab282da7051a71f69b781a6",
     "formal/system/identity-lifecycle.md": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440"
   },
   "obligations": [
@@ -303,11 +303,35 @@
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "7b4b82519ecfdb0620ad320820d6c53b3404eb04",
+      "previousSha256": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+      "currentSha256": "5cfa6ae42dd128664bd520b493f6d596bf325dc12033eb00a935275d0002d5f1",
+      "change": "PR #703 (account storage and recoverable uploads) registers two new library modules, TDF.API.ContentStorage and TDF.ContentStorage, in exposed-modules. No other line of the cabal file changes.",
+      "semanticReview": "The change only lists new modules for compilation; it alters no build flag, dependency, language extension or existing module, and neither new module is a source of the verified predicates. The verified obligations are therefore unaffected and the pin is refreshed to the new file."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "8efa5afe186705545103db80c527a09133708ede",
+      "previousSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
+      "currentSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "change": "Merge preserves protected main build declarations and appends only TDF.API.ContentStorage and TDF.ContentStorage exposed modules.",
+      "semanticReview": "New module registration changes no existing module implementation, flag or dependency. Both parent source-context reviews are retained. Fresh solver/replay execution remains required; this pin refresh is not a proof or release authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "c6c519e7e9baf1bf3f00165eb4e945ac0c1d08ac",
       "previousSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
       "currentSha256": "0ad432ae63df95570343809ec585e90de2da1cda2cdde9f60116fcc336fbcd2e",
       "change": "PR #704 (event city, multi-artist and past filters) adds one package field, extra-source-files: sql/queries/social-event-city-match.sql, so Cabal tracks the embedded city-matching query as a build input. No other line changes.",
       "semanticReview": "The field only declares a non-Haskell file as a build dependency; it alters no module, flag, extension or dependency, and the query is not a source of the verified predicates. The verified obligations are unaffected and the pin is refreshed to the new file."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "bf99bf6443094d872bc470129c43e4256ae69d8efab282da7051a71f69b781a6",
+      "change": "Merge preserves protected main's cabal file (including the TDF.API.ContentStorage and TDF.ContentStorage modules from PR #703) and adds only PR #704's extra-source-files: sql/queries/social-event-city-match.sql line.",
+      "semanticReview": "The added field only declares a non-Haskell build input; it changes no module, flag, extension or dependency, and the query is not a source of the verified predicates. Both parent source-context reviews are retained. Fresh solver/replay execution remains required; this pin refresh is not a proof or release authorization."
     }
   ]
 }

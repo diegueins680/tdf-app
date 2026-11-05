@@ -897,6 +897,95 @@ paths:
         '409': { description: Missing, expired, self, terminal or changed approval; no effects committed }
         '422': { description: Invalid decision or blank reason }
         '500': { description: Transaction rolled back; operational data unavailable }
+  /storage/me:
+    get:
+      operationId: getContentStorageAccount
+      summary: Read the current account's storage allowance and selected default
+      responses:
+        '200':
+          description: Decimal bytes, including capacity reserved by uncertain uploads
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StorageAccountDTO' }
+        '401': { description: Missing or invalid TDF session }
+  /storage/me/destination:
+    put:
+      operationId: setContentStorageDestination
+      summary: Change the default for future uploads without moving existing files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination, expectedRevision]
+              properties:
+                destination: { type: string, enum: [tdf, google_drive] }
+                expectedRevision: { type: integer, format: int64, minimum: 0 }
+      responses:
+        '200':
+          description: Updated account preference
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StorageAccountDTO' }
+        '401': { description: Missing or invalid TDF session }
+        '409': { description: Preference was edited concurrently; reread before retrying }
+  /storage/files:
+    get:
+      operationId: listContentStorageFiles
+      summary: List owned TDF uploads and pending cleanup intents
+      parameters:
+        - name: after
+          in: query
+          schema: { type: string, format: uuid }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Account-scoped files, ordered by immutable ID
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/StorageFileDTO' }
+        '401': { description: Missing or invalid TDF session }
+  /storage/files/{fileId}:
+    delete:
+      operationId: deleteContentStorageFile
+      summary: Persist an owner-authorized deletion intent and remove its managed bytes
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: File deletion confirmed; metadata and tombstone retained }
+        '401': { description: Missing or invalid TDF session }
+        '404': { description: No owned file }
+        '409': { description: Upload is still running; wait before retrying deletion }
+        '503': { description: Deletion intent retained for retry; cleanup unconfirmed }
+    get:
+      operationId: downloadPrivateContentStorageFile
+      summary: Download an owned private managed file; public files use the assets mount
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Owner-authenticated attachment
+          headers:
+            Content-Disposition: { schema: { type: string } }
+            Cache-Control: { schema: { type: string } }
+            X-Content-Type-Options: { schema: { type: string } }
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '401': { description: Missing or invalid TDF session }
+        '404': { description: File missing or not owned by the current account }
+        '503': { description: Stored bytes unavailable }
   /drive/upload:
     post:
       tags: [Media]
@@ -930,6 +1019,9 @@ paths:
                 folderId: { type: string }
                 name: { type: string }
                 accessToken: { type: string, maxLength: 4096 }
+                authMode: { type: string, enum: [user, server], description: Explicit authority; user mode never falls back to TDF credentials }
+                destination: { type: string, enum: [tdf, google_drive] }
+                visibility: { type: string, enum: [private, public], description: New managed uploads default to private; public is restricted to passive image, audio and video formats with matching signatures }
                 idempotencyKey: { type: string, pattern: '^\s*[0-9a-fA-F]{64}\s*$' }
       responses:
         '200':
@@ -945,7 +1037,7 @@ paths:
                   duWebContentLink: { type: string, nullable: true }
                   duPublicUrl: { type: string, nullable: true }
         '400': { description: Invalid multipart input, size, name, MIME, folder or credentials }
-        '401': { description: Missing or invalid TDF session, or revoked Google refresh grant }
+        '401': { description: Missing or invalid TDF session }
         '403': { description: Authenticated actor lacks Drive access }
         '409': { description: Retry key conflicts with the actor or request, or legacy entry lacks binding }
         '502': { description: Provider request or response failed }
@@ -10377,6 +10469,26 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    StorageFileDTO:
+      type: object
+      required: [fileId, fileName, byteSize, status, visibility]
+      properties:
+        fileId: { type: string, format: uuid }
+        fileName: { type: string }
+        byteSize: { type: integer, format: int64, minimum: 1 }
+        status: { type: string, enum: [uploading, completed, cancelled] }
+        visibility: { type: string, enum: [private, public] }
+    StorageAccountDTO:
+      type: object
+      required: [allowanceBytes, usedBytes, reservedBytes, defaultDestination, revision, legacyUsageVerified]
+      properties:
+        legacyUsageVerified: { type: boolean, description: Existing unmetered files require operator reconciliation before new TDF storage grows }
+        allowanceBytes: { type: integer, format: int64, minimum: 5000000000 }
+        usedBytes: { type: integer, format: int64, minimum: 0 }
+        reservedBytes: { type: integer, format: int64, minimum: 0 }
+        defaultDestination: { type: string, enum: [tdf, google_drive], nullable: true }
+        revision: { type: integer, format: int64, minimum: 0 }
+
     InvoiceLineDTO:
       type: object
       required:

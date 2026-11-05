@@ -58,6 +58,8 @@ library
     TDF.API.Merch
     TDF.API.Label
     TDF.API.Drive
+    TDF.API.ContentStorage
+    TDF.ContentStorage
     TDF.API.Rooms
     TDF.API.Services
     TDF.API.Sessions

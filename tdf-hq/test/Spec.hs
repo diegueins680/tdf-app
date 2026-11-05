@@ -10752,6 +10752,7 @@ main = hspec $ do
         it "keeps the internal evidence subtree outside the public raw asset route" $ do
             assetsServePathAllowed [] `shouldBe` True
             assetsServePathAllowed ["inventory", "fixture.png"] `shouldBe` True
+            assetsServePathAllowed [".content-storage-staging", "partial.pending"] `shouldBe` False
             assetsServePathAllowed [".internal-feedback"] `shouldBe` False
             assetsServePathAllowed [".internal-feedback", "report", "evidence.png"] `shouldBe` False
 
