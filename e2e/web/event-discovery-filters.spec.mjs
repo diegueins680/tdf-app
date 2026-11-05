@@ -51,7 +51,11 @@ test('event city, artist union and past filters work at narrow widths @mobile-fl
   await input.fill('Beta');
   await page.getByRole('option', { name: 'Beta · #8' }).click();
   await expect.poll(() => reads.at(-1)?.artistId).toBe('7,8');
-  await page.getByRole('checkbox', { name: 'Incluir eventos pasados' }).check();
+  // The switch is controlled by the `past` URL parameter, so its checked state
+  // only flips after the router commits; click and let the assertion retry.
+  const includePast = page.getByRole('checkbox', { name: 'Incluir eventos pasados' });
+  await includePast.click();
+  await expect(includePast).toBeChecked();
   await expect(page.getByText('2 eventos en esta página', { exact: true })).toBeVisible();
   await expect(page.getByText('Evento pasado', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/past=1/);
