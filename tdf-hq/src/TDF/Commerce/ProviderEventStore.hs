@@ -611,6 +611,7 @@ claimProviderEvent eventRef now = do
 
 markProviderEventProcessed
   :: ProviderEventReference
+  -> Int
   -> Maybe Text
   -> Maybe Text
   -> Maybe Text
@@ -620,6 +621,7 @@ markProviderEventProcessed = markProviderEventTerminal "processed"
 
 markProviderEventIgnored
   :: ProviderEventReference
+  -> Int
   -> Maybe Text
   -> Maybe Text
   -> Maybe Text
@@ -641,35 +643,40 @@ markProviderEventRetry eventRef attemptCount rawSummary now = do
     "UPDATE commerce_provider_event_inbox\
     \ SET processing_status = ?, next_attempt_at = ?, error_summary = ?,\
     \ processing_started_at = NULL\
-    \ WHERE id = ?::uuid AND processing_status = 'processing'"
+    \ WHERE id = ?::uuid AND processing_status = 'processing'\
+    \ AND attempt_count = ?"
     [ PersistText status
     , if exhausted then PersistNull else PersistUTCTime nextAttempt
     , PersistText (safeErrorSummary rawSummary)
     , PersistText (providerEventReferenceId eventRef)
+    , PersistInt64 (fromIntegral attemptCount)
     ]
   pure exhausted
 
 markProviderEventDeadLetter
   :: ProviderEventReference
+  -> Int
   -> Maybe Text
   -> Maybe Text
   -> Maybe Text
   -> Text
   -> UTCTime
   -> SqlPersistT IO ()
-markProviderEventDeadLetter eventRef checkoutId attemptId refundId rawSummary now =
+markProviderEventDeadLetter eventRef attemptCount checkoutId attemptId refundId rawSummary now =
   rawExecute
     "UPDATE commerce_provider_event_inbox\
     \ SET processing_status = 'dead_letter', next_attempt_at = NULL,\
     \ checkout_id = ?::uuid, payment_attempt_id = ?::uuid, refund_id = ?::uuid,\
     \ error_summary = ?, processing_started_at = NULL, last_attempt_at = ?\
-    \ WHERE id = ?::uuid AND processing_status = 'processing'"
+    \ WHERE id = ?::uuid AND processing_status = 'processing'\
+    \ AND attempt_count = ?"
     [ maybe PersistNull PersistText checkoutId
     , maybe PersistNull PersistText attemptId
     , maybe PersistNull PersistText refundId
     , PersistText (safeErrorSummary rawSummary)
     , PersistUTCTime now
     , PersistText (providerEventReferenceId eventRef)
+    , PersistInt64 (fromIntegral attemptCount)
     ]
 
 validateProviderEventTimestamp
@@ -686,24 +693,30 @@ validateProviderEventTimestamp now transmittedAt
 markProviderEventTerminal
   :: Text
   -> ProviderEventReference
+  -> Int
   -> Maybe Text
   -> Maybe Text
   -> Maybe Text
   -> UTCTime
   -> SqlPersistT IO ()
-markProviderEventTerminal status eventRef checkoutId attemptId refundId now =
+-- Every lease write is fenced by the claimed attempt number: a worker whose
+-- lease was reclaimed as stale can no longer record an outcome over the
+-- current holder's lease (PAY-PROVIDER-INBOX-001; formal/payments/ProviderInbox.tla).
+markProviderEventTerminal status eventRef attemptCount checkoutId attemptId refundId now =
   rawExecute
     "UPDATE commerce_provider_event_inbox\
     \ SET processing_status = ?, checkout_id = ?::uuid, payment_attempt_id = ?::uuid,\
     \ refund_id = ?::uuid, processed_at = ?, processing_started_at = NULL,\
     \ next_attempt_at = NULL, error_summary = NULL\
-    \ WHERE id = ?::uuid AND processing_status = 'processing'"
+    \ WHERE id = ?::uuid AND processing_status = 'processing'\
+    \ AND attempt_count = ?"
     [ PersistText status
     , maybe PersistNull PersistText checkoutId
     , maybe PersistNull PersistText attemptId
     , maybe PersistNull PersistText refundId
     , PersistUTCTime now
     , PersistText (providerEventReferenceId eventRef)
+    , PersistInt64 (fromIntegral attemptCount)
     ]
 
 sha256Hex :: ByteString -> Text

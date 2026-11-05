@@ -13,7 +13,6 @@ import {
   Alert,
   AlertTitle,
   Autocomplete,
-  Avatar,
   Box,
   Button,
   Card,
@@ -60,6 +59,7 @@ import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import ArtistProfileImage from '../components/ArtistProfileImage';
 import { Records, type RecordsResourceDTO } from '../api/records';
 import {
   buildReleaseStreamUpdatePayload,
@@ -1257,7 +1257,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             >
                               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                  <Avatar src={getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ?? undefined} alt={artist.apDisplayName} />
+                                  <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={artist.apHeroImageUrl} slug={artist.apSlug} width={40} height={40} sx={{ borderRadius: '50%' }} />
                                   <Box>
                                     <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                                       {artist.apDisplayName}
@@ -2021,7 +2021,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             const youtubeButtonProps = youtubeUrl
               ? { component: 'a', href: youtubeUrl, target: '_blank', rel: 'noopener noreferrer' }
               : {};
-            const displayHeroImage = getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug);
+            const displayHeroImage = getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug, artist.apDisplayName);
             const featuredSources = artist.apFeaturedVideoUrl
               ? [
                   {
@@ -2059,7 +2059,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   onClick={() => { if (artistProfilePath) navigate(artistProfilePath); }}
                 >
                   {displayHeroImage && (
-                    <CardMedia component="img" height="220" image={displayHeroImage} alt={artist.apDisplayName} />
+                    <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={displayHeroImage} width={640} height={220} sx={{ width: '100%' }} />
                   )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack

@@ -8,6 +8,7 @@ module TDF.Commerce.DomoQuotes
   , DomoQuoteInput(..)
   , DomoQuoteBreakdown(..)
   , calculateDomoQuote
+  , calculateDomoQuoteWith
   , parseDomoQuoteState
   , domoQuoteStateText
   , validateDomoQuoteTransition
@@ -19,6 +20,9 @@ import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Text (Text)
 import qualified Data.Text as T
+
+import           TDF.Commerce.DepositPolicy
+  ( DepositOutcome (..), DepositPolicy, applyDepositPolicy, defaultDepositPolicy )
 
 -- Payment is intentionally not part of this state machine. A verified deposit
 -- is an explicit gate for DepositDue -> DepositPaid; it never completes the
@@ -94,11 +98,22 @@ data DomoQuoteBreakdown = DomoQuoteBreakdown
   , dqbBalanceMinor   :: Int64
   } deriving (Eq, Show)
 
+-- | Price with the default deposit policy (PAY-DEPOSIT-POLICY-001).
 calculateDomoQuote
   :: DomoRateCard
   -> DomoQuoteInput
   -> Either Text DomoQuoteBreakdown
-calculateDomoQuote rateCard input
+calculateDomoQuote = calculateDomoQuoteWith defaultDepositPolicy
+
+-- | Price with an explicit deposit policy: the basis-point deposit is raised
+-- to the policy minimum, and a deposit that would be the whole price in
+-- disguise becomes full payment (AUTHORITY-095). Rounding alone never rejects.
+calculateDomoQuoteWith
+  :: DepositPolicy
+  -> DomoRateCard
+  -> DomoQuoteInput
+  -> Either Text DomoQuoteBreakdown
+calculateDomoQuoteWith depositPolicy rateCard input
   | Map.null (drcEventRates rateCard) = Left "Domo rate card has no event types"
   | any (< 0) monetaryRates = Left "Domo rate card contains a negative amount"
   | drcHourMinor rateCard <= 0 = Left "Domo hourly rate must be greater than zero"
@@ -139,15 +154,15 @@ calculateDomoQuote rateCard input
           || derIncludedGuests eventRate > drcMaximumGuests rateCard =
           Left "Domo included guest count is outside the approved rate card limits"
       | any (> maxInt64) allAmounts = Left "Domo quote total is too large"
-      | total <= 0 || deposit <= 0 = Left "Domo quote and deposit must be greater than zero"
+      | total <= 0 = Left "Domo quote total must be greater than zero"
       | otherwise = Right DomoQuoteBreakdown
           { dqbLines = quoteLines
           , dqbBillableHours = billableHours
           , dqbSubtotalMinor = fromInteger subtotal
           , dqbTaxMinor = fromInteger tax
           , dqbTotalMinor = fromInteger total
-          , dqbDepositMinor = fromInteger deposit
-          , dqbBalanceMinor = fromInteger (total - deposit)
+          , dqbDepositMinor = finalDeposit
+          , dqbBalanceMinor = fromInteger total - finalDeposit
           }
       where
         billableHours = max (derMinimumHours eventRate) (dqiDurationHours input)
@@ -179,6 +194,9 @@ calculateDomoQuote rateCard input
         total = subtotal + tax
         deposit = roundBasisPoints total (drcDepositBasisPoints rateCard)
         allAmounts = lineAmounts <> [subtotal, tax, total, deposit]
+        finalDeposit = case applyDepositPolicy depositPolicy (fromInteger total) (fromInteger deposit) of
+          DepositOf raised -> raised
+          FullPaymentNow -> fromInteger total
         quoteLines = zipWith toLine rawLines lineAmounts
         toLine (code, description, quantity, unit) lineSubtotal = DomoQuoteLine
           { dqlCode = code

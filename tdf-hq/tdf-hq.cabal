@@ -139,6 +139,7 @@ library
     TDF.Invoice.BuyerIdentity
     TDF.Invoice.Datil
     TDF.Invoice.SRI
+    TDF.Invoice.SessionIssue
     TDF.Internationalization
     TDF.LogBuffer
     TDF.Meta
@@ -265,6 +266,14 @@ library
     TDF.WhatsApp.Transport
     TDF.WhatsApp.Service
     TDF.Profiles.Artist
+    TDF.Commerce.ArtistTip
+    TDF.Commerce.ArtistTipStore
+    TDF.Commerce.DepositPolicy
+    TDF.Commerce.DomoCancellation
+    TDF.Commerce.DomoCancellationStore
+    TDF.Profiles.ArtistVisibility
+    TDF.Social.AccountOwnership
+    TDF.Social.AccountOwnershipStore
   other-modules:
     Paths_tdf_hq
   autogen-modules:
@@ -385,6 +394,8 @@ test-suite tdf-hq-test
     TDF.EmailHeadersSpec
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
+    TDF.Invoice.SessionIssueSpec
+    TDF.Contracts.StoreSpec
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
@@ -434,6 +445,17 @@ test-suite tdf-hq-test
     TDF.DDEX.ERN.V432.BusinessRulesSpec
     TDF.Operations.ModelSpec
     TDF.WhatsApp.HistorySpec
+    TDF.Commerce.ArtistTipSpec
+    TDF.Commerce.ArtistTipStoreSpec
+    TDF.Commerce.DepositPolicySpec
+    TDF.Commerce.DomoCancellationSpec
+    TDF.Commerce.DomoCancellationRuntimeSpec
+    TDF.Commerce.DomoQuotePropertiesSpec
+    TDF.Commerce.ProviderAdapterBindingSpec
+    TDF.CorsPropertiesSpec
+    TDF.MetaWebhookSignatureSpec
+    TDF.Social.AccountOwnershipSpec
+    TDF.Social.AccountOwnershipStoreSpec
   ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N2
   default-language:  Haskell2010
   build-depends:

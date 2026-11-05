@@ -11,7 +11,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
@@ -29,13 +28,13 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import GroupsIcon from '@mui/icons-material/Groups';
 import LaunchIcon from '@mui/icons-material/Launch';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import { reconcileFollowState } from '../features/fans/reconcileFollowState';
 import type { ArtistReleaseDTO } from '../api/types';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import ArtistProfileImage from '../components/ArtistProfileImage';
 import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
@@ -352,7 +351,7 @@ export default function ArtistPublicPage() {
     );
   }
 
-  const heroImage = getArtistHeroImage(artist.apHeroLandscapeUrl ?? artist.apHeroImageUrl, artist.apSlug);
+  const heroImage = getArtistHeroImage(artist.apHeroLandscapeUrl ?? artist.apHeroImageUrl, artist.apSlug, artist.apDisplayName);
   const avatarImage = artist.apHeroSquareUrl ?? heroImage;
   const spotifyUrl =
     artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
@@ -380,19 +379,19 @@ export default function ArtistPublicPage() {
             bgcolor: '#0b1224',
           }}
         >
-          {heroImage && (
-            <Box component="picture" sx={{ position: 'absolute', inset: 0 }}>
-              {avifSourceSet && <source type="image/avif" srcSet={avifSourceSet} sizes="(max-width: 1040px) 100vw, 1040px" />}
-              {webpSourceSet && <source type="image/webp" srcSet={webpSourceSet} sizes="(max-width: 1040px) 100vw, 1040px" />}
-              <Box
-                component="img"
-                src={heroImage}
-                alt=""
-                aria-hidden="true"
-                sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: artist.apHeroFocalPoint ?? 'center' }}
-              />
-            </Box>
-          )}
+          <ArtistProfileImage
+            artistName={artist.apDisplayName}
+            imageUrl={heroImage}
+            alt=""
+            eager
+            width={1040}
+            height={280}
+            avifSourceSet={avifSourceSet}
+            webpSourceSet={webpSourceSet}
+            sizes="(max-width: 1040px) 100vw, 1040px"
+            objectPosition={artist.apHeroFocalPoint ?? 'center'}
+            sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+          />
           <Box
             sx={{
               position: 'absolute',
@@ -412,13 +411,14 @@ export default function ArtistPublicPage() {
             }}
           >
             <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-              <Avatar
-                src={avatarImage ?? undefined}
-                alt={artist.apDisplayName}
-                sx={{ width: 64, height: 64, bgcolor: 'rgba(59,130,246,0.35)', border: '1px solid rgba(148,163,184,0.35)' }}
-              >
-                {artist.apDisplayName?.[0]?.toUpperCase() ?? <MusicNoteIcon />}
-              </Avatar>
+              <ArtistProfileImage
+                artistName={artist.apDisplayName}
+                imageUrl={avatarImage}
+                width={64}
+                height={64}
+                eager
+                sx={{ borderRadius: '50%', border: '1px solid rgba(148,163,184,0.35)' }}
+              />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography component="h1" variant="h4" fontWeight={900} id="artist-hero" sx={{ lineHeight: 1.1 }}>
                   {artist.apDisplayName}
