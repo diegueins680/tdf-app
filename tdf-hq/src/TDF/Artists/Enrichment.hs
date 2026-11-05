@@ -12,6 +12,7 @@ module TDF.Artists.Enrichment
   , independentSignalCount
   , matchConfidence
   , automaticIdentityMatchAllowed
+  , automaticFieldFillAllowed
   , loadArtistEnrichmentOverview
   , runArtistEnrichment
   , runArtistEnrichmentWithKey
@@ -138,6 +139,17 @@ matchConfidence sources hasStablePartyId =
 automaticIdentityMatchAllowed :: [Text] -> Int -> Bool
 automaticIdentityMatchAllowed sources candidateIdentityCount =
   candidateIdentityCount <= 1 && independentSignalCount sources >= 2
+
+-- | Existing content requires a human decision even when an alternative is verified.
+automaticFieldFillAllowed :: Text -> Maybe Text -> Bool
+automaticFieldFillAllowed fieldName current = case cleanOptional current of
+  Nothing -> True
+  Just value -> fieldName `elem`
+    ["heroImageUrl", "heroOriginalUrl", "heroSquareUrl", "heroLandscapeUrl"]
+    && (value == "/artist-fallback.svg"
+      || value == "https://www.tdfrecords.net/artist-fallback.svg"
+      || ("data:image/svg+xml," `T.isPrefixOf` value
+        && "data-tdf-artist-avatar" `T.isInfixOf` T.take 350 value))
 
 digestText :: Text -> Text
 digestText input =
@@ -916,7 +928,8 @@ auditProfileSlugs actor mode now profiles =
                   , "reason" .= ("missing_or_invalid_slug" :: Text)
                   ]
               }
-            if mode == "production"
+            if mode == "production" && aesAutoPublish suggestion
+                && aesStatus suggestion == "pending"
               then do
                 suggestionEntity <- requireSuggestion (aesId suggestion)
                 _ <- applySuggestion actor now Nothing suggestionEntity
@@ -970,6 +983,7 @@ createArtistSuggestion now ArtistEnrichmentSuggestionCreate{..} = do
   proposedValue <- validateFieldValue fieldName (fmap T.strip aescProposedValue)
   let currentValue = cleanOptional aescCurrentValue
       autoPublish = fromMaybe False aescAutoPublish
+        && automaticFieldFillAllowed fieldName currentValue
         && confidence >= 0.9
         && evidenceSignalCount evidence >= 2
       idem = digestText (T.intercalate "|"
@@ -981,7 +995,13 @@ createArtistSuggestion now ArtistEnrichmentSuggestionCreate{..} = do
       row = ArtistEnrichmentSuggestion artistId inventoryId fieldName currentValue
         proposedValue confidence "pending" autoPublish evidence idem now now
         Nothing Nothing Nothing
-  _ <- upsert row
+  -- The status predicate is evaluated by the UPDATE while holding its row
+  -- lock. A concurrent terminal decision cannot have its evidence overwritten.
+  _ <- insertUnique row
+  updateWhere
+    [ ArtistEnrichmentSuggestionIdempotencyKey ==. idem
+    , ArtistEnrichmentSuggestionStatus ==. "pending"
+    ]
     [ ArtistEnrichmentSuggestionCurrentValue =. currentValue
     , ArtistEnrichmentSuggestionProposedValue =. proposedValue
     , ArtistEnrichmentSuggestionConfidence =. confidence

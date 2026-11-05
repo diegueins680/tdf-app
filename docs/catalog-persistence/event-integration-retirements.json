@@ -678,19 +678,18 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "a2bb0e828d5b94c1cb31",
-      "reason": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
-      "previousReplacementId": "79a6def1e91baee6e937",
+      "replacementId": "d7fc1df6cbade4a92d25",
+      "reason": "Preserve the complete 238-entry manifest reviewed as 050f3093 (canonical sha256 f79154170832ca4128536ebec5de5d80f220e5ac864e208bb94745023d89d179) byte for byte and append only 2026-11-04_contract_store, which creates the contract and contract_delivery tables so contracts are stored in the database instead of files outside the persistent volume and each send request is recorded before SMTP is contacted (CONTRACT-STORE-001, CONTRACT-SEND-001). Both tables are new; no existing row changes. The entire 238-entry review graph is preserved by canonical hash. This 239-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "previousReplacementId": "050f309300a1688162fa",
       "currentResolution": {
-        "id": "a2bb0e828d5b94c1cb31",
-        "valueCount": 227,
+        "id": "d7fc1df6cbade4a92d25",
+        "valueCount": 239,
         "sourceParents": [
-          "5875e60701465f9512fad1628b64c0d59a53f049",
-          "4b81ab4ab92416aa31dc816057fb8e6a736596d1"
+          "663a127de6c99d2eb73bc204940ceb39269c30b9"
         ],
-        "justification": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required."
+        "justification": "Preserve the complete 238-entry manifest reviewed as 050f3093 (canonical sha256 f79154170832ca4128536ebec5de5d80f220e5ac864e208bb94745023d89d179) byte for byte and append only 2026-11-04_contract_store, which creates the contract and contract_delivery tables so contracts are stored in the database instead of files outside the persistent volume and each send request is recorded before SMTP is contacted (CONTRACT-STORE-001, CONTRACT-SEND-001). Both tables are new; no existing row changes. The entire 238-entry review graph is preserved by canonical hash. This 239-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
       },
-      "change": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+      "change": "Preserve the complete 238-entry manifest reviewed as 050f3093 (canonical sha256 f79154170832ca4128536ebec5de5d80f220e5ac864e208bb94745023d89d179) byte for byte and append only 2026-11-04_contract_store, which creates the contract and contract_delivery tables so contracts are stored in the database instead of files outside the persistent volume and each send request is recorded before SMTP is contacted (CONTRACT-STORE-001, CONTRACT-SEND-001). Both tables are new; no existing row changes. The entire 238-entry review graph is preserved by canonical hash. This 239-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -944,6 +943,94 @@
           },
           "sourceEntryCanonicalSha256": "8ff563904a9e76472408bc186849b6ab056c3fbebcfa336fb2f0b59063ae77f1",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "df3417afcd9095d570d7be683eef5ab3382361d1",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "08f6e44ccd5ce830bee7363c0e66639cc9081be85e7b7c487d8b2089336cf062",
+          "sourceEntry": {
+            "id": "a2bb0e828d5b94c1cb31"
+          },
+          "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "979001b3f6bedf6eba7b3a125f243b680c120c81a722286b7faaee25e5ba49a1",
+          "sourceEntry": {
+            "id": "903e61463c0222f30d9b"
+          },
+          "sourceEntryCanonicalSha256": "9adad9f469eb233e58e2cbfac22651f797d7aba5e438d1f10ce880c436e0566c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "644a3303bc938cabac5673a9940850e1bb124566",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "18ab55179d6524a8aa50b1f5d4d309e2201d7e9171844172ac8d4d57f382faa0",
+          "sourceEntry": {
+            "id": "d9468b767dadec9cf3d8"
+          },
+          "sourceEntryCanonicalSha256": "61cbf1e27157b704dcad31fb8800df2d3498c2b57efb3dbc519f63f8b38e1c18",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "dc58f1432d87069b5c371863e0fa86edf58ce30b32ceada8080847ef5c56a3af",
+          "sourceEntry": {
+            "id": "040c32c5b44ceadb2dde"
+          },
+          "sourceEntryCanonicalSha256": "e863458f044f4994d17134c7cd04ae00e8d48c95c2f59f23f076c6d27cfcf85e",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "0b9536229569ebb50323855af3125b46747fb6098eacd8d5e644fd225aee6f8a",
+          "sourceEntry": {
+            "id": "27def070486792cad395"
+          },
+          "sourceEntryCanonicalSha256": "085659be48eed02b09860767b22855e80f1fe17bddca460289a6ab13504fca03",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "1976242a72541ecfff90a54c72659df42f7bd085",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "f4534b111db59dd606d8969cc61c23dbd45943bbe681564d53f0b10a0fc46c2f",
+          "sourceEntry": {
+            "id": "438668da134480da0a9e"
+          },
+          "sourceEntryCanonicalSha256": "fae5221769f1e07714cd6160b57b8ae09146c3840d305f109d81baa176396032",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "084425384f01acd9db680f0d3f5178cf93b1122c",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "bba44fca026664f17127278ed7aa7dc69e0a121a0cc8ac6caf4279178ce5c66c",
+          "sourceEntry": {
+            "id": "ef3b8933af3854450a02"
+          },
+          "sourceEntryCanonicalSha256": "b3e101545dbce2e26e9603fbc81d735463b22f0cb486b4ae9342f724131fa145",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "663a127de6c99d2eb73bc204940ceb39269c30b9",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58345e17f4014890b8ae4fd8ff0dffb81d99c2f6b66d894c598cd2255a3301d6",
+          "sourceEntry": {
+            "id": "050f309300a1688162fa"
+          },
+          "sourceEntryCanonicalSha256": "8c6aa26845f40678a9625f41a2d67b5dc367d290f4b0432639fd8472b85f4b8b",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
         }
       ],
       "previousReplacementIds": [
@@ -966,9 +1053,17 @@
         "6ff395b6131079017c9d",
         "a70a9a4dd05ce44e950b",
         "f48c34252ff8930b3d74",
-        "2634b239375f2ad309ba"
+        "2634b239375f2ad309ba",
+        "a2bb0e828d5b94c1cb31",
+        "903e61463c0222f30d9b",
+        "d9468b767dadec9cf3d8",
+        "040c32c5b44ceadb2dde",
+        "27def070486792cad395",
+        "438668da134480da0a9e",
+        "ef3b8933af3854450a02",
+        "050f309300a1688162fa"
       ],
-      "previousReason": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision."
+      "previousReason": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
     }
   ]
 }

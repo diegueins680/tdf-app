@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "problem": "A ticket-tier total edit racing a purchase could persist total 1 and sold 3 from valid initial total 20 and sold 0. Four original actual-handler counterexamples cover direct purchase and legacy checkout in both mutation orders.",
+  "correction": "The tier edit atomically checks current sold count and event binding and returns its entity in the same SQL statement. Both new-hold routes reserve through the existing locked Inventory.reserveTicketInventory action within order/ticket creation. The shared helper and original correction are preserved exactly.",
+  "properties": [
+    {
+      "id": "EVT-TIER-EDIT-BOUNDS-001",
+      "statement": "Every successful edit preserves quantity_total >= current quantity_sold under the tier row lock.",
+      "designAssurance": "BOUNDED_VERIFIED",
+      "bounds": {
+        "inputs": 48,
+        "states": 606,
+        "transitions": 658
+      },
+      "assumptions": "Initially valid nonnegative stock; cooperating writers; event capacity fixed per model input.",
+      "currentImplementation": "PARTIAL until fresh actual-main 102-case PostgreSQL qualification."
+    },
+    {
+      "id": "EVT-LEGACY-RESERVE-BOUNDS-001",
+      "statement": "A successful reservation reads locked current stock and commits the stock change with its order and tickets.",
+      "designAssurance": "BOUNDED_VERIFIED",
+      "limitations": "Finite design model has no SQL/Haskell refinement theorem or global all-writer inventory guarantee."
+    }
+  ],
+  "verification": {
+    "local": "21 finite-model checks including stale-sold, stale-total and omitted-lock negative controls; 8 catalog controls; strict JSON/CSV; inherited radio configuration controls; inventory/conformance generation and checks; immutable-source admission; full root repository quality. Exact receipts are in this archive.",
+    "counterexamples": "Four original native handler schedules oversell before repair; the preserved finite mutants expose overselling. Historical native red logs retain their original source identity.",
+    "priorQualified659": "Exact prior head 38aa4663da12ef5e064875c1b04b1d09f91475a4 qualified all 102 intended cases within 419 PostgreSQL examples with all 228 migrations applied/replayed, 4091 full examples/0 failures/21 pending, 23 music-worker scenarios and 682 browser cases. Prior identity is retained; it is not the new main-composition execution.",
+    "currentRuntime": "NOT_EXECUTED locally. Fresh hosted canonical Stack/GHC9.10.3 must qualify 102 intended cases within 419 PostgreSQL examples and full 228 migration replay on the actual-main composition.",
+    "parent658": "Protected main merge 84e7e9a6 has the exact freshly qualified 6b20 tree; fresh 90 cases/407 PostgreSQL examples/full228/682 browser cases and merge provenance are embedded as parent evidence only.",
+    "originalRuntime": "Original 227-migration and 913-operation observations remain historical. They do not qualify the new tree.",
+    "architecture": "Two duplicated reservation implementations are replaced by one existing authoritative action; the original handler correction has net 43 fewer lines. No new abstraction was added in this reconciliation."
+  },
+  "assurance": {
+    "newTheorems": 0,
+    "wholeRequirements": 170,
+    "wholeImplementation": "170 UNPROVEN",
+    "wholeRefinement": "170 UNPROVEN",
+    "inheritedConditionalSMTLemmas": 11,
+    "release": "BLOCKED",
+    "limits": [
+      "Finite model is not a PostgreSQL lock graph or Haskell refinement proof.",
+      "Initially valid nonnegative stock and cooperating writers assumed; historical invalid stock and mixed old binaries remain separate.",
+      "Owner requires validity at actual reservation time; existing #666 owns that requirement. This bounds correction preserves the old time argument and does not satisfy the deadline rule.",
+      "Price/currency, promo and terms snapshots and provider recovery remain separate existing follow-ups.",
+      "Fresh current-head PostgreSQL, browser, review and admission gates remain required."
+    ]
+  },
+  "integration": {
+    "existingPR": 659,
+    "base": "main",
+    "draft": false,
+    "autoMerge": false,
+    "requiredControls": "Fresh current-head CI, one current approval, strict 20 required contexts with app identities, conversation resolution and ordinary main admission. No old approval borrowed.",
+    "messagesOrReviewerRequestsSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Qualify fresh actual-main 102 cases/419 PostgreSQL examples/full228 migrations and all relevant workflows.",
+    "Recheck current main, head, branch policy, current approval, unresolved threads and admission before an ordinary protected merge.",
+    "Continue serial #660 eligibility and #661 fee bounds; qualify #662 pricing component and preserve all incoming main radio changes. Existing #663/#664/#666 remain follow-ups."
+  ],
+  "generatedAt": "2026-11-03T05:38:25.525233+00:00",
+  "baseline659": "38aa4663da12ef5e064875c1b04b1d09f91475a4",
+  "incomingMain": "84e7e9a6fe97357bd377f22e91f045e911b8e20c",
+  "composition": "d0dded1f701f059f7fcf904c91eb14e285ecfcc6",
+  "qualifiedSource": "820cbf96ed1dbe6ebbeb48976302af45816d0b42",
+  "preservation": {
+    "baseline659": "38aa4663da12ef5e064875c1b04b1d09f91475a4",
+    "oldParent658": "8e18b249084f3b411ed927e85ea1aaf94eb8e2ad",
+    "incomingMain": "84e7e9a6fe97357bd377f22e91f045e911b8e20c",
+    "composition": "d0dded1f701f059f7fcf904c91eb14e285ecfcc6",
+    "exactResidualPatches": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "exactResidual": true,
+        "originalSHA256": "c92c4d3849416338b2466a8e13913feea07f37b0154d205eb1b5d0c56263d1db",
+        "composedSHA256": "c92c4d3849416338b2466a8e13913feea07f37b0154d205eb1b5d0c56263d1db"
+      },
+      {
+        "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "exactResidual": true,
+        "originalSHA256": "9462e6aba3fad3fd3d2c74572943e279dd5ad9e1c76eb004439c531c0957b178",
+        "composedSHA256": "9462e6aba3fad3fd3d2c74572943e279dd5ad9e1c76eb004439c531c0957b178"
+      },
+      {
+        "path": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "exactResidual": true,
+        "originalSHA256": "7d6051b75ca07ee0c50f91fdc2105850e44bee4594a0a72691d8a24dc381de8d",
+        "composedSHA256": "7d6051b75ca07ee0c50f91fdc2105850e44bee4594a0a72691d8a24dc381de8d"
+      }
+    ],
+    "otherRequirementsExact": 169,
+    "totalRequirements": 170,
+    "canonicalDecisionObjectsExact": 1372,
+    "canonicalFileByteExact": true,
+    "radio694PathsByteExact": [
+      "e2e/web/radio-navigation.spec.mjs",
+      "formal/system/mobile-entry-ux.md",
+      "formal/system/player-session.md",
+      "playwright.config.mjs",
+      "playwright.music-native.config.mjs",
+      "scripts/__tests__/music-browser-config.test.mjs",
+      "tdf-hq-ui/src/App.tsx",
+      "tdf-hq-ui/src/components/RadioWidget.tsx",
+      "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+      "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
+      "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
+      "tdf-hq-ui/src/utils/radioRouteVisibility.ts"
+    ],
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq-ui",
+      "tdf-mobile",
+      "package.json",
+      "package-lock.json",
+      "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/stack.yaml.lock",
+      ".github/workflows",
+      "scripts/quality-repo.sh",
+      "scripts/run-music-release-worker-once.sh"
+    ],
+    "normativeContractExact": true,
+    "sharedInventoryAuthorityExact": true
+  },
+  "traceability": {
+    "requirement": "EVT-TICKET-001",
+    "invariants": [
+      "EVT-TIER-EDIT-BOUNDS-001",
+      "EVT-LEGACY-RESERVE-BOUNDS-001"
+    ],
+    "specification": "formal/system/legacy-ticket-inventory.md",
+    "implementation": [
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+      "tdf-hq/src/TDF/Ticketing/Inventory.hs"
+    ],
+    "verification": [
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+      "scripts/__tests__/ticket-admission-model.test.mjs"
+    ],
+    "CIProtection": [
+      ".github/workflows/ci.yml: backend-quality -> scripts/test-provider-retry-runtime.sh",
+      "scripts/quality-repo.sh: ticket-admission-model.test.mjs"
+    ],
+    "currentStatus": "PARTIAL pending fresh current-head runtime and integration",
+    "qualifiedSource": "820cbf96ed1dbe6ebbeb48976302af45816d0b42"
+  },
+  "evidence": {
+    "archive": "reports/ticket-tier-bounds-main658-2026-11-03/evidence.tar.gz",
+    "sha256": "7795ff65c0542fbd3f724d3ff25e7eab725bb74197c5f0a757f0d85ddb665e88",
+    "regularFiles": 119,
+    "independentlyVerifiedManifestEntries": 118,
+    "manifest": "reports/ticket-tier-bounds-main658-2026-11-03/manifest.json"
+  }
+}

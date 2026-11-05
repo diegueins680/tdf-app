@@ -1533,7 +1533,8 @@ upsertToken token pid label = do
     case mTok of
         Just (Entity tokId _) -> update tokId [ApiTokenPartyId =. pid, ApiTokenActive =. True, ApiTokenLabel =. label]
         Nothing -> do
-            _ <- insert $ ApiToken token pid label True
+            -- Seeded role tokens are service tokens: no server-side expiry.
+            _ <- insert $ ApiToken token pid label True Nothing Nothing
             pure ()
 
 ensureCredential :: PartyId -> Text -> Text -> SqlPersistT IO ()

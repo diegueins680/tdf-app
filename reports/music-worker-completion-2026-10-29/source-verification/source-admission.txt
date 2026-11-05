@@ -1,0 +1,13 @@
+{
+  "base": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "head": "4ac12ee2f9a4b2e1b7fd33ae01ac2b0adfb8b630",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    "scripts/__tests__/test-child-completion.test.mjs",
+    "scripts/lib/test-child-completion.mjs",
+    "scripts/quality-repo.sh",
+    "scripts/test-music-release-worker-runtime.mjs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

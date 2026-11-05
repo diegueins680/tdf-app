@@ -269,12 +269,19 @@ instance FromJSON FanClubOfficerRole
 instance ToJSON ElectionStatus
 instance FromJSON ElectionStatus
 
+-- ApiToken.issuedAtEpoch / expiresAtEpoch: server-side validity window in UTC
+-- Unix seconds from the database clock, half-open [issued, expires). Interactive
+-- session tokens (password/google login) must carry one and are rejected once it
+-- has elapsed. Service and custom-label tokens may leave it NULL and remain valid
+-- until revoked.
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 ApiToken
     token            Text
     partyId          PartyId
     label            Text Maybe
     active           Bool
+    issuedAtEpoch    Int64 Maybe
+    expiresAtEpoch   Int64 Maybe
     UniqueApiToken   token
     deriving Show Generic
 UserCredential
@@ -839,7 +846,21 @@ SocialSyncAccount
     lastSyncedAt     UTCTime Maybe
     createdAt        UTCTime
     updatedAt        UTCTime Maybe
+    -- AUTHORITY-094: platform delivery only through designated accounts;
+    -- OAuth-connected accounts belong to the party that connected them.
+    deliveryDesignated   Bool default=FALSE
+    connectedByPartyId   PartyId Maybe
+    designatedByPartyId  PartyId Maybe
+    designatedAt         UTCTime Maybe
     UniqueSocialSyncAccount platform externalUserId
+    deriving Show Generic
+SocialSyncAccountEvent
+    accountId        SocialSyncAccountId
+    actorPartyId     PartyId Maybe
+    eventType        Text
+    fromPartyId      PartyId Maybe
+    toPartyId        PartyId Maybe
+    createdAt        UTCTime default=now()
     deriving Show Generic
 SocialSyncPost
     accountId        SocialSyncAccountId Maybe

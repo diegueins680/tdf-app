@@ -396,6 +396,7 @@ jobs:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
         run: |
           node --test scripts/__tests__/music-test-database.test.mjs
+          node --test scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs
           npm run test:music-worker-runtime
 
       - name: Verify authorized music catalog recording search
@@ -603,7 +604,20 @@ jobs:
           TDF_PROVIDER_RETRY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_provider_retry_test
         run: |
           createdb -h postgres -U postgres tdf_provider_retry_test
-          sh scripts/test-provider-retry-runtime.sh
+          # The job log tail is dominated by the service container dump, so a
+          # failing hspec run also surfaces its failure report as annotations.
+          # The step shell runs with errexit, so capture the status explicitly.
+          status=0
+          sh scripts/test-provider-retry-runtime.sh > "$RUNNER_TEMP/provider-retry.log" 2>&1 || status=$?
+          cat "$RUNNER_TEMP/provider-retry.log"
+          if [ "$status" -ne 0 ]; then
+            # hspec failure report when present, otherwise the end of the gate output.
+            { sed -n '/^Failures:/,/^Randomized with seed/p' "$RUNNER_TEMP/provider-retry.log" \
+                | grep -v "tdf-intent-expiry"; echo "--- gate output tail ---"; tail -n 60 "$RUNNER_TEMP/provider-retry.log"; } \
+              | grep -v '^\s*$' | head -n 200 \
+              | while IFS= read -r line; do printf '::error::%s\n' "$line"; done
+            exit "$status"
+          fi
       - name: Verify invoice worker claim, submission mark and lease fencing
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -616,6 +630,7 @@ jobs:
         run: |
           sh scripts/test-operations-inbound-capture.sh
           bash scripts/test-auth-recovery-migration.sh
+          bash scripts/test-api-token-session-expiry-migration.sh
           sh scripts/test-meta-redelivery.sh
           sh scripts/test-rag-index-privacy.sh
           node scripts/__tests__/identity-http-runtime.mjs
@@ -661,6 +676,11 @@ jobs:
         env:
           TDF_MIGRATION_BATCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/migration-batch-postgres.mjs
+
+      - name: Verify the Domo deposit policy validator accepts exactly the policy deposit
+        env:
+          TDF_DOMO_VALIDATOR_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-domo-deposit-policy-validator.sh
 
       - name: Verify the startup capability-gate policy for every asserted flag state
         env:
