@@ -1478,7 +1478,7 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
         bindTicketProviderResource context attempt Checkout.ProviderDatafast
           (tpcEnvironment context) (ServiceStorefront.sdfEntityId datafast)
           "payment" paymentId (Just resourcePath) Checkout.AttemptProcessing "status"
-        verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+        verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
           { Checkout.vpAttempt = attempt
           , Checkout.vpCheckout = tpcCheckout context
           , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -1654,7 +1654,7 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
             merchantRef "capture" captureId
             (Just ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture"))
             Checkout.AttemptProcessing "capture"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = tpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal

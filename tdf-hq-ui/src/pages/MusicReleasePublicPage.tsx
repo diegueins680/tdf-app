@@ -33,12 +33,9 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 import { musicReleases, type MusicPublicRelease } from '../api/musicReleases';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { PLAYER_LOAD_TRACK_EVENT, type PlayerTrack } from '../player/types';
-import { musicSourceQuality } from '../player/sourceMetadata';
+import { publicMusicTrack } from '../player/publicMusicTrack';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
-
-const loudnessFor = (metadata: Record<string, unknown>): number | null =>
-  typeof metadata['loudness_lufs'] === 'number' ? metadata['loudness_lufs'] : null;
 
 type PublicOffer = MusicPublicRelease['availability'][number];
 
@@ -169,18 +166,8 @@ export default function MusicReleasePublicPage() {
     return () => buttons.close?.();
   }, [paypalPurchase, paypalReady, release.data]);
 
-  const prepareTrack = (track: MusicPublicRelease['tracks'][number]): PlayerTrack => ({
-    id: track.trackId, recordingId: track.recordingId, releaseId: release.data?.id,
-    releaseVersionId: release.data?.versionId, title: track.title, artist: track.displayArtist,
-    artworkUrl, durationMs: track.durationMs,
-    // The engine applies this cap only when its authorized source is a preview.
-    previewEndMs: track.sources.some((source) => source.role === 'preview_audio') ? 30000 : null,
-    loudnessLufs: track.sources.map((source) => loudnessFor(source.technicalMetadata)).find((value) => value !== null) ?? null,
-    sources: track.sources.map((source) => ({
-      url: '', assetId: source.assetId,
-      quality: musicSourceQuality(source.technicalMetadata, source.mediaType), mediaType: source.mediaType,
-      preview: source.role === 'preview_audio',
-    })),
+  const prepareTrack = (track: MusicPublicRelease['tracks'][number]): PlayerTrack => publicMusicTrack({
+    ...track, releaseId: release.data?.id, releaseVersionId: release.data?.versionId, artworkUrl,
   });
 
   const play = (trackId: string) => {

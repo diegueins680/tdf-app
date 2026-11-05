@@ -45,8 +45,8 @@ import           Data.Text.Encoding.Error   (lenientDecode)
 import           Data.Time                  (UTCTime, getCurrentTime)
 import           Data.Time.Format           (defaultTimeLocale, parseTimeM)
 import           Data.Time.Format.ISO8601   (iso8601ParseM)
-import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, upsert, (=.), (==.))
-import           Database.Persist.Sql       (runSqlPool)
+import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, (=.), (==.))
+import           Database.Persist.Sql       (fromSqlKey, runSqlPool, transactionUndo)
 import           GHC.Generics               (Generic)
 import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Types.Status  (statusCode)
@@ -62,7 +62,8 @@ import           TDF.Config
   , resolveConfiguredAppBase
   )
 import           TDF.DB                     (Env(..), sharedTlsManager)
-import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), SocialSyncAccount(..))
+import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountArtistProfileId, SocialSyncAccountConnectedByPartyId, SocialSyncAccountDeliveryDesignated, SocialSyncAccountDesignatedAt, SocialSyncAccountDesignatedByPartyId, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), RoleEnum(Admin), SocialSyncAccount(..))
+import qualified TDF.Social.AccountOwnershipStore as OwnershipStore
 
 data FacebookAccessToken = FacebookAccessToken
   { fatAccessToken :: Text
@@ -361,31 +362,26 @@ instagramOAuthServer user = exchangeHandler
         either throwError pure (selectPrimaryInstagramPage preferredIds pageContexts)
 
       now <- liftIO getCurrentTime
-      liftIO $ flip runSqlPool envPool $ do
-        forM_ pageContexts $ \ctx ->
-          forM_ (pcInstagramUserId ctx) $ \igUserId -> do
-            let record = SocialSyncAccount
-                  { socialSyncAccountPartyId = Just (auPartyId user)
-                  , socialSyncAccountArtistProfileId = Nothing
-                  , socialSyncAccountPlatform = "instagram"
-                  , socialSyncAccountExternalUserId = igUserId
-                  , socialSyncAccountHandle = pcInstagramHandle ctx
-                  , socialSyncAccountAccessToken = Just (pcAccessToken ctx)
-                  , socialSyncAccountTokenExpiresAt = Nothing
-                  , socialSyncAccountStatus = "connected"
-                  , socialSyncAccountLastSyncedAt = Nothing
-                  , socialSyncAccountCreatedAt = now
-                  , socialSyncAccountUpdatedAt = Just now
-                  }
-            _ <- upsert record
-              [ SocialSyncAccountPartyId =. Just (auPartyId user)
-              , SocialSyncAccountHandle =. pcInstagramHandle ctx
-              , SocialSyncAccountAccessToken =. Just (pcAccessToken ctx)
-              , SocialSyncAccountTokenExpiresAt =. Nothing
-              , SocialSyncAccountStatus =. "connected"
-              , SocialSyncAccountUpdatedAt =. Just now
-              ]
-            pure ()
+      -- AUTHORITY-094: an account connected by another party is rebound only by
+      -- an administrator, and every binding change is audited. A refused
+      -- rebind fails the whole exchange before any row changes.
+      let isAdmin = Admin `elem` auRoles user
+          connectable =
+            [ OwnershipStore.ConnectedAccountInput
+                { OwnershipStore.caiExternalUserId = igUserId
+                , OwnershipStore.caiHandle = pcInstagramHandle ctx
+                , OwnershipStore.caiAccessToken = pcAccessToken ctx
+                }
+            | ctx <- pageContexts, Just igUserId <- [pcInstagramUserId ctx] ]
+      plan <- liftIO (flip runSqlPool envPool
+          (OwnershipStore.planInstagramConnections isAdmin (auPartyId user) connectable))
+        >>= either (\message -> throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure
+      liftIO (flip runSqlPool envPool $ do
+          applied <- OwnershipStore.applyInstagramConnections now (auPartyId user) plan
+          -- A stale plan writes nothing: undo the accounts applied before it.
+          either (const transactionUndo) (const (pure ())) applied
+          pure applied)
+        >>= either (\message -> throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) (const (pure ()))
 
       let pagesDto = map toPageDTO pageContexts
       (mPrimaryId, mPrimaryHandle, media) <-

@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-02T06:08:48.884755+00:00",
+  "sourceCommit": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+  "baselineParent652": "26d8c1082d8fec217d350c7cca941731266301e9",
+  "protectedMain": "2c0b011c1d36a3ce6d0c292d005c4ddf1f858a37",
+  "status": "Prepared current-main composition; fresh exact-head hosted CI and required approval remain separate gates.",
+  "classification": "Necessary current-main reconciliation of existing financial and verification repairs; no speculative product rewrite",
+  "correctionsCarried": [
+    "Matching succeeded Stripe refund evidence, retained processing fence/observed identity, atomic completion",
+    "Serial Jest file-boundary memory recycling and failure preservation",
+    "Quiet npm configuration acceptance and private reporter diagnostics exclusion"
+  ],
+  "incomingBehaviorPreserved": [
+    "All32 unchanged incoming main source/test paths are byte-identical",
+    "Artist catalog/profile/audience projection changes and container cleanup controls retained",
+    "Main672 approved6144MiB NODE_OPTIONS flag retained while removing forced in-band execution",
+    "All1368 parent and1355 incoming catalog decision objects preserved across1369 unique identities"
+  ],
+  "sourceBinding": {
+    "source": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+    "parent652": "26d8c1082d8fec217d350c7cca941731266301e9",
+    "protectedMain": "2c0b011c1d36a3ce6d0c292d005c4ddf1f858a37",
+    "requirements": 167,
+    "all164OtherMainNormsExact": true,
+    "EVTAndTwoParentNormsExactParent": true,
+    "catalogDecisions": 1369,
+    "all1368ParentAnd1355MainDecisionObjectsExact": true,
+    "entireBackendTreeExact26d8": true,
+    "allLockDependencyAndFinancialModelInputsExact26d8": true,
+    "UIWorkerGuardAndQualitySequenceExact26d8": true,
+    "mergedTestCommand": "NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=6144' jest",
+    "preservedMainSourceAndTestPaths": [
+      "docs/architecture/artist-catalog-unification.md",
+      "formal/system/container-cleanup-evidence.md",
+      "formal/system/event-memories.md",
+      "reports/catalog-delivery-blockers-2026-10-30.json",
+      "reports/container-cleanup-evidence-2026-10-30.json",
+      "reports/container-cleanup-evidence-2026-10-30/evidence.tar.gz",
+      "reports/container-cleanup-evidence-2026-10-30/independent-review.txt",
+      "reports/container-cleanup-evidence-2026-10-30/manifest.json",
+      "scripts/test-event-memory-source-browser.mjs",
+      "scripts/test-persistent-uploads-container-diagnostics.py",
+      "scripts/test-persistent-uploads-container.py",
+      "tdf-hq-ui/src/api/artistCatalog.test.ts",
+      "tdf-hq-ui/src/api/artistCatalog.ts",
+      "tdf-hq-ui/src/api/fans.ts",
+      "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
+      "tdf-hq-ui/src/features/fans/artistAudience.ts",
+      "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
+      "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
+      "tdf-hq-ui/src/features/releases/catalogQueries.ts",
+      "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
+      "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+      "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+      "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+      "tdf-hq-ui/src/pages/FanHubPage.tsx",
+      "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
+      "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+      "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+      "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+      "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+      "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+      "tdf-hq-ui/src/utils/artistIdentity.test.ts",
+      "tdf-hq-ui/src/utils/artistIdentity.ts"
+    ],
+    "qualityScriptComposition": "Normalautomaticmerge retains main cleanupcontrol line and parent browserchecks; qualified byfreshrootQA",
+    "scope": "Composition/sourcecorrespondence only; freshjoinedCI/reviewrequired; old26d8actualCI componentonly",
+    "compositionCommit": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+    "metadataOnlyFollowup": [
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+      "docs/catalog-persistence/reports/static-list-inventory.json",
+      "formal/system/inventory.json",
+      "formal/system/traceability.json"
+    ],
+    "canonicalMetadataSixChecks": "PASS"
+  },
+  "localVerification": {
+    "workerGuards": 6,
+    "refundModelTests": 13,
+    "catalogControls": 8,
+    "focusedIncomingCatalogUI": {
+      "suites": 7,
+      "tests": 90,
+      "failures": 0
+    },
+    "productionUIBuildTypecheckAndBundle": "PASS",
+    "modulePreloads": 5,
+    "initialGzipJSBytes": 388634,
+    "strictJSONCSVAndGeneratedMetadata": "PASS",
+    "immutableSpecificationAdmissionAgainstMain2c0": "PASS",
+    "repositoryQuality": "PASS",
+    "setup": "Owned pinned Mobilec3b and unchanged borrowed owned dependencies with official native supplement/fallback disabled. No fresh canonical install, local Stack/PostgreSQL or fresh whole-suite UI execution credit."
+  },
+  "previousHeadActualHostedEvidence": {
+    "head": "26d8c1082d8fec217d350c7cca941731266301e9",
+    "UIAndSchema": {
+      "head": "26d8c1082d8fec217d350c7cca941731266301e9",
+      "run": 41395338797,
+      "checkout": "3a7dd0c751069f73ff8f0b8ba4446690547928b4",
+      "checkoutParents": [
+        "1b6e970fccc3c505dac0fadfa0e4c32025ebf23d",
+        "26d8c1082d8fec217d350c7cca941731266301e9"
+      ],
+      "checkoutTree": "a2f318e754e4fd172797ec68345d8e53eca4d6b8",
+      "treeEqualsPublishedHead": true,
+      "UI": {
+        "job": 125115727513,
+        "status": "SUCCESS",
+        "suites": 328,
+        "tests": 3799,
+        "failures": 0,
+        "sixGuardMatches": {
+          "the default UI command enables serial worker recycling with the configured idle budget": 1,
+          "configuration errors do not expose captured private reporter settings": 1,
+          "the real UI command recycles its worker after the controlled per-file memory threshold": 1,
+          "forcing the old in-band command defeats the recycling probe": 1,
+          "worker recycling preserves a failing assertion and still executes every file": 1,
+          "a persistently crashing file fails after worker retries and other files still complete": 1
+        },
+        "logSHA256": "9aa311afd127da6cfb742cf6bbd00a5b40a7c91be794ec4f42aab828cfc98ed9"
+      },
+      "schema": {
+        "job": 125115727547,
+        "status": "SUCCESS",
+        "manifestEntries": 227,
+        "applyReplayAndMusicRollbackReapply": true,
+        "logSHA256": "6e2192bc8af530dc85fa5869bebee871a4387ea8a601b2aee0092319ed965f18"
+      },
+      "scope": "ActualexactcompositionNode22UIandmigrationjob evidence; wholeCI/backend/browser/review notyetqualified",
+      "recordedAt": "2026-11-02T05:50:21.806441+00:00"
+    },
+    "backend": {
+      "status": "PENDING"
+    },
+    "scope": "Actual previous-head component results, not fresh execution of this composition. Backend source tree remains exact26d8; new main UI behavior requires new hosted qualification."
+  },
+  "formalProperties": {
+    "TESTED": [
+      "PAY-STRIPE-REFUND-COMPLETION-001",
+      "PAY-STRIPE-REFUND-OBSERVATION-001",
+      "PAY-STRIPE-REFUND-ATOMIC-COMPLETION-001",
+      "SYS-UI-WORKER-RECYCLE-001",
+      "SYS-UI-WORKER-FAILURE-001",
+      "SYS-UI-CONFIG-PRIVACY-001"
+    ],
+    "BOUNDED_VERIFIED": {
+      "model": "scripts/__tests__/ticket-admission-model.test.mjs",
+      "inputs": 224,
+      "states": 560,
+      "transitions": 896,
+      "unsafeControlsDetected": 8,
+      "scope": "Finite design model; no refinement proof to Haskell, PostgreSQL or provider"
+    }
+  },
+  "wholeSystemAssurance": {
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 167,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 150,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 167,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 167,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "releaseDecision": "BLOCKED",
+    "scope": "167 full implementation and167 refinement obligations remain UNPROVEN/UNKNOWN.11 inherited conditional SMT lemmas do not prove the new worker/privacy or whole financial workflow."
+  },
+  "checks": {
+    "composed-model": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "9d5746a50c0e5d29043e4f5dbddff48784b85da8ccb610db3b0d2946a2ca9b32"
+    },
+    "composed-guards": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "03a54ee37b746132a5332ba0e5139b53e26d630c7777bbc2628a2d0aee2287e8"
+    },
+    "catalog-controls": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "8098ae4aa829d5688054d323ba8bc4dd3d6cadcb4efb2247578cb074ed174cdc"
+    },
+    "catalog-ui-focused": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "7dce77bb2c4d4354420e8ee838b5bee066f54ee07d5ab685179344a63ed30212"
+    },
+    "composed-ui-build": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "c14d5a981360292cfdf04f3a699e97e72def735fe90e2dfbda50c80f17cef95b"
+    },
+    "final-admission": {
+      "exitCode": 0,
+      "sourceAtStart": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+      "sourceAtFinish": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+      "logSha256": "9d7a953fb053cde0a00791a24c556446322f11cc05d4b638fde044c22dff60b5"
+    },
+    "final-assurance": {
+      "exitCode": 0,
+      "sourceAtStart": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+      "sourceAtFinish": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+      "logSha256": "035b53a23090ce4e190002f424912f9e0600718edd7d9e42d6a97da2d643d8a1"
+    },
+    "final-repo-qa": {
+      "exitCode": 0,
+      "sourceAtStart": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+      "sourceAtFinish": "6b0ffa1f689fa0eaacba6dc1e4c9118f1b0a5563",
+      "logSha256": "7be1efbcc6ec6caa0ee3f88796bc09f641f9072578429f51640548a278ff14d1"
+    },
+    "metadata-0": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "metadata-1": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "metadata-2": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5"
+    },
+    "metadata-3": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6"
+    },
+    "metadata-4": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d"
+    },
+    "metadata-5": {
+      "exitCode": 0,
+      "sourceAtStart": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "sourceAtFinish": "70485db879f09e71a7a9f3a0650d8f9bdd13cbb2",
+      "logSha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e"
+    }
+  },
+  "integration": {
+    "PR": 652,
+    "mode": "Normal fast-forward only after live head/review/main/rules preflight",
+    "protectedMainMerged": false,
+    "freshHeadCI": "PENDING",
+    "freshHeadApproval": "PENDING",
+    "old26d8ApprovalReusable": false,
+    "messagesOrReviewerRequests": 0,
+    "productionOperations": 0
+  },
+  "remainingRisks": [
+    "Serial worker limit is an idle threshold between files, not a hard bound on a test, parent or OS",
+    "Provider account/environment authenticity, post-I/O actor/order fencing and partial allocation remain separate",
+    "Inventory654 is a distinct existing child correction published4da; do not silently fold it into this parent",
+    "Main can advance again; respect exact-head review, strict20contexts and current-main admission before integration"
+  ],
+  "next": "Publish verified composition without force; qualify its actual hosted checkout, all55 provider regressions/schema227 and current UI suite. Obtain fresh exact-head approval and admission without changing protected controls.",
+  "evidence": {
+    "archive": "reports/refund-completion-main672-2026-11-02/evidence.tar.gz",
+    "sha256": "524452dc98be2e1d902ce8ee2a1fde5fd40f48a447319b9d2189d7807d2aa1ba",
+    "regularFiles": 85,
+    "manifestEntries": 84
+  }
+}

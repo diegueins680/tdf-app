@@ -6732,7 +6732,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. */
+        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. Revoking an approved claim (status revoked, AUTHORITY-097) requires a non-empty reason, deactivates every manager grant the claim created in the same transaction and is terminal. */
         patch: operations["decideDirectoryClaim"];
         trace?: never;
     };
@@ -7279,6 +7279,46 @@ export interface paths {
          * @description Browser approval is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, quote, checkout, environment, and provider binding before recording the deposit and reserving the date.
          */
         post: operations["capturePublicDomoPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel the quote and record its refund obligation (PAY-DOMO-CANCEL-001)
+         * @description Releases the quote and its date hold. Collected money is priced by the single approved cancellation policy version (AUTHORITY-093, by lead time before the event) and recorded as an immutable cancellation with the retained and refundable amounts. The quote holder is not an authenticated party, so a refund due is recorded as an open obligation that an operator turns into a refund request; replaying returns the stored record.
+         */
+        post: operations["cancelPublicDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a Domo quote as an operator and request the policy refund
+         * @description Strict administrators only. The approved cancellation policy prices the refund (customer ladder or full refund when TDF cancels) and the refund request is created in the same transaction with the administrator as requester; a different party must approve it. Called on a customer-cancelled quote with an open obligation, it creates that refund request.
+         */
+        post: operations["adminCancelDomoQuote"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8920,6 +8960,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/music/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find a currently discoverable recording with its exact playback context
+         * @description Requires the existing music_releases.public feature. Text matches current
+         *     public release/track contexts inside the database. Every returned context
+         *     must have an eligible stream or matching preview under the existing public
+         *     delivery policy and trusted edge territory. Contexts without eligible audio
+         *     are excluded before recording deduplication, pagination and JSON projection.
+         *     Results contain deferred asset IDs, never delivery URLs or storage keys.
+         *     The player reauthorizes the selected asset. This is canonical release audio
+         *     search, not indexing of all historical, social, podcast or event sources.
+         */
+        get: operations["searchPublicMusicTracks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/music/releases/{releaseId}/versions/{versionId}/validate": {
         parameters: {
             query?: never;
@@ -9685,8 +9752,13 @@ export interface components {
             verifiedPurchase: true;
             /** @enum {string} */
             badge: "Compra verificada";
-            /** @description Public name/avatar according to buyer privacy preferences */
+            /** @description Public identity according to buyer privacy preferences; partyId and avatarUrl are omitted for anonymous buyers */
             author: {
+                /** Format: int64 */
+                partyId?: number;
+                name?: string;
+                avatarUrl?: string | null;
+            } & {
                 [key: string]: unknown;
             };
             dimensions: {
@@ -10561,6 +10633,46 @@ export interface components {
         PublicDomoQuoteAcceptRequest: {
             /** @enum {boolean} */
             termsAccepted: true;
+        };
+        PublicDomoQuoteCancelRequest: {
+            /** @enum {boolean} */
+            confirmCancellation: true;
+            cancellationNote?: string;
+        };
+        PublicDomoCancellation: {
+            /** Format: uuid */
+            quoteId: string;
+            quoteStatus: string;
+            /** @enum {string} */
+            canceller: "customer" | "tdf";
+            policyVersion?: number | null;
+            /** Format: date-time */
+            cancelledAt: string;
+            /** @description Whole 24-hour periods before the event start; negative after it */
+            leadDays: number;
+            inProgress: boolean;
+            retainedBasisPoints: number;
+            /** Format: int64 */
+            depositCollectedMinor: number;
+            /** Format: int64 */
+            balanceCollectedMinor: number;
+            /** Format: int64 */
+            retainedMinor: number;
+            /**
+             * Format: int64
+             * @description retainedMinor + refundDueMinor equals the collected money
+             */
+            refundDueMinor: number;
+            currency: string;
+            /** @enum {string} */
+            refundStatus: "none" | "awaiting_operator" | "requested";
+            /** @description True when the quote was cancelled earlier and the stored record is returned */
+            alreadyCancelled: boolean;
+        };
+        DomoQuoteCancelRequest: {
+            /** @enum {string} */
+            canceller: "customer" | "tdf";
+            note?: string;
         };
         PublicDomoQuoteLine: {
             code: string;
@@ -16330,6 +16442,8 @@ export interface components {
         /** @enum {string} */
         ExperienceReviewSourceKind: "event_ticket_order" | "marketplace_order" | "service_booking" | "service_storefront_order";
         ExperienceReviewAuthor: {
+            /** Format: int64 */
+            partyId?: number;
             name: string;
             /** Format: uri */
             avatarUrl?: string | null;
@@ -16452,6 +16566,34 @@ export interface components {
             sourceId: string;
             rating: number;
             body?: string | null;
+        };
+        MusicTrackSearchSource: {
+            /** Format: uuid */
+            assetId: string;
+            /** @enum {string} */
+            role: "stream_audio" | "preview_audio";
+            mediaType: string;
+            technicalMetadata: {
+                bitrate_kbps?: number;
+                loudness_lufs?: number;
+            };
+        };
+        MusicTrackSearchHit: {
+            /** Format: uuid */
+            trackId: string;
+            /** Format: uuid */
+            recordingId: string;
+            /** Format: uuid */
+            releaseId: string;
+            /** Format: uuid */
+            releaseVersionId: string;
+            releaseSlug: string;
+            releaseTitle: string;
+            title: string;
+            displayArtist: string;
+            /** Format: int64 */
+            durationMs: number | null;
+            sources: components["schemas"]["MusicTrackSearchSource"][];
         };
     };
     responses: {
@@ -32973,6 +33115,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Revocation without a reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Authentication required */
             401: {
                 headers: {
@@ -34266,6 +34415,126 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoQuoteCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded cancellation outcome */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoCancellation"];
+                };
+            };
+            /** @description Cancellation not confirmed or note too long */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote is completed or expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved cancellation policy exists; nothing was cancelled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminCancelDomoQuote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomoQuoteCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded cancellation including the linked refund request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Malformed quoteId */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin role or module access missing */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote cannot be cancelled or the refund request was refused */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved cancellation policy exists */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -37268,6 +37537,56 @@ export interface operations {
             };
             /** @description Music commerce is disabled in the applicable environment */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    searchPublicMusicTracks: {
+        parameters: {
+            query?: {
+                /** @description Trimmed query; absent or blank returns an empty array. Accent/case and literal non-Latin substring matching; no typo-tolerance guarantee. */
+                q?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Accepted only through the existing trusted-edge configuration. Absent, ignored or invalid values use the existing unknown-territory policy; the browser does not choose this value. */
+                "CF-IPCountry"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stable authorized recording hits, deduplicated before pagination. Readiness and rights may change before selection. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicTrackSearchHit"][];
+                };
+            };
+            /** @description Invalid query length or pagination. Handler denials use private/no-store; parameter-parser errors precede the handler. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing public music feature disabled; no catalog existence inferred. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Explicit service failure; not an empty catalog. */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };

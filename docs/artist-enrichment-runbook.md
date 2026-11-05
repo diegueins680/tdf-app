@@ -263,3 +263,62 @@ cd tdf-hq && stack test
 Migration CI applies every registered migration, applies the enrichment migration
 twice, checks all required tables/indexes/foreign keys, executes the rollback in
 an isolated database, and confirms the pre-existing artist row survives.
+
+
+## Artist photo coverage (4 November 2026)
+
+`--scope profiles` processes only existing artist profiles; it never researches
+unprofiled inventory groups or creates an artist. Missing/provisional photos are
+prioritized. Registered, explicitly authorized/licensed same-artist media is
+considered before provider research. `--scope media` returns after internal reuse
+when no explicit external image was requested.
+
+A previously reviewed external `authorized_artist_image` source can be ingested
+only with an exact artist ID, explicit rights/attribution and its retained SHA256.
+If source bytes change, ingestion rejects and requires renewed review. Unknown
+provider image rights create a review source, not a published photograph.
+Downloaded photos use public-only pinned DNS/TLS, at most three redirects, a
+streaming25MiB bound, bounded decoder processes and a40-million-pixel ceiling.
+This protection covers image ingestion. Legacy availability probes and provider
+adapter fetching have separate remaining SSRF/transport obligations.
+
+Automatic field publication fills empty fields or explicit provisional images.
+Populated fields remain human-reviewed alternatives. Terminal suggestions retain
+their original reviewed baseline/evidence on replay. The existing server field
+lock/re-read still refuses stale baselines. Biography proposals are synthesized
+from corroborated provider facts; audio/video remain links. A transient HTTP
+failure is recorded as unavailable; only404/410 is recorded broken by this worker.
+
+The web uses named initials in current TDF primary/secondary shades across artist
+profiles, Community, search, fan suggestions/cards, club previews and the TDF
+carousel. Image failures remove responsive sources and fall back locally without
+writing a permanent media-health verdict. No photograph is invented or replaced
+by an unrelated album image. Existing artists and new profiles receive this
+presentation immediately after the web change is deployed.
+
+Example existing-profile run, with credentials supplied privately in environment:
+
+```sh
+npm run artists:enrich -- --mode dry-run --scope profiles --batch-size 25 \
+  --checkpoint /absolute/private/artist-photos-dry.json \
+  --report /absolute/private/artist-photos-dry-report.json
+```
+
+Start production with a single
+`--artist ID --batch-size 1`, a new production checkpoint and `--auto-publish`.
+The production run requires the changed backend's publication/terminal-history
+guards, a reviewed deployment, an active strict-admin token and image-storage
+integration. Inspect the retained report and actual profile before expanding.
+Publication is permission to fill supported fields, not permission to infer photo
+rights or broaden account roles. Revert a field using the retained old value
+through a fresh explicitly reviewed proposal with the current baseline; do not
+replay a terminal decision or edit historical audit rows.
+
+Full prompt delivery remains PARTIAL: owner-facing enrichment review, durable
+per-field opt-out controls, one-action reversal, exhaustive internal event/upload
+photo discovery, event-driven background research on creation, and comprehensive
+legacy probe safety are not supplied by this change. Existing strict-admin review
+and artist self-edit/photo replacement remain authoritative. The public audit at
+`reports/artist-profile-media-2026-11-04.json` is a read-only observation, not
+proof of imported photos or deployed source. No production backfill or rollout
+is claimed by local tests.

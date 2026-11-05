@@ -1,0 +1,56 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runTestsByPath src/__tests__/PublicBookingPage.test.tsx --testNamePattern=keeps the physical studio
+
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+(node:16912) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL src/__tests__/PublicBookingPage.test.tsx
+  PublicBookingPage
+    ✕ keeps the physical studio in Quito when the general display preference is UTC (733 ms)
+    ○ skipped stacks the service reviews below the booking card in a column so phones never squeeze the card
+    ○ skipped hides the rooms field from the public form
+    ○ skipped lets visitors pick any published service from the contact step
+    ○ skipped clears the old service quote while its replacement is pending and ignores a late old response
+    ○ skipped preserves booking acquisition context through optional login and signup
+    ○ skipped computes quick schedule shortcuts using studio-timezone opening hours
+    ○ skipped submits the canonical offering ID and lets the backend assign persisted default resources
+    ○ skipped creates an idempotent deposit checkout only from an authoritative server quote
+    ○ skipped can preselect DJ Booth from the public service query parameter
+    ○ skipped lets the backend resolve persisted default resources when legacy room UUIDs are ambiguous
+    ○ skipped prevents moving to schedule step with invalid email
+    ○ skipped does not overwrite in-progress contact edits after services load
+    ○ skipped advances by step on form submit before sending booking
+    ○ skipped does not auto-bind an ambiguous engineer id when duplicate names exist
+
+  ● PublicBookingPage › keeps the physical studio in Quito when the general display preference is UTC
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected substring: "08:00–22:00, Quito (GMT-5)"
+    Received string:    "Agenda públicaReserva un servicio con TDFSolicitud para confirmarCompleta tus datos y agenda el horario que prefieras. Puedes reservar como invitado; crear una cuenta es opcional.Horario del estudio: UTC. Tu zona: GMT-5.Precios de referencia en USD; confirmamos el total contigo antes de agendar.Estimado para Grabación de banda: USD 100 / hourPuedes dejar la solicitud ahora mismo. Guarda el ID de reserva y escríbenos por WhatsApp si necesitas confirmar disponibilidad o recursos.1. Elige tu servicio y agenda sin crear cuenta2. Recibe un ID de reserva3. Coordina ajustes por WhatsApp¿Ya tienes cuenta?Inicia sesión para completar tus datos guardados. Si no tienes cuenta, puedes crearla de forma opcional.Iniciar sesiónCrear cuentaDatos de contactoUsa un correo válido para identificar la reserva. Crear una cuenta es opcional.Bloque tentativo en el calendario.Duración estándar de 1h (ajústala si necesitas más tiempo).Añade tu WhatsApp si prefieres coordinar por ahí.1Contacto2Horario3ConfirmaciónServicio *Grabación de bandaUSD 100 / hourServicio *Estimado: USD 100 / hour · Moneda: USDNombre completo *Nombre completo *Correo *Correo *WhatsApp / TeléfonoWhatsApp / TeléfonoRecordar mis datos mientras esta pestaña siga abierta.Limpiar datos guardadosContinuarReseñas del servicioAún no hay reseñasInicia sesión para publicar una reseña después de completar una interacción.No se pudieron cargar las reseñas."
+
+      361 |     const { cleanup } = await renderPage(container);
+      362 |     try {
+    > 363 |       expect(container.textContent).toContain('08:00–22:00, Quito (GMT-5)');
+          |                                     ^
+      364 |     } finally {
+      365 |       await cleanup();
+      366 |       container.remove();
+
+      at Object.<anonymous> (src/__tests__/PublicBookingPage.test.tsx:363:37)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 14 skipped, 15 total
+Snapshots:   0 total
+Time:        4.805 s, estimated 12 s
+Ran all test suites within paths "src/__tests__/PublicBookingPage.test.tsx".
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /private/tmp/tdf-studio-booking-quito-20261026/tdf-hq-ui
+npm error workspace tdf-hq-ui@0.1.0
+npm error location /private/tmp/tdf-studio-booking-quito-20261026/tdf-hq-ui
+npm error command failed
+npm error command sh -c NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runTestsByPath src/__tests__/PublicBookingPage.test.tsx '--testNamePattern=keeps the physical studio'

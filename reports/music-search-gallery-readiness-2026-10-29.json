@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "parent": "a2fc95aff76f92310e164c073c7086c5c9bf5aa5",
+  "failedHostedRun": 40970343670,
+  "failedHostedJob": 123785552172,
+  "originalResult": {
+    "passed": 642,
+    "failed": 1,
+    "existingSkipped": 22,
+    "failure": "WebKit iPhone gallery contrast: title2.01/close1.65; required4.5",
+    "rootCause": "UNPROVEN: original contemporaneous computed opacity not recorded"
+  },
+  "originalArtifact": {
+    "id": 12940958353,
+    "bytes": 113955695,
+    "sha256": "0e61037a1b2b3d7ad0cfbce902c43d76d4c75acf05ddd77ab042325757998361",
+    "downloadHashVerified": true,
+    "retained": "Original failed archive/screenshot/context/trace kept locally without rewriting its result"
+  },
+  "fix": {
+    "source": "Existing approved draft648 b0d192f38b4aa33b5359722c2c999e7d0cd745a3",
+    "reusedWholeTestFileExact": true,
+    "delta": "14 added lines at the existing gallery audit point; no application, styles, accessibility-rule, threshold, timeout, retry, skip, dependency, browser configuration or normative-object change",
+    "method": "Capture computed paint; bounded existing expect deadline requires opacity1 and no running/paused/pending animations before ONCE the same dialog axe scan. Persistent opacity and settled low contrast still reject.",
+    "queue": "Existing648head/draft and all PR integration order remain unchanged; no merge/cherry-pick of648head"
+  },
+  "localVerification": {
+    "status": "PASS",
+    "executedAt": "2026-10-30T00:13:49.080680+00:00",
+    "testedPendingWorkingPatch": true,
+    "exactContentSha256": {
+      "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
+      "e2e/web/helpers/review-paint.mjs": "f8f6d9d3164a0017dcc6a83f79d7e4a989d01fc94d0817f5fd08d55aa5a8e022"
+    },
+    "cases": 18,
+    "skipped": 0,
+    "unexpected": 0,
+    "retriesOrFlaky": 0,
+    "galleryPositiveCases": 3,
+    "existingPermanentContrastAndStuckOpacityControls": 6,
+    "browsers": "Chrome desktop/phone emulation and Firefox; no local pinned WebKit execution claimed",
+    "observations": [
+      {
+        "project": "chromium-desktop",
+        "phase": "studio-photo-paint-before",
+        "ready": false,
+        "opacities": [
+          "0.798132",
+          "1"
+        ],
+        "activeAnimations": 1
+      },
+      {
+        "project": "chromium-desktop",
+        "phase": "studio-photo-paint-final",
+        "ready": true,
+        "opacities": [
+          "1"
+        ],
+        "activeAnimations": 0
+      },
+      {
+        "project": "chromium-phone",
+        "phase": "studio-photo-paint-before",
+        "ready": false,
+        "opacities": [
+          "0.695403",
+          "1"
+        ],
+        "activeAnimations": 1
+      },
+      {
+        "project": "chromium-phone",
+        "phase": "studio-photo-paint-final",
+        "ready": true,
+        "opacities": [
+          "1"
+        ],
+        "activeAnimations": 0
+      },
+      {
+        "project": "firefox-critical",
+        "phase": "studio-photo-paint-before",
+        "ready": false,
+        "opacities": [
+          "0.746748",
+          "1"
+        ],
+        "activeAnimations": 1
+      },
+      {
+        "project": "firefox-critical",
+        "phase": "studio-photo-paint-final",
+        "ready": true,
+        "opacities": [
+          "1"
+        ],
+        "activeAnimations": 0
+      }
+    ],
+    "caseMatrixSha256": "4a79eed544d0cd000c35a81e92a2b8698181b23f42ed8b9ec162ee86e485f310"
+  },
+  "scope": "Local observations prove visibility+decoded image is insufficient for paint readiness on this composition; they do not retroactively prove the original WebKit failure cause. Prior unit/backend/native qualifications retain their own identities.",
+  "remaining": [
+    "new exact-head hosted CI including WebKit",
+    "fresh independent current-head approval",
+    "strict/FIFO protected merge",
+    "separate canonical deployment verification"
+  ],
+  "canonicalReportLive": false
+}
