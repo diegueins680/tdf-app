@@ -16641,7 +16641,7 @@
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
     "scripts/test-community-search.py": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
-    "scripts/test-content-storage-postgres.mjs": "07b0c220957e8a89675ea93ca6e8a908ca9f21233c9a9864d2340e2b1c23a84b",
+    "scripts/test-content-storage-postgres.mjs": "3c68a16e43c08e6d241a4b5bc39c5b0b08d625bffa740dcd6c8b1916c2cf074d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
@@ -17343,9 +17343,9 @@
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
     "tdf-hq/sql/2026-11-04_content_storage.sql": "dc48d8a2849069de750861f0c23265665fb3af0d6fb21550e82229c3ef29e7e1",
-    "tdf-hq/sql/2026-11-04_content_storage_accounting.sql": "860779ca84da292431f5e07034cc892696ed63b2b186ceaac0e0ed06b31e92fc",
-    "tdf-hq/sql/2026-11-04_content_storage_accounting_rollback.sql": "62d05533e971552184302933eb68c0a3002ff94c19f55e3488058cf1f40ae64f",
-    "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql": "3fe912ba124461460dd149a4aed37178440a18878c1d451dcfbed37947be7b5a",
+    "tdf-hq/sql/2026-11-04_content_storage_accounting.sql": "63541c66b0cbfcad3be42bb3bb18e9d7748e07d876bb093eed0536f8f663c5ee",
+    "tdf-hq/sql/2026-11-04_content_storage_accounting_rollback.sql": "c8216053c5216b00cfd8a18028161446b8419e1569a7e867fae1ff5c397b1a95",
+    "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql": "a28a0f06f2496de45400dbe181cd5303381c3e2f9cf78cbc0f4bf035c3efdd4f",
     "tdf-hq/sql/2026-11-04_content_storage_delete_capacity_rollback.sql": "6ea9f088af10e00d2bbae4fb1784cbc1f7bfaf524bdfa3c4b2a603aa1606e5ac",
     "tdf-hq/sql/2026-11-04_content_storage_deletion.sql": "ca04f854a4b40c2c63b27d0a2b9d942c1aaf5156ab34c811170500574c4f066b",
     "tdf-hq/sql/2026-11-04_content_storage_deletion_rollback.sql": "df3cc43dbaf01e853ad5df6e638118986c61792f27d999f59a3e55044f08a61a",
@@ -17410,7 +17410,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "18085ab24c01e2fdf4320d904a4e7f4d6c8eb32e51d76c95c5b1cd8074ba5fd2",
-    "tdf-hq/src/TDF/ContentStorage.hs": "2d8321f9b4466acc3ded0f28e0901f446c978c392b335d5a7fb1ab5210ef9051",
+    "tdf-hq/src/TDF/ContentStorage.hs": "4c39f039f1a81aa2b5d42db562063edfc569e651ad4bdb0afec5796aaa906634",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
     "tdf-hq/src/TDF/Contracts/Types.hs": "cd59c25f047739b58e8e6b0373b858e212665705dbd9f0ca2c2ced7c56b36a20",
@@ -36895,7 +36895,7 @@
     {
       "id": "SURFACE-0b89edc194bc4b58",
       "path": "scripts/test-content-storage-postgres.mjs",
-      "sha256": "07b0c220957e8a89675ea93ca6e8a908ca9f21233c9a9864d2340e2b1c23a84b",
+      "sha256": "3c68a16e43c08e6d241a4b5bc39c5b0b08d625bffa740dcd6c8b1916c2cf074d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52612,7 +52612,7 @@
     {
       "id": "SURFACE-c5c88f4c70fa0bec",
       "path": "tdf-hq/sql/2026-11-04_content_storage_accounting.sql",
-      "sha256": "860779ca84da292431f5e07034cc892696ed63b2b186ceaac0e0ed06b31e92fc",
+      "sha256": "63541c66b0cbfcad3be42bb3bb18e9d7748e07d876bb093eed0536f8f663c5ee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52624,7 +52624,7 @@
     {
       "id": "SURFACE-dad1ef004364bc36",
       "path": "tdf-hq/sql/2026-11-04_content_storage_accounting_rollback.sql",
-      "sha256": "62d05533e971552184302933eb68c0a3002ff94c19f55e3488058cf1f40ae64f",
+      "sha256": "c8216053c5216b00cfd8a18028161446b8419e1569a7e867fae1ff5c397b1a95",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52636,7 +52636,7 @@
     {
       "id": "SURFACE-9d59f941bcc7c76e",
       "path": "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql",
-      "sha256": "3fe912ba124461460dd149a4aed37178440a18878c1d451dcfbed37947be7b5a",
+      "sha256": "a28a0f06f2496de45400dbe181cd5303381c3e2f9cf78cbc0f4bf035c3efdd4f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53995,7 +53995,7 @@
     {
       "id": "SURFACE-2b23cc9a08067b9e",
       "path": "tdf-hq/src/TDF/ContentStorage.hs",
-      "sha256": "2d8321f9b4466acc3ded0f28e0901f446c978c392b335d5a7fb1ab5210ef9051",
+      "sha256": "4c39f039f1a81aa2b5d42db562063edfc569e651ad4bdb0afec5796aaa906634",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

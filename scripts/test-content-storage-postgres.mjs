@@ -130,3 +130,18 @@ test('explicit deletion preserves completion evidence, fences stale publication 
   await sql(`UPDATE content_storage_upload SET deleted_at=now() WHERE id='${first.id}'`);
   assert.equal((await reserve(19, 5000000000, { key: hash('d') })).status, 'uploading');
 });
+
+test('creates accounts lazily so identity merges are not blocked by every party', async () => {
+  await sql('INSERT INTO party VALUES (30), (0)');
+  // No row is created merely because a party exists.
+  assert.equal(await sql('SELECT count(*) FROM content_storage_account WHERE party_id IN (0,30)'), '0');
+  assert.equal(await sql("SELECT content_storage_new_party(30)::text || ',' || content_storage_new_party(0)::text"), 'true,false');
+  // A party created after the migration cannot own legacy objects: its first
+  // upload creates a verified account.
+  const fresh = await reserve(30, 1, { key: hash('7'), fingerprint: hash('8') });
+  assert.equal(fresh.status, 'uploading');
+  assert.equal(await sql('SELECT legacy_usage_verified FROM content_storage_account WHERE party_id=30'), 't');
+  // A party at or below the cutoff still needs a reconciled inventory.
+  assert.equal((await reserve(0, 1, { key: hash('9'), fingerprint: hash('8') })).code, 'storage_inventory_required');
+  assert.equal(await sql('SELECT legacy_usage_verified FROM content_storage_account WHERE party_id=0'), 'f');
+});

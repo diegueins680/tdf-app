@@ -13,16 +13,28 @@ CREATE TABLE IF NOT EXISTS content_storage_reconciliation (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY(party_id,evidence_sha256)
 );
-CREATE OR REPLACE FUNCTION content_storage_new_account() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  INSERT INTO content_storage_account(party_id,legacy_usage_verified) VALUES(NEW.id,true) ON CONFLICT DO NOTHING;
-  RETURN NEW;
-END $$;
-DO $$ BEGIN
-  IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='party'::regclass AND tgname='content_storage_new_account') THEN
-    CREATE TRIGGER content_storage_new_account AFTER INSERT ON party FOR EACH ROW EXECUTE FUNCTION content_storage_new_account();
-  END IF;
-END $$;
+-- Accounts are created on first use, never per party: identity merges refuse
+-- to run while any row references the retired party, so an account row for
+-- every party would block every merge. Parties created after this migration
+-- cannot own unmetered legacy objects, so their lazily created account starts
+-- verified; parties that existed before it must be reconciled first.
+CREATE TABLE IF NOT EXISTS content_storage_legacy_cutoff (
+  singleton boolean PRIMARY KEY DEFAULT true CHECK (singleton),
+  max_legacy_party_id bigint NOT NULL CHECK (max_legacy_party_id >= 0)
+);
+INSERT INTO content_storage_legacy_cutoff(max_legacy_party_id)
+  SELECT COALESCE(max(id),0) FROM party ON CONFLICT DO NOTHING;
+CREATE OR REPLACE FUNCTION content_storage_new_party(p_party bigint) RETURNS boolean
+LANGUAGE sql STABLE AS $$
+  SELECT COALESCE((SELECT p_party > max_legacy_party_id FROM content_storage_legacy_cutoff), false)
+$$;
+CREATE OR REPLACE FUNCTION content_storage_ensure_account(p_party bigint) RETURNS void
+LANGUAGE sql AS $$
+  INSERT INTO content_storage_account(party_id,legacy_usage_verified)
+    VALUES(p_party, content_storage_new_party(p_party)) ON CONFLICT DO NOTHING
+$$;
+DROP TRIGGER IF EXISTS content_storage_new_account ON party;
+DROP FUNCTION IF EXISTS content_storage_new_account();
 -- Invoker-security operator primitive, not an HTTP endpoint. Requires the
 -- reviewed DB writer and a byte-verified ownership/size report before activation.
 CREATE OR REPLACE FUNCTION content_storage_reconcile(p_party bigint,p_bytes bigint,p_evidence text,p_revision bigint)
@@ -30,7 +42,7 @@ RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE account content_storage_account; prior content_storage_reconciliation;
 BEGIN
   IF p_bytes<0 OR p_evidence !~ '^[a-f0-9]{64}$' THEN RETURN jsonb_build_object('code','invalid_reconciliation'); END IF;
-  INSERT INTO content_storage_account(party_id) VALUES(p_party) ON CONFLICT DO NOTHING;
+  PERFORM content_storage_ensure_account(p_party);
   SELECT * INTO STRICT account FROM content_storage_account WHERE party_id=p_party FOR UPDATE;
   SELECT * INTO prior FROM content_storage_reconciliation WHERE party_id=p_party AND evidence_sha256=p_evidence;
   IF FOUND THEN
@@ -55,7 +67,7 @@ CREATE OR REPLACE FUNCTION content_storage_reserve(
 DECLARE account content_storage_account; existing content_storage_upload;
   occupied bigint;
 BEGIN
-  INSERT INTO content_storage_account(party_id) VALUES(p_owner) ON CONFLICT DO NOTHING;
+  PERFORM content_storage_ensure_account(p_owner);
   SELECT * INTO STRICT account FROM content_storage_account WHERE party_id=p_owner FOR UPDATE;
   SELECT * INTO existing FROM content_storage_upload WHERE owner_party_id=p_owner AND request_key=p_key FOR UPDATE;
   IF FOUND THEN

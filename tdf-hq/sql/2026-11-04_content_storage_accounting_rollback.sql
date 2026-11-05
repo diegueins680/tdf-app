@@ -5,6 +5,9 @@ DO $$ BEGIN
 END $$;
 DROP TRIGGER IF EXISTS content_storage_new_account ON party;
 DROP FUNCTION IF EXISTS content_storage_new_account();
+DROP FUNCTION IF EXISTS content_storage_ensure_account(bigint);
+DROP FUNCTION IF EXISTS content_storage_new_party(bigint);
+DROP TABLE IF EXISTS content_storage_legacy_cutoff;
 DROP FUNCTION IF EXISTS content_storage_reconcile(bigint,bigint,text,bigint);
 DROP TABLE IF EXISTS content_storage_reconciliation;
 ALTER TABLE content_storage_account DROP COLUMN IF EXISTS legacy_bytes;

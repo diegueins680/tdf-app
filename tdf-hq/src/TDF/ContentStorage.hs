@@ -64,10 +64,11 @@ contentStorageServer :: AuthedUser -> ServerT ContentStorageAPI AppM
 contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> readPrivate :<|> deleteFile
   where
     owner = fromSqlKey (auPartyId user)
+    -- Reading the account never creates it: identity merges are blocked by any
+    -- row referencing a party, so accounts exist only once storage is used.
     account = runDB $ do
-      rawExecute "INSERT INTO content_storage_account(party_id) VALUES(?) ON CONFLICT DO NOTHING" [PersistInt64 owner]
       rows <- rawSql
-        "SELECT GREATEST(account.allowance_bytes,5000000000),account.legacy_bytes+COALESCE(sum(upload.byte_size) FILTER(WHERE upload.destination='tdf' AND upload.status='completed'),0)::bigint,COALESCE(sum(upload.byte_size) FILTER(WHERE upload.destination='tdf' AND (upload.status='uploading' OR (upload.status='cancelled' AND upload.deleted_at IS NULL))),0)::bigint,account.default_destination,account.revision,account.legacy_usage_verified FROM content_storage_account account LEFT JOIN content_storage_upload upload ON upload.owner_party_id=account.party_id WHERE account.party_id=? GROUP BY account.party_id"
+        "SELECT GREATEST(COALESCE(account.allowance_bytes,0),5000000000),COALESCE(account.legacy_bytes,0)+COALESCE(sum(upload.byte_size) FILTER(WHERE upload.destination='tdf' AND upload.status='completed'),0)::bigint,COALESCE(sum(upload.byte_size) FILTER(WHERE upload.destination='tdf' AND (upload.status='uploading' OR (upload.status='cancelled' AND upload.deleted_at IS NULL))),0)::bigint,account.default_destination,COALESCE(account.revision,0),COALESCE(account.legacy_usage_verified,content_storage_new_party(owner.party_id)) FROM (SELECT ?::bigint AS party_id) owner LEFT JOIN content_storage_account account ON account.party_id=owner.party_id LEFT JOIN content_storage_upload upload ON upload.owner_party_id=owner.party_id GROUP BY owner.party_id,account.party_id"
         [PersistInt64 owner]
       case rows of
         [(Single capacity, Single used, Single reserved, Single preferred, Single version, Single verified)] ->
@@ -76,11 +77,14 @@ contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> read
     setDestination StorageDestinationUpdate{..} = do
       unless (destination `elem` ["tdf", "google_drive"] && expectedRevision >= 0) $
         throwError (storageError err400 "storage_destination_invalid")
-      _ <- account
-      rows <- runDB (rawSql
-        "UPDATE content_storage_account SET default_destination=?,revision=revision+1 WHERE party_id=? AND revision=? RETURNING party_id"
-        [PersistText destination, PersistInt64 owner, PersistInt64 expectedRevision]
-        :: SqlPersistT IO [Single Int64])
+      rows <- runDB $ do
+        -- Choosing a destination uses storage, so the account is created here.
+        _ <- rawSql "SELECT 1::bigint FROM (SELECT content_storage_ensure_account(?)) ensured" [PersistInt64 owner]
+          :: SqlPersistT IO [Single Int64]
+        rawSql
+          "UPDATE content_storage_account SET default_destination=?,revision=revision+1 WHERE party_id=? AND revision=? RETURNING party_id"
+          [PersistText destination, PersistInt64 owner, PersistInt64 expectedRevision]
+          :: SqlPersistT IO [Single Int64]
       when (null rows) (throwError (storageError err409 "storage_preference_conflict"))
       account
     listFiles after requestedLimit = do

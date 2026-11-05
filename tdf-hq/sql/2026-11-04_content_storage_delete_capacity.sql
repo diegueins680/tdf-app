@@ -4,7 +4,7 @@ RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE account content_storage_account; prior content_storage_reconciliation;
 BEGIN
   IF p_bytes<0 OR p_evidence !~ '^[a-f0-9]{64}$' THEN RETURN jsonb_build_object('code','invalid_reconciliation'); END IF;
-  INSERT INTO content_storage_account(party_id) VALUES(p_party) ON CONFLICT DO NOTHING;
+  PERFORM content_storage_ensure_account(p_party);
   SELECT * INTO STRICT account FROM content_storage_account WHERE party_id=p_party FOR UPDATE;
   SELECT * INTO prior FROM content_storage_reconciliation WHERE party_id=p_party AND evidence_sha256=p_evidence;
   IF FOUND THEN
@@ -29,7 +29,7 @@ CREATE OR REPLACE FUNCTION content_storage_reserve(
 DECLARE account content_storage_account; existing content_storage_upload;
   occupied bigint;
 BEGIN
-  INSERT INTO content_storage_account(party_id) VALUES(p_owner) ON CONFLICT DO NOTHING;
+  PERFORM content_storage_ensure_account(p_owner);
   SELECT * INTO STRICT account FROM content_storage_account WHERE party_id=p_owner FOR UPDATE;
   SELECT * INTO existing FROM content_storage_upload WHERE owner_party_id=p_owner AND request_key=p_key FOR UPDATE;
   IF FOUND THEN
