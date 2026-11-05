@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-02T23:54:56.987873+00:00",
+  "baseline657": "4d48e13556f3fb1a2756b30099f09a5992682ad3",
+  "incoming699": "3d395117b330382fcade995bfb781d01a2e40412",
+  "composition": "764dbe3b86266ea8cd5405330cdcb600dc10f295",
+  "qualifiedSource": "d68e314f6f9cc354585ddbd545249cbe2ef8db91",
+  "main": "a0cc6529fa10d3aae33804a06c3da23c648a9fbb",
+  "problem": "Legacy refund requests previously checked absence and inserted in separate transactions; simultaneous submissions created two pending execution identities, and paid-state/buyer/amount/organizer changes could authorize stale insertion.",
+  "correction": "Preserve existing657explicitREADCOMMITTED event-to-order locking; recheck current paid amount, event/authority, provider classification and request absence before one atomic insert and return. No providerIOinside transaction.",
+  "preservation": {
+    "incoming699": "3d395117b330382fcade995bfb781d01a2e40412",
+    "composition": "764dbe3b86266ea8cd5405330cdcb600dc10f295",
+    "oldQualified657": "4d48e13556f3fb1a2756b30099f09a5992682ad3",
+    "oldParent654": "3be9e5ec8c3c02064632fb33ec062c480e2cf9f8",
+    "exactResidualPatches": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "exactResidual": true,
+        "originalPatchSha256": "a2c0d086b175021fcd4504ef6927da8d5ee7ad3ea7d57772cc1aa50ccabf42bd",
+        "composedPatchSha256": "a2c0d086b175021fcd4504ef6927da8d5ee7ad3ea7d57772cc1aa50ccabf42bd"
+      },
+      {
+        "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "exactResidual": true,
+        "originalPatchSha256": "920850fdc3a68f88dee053f4da8084a6386eebade7d7aaf070598a1f00364242",
+        "composedPatchSha256": "920850fdc3a68f88dee053f4da8084a6386eebade7d7aaf070598a1f00364242"
+      },
+      {
+        "path": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "exactResidual": true,
+        "originalPatchSha256": "3cd28f4b72a084245dae802ce05e9374eaff5e99d8447ac3b2e22950cdc8505e",
+        "composedPatchSha256": "3cd28f4b72a084245dae802ce05e9374eaff5e99d8447ac3b2e22950cdc8505e"
+      }
+    ],
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq-ui",
+      "tdf-mobile",
+      "package-lock.json",
+      "package.json",
+      "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/stack.yaml.lock",
+      ".github/workflows",
+      "scripts/quality-repo.sh",
+      "scripts/run-music-release-worker-once.sh",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "scripts/lib/test-child-completion.mjs"
+    ],
+    "otherRequirementObjectsExact": 169,
+    "totalRequirements": 170,
+    "catalogDecisionsExact": 1371,
+    "oldCatalogEvidenceCounts": "Twoold657evidenceconsumerCountsrestoredtoincomingobjects; canonicalreportsregeneratedratherthanrewritingdecisions.",
+    "runtimeQualification": "FreshcurrentHaskell/PostgreSQL82casesPENDING; no currentpassclaim."
+  },
+  "properties": [
+    {
+      "id": "PAY-LEGACY-REFUND-REQUEST-001",
+      "status": "BOUNDED_VERIFIED",
+      "scope": "Two-requester finite model:4initialconditions/168states/203transitions; original82realhandlercases remain prior4d48evidence until fresh currentCI."
+    },
+    {
+      "id": "AUTH-LEGACY-REFUND-REQUEST-001",
+      "status": "BOUNDED_VERIFIED",
+      "scope": "Finitecurrent-eligibilitymodelandstale-eligibilitynegativecontrol; actualcompositehandlerqualificationPENDING."
+    },
+    {
+      "id": "PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001",
+      "status": "PARTIAL",
+      "scope": "Originalactual-handlerandrepeatable-read-defaulttestsevidencepreserved; currentimplementationmechanicallysamepatch, freshruntimepending."
+    }
+  ],
+  "verification": {
+    "currentLocal": "17modelchecks,14inheritedworker/catalogcontrols,fullrootQA,strictcatalogJSON/CSV,inventory/conformanceandimmutableadmissionPASS.",
+    "modelCounterexamples": [
+      "omit-request-lock violatesone-request/currenteligibility",
+      "stale-request-snapshotcreates2requests",
+      "stale-request-eligibilitypermitsunauthorizedinsertion"
+    ],
+    "priorRuntime": "Original4d48:5of80actualhandlerfailuresbeforefix;final82PASS,4444full0fail21pending,227manifest. These are historical counts, not currentcomposition results.",
+    "currentRuntime": "NOT_EXECUTED locally; freshhostedStackGHC9.10.3/228manifest and82casequalificationrequired.",
+    "parentWorker": "FreshLinux699repoqualitysixregressionsPASS, checkoutbf76treeequal3d395; fullworker+67stockpendingatparentreceiptcapture. No speculative claim for live original holder identity."
+  },
+  "assurance": {
+    "newTheorems": 0,
+    "wholeRequirements": 170,
+    "wholeImplementation": "170UNPROVEN",
+    "wholeRefinement": "170UNPROVEN",
+    "inheritedConditionalSMTLemmas": 11,
+    "release": "BLOCKED",
+    "limits": [
+      "Finite model has no Haskell/SQL refinement proof.",
+      "Other writers and historical duplicate requests remain outside cooperating lock protocol.",
+      "Provider runtime/attempt rows are re-observed, not frozen universally.",
+      "No provider/account authenticity or historical data correction established.",
+      "Newcompositionactualhandlerqualificationpending."
+    ]
+  },
+  "integration": {
+    "existingPR": 657,
+    "desiredFocusedBase": "correctness/heartbeat-owned-child-20261102-2330",
+    "draft": true,
+    "autoMerge": false,
+    "review": "Freshrequired fornewhead; no approvalborrowed.",
+    "parent699": "Open CI/reviewpending;654sourceDCretainedwithknownbackendworkerfailure.",
+    "main652": "Actualexternallymergeda0cc, no own merge.",
+    "messagesOrReviewerRequestsSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Freshcurrent657hosted82handlerchecks andcurrent228manifestqualification.",
+    "Finish699requiredCI/review thennormallyintegrateworkerprerequisite into654.",
+    "Reconcileactualcurrentmain andrequirefreshchecks/reviewbefore654mainmerge;657thenfollowsthesafe stack.",
+    "Resumeexisting658history-fenceafter657qualified; no duplicateimplementation."
+  ],
+  "evidence": {
+    "archive": "reports/refund-request-live-parent-2026-11-02/evidence.tar.gz",
+    "sha256": "2ad0afc46a1030ad28e0425212bc61fd292cacfc139b084c485cb66a879547ab",
+    "regularFiles": 101,
+    "independentlyVerifiedManifestEntries": 100,
+    "manifest": "reports/refund-request-live-parent-2026-11-02/manifest.json"
+  }
+}

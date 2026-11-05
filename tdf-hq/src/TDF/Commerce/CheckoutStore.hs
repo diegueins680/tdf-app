@@ -29,6 +29,8 @@ module TDF.Commerce.CheckoutStore
   , recordPaymentProcessing
   , recordManualPaymentSelection
   , recordVerifiedPayment
+  , recordVerifiedPaymentOrReconcile
+  , verifiedPaymentNeedsReconciliation
   , recordApprovedManualPayment
   , validateApprovedManualPayment
   , recordReconciliationException
@@ -623,6 +625,28 @@ recordManualPaymentSelection checkout attempt provider correlationId occurredAt 
     "customer"
     correlationId
     (objectText "provider" (paymentProviderText provider))
+
+-- | PAY-CAPTURE-RECON-001: admit an authoritative provider payment, or leave
+-- an open reconciliation exception for it in the same transaction. Money the
+-- provider reports as captured is never only an error response: it is either
+-- a verified checkout payment or an open exception (deduplicated by the open
+-- reconciliation fingerprint). Non-authoritative evidence is not money and
+-- records nothing.
+recordVerifiedPaymentOrReconcile :: VerifiedPayment -> SqlPersistT IO (Either Text Bool)
+recordVerifiedPaymentOrReconcile payment@VerifiedPayment{..} = do
+  result <- recordVerifiedPayment payment
+  when (verifiedPaymentNeedsReconciliation payment result) $
+    recordReconciliationException vpProvider vpEnvironment vpMerchantRef
+      "verified_payment_not_admitted" vpOrderReference vpProviderResource
+      vpAmountMinor Nothing vpCurrency vpOccurredAt
+  pure result
+
+-- | The pure decision of 'recordVerifiedPaymentOrReconcile'.
+verifiedPaymentNeedsReconciliation :: VerifiedPayment -> Either Text Bool -> Bool
+verifiedPaymentNeedsReconciliation VerifiedPayment{..} result =
+  vpEvidence `elem` ["server_to_server", "signature_verified_webhook"]
+    && vpAmountMinor > 0
+    && either (const True) (const False) result
 
 recordVerifiedPayment :: VerifiedPayment -> SqlPersistT IO (Either Text Bool)
 recordVerifiedPayment payment@VerifiedPayment{..}

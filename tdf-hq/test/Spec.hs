@@ -48,6 +48,7 @@ import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
+import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
@@ -120,12 +121,24 @@ import TDF.Merch.Reputation
       commercialStoreScore, initialCommercialFormula, roundPublicRating, temporalWeight,
       validateCommercialFormula )
 import qualified TDF.APITypesSpec as APITypesSpec
+import qualified TDF.Commerce.ArtistTipSpec as ArtistTipSpec
+import qualified TDF.Commerce.DomoQuotePropertiesSpec as DomoQuotePropertiesSpec
+import qualified TDF.Commerce.ProviderAdapterBindingSpec as ProviderAdapterBindingSpec
+import qualified TDF.MetaWebhookSignatureSpec as MetaWebhookSignatureSpec
+import qualified TDF.CorsPropertiesSpec as CorsPropertiesSpec
+import qualified TDF.Commerce.DomoCancellationSpec as DomoCancellationSpec
+import qualified TDF.Commerce.ArtistTipStoreSpec as ArtistTipStoreSpec
+import qualified TDF.Social.AccountOwnershipStoreSpec as AccountOwnershipStoreSpec
+import qualified TDF.Commerce.DepositPolicySpec as DepositPolicySpec
+import qualified TDF.Social.AccountOwnershipSpec as AccountOwnershipSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import qualified TDF.CorsSpec as CorsSpec
 import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import qualified TDF.ReadinessSpec as ReadinessSpec
 import qualified TDF.Invoice.ReceiptSpec as ReceiptSpec
+import qualified TDF.Invoice.SessionIssueSpec as SessionIssueSpec
+import qualified TDF.Contracts.StoreSpec as ContractStoreSpec
 import TDF.Cors
     ( corsPolicy,
       isAccountDeletionRequestAllowed,
@@ -887,9 +900,12 @@ sampleSriScriptRequest =
 main :: IO ()
 main = hspec $ do
     AccountNameSpec.spec
+    GoogleProfileNameSpec.spec
     FailureBoundarySpec.spec
     ReadinessSpec.spec
     ReceiptSpec.spec
+    SessionIssueSpec.spec
+    ContractStoreSpec.spec
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
@@ -12858,6 +12874,17 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
 
+    describe "event logistics timezone inheritance" $ do
+        it "inherits an event's clock instead of the server default for a new plan" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") Nothing
+                `shouldBe` "America/Guayaquil"
+        it "preserves an explicitly saved logistics timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") (Just "Europe/Berlin")
+                `shouldBe` "Europe/Berlin"
+        it "keeps the configured default for legacy events without a timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "America/Guayaquil" Nothing Nothing
+                `shouldBe` "America/Guayaquil"
+
     describe "stored discovery ownership metadata boundary" $ do
         it "accepts internal evidence without exposing it through the public projection" $ do
             let raw = "{\"isPublic\":true,\"ticketUrl\":\"https://tickets.example/event\",\"_discoveryOwned\":{\"isPublic\":true}}"
@@ -17956,6 +17983,16 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ArtistTipSpec.spec
+    DomoQuotePropertiesSpec.spec
+    ProviderAdapterBindingSpec.spec
+    MetaWebhookSignatureSpec.spec
+    CorsPropertiesSpec.spec
+    DomoCancellationSpec.spec
+    ArtistTipStoreSpec.spec
+    AccountOwnershipStoreSpec.spec
+    DepositPolicySpec.spec
+    AccountOwnershipSpec.spec
     ProviderRetrySpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec

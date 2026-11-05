@@ -8721,6 +8721,48 @@ paths:
         '404': { description: Quote not found or lookup token does not match }
         '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
+  /public/domo/quotes/{quoteId}/cancel:
+    post:
+      tags: [Public Domo quotes]
+      summary: Cancel the quote and record its refund obligation (PAY-DOMO-CANCEL-001)
+      description: Releases the quote and its date hold. Collected money is priced by the single approved cancellation policy version (AUTHORITY-093, by lead time before the event) and recorded as an immutable cancellation with the retained and refundable amounts. The quote holder is not an authenticated party, so a refund due is recorded as an open obligation that an operator turns into a refund request; replaying returns the stored record.
+      operationId: cancelPublicDomoQuote
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuoteCancelRequest' } } }
+      responses:
+        '200':
+          description: The recorded cancellation outcome
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoCancellation' } } }
+        '400': { description: Cancellation not confirmed or note too long }
+        '404': { description: Quote not found or lookup token does not match }
+        '409': { description: Quote is completed or expired, or a deposit payment is still being verified }
+        '503': { description: No approved cancellation policy exists; nothing was cancelled }
+  /admin/domo/quotes/{quoteId}/cancel:
+    post:
+      tags: [Admin]
+      summary: Cancel a Domo quote as an operator and request the policy refund
+      description: Strict administrators only. The approved cancellation policy prices the refund (customer ladder or full refund when TDF cancels) and the refund request is created in the same transaction with the administrator as requester; a different party must approve it. Called on a customer-cancelled quote with an open obligation, it creates that refund request.
+      operationId: adminCancelDomoQuote
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DomoQuoteCancelRequest' } } }
+      responses:
+        '200':
+          description: The recorded cancellation including the linked refund request
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Malformed quoteId, canceller or note }
+        '403': { description: Admin role or module access missing }
+        '404': { description: Quote not found }
+        '409': { description: Quote cannot be cancelled or the refund request was refused }
+        '503': { description: No approved cancellation policy exists }
   /fans/me/notifications:
     get:
       tags: [Notifications]
@@ -11005,7 +11047,11 @@ components:
         badge: { type: string, enum: [Compra verificada] }
         author:
           type: object
-          description: Public name/avatar according to buyer privacy preferences
+          description: Public identity according to buyer privacy preferences; partyId and avatarUrl are omitted for anonymous buyers
+          properties:
+            partyId: { type: integer, format: int64, minimum: 1 }
+            name: { type: string }
+            avatarUrl: { type: string, nullable: true }
           additionalProperties: true
         dimensions:
           type: object
@@ -11817,6 +11863,40 @@ components:
       required: [termsAccepted]
       properties:
         termsAccepted: { type: boolean, enum: [true] }
+    PublicDomoQuoteCancelRequest:
+      type: object
+      additionalProperties: false
+      required: [confirmCancellation]
+      properties:
+        confirmCancellation: { type: boolean, enum: [true] }
+        cancellationNote: { type: string, maxLength: 4000 }
+    PublicDomoCancellation:
+      type: object
+      additionalProperties: false
+      required: [quoteId, quoteStatus, canceller, cancelledAt, leadDays, inProgress, retainedBasisPoints, depositCollectedMinor, balanceCollectedMinor, retainedMinor, refundDueMinor, currency, refundStatus, alreadyCancelled]
+      properties:
+        quoteId: { type: string, format: uuid }
+        quoteStatus: { type: string }
+        canceller: { type: string, enum: [customer, tdf] }
+        policyVersion: { type: integer, nullable: true }
+        cancelledAt: { type: string, format: date-time }
+        leadDays: { type: integer, description: Whole 24-hour periods before the event start; negative after it }
+        inProgress: { type: boolean }
+        retainedBasisPoints: { type: integer, minimum: 0, maximum: 10000 }
+        depositCollectedMinor: { type: integer, format: int64, minimum: 0 }
+        balanceCollectedMinor: { type: integer, format: int64, minimum: 0 }
+        retainedMinor: { type: integer, format: int64, minimum: 0 }
+        refundDueMinor: { type: integer, format: int64, minimum: 0, description: retainedMinor + refundDueMinor equals the collected money }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        refundStatus: { type: string, enum: [none, awaiting_operator, requested] }
+        alreadyCancelled: { type: boolean, description: True when the quote was cancelled earlier and the stored record is returned }
+    DomoQuoteCancelRequest:
+      type: object
+      additionalProperties: false
+      required: [canceller]
+      properties:
+        canceller: { type: string, enum: [customer, tdf] }
+        note: { type: string, maxLength: 500 }
     PublicDomoQuoteLine:
       type: object
       additionalProperties: false

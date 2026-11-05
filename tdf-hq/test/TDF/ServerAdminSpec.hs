@@ -39,6 +39,8 @@ import TDF.API.Admin
     , ConnectOnboardingLinkResponse
     , EmailTestRequest (..)
     , ArtistEnrichmentOverviewDTO
+    , SocialDeliveryDesignation (..)
+    , DomoQuoteCancelRequest (..)
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
@@ -52,7 +54,7 @@ import TDF.API.Types
     , UserAccountDTO
     , UserAccountUpdate (..)
     )
-import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Auth (AuthedUser (..), modulesForRoles, secretTokenMatches)
 import TDF.Config (defaultLocale, defaultTimezone, loadConfig, seedTriggerToken)
 import TDF.DB (Env (..))
 import TDF.DTO
@@ -1057,6 +1059,13 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         "Expected malformed Admin seed access to be rejected"
 
+        it "compares seed tokens by digest (F-10): equal only for identical secrets" $ do
+            secretTokenMatches "correct-seed-token-123" "correct-seed-token-123" `shouldBe` True
+            secretTokenMatches "correct-seed-token-124" "correct-seed-token-123" `shouldBe` False
+            secretTokenMatches "correct-seed-token-12" "correct-seed-token-123" `shouldBe` False
+            secretTokenMatches "" "correct-seed-token-123" `shouldBe` False
+            secretTokenMatches "Correct-seed-token-123" "correct-seed-token-123" `shouldBe` False
+
         it "requires a configured seed token even for strict Admin seed requests" $ do
             cfg <- loadConfig
             let seedHandler = seedHandlerFor (mkUser [Admin])
@@ -1555,7 +1564,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , surNote = Nothing
                         }
                 assertRoleRejected role = do
-                    let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                    let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery =
                             socialHandlersFor (mkUser [role])
                     result <- runAdminTest (socialUnhold req)
                     case result of
@@ -1573,7 +1582,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertRoleRejected StudioManager
             assertRoleRejected Webmaster
 
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery =
                     socialHandlersFor malformedAdmin
             result <- runAdminTest (socialUnhold req)
             case result of
@@ -1587,8 +1596,50 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             <> show value
                         )
 
+        it "rejects Domo quote cancellation without the strict Admin role (PAY-DOMO-CANCEL-001)" $ do
+            let request = DomoQuoteCancelRequest { dqcCanceller = "customer", dqcNote = Nothing }
+                assertRejected role = do
+                    result <- runAdminTest (domoCancelHandlerFor (mkUser [role]) "d1000000-0000-4000-8000-000000000001" request)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right value ->
+                            expectationFailure ("Expected " <> show role <> " Domo cancellation to be rejected, got " <> show value)
+            mapM_ assertRejected [StudioManager, Manager, Reception, Fan]
+            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+            result <- runAdminTest (domoCancelHandlerFor malformedAdmin "d1000000-0000-4000-8000-000000000001" request)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Missing required module access"
+                Right value -> expectationFailure ("Expected malformed Admin to be rejected, got " <> show value)
+            badId <- runAdminTest (domoCancelHandlerFor (mkUser [Admin]) "not-a-uuid" request)
+            case badId of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected 400 for a malformed quoteId, got " <> show value)
+            badCanceller <- runAdminTest (domoCancelHandlerFor (mkUser [Admin]) "d1000000-0000-4000-8000-000000000001" request { dqcCanceller = "someone" })
+            case badCanceller of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected 400 for an unknown canceller, got " <> show value)
+
+        it "rejects social delivery designation without the strict Admin role (AUTHORITY-094)" $ do
+            let designation = SocialDeliveryDesignation { sddDesignated = True, sddNote = Nothing }
+                assertDesignationRejected role = do
+                    let _socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> socialDelivery =
+                            socialHandlersFor (mkUser [role])
+                    result <- runAdminTest (socialDelivery 1 designation)
+                    case result of
+                        Left err -> errHTTPCode err `shouldBe` 403
+                        Right value ->
+                            expectationFailure
+                                ("Expected " <> show role <> " delivery designation to be rejected, got " <> show value)
+            assertDesignationRejected StudioManager
+            assertDesignationRejected Webmaster
+            assertDesignationRejected Manager
+
         it "rejects blank channels before surfacing lookup-shape errors" $ do
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "   "
@@ -1607,7 +1658,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure ("Expected blank channel social unhold to be rejected, got " <> show value)
 
         it "rejects unsupported channels before any unhold lookup work" $ do
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "telegram"
@@ -1625,7 +1676,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure ("Expected unsupported channel social unhold to be rejected, got " <> show value)
 
         it "rejects malformed notes before querying social inbox rows" $ do
-            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "whatsapp"
@@ -1646,7 +1697,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
           withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
-                socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "whatsapp"
@@ -1685,7 +1736,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
           withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
-                socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery =
                     socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
@@ -1725,7 +1776,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
           withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
-                socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
                 req =
                     SocialUnholdRequest
                         { surChannel = "whatsapp"
@@ -2218,6 +2269,25 @@ socialHandlersFor
     -> (SocialUnholdRequest -> AdminTestM Value)
         :<|> AdminTestM Value
         :<|> (Maybe T.Text -> Maybe Int -> AdminTestM Value)
+        :<|> (Int64 -> SocialDeliveryDesignation -> AdminTestM Value)
+domoCancelHandlerFor :: AuthedUser -> T.Text -> DomoQuoteCancelRequest -> AdminTestM Value
+domoCancelHandlerFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _artists
+            :<|> _logs
+            :<|> _activity
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social
+            :<|> domoCancel
+            :<|> _recordsIngestion ->
+                domoCancel
+
 socialHandlersFor user =
     case adminServer user of
         _seed
@@ -2231,5 +2301,6 @@ socialHandlersFor user =
             :<|> _brain
             :<|> _rag
             :<|> socialRouter
+            :<|> _domo
             :<|> _recordsIngestion ->
                 socialRouter

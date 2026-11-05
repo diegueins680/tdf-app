@@ -2054,7 +2054,7 @@ validateGoogleIdTokenInfo mExpectedClientId info
                 { gpIssuer = "https://accounts.google.com"
                 , gpSubject = gitSub info
                 , gpEmail = normalizedEmail
-                , gpName = normalizedName <|> Just normalizedEmail
+                , gpName = normalizedName
                 , gpPicture = gitPicture info
                 }
            in Right profile

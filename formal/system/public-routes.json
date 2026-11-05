@@ -677,6 +677,12 @@
   },
   {
    "method": "POST",
+   "path": "/public/domo/quotes/{quoteId}/cancel",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
    "path": "/public/domo/quotes/{quoteId}/datafast/checkout",
    "boundary": "capability-header",
    "header": "X-Order-Lookup-Token"
