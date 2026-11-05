@@ -339,9 +339,10 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters: [{ name: claimId, in: path, required: true, schema: { type: string, format: uuid } }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
-      description: Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants.
+      description: Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. Revoking an approved claim (status revoked, AUTHORITY-097) requires a non-empty reason, deactivates every manager grant the claim created in the same transaction and is terminal.
       responses:
-        '200': { description: Reviewed claim; only a new approval transition creates a manager grant }
+        '200': { description: Reviewed claim; only a new approval transition creates a manager grant, and only revocation withdraws them }
+        '400': { description: Revocation without a reason }
         '401': { description: Authentication required }
         '403': { description: Missing Admin role or module or attempted self-review }
         '404': { description: Claim not found }

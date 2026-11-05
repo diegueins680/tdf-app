@@ -143,6 +143,7 @@ import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Operations.Server as OperationsServer
 import qualified TDF.EventOperations.Server as EventOperationsServer
 import qualified TDF.Invoice.SRI as Sri
+import qualified TDF.Invoice.SessionIssue as SessionIssue
 import           TDF.Invoice.Receipt (validateReceiptSnapshot)
 import           TDF.Models
 import qualified TDF.Models as M
@@ -161,6 +162,7 @@ import           TDF.DTO
 import qualified TDF.DTO as DTO
 import           TDF.Auth
   ( AuthedUser(..)
+  , secretTokenMatches
   , ModuleAccess(..)
   , authContext
   , hasAiToolingAccess
@@ -203,6 +205,9 @@ import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.Money as CommerceMoney
+import qualified TDF.Commerce.ArtistTip as ArtistTip
+import qualified TDF.Commerce.ArtistTipStore as TipStore
+import qualified TDF.Profiles.ArtistVisibility as ArtistVisibility
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
@@ -1075,7 +1080,7 @@ requireSeedToken rawToken = do
   token <- maybe missingHeader pure rawToken
   when (T.null (T.strip token)) missingHeader
   when (token /= T.strip token || T.any invalidTokenChar token) malformed
-  when (token /= secret) invalid
+  unless (secretTokenMatches token secret) invalid
   pure ()
 
 fanPublicServer :: ServerT FanPublicAPI AppM
@@ -1091,11 +1096,12 @@ fanPublicServer =
     listFanArtists :: AppM [ArtistProfileDTO]
     listFanArtists = do
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool loadAllArtistProfilesDTO
+      liftIO $ flip runSqlPool pool (loadAllArtistProfilesDTO >>= filterPubliclyListedArtists)
 
     fanArtistProfile :: Int64 -> AppM ArtistProfileDTO
     fanArtistProfile artistId = do
       artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistIdValid)
       maybe (throwError err404) pure mDto
@@ -1103,6 +1109,7 @@ fanPublicServer =
     fanArtistReleases :: Int64 -> AppM [ArtistReleaseDTO]
     fanArtistReleases artistId = do
       artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool $ do
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
@@ -1114,6 +1121,7 @@ fanPublicServer =
       let page = max 1 (fromMaybe 1 mPage)
           pageSize = min 100 (max 1 (fromMaybe 5 mPageSize))
           offset = (page - 1) * pageSize
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool $ do
         let artistKey = toSqlKey artistIdValid
@@ -1145,8 +1153,8 @@ fanPublicServer =
     getPublicClub = fanClubPublicGetClub
     getPublicClubEvents = fanClubPublicGetEvents
 
-    tipArtist :: Int64 -> APITypes.ArtistTipRequest -> AppM APITypes.ArtistTipResponse
-    tipArtist artistIdRaw req = createArtistTip artistIdRaw req
+    tipArtist :: Int64 -> Maybe Text -> APITypes.ArtistTipRequest -> AppM APITypes.ArtistTipResponse
+    tipArtist artistIdRaw mIdempotencyKey req = createArtistTip artistIdRaw mIdempotencyKey req
 
 artistPublicServer :: ServerT ArtistPublicAPI AppM
 artistPublicServer =
@@ -1158,14 +1166,14 @@ artistPublicServer =
     listArtists :: AppM [ArtistProfileDTO]
     listArtists = do
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool loadAllArtistProfilesDTO
+      liftIO $ flip runSqlPool pool (loadAllArtistProfilesDTO >>= filterPubliclyListedArtists)
 
     searchArtists :: Maybe Text -> Maybe UUID.UUID -> Maybe Text -> AppM [ArtistProfileDTO]
     searchArtists mQuery mGenreId mLegacyGenre = do
       when (mLegacyGenre /= Nothing) $
         throwBadRequest "genre is obsolete; use the canonical genreId UUID parameter"
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool $ searchArtistProfilesDTO mQuery mGenreId
+      liftIO $ flip runSqlPool pool (searchArtistProfilesDTO mQuery mGenreId >>= filterPubliclyListedArtists)
 
     artistPublicProfile :: Text -> AppM ArtistProfileDTO
     artistPublicProfile rawRef = do
@@ -1177,14 +1185,31 @@ artistPublicServer =
         case parseArtistPublicRef ref of
           ArtistPublicRefId artistId -> loadArtistProfileDTO (toSqlKey artistId)
           ArtistPublicRefSlug slug   -> loadArtistProfileBySlugDTO slug
-      maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+      dto <- maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+      listed <- liftIO $ flip runSqlPool pool $
+        ArtistVisibility.artistPartyPubliclyListed (toSqlKey (apArtistId dto))
+      unless listed $ throwError err404 { errBody = "Artist profile not found" }
+      pure dto
 
     artistProfileById :: Int64 -> AppM ArtistProfileDTO
     artistProfileById artistId = do
       artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      requirePubliclyListedArtist (toSqlKey artistIdValid)
       Env pool _ <- ask
       mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistIdValid)
       maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+
+-- | Keep only artists the public may see (ART-PUBLIC-VISIBILITY-001).
+filterPubliclyListedArtists :: MonadIO m => [ArtistProfileDTO] -> SqlPersistT m [ArtistProfileDTO]
+filterPubliclyListedArtists dtos = do
+  listed <- ArtistVisibility.loadPubliclyListedArtistParties
+  pure [dto | dto <- dtos, Set.member (toSqlKey (apArtistId dto)) listed]
+
+-- | A hidden artist answers exactly like an absent one (ART-PUBLIC-VISIBILITY-001).
+requirePubliclyListedArtist :: PartyId -> AppM ()
+requirePubliclyListedArtist partyKey = do
+  listed <- runDB (ArtistVisibility.artistPartyPubliclyListed partyKey)
+  unless listed $ throwError err404 { errBody = "Artist profile not found" }
 
 data ArtistPublicRef
   = ArtistPublicRefId Int64
@@ -1199,41 +1224,69 @@ parseArtistPublicRef ref
   | otherwise =
       ArtistPublicRefSlug (T.toLower ref)
 
--- | Platform's cut of every artist tip, in basis points. 1000 = 10%.
--- Centralized so the rate is a one-line change when negotiated terms shift.
-artistTipPlatformFeeBps :: Int
-artistTipPlatformFeeBps = 1000
-
--- | POST /artists/:artistId/tips
+-- | POST /fans/artists/:artistId/tips (PAY-TIP-001)
 --
--- Public destination charge that routes funds from the tipper to the artist's
--- connected Stripe account, keeping 'artistTipPlatformFeeBps' for the platform.
--- The tip row is persisted in @pending@ status BEFORE the Stripe call so we
--- always have an audit trail even if Stripe returns a transient error; the
--- @payment_intent.succeeded@ webhook flips it to @paid@.
+-- Public destination charge that routes funds from the tipper to the
+-- addressed artist's connected Stripe account, keeping
+-- 'ArtistTip.artistTipPlatformFeeBps' for the platform.
+--
+-- @artistId@ is the artist's 'PartyId', exactly as in every sibling
+-- @/fans/artists/{artistId}@ route and in the public 'apArtistId'. Admission
+-- requires an artist the public directory currently lists and a completed
+-- payout account ('ArtistTip.admitArtistTip'). Provider availability is
+-- checked before anything is stored, so an unavailable provider leaves no
+-- row behind. The tip row is persisted in @pending@ status before the Stripe
+-- call so a transient provider error still leaves an audit trail; the
+-- @payment_intent.succeeded@ webhook flips it to @paid@. Provider error text
+-- is logged, never returned to the caller (PRIV-ERROR-001).
 createArtistTip
   :: Int64
+  -> Maybe Text
   -> APITypes.ArtistTipRequest
   -> AppM APITypes.ArtistTipResponse
-createArtistTip artistIdRaw req = do
+createArtistTip artistIdRaw mIdempotencyKey req = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
+  artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistIdRaw)
   when (APITypes.atrAmountCents req <= 0) $
     throwError err400 { errBody = "Tip amount must be greater than zero" }
   when (T.null (T.strip (APITypes.atrCurrency req))) $
     throwError err400 { errBody = "Tip currency is required" }
-  let artistProfileKey = toSqlKey artistIdRaw :: ArtistProfileId
-  mProfile <- runDB $ get artistProfileKey
-  profile <- maybe (throwNotFound "Artista no encontrado") pure mProfile
-  destinationAccountId <- case artistProfileStripeAccountId profile of
-    Nothing -> throwError err400
-      { errBody = "This artist has not finished payout onboarding" }
-    Just acct -> pure acct
+  mKey <- case mIdempotencyKey of
+    Nothing -> pure Nothing
+    Just raw -> either (\msg -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) })
+                       (pure . Just) (ArtistTip.validateTipIdempotencyKey raw)
+  stripeCfg <- case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+    (Just secretKey, Just webhookSecret) ->
+      pure Stripe.StripeConfig
+        { Stripe.stripeSecretKey = secretKey
+        , Stripe.stripeWebhookSecret = webhookSecret
+        , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+        }
+    _ -> throwError err503 { errBody = "Tips are not available right now" }
+  let artistPartyKey = toSqlKey artistIdValid :: PartyId
+  (mProfile, visibility) <- runDB $ do
+    mEntity <- getBy (UniqueArtistProfile artistPartyKey)
+    vis <- case mEntity of
+      Nothing -> pure ArtistTip.NoDirectoryIdentity
+      Just (Entity profileKey _) -> ArtistVisibility.loadArtistDirectoryVisibility artistPartyKey profileKey
+    pure (mEntity, vis)
+  destinationAccountId <-
+    case ArtistTip.admitArtistTip (artistProfileStripeAccountId . entityVal <$> mProfile) visibility of
+      Right account -> pure account
+      Left ArtistTip.TipArtistNotFound -> throwNotFound "Artista no encontrado"
+      -- A hidden artist is indistinguishable from an absent one.
+      Left ArtistTip.TipArtistNotListed -> throwNotFound "Artista no encontrado"
+      Left ArtistTip.TipPayoutNotReady -> throwError err409
+        { errBody = "This artist has not finished payout onboarding" }
+  profileKey <- maybe (throwNotFound "Artista no encontrado") (pure . entityKey) mProfile
   let amountCents = APITypes.atrAmountCents req
       currency = T.toLower (T.strip (APITypes.atrCurrency req))
-      platformFeeCents = (amountCents * artistTipPlatformFeeBps) `div` 10000
+      platformFeeCents = ArtistTip.artistTipPlatformFeeCents amountCents
+      fingerprint = ArtistTip.tipRequestFingerprint artistIdValid amountCents currency
+        (APITypes.atrTipperName req) (APITypes.atrTipperEmail req) (APITypes.atrMessage req)
       tipRow = ME.ArtistTip
-        { ME.artistTipArtistProfileId = artistProfileKey
+        { ME.artistTipArtistProfileId = profileKey
         , ME.artistTipTipperPartyId = Nothing
         , ME.artistTipTipperEmail = APITypes.atrTipperEmail req
         , ME.artistTipTipperName = APITypes.atrTipperName req
@@ -1243,58 +1296,79 @@ createArtistTip artistIdRaw req = do
         , ME.artistTipStripePaymentIntentId = Nothing
         , ME.artistTipStatus = "pending"
         , ME.artistTipMessage = APITypes.atrMessage req
+        , ME.artistTipIdempotencyKey = mKey
+        , ME.artistTipRequestSha256 = fingerprint <$ mKey
         , ME.artistTipCreatedAt = now
         , ME.artistTipUpdatedAt = now
         }
-  tipKey <- runDB $ insert tipRow
-  case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
-    (Just secretKey, Just webhookSecret) -> do
-      let stripeCfg = Stripe.StripeConfig
-            { Stripe.stripeSecretKey = secretKey
-            , Stripe.stripeWebhookSecret = webhookSecret
-            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
-            }
-          tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
-          description = "Tip to artist " <> T.pack (show artistIdRaw) <> " from " <> tipperLabel
-          metadata = object
-            [ "purpose" .= ("artist_tip" :: Text)
-            , "artist_tip_id" .= fromSqlKey tipKey
-            , "artist_profile_id" .= artistIdRaw
-            ]
-          metadataJson =
-            Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
-      result <- liftIO $
-        Stripe.createPaymentIntentForTip
-          stripeCfg
-          destinationAccountId
-          amountCents
-          platformFeeCents
-          currency
-          description
-          metadataJson
-      case result of
-        Left err -> do
-          runDB $ update tipKey
-            [ ME.ArtistTipStatus =. "failed"
-            , ME.ArtistTipUpdatedAt =. now
-            ]
-          throwError err500
-            { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe tip error: " <> err))
-            }
-        Right paymentIntent -> do
-          (piId, clientSecret) <- eitherStripeServerError $
-            parseStripePaymentIntentResponse paymentIntent
-          runDB $ update tipKey
-            [ ME.ArtistTipStripePaymentIntentId =. Just piId
-            , ME.ArtistTipUpdatedAt =. now
-            ]
-          pure APITypes.ArtistTipResponse
-            { APITypes.atrespTipId = fromSqlKey tipKey
-            , APITypes.atrespClientSecret = clientSecret
-            , APITypes.atrespAmountCents = amountCents
-            , APITypes.atrespCurrency = currency
-            }
-    _ -> throwError err500 { errBody = "Stripe is not configured" }
+      conflict msg = throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+      -- Replay (PAY-TIP-001): answer with the stored PaymentIntent; the client
+      -- secret is retrieved from Stripe, never stored.
+      replayResponse tipKey tip intentId = do
+        retrieved <- liftIO (Stripe.retrievePaymentIntent stripeCfg intentId)
+        paymentIntent <- either
+          (\err -> do
+             liftIO $ hPutStrLn stderr $
+               "artist tip " <> show (fromSqlKey tipKey) <> " Stripe retrieve error: " <> T.unpack err
+             throwError err502 { errBody = "The payment provider could not resume this tip" })
+          pure retrieved
+        (_, clientSecret) <- eitherStripeServerError (parseStripePaymentIntentResponse paymentIntent)
+        pure APITypes.ArtistTipResponse
+          { APITypes.atrespTipId = fromSqlKey tipKey
+          , APITypes.atrespClientSecret = clientSecret
+          , APITypes.atrespAmountCents = ME.artistTipAmountCents tip
+          , APITypes.atrespCurrency = ME.artistTipCurrency tip
+          }
+      createFresh tipKey = do
+        let tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
+            description = "Tip to artist " <> T.pack (show artistIdValid) <> " from " <> tipperLabel
+            metadata = object $
+              [ "purpose" .= ("artist_tip" :: Text)
+              , "artist_tip_id" .= fromSqlKey tipKey
+              , "artist_party_id" .= artistIdValid
+              , "artist_profile_id" .= fromSqlKey profileKey
+              ] <> maybe [] (\key -> ["idempotency_key" .= key]) mKey
+            metadataJson = Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
+        result <- liftIO $
+          Stripe.createPaymentIntentForTip
+            stripeCfg
+            destinationAccountId
+            amountCents
+            platformFeeCents
+            currency
+            description
+            metadataJson
+        case result of
+          Left err -> do
+            runDB $ update tipKey
+              [ ME.ArtistTipStatus =. "failed"
+              , ME.ArtistTipUpdatedAt =. now
+              ]
+            liftIO $ hPutStrLn stderr $
+              "artist tip " <> show (fromSqlKey tipKey) <> " Stripe error: " <> T.unpack err
+            throwError err502 { errBody = "The payment provider could not start this tip" }
+          Right paymentIntent -> do
+            (piId, clientSecret) <- eitherStripeServerError $
+              parseStripePaymentIntentResponse paymentIntent
+            runDB $ update tipKey
+              [ ME.ArtistTipStripePaymentIntentId =. Just piId
+              , ME.ArtistTipUpdatedAt =. now
+              ]
+            pure APITypes.ArtistTipResponse
+              { APITypes.atrespTipId = fromSqlKey tipKey
+              , APITypes.atrespClientSecret = clientSecret
+              , APITypes.atrespAmountCents = amountCents
+              , APITypes.atrespCurrency = currency
+              }
+  -- Reserve the row (or recognise a replay) before any provider call; the
+  -- ordering lives in TDF.Commerce.ArtistTipStore so it is tested against a
+  -- database without Stripe.
+  reservation <- runDB (TipStore.reserveArtistTip fingerprint mKey tipRow)
+  case reservation of
+    TipStore.TipReserved tipKey -> createFresh tipKey
+    TipStore.TipReplay tipKey tip intentId -> replayResponse tipKey tip intentId
+    TipStore.TipConflict msg -> conflict msg
+    TipStore.TipPending -> conflict "Tip request is already being processed; retry with the same Idempotency-Key"
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
@@ -3022,6 +3096,8 @@ metaBackfillServer user payload = do
       [ SocialSyncAccountPlatform ==. "instagram"
       , SocialSyncAccountAccessToken !=. Nothing
       , SocialSyncAccountStatus ==. "connected"
+      -- AUTHORITY-094: backfill only through administrator-designated accounts.
+      , SocialSyncAccountDeliveryDesignated ==. True
       ]
       [Desc SocialSyncAccountUpdatedAt]
   let sources =
@@ -10982,7 +11058,7 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
             context attempt Checkout.ProviderDatafast (sbpcEnvironment context)
             (ServiceStorefront.sdfEntityId datafast) "payment" paymentId
             (Just resourcePath) Checkout.AttemptProcessing "status"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = sbpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -11123,7 +11199,7 @@ capturePublicBookingPaypalOrder
             "capture" captureId
             (Just ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture"))
             Checkout.AttemptProcessing "capture"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = sbpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal
@@ -13252,7 +13328,9 @@ createPurchase user req = do
               , packagePurchaseProductId      = productKey
               , packagePurchasePurchasedAt    = now
               , packagePurchasePriceCents     = priceC
-              , packagePurchaseExpiresAt      = Nothing
+              , packagePurchaseExpiresAt      =
+                  (\days -> addUTCTime (fromIntegral days * 86400) now)
+                    <$> packageProductExpiresDays productRecord
               , packagePurchaseRemainingUnits = qty
               , packagePurchaseStatus         = "Active"
               }
@@ -13286,6 +13364,8 @@ resolvePackagePurchaseRefs PackagePurchaseReq{buyerId = rawBuyerId, productId = 
               Just productRecord
                 | not (packageProductActive productRecord) ->
                     Left err409 { errBody = "Package product is inactive" }
+                | maybe False (<= 0) (packageProductExpiresDays productRecord) ->
+                    Left err409 { errBody = "Package product validity must be positive when configured" }
                 | otherwise ->
                     Right (buyerKey, productKey, productRecord)
 
@@ -13320,25 +13400,100 @@ generateInvoiceForSession user sessionId payload = do
   req <- case fromJSON payload of
     Error err -> throwBadRequest ("Invalid generate-invoice payload: " <> T.pack err)
     Success decoded -> pure decoded
+  -- PAY-INVOICE-ISSUE-001: an SRI document is a legal invoice, so issuing one
+  -- requires an idempotency key; validate it before touching the database.
+  let issuesSri = fromMaybe True (gsiIssueSri req)
+  mIssueKey <- either throwBadRequest pure (SessionIssue.validateIssueKey issuesSri (gsiIdempotencyKey req))
   Env pool _ <- ask
   sessionEnt <- liftIO $ flip runSqlPool pool $ getEntity sessionKey
   session <- maybe (throwError err404 { errBody = "Session not found" }) pure sessionEnt
   customerKey <- resolveSessionInvoiceCustomer session req
-  now <- liftIO getCurrentTime
-  dto <- createInvoice user (toCreateInvoiceReq customerKey req)
-  let invoiceKey = toSqlKey (invId dto) :: Key Invoice
-  liftIO $ flip runSqlPool pool $ do
-    _ <- insertUnique ME.SessionInvoice
-      { ME.sessionInvoiceSessionId = sessionKey
-      , ME.sessionInvoiceInvoiceId = invoiceKey
-      , ME.sessionInvoiceCreatedAt = now
-      }
-    pure ()
-  sriValue <-
-    if fromMaybe True (gsiIssueSri req)
+  -- Everything the SRI script would reject is checked before a key is reserved
+  -- or an invoice created, so a correctable input error (for example a customer
+  -- without RUC) answers 400 and leaves the key reusable.
+  mSriRequest <-
+    if issuesSri
       then do
         customer <- loadCustomerForSri customerKey
-        sriResult <- liftIO (Sri.runSriInvoiceScript (toSriScriptRequest customer req))
+        let sriRequest = toSriScriptRequest customer req
+        either throwBadRequest (const (pure (Just sriRequest))) (Sri.validateSriScriptRequest sriRequest)
+      else pure Nothing
+  case mIssueKey of
+    Nothing -> snd <$> generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest (pure ())
+    Just issueKey -> do
+      now <- liftIO getCurrentTime
+      let fingerprint = SessionIssue.issueFingerprint sessionId req
+          portalVerified = gsiSriPortalVerified req == Just True
+      -- A new key for a request whose earlier attempt is unresolved could issue
+      -- a duplicate legal invoice (for example after the browser lost the key).
+      -- The check and the reservation share one transaction and a lock on
+      -- (session, request), so two concurrent new keys cannot both pass.
+      guarded <- liftIO $ flip runSqlPool pool $
+        SessionIssue.reserveIssueGuarded
+          (SessionIssue.issueAdvisoryLock sessionKey fingerprint)
+          (issuesSri && not portalVerified)
+          now sessionKey issueKey fingerprint
+      reservation <- case guarded of
+        SessionIssue.SiblingUnresolved ->
+          throwError err409
+            { errBody =
+                "An earlier attempt to issue this invoice to SRI is unresolved. Check the SRI portal; \
+                \if nothing was issued, retry confirming the portal was verified."
+            }
+        SessionIssue.Guarded r -> pure r
+      case reservation of
+        SessionIssue.IssueExisting (SessionIssue.IssueReplayStored stored) ->
+          maybe
+            (throwError err500 { errBody = "Stored invoice response could not be read" })
+            pure
+            (decodeStrict' (TE.encodeUtf8 stored))
+        SessionIssue.IssueExisting SessionIssue.IssueInProgress ->
+          throwError err409
+            { errBody =
+                "An invoice request with this idempotencyKey has no answer yet. Retry with the same key; \
+                \if it never completes, check the SRI portal before using a new key."
+            }
+        SessionIssue.IssueExisting (SessionIssue.IssueConflict reason) ->
+          throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 reason) }
+        SessionIssue.IssueExisting SessionIssue.IssueFresh ->
+          throwError err500 { errBody = "Invoice idempotency reservation was not recorded" }
+        SessionIssue.IssueReserved reservationId -> do
+          let release = liftIO $ flip runSqlPool pool $ SessionIssue.releaseIssue reservationId
+          (invoiceKey, response) <-
+            generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest release
+          completedAt <- liftIO getCurrentTime
+          liftIO $ flip runSqlPool pool $
+            SessionIssue.completeIssue completedAt reservationId (Just invoiceKey)
+              (TE.decodeUtf8 (BL.toStrict (encode response)))
+          pure response
+
+-- | Create the invoice, link it to the session and, when requested, issue the
+-- SRI document. @beforeSri@ runs if creating or linking the invoice fails: no
+-- SRI document can have been issued yet, so a reservation may be released.
+-- Once the SRI script starts, failures are reported in the response instead.
+generateSessionInvoiceOnce
+  :: AuthedUser -> Text -> Key ME.Session -> Key Party -> GenerateSessionInvoiceReq
+  -> Maybe Sri.SriScriptRequest -> AppM ()
+  -> AppM (Key Invoice, Value)
+generateSessionInvoiceOnce user sessionId sessionKey customerKey req mSriRequest beforeSri = do
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  invoiceKey <- (do
+      dto <- createInvoice user (toCreateInvoiceReq customerKey req)
+      let createdKey = toSqlKey (invId dto) :: Key Invoice
+      liftIO $ flip runSqlPool pool $ do
+        _ <- insertUnique ME.SessionInvoice
+          { ME.sessionInvoiceSessionId = sessionKey
+          , ME.sessionInvoiceInvoiceId = createdKey
+          , ME.sessionInvoiceCreatedAt = now
+          }
+        pure ()
+      pure createdKey)
+    `catchError` \err -> beforeSri >> throwError err
+  sriValue <-
+    case mSriRequest of
+      Just sriRequest -> do
+        sriResult <- liftIO (Sri.runSriInvoiceScript sriRequest)
         case sriResult of
           Left err ->
             pure (object ["ok" .= False, "error" .= err])
@@ -13351,15 +13506,17 @@ generateInvoiceForSession user sessionId payload = do
                   , InvoiceNumber =. sirInvoiceNumber result
                   ]
             pure (toJSON result)
-      else pure Null
+      Nothing -> pure Null
   refreshed <- loadInvoiceDTOOr404 invoiceKey
-  pure $
-    object
-      [ "ok" .= True
-      , "sessionId" .= sessionId
-      , "invoice" .= refreshed
-      , "sri" .= sriValue
-      ]
+  pure
+    ( invoiceKey
+    , object
+        [ "ok" .= True
+        , "sessionId" .= sessionId
+        , "invoice" .= refreshed
+        , "sri" .= sriValue
+        ]
+    )
 
 getInvoicesBySession :: AuthedUser -> Text -> AppM Value
 getInvoicesBySession user sessionId = do
@@ -15620,12 +15777,21 @@ contractsServer user =
   :<|> (\contractId -> guardContracts (pdfH contractId))
   :<|> (\contractId body -> guardContracts (sendH contractId body))
   where
-    createH :<|> pdfH :<|> sendH = Contracts.server
-
-    guardContracts :: Handler a -> AppM a
+    guardContracts :: (Contracts.ContractsDeps -> Handler a) -> AppM a
     guardContracts action = do
       either throwError pure (validateContractsAccess user)
-      lift action
+      Env pool cfg <- ask
+      let deps = Contracts.ContractsDeps
+            { Contracts.cdPool = pool
+            , Contracts.cdEmail = Email.sendContractEmail <$> emailConfig cfg
+            , Contracts.cdActor = Just (auPartyId user)
+            , Contracts.cdRenderPdf = Contracts.defaultRenderPdf
+            }
+      lift (action deps)
+
+    createH body deps = let (h :<|> _ :<|> _) = Contracts.server deps in h body
+    pdfH contractId deps = let (_ :<|> h :<|> _) = Contracts.server deps in h contractId
+    sendH contractId body deps = let (_ :<|> _ :<|> h) = Contracts.server deps in h contractId body
 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do
@@ -17138,7 +17304,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
       if success
         then do
           verified <- liftIO $ flip runSqlPool envPool $
-            Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
               { Checkout.vpAttempt = attempt
               , Checkout.vpCheckout = checkout
               , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -17392,7 +17558,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
         case binding of
           Left message -> pure (Left message)
           Right () -> do
-            verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            verified <- Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
               { Checkout.vpAttempt = attempt
               , Checkout.vpCheckout = checkout
               , Checkout.vpProvider = Checkout.ProviderPayPal

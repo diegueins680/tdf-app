@@ -5,6 +5,7 @@ module TDF.Commerce.CourseCheckout
   , CoursePaymentMode(..)
   , CoursePriceBreakdown(..)
   , calculateCoursePrice
+  , calculateCoursePriceWith
   , parseCourseEnrollmentState
   , courseEnrollmentStateText
   , validateCourseEnrollmentTransition
@@ -13,6 +14,8 @@ module TDF.Commerce.CourseCheckout
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           TDF.Commerce.DepositPolicy
+  ( DepositOutcome (..), DepositPolicy, applyDepositPolicy, defaultDepositPolicy )
 
 -- Payment is deliberately not part of this state machine. A verified payment
 -- can release a seat hold into Enrolled, but it cannot prove attendance,
@@ -50,7 +53,19 @@ calculateCoursePrice
   -> CoursePaymentMode
   -> Int
   -> Either Text CoursePriceBreakdown
-calculateCoursePrice priceMinor taxBps paymentMode depositBps
+calculateCoursePrice = calculateCoursePriceWith defaultDepositPolicy
+
+-- | Price with an explicit deposit policy (PAY-DEPOSIT-POLICY-001,
+-- AUTHORITY-095): a deposit is raised to the policy minimum and becomes full
+-- payment when it would be the whole price in disguise.
+calculateCoursePriceWith
+  :: DepositPolicy
+  -> Int64
+  -> Int
+  -> CoursePaymentMode
+  -> Int
+  -> Either Text CoursePriceBreakdown
+calculateCoursePriceWith depositPolicy priceMinor taxBps paymentMode depositBps
   | priceMinor <= 0 = Left "Course price must be greater than zero"
   | taxBps < 0 || taxBps > 10000 =
       Left "Course tax must be between 0 and 10000 basis points"
@@ -72,7 +87,10 @@ calculateCoursePrice priceMinor taxBps paymentMode depositBps
     total = subtotal + tax
     dueNow = case paymentMode of
       CourseFullPayment -> total
-      CourseDeposit -> roundBasisPoints total depositBps
+      CourseDeposit ->
+        case applyDepositPolicy depositPolicy (fromInteger total) (fromInteger (roundBasisPoints total depositBps)) of
+          DepositOf raised -> toInteger raised
+          FullPaymentNow -> total
     maxInt64 = toInteger (maxBound :: Int64)
 
 roundBasisPoints :: Integer -> Int -> Integer

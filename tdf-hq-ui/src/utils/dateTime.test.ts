@@ -1,4 +1,4 @@
-import { formatTimestampForDisplay, parseTimestamp } from './dateTime';
+import { formatInEventTimeZone, formatTimestampForDisplay, parseTimestamp } from './dateTime';
 
 describe('parseTimestamp', () => {
   it('returns null for empty values', () => {
@@ -47,5 +47,20 @@ describe('formatTimestampForDisplay', () => {
   it('formats valid timestamps using local datetime formatting', () => {
     const iso = '2026-03-04T18:30:00.000Z';
     expect(formatTimestampForDisplay(iso)).toBe(new Date(iso).toLocaleString());
+  });
+});
+
+describe('formatInEventTimeZone', () => {
+  const date = new Date('2026-11-28T23:00:00Z');
+
+  it('formats in a supported IANA zone', () => {
+    expect(formatInEventTimeZone(date, 'en-US', 'America/Guayaquil', { hour: 'numeric', hour12: false }))
+      .toBe('18');
+  });
+
+  it('falls back to the viewer zone instead of throwing for a zone Intl rejects', () => {
+    expect(() => date.toLocaleString('en-US', { timeZone: 'UTC+5' })).toThrow(RangeError);
+    expect(formatInEventTimeZone(date, 'en-US', 'UTC+5', { hour: 'numeric', hour12: false }))
+      .toBe(date.toLocaleString('en-US', { hour: 'numeric', hour12: false }));
   });
 });

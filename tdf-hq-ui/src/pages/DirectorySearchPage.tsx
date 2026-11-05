@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from '../features/discovery/useDirectorySearch';
 import { useTranslation } from 'react-i18next';
 import {
@@ -571,6 +572,7 @@ function ResultCard({
       }}
     >
       <DirectoryPreviewImage
+        profileName={item.type === 'profile' ? item.title : undefined}
         kind={item.type}
         imageUrl={item.imageUrl}
         alt={t('directorySearch.photo', { title: item.title })}
@@ -605,7 +607,7 @@ function ResultCard({
             </Box>
             {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
           </Stack>
-          <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</Typography>
+          <MarkdownText inline mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</MarkdownText>
           <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
             {eventDate && <Chip size="small" color="primary" variant="outlined" icon={<EventIcon />} label={eventDate} aria-label={t('directorySearch.eventDate', { date: eventDate })} />}
             {item.location.city && <Chip size="small" label={`${item.location.city}${item.location.countryCode ? `, ${item.location.countryCode}` : ''}`} />}

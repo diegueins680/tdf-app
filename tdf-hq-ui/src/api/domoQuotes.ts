@@ -5,6 +5,7 @@ import type { DatafastCheckoutDTO, PaypalCreateDTO } from './types';
 export type PublicDomoStorefront = components['schemas']['PublicDomoStorefront'];
 export type PublicDomoQuoteCreateRequest = components['schemas']['PublicDomoQuoteCreateRequest'];
 export type PublicDomoQuote = components['schemas']['PublicDomoQuote'];
+export type PublicDomoCancellation = components['schemas']['PublicDomoCancellation'];
 
 const quoteBase = (quoteId: string): string => {
   const normalized = quoteId.trim();
@@ -49,6 +50,14 @@ export const DomoQuotes = {
     post<PaypalCreateDTO>(
       `${quoteBase(quoteId)}/paypal/create`,
       {},
+      lookupHeaders(lookupToken),
+    ),
+  cancelQuote: (quoteId: string, lookupToken: string, cancellationNote?: string) =>
+    post<PublicDomoCancellation>(
+      `${quoteBase(quoteId)}/cancel`,
+      cancellationNote?.trim()
+        ? { confirmCancellation: true, cancellationNote: cancellationNote.trim() }
+        : { confirmCancellation: true },
       lookupHeaders(lookupToken),
     ),
   capturePaypalOrder: (

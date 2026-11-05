@@ -1,0 +1,49 @@
+Independent final package purchase expiry review
+Date: 2026-10-30
+Qualified clean source: 90eb633d56b405029782a82007fc9ea3742deed3
+Baseline: e1cec5b59723c2ff9828ac4fce45abb930d73055
+Review scope: read-only source, contract, raw qualification/control logs, metadata, actual binary/object bytes and Git/filesystem correspondence. No compiler, test or solver execution, database/server/provider/browser, source/ref/remote mutation or delegation was performed by this reviewer. No current GitHub approval is conferred.
+
+Disposition: zero blocking findings within the scoped source and evidence review. The correction meets the two explicit owner decisions for ordinary finite new-purchase terms, with credible finite regression/control evidence. Integration/required review and final-head hosted CI remain separate actions; no deployment, serving executable or complete proof claim is warranted.
+
+Behavior and source:
+The final production handler hash bafce158ececa27745aafaa06f4f5dccad0a229d54e567f5be6659ab606d8d26 and test hash 6704394469f88fefe9c80a0d38e9f72877de99a438f853f262861b0cb33391f9 are unchanged from the reviewed applied source and baseline/control assertions. Positive terms map to addUTCTime (fromIntegral days *86400) using the same now stored as purchasedAt. The nonpositive check follows existing inactive/reference checks and precedes insert. Nothing remains nonexpiring. No historical purchase update, payment/actor/gift/retry/redemption or concurrent product-edit guarantee is introduced.
+The final contract explicitly assumes trusted compiler/time/Persistent behavior, representable finite database timestamps, isolated SQLite fixtures, current module access and a wall clock that does not step across fixture before/after samples. Its expiry oracle is nevertheless exact from persisted purchasedAt, not a loose before/after duration tolerance. Extremely large configured terms/database timestamp-range admission remain explicitly unresolved. The contract does not claim all manual UI functionality or actual expired consumption was observed.
+
+Actual native evidence inspected:
+The final native-quality.json and native-force-dirty-confirmed.json record canonical Stack build0, targeted11/0/0 pending and full 4056/0/21 inherited pending. The corresponding raw targeted/full logs contain those counts and actual Hspec results. Pending external-runner cases are not claimed as real PostgreSQL coverage. The final driver explicitly invokes stack test tdf-hq:tdf-hq-test --no-run-tests --force-dirty. The qualified build log records TDF.Version recompilation and test binary relinking. I independently read/hashed the current test binary and Version.o and verified the exact 90eb commit literal occurs in both:
+- Test binary: 48cde77fcebcf484a7cc52858d4c4f0530540cc4c7edb757d664ca00ddff52ee.
+- Version.o: 6eae2edf8802cf1ebf493c2ea6771555aea62f019ec303466a277e152657ecc9.
+These are inspected artifacts, not an independent rerun or authenticated HTTP/serving deployment attestation.
+
+Earlier unforced stage is preserved honestly:
+The archived earlier-unforced-build stage really executed 11/0 and full 4056/0/21 on tracked-source-equivalent behavior, but reused precommit restored binary 1c199cdbe68e8230b3b17e74459ffe749a7d07e7a61de5bef2a497992f27a29b. Its old raw native-quality label/sourceCommit fields are historical and insufficient for current compiled Git metadata identity. The explicit native-force-dirty-qualification-correction.json records the omitted canonical force flag and its limitation. This review does not promote that earlier artifact as a fresh 90eb metadata-qualified binary. The final forced build/test cycle and new 48cde artifact resolve that local qualification gap without changing source/tests or lowering assertions. No serving executable qualification is inferred from test-binary Version identity.
+
+Completed controls:
+The raw native controls support corrected 11/0, wrong-unit 11/3, write-before-refuse 11/2 and restored 11/0, with successful builds in every stage and unchanged test bytes. My earlier control receipt independently examined the exact wrong-unit timestamp values and late-refusal committed row counts. Here I rehashed all four recorded test logs against controls.json and read the completed restored 11/0 result. The wrong-unit variant removes only 86400 multiplication; the three positive exact-date checks detect seconds instead of elapsed days. The late-refusal variant returns 409 after the insert, so normal transaction completion commits the invalid purchase; both tests pass their 409 assertion then fail expected row count 0/got 1. These are five actual semantic assertion failures across two logical source faults, not compiler/setup failures. Precommit component control artifacts are kept separate from the final clean-source forced native binary. Final handler/test bytes match those controls exactly; compiled Version identity is separately bound above.
+
+Independent correspondence checks:
+I rehashed all 1428 registered files both from the filesystem and their committed Git blobs: 1328 root files and 100 Mobile files under pinned Mobile 7586be92f447faaf05d1f7d7073af6321ad1496a. I separately verified all 987 backend qualification inputs against filesystem and 90eb Git blobs. Four contract/authority bindings (new MD, manual, Seed and operations SQL) match both Git and filesystem. The entire historical catalog decision file is byte-exact baseline. All 158 incoming requirement objects are exact; only PKG-PURCHASE-EXPIRY-001 is appended, total 159. Current Git HEAD is 90eb and status is clean. The only backend changes versus baseline are the reviewed Server.hs and ServerSpec.hs; Cabal, Stack, existing models, workflows, UI and Mobile are unchanged. Four derived metadata paths plus the new contract/requirement comprise the other source-commit changes; no unrelated runtime code was added.
+Source fingerprint digest 4e69bf0c89f8d15a8aa880daf4e448cf6eb1f2b0efe627e23889b8e1fd592905 is consistently recorded in the source/assurance receipts. All 52 recorded assurance artifact hashes were independently checked. Fresh assurance reports 159 whole requirements and 318 implementation/refinement obligations UNPROVEN, with 11 inherited conditional source-derived SMT results; formal release remains BLOCKED. No new complete proof or universal conformance claim follows from local assurance execution passing.
+Root-quality/admission/catalog8, strict 1354 JSON/CSV and generated-index checks report actual0; this review inspects those receipts rather than independently rerunning them. The final actual native/metadata scope supports preparing the focused correction for review; required protected integration controls remain applicable.
+
+Material limits retained after correction:
+Finite typed Handler/SQLite results do not prove authenticated HTTP authorization, production PostgreSQL timestamp acceptance/triggers, operational warning trigger execution, large-duration range safety, current product-edit concurrency or whole-domain redemption/payment behavior. No production financial record, purchase history or actor/payment policy was changed. A field-level correctness repair and regression protection are established within that explicit scope.
+
+Reviewed evidence SHA256 bindings:
+- native-quality.json: afafb7224705f9eefd18b3ad9a13fea58520985fbc8f2b448d7e2267076c7ecc
+- native-force-dirty-confirmed.json: 5256e9a66dc5815da82205cfa7cebdec6fc3969311af87412d9eccba28865eb8
+- native-force-dirty-qualification-correction.json: 125655557f17961991d19b808b6384dd607965ad36cceadc098e99169c2e459f
+- source-correspondence.json: 15daab3aa72c932174ddf0eec2c5ee4175180bd9b99bac31e06a8816d869c186
+- native-qualified-inputs.json: 47cee8bb8ebff52f49e238951ef3950b4e41c7b8ee6be3563ea1bb9667d0c855
+- controls.json: bb2ee04aaff8ad19bc1d4e1cc334fe6644a7de45214a1579df2cb22fd2a5e29b
+- qualified-build.log: 65e4a221d635eef6a8299235b7bdd25b284de5401bef531ebaa54933ab164b4d
+- qualified-targeted.log: 0d2a1906081c72a6a6c819ed84e2e9b30dc86ee4b23a41ee20c1ba707462c310
+- qualified-full.log: f6d8f8cda8fa513c531db3147c0eb41190496cec98bc7754672e7e59661334d4
+- restored-tests.log: db5c87c332d0100bb1b90c9ef54f7bc08be47b2c612cd992033385894226d240
+- root-quality-result.json: 9bd04b8f1325cec7bd26f34ad66c49b6124aa660d3c8c0fafed5625b5945a1a0
+- verification-state.json: 36d841b12bb69d66f5d52c4a4ab4e5ed7ab8c4324165c489f28dfefc65f64fad
+- assurance-committed/sources.json: 88e1aa50310a3714a17ea70f923393a5ac081ecd630e561a53c7684d77d91d65
+- assurance-committed/report.json: 121d50f3c9a85fc4ab7941470a7f79bb778feb3c989a880885493432231b49cd
+- earlier-unforced-build/native-quality.json: 0943a2f2f14a2f63ce61b5bf18a8a77ee4c9bd7f8328af4a64bc643bdedaea84
+- formal/system/package-purchase-expiry.md: c3fcb526015fe5d1dafb38252f9f345484e9a2ec27da4435d9009be6a87a088c

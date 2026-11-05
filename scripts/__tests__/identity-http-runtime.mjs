@@ -152,9 +152,11 @@ try {
     body: JSON.stringify({ username, password }), signal: AbortSignal.timeout(30000) });
   const addTokens = suffix => {
     const google = `synthetic-google-${suffix}`, service = `synthetic-service-${suffix}`;
-    sql(`INSERT INTO api_token(token,party_id,label,active) VALUES
-      ('${google}',${independent.partyId},'google-login:claimant@example.test',true),
-      ('${service}',${independent.partyId},'Synthetic service scope',true);`);
+    // Interactive sessions must carry a validity window (ID-SESSION-004); service tokens stay unbounded.
+    sql(`INSERT INTO api_token(token,party_id,label,active,issued_at_epoch,expires_at_epoch) VALUES
+      ('${google}',${independent.partyId},'google-login:claimant@example.test',true,
+        floor(extract(epoch FROM clock_timestamp()))::bigint,floor(extract(epoch FROM clock_timestamp()))::bigint+3600),
+      ('${service}',${independent.partyId},'Synthetic service scope',true,NULL,NULL);`);
     return { google, service };
   };
   const forbiddenAdmin = await fetch(`${base}/admin/users/${credentialId}`, {
@@ -471,6 +473,28 @@ try {
   assert.equal(sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${submittedClaim.id}' AND action='claim.reviewed'`), reviewAuditCount, 'replay must not append a fake review');
   assert.equal(sql(`SELECT active FROM directory_profile_manager WHERE source_claim_id='${submittedClaim.id}'`), 'f',
     'approval replay must never reactivate a separately revoked manager');
+  // AUTHORITY-097: revoking an approved claim needs a reason, withdraws the
+  // grant it created in the same transaction, is audited and is terminal.
+  const revokeClaim = await createReviewClaim('b', 'identity-http-revocation');
+  assert.equal((await decide(revokeClaim.id, 'under_review', 'a')).status, 200);
+  assert.equal((await decide(revokeClaim.id, 'approved', 'a')).status, 200);
+  assert.equal(sql(`SELECT active FROM directory_profile_manager WHERE source_claim_id='${revokeClaim.id}'`), 't');
+  const noReason = await fetch(`${base}/directory/admin/claims/${revokeClaim.id}/status`, {
+    method: 'PATCH', headers: { ...headers('a'), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'revoked', reason: '  ' }), signal: AbortSignal.timeout(30000),
+  });
+  assert.equal(noReason.status, 400, 'revocation without a reason is refused');
+  assert.equal(sql(`SELECT status||':'||(SELECT active FROM directory_profile_manager WHERE source_claim_id='${revokeClaim.id}') FROM directory_claim WHERE id='${revokeClaim.id}'`), 'approved:true',
+    'a refused revocation changes nothing');
+  assert.equal((await decide(revokeClaim.id, 'revoked', 'b')).status, 403, 'the claimant cannot revoke their own approved claim');
+  const revoked = await decide(revokeClaim.id, 'revoked', 'a');
+  assert.equal(revoked.status, 200, await revoked.clone().text());
+  assert.equal(sql(`SELECT c.status||':'||m.active||':'||(m.revoked_at IS NOT NULL) FROM directory_claim c JOIN directory_profile_manager m ON m.source_claim_id=c.id WHERE c.id='${revokeClaim.id}'`), 'revoked:false:true',
+    'revocation withdraws the grant in the same transaction');
+  assert.equal(sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${revokeClaim.id}' AND action='claim.revoked' AND previous_state='approved' AND new_state='revoked'`), '1');
+  assert.equal((await decide(revokeClaim.id, 'approved', 'a')).status, 409, 'a revoked claim is terminal');
+  assert.equal((await decide(revokeClaim.id, 'revoked', 'a')).status, 200, 'revoked replay is observational');
+  assert.equal(sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${revokeClaim.id}' AND action='claim.revoked'`), '1', 'replay appends no audit event');
   const failingClaim = await createReviewClaim('b', 'identity-http-grant-failure');
   assert.equal((await decide(failingClaim.id, 'under_review', 'a')).status, 200);
   const claimBeforeFailure = sql(`SELECT to_jsonb(c) FROM directory_claim c WHERE id='${failingClaim.id}'`);
@@ -492,7 +516,7 @@ try {
   // by an earlier successful transition. SQL fixture setup is not an API grant.
   const claimGraph = yaml.parse(readFileSync(new URL('../../docs/music-directory/formal-model.yaml', import.meta.url), 'utf8')).state_machines.claim.transitions;
   const claimStates = Object.keys(claimGraph);
-  assert.equal(claimStates.length, 7, 'review deliberate changes to the claim state domain');
+  assert.equal(claimStates.length, 8, 'review deliberate changes to the claim state domain');
   let checkedClaimPairs = 0;
   for (const from of claimStates) {
     for (const to of [...claimStates, 'unknown_state']) {
@@ -500,8 +524,8 @@ try {
       // States come from a checked-in contract, nevertheless bind fixture
       // interpolation to the protocol's identifier alphabet.
       assert.match(from, /^[a-z_]+$/); assert.match(to, /^[a-z_]+$/);
-      sql(`INSERT INTO directory_claim(id,profile_id,claimant_party_id,claim_type,status,reviewer_party_id,reviewed_at)
-        VALUES ('${id}','${target.id}',${independent.partyId},'profile','${from}',${actor},now());`);
+      sql(`INSERT INTO directory_claim(id,profile_id,claimant_party_id,claim_type,status,reviewer_party_id,reviewed_at,reviewer_notes)
+        VALUES ('${id}','${target.id}',${independent.partyId},'profile','${from}',${actor},now(),'Synthetic fixture review');`);
       const before = sql(`SELECT to_jsonb(c) FROM directory_claim c WHERE id='${id}'`);
       const managerBefore = sql(`SELECT coalesce(jsonb_agg(to_jsonb(m) ORDER BY profile_id,account_party_id),'[]'::jsonb) FROM directory_profile_manager m WHERE profile_id='${target.id}'`);
       const response = await decide(id, to);
