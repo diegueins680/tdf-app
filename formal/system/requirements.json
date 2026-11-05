@@ -15975,6 +15975,75 @@
       "evidence": "Source-bound local validation and reports/artist-profile-media-2026-11-04.json; fresh hosted checks remain required."
     },
     {
+      "id": "SYS-VERIFY-CAMPAIGN-001",
+      "title": "Retain campaign accessibility counterexample evidence",
+      "statement": "When a campaign axe audit returns violations on an inspectable page with writable artifact storage, attach the complete unfiltered violations and before/after tab observations before the unchanged all-violations assertion fails.",
+      "domain": "SYS",
+      "authority": "Owner mission sections2,6,7,8 require credible counterexamples and independently checked verification; hosted671 stripped the diagnostic fields needed to investigate a real failure.",
+      "source": "formal/system/campaign-accessibility-evidence.md",
+      "contract": "formal/system/campaign-accessibility-evidence.md",
+      "property": "Preserve all axe violation/node/check fields and rule scope; include observational tab/ancestor/viewport/scroll data. Never heal a failing audit, add retries or infer root cause from readiness assumptions.",
+      "actors": [
+        "CI reviewer",
+        "Verification engineer"
+      ],
+      "preconditions": [
+        "Successful axe execution",
+        "Live inspectable page and writable Playwright artifact storage"
+      ],
+      "inputs": [
+        "All campaign axe violations",
+        "Before/after tab geometry and computed ancestor styles"
+      ],
+      "state": {
+        "initial": "Campaign audit result",
+        "terminal": [
+          "Existing empty audit passes",
+          "Full evidence attached and existing nonempty assertion fails",
+          "Diagnostic IO/page failure remains a failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Attach unfiltered structured counterexamples",
+        "Record observational geometry without deciding readiness"
+      ],
+      "forbiddenTransitions": [
+        "Discard axe colors/ratio/checks from the only structured failure record",
+        "Filter severity or relax the empty-violations assertion",
+        "Treat sampled geometry or successful rerun as proof of the original WebKit cause"
+      ],
+      "effects": [
+        "Local synthetic browser artifacts only"
+      ],
+      "authorization": "No production writes, provider calls, new permissions or integration-control changes.",
+      "privacy": "Synthetic campaign network fixtures and test DOM only.",
+      "concurrency": "Before and after are distinct CSSOM samples; no atomic snapshot across asynchronous axe or RAF scrolling is claimed.",
+      "idempotency": "No new retry or external effect; original assertion semantics retained.",
+      "failure": "Nonempty audits remain failures; diagnostic/page/storage errors are not converted into passes.",
+      "recovery": "Use full source-bound evidence to investigate the original unknown cause; preserve failed CI.",
+      "observability": "Actual Playwright JSON attachment with full violations plus tab/ancestor/scroll observations.",
+      "implementation": [
+        "e2e/web/helpers/campaign-accessibility.mjs"
+      ],
+      "tests": [
+        "e2e/web/campaign-accessibility.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Actual supported-browser control cases and loss/attachment fault sensitivity; per-source execution receipts separate.",
+      "evidence": "formal/system/campaign-accessibility-evidence.md; reports/campaign-accessibility-evidence-2026-10-30.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Confirmed original information loss; original WebKit contrast cause remains unknown.",
+      "ambiguity": [
+        "Rectangular CSSOM clips are not complete visible-pixel or compositor evidence.",
+        "Pinned WebKit is unsupported on localmac12; hosted current-head verification remains separate."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite browser counterexample-retention tests; original contrast cause and complete verification-pipeline refinement are not proven."
+      }
+    },
+    {
       "id": "MEDIA-STORAGE-001",
       "title": "Explicit account storage and safe upload recovery",
       "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals.",

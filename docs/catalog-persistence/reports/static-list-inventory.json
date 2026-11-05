@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T15:45:11.886Z",
+  "generatedAt": "2026-11-05T16:51:22.974Z",
   "repositoryRoot": ".",
   "filesScanned": 2599,
   "candidateCount": 1394,
@@ -20774,7 +20774,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 12,
+      "consumerCount": 13,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-11-04_content_storage.sql",
@@ -20789,7 +20789,9 @@
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx"
       ],
-      "mobileConsumers": [],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
       "automationConsumers": [
         "scripts/content-storage-model.mjs",
         "scripts/test-content-storage-postgres.mjs"
@@ -20798,7 +20800,8 @@
         "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/docs/openapi/api.yaml",
-        "tdf-hq/src/TDF/API/ContentStorage.hs"
+        "tdf-hq/src/TDF/API/ContentStorage.hs",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -29732,7 +29735,7 @@
       "lines": [
         423
       ],
-      "consumerCount": 9,
+      "consumerCount": 10,
       "backendConsumers": [
         "tdf-hq/sql/2026-11-04_content_storage.sql",
         "tdf-hq/src/TDF/ContentStorage.hs",
@@ -29744,7 +29747,9 @@
         "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/generated/types.ts"
       ],
-      "mobileConsumers": [],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
       "automationConsumers": [
         "scripts/content-storage-model.mjs",
         "scripts/test-content-storage-postgres.mjs"
@@ -29752,7 +29757,8 @@
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/drive.ts",
-        "tdf-hq-ui/src/api/generated/types.ts"
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
@@ -133283,7 +133289,7 @@
       "lines": [
         795
       ],
-      "consumerCount": 23,
+      "consumerCount": 24,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/Drive.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -133304,6 +133310,7 @@
         "tdf-mobile/app/eventDetail.tsx",
         "tdf-mobile/app/userProfile.tsx",
         "tdf-mobile/src/analytics/partySelectorTelemetry.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/lib/savedEvents.ts"
       ],
       "automationConsumers": [
@@ -133320,7 +133327,8 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/uploadFailure.test.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
-        "tdf-hq/src/TDF/API/Drive.hs"
+        "tdf-hq/src/TDF/API/Drive.hs",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
@@ -150086,7 +150094,7 @@
         5,
         16
       ],
-      "consumerCount": 10,
+      "consumerCount": 11,
       "backendConsumers": [
         "tdf-hq/src/TDF/ContentStorage.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -150098,7 +150106,9 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx"
       ],
-      "mobileConsumers": [],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
       "automationConsumers": [
         "scripts/catalog-list-audit.mjs",
         "scripts/content-storage-model.mjs",
@@ -150107,7 +150117,8 @@
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/drive.ts",
-        "tdf-hq-ui/src/api/generated/types.ts"
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
@@ -150333,7 +150344,7 @@
       "lines": [
         21
       ],
-      "consumerCount": 19,
+      "consumerCount": 20,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
         "tdf-hq/sql/2026-09-15_music_preview_ranges.sql",
@@ -150353,7 +150364,9 @@
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
       ],
-      "mobileConsumers": [],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
       "automationConsumers": [
         "scripts/catalog-list-audit.mjs",
         "scripts/content-storage-model.mjs",
@@ -150363,7 +150376,8 @@
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/musicReleases.ts"
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
