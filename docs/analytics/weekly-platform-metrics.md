@@ -1,6 +1,7 @@
 # Weekly platform measurement
 
-Status: implemented offline preparation; production export and SQL execution unverified.
+Status: implemented offline preparation; disposable PostgreSQL 16 execution qualified.
+Production export and the production read-only role's grants remain unverified.
 
 Generate a bounded, read-only PostgreSQL aggregate query from the actual model
 fields `UserOnboardingProgress` and `ArtistProfile` in `tdf-hq/src/TDF/Models.hs`:
@@ -39,3 +40,14 @@ users and campaign conversions remain explicitly unavailable. A supplied export
 is evidence provided by the operator, not an independently verified production
 snapshot. Do not publish private inputs or substitute synthetic fixtures for
 production results. The existing PostHog funnel contract remains unchanged.
+
+The exact generated query also passes a disposable PostgreSQL 16.13 fixture using
+the actual Party and ArtistProfile table declarations and onboarding migration.
+Synthetic rows cover both half-open window boundaries, equivalent UTC offsets,
+first values across signup cohorts and unavailable coverage. A SELECT-only role
+reads the aggregates while writes and private Party fields reject; a separate
+owner control confirms the read-only transaction itself rejects writes. Snapshot
+isolation and both deadlines are checked, row counts remain unchanged, and the
+owned cluster is stopped. This is not full canonical migration replay or a
+production role/data observation. Source-bound receipt and retained setup failures:
+`reports/weekly-platform-metrics-main-qualification-2026-11-05.json`.

@@ -16022,22 +16022,23 @@
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "confidence": "Scoped offline tests; production SQL and collection unverified.",
+      "confidence": "Four offline tests and actual disposable PostgreSQL16 query/permission controls; production grants and collection unverified.",
       "ambiguity": [
         "Synthetic account exclusions and historical deletions are not classified.",
         "No reliable origin/claim partition or campaign attribution is supplied.",
-        "SQL has not run against PostgreSQL in this environment."
+        "Only extracted actual table DDL and the onboarding migration are qualified in disposable PostgreSQL; full canonical replay and production grants remain unverified."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Offline preparation and validation implemented; production permission, actual SQL execution and complete growth coverage remain unverified."
+        "reason": "Offline preparation and isolated PostgreSQL aggregate/permission qualification implemented; production grants, actual collection and complete growth coverage remain unverified."
       },
       "critical": false,
       "property": "Unknown growth coverage cannot become a verified human or attributed conversion count.",
       "contract": "docs/analytics/weekly-platform-metrics.md",
-      "verification": "Offline window/validation/unknown-data tests; SQL, grants and production collection remain unverified.",
+      "verification": "Four offline tests and actual PostgreSQL16 half-open boundaries, offset equivalence, snapshot/deadline checks, SELECT-only role and independent read-only write controls; no production collection or grants attested.",
       "evidence": [
-        "Offline unit tests only; no production data collected."
+        "Offline unit tests only; no production data collected.",
+        "reports/weekly-platform-metrics-main-qualification-2026-11-05.json"
       ],
       "historicalStatus": "New bounded measurement tooling, not a production observation."
     }

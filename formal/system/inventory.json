@@ -20570,9 +20570,9 @@
     },
     {
       "path": "docs/analytics/weekly-platform-metrics.md",
-      "sha256": "6e2a9280d54912a95686a2f1464607a1a1ccf9c01566c917eaa024d58a6f3cb0",
+      "sha256": "afdbf3589c89084874fdb3f265e4eaa2679596067f69ff8bf6f1e28d07dcfa71",
       "authority": "inferred",
-      "authorityBasis": "Status: implemented offline preparation; production export and SQL execution unverified.",
+      "authorityBasis": "Status: implemented offline preparation; disposable PostgreSQL 16 execution qualified.",
       "kind": "requirement-candidate"
     },
     {
@@ -29054,7 +29054,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6472bf4ae6d8fd340e73178aee12bd6fef3cb00c1cf2a910d609ae5861402026",
+      "sha256": "68e7e538d1a6e04364e83d9ee0653770aa905ebf90962f63aaafb26e65803dd3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
