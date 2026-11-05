@@ -11,6 +11,8 @@ module TDF.Routes.DomoQuotes
   , PublicDomoQuoteLineDTO(..)
   , PublicDomoQuoteDTO(..)
   , PublicDomoPaypalCaptureRequest(..)
+  , PublicDomoQuoteCancelRequest(..)
+  , PublicDomoCancellationDTO(..)
   , PublicDomoQuotesAPI
   ) where
 
@@ -120,6 +122,40 @@ instance ToJSON PublicDomoPaypalCaptureRequest
 instance FromJSON PublicDomoPaypalCaptureRequest where
   parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 
+-- | PAY-DOMO-CANCEL-001: the quote holder cancels with the lookup token.
+data PublicDomoQuoteCancelRequest = PublicDomoQuoteCancelRequest
+  { confirmCancellation :: Bool
+  , cancellationNote    :: Maybe Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PublicDomoQuoteCancelRequest
+instance FromJSON PublicDomoQuoteCancelRequest where
+  parseJSON value = do
+    rejectNullOptionalFields "PublicDomoQuoteCancelRequest" ["cancellationNote"] value
+    genericParseJSON defaultOptions { rejectUnknownFields = True } value
+
+-- | The recorded outcome of a cancellation: what was collected, what the
+-- approved policy retains and what is refunded. Amounts in minor units.
+data PublicDomoCancellationDTO = PublicDomoCancellationDTO
+  { quoteId               :: Text
+  , quoteStatus           :: Text
+  , canceller             :: Text
+  , policyVersion         :: Maybe Int
+  , cancelledAt           :: UTCTime
+  , leadDays              :: Int
+  , inProgress            :: Bool
+  , retainedBasisPoints   :: Int
+  , depositCollectedMinor :: Int64
+  , balanceCollectedMinor :: Int64
+  , retainedMinor         :: Int64
+  , refundDueMinor        :: Int64
+  , currency              :: Text
+  , refundStatus          :: Text
+  , alreadyCancelled      :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PublicDomoCancellationDTO
+
 type PublicDomoQuotesAPI =
        "public" :> "domo" :> Get '[JSON] PublicDomoStorefrontDTO
   :<|> "public" :> "domo" :> "quotes"
@@ -151,3 +187,7 @@ type PublicDomoQuotesAPI =
          :> Header "X-Order-Lookup-Token" Text
          :> ReqBody '[JSON] PublicDomoPaypalCaptureRequest
          :> Post '[JSON] PublicDomoQuoteDTO
+  :<|> "public" :> "domo" :> "quotes" :> Capture "quoteId" Text :> "cancel"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] PublicDomoQuoteCancelRequest
+         :> Post '[JSON] PublicDomoCancellationDTO
