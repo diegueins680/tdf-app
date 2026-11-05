@@ -3120,6 +3120,28 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 enabled <- eventTicketPurchaseEnabledFor event
                 pure (validateTicketPurchaseEventEligibility (socialEventMetadata event) enabled)
 
+    -- New holds bind the pricing inputs under the Tier lock. Existing order
+    -- snapshots remain valid after later tier edits and are not repriced here.
+    lockTicketPurchaseTierPricing ::
+        SocialEventId -> EventTicketTierId -> EventTicketTier ->
+        SqlPersistT IO (Either ServerError ())
+    lockTicketPurchaseTierPricing eventKey tierKey quotedTier = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        current <-
+            if "postgres" `T.isInfixOf` backendName
+                then listToMaybe <$> (rawSql
+                    "SELECT ?? FROM event_ticket_tier WHERE id = ? AND event_id = ? FOR UPDATE"
+                    [toPersistValue tierKey, toPersistValue eventKey]
+                    :: SqlPersistT IO [Entity EventTicketTier])
+                else getEntity tierKey
+        pure $ case current of
+            Just (Entity _ tier)
+                | eventTicketTierEventId tier == eventKey
+                , eventTicketTierPriceCents tier == eventTicketTierPriceCents quotedTier
+                , T.toUpper (eventTicketTierCurrency tier)
+                    == T.toUpper (eventTicketTierCurrency quotedTier) -> Right ()
+            _ -> Left err409{errBody = "Ticket tier pricing changed; reload before buying"}
+
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
         Env{..} <- ask
@@ -4734,7 +4756,10 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 runSqlPool
                     ( do
                         eligibility <- lockTicketPurchaseEvent eventKey
-                        case eligibility of
+                        admission <- case eligibility of
+                            Left refused -> pure (Left refused)
+                            Right () -> lockTicketPurchaseTierPricing eventKey tierKey tier
+                        case admission of
                             Left refused -> pure (Left refused)
                             Right () -> Right <$> do
                                 reserved <- TicketInventory.reserveTicketInventory
@@ -5253,6 +5278,9 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     , True
                     )
             Nothing -> do
+                -- Admission bounds the actual fee-inclusive provider amount.
+                -- Existing checkouts keep their stored amount/recovery contract.
+                _ <- either throwError pure (validateTicketCheckoutAmount 1 finalAmountCents)
                 let createReservedOrder = do
                         promoClaimed <- case mPromoCodeEnt of
                             Nothing -> pure True
@@ -5328,6 +5356,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                 termsVersionAtHold <- lockActiveTicketTermsVersion now eventKey
                                 when (termsVersionAtHold /= mTermsVersion) $
                                     liftIO (throwIO ticketTermsChangedError)
+                                pricing <- lockTicketPurchaseTierPricing eventKey tierKey tier
+                                either (liftIO . throwIO) pure pricing
                                 reserved <- TicketInventory.reserveTicketInventory
                                     eventKey tierKey ticketPurchaseQuantity now
                                 if reserved then createReservedOrder else pure Nothing
