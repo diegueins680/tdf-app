@@ -152,7 +152,11 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   assert.ok(commands.includes('npx playwright test e2e/web/account-deletion-rollout.spec.mjs'));
   assert.ok(commands.includes('node node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs'));
   assert.match(workflow, /run: npm run test:e2e:web/);
-  assert.match(workflow, /path: artifacts\/persona-playwright/);
+  const evidence = job.steps.find(step => step.name === 'Upload sanitized browser evidence');
+  assert.equal(evidence.if, 'always()');
+  assert.ok(evidence.with.path.split('\n').includes('artifacts/persona-playwright'));
+  assert.ok(evidence.with.path.split('\n').includes('artifacts/storage-upload'));
+  assert.ok(commands.indexOf('node node_modules/@playwright/test/cli.js test --config=playwright.storage-upload.config.mjs') < commands.indexOf('npm run test:e2e:web'));
   assert.match(workflow, /retention-days: 14/);
   assert.match(workflow, /quality:[\s\S]*?needs:[\s\S]*?- persona-web-e2e/);
   const admission = parseYaml(workflow).jobs.quality.steps.find(step => step.env?.CI_ADMISSION_NEEDS);
