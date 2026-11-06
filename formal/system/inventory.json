@@ -16426,7 +16426,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "604e127814d5f379843bb29d0b4bcdbe6881e7c57322a4f6768c94fd34b4df42",
+      "sha256": "2f8829d3716c74c6f88ac40a8a74d3457ad21fddb0cc804d98118dab6fe795de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17326,7 +17326,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
+      "sha256": "cf44ce65b86c21a325c39ed22b6959ee646f68c5a0d72f1c68ba6eb9427961ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28724,6 +28724,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-finance-report-currency.md",
+      "sha256": "69015488aae669c32821e6be4ef88524e10d486e284adb97258c2b8de0490b9f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-finance-report-range.md",
       "sha256": "18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf",
       "authority": "inferred",
@@ -29334,7 +29341,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "243e0e5476913900b1c642336fa328a3ed02125afd78cbddfb5abf060547d997",
+      "sha256": "fb4e30c388d618f6fbfa3426bc8ad8b6c4fb4320a40edb1a070694f87db0dd86",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
