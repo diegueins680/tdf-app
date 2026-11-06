@@ -5222,7 +5222,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "4cfa135d426520a796be2f2f81832d570ae2d81dab07bce93005dbada706eeac",
+      "sha256": "0a117518472351ad5793728097ddb346777eb6d5aef27ff2d1996bc6ce7d42b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
