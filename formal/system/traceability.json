@@ -12682,8 +12682,10 @@
         ".github/workflows/ci.yml",
         "scripts/test-provider-domain-harness.py"
       ],
-      "formalModels": [],
-      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
+      "formalModels": [
+        "formal/payments/provider_binding_admission.py"
+      ],
+      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required. Z3 (formal/payments/provider_binding_admission.py, pinned 4.13.3, source sha256 pinned, run in the formal workflow): the encoded admission predicate implies the stated agreement for hosted and direct evidence and refuses non-succeeded or mismatched attempts; each of the 25 hosted-branch conjuncts is necessary. Manual evidence and the Domo hold guard are not encoded.",
       "evidence": "formal/system/evidence/2026-10-26-provider-domain-main/ records clean223-schema qualification atcb777,317 compiled cases, independent optimized-harness counterexamples, failed earlier attempts and exact scoped integration hashes. Fresh final-head CI/review remain separate.",
       "critical": true,
       "status": "specified and implemented",
@@ -16291,7 +16293,7 @@
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "f5355f67f7afa9b1caa9e4c9304ca2b392bf3b6cf6e17edd05672723b50c0c5f",
+    ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -16647,6 +16649,7 @@
     "formal/payments/domo_cancellation_refund.py": "6c0c8bdca1c70caff40c8f46f645aa482cc943ee9f1ac3ec6cef333c41b4bc40",
     "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
+    "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -29696,6 +29699,12 @@
         "relationship": "tests"
       }
     ],
+    "formal/payments/provider_binding_admission.py": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq-ui/src/features/fans/reconcileFollowState.ts": [
       {
         "requirement": "COMM-FOLLOW-RECOVERY-001",
@@ -32002,7 +32011,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "f5355f67f7afa9b1caa9e4c9304ca2b392bf3b6cf6e17edd05672723b50c0c5f",
+      "sha256": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63884,7 +63893,6 @@
     "COMMUNITY-PROFILE-001",
     "MEDIA-MUSIC-DISCOVERY-001",
     "MEDIA-MUSIC-LEGACY-001",
-    "PAY-DOMAIN-BINDING-001",
     "MEDIA-MUSIC-SOURCES-001",
     "SOCIAL-EVENT-MEMORY-001",
     "SOCIAL-EVENT-MODERATION-001",
@@ -65020,7 +65028,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "daa1cd6160b54458085a7cbd37f1cae5cb00d3985bb0ce18027315f0f88f9b46",
+      "sourceSha256": "4afa420298c72a03b54917351408a273e1825ea6048a7724db3843204aa80ebd",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65048,7 +65056,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "daa1cd6160b54458085a7cbd37f1cae5cb00d3985bb0ce18027315f0f88f9b46",
+      "sourceSha256": "4afa420298c72a03b54917351408a273e1825ea6048a7724db3843204aa80ebd",
       "definition": {
         "states": [
           "absent",
@@ -65078,7 +65086,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "daa1cd6160b54458085a7cbd37f1cae5cb00d3985bb0ce18027315f0f88f9b46",
+      "sourceSha256": "4afa420298c72a03b54917351408a273e1825ea6048a7724db3843204aa80ebd",
       "definition": {
         "export": [
           "queued",

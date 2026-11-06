@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001.
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001, PAY-DOMAIN-BINDING-001.
 
 ## Contract
 
@@ -232,3 +232,28 @@ never turns a full payment into a deposit. Witnesses with the default policy (5.
 Without the `raised >= total` guard a 100% threshold admits a zero-balance deposit;
 without the share guard a deposit exceeds the share. Which policy version the
 callers load is covered by the course and Domo tests and triggers, not here.
+
+## Provider binding admission (PAY-DOMAIN-BINDING-001)
+
+`provider_binding_admission.py` (Z3 4.13.3, pinned) encodes
+`commerce_checkout_has_verified_payment` from
+`tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql` conjunct by conjunct,
+over one checkout, attempt, binding and, for hosted providers, create operation and
+intent. It refuses to run if that migration's sha256 changes or another forward
+migration redefines the predicate, so the hand encoding cannot silently drift.
+
+- **Hosted (PlaceToPay session, PayPhone sale):** admitted evidence agrees on
+  checkout, provider, account, environment, provider reference, provider resource,
+  currency and amount, as the requirement states; the provider reference may differ
+  from the internal order id.
+- **Direct (Datafast, PayPal, Stripe):** the binding's reference is the checkout's
+  domain order id, the resource type is the provider's, and environment, amount and
+  currency agree.
+- A non-succeeded attempt, or one of another environment, amount or currency, is
+  never admitted.
+- **Necessity:** dropping any one of the 25 hosted-branch conjuncts breaks the
+  agreement, so none is redundant; the result is pinned so a change is reviewed.
+
+The manual-evidence branch (bank transfer, cash, POS with two different reviewers)
+and the Domo date-hold guard are not encoded here; they are covered by the
+PostgreSQL matrix in `scripts/test-provider-domain-binding.py`.

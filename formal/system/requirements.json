@@ -12681,8 +12681,10 @@
         ".github/workflows/ci.yml",
         "scripts/test-provider-domain-harness.py"
       ],
-      "formalModels": [],
-      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
+      "formalModels": [
+        "formal/payments/provider_binding_admission.py"
+      ],
+      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required. Z3 (formal/payments/provider_binding_admission.py, pinned 4.13.3, source sha256 pinned, run in the formal workflow): the encoded admission predicate implies the stated agreement for hosted and direct evidence and refuses non-succeeded or mismatched attempts; each of the 25 hosted-branch conjuncts is necessary. Manual evidence and the Domo hold guard are not encoded.",
       "evidence": "formal/system/evidence/2026-10-26-provider-domain-main/ records clean223-schema qualification atcb777,317 compiled cases, independent optimized-harness counterexamples, failed earlier attempts and exact scoped integration hashes. Fresh final-head CI/review remain separate.",
       "critical": true,
       "status": "specified and implemented",
