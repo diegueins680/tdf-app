@@ -16279,7 +16279,7 @@
       "statement": "Any registered user may prepare and execute musical campaigns on their own connected accounts; TDF posts require current admin approval, and execution survives browser disconnection without automatically replaying uncertain provider effects.",
       "authority": "approved",
       "source": "Diego explicit campaign-platform implementation instruction, 2026-10-29; docs/campaign-platform/operations.md",
-      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits; persisted provider sessions also prohibit replacing a resumable piece version before a final external ID exists; successful pending verification polls do not exhaust consecutive-error retries; email eligibility precedes its batch limit while delivered or uncertain claims remain non-replayable; generated plan graphics may attach only to the unchanged unapproved piece IDs created by that plan, preserving manual/concurrent revisions",
+      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits; persisted provider sessions also prohibit replacing a resumable piece version before a final external ID exists; successful pending verification polls do not exhaust consecutive-error retries; email eligibility precedes its batch limit while delivered or uncertain claims remain non-replayable; generated plan graphics may attach only to the unchanged unapproved piece IDs created by that plan, preserving manual/concurrent revisions; completed clip renders attach at most once to an unchanged initial unapproved draft, preserving subsequent manual media and metadata revisions",
       "contract": "formal/system/campaign-server.md",
       "implementation": [
         ".github/workflows/campaign-platform.yml",
@@ -17276,7 +17276,7 @@
     "services/campaign-platform/facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
     "services/campaign-platform/graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
     "services/campaign-platform/import_rojo.py": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
-    "services/campaign-platform/media.py": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+    "services/campaign-platform/media.py": "6f1a170104b165432d897e2c2427453c031fe989d691b752fb0cd07029b1e6a9",
     "services/campaign-platform/model_check.py": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
     "services/campaign-platform/monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
     "services/campaign-platform/notifications.py": "a8ad191a4c81e5752819ee486c679cd1093af716d3dd250f9a8652c1ef288efb",
@@ -17296,7 +17296,7 @@
     "services/campaign-platform/tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
     "services/campaign-platform/tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
     "services/campaign-platform/tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
-    "services/campaign-platform/tests/test_domain.py": "fdc061c69d50f06db4c588686058552da6632334d6f270ddfbdb4ec29f98281b",
+    "services/campaign-platform/tests/test_domain.py": "bee8dbc797f6ddd8fdcc25cf3b8de4e06d02e8ed8bfd8266d888e2eb1933493d",
     "services/campaign-platform/tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
     "services/campaign-platform/tests/test_http.py": "17449bc6a0b7965bef8b404c9e21ceb6da34f7abc85eef02d89fc2d2d5f19b1d",
     "services/campaign-platform/tests/test_notifications.py": "aa5b5f2e6e9998a3d1b0fe7c09ea26f98a52d6e675d0555afa9b8b8e60a27055",
@@ -40458,7 +40458,7 @@
     {
       "id": "SURFACE-00d53256ed14388b",
       "path": "services/campaign-platform/media.py",
-      "sha256": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+      "sha256": "6f1a170104b165432d897e2c2427453c031fe989d691b752fb0cd07029b1e6a9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40706,7 +40706,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "fdc061c69d50f06db4c588686058552da6632334d6f270ddfbdb4ec29f98281b",
+      "sha256": "bee8dbc797f6ddd8fdcc25cf3b8de4e06d02e8ed8bfd8266d888e2eb1933493d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66728,7 +66728,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72d6f3c5698f4d697a9819a655ffdd10c54bb4d52f340760f8645aa1dfbb8f46",
+      "sourceSha256": "d4aace5451f0e9afd374fbfa74aa0f43a25a1db935e70d482097e0988b5407f9",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -66756,7 +66756,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72d6f3c5698f4d697a9819a655ffdd10c54bb4d52f340760f8645aa1dfbb8f46",
+      "sourceSha256": "d4aace5451f0e9afd374fbfa74aa0f43a25a1db935e70d482097e0988b5407f9",
       "definition": {
         "states": [
           "absent",
@@ -66786,7 +66786,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72d6f3c5698f4d697a9819a655ffdd10c54bb4d52f340760f8645aa1dfbb8f46",
+      "sourceSha256": "d4aace5451f0e9afd374fbfa74aa0f43a25a1db935e70d482097e0988b5407f9",
       "definition": {
         "export": [
           "queued",

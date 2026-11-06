@@ -50,12 +50,14 @@ def render(store,config,j):
  return {'assets':outputs,'review_required':True,'source_unchanged':True}
 
 def bind_rendered_clip(store,job,segment,asset):
- """Attach only to this plan's unapproved draft; approvals cannot silently gain media."""
+ """Attach once to the plan's initial draft, never an intervening human revision."""
  with store.db(True) as d:
-  for row in d.execute('SELECT id,settings,status,approved_version FROM pieces WHERE campaign=? AND name=?',(job['campaign'],segment['label'])).fetchall():
+  for row in d.execute('SELECT id,settings,status,approved_version,version FROM pieces WHERE campaign=? AND name=?',(job['campaign'],segment['label'])).fetchall():
    if json.loads(row['settings']).get('render_job')!=job['id']:continue
-   if row['status']!='draft' or row['approved_version'] is not None:
-    owner=d.execute('SELECT owner FROM campaigns WHERE id=?',(job['campaign'],)).fetchone()[0];store.notice(d,owner,'Un fragmento terminó después de la revisión. Asígnalo a una nueva versión y vuelve a aprobar.',job['campaign']);continue
+   # Plan clips start at version1. Every human edit and successful attachment
+   # advances it, even if the editor retains settings.render_job.
+   if row['version']!=1 or row['status']!='draft' or row['approved_version'] is not None:
+    owner=d.execute('SELECT owner FROM campaigns WHERE id=?',(job['campaign'],)).fetchone()[0];store.notice(d,owner,'Un fragmento terminó después de una edición o revisión. Asígnalo a una nueva versión y vuelve a aprobar.',job['campaign']);continue
    d.execute('UPDATE pieces SET asset=?,version=version+1 WHERE id=?',(asset,row['id']))
    d.execute('UPDATE campaigns SET version=version+1,approved_version=NULL,updated_at=? WHERE id=?',(time.time(),job['campaign']))
    store.audit(d,None,'render.bind_draft',job['campaign'],row['id'],{'asset':asset,'render_job':job['id']})

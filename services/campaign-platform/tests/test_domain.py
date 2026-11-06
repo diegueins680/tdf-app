@@ -212,6 +212,33 @@ class CampaignTests(unittest.TestCase):
   self.assertEqual(pieces[pid]['asset'],'finished-asset');self.assertIsNone(pieces[wrong]['asset'])
   self.approve();bind_rendered_clip(self.store,{'id':'render-owned','campaign':self.cid},{'label':'CL01'},'late-asset')
   self.assertEqual(next(p for p in self.store.detail(self.a,self.cid)['pieces'] if p['id']==pid)['asset'],'finished-asset')
+ def test_completed_render_preserves_manual_media_revision_with_retained_binding(self):
+  from media import bind_rendered_clip
+  pid=self.piece(name='CL01',settings={'render_job':'render-owned','custom':'keep'})
+  manual=self.store.reserve_asset(self.a,self.cid,'manual.mp4',4)
+  with self.store.db(True) as d:d.execute('UPDATE assets SET status="ready" WHERE id=?',(manual,))
+  self.store.piece(self.a,self.cid,{'name':'CL01','platform':'instagram','format':'reel','account':self.account,'asset':manual,'copy':'Manual revision','due_at':time.time()+60,'settings':{'render_job':'render-owned','custom':'keep'}},pid)
+  before=self.store.detail(self.a,self.cid)
+  bind_rendered_clip(self.store,{'id':'render-owned','campaign':self.cid},{'label':'CL01'},'old-render')
+  self.assertEqual(self.store.detail(self.a,self.cid),before)
+ def test_completed_render_preserves_nonmedia_revision_and_unapproved_state(self):
+  from media import bind_rendered_clip
+  pid=self.piece(name='CL01',settings={'render_job':'render-owned'})
+  self.store.piece(self.a,self.cid,{'name':'CL01','platform':'instagram','format':'reel','copy':'Human copy','due_at':time.time()+60,'settings':{'render_job':'render-owned'}},pid)
+  before=self.store.detail(self.a,self.cid)
+  bind_rendered_clip(self.store,{'id':'render-owned','campaign':self.cid},{'label':'CL01'},'old-render')
+  self.assertEqual(self.store.detail(self.a,self.cid),before)
+ def test_completed_render_attaches_only_once_before_review(self):
+  from media import bind_rendered_clip
+  pid=self.piece(name='CL01',settings={'render_job':'render-owned'})
+  job={'id':'render-owned','campaign':self.cid};segment={'label':'CL01'}
+  with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+   list(pool.map(lambda _:bind_rendered_clip(self.store,job,segment,'finished-asset'),range(4)))
+  before=self.store.detail(self.a,self.cid);piece=next(p for p in before['pieces'] if p['id']==pid)
+  self.assertEqual((piece['version'],piece['asset'],piece['status'],piece['approved_version']),(2,'finished-asset','draft',None))
+  bind_rendered_clip(self.store,job,segment,'duplicate-output')
+  self.assertEqual(self.store.detail(self.a,self.cid),before)
+  with self.store.db() as d:self.assertEqual(d.execute('SELECT count(*) FROM audit WHERE action="render.bind_draft"').fetchone()[0],1)
  def test_final_provider_guard_rechecks_pause(self):
   pid=self.piece();self.approve();self.store.status(self.a,self.cid,'active');p=next(p for p in self.store.detail(self.a,self.cid)['pieces'] if p['id']==pid)
   adapter=Providers(self.store,Vault(Fernet.generate_key()),{})

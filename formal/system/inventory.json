@@ -6966,7 +6966,7 @@
     {
       "id": "SURFACE-00d53256ed14388b",
       "path": "services/campaign-platform/media.py",
-      "sha256": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+      "sha256": "6f1a170104b165432d897e2c2427453c031fe989d691b752fb0cd07029b1e6a9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7086,7 +7086,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "fdc061c69d50f06db4c588686058552da6632334d6f270ddfbdb4ec29f98281b",
+      "sha256": "bee8dbc797f6ddd8fdcc25cf3b8de4e06d02e8ed8bfd8266d888e2eb1933493d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29819,7 +29819,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "72d6f3c5698f4d697a9819a655ffdd10c54bb4d52f340760f8645aa1dfbb8f46",
+      "sha256": "d4aace5451f0e9afd374fbfa74aa0f43a25a1db935e70d482097e0988b5407f9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
