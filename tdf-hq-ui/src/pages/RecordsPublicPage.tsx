@@ -1,3 +1,5 @@
+import { NativeSessionCard } from '../features/sessions/NativeSessionCard';
+import { nativeSessionsFromFeed } from '../features/sessions/nativeSessions';
 import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
@@ -1008,6 +1010,7 @@ export default function RecordsPublicPage() {
     queryFn: () => Records.getFeed('es'),
     staleTime: 5 * 60 * 1000,
   });
+  const nativeSessions = recordsFeedQuery.data ? nativeSessionsFromFeed(recordsFeedQuery.data) : [];
   const { session } = useSession();
   const canManageReleases = useMemo(
     () => canAccessPath('/label/releases', session?.roles, session?.modules),
@@ -1015,7 +1018,7 @@ export default function RecordsPublicPage() {
   );
 
   const sessions = useMemo(
-    () => sortSessions((recordsFeedQuery.data?.sessions ?? []).map(mapRecordsSession).filter((item): item is SessionItem => item != null)),
+    () => sortSessions((recordsFeedQuery.data?.sessions ?? []).filter(item => !item.resources.some(resource => resource.providerCode === 'tdf' && resource.providerMetadata?.['tdfNative'])).map(mapRecordsSession).filter((item): item is SessionItem => item != null)),
     [recordsFeedQuery.data?.sessions],
   );
   const releases = useMemo(
@@ -1023,7 +1026,7 @@ export default function RecordsPublicPage() {
     [recordsFeedQuery.data?.releases],
   );
   const recordings = useMemo(
-    () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
+    () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).filter(item => !item.resources.some(resource => resource.providerCode === 'tdf' && resource.providerMetadata?.['tdfNative'])).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
     [recordsFeedQuery.data?.recordings],
   );
   const recordingSelection = usePublicationSelection('recording', recordings.map((item) => item.id), recordsFeedQuery.isLoading);
@@ -1071,6 +1074,7 @@ export default function RecordsPublicPage() {
         }}
       >
         <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
+        {nativeSessions.map(nativeSession => <NativeSessionCard key={nativeSession.id} session={nativeSession} />)}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
             <PublicBrandBar tagline="TDF Records · Estudio · Lanzamientos · Sesiones" />
           </Box>

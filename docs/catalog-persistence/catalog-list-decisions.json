@@ -3275,6 +3275,35 @@
     "storageProtectedMainIntegration20261104": {
       "document": "docs/catalog-persistence/storage-main-integration-20261104.json",
       "currentDecisionId": "be0b1503a04f9fa295ee"
+    },
+    "nativeSessionSourceTagRetirement": {
+      "sourceMain": "81a06faa06731f866333a0b89fb266720c4fa065",
+      "reason": "CatalogSource now includes the persisted Records read source. Preserve the complete earlier two-source review as historical evidence; its three-source successor is individually reviewed.",
+      "supersededBy": "7233cfc847a5104949f1",
+      "decisions": [
+        {
+          "id": "44a129d61d3814253c76",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
+          "justification": "Individually reviewed discriminants for two existing API response shapes. These are internal source-provenance tags, not artist-selectable business values, editable release kinds, persisted genre values or streaming grants.",
+          "reviewed": true,
+          "reviewMethod": "individual-source-review",
+          "reviewBatch": "artist-catalog-unification-2026-10-29",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/artistCatalog.ts",
+            "line": 5,
+            "kind": "literal-union",
+            "name": "CatalogSource",
+            "valueCount": 2,
+            "consumerCount": 30,
+            "exactDuplicateIds": [],
+            "similarCandidateIds": []
+          }
+        }
+      ]
     }
   },
   "decisions": [
@@ -20408,23 +20437,23 @@
       "reviewed": true
     },
     {
-      "id": "44a129d61d3814253c76",
+      "id": "7233cfc847a5104949f1",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
-      "justification": "Individually reviewed discriminants for two existing API response shapes. These are internal source-provenance tags, not artist-selectable business values, editable release kinds, persisted genre values or streaming grants.",
+      "justification": "Individually reviewed discriminants for the three existing public read sources: canonical Music, legacy artist releases and persisted Records delivery metadata. These are internal source-provenance tags, not artist-selectable catalog values, publication kinds, grants or identity inference.",
       "reviewed": true,
       "reviewMethod": "individual-source-review",
-      "reviewBatch": "artist-catalog-unification-2026-10-29",
+      "reviewBatch": "native-tdf-sessions-2026-11-05",
       "evidence": {
         "file": "tdf-hq-ui/src/api/artistCatalog.ts",
-        "line": 5,
+        "line": 8,
         "kind": "literal-union",
         "name": "CatalogSource",
-        "valueCount": 2,
-        "consumerCount": 30,
+        "valueCount": 3,
+        "consumerCount": 38,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }

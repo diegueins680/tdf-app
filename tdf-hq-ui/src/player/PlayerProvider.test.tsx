@@ -573,3 +573,61 @@ it('ignores queued native transport events while the restored source is preparin
   await ready();
   expect(audio.play).toHaveBeenCalledTimes(1);
 });
+
+const nativeTrack = (): PlayerTrack => ({ ...track('native'), durationMs: 10000, startMs: 10000, endMs: 20000,
+  sources: [{ url: 'https://media.invalid/session.mp4', quality: 'high', mediaType: 'video/mp4' },
+    { url: 'https://media.invalid/session.m4a', quality: 'high', mediaType: 'audio/mp4' }] });
+it('uses one native engine, seeks within chapter bounds and switches to audio without loading video', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(nativeTrack()); });
+  const video = view.container.querySelector('video')!;
+  Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  expect(video.src).toBe('https://media.invalid/session.mp4');
+  expect(video.currentTime).toBe(10);
+  expect(view.container.querySelector('audio')?.hasAttribute('src')).toBe(false);
+  act(() => { player.seek(4); });
+  expect(video.currentTime).toBe(14);
+  expect(player.currentTime).toBe(4);
+  await act(async () => { player.setMediaMode('audio'); });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  expect(video.src).toBe('https://media.invalid/session.m4a');
+  expect(video.currentTime).toBe(14);
+  expect(player.currentTime).toBe(4);
+  expect(player.status).toBe('playing');
+  act(() => { player.seek(500); });
+  expect(video.currentTime).toBe(20);
+  act(() => { player.setPlaybackRate(1.5); });
+  expect(video.playbackRate).toBe(1.5);
+});
+it('continues native playback across page content changes and yields to radio', async () => {
+  const view = render(<PlayerProvider><Probe /><div>First page</div></PlayerProvider>);
+  await act(async () => { player.playTrack({ ...nativeTrack(), startMs: 0 }); });
+  const video = view.container.querySelector('video')!;
+  await act(async () => { view.rerender(<PlayerProvider><Probe /><div>Second page</div></PlayerProvider>); });
+  expect(view.container.querySelector('video')).toBe(video);
+  expect(player.currentTrack?.id).toBe('native');
+  await act(async () => { window.dispatchEvent(new Event('tdf-radio-takeover')); });
+  expect(player.status).toBe('paused');
+});
+it('stops a bounded song at its endpoint instead of playing the following song', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(nativeTrack()); });
+  const video = view.container.querySelector('video')!;
+  Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
+  Object.defineProperty(video, 'paused', { configurable: true, get: () => false });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  video.currentTime = 20;
+  await act(async () => { video.dispatchEvent(new Event('timeupdate')); });
+  expect(player.status).toBe('paused');
+  expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+});
+it('releases the ordinary audio source when a native video takes over', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(track('ordinary')); });
+  const audio = view.container.querySelector('audio')!;
+  expect(audio.hasAttribute('src')).toBe(true);
+  await act(async () => { player.playTrack({ ...nativeTrack(), startMs: 0 }); });
+  expect(audio.hasAttribute('src')).toBe(false);
+  expect(view.container.querySelector('video')?.getAttribute('src')).toBe('https://media.invalid/session.mp4');
+});

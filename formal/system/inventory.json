@@ -372,6 +372,7 @@
       "scripts/prepare-content-storage-reconciliation.mjs",
       "scripts/prepare-event-draft.mjs",
       "scripts/prepare-hetzner-release.mjs",
+      "scripts/prepare-native-session.py",
       "scripts/prepare-portable-restore.mjs",
       "scripts/prepare-studio-audit-draft.mjs",
       "scripts/privacy-request-ledger.py",
@@ -589,6 +590,7 @@
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-player-session-model.mjs",
+      "scripts/test-prepare-native-session.py",
       "scripts/test-privacy-request-ledger.py",
       "scripts/test-proof-certificates.py",
       "scripts/test-provider-domain-binding.py",
@@ -1090,6 +1092,9 @@
       "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
       "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
       "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
+      "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+      "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+      "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
       "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
       "tdf-hq-ui/src/hooks/useAutoSave.test.ts",
@@ -5027,6 +5032,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1be7907fa26b54e6",
+      "path": "scripts/prepare-native-session.py",
+      "sha256": "a4f3a668b63c11b6c7878bc6f7dafe0853ad2cc9e9e7db8ad6c691c43f680479",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1ef043656b0c0dd7",
       "path": "scripts/prepare-portable-restore.mjs",
       "sha256": "e0e7cfad0b09971d8b9a92a5018ea4d8d0a82d010a190f084d086e8f7f0c3db3",
@@ -6329,6 +6340,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d3a3a07ff681cb25",
+      "path": "scripts/test-prepare-native-session.py",
+      "sha256": "81a90e3ce053c6583ce3b49881aa33828699692e65c2bde5a8e340193a65b249",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-17287b59b5e37160",
       "path": "scripts/test-privacy-request-ledger.py",
       "sha256": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
@@ -7165,13 +7182,13 @@
     {
       "id": "SURFACE-ff974a25a3a04aab",
       "path": "tdf-hq-ui/src/api/artistCatalog.test.ts",
-      "sha256": "1ac8ee9be045c1bd56511e8bdedbf19c560ad4629bf84953297246d96eac0155",
+      "sha256": "043c8cfcd398d22039d171a6c125d9c96fe60b78e79e7adeb45e30375896e0af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-128a32e4c523fd40",
       "path": "tdf-hq-ui/src/api/artistCatalog.ts",
-      "sha256": "013a487fccc8b72de36e74ab2be912343b8afc350553ef9c378f7fcbd6c965cb",
+      "sha256": "746f1024c03b4e0da2e5bddf14e75998569e188c58b9b03b568774508c2f802e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7807,7 +7824,7 @@
     {
       "id": "SURFACE-b38100408189d548",
       "path": "tdf-hq-ui/src/api/records.ts",
-      "sha256": "894aa347435a50e7270c9790dae0d3db9f637db343fff22f090de70a48ddb90b",
+      "sha256": "fe30ae8c45915cc8b3448dc2d6691cf529f1bd4b06c02360ae23fcb3654b6342",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9311,6 +9328,24 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8c59c9acbb5b29a1",
+      "path": "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+      "sha256": "4526397a08d11d517f9a506f05084f9ccdebecf1895db6b03ba17c5c7e016e16",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-48bc61fb013dcaf0",
+      "path": "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+      "sha256": "d6c2dcf50daf86dc40d0603287c3abc31f0a0a63df5f92045d06a38bc007f92d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e26b7365f9aa6c9c",
+      "path": "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
+      "sha256": "6723b3e6424fb9a87ec3a194475eb3695f74458dda052d13e80ed91f8abf8e68",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "sha256": "d6419557dc90a2248dc8560cfc5a8260e0297fc3354e7b652fd6f11098bc67e5",
@@ -9703,7 +9738,7 @@
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "82dd7341d70a80543f254a44c39c84a217784ced7182c097786f3e0901d55071",
+      "sha256": "692a61b667187e41c54e9ca59c20db2320e80a587d5feccf5e7241be8fca00e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10711,7 +10746,7 @@
     {
       "id": "SURFACE-56568ee47192d217",
       "path": "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-      "sha256": "3bd6c293b2481dac3648c418221946d2fd0c5db859928a22eb0414f4f52e0b98",
+      "sha256": "8ca0cceb9d7ea807a5dd90eec17df159dd1adb775cf379232427b1b986d0f63b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11101,7 +11136,7 @@
     {
       "id": "SURFACE-818df6bbb0d7fdd5",
       "path": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-      "sha256": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
+      "sha256": "b1b6d9e7ce53c9c63c5d6968581cd0baf1b89569f468af595861f65b7cff85d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11113,13 +11148,13 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "1817116d31aaccdfe90c6603a68b7f79ec4de53231ec8dc4827801cc5ac978b6",
+      "sha256": "0f891a465b1bfaf08775a24b5fc7c7bf4c51e4e7266be88d2ea0857d96b955c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "445adef24fefb118ba1c86ad94e77fd28a4435610bf0f5d5a32057567a2d046b",
+      "sha256": "b67b3dc72130576543f1679a72fd370fe82c2350808fb134c328e040b6ee3c69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11185,7 +11220,7 @@
     {
       "id": "SURFACE-696ad66d25c26381",
       "path": "tdf-hq-ui/src/player/types.ts",
-      "sha256": "469cc2cbcd256ea4f59b510e82e8d54927ca4081f372575822e0f2c375fd558f",
+      "sha256": "d08f4a7a420ab508d03629fa2f1a5c5d1a17d5bc235674b6ab29bc6795ac6b7d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22620,6 +22655,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/native-tdf-sessions.md",
+      "sha256": "eff3f06d22911fbd86e7ee4eb49e011fcd20b07450a9e7ac3764eefe9d5c197f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/navegacion.md",
       "sha256": "8bdb803fcf556e508bcbb234b275e1af0d1d908f5e601df1dc29da21c7788972",
       "authority": "inferred",
@@ -29278,7 +29320,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79877e1ad858342567bd68e150a561add1927239191bb8dae6bf619178d4b32e",
+      "sha256": "52578ef8e08c691dc153679683c13085d791308c4771725e0b44cf22094a11fe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
