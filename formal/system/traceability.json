@@ -16253,7 +16253,8 @@
         "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
         "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
         ".github/workflows/ci.yml",
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx"
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq/Dockerfile"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
@@ -16264,7 +16265,8 @@
         "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
         "e2e/web/event-discovery-filters.spec.mjs",
         "scripts/test-event-discovery-postgres.mjs",
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx"
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16706,7 +16708,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
-    "scripts/__tests__/ci-pipeline.test.mjs": "881b8fa0370c349ee8bc734eec59b730f2103ad8b9dee267e63de0eab89da0c7",
+    "scripts/__tests__/ci-pipeline.test.mjs": "e844abfa54df09de9296a669c06bd07c3330b48e50d7ad7270a1a4514f707980",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
@@ -17469,7 +17471,7 @@
     "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
-    "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
+    "tdf-hq/Dockerfile": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
     "tdf-hq/Dockerfile.music-worker": "1de769ca7636491fb5391fc2fe8b90ee19e20d19621b21d90a52ffa170366a83",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
@@ -19277,6 +19279,10 @@
       {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
       }
     ],
     "scripts/check-mobile-gitlink-ancestry.sh": [
@@ -20368,6 +20374,10 @@
       },
       {
         "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-FILTER-001",
         "relationship": "implementation"
       }
     ],
@@ -33349,7 +33359,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "881b8fa0370c349ee8bc734eec59b730f2103ad8b9dee267e63de0eab89da0c7",
+      "sha256": "e844abfa54df09de9296a669c06bd07c3330b48e50d7ad7270a1a4514f707980",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33386,6 +33396,10 @@
         },
         {
           "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-FILTER-001",
           "relationship": "tests"
         }
       ]
@@ -49161,7 +49175,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
+      "sha256": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49170,6 +49184,10 @@
         },
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-FILTER-001",
           "relationship": "implementation"
         }
       ]
@@ -65178,7 +65196,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ecfd00d8d6b8c0bf2134da2bc3df2291623e6104d42eed0336a6c84b274fcf70",
+      "sourceSha256": "3bcaec561798e5099d77a48afaed99a642ae913760cc419388bb85725432b2a0",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65206,7 +65224,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ecfd00d8d6b8c0bf2134da2bc3df2291623e6104d42eed0336a6c84b274fcf70",
+      "sourceSha256": "3bcaec561798e5099d77a48afaed99a642ae913760cc419388bb85725432b2a0",
       "definition": {
         "states": [
           "absent",
@@ -65236,7 +65254,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ecfd00d8d6b8c0bf2134da2bc3df2291623e6104d42eed0336a6c84b274fcf70",
+      "sourceSha256": "3bcaec561798e5099d77a48afaed99a642ae913760cc419388bb85725432b2a0",
       "definition": {
         "export": [
           "queued",

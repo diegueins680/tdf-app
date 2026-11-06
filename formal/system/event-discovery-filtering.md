@@ -21,7 +21,11 @@ organizers, invitees, attendance, equal names or equal numeric Party IDs.
 ## City source and normalization
 
 Production PostgreSQL executes the embedded `social-event-city-match.sql` predicate
-before LIMIT/OFFSET. A venue's canonical city wins when linked: match its Spanish
+before LIMIT/OFFSET. Source-based Docker builds copy `sql/queries` into the
+builder stage before the Template Haskell splice is compiled; the later
+migration-bundle stage cannot supply compile-time inputs. A source-stage test
+checks the actual embedded query bytes and rejects removal of that copy. This
+source check does not establish a complete Docker build. A venue's canonical city wins when linked: match its Spanish
 or English name, or an exact alias registered for that city in the cities catalog.
 With no canonical city, match the venue's city text. Only if there is no usable
 venue location may an unsuppressed external reference supply the city.

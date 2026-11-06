@@ -16252,7 +16252,8 @@
         "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
         "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
         ".github/workflows/ci.yml",
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx"
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq/Dockerfile"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
@@ -16263,7 +16264,8 @@
         "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
         "e2e/web/event-discovery-filters.spec.mjs",
         "scripts/test-event-discovery-postgres.mjs",
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx"
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
