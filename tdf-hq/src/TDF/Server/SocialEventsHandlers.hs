@@ -201,6 +201,7 @@ import Database.Persist.Sql
     , fromSqlKey
     , orderClause
     , rawExecute
+    , rawExecuteCount
     , rawSql
     , runSqlPool
     , runSqlPoolWithIsolation
@@ -3151,6 +3152,34 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     == T.toUpper (eventTicketTierCurrency quotedTier) -> Right ()
             _ -> Left err409{errBody = "Ticket tier pricing changed; reload before buying"}
 
+    lockTicketPurchasePromo :: Maybe (Entity PromoCode) -> SqlPersistT IO (Either ServerError ())
+    lockTicketPurchasePromo Nothing = pure (Right ())
+    lockTicketPurchasePromo (Just (Entity promoKey quoted)) = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        current <-
+            if "postgres" `T.isInfixOf` backendName
+                then listToMaybe <$> (rawSql
+                    "SELECT ?? FROM promo_code WHERE id = ? FOR UPDATE"
+                    [toPersistValue promoKey] :: SqlPersistT IO [Entity PromoCode])
+                else getEntity promoKey
+        -- Counters and caps stay authoritative at the atomic claim. Harmless
+        -- descriptive edits and later changes to stored orders are independent.
+        let sameTerms actual =
+                SM.promoCodeEventId actual == SM.promoCodeEventId quoted
+                    && SM.promoCodeDiscountType actual == SM.promoCodeDiscountType quoted
+                    && SM.promoCodeDiscountValue actual == SM.promoCodeDiscountValue quoted
+                    && T.toUpper (SM.promoCodeCurrency actual)
+                        == T.toUpper (SM.promoCodeCurrency quoted)
+                    && SM.promoCodeValidFrom actual == SM.promoCodeValidFrom quoted
+                    && SM.promoCodeValidUntil actual == SM.promoCodeValidUntil quoted
+                    && SM.promoCodeTierIds actual == SM.promoCodeTierIds quoted
+                    && SM.promoCodeMinPurchaseAmountCents actual
+                        == SM.promoCodeMinPurchaseAmountCents quoted
+                    && SM.promoCodeIsActive actual == SM.promoCodeIsActive quoted
+        pure $ case current of
+            Just (Entity _ promo) | sameTerms promo -> Right ()
+            _ -> Left err409{errBody = "Promotion changed; reload before buying"}
+
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
         Env{..} <- ask
@@ -4771,8 +4800,9 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         case admission of
                             Left refused -> pure (Left refused)
                             Right () -> Right <$> do
+                                admissionTime <- TicketInventory.ticketReservationTime
                                 reserved <- TicketInventory.reserveTicketInventory
-                                    eventKey tierKey ticketPurchaseQuantity now
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
                                 if not reserved
                                     then pure Nothing
                                     else do
@@ -5293,19 +5323,15 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 let createReservedOrder = do
                         promoClaimed <- case mPromoCodeEnt of
                             Nothing -> pure True
-                            Just (Entity promoKey promo) -> do
-                                let redemptionFilters =
-                                        [ PromoCodeId ==. promoKey
-                                        , PromoCodeIsActive ==. True
-                                        ]
-                                            ++ maybe
-                                                []
-                                                (\limit -> [PromoCodeCurrentRedemptions <. limit])
-                                                (SM.promoCodeMaxRedemptions promo)
-                                (> 0)
-                                    <$> updateWhereCount
-                                        redemptionFilters
-                                        [PromoCodeCurrentRedemptions +=. 1]
+                            Just (Entity promoKey _) ->
+                                -- The organizer can change the cap while this
+                                -- checkout waits. Bind the claim to the current
+                                -- row, including NULL/unlimited, atomically.
+                                (> 0) <$> rawExecuteCount
+                                    "UPDATE promo_code SET current_redemptions=current_redemptions+1 \
+                                    \WHERE id=? AND is_active=TRUE AND \
+                                    \(max_redemptions IS NULL OR current_redemptions<max_redemptions)"
+                                    [toPersistValue promoKey]
                         if not promoClaimed
                             then do
                                 update
@@ -5367,8 +5393,16 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                     liftIO (throwIO ticketTermsChangedError)
                                 pricing <- lockTicketPurchaseTierPricing eventKey tierKey tier
                                 either (liftIO . throwIO) pure pricing
+                                promotion <- lockTicketPurchasePromo mPromoCodeEnt
+                                either (liftIO . throwIO) pure promotion
+                                admissionTime <- TicketInventory.ticketReservationTime
+                                forM_ mPromoCodeEnt $ \(Entity _ promo) ->
+                                    either (const $ liftIO $ throwIO err409
+                                        {errBody = "Promotion is outside its validity window; reload before buying"})
+                                        pure (validatePromoCodeDateWindow admissionTime
+                                            (SM.promoCodeValidFrom promo) (SM.promoCodeValidUntil promo))
                                 reserved <- TicketInventory.reserveTicketInventory
-                                    eventKey tierKey ticketPurchaseQuantity now
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
                                 if reserved then createReservedOrder else pure Nothing
                             )
                             envPool
