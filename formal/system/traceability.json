@@ -1695,12 +1695,14 @@
         "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
-      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test Formal model formal/auth/SessionExpiry.tla: Apalache proves WithinWindowAtUse, LegacyInteractiveFailsClosed, TtlBoundedByCookie and ResetNeverAuthenticates inductively for up to four tokens and any clock movement; TLC explores 2,046,828 states; accepting tokens without expiry, or admitting a TTL above the cookie Max-Age, violates Safe in both tools; a reachability witness shows a minted session is accepted (scripts/verify-inductive-proofs.sh).",
       "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
       "observability": "No token in production receipts; retain migration identity and exact tested source.",
-      "formalModels": [],
+      "formalModels": [
+        "formal/auth/SessionExpiry.tla"
+      ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/Spec.hs",
@@ -16553,6 +16555,7 @@
     "formal/auth/LogoutIntent.cfg": "f30060897bc76161ef739e65981da34addc1e9ef7ef6d5892a7184521eb3c7ae",
     "formal/auth/LogoutIntent.tla": "1b08e8a1073c5aa73236e42bac4e02dd9ebf5a64bbcf68729101eed15cf34445",
     "formal/auth/LogoutIntentLegacy.cfg": "a89e41350ca46b7e087f4dd3a99858ca54518951d98e653d858051591e788d4e",
+    "formal/auth/SessionExpiry.tla": "bc8137a81818acbb2053db4492e7d12f1d07e776778011132b456d2497f94be5",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -17216,7 +17219,7 @@
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
-    "scripts/verify-inductive-proofs.sh": "caf0011c50a06e810aef118aa7437d9aaf4ed38c29826f94d94a24c072fb6b16",
+    "scripts/verify-inductive-proofs.sh": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -20521,6 +20524,12 @@
       {
         "requirement": "ID-SESSION-004",
         "relationship": "tests"
+      }
+    ],
+    "formal/auth/SessionExpiry.tla": [
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/stack.yaml": [
@@ -39865,7 +39874,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "caf0011c50a06e810aef118aa7437d9aaf4ed38c29826f94d94a24c072fb6b16",
+      "sha256": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64684,7 +64693,6 @@
     "SYS-TRACE-001",
     "SYS-STATE-001",
     "AUTH-CORS-001",
-    "ID-SESSION-004",
     "DEPLOY-BUILD-001",
     "DEPLOY-TARGET-001",
     "MEDIA-PERSIST-001",
@@ -65851,7 +65859,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "627c770fa0f37cae0b51f6401b183d66d85e8b0c715bd1d4ba963e283450f545",
+      "sourceSha256": "68029852b66176b862e5d4f213bac5c3ca431555adc7aab0475b01ffefd82b3c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65879,7 +65887,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "627c770fa0f37cae0b51f6401b183d66d85e8b0c715bd1d4ba963e283450f545",
+      "sourceSha256": "68029852b66176b862e5d4f213bac5c3ca431555adc7aab0475b01ffefd82b3c",
       "definition": {
         "states": [
           "absent",
@@ -65909,7 +65917,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "627c770fa0f37cae0b51f6401b183d66d85e8b0c715bd1d4ba963e283450f545",
+      "sourceSha256": "68029852b66176b862e5d4f213bac5c3ca431555adc7aab0475b01ffefd82b3c",
       "definition": {
         "export": [
           "queued",

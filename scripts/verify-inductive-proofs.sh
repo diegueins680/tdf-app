@@ -176,6 +176,19 @@ apalache_expect "${L}" CInitFence Init IndInv 0 NoError "LogoutIntent-initiation
 apalache_expect "${L}" CInitFence IndInv IndInv 1 NoError "LogoutIntent-consecution"
 apalache_expect "${L}" CInitFence IndInv Safe 0 NoError "LogoutIntent-implication"
 apalache_expect "${L}" CInitLegacy Init Safe 5 Error "LogoutIntentLegacy-reachable-violation"
+E=SessionExpiry.tla
+
+# ID-SESSION-004: interactive sessions are accepted only inside their database-
+# clock window, legacy sessions without expiry fail closed, every window is
+# within the cookie Max-Age, and reset tokens never authenticate.
+tlc_expect "${E}" SessionExpiry.cfg pass
+tlc_expect "${E}" SessionExpiryNotFailClosed.cfg violation
+tlc_expect "${E}" SessionExpiryTtlUnchecked.cfg violation
+apalache_expect "${E}" CInitCurrent Init IndInv 0 NoError "SessionExpiry-initiation"
+apalache_expect "${E}" CInitCurrent IndInv IndInv 1 NoError "SessionExpiry-consecution"
+apalache_expect "${E}" CInitCurrent IndInv Safe 0 NoError "SessionExpiry-implication"
+apalache_expect "${E}" CInitCurrent Init NoMintedSessionUsed 3 Error "SessionExpiry-reachability-witness"
+apalache_expect "${E}" CInitNotFailClosed Init Safe 4 Error "SessionExpiryNotFailClosed-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 echo "Inductive proofs and controls passed."
