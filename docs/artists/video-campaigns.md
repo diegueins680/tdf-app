@@ -126,6 +126,11 @@ service. Unifying its provider execution with these drafts remains a dependency;
 manual export is the usable route in this candidate. The WhatsApp acquisition
 sequences in `docs/campaign-automation.md` and the TDF Sessions x Domo recruitment
 panel have different purposes and receive no changes or enrollments here.
+The current Domo panel stores its recruitment tracker in browser localStorage
+and exports JSON; it is not a durable per-artist launch backend. The WhatsApp
+document describes a real administrative sequence/worker boundary whose
+activation requires consent and approved templates; it is not an Instagram or
+TikTok video publisher. Neither is used as campaign execution authority here.
 
 ## Verification
 

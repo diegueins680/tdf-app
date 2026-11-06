@@ -31,6 +31,7 @@ test('artist can retry a draft save, reload and review manual publication @mobil
     return route.continue();
   });
   await page.goto('/mi-artista/campanas');
+  await expect(page.locator('audio')).toHaveCount(0);
   await page.getByRole('button', { name: 'Crear campaña', exact: true }).click();
   await page.getByLabel('Título de la sesión').fill('Sesión de prueba');
   await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click();

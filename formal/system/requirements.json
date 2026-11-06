@@ -16047,7 +16047,8 @@
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/utils/artistFollowIntent.ts",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-hq/docs/openapi/api.yaml"
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts"
       ],
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
@@ -16056,7 +16057,10 @@
         "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
-        "e2e/web/video-campaigns.spec.mjs"
+        "e2e/web/video-campaigns.spec.mjs",
+        "e2e/web/artist-follow.spec.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
