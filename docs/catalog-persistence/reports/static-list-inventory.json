@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T13:47:21.227Z",
+  "generatedAt": "2026-11-06T17:05:14.250Z",
   "repositoryRoot": ".",
   "filesScanned": 2605,
   "candidateCount": 1394,
@@ -5893,7 +5893,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6180,7 +6180,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -16399,7 +16399,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 900,
+      "consumerCount": 901,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17180,7 +17180,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 896,
+      "consumerCount": 897,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17470,7 +17470,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 896,
+      "consumerCount": 897,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -25765,7 +25765,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 969,
+      "consumerCount": 970,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -48856,7 +48856,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 996,
+      "consumerCount": 997,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -59101,7 +59101,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 996,
+      "consumerCount": 997,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -69159,7 +69159,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 996,
+      "consumerCount": 997,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -69459,7 +69459,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 996,
+      "consumerCount": 997,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -70888,7 +70888,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 996,
+      "consumerCount": 997,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -76044,7 +76044,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 916,
+      "consumerCount": 917,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -94950,7 +94950,7 @@
       "lines": [
         254
       ],
-      "consumerCount": 119,
+      "consumerCount": 120,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -95043,6 +95043,7 @@
         "tdf-mobile/src/navigation/deepLinks.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/lib/production-release.mjs",
@@ -95866,13 +95867,14 @@
       "lines": [
         16
       ],
-      "consumerCount": 11,
+      "consumerCount": 12,
       "backendConsumers": [
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/socialEvents.ts",
@@ -108476,7 +108478,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 19,
+      "consumerCount": 20,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
@@ -108501,6 +108503,7 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/studio-audit-safety.mjs"
       ],
@@ -113573,7 +113576,7 @@
         797,
         1036
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -113685,6 +113688,7 @@
         "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -115153,7 +115157,7 @@
       "lines": [
         905
       ],
-      "consumerCount": 158,
+      "consumerCount": 159,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -115268,6 +115272,7 @@
         "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -117391,7 +117396,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 158,
+      "consumerCount": 159,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -117506,6 +117511,7 @@
         "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -121804,7 +121810,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 116,
+      "consumerCount": 117,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -121894,6 +121900,7 @@
         "tdf-mobile/src/navigation/deepLinks.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -138278,7 +138285,7 @@
       "lines": [
         197
       ],
-      "consumerCount": 12,
+      "consumerCount": 13,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
@@ -138297,6 +138304,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/catalog-list-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -145470,7 +145478,7 @@
       "lines": [
         208
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -145573,6 +145581,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -157301,7 +157310,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1777,
+      "line": 1778,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -157312,7 +157321,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1777
+        1778
       ],
       "consumerCount": 91,
       "backendConsumers": [
@@ -161269,7 +161278,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 603,
+      "consumerCount": 604,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -161582,7 +161591,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 996,
+      "consumerCount": 997,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -170662,7 +170671,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 65,
+      "consumerCount": 66,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
@@ -170685,6 +170694,7 @@
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/RecordsRuntimeProbe.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
         "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",

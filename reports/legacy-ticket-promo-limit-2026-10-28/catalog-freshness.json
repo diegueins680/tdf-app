@@ -1,0 +1,20 @@
+{
+  "normativeParentDecisionsPreserved": 1353,
+  "entireDecisionFileByteIdentical": false,
+  "newDecisions": 0,
+  "freshCandidates": 1353,
+  "freshJSONSemanticMatchBeforeRefresh": false,
+  "freshCSVByteMatchBeforeRefresh": false,
+  "strictJSONAndCSV": "PASS",
+  "trackedGenerationClockPreserved": false,
+  "finalStrictJSONAndCSV": "PASS",
+  "finalFreshJSONExactAfterRefresh": true,
+  "finalFreshCSVByteMatch": true,
+  "finalAuditIncludesRefreshedEvidenceCounts": true,
+  "finalSourceLineRefresh": {
+    "id": "fb1005d3b1d035e17581",
+    "before": 1744,
+    "after": 1745,
+    "reason": "Explicit rawExecuteCount import shifted a source declaration by one line."
+  }
+}
