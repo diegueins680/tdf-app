@@ -16346,7 +16346,8 @@
         "e2e/web/event-discovery-filters.spec.mjs",
         "scripts/test-event-discovery-postgres.mjs",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

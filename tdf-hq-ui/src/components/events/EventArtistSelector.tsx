@@ -24,6 +24,7 @@ export default function EventArtistSelector({ artistIds, onChange, label = 'Arti
     enabled: Boolean(session),
     retry: false,
   });
+  const options = useMemo(() => (optionsQuery.data ?? []).filter(a => a.artistId), [optionsQuery.data]);
   const selectedQueries = useQueries({
     queries: artistIds.map(id => ({
       queryKey: ['event-artist-option', session?.partyId, id],
@@ -32,11 +33,15 @@ export default function EventArtistSelector({ artistIds, onChange, label = 'Arti
       staleTime: 300_000,
       retry: false,
     })),
+    // Query combination structurally shares unchanged values, even when the
+    // controlled parent passes a new ID array on each render.
+    combine: results => ({
+      selected: artistIds.map((id, index): SocialArtistDTO =>
+        results[index]?.data ?? options.find(a => a.artistId === id)
+          ?? { artistId: id, artistName: `Artista #${id}` }),
+      isError: results.some(query => query.isError),
+    }),
   });
-  const options = useMemo(() => (optionsQuery.data ?? []).filter(a => a.artistId), [optionsQuery.data]);
-  const selected: SocialArtistDTO[] = artistIds.map((id, index) =>
-    selectedQueries[index]?.data ?? options.find(a => a.artistId === id)
-      ?? { artistId: id, artistName: `Artista #${id}` });
   return (
     <Stack spacing={0.5} sx={{ minWidth: 0, width: '100%' }}>
       <Autocomplete
@@ -44,14 +49,17 @@ export default function EventArtistSelector({ artistIds, onChange, label = 'Arti
         filterSelectedOptions
         filterOptions={values => values}
         options={options}
-        value={selected}
+        value={selectedQueries.selected}
         inputValue={input}
         loading={optionsQuery.isFetching}
         disabled={!session}
         getOptionLabel={artist => artist.artistName}
         getOptionKey={artist => artist.artistId ?? artist.artistName}
         isOptionEqualToValue={(a, b) => a.artistId === b.artistId}
-        onInputChange={(_event, value) => setInput(value)}
+        onInputChange={(_event, value, reason) => {
+          // Async selected-label hydration must not erase an active search.
+          if (reason !== 'reset') setInput(value);
+        }}
         onChange={(_event, artists) => onChange(artists.flatMap(a => a.artistId ? [a.artistId] : []))}
         getOptionDisabled={artist => artistIds.length >= 50 && !artistIds.includes(artist.artistId ?? '')}
         renderOption={(props, artist) => {
@@ -66,7 +74,7 @@ export default function EventArtistSelector({ artistIds, onChange, label = 'Arti
       {optionsQuery.isError && <Alert severity="warning" action={<button onClick={() => void optionsQuery.refetch()}>Reintentar</button>}>
         No pudimos buscar artistas. Intenta de nuevo.
       </Alert>}
-      {selectedQueries.some(query => query.isError) && <Alert severity="warning">
+      {selectedQueries.isError && <Alert severity="warning">
         No se pudo resolver algún artista seleccionado. Puedes quitarlo o intentar de nuevo.
       </Alert>}
     </Stack>

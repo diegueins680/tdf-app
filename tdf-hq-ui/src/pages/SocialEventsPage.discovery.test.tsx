@@ -8,12 +8,14 @@ interface Filters { city?: string; artistIds?: string[]; startAfter?: string; li
 const listEvents = jest.fn<(filters: Filters) => Promise<SocialEventDTO[]>>();
 const artists: SocialArtistDTO[] = [{ artistId: '7', artistName: 'Alpha' }, { artistId: '8', artistName: 'Beta' }];
 const empty = jest.fn<() => Promise<never[]>>().mockResolvedValue([]);
+const listArtistOptions = jest.fn<(options?: { name?: string; signal?: AbortSignal }) => Promise<SocialArtistDTO[]>>();
+const getArtistOption = jest.fn<(id: string) => Promise<SocialArtistDTO>>();
 const listVenues = jest.fn<() => Promise<SocialVenueDTO[]>>();
 const getVenue = jest.fn<(venueId: string, signal?: AbortSignal) => Promise<SocialVenueDTO>>();
 jest.unstable_mockModule('../api/socialEvents', () => ({ SocialEventsAPI: {
   listEvents, listVenues, getVenue, listInvitations: empty, listTicketTiers: empty, listTicketOrders: empty,
-  listArtists: async () => artists,
-  getArtist: async (id: string) => artists.find(artist => artist.artistId === id),
+  listArtists: listArtistOptions,
+  getArtist: getArtistOption,
 } }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: { partyId: 42, roles: [], modules: [] } }) }));
 jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({ useLocalePreferences: () => ({ locale: 'es' }) }));
@@ -46,6 +48,8 @@ function mount(path = '/social/eventos') {
 }
 beforeEach(() => {
   listEvents.mockReset().mockResolvedValue([]);
+  listArtistOptions.mockReset().mockResolvedValue(artists);
+  getArtistOption.mockReset().mockImplementation(async id => artists.find(artist => artist.artistId === id)!);
   listVenues.mockReset().mockRejectedValue(new Error('No global venue query expected'));
   getVenue.mockReset().mockImplementation(async venueId => ({ venueId, venueName: `Sala ${venueId}` }));
 });
@@ -194,4 +198,26 @@ it('cancels a previous city venue read and never applies its late result to the 
   await act(async () => finishOld({ venueId: '225', venueName: 'Sala Quito tardía' }));
   expect(screen.queryByText('Sala Quito tardía')).toBeNull();
   expect(screen.getAllByText('Sala New York')).toHaveLength(2);
+});
+
+
+it.each([{ initial: [] }, { initial: ['7'] }])('searches past the first fifty artists in the actual event filter with initial IDs $initial', async ({ initial }) => {
+  const remote = { artistId: '51', artistName: 'Beyond initial fifty' };
+  listArtistOptions.mockImplementation(async options => options?.name ? [remote]
+    : Array.from({ length: 50 }, (_, index) => ({ artistId: String(index + 1), artistName: `Artist ${index + 1}` })));
+  getArtistOption.mockImplementation(async id => id === '51' ? remote : { artistId: id, artistName: `Artist ${id}` });
+  mount(`/social/eventos${initial.length ? '?artists=7' : ''}`);
+  await screen.findByText(/No hay eventos que coincidan/);
+  const input = screen.getByRole('combobox', { name: 'Artistas' });
+  act(() => input.focus());
+  fireEvent.change(input, { target: { value: 'Beyond' } });
+  expect(input.value).toBe('Beyond');
+  await screen.findByRole('option', { name: 'Beyond initial fifty · #51' });
+  expect(listArtistOptions).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Beyond', signal: expect.any(AbortSignal) }));
+  expect(input.value).toBe('Beyond');
+  fireEvent.click(screen.getByRole('option', { name: 'Beyond initial fifty · #51' }));
+  await waitFor(() => expect(listEvents).toHaveBeenLastCalledWith(expect.objectContaining({ artistIds: [...initial, '51'] })));
+  expect(new URLSearchParams(screen.getByTestId('location').textContent ?? '').get('artists')).toBe([...initial, '51'].join(','));
+  fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+  await waitFor(() => expect(listEvents).toHaveBeenLastCalledWith(expect.objectContaining({ artistIds: [] })));
 });

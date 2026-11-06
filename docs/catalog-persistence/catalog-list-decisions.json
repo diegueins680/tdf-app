@@ -26409,6 +26409,31 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "1656a068e0a5b43edfe2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-activation-verification",
+      "risk": "Removing or changing this synthetic event shape can conceal real-MUI artist lookup, controlled canonical lineup IDs, or authorized latest-event write regressions; it must not become production event authority.",
+      "justification": "This four-field SocialEventDTO object is synthetic test setup for the actual EventLineupEditor and EventArtistSelector. It supplies event21, a future date and an initially empty lineup while real MUI and React Query exercise typing, async hydration, selection beyond the first50, explicit clearing and original save guards. API writes are mocked; it creates no production event, permission, selectable event type or catalog value. The existing SocialEventDTO and server authorization remain canonical.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr704-real-mui-selector-regression-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
+        "line": 18,
+        "kind": "object-registry",
+        "name": "event",
+        "valueCount": 4,
+        "values": [
+          "eventId",
+          "eventTitle",
+          "eventStart",
+          "eventArtists"
+        ]
+      }
     }
   ]
 }

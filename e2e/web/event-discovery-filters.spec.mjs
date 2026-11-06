@@ -147,3 +147,73 @@ test('event cards and calendar resolve venues after row 200 across pages and cit
   await expect(page.getByText('Venue por definir', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
+
+for (const context of ['filter', 'lineup']) for (const selected of [false, true]) {
+  test(`artist search reaches beyond the initial fifty and clears (${context}, ${selected ? 'selected' : 'empty'}) @mobile-flow @critical`, async ({ page, baseURL }) => {
+    const origin = new URL(baseURL).origin;
+    const initial = selected ? ['7'] : [];
+    const artists = Array.from({ length: 51 }, (_, index) => ({ artistId: String(index + 1),
+      artistName: index === 50 ? 'Beyond initial fifty' : `Artist ${index + 1}` }));
+    const searches = [], filters = [], saves = [], errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    let event = { eventId: '21', eventTitle: 'Synthetic lineup search', eventStart: '2099-05-03T20:00:00Z',
+      eventOrganizerPartyId: '42', eventArtists: initial.map(id => artists.find(artist => artist.artistId === id)) };
+    await page.route(localApiFixturePattern(baseURL), async route => {
+      const request = route.request(), url = new URL(request.url());
+      if (url.origin !== origin) return route.abort('blockedbyclient');
+      if (!['fetch', 'xhr'].includes(request.resourceType())) return route.continue();
+      const path = url.pathname;
+      if (path === '/session') return route.fulfill({ json: {
+        username: 'synthetic-artist-selector', displayName: 'Synthetic selector owner', partyId: 42,
+        roles: ['Customer', 'Fan'], modules: [], featureFlags: [],
+        preferences: { locale: 'es', currency: 'USD', timeZone: 'America/Guayaquil' },
+      } });
+      if (path === '/health') return route.fulfill({ json: { status: 'ok' } });
+      if (path === '/session/preferences') return route.fulfill({ json: { locale: 'es', currency: 'USD', timezone: 'America/Guayaquil' } });
+      if (path === '/social-events/artists') {
+        expect(url.searchParams.get('limit')).toBe('50');
+        const name = url.searchParams.get('name') ?? ''; searches.push(name);
+        return route.fulfill({ json: name ? artists.filter(artist => artist.artistName.includes(name)) : artists.slice(0, 50) });
+      }
+      if (path.startsWith('/social-events/artists/')) return route.fulfill({ json: artists.find(artist => path.endsWith('/' + artist.artistId)) });
+      if (path === '/social-events/events') { filters.push(url.searchParams.get('artistId') ?? ''); return route.fulfill({ json: [] }); }
+      if (path === '/social-events/events/21') {
+        if (request.method() === 'PUT') { const payload = request.postDataJSON(); saves.push(payload); event = { ...event, ...payload }; }
+        return route.fulfill({ json: event });
+      }
+      if (path.startsWith('/social-events/')) return route.fulfill({ json: [] });
+      if (path.includes('workflow')) return route.fulfill({ json: { states: [] } });
+      if (path.includes('catalog')) return route.fulfill({ json: { items: [] } });
+      return route.fulfill({ status: 404, json: { error: 'No synthetic fixture' } });
+    });
+    await page.goto(context === 'filter' ? `/social/eventos${selected ? '?artists=7' : ''}` : '/social/eventos/21');
+    const input = page.getByRole('combobox', { name: context === 'filter' ? 'Artistas' : 'Artistas que se presentan', exact: true });
+    await expect(input).toBeEditable();
+    await input.pressSequentially('Beyond');
+    await expect(input).toHaveValue('Beyond');
+    await expect.poll(() => searches.includes('Beyond')).toBe(true);
+    const remote = page.getByRole('option', { name: 'Beyond initial fifty · #51', exact: true });
+    await expect(remote).toBeVisible(); await expect(input).toHaveValue('Beyond');
+    await remote.click();
+    const expected = [...initial, '51'];
+    if (context === 'filter') await expect.poll(() => filters.at(-1)).toBe(expected.join(','));
+    else {
+      await page.getByRole('button', { name: 'Guardar artistas', exact: true }).click();
+      await expect.poll(() => saves.at(-1)?.eventArtists?.map(artist => artist.artistId)).toEqual(expected);
+    }
+    await expect(input).toHaveValue('');
+    await input.focus();
+    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    if (context === 'filter') {
+      // An already-loaded empty filter may use its valid cached response.
+      await expect.poll(() => new URL(page.url()).searchParams.get('artists')).toBeNull();
+      await expect(page.getByRole('button', { name: 'Clear', exact: true })).toHaveCount(0);
+    }
+    else {
+      await page.getByRole('button', { name: 'Guardar artistas', exact: true }).click();
+      await expect.poll(() => saves.length).toBe(2);
+      expect(saves[1].eventArtists).toEqual([]);
+    }
+    await expect(input).toHaveValue(''); expect(errors).toEqual([]);
+  });
+}
