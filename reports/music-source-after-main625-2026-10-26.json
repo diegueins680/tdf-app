@@ -1,0 +1,93 @@
+{
+  "observedAt": "2026-10-27T00:32:04.228132+00:00",
+  "classification": "PARTIAL_PRIVATE_630_PREPARATION_QUALIFIED;ACTUAL_PARENT_INTEGRATION_PENDING",
+  "compositionSource": "bfa85451b6f5b14a5f4721d7246271c70f91608e",
+  "protectedMain": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "observedParent626": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+  "problem": "The original authorized-source regression runner used a14-migration subset and missed mandatory fixture fields and canonical migration readiness.",
+  "expectedBenefit": "Catch source permission and full-schema compatibility failures before users reach unavailable media; affected-user count and monetization/retention benefit remain hypotheses.",
+  "changes": "Existing runner now uses canonical fixtures and production batch, full registry apply/replay/finalreadiness, requiredfixturefields and boundedGittrust. No product policy or handler changes versus parent626. Currentmain63auth and all parentreportfields retained.",
+  "composition": {
+    "observedAt": "2026-10-27T00:24:09.801469+00:00",
+    "protectedMain": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+    "observed626Parent": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+    "qualifiedSqlExecutionSource": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+    "requirements": 149,
+    "all148ProtectedMainNormativeObjectsExact": true,
+    "allParentNormativeObjectsExactExceptAuthImplementationAndTestsExtendedByMain": true,
+    "catalogDecisions": 1341,
+    "entireCatalogObjectsAndReconciliationExactProtectedMain": true,
+    "entireBackendExact626Parent": true,
+    "frontendExactProtectedMain": true,
+    "allSqlExecutionInputsAndHandlerExactQualified35a": true,
+    "migrations": 223,
+    "allCurrent626ReportFieldsPreserved": true,
+    "historical630FieldsKeepOriginalIdentities": true,
+    "noSqlReexecutionClaimed": true,
+    "public630Still533DraftFeatureBase": true,
+    "limit": "Private preparation; actual protected626integration/finalinputcorrespondence required before public update."
+  },
+  "verification": {
+    "requirements": 149,
+    "strictCatalogCandidates": 1341,
+    "unreviewed": 0,
+    "stale": 0,
+    "jsonAndCsv": "PASS",
+    "catalogHistoryRegressionsPassed": 8,
+    "inventoryAndTraceabilityFreshness": "PASS",
+    "immutableSourceAdmission": {
+      "base": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+      "head": "bfa85451b6f5b14a5f4721d7246271c70f91608e",
+      "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mappedChangedSurfaces": [
+        ".github/workflows/ci.yml",
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        "scripts/ci-change-scope.mjs",
+        "scripts/test-music-source-projection.mjs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs"
+      ],
+      "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+    },
+    "sqlExecutionIdentity": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+    "fullCanonicalMigrations": 223,
+    "baselineCounterexamples": 10,
+    "candidateSurfaces": 4,
+    "policyRemovalControls": 4,
+    "bindingArgumentControls": 8,
+    "sqlInputsAndHandlerByteExactQualifiedExecution": true,
+    "sqlReexecutedForMetadataComposition": false,
+    "cleanup": {
+      "ownedDatabasesRemoved": true,
+      "clusterStopped": true,
+      "postgresListenerClosed": true
+    }
+  },
+  "delivery": {
+    "pr": 630,
+    "publicHead": "533b469bc3334f62eeb73a77ddcedb1408100c39",
+    "draft": true,
+    "baseBranch": "fix/music-source-availability-20261026",
+    "publishedThisPreparation": false,
+    "merged": false,
+    "deployed": false,
+    "next": "Normally incorporate actual protected626main, verify finalmaterialcorrespondence and exact-head checks/review/admission. No merge into unprotected feature branch."
+  },
+  "parentCiObservation": {
+    "head": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+    "workflow": 40420558440,
+    "quality": "FAILURE",
+    "persona": {
+      "passed": 579,
+      "existingSkipped": 22,
+      "failed": 1,
+      "case": "Marketplace cart phone WebKit: global30s timeout at final empty-headercheck; matching finalstate. RootcauseUNPROVEN; no waiver/retry/timeout change."
+    },
+    "scope": "Oldc66base parent, not a result on the eventual actual63composition."
+  },
+  "limits": [
+    "Finite real SQL and lexical Haskell binding controls; not compiledHTTP/media-byte authorization/globalproof.",
+    "Original35a execution identity, archive and hashes retained; no relabeling as currentcomposition.",
+    "No realprovider/payment/productionbusinesswrite or deployment; parentintegration and finalreview/CI remainrequired."
+  ]
+}
