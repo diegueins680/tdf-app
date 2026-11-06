@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-03T02:05:16.450557+00:00",
+  "baseline660": "0a9228b0a00eb93ea0924cfec7c149ec0caacad5",
+  "incoming659": "38aa4663da12ef5e064875c1b04b1d09f91475a4",
+  "composition": "7a2e309594ca442ed7e555cf1e3975ea0687c88b",
+  "qualifiedSource": "21a4e75638369b9356e748278370e3fade81fd83",
+  "mainObserved": "261d10dff011529dfaa93bc139cb53af5280bcdc",
+  "problem": "Both legacy new-hold routes used pre-lock eligibility. Six original actual-handler cases admitted sold3/order1/tickets3 after normal organizer postponed/cancelled/private changes committed. The barrier only locked an unchanged Event row; no provider or SMTP calls.",
+  "correction": "Read the locked current Event and apply the existing privacy/workflow purchase predicate before stock/order/ticket effects. Direct creation returns refusal before writes; new legacy checkout throws the same ServerError through its rollback path. Preserve Event-to-terms-to-Tier ordering, previous admitted purchases and existing checkout reuse/settlement/recovery behavior.",
+  "preservation": {
+    "old660": "0a9228b0a00eb93ea0924cfec7c149ec0caacad5",
+    "oldParent659": "93589a5f31426c8542d8c36fe1da37dabad4fd22",
+    "incoming659": "38aa4663da12ef5e064875c1b04b1d09f91475a4",
+    "exactResidualPatches": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "exactOriginalResidual": true,
+        "originalPatchSHA256": "8cbaebce890b79599377f935edb6ce6e77001bf06a2b0b31f6e05970da0efbcf",
+        "composedPatchSHA256": "8cbaebce890b79599377f935edb6ce6e77001bf06a2b0b31f6e05970da0efbcf"
+      },
+      {
+        "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "exactOriginalResidual": true,
+        "originalPatchSHA256": "2f328290456be04197d0133e6f8e4cd1a40828bf1d4a4d332a7a3f373c43c13d",
+        "composedPatchSHA256": "2f328290456be04197d0133e6f8e4cd1a40828bf1d4a4d332a7a3f373c43c13d"
+      },
+      {
+        "path": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "exactOriginalResidual": true,
+        "originalPatchSHA256": "c43dd5411d0d070953376b7caca22700a68679c3827e2ca1573096c7a5d82119",
+        "composedPatchSHA256": "c43dd5411d0d070953376b7caca22700a68679c3827e2ca1573096c7a5d82119"
+      }
+    ],
+    "otherRequirementObjectsExact": 169,
+    "totalRequirements": 170,
+    "catalogDecisionsFileExact": true,
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq-ui",
+      "tdf-mobile",
+      "package.json",
+      "package-lock.json",
+      "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/stack.yaml.lock",
+      ".github/workflows",
+      "scripts/quality-repo.sh",
+      "scripts/run-music-release-worker-once.sh",
+      "tdf-hq/src/TDF/Ticketing"
+    ],
+    "contractExactHistorical": true,
+    "scope": "Exactoriginalrepairreplayed; incomingcatalogobservationsretained instead of refreshing historical consumerCounts. Generated indexes will reflect current consumers.",
+    "composition": "7a2e309594ca442ed7e555cf1e3975ea0687c88b"
+  },
+  "properties": [
+    {
+      "id": "EVT-LEGACY-HOLD-ELIGIBILITY-001",
+      "statement": "A new legacy hold must satisfy current workflow/privacy purchase eligibility under the Event lock before durable effects; earlier admitted orders survive later normal event edits.",
+      "designAssurance": "BOUNDED_VERIFIED",
+      "modelBounds": "6 inputs, 56 states, 58 transitions; one buyer and one editor, open/closed/private abstraction.",
+      "currentImplementationAssurance": "PARTIAL until fresh current114-case Stack/PostgreSQL qualification."
+    }
+  ],
+  "verification": {
+    "currentLocal": "23 model checks; 8 catalog controls; strict JSON/CSV; full root quality; generated inventory/conformance and immutable source admission PASS.",
+    "negativeControls": "Cached eligibility, omitted admission lock and effects committed before refusal each expose counterexamples.",
+    "historicalRuntime": "Original0a922/ee77: 6 of 6 actual counterexamples fail, then 12 new cases pass; 4476 full examples/0 failures/21 pending against227 migrations. The913-operation API snapshot is historical only.",
+    "currentRuntime": "NOT_EXECUTED locally. Require all12eligibility plus102parent cases=114intended cases within expected431dedicatedPG examples, full228migrations on fresh hosted Stack/GHC9.10.3.",
+    "parent659": "Exact38aa all7workflowsSUCCESS; actual102casesmatchedoncein419PG/0fail/full228appliedandreplayed;4091full0fail21pending;23worker;682browser. Parent evidence is not child execution.",
+    "environment": "Initial catalog metadata/control lacked TypeScript; original failures retained privately. Supplied owned verification dependencies, then passed controls and metadata with new receipts. No fresh canonical dependency install or new local Haskell build claimed."
+  },
+  "assurance": {
+    "wholeRequirements": 170,
+    "criticalRequirements": 133,
+    "wholeImplementation": "170UNPROVEN",
+    "wholeRefinement": "170UNPROVEN",
+    "inheritedConditionalSMTLemmas": 11,
+    "newTheorems": 0,
+    "release": "BLOCKED",
+    "limits": [
+      "Finite design model is not a Haskell/SQL refinement proof.",
+      "Cooperating Event writers and stable capability definitions assumed; capability catalog rows are re-read, not universally locked.",
+      "Direct writers, mixed old binaries, every workflow state, price/owner snapshots and alternate-isolation availability remain outside this correction.",
+      "Actual-reservation deadline validity remains the existing owner requirement under666; this patch does not establish it.",
+      "Outer route validation may still refuse closed-event retries; no newly successful retry or live-provider guarantee."
+    ]
+  },
+  "integration": {
+    "existingPR": 660,
+    "base": "fix/ticket-tier-capacity-race-20261028",
+    "draft": true,
+    "autoMerge": false,
+    "upstream": "654protectedmainintegrated261d;657readyfreshmaincontrols;658readyqualified90cases;659readyqualified102cases. Serial protected integration remains required.",
+    "freshHeadReview": "Required for main integration; no old review borrowed.",
+    "messagesOrReviewerRequestsSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Fresh current114handlercases/full228qualification, then markreadyonlyafterallrelevantworkflows pass.",
+    "657/658/659serialmainintegrationunderactual20strictchecks,currentreviewandordinaryadmission.",
+    "Existing661fees/662prices/663promo/664terms/666reservationclockremainseparatefocusedfollowups."
+  ],
+  "evidence": {
+    "archive": "reports/ticket-eligibility-live-parent-2026-11-03/evidence.tar.gz",
+    "sha256": "ccf568c8b77a3773674317a67f8da3e243b6be49cb79236266d1ea93e6bbb8da",
+    "regularFiles": 108,
+    "independentlyVerifiedManifestEntries": 107,
+    "manifest": "reports/ticket-eligibility-live-parent-2026-11-03/manifest.json"
+  }
+}
