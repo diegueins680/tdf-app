@@ -22,6 +22,9 @@ canonical publication body/manifest accounting and routing is reconciled, the
 native selection/consent UI is complete, exact-image HTTP/provider/persistence
 and coordinated restore tests pass, and required independent review/CI are green.
 A root flag or successful build is not that evidence. Keep `RUN_MIGRATIONS=false`.
+Legacy operational Drive writes also require the activation gate; a service
+folder cannot accept a private account upload through the legacy fallback.
+Private uploads require the explicit managed or personal destination.
 The additive November 6 migration follows the five unchanged November 4 steps;
 preserve its introduction commit and the entire ordered migration manifest.
 

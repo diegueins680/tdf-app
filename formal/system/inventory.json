@@ -16321,7 +16321,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "b66681e5a8f6c6ad4eadccac55d381c7fbcb7a7195ee72d853360847ac120114",
+      "sha256": "fcb9345287345c6cc1628b0ccb991e2fe1092f5eefdc6b81823cc34d89a759f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17395,7 +17395,7 @@
     {
       "id": "SURFACE-acc5e4157c112418",
       "path": "tdf-hq/test/TDF/StorageSecuritySpec.hs",
-      "sha256": "859b8dea50e0969d3ebb4096e9546464e85ea1847cb7534eded955ba8834ac75",
+      "sha256": "067f1685db524ae70294b30ea0720903b92fcef4336b41d101868e32ec318f67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21081,7 +21081,7 @@
     },
     {
       "path": "docs/content-storage/rollout.md",
-      "sha256": "43226c07ad7d114734387ac8747d55b104967752a114850e9203d445e6540ae5",
+      "sha256": "4e972882d1e8f704b1f25a0cf99f4b3c87920504898ac51a3e4d87faf516d7d4",
       "authority": "inferred",
       "authorityBasis": "Status: implementation candidate; production activation blocked by the open",
       "kind": "requirement-candidate"

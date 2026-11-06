@@ -22,12 +22,13 @@ import System.FilePath ((</>))
 import System.IO.Temp (withSystemTempDirectory)
 import Test.Hspec
 import TDF.API.Types (DriveUploadDTO(..), DriveTokenResponse(..))
+import TDF.API.Drive (DriveUploadForm(..))
 import TDF.Auth (loadAuthedUser)
 import TDF.Config (loadConfig, assetsRootDir)
 import TDF.ContentStorage
 import TDF.DB (Env(..), makePool, sharedTlsManager)
 import TDF.StorageVault
-import TDF.Server (mkApp, privateDrivePermissionsSafe)
+import TDF.Server (mkApp, driveUploadServer, privateDrivePermissionsSafe)
 import qualified Network.HTTP.Client as HTTP
 import Network.HTTP.Types.Status (statusCode)
 import Network.Wai.Handler.Warp (testWithApplication)
@@ -145,7 +146,10 @@ spec = do
             BS.writeFile source binary
             unsetEnv "CONTENT_STORAGE_UPLOADS_ENABLED"
             run (storeManagedUpload owner file "evidence.bin" "application/octet-stream" "private" key) >>= expectCode 503
+            let legacyForm = DriveUploadForm file Nothing Nothing Nothing (Just "server") Nothing Nothing Nothing
+            run (driveUploadServer admin Nothing legacyForm) >>= expectCode 503
             setEnv "CONTENT_STORAGE_UPLOADS_ENABLED" "true"
+            run (driveUploadServer admin Nothing legacyForm) >>= expectCode 409
             uploaded <- run (storeManagedUpload owner file "evidence.bin" "application/octet-stream" "private" key)
             identifier <- case uploaded of
               Right dto -> pure (fromJust (UUID.fromText (duFileId dto)))

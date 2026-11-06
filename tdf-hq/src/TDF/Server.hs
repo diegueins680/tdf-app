@@ -3294,6 +3294,12 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
   fileSize <- liftIO (getFileSize (fdPayload duFile))
   either throwError pure (validateDriveUploadFileSize fileSize)
   mimeType <- either throwError pure (resolveDriveUploadMimeType (fdFileCType duFile))
+  -- Legacy operational uploads cannot bypass activation or claim privacy in a
+  -- service folder with inherited permissions. Private files need an explicit
+  -- managed/personal destination with the corresponding admission boundary.
+  ContentStorage.requireUploadsEnabled
+  when (not personal && sharing /= Just "public") $
+    throwError (ContentStorage.storageError err409 "storage_destination_required")
   manager <- pure sharedTlsManager
   accessToken <- if personal
     then maybe (throwError (ContentStorage.storageError err409 "storage_reconnect_required"))
