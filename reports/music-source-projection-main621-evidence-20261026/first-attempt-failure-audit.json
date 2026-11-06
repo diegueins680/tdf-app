@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-10-26T16:52:07.621780+00:00",
+  "status": "FAILED_FIXTURE_SETUP_NOT_POLICY_COUNTEREXAMPLE",
+  "originalReceiptStatus": "RUNNING preserved original bug; do not treat as successful or still-running job",
+  "originalExecution": "execution-v1.log",
+  "source": "5a33e3f6c56c0e1fb0b7737cb7dfafb8f113c637",
+  "reason": "Complete-schema party.is_org NOT NULL; legacy partial-schema fixture omitted required data",
+  "baselineReachedCanonical222": true,
+  "policyBaselineAgreementChecksNotReached": true,
+  "candidateNotExecuted": true,
+  "cleanup": "Runner finally completed its owned database cleanup before error; cluster stopped and listenerclosed",
+  "correction": "Explicit FALSE is_org and NOW created_at for synthetic listener; no schema/constraint/assertion weakening",
+  "nextSource": "349c67ee7ffeda6a550978f4bd527b5f33aeab5b"
+}

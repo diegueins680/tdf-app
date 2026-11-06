@@ -1,0 +1,22 @@
+{
+  "head": "43b1b4b00715c5564525d7bce1fa838bf6366122",
+  "tree": "d6bc6a9f63276d68e783687408b2d8336abb597b",
+  "trackedStatus": "",
+  "beforeBuild": "2026-10-26T19:13:38.022737+00:00",
+  "sha256": {
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
+    "tdf-hq/src/TDF/App/Boot.hs": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
+    "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": "69301329d82629dd98495bc6d921a7c63cc10a6a5785cb49e705d0aa8ffa555d",
+    "tdf-hq/src/TDF/Server.hs": "79a3008b96d6814bdeb78f3648a7c83ae9782f9518206a4068504fd3becf5d37",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+    "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
+    "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+    "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+    "tdf-hq/tdf-hq.cabal": "ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869",
+    "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
+    "tdf-hq/test/Spec.hs": "5ea594d34202f994fc86259f841832e6a41e7fc750046b14499e1c9336036ebd",
+    "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs": "0902bc7c7ce5cec1921b1ff25693b7ac2bc98a3dbf8b74f7982f549d247e4ffc",
+    "tdf-hq/test/TDF/ServerSpec.hs": "1e5817c4ed4c9a733fdc37c32b653c28c5048ddd7366208c0dc15e52819abebb"
+  }
+}

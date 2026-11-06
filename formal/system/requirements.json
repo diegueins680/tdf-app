@@ -4863,7 +4863,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001); formal/system/legacy-refund-request-creation.md (PAY-LEGACY-REFUND-REQUEST-001, AUTH-LEGACY-REFUND-REQUEST-001, PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001); formal/system/legacy-refund-history.md (PAY-LEGACY-REFUND-HISTORY-001); formal/system/legacy-ticket-inventory.md (EVT-TIER-EDIT-BOUNDS-001, EVT-LEGACY-RESERVE-BOUNDS-001)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001); formal/system/legacy-refund-request-creation.md (PAY-LEGACY-REFUND-REQUEST-001, AUTH-LEGACY-REFUND-REQUEST-001, PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001); formal/system/legacy-refund-history.md (PAY-LEGACY-REFUND-HISTORY-001); formal/system/legacy-ticket-inventory.md (EVT-TIER-EDIT-BOUNDS-001, EVT-LEGACY-RESERVE-BOUNDS-001); formal/system/legacy-ticket-eligibility.md (EVT-LEGACY-HOLD-ELIGIBILITY-001); formal/system/legacy-ticket-final-amount.md; formal/system/legacy-ticket-pricing-snapshot.md (EVT-LEGACY-PRICE-SNAPSHOT-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4932,7 +4932,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee. Legacy request creation: actual-handler table-lock races and committed paid-state, buyer, amount and organizer changes; compatibility for default/full/partial amounts, invalid amounts, prior requests and organizer authority; a bounded two-requester model exposes missing locks, stale snapshots and stale eligibility. The transaction explicitly selects READ COMMITTED; source-bound receipts retain exact scope and isolation evidence. Historical legacy approval: actual-handler duplicate identity/status and lock-wait cases require zero provider callbacks with preserved history; canonical successive partial replay bypasses the legacy guard. A finite twenty-input model detects omitted-history and pending-only guards. Direct writers, historical reconciliation and full SQL refinement remain separate obligations. Legacy tier edit/reservation concurrency: actual-handler direct/free-checkout counterexamples in both mutation orders, current-sold conditional edits and shared locked inventory authority; empty/exact/increased tier and event capacity compatibility. A bounded two-writer design model exposes stale sold, cached totals and omitted tier locking; no SQL refinement or global all-writer inventory proof.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee. Legacy request creation: actual-handler table-lock races and committed paid-state, buyer, amount and organizer changes; compatibility for default/full/partial amounts, invalid amounts, prior requests and organizer authority; a bounded two-requester model exposes missing locks, stale snapshots and stale eligibility. The transaction explicitly selects READ COMMITTED; source-bound receipts retain exact scope and isolation evidence. Historical legacy approval: actual-handler duplicate identity/status and lock-wait cases require zero provider callbacks with preserved history; canonical successive partial replay bypasses the legacy guard. A finite twenty-input model detects omitted-history and pending-only guards. Direct writers, historical reconciliation and full SQL refinement remain separate obligations. Legacy tier edit/reservation concurrency: actual-handler direct/free-checkout counterexamples in both mutation orders, current-sold conditional edits and shared locked inventory authority; empty/exact/increased tier and event capacity compatibility. A bounded two-writer design model exposes stale sold, cached totals and omitted tier locking; no SQL refinement or global all-writer inventory proof. Legacy new-hold eligibility: actual normal organizer lifecycle/privacy changes racing both legacy purchase routes, exact refusal with zero effects and reverse-order admitted-sale preservation. Current locked predicate is shared; bounded editor/buyer model exposes cached eligibility, omitted lock and committed refusal-effects controls. Capability-catalog governance and SQL refinement remain separate.; actual-handler final fee-inclusive admission boundary/promo/free/replay regressions and separately scoped arithmetic evidence; Legacy pricing snapshot: normal organizer price/currency edits before new-hold admission, zero-effect409, harmless edits, earlier-sale preservation and free idempotent replay. Bounded buyer/editor pricing model with omitted price/currency/lock/refusal-effect controls; historical snapshots and later provider recovery remain separate. Actual Tier FIFO schedules and controlled removal of only the financial read FOR UPDATE verify that the lock is necessary even while Inventory locking remains.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -15060,12 +15060,12 @@
     {
       "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
       "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
-      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact case-sensitive nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic prefix.",
       "domain": "SYS",
       "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
       "source": "formal/system/container-cleanup-evidence.md",
       "contract": "formal/system/container-cleanup-evidence.md",
-      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout and exact case-insensitive error: no such object: <inspected nonce name>. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
+      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout, a case-insensitive fixed error: no such object: prefix and a byte-exact inspected nonce name suffix after existing outer whitespace stripping. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
       "actors": [
         "Hosted CI upload verifier",
         "Maintainer diagnosing a failed gate"
@@ -15117,15 +15117,16 @@
         "scripts/test-persistent-uploads-container-diagnostics.py"
       ],
       "formalModels": [],
-      "verification": "12 mocked actual-main-path tests including four recognized missing-object variants and seven nearby refusals; old classifier reproduces lowercase-response refusal and daemon-error false acceptance. Original diagnostic fault controls remain historical.",
-      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "verification": "13 mocked actual-main-path tests retain the published12 cases and add case-different-name refusal. On unchanged b99, the new expected-refusal assertion fails; removing only the additive exact-name check reproduces that assertion and restored13 pass. Earlier lowercase/daemon-error and diagnostic controls remain historical source-bound evidence.",
+      "evidence": "formal/system/container-cleanup-evidence.md; historical reports/container-cleanup-evidence-2026-10-30.json; separate follow-up reports/container-exact-name-2026-10-30.json",
       "critical": false,
       "status": "specified and implemented",
-      "confidence": "Actual hosted response identifies the later failure cause; finite actual-runner simulations pass. No local Docker or current-head hosted qualification claim.",
+      "confidence": "Tagged Docker/Moby source establishes case-sensitive name identity. The current wrong-case response-binding counterexample is simulated; the published lowercase repair remains distinct. No hosted wrong-case response or production incident is claimed.",
       "ambiguity": [
         "The original PR677 Docker response remains unknown; later PR679 response is retained in job123928715883.",
         "Exact classifier covers the recorded Docker spellings, not every version or concurrent daemon state.",
-        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee.",
+        "The b99 wording combined exact inspected identity and whole-message case insensitivity; this refinement limits capitalization independence to the fixed diagnostic prefix. Correct CLI behavior echoes the requested ref; no real misbound response has been observed."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -16282,6 +16283,87 @@
       "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login.",
       "recovery": "Same-tab metadata expires after eight hours and is purged by account/session cleanup. Browser reload requires reselecting the original binary; successful matching uploads reconcile the original key. Storage denial warns the user to keep the tab open.",
       "observability": "No tokens or private bodies in diagnostics; compiler observations, synthetic test receipts and production version reads identify their evidence boundary."
+    },
+    {
+      "id": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+      "title": "Private non-storable responses for music bearer credentials",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "The eight inventoried music credential operations emit exactly one Cache-Control: private, no-store response header, including GET/HEAD aliases and success or denial responses; unrelated operations and all non-cache headers, status and body remain unchanged.",
+      "authority": "Explicit universal audio implementation directive sections 13, 14 and 17, plus scoped credential-cache implementation instruction 2026-10-26; independent release review remains required.",
+      "source": "docs/music-releases/credential-cache-control.md",
+      "contract": "formal/system/music-credential-cache.md",
+      "property": "For an inventoried method and decoded path, replace all case-insensitive Cache-Control headers with one private/no-store directive. The transformation is idempotent, preserves other response/request data, and is identity for every other request.",
+      "actors": [
+        "Public listener",
+        "Authorized uploader or downloader",
+        "Canonical WAI application and boot response boundary"
+      ],
+      "preconditions": [
+        "Request handling uses Server.mkApp or the canonical boot wrapper.",
+        "WAI method/path/header representations and compliant cache handling are trusted.",
+        "The operation inventory is reviewed when credential endpoints change."
+      ],
+      "inputs": [
+        "Request method, decoded pathInfo and query parameters",
+        "Response status, headers and body from routing, authorization, startup or exception handling"
+      ],
+      "state": {
+        "boundary": "Request-local response transformation; no database or session state",
+        "routeInventory": "Eight music credential operations plus HEAD for their GET routes",
+        "publication": "Existing authorization, feature gates and credential lifetimes remain authoritative"
+      },
+      "allowedTransitions": [
+        "Inventoried response -> one private/no-store directive, otherwise identical response",
+        "Unrelated request -> unchanged response",
+        "Nested transformation -> same single directive"
+      ],
+      "forbiddenTransitions": [
+        "Music bearer credential response remains publicly cacheable through an inventoried route alias.",
+        "A conflicting duplicate Cache-Control survives the transformation.",
+        "Catalog/library/payment responses or other headers/status/body are changed by this scoped policy."
+      ],
+      "effects": [
+        "Replace only the Cache-Control header for inventoried music credential operations."
+      ],
+      "authorization": "The boundary grants no access and does not alter existing feature, territory, ownership, entitlement, upload or DDEX predicates.",
+      "privacy": "Music signed credentials should not be stored by compliant browser/shared HTTP caches. Previously issued grants, storage/CDN object caching and unrelated private response policies remain outside this change.",
+      "concurrency": "The transformation has no shared mutable state and does not consume or replace the response stream.",
+      "idempotency": "Filtering all Cache-Control instances before adding one directive makes nested application/boot boundaries idempotent.",
+      "failure": "Apply the same header transformation to matched denied, startup and exception responses without changing their status, body or recovery semantics.",
+      "recovery": "Application-only rollback requires no data or schema changes but reintroduces the missing cache instruction; existing credential expiry remains unchanged.",
+      "observability": "Focused WAI/Servant and application-route tests plus separate exact-candidate HTTP response-header receipts; no credential logging is added.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-PLAYER-001"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/MusicCredentialCacheMain.hs"
+      ],
+      "formalModels": [],
+      "verification": "Focused canonical Stack run passed42 examples with zero failures against the actual WAI boundary and public Servant router. The three registered actual mkApp cases and fresh candidate HTTP checks remain separate. No mathematical proof, S3 signature enforcement or cache-provider conformance claim.",
+      "evidence": "reports/music-credential-cache-2026-10-26.json; historical actual 5f HTTP baseline with absent header, not credential-byte delivery or a demonstrated disclosure.",
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation; candidate runtime, CI, independent review and deployment remain separate gates.",
+      "ambiguity": [
+        "No new/future credential endpoint is automatically covered without inventory review.",
+        "Noncompliant caches, previous stored responses, media-object/CDN caching and unauthorized redistribution are not solved by this response header.",
+        "No current-candidate compiled HTTP or production acceptance is claimed before its own receipt."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped response boundary and42 finite WAI/public-router examples pass in canonical Stack. Actual mkApp cases, aggregate/current-candidate HTTP checks, CI, independent review and deployment remain pending; this is not formal proof or global cache-policy verification."
+      }
     }
   ]
 }

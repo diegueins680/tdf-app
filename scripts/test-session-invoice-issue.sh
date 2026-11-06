@@ -18,6 +18,6 @@ output=$(stack test ${TDF_STACK_FLAGS:-} tdf-hq:test:tdf-hq-test --jobs 1 \
   printf '%s\n' "$output"; exit 1; }
 printf '%s\n' "$output"
 # A pending example means the database was not configured; a silent pass with
-# no examples would not prove the lock.
-printf '%s\n' "$output" | grep -Eq '^[0-9]+ examples?, 0 failures' || {
+# no examples would not prove the lock; require a positive count.
+printf '%s\n' "$output" | grep -Eq '^[1-9][0-9]* examples?, 0 failures' || {
   echo "session invoice PostgreSQL examples did not run" >&2; exit 1; }
