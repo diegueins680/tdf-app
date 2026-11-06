@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useContactCreation } from '../hooks/useContactCreation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -397,11 +398,11 @@ export default function LeadsPage() {
                   <Typography variant="body2">
                     Contacto: {getLeadContactSummary(singleLead)}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <MarkdownText variant="body2" color="text.secondary">
                     {normalizeLeadFieldValue(singleLead.notes)
                       ? `Contexto: ${singleLead.notes?.trim()}`
                       : 'Todavía no hay contexto registrado. Usa Editar lead para agregar estado, fuente o siguiente paso.'}
-                  </Typography>
+                  </MarkdownText>
                 </Stack>
 
                 <Button
@@ -466,7 +467,7 @@ export default function LeadsPage() {
                             </Stack>
                           </TableCell>
                           <TableCell>{getLeadContactSummary(l)}</TableCell>
-                          {showNotesColumn && <TableCell>{normalizeLeadFieldValue(l.notes) ?? '—'}</TableCell>}
+                          {showNotesColumn && <TableCell><MarkdownText>{normalizeLeadFieldValue(l.notes) ?? '—'}</MarkdownText></TableCell>}
                           <TableCell align="right">
                             <Button
                               size="small"

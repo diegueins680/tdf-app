@@ -44,6 +44,7 @@ import qualified TDF.API.Types as APITypes
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.CourseCheckout as CourseDomain
+import           TDF.Commerce.DepositPolicy (DepositPolicy (..), validateDepositPolicy)
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..))
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
@@ -69,6 +70,8 @@ data ApprovedCourseCheckoutPolicy = ApprovedCourseCheckoutPolicy
   , accpTermsVersion    :: Text
   , accpTermsSummary    :: Text
   , accpCancellationPolicy :: Text
+  , accpDepositPolicy   :: DepositPolicy
+    -- ^ PAY-DEPOSIT-POLICY-001 values approved with this policy version
   } deriving (Eq, Show)
 
 data CourseCheckoutRuntimeView = CourseCheckoutRuntimeView
@@ -208,7 +211,7 @@ loadApprovedCourseCheckoutPolicy now courseKey = do
     "SELECT policy.id::text, policy.policy_version, policy.currency,\
     \ policy.price_minor, policy.tax_bps, policy.payment_mode, policy.deposit_bps,\
     \ policy.hold_minutes, policy.terms_version, policy.terms_summary,\
-    \ policy.cancellation_policy\
+    \ policy.cancellation_policy, policy.minimum_deposit_minor, policy.full_payment_above_bps\
     \ FROM course_checkout_policy policy\
     \ JOIN course course ON course.id = policy.course_id\
     \ WHERE policy.course_id = ? AND policy.active\
@@ -222,18 +225,23 @@ loadApprovedCourseCheckoutPolicy now courseKey = do
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int64, Single Int
        , Single Text, Single Int, Single Int, Single Text
-       , Single Text, Single Text
+       , Single Text, Single Text, Single Int64, Single Int
        )])
   pure $ case rows of
     [( Single policyId, Single version, Single currency, Single priceMinor
      , Single taxBps, Single paymentModeText, Single depositBps
      , Single holdMinutes, Single termsVersion
      , Single termsSummary, Single cancellationPolicy
+     , Single minimumDepositMinor, Single fullPaymentAboveBps
      )] -> do
       paymentMode <- case paymentModeText of
         "full" -> Just CourseDomain.CourseFullPayment
         "deposit" -> Just CourseDomain.CourseDeposit
         _ -> Nothing
+      depositPolicy <- either (const Nothing) Just $ validateDepositPolicy DepositPolicy
+        { dpMinimumDepositMinor = minimumDepositMinor
+        , dpFullPaymentAboveBps = fullPaymentAboveBps
+        }
       Just ApprovedCourseCheckoutPolicy
         { accpId = policyId
         , accpVersion = version
@@ -247,6 +255,7 @@ loadApprovedCourseCheckoutPolicy now courseKey = do
         , accpTermsVersion = termsVersion
         , accpTermsSummary = termsSummary
         , accpCancellationPolicy = cancellationPolicy
+        , accpDepositPolicy = depositPolicy
         }
     _ -> Nothing
 
@@ -387,7 +396,7 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
             throwError (conflictError
               "Course terms changed; review the current terms and accept them again")
       price <- either (throwError . conflictError) pure $
-        CourseDomain.calculateCoursePrice
+        CourseDomain.calculateCoursePriceWith (accpDepositPolicy policy)
           (accpPriceMinor policy)
           (accpTaxBps policy)
           (accpPaymentMode policy)
@@ -1162,7 +1171,7 @@ confirmPublicCourseDatafastStatus rawSlug rawRegistrationId mLookupToken rawReso
           bindCourseProviderResource context attempt Checkout.ProviderDatafast
             (cpcEnvironment context) (ServiceStorefront.sdfEntityId datafast)
             "payment" paymentId (Just resourcePath) Checkout.AttemptProcessing "status"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = cpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -1303,7 +1312,7 @@ capturePublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken request = 
             merchantRef "capture" captureId
             (Just ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture"))
             Checkout.AttemptProcessing "capture"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = cpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal

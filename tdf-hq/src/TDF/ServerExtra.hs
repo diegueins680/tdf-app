@@ -4885,6 +4885,8 @@ resolveInstagramDeliveryAccount mPreferredAccountId = do
         [ M.SocialSyncAccountPlatform ==. "instagram"
         , M.SocialSyncAccountStatus ==. "connected"
         , M.SocialSyncAccountAccessToken !=. Nothing
+        -- AUTHORITY-094: only administrator-designated accounts deliver.
+        , M.SocialSyncAccountDeliveryDesignated ==. True
         ]
       ordering = [Desc M.SocialSyncAccountUpdatedAt, Desc M.SocialSyncAccountCreatedAt]
       mCleanPreferred = stripNonEmptyText mPreferredAccountId

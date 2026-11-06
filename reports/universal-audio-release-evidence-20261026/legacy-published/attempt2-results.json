@@ -1,0 +1,267 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-legacy-published-verification-20261026-v2/playwright.config.mjs",
+    "rootDir": "/private/tmp/tdf-legacy-published-verification-20261026-v2",
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-legacy-published-verification-20261026-v2/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-legacy-published-verification-20261026-v2",
+        "testIgnore": [],
+        "testMatch": [
+          "legacy-provider-playback.spec.mjs"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-legacy-published-verification-20261026-v2/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-legacy-published-verification-20261026-v2",
+        "testIgnore": [],
+        "testMatch": [
+          "legacy-provider-playback.spec.mjs"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-legacy-published-verification-20261026-v2/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "legacy-provider-playback.spec.mjs",
+      "file": "legacy-provider-playback.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2933,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:04:33.449Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "legacy-provider-boundary.json",
+                      "contentType": "application/json",
+                      "body": "ewogICJwcm92aWRlclVybCI6ICJodHRwczovL29wZW4uc3BvdGlmeS5jb20vdHJhY2svc3ludGhldGljLXJlbGVhc2UiLAogICJyZWxlYXNlUmVhZHMiOiAxLAogICJ1bmV4cGVjdGVkTXV0YXRpb25zIjogW10sCiAgImRlbmllZEV4dGVybmFsIjogWwogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUtYXNzZXRzLmkucG9zdGhvZy5jb20iLAogICAgICAicmVzb3VyY2VUeXBlIjogInNjcmlwdCIKICAgIH0sCiAgICB7CiAgICAgICJvcmlnaW4iOiAiaHR0cHM6Ly9ldS5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiUE9TVCIsCiAgICAgICJwYXRoIjogIi9mbGFncy8iCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUtYXNzZXRzLmkucG9zdGhvZy5jb20iLAogICAgICAicmVzb3VyY2VUeXBlIjogImZldGNoIiwKICAgICAgIm1ldGhvZCI6ICJHRVQiLAogICAgICAicGF0aCI6ICIvYXJyYXkvcGhjX3prNkhLd1dHeFZOYjJ2NG1RZ2ZLYmFncFpYZFdCanlGaDlNUVFqcGV4UVhXL2NvbmZpZyIKICAgIH0sCiAgICB7CiAgICAgICJvcmlnaW4iOiAiaHR0cHM6Ly9ldS5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiUE9TVCIsCiAgICAgICJwYXRoIjogIi9mbGFncy8iCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vb3Blbi5zcG90aWZ5LmNvbSIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiCiAgICB9CiAgXSwKICAicHJvdmlkZXJOYXZpZ2F0aW9ucyI6IFsKICAgIHsKICAgICAgInVybCI6ICJodHRwczovL29wZW4uc3BvdGlmeS5jb20vdHJhY2svc3ludGhldGljLXJlbGVhc2UiLAogICAgICAicmVmZXJlciI6IG51bGwKICAgIH0KICBdLAogICJkZWNsYXJlZFJlY29uY2lsaWF0aW9ucyI6IFsKICAgICIvc2Vzc2lvbi9vbmJvYXJkaW5nL3JlY29uY2lsZSIKICBdLAogICJsb2FkZWRFbnRyaWVzIjogWwogICAgImh0dHBzOi8vd3d3LnRkZnJlY29yZHMubmV0L2Fzc2V0cy9pbmRleC1EWlJtbUQwbC5qcyIKICBdLAogICJvYnNlcnZlZCI6IHsKICAgICJjb21tYW5kcyI6IFtdLAogICAgInRha2VvdmVycyI6IFsKICAgICAgMjQyNi42MDAwMDAwMjM4NDIKICAgIF0KICB9LAogICJsaW1pdGF0aW9uIjogIlN5bnRoZXRpYyBBUEkvcHJvdmlkZXItZGVzdGluYXRpb24gcmVzcG9uc2VzOyBubyBleHRlcm5hbCBuZXR3b3JrLCBleHRlcm5hbCBwbGF5YmFjaywgb3IgbmF0aXZlIGRlY29kZXIgZXZpZGVuY2UuIgp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-fd0e1f65fe7b6a121939",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 111,
+          "column": 1
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2289,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:04:36.592Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "legacy-provider-boundary.json",
+                      "contentType": "application/json",
+                      "body": "ewogICJwcm92aWRlclVybCI6ICJodHRwczovL3d3dy55b3V0dWJlLmNvbS9jaGFubmVsL3N5bnRoZXRpYy1hcnRpc3QiLAogICJyZWxlYXNlUmVhZHMiOiAxLAogICJ1bmV4cGVjdGVkTXV0YXRpb25zIjogW10sCiAgImRlbmllZEV4dGVybmFsIjogWwogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUtYXNzZXRzLmkucG9zdGhvZy5jb20iLAogICAgICAicmVzb3VyY2VUeXBlIjogInNjcmlwdCIKICAgIH0sCiAgICB7CiAgICAgICJvcmlnaW4iOiAiaHR0cHM6Ly9ldS5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiUE9TVCIsCiAgICAgICJwYXRoIjogIi9mbGFncy8iCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUuaS5wb3N0aG9nLmNvbSIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIlBPU1QiLAogICAgICAicGF0aCI6ICIvZmxhZ3MvIgogICAgfSwKICAgIHsKICAgICAgIm9yaWdpbiI6ICJodHRwczovL2V1LWFzc2V0cy5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiR0VUIiwKICAgICAgInBhdGgiOiAiL2FycmF5L3BoY196azZIS3dXR3hWTmIydjRtUWdmS2JhZ3BaWGRXQmp5Rmg5TVFRanBleFFYVy9jb25maWciCiAgICB9CiAgXSwKICAicHJvdmlkZXJOYXZpZ2F0aW9ucyI6IFtdLAogICJkZWNsYXJlZFJlY29uY2lsaWF0aW9ucyI6IFsKICAgICIvc2Vzc2lvbi9vbmJvYXJkaW5nL3JlY29uY2lsZSIKICBdLAogICJsb2FkZWRFbnRyaWVzIjogWwogICAgImh0dHBzOi8vd3d3LnRkZnJlY29yZHMubmV0L2Fzc2V0cy9pbmRleC1EWlJtbUQwbC5qcyIKICBdLAogICJvYnNlcnZlZCI6IHsKICAgICJjb21tYW5kcyI6IFtdLAogICAgInRha2VvdmVycyI6IFtdCiAgfSwKICAibGltaXRhdGlvbiI6ICJTeW50aGV0aWMgQVBJL3Byb3ZpZGVyLWRlc3RpbmF0aW9uIHJlc3BvbnNlczsgbm8gZXh0ZXJuYWwgbmV0d29yaywgZXh0ZXJuYWwgcGxheWJhY2ssIG9yIG5hdGl2ZSBkZWNvZGVyIGV2aWRlbmNlLiIKfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-0c0e8e4046bf524b3b6c",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 148,
+          "column": 1
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3089,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:04:39.984Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "legacy-provider-boundary.json",
+                      "contentType": "application/json",
+                      "body": "ewogICJwcm92aWRlclVybCI6ICJodHRwczovL29wZW4uc3BvdGlmeS5jb20vdHJhY2svc3ludGhldGljLXJlbGVhc2UiLAogICJyZWxlYXNlUmVhZHMiOiAxLAogICJ1bmV4cGVjdGVkTXV0YXRpb25zIjogW10sCiAgImRlbmllZEV4dGVybmFsIjogWwogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUtYXNzZXRzLmkucG9zdGhvZy5jb20iLAogICAgICAicmVzb3VyY2VUeXBlIjogInNjcmlwdCIKICAgIH0sCiAgICB7CiAgICAgICJvcmlnaW4iOiAiaHR0cHM6Ly9ldS5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiUE9TVCIsCiAgICAgICJwYXRoIjogIi9mbGFncy8iCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUuaS5wb3N0aG9nLmNvbSIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIlBPU1QiLAogICAgICAicGF0aCI6ICIvZmxhZ3MvIgogICAgfSwKICAgIHsKICAgICAgIm9yaWdpbiI6ICJodHRwczovL2V1LWFzc2V0cy5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiR0VUIiwKICAgICAgInBhdGgiOiAiL2FycmF5L3BoY196azZIS3dXR3hWTmIydjRtUWdmS2JhZ3BaWGRXQmp5Rmg5TVFRanBleFFYVy9jb25maWciCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vb3Blbi5zcG90aWZ5LmNvbSIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiCiAgICB9CiAgXSwKICAicHJvdmlkZXJOYXZpZ2F0aW9ucyI6IFsKICAgIHsKICAgICAgInVybCI6ICJodHRwczovL29wZW4uc3BvdGlmeS5jb20vdHJhY2svc3ludGhldGljLXJlbGVhc2UiLAogICAgICAicmVmZXJlciI6IG51bGwKICAgIH0KICBdLAogICJkZWNsYXJlZFJlY29uY2lsaWF0aW9ucyI6IFsKICAgICIvc2Vzc2lvbi9vbmJvYXJkaW5nL3JlY29uY2lsZSIKICBdLAogICJsb2FkZWRFbnRyaWVzIjogWwogICAgImh0dHBzOi8vd3d3LnRkZnJlY29yZHMubmV0L2Fzc2V0cy9pbmRleC1EWlJtbUQwbC5qcyIKICBdLAogICJvYnNlcnZlZCI6IHsKICAgICJjb21tYW5kcyI6IFtdLAogICAgInRha2VvdmVycyI6IFsKICAgICAgMjQ2OC41OTk5OTk5MDQ2MzI2CiAgICBdCiAgfSwKICAibGltaXRhdGlvbiI6ICJTeW50aGV0aWMgQVBJL3Byb3ZpZGVyLWRlc3RpbmF0aW9uIHJlc3BvbnNlczsgbm8gZXh0ZXJuYWwgbmV0d29yaywgZXh0ZXJuYWwgcGxheWJhY2ssIG9yIG5hdGl2ZSBkZWNvZGVyIGV2aWRlbmNlLiIKfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-7fe45a78aa06a5ed1f5d",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 111,
+          "column": 1
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2484,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:04:43.275Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "legacy-provider-boundary.json",
+                      "contentType": "application/json",
+                      "body": "ewogICJwcm92aWRlclVybCI6ICJodHRwczovL3d3dy55b3V0dWJlLmNvbS9jaGFubmVsL3N5bnRoZXRpYy1hcnRpc3QiLAogICJyZWxlYXNlUmVhZHMiOiAxLAogICJ1bmV4cGVjdGVkTXV0YXRpb25zIjogW10sCiAgImRlbmllZEV4dGVybmFsIjogWwogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUtYXNzZXRzLmkucG9zdGhvZy5jb20iLAogICAgICAicmVzb3VyY2VUeXBlIjogInNjcmlwdCIKICAgIH0sCiAgICB7CiAgICAgICJvcmlnaW4iOiAiaHR0cHM6Ly9ldS5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiUE9TVCIsCiAgICAgICJwYXRoIjogIi9mbGFncy8iCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vYXBpLmZyYW5rZnVydGVyLmRldiIsCiAgICAgICJyZXNvdXJjZVR5cGUiOiAiZmV0Y2giLAogICAgICAibWV0aG9kIjogIkdFVCIsCiAgICAgICJwYXRoIjogIi92MS9sYXRlc3QiCiAgICB9LAogICAgewogICAgICAib3JpZ2luIjogImh0dHBzOi8vZXUtYXNzZXRzLmkucG9zdGhvZy5jb20iLAogICAgICAicmVzb3VyY2VUeXBlIjogImZldGNoIiwKICAgICAgIm1ldGhvZCI6ICJHRVQiLAogICAgICAicGF0aCI6ICIvYXJyYXkvcGhjX3prNkhLd1dHeFZOYjJ2NG1RZ2ZLYmFncFpYZFdCanlGaDlNUVFqcGV4UVhXL2NvbmZpZyIKICAgIH0sCiAgICB7CiAgICAgICJvcmlnaW4iOiAiaHR0cHM6Ly9ldS5pLnBvc3Rob2cuY29tIiwKICAgICAgInJlc291cmNlVHlwZSI6ICJmZXRjaCIsCiAgICAgICJtZXRob2QiOiAiUE9TVCIsCiAgICAgICJwYXRoIjogIi9mbGFncy8iCiAgICB9CiAgXSwKICAicHJvdmlkZXJOYXZpZ2F0aW9ucyI6IFtdLAogICJkZWNsYXJlZFJlY29uY2lsaWF0aW9ucyI6IFsKICAgICIvc2Vzc2lvbi9vbmJvYXJkaW5nL3JlY29uY2lsZSIKICBdLAogICJsb2FkZWRFbnRyaWVzIjogWwogICAgImh0dHBzOi8vd3d3LnRkZnJlY29yZHMubmV0L2Fzc2V0cy9pbmRleC1EWlJtbUQwbC5qcyIKICBdLAogICJvYnNlcnZlZCI6IHsKICAgICJjb21tYW5kcyI6IFtdLAogICAgInRha2VvdmVycyI6IFtdCiAgfSwKICAibGltaXRhdGlvbiI6ICJTeW50aGV0aWMgQVBJL3Byb3ZpZGVyLWRlc3RpbmF0aW9uIHJlc3BvbnNlczsgbm8gZXh0ZXJuYWwgbmV0d29yaywgZXh0ZXJuYWwgcGxheWJhY2ssIG9yIG5hdGl2ZSBkZWNvZGVyIGV2aWRlbmNlLiIKfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-7d20c5718ac91791462f",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 148,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-26T21:04:32.307Z",
+    "duration": 13560.023000000001,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

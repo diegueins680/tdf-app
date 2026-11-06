@@ -580,6 +580,11 @@
   },
   {
    "method": "GET",
+   "path": "/music/search",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
    "path": "/openapi.yaml",
    "boundary": "public-diagnostic"
   },
@@ -667,6 +672,12 @@
   {
    "method": "POST",
    "path": "/public/domo/quotes/{quoteId}/accept",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/domo/quotes/{quoteId}/cancel",
    "boundary": "capability-header",
    "header": "X-Order-Lookup-Token"
   },

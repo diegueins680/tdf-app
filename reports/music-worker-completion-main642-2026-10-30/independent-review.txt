@@ -1,0 +1,48 @@
+Independent bounded final review of current-main PR668 worker completion diagnostics, 2026-10-30.
+
+Qualified source:12583b56d60ad4fc8a3dfdf93a9fc395447d7790.
+Protected main baseline:0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5.
+Previous published668:7082d7d045dcd6b2c7f8d33282e9ff2d6588d617.
+
+Conclusion:zero blocking defects found in the reviewed ROOT-authored qualification, seal and publication machinery or supplied completed evidence. This is bounded source/artifact review, not current-head GitHub approval, integration permission, an independent runtime rerun or a complete proof. I authored the isolated merge preparation; ROOT independently reviewed it. My peer-review scope here is ROOT's new qualification drivers, their cleanup correction, raw results and source/evidence correspondence.
+
+Source preservation independently checked: normal parents[7082,0bd], clean HEAD, three owned helper/unit/runtime scripts exact7082, quality-repo exact main plus its one existing worker unit registration. Whole production backend/UI/workflows/ops/dependencies/Mobile are exact main. All159 incoming main requirement objects and unchanged SYS-WORKER-COMPLETION-001 produce160 total. The worker contract and all208 original historical report/tree blobs remain exact7082; historical results are not relabeled as current source. No application worker, deadline, close-completion predicate, assertion, retry, Haskell module or production schema was changed in this reconciliation.
+
+Independent read-only rehash checks verified1,431 registered filesystem/Git/Mobile bindings, all987 tracked backend inputs,208 historical Git/filesystem blobs and52 assurance evidence artifacts. Source digest a4e294ba8c1e1880c5094a2aa59562f5d864185108a03afc8378df784c2fe4d9 and the report's files/digest/revision/Mobile/clean provenance match current inputs. Root quality/admission/catalog8 and assurance receipts record actual0. The final seal separately records actual0 and matches the current seal/output hashes. No local Haskell/test/serving binary qualification is claimed.
+
+I read actual raw Node control logs. Omitted exit observation fails ERR_ASSERTION with awaiting-exit versus exited-awaiting-close; completion-at-exit fails ERR_ASSERTION Missing expected rejection; discarded timeout context fails the expected Worker completion snapshot message assertion. Each selected run reports1 test/0 pass/1 fail/0 skip. These are intended real assertions, not setup/compiler failures. Correct restored source copies report6 tests/6 pass/0 fail/0 skip; their bytes match current Git. The context control removes CLI message context and structured property together as one logical fault; it is not independent fault coverage for each individual field. The frozen checkout was never mutated by these controls.
+
+I read the local runtime log with exactly seven PASS scenarios, final7-scenario success and external driver actual0. The new owned PostgreSQL16.13 cluster ran on127.0.0.1:60934 with unique data/socket directories, verified server directory/port before Node, explicit sanitized routing and a fresh nonce test database. Curl is the actual transport fault injector; no network S3/provider compatibility is established. Runtime completion retained the same30-second close-based predicate. Post-run receipts record zero owned databases/sessions, owned process group removed, pg_ctl stop0 and final stopped state. I independently performed only read-only pg_ctl status on /private/tmp/tdf-worker642-data-9500c0d94b68: actual exit3, 'no server running'; a signal0 existence probe found runner group87779 absent. No database/server was started, SQL executed or TERM/KILL sent by me.
+
+The pre-use cleanup blocker is resolved and remains documented historically. Child cleanup exceptions now cannot skip owned PostgreSQL stop/status/save; ESRCH is specifically tolerated and primary/unexpected cleanup exceptions are retained with BaseExceptionGroup. Four supplied actual-AST mocked fault controls cover permission failure, ESRCH race, primary-plus-child error and pg_ctl stop error. These establish listed mock ordering/error-retention behavior, not universal OS-signal/interruption cleanup. The actual normal seven-case cleanup observation is a separate empirical result. Catastrophic Node/harness interruption, detached descendants outside the runner group, process scheduling and forced termination remain bounded limitations; no universal process-tree claim follows.
+
+Assurance limits checked:160 whole requirements and320 implementation/refinement obligations remain UNPROVEN. Eleven inherited conditional source-derived SMT results retain translation assumptions; formal release is BLOCKED and executionAllowed false. No new complete proof or universal verifier guarantee is established.
+
+I inspected ROOT's seal, publisher and committed-artifact verifier. The publisher retains historical evidence, explicitly limits current qualification to Node/process/localPG16, requires a report-only child and excludes PostgreSQL data/socket directories from collection. The verifier requires exactly four new report paths, verifies Git/filesystem parity and unique safe regular archive members/hash/size bindings, and preserves all other trees by exact report-only diff. Publisher/archive/containing-Git verification have not executed at review time and remain future work; fresh published-head all-selected CI, exact-head independent approval, main freshness and protected FIFO remain required. No oldhead approval is borrowed.
+
+The recurring hosted677 completion failure remains UNKNOWN and unrepaired. Last synchronous PASS/source-order inference is not observed worker state. Historical668 backend SUCCESS/native4045/0/21 and23 worker scenario passes on old main6197 are separately historical; neither that sample nor current local7 proves the recurring cause repaired. PostgreSQL17, realS3/provider, DDEXschema, authenticated application/production behavior, serving deployment and broad platform correctness are not qualified here. No new code/business repair was introduced to make the hosted sample pass.
+
+No tests, source controls, runtime driver, browser, heavy build, provider or remote mutation was independently executed in this review. Commands were limited to read-only source/evidence parsing, rehash/Git comparison and the stopped-cluster/group status probes noted above. Detailed independent check receipt SHA256: f3b4f9b39e79b366c6a8f5a0d4d43606aaa6d018ba704b5ac5cbcac137c2732c, at /private/tmp/tdf-music-worker-completion-main642-independent-checks-20261030.json.
+
+Exact evidence SHA256 bindings:
+- source-correspondence.json: b46ae79fd8adc13149d5786a5f0755f578cda3e69019096047b35d2485573494
+- seal-execution.json: 9cf7f86f512767a984b150b7772c4717741c85f55af6a49d3f94bc99c3e5856b
+- native-driver-result.json: 29414afaf059458ad677414cb7b6ce78acdab436a9e78d29e2abdfe3cc4de6fd
+- native-concurrency/execution.json: 45be87c07933ec6791a1ebce82778df03780f83f61e254e3d5373e1746d30d82
+- native-concurrency/worker-runtime.log: ff1d2c6eae389801df52fc483f6c11190704200e5aa7f0f948bf784c1af2efe7
+- native-concurrency/postgres-stop.log: ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d
+- native-concurrency/postgres-server.log: 0a24003bbb7f4f0c230a4400494b984d30d2c6db05579db847688070066f63e5
+- controls.json: e5608a68971426bbe3e291eaaeef2ac1cf0cacd874543b27bf5e5feab9c473de
+- cleanup-controls.json: 0a32508fafbd44c8d28e6e93206ebc11666fcbc62f6ef3ae8d6eb5a19c719349
+- root-quality-result.json: 9443191f12685571b0c6fc6193619ca45aec17a30a76ae9511a562ffe1ed9795
+- assurance-execution.json: d503f882894739cb473c8f632f46549b3d78147c21f78a38d3829bbfb4e3adca
+- assurance-committed/sources.json: 156e3ca97ba94af07f53bf80345a3de8315b42af8c91995416888929b8cba705
+- assurance-committed/report.json: b2ed1973e9ab41e3371de53b4b5f36aac926d19b268565bf65e61a395b1623b3
+- current-controls/restored-positive.log: 452cde17e37f9172ae858317aa6a6c5c3f5090efb1f4b78e8e7b776f13b0be54
+- tdf-music-worker-completion-main642-root-quality-20261030.py: 74c740a7e8605c058ee41cc2545bb1e246906a2c05e351d483fe8a10dd271517
+- tdf-music-worker-completion-main642-controls-20261030.py: f804f95a3e99921ea2260acfa321454a6f36ecb6838a6ffc225afeebed2a4083
+- tdf-music-worker-completion-main642-native-pg-20261030.py: 416f48ebccb879d72b50aecc7472fe0e8a1023d689d2d1dd502d0f840fff8613
+- tdf-music-worker-completion-main642-cleanup-controls-20261030.py: c223a5bf014026f181f080e580f1e6ae694394b7120b68e1386e2b36ba1ccfa2
+- tdf-music-worker-completion-main642-seal-20261030.py: b60a4ab207649680fe1310b8aa2f8fd441d6e717a7ead0a8afc6e8509a4bed2d
+- tdf-music-worker-completion-main642-publish-20261030.py: 136b11815a9e2ba9d2fbfacb3866719a84a6a19a6194741539b27a9e70b848aa
+- tdf-music-worker-completion-main642-verify-committed-20261030.py: a588aeb606c70707e5bc32e53bed46660ec634b06c0383632b27cdfc6d67dc6f

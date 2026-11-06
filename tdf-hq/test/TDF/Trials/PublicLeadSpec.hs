@@ -575,6 +575,8 @@ spec = do
           , Models.apiTokenPartyId = partyId
           , Models.apiTokenLabel = Just "anonymous-public-lead"
           , Models.apiTokenActive = False
+          , Models.apiTokenIssuedAtEpoch = Nothing
+          , Models.apiTokenExpiresAtEpoch = Nothing
           }
         pure ()
 
@@ -3070,6 +3072,8 @@ initializePartySchema = do
     \\"party_id\" INTEGER NOT NULL,\
     \\"label\" VARCHAR NULL,\
     \\"active\" BOOLEAN NOT NULL,\
+    \\"issued_at_epoch\" INTEGER NULL,\
+    \\"expires_at_epoch\" INTEGER NULL,\
     \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\")\
     \)"
     []

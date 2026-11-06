@@ -1,0 +1,294 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-26T19:32:02Z",
+  "purpose": "Read-only PR624 hosted qualification monitor; no review request, rerun, source edit, merge, production probe, or deployment performed by this agent",
+  "repository": "diegueins680/tdf-app",
+  "pullRequest": 624,
+  "url": "https://github.com/diegueins680/tdf-app/pull/624",
+  "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+  "base": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+  "computedMerge": {
+    "commit": "c79de0ca05c0dc882ef6d5ad4c8af4a6fc071ae6",
+    "tree": "f64d801e110320edfeee4d789f03c2176b24cacb",
+    "parents": [
+      "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+      "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f"
+    ]
+  },
+  "ci": {
+    "run": 40383342111,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342111",
+    "requiredPolicySource": "Root REST branch-protection observation2026-10-26T19:12Z; this agent GitHub integration protection GET returned403, not absence of protection",
+    "requiredContexts": [
+      {
+        "name": "quality",
+        "state": "success",
+        "id": 121798998751,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342111/job/121798998751",
+        "completedAt": "2026-10-26T19:30:31Z"
+      },
+      {
+        "name": "api-contracts",
+        "state": "success",
+        "id": 121785863988,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342111/job/121785863988",
+        "completedAt": "2026-10-26T19:06:32Z"
+      },
+      {
+        "name": "production-migrations",
+        "state": "success",
+        "id": 121785864047,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342111/job/121785864047",
+        "completedAt": "2026-10-26T19:06:38Z"
+      },
+      {
+        "name": "specification-contracts",
+        "state": "success",
+        "id": 121785040309,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040309",
+        "completedAt": "2026-10-26T19:08:27Z"
+      },
+      {
+        "name": "verify",
+        "state": "success",
+        "id": 121785040801,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040801",
+        "completedAt": "2026-10-26T19:12:05Z"
+      },
+      {
+        "name": "postgres-foundation",
+        "state": "success",
+        "id": 121785041027,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041027",
+        "completedAt": "2026-10-26T19:06:01Z"
+      },
+      {
+        "name": "postgres-api",
+        "state": "success",
+        "id": 121785040815,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040815",
+        "completedAt": "2026-10-26T19:04:29Z"
+      },
+      {
+        "name": "postgres-task-commit",
+        "state": "success",
+        "id": 121785041104,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041104",
+        "completedAt": "2026-10-26T19:05:36Z"
+      },
+      {
+        "name": "postgres-task-read",
+        "state": "success",
+        "id": 121785040760,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040760",
+        "completedAt": "2026-10-26T19:04:32Z"
+      },
+      {
+        "name": "postgres-task-revision",
+        "state": "success",
+        "id": 121785041013,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041013",
+        "completedAt": "2026-10-26T19:05:02Z"
+      },
+      {
+        "name": "postgres-task-revisioned-read",
+        "state": "success",
+        "id": 121785040836,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040836",
+        "completedAt": "2026-10-26T19:04:38Z"
+      },
+      {
+        "name": "postgres-raci-reassignment",
+        "state": "success",
+        "id": 121785041101,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041101",
+        "completedAt": "2026-10-26T19:06:37Z"
+      },
+      {
+        "name": "postgres-raci-editor-context",
+        "state": "success",
+        "id": 121785041179,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041179",
+        "completedAt": "2026-10-26T19:06:27Z"
+      },
+      {
+        "name": "postgres-task-completion",
+        "state": "success",
+        "id": 121785041126,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041126",
+        "completedAt": "2026-10-26T19:06:38Z"
+      },
+      {
+        "name": "postgres-complete-schema",
+        "state": "success",
+        "id": 121785040971,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040971",
+        "completedAt": "2026-10-26T19:05:12Z"
+      },
+      {
+        "name": "main-integration-admission",
+        "state": "success",
+        "id": 57297136594,
+        "url": "https://github.com/diegueins680/tdf-app/actions/workflows/merge-admission.yml",
+        "completedAt": "2026-10-26T19:04:09Z"
+      },
+      {
+        "name": "models-and-postgres",
+        "state": "success",
+        "id": 121785040174,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342297/job/121785040174",
+        "completedAt": "2026-10-26T19:06:09Z"
+      },
+      {
+        "name": "social-client",
+        "state": "success",
+        "id": 121785040704,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342297/job/121785040704",
+        "completedAt": "2026-10-26T19:17:03Z"
+      },
+      {
+        "name": "postgres-properties",
+        "state": "success",
+        "id": 121785039526,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342007/job/121785039526",
+        "completedAt": "2026-10-26T19:04:54Z"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "state": "success",
+        "id": 121785040014,
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342109/job/121785040014",
+        "completedAt": "2026-10-26T19:06:06Z"
+      }
+    ],
+    "results": {
+      "native": {
+        "passed": 40,
+        "realMediaAndDeclaredMocks": "Existing native suite includes explicitly declared mocked case;40 passed is not40 real-media cases"
+      },
+      "primaryPersonas": {
+        "total": 602,
+        "passed": 580,
+        "skipped": 22,
+        "failed": 0
+      },
+      "defaultOff": {
+        "passed": 10
+      },
+      "discovery": {
+        "passed": 25
+      }
+    },
+    "artifacts": {
+      "downloadedByThisMonitor": false,
+      "verification": "IDs and SHA256 digests observed in GitHub artifact API and upload job logs; ZIP bytes not locally downloaded or hashed by this monitor",
+      "items": [
+        {
+          "id": 12681587503,
+          "name": "discovery-web-e2e-40383342111",
+          "size_in_bytes": 3041,
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12681587503",
+          "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12681587503/zip",
+          "expired": false,
+          "created_at": "2026-10-26T19:30:19Z",
+          "expires_at": "2026-11-09T19:30:18Z",
+          "updated_at": "2026-10-26T19:30:19Z",
+          "digest": "sha256:a05f74184683598b032b8be4f5fb4cddf7552d23b193207bee9fc038fc198647",
+          "workflow_run": {
+            "id": 40383342111,
+            "repository_id": 1089950892,
+            "head_repository_id": 1089950892,
+            "head_branch": "fix/legacy-audio-links-20261026",
+            "head_sha": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f"
+          }
+        },
+        {
+          "id": 12681507635,
+          "name": "persona-web-e2e-40383342111",
+          "size_in_bytes": 66521557,
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12681507635",
+          "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12681507635/zip",
+          "expired": false,
+          "created_at": "2026-10-26T19:30:17Z",
+          "expires_at": "2026-11-09T19:30:13Z",
+          "updated_at": "2026-10-26T19:30:17Z",
+          "digest": "sha256:b9f7df16843857c2e94b89689517093cff46015aecd3ba48bac6a9fe08ea6316",
+          "workflow_run": {
+            "id": 40383342111,
+            "repository_id": 1089950892,
+            "head_repository_id": 1089950892,
+            "head_branch": "fix/legacy-audio-links-20261026",
+            "head_sha": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f"
+          }
+        },
+        {
+          "id": 12679807980,
+          "name": "native-music-40383342111",
+          "size_in_bytes": 540863,
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12679807980",
+          "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12679807980/zip",
+          "expired": false,
+          "created_at": "2026-10-26T19:13:21Z",
+          "expires_at": "2026-11-09T19:13:20Z",
+          "updated_at": "2026-10-26T19:13:21Z",
+          "digest": "sha256:f84bd5bee9835cc21bcf91251f06f6fe0e847f427983b4b60068e6f057ceac0d",
+          "workflow_run": {
+            "id": 40383342111,
+            "repository_id": 1089950892,
+            "head_repository_id": 1089950892,
+            "head_branch": "fix/legacy-audio-links-20261026",
+            "head_sha": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f"
+          }
+        }
+      ]
+    },
+    "logs": [
+      {
+        "path": "/private/tmp/tdf-624-ba2729-native-hosted-20261026.log",
+        "sha256": "98ecf747ab93a43ba513285ff405b6431d71abe3178fa9d3f64617a367dc584f",
+        "job": 121785862955
+      },
+      {
+        "path": "/private/tmp/tdf-624-ba2729-persona-hosted-20261026.log",
+        "sha256": "e76b65693f3de14536d29d13ab53f84efb5422c84fb3a5a03fc06433b965d2ad",
+        "job": 121785862942
+      }
+    ]
+  },
+  "review": {
+    "requested": [
+      "tdfrecords"
+    ],
+    "currentHeadReviews": [],
+    "inlineThreads": [],
+    "blocker": "Fresh current-head approval pending; prior older-head approvals are not asserted valid"
+  },
+  "integration": {
+    "merged": false,
+    "mergeable": true,
+    "mergeableState": "blocked",
+    "fifoPositionObserved": 1,
+    "admissionStatus": {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/statuses/ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+      "id": 57297136594,
+      "node_id": "SC_kwDOQPdUrM8AAAANVyzr0g",
+      "state": "success",
+      "description": "Admitted PR #624; base 9b7aa4648d4158f6da84fbb5e794267cd4953177",
+      "target_url": "https://github.com/diegueins680/tdf-app/actions/workflows/merge-admission.yml",
+      "context": "main-integration-admission",
+      "created_at": "2026-10-26T19:04:09Z",
+      "updated_at": "2026-10-26T19:04:09Z"
+    },
+    "mergeOwner": "Separate integration operator; no merge by this agent"
+  },
+  "limits": [
+    "Deterministic fixtures and synthetic API metadata; no claim of actual external-provider playback or actual production catalog/media delivery",
+    "No production deployment or production upload-to-playback verified",
+    "No SLO performance percentile claim",
+    "Prior failed PR622 run and same-head replay are separate evidence; PR624 run40383342111 passed attempt1"
+  ]
+}

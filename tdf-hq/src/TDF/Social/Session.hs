@@ -5,7 +5,7 @@ import Data.Int (Int64)
 import Database.Persist (PersistValue(..), get)
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql)
 import Servant (ServerError, err401, err404)
-import TDF.Auth (AuthedUser(..), isAuthenticatableApiTokenLabel)
+import TDF.Auth (AuthedUser(..), apiTokenWithinValidity, isAuthenticatableApiTokenLabel, sessionClockEpoch)
 import TDF.Models (PartyId, apiTokenActive, apiTokenLabel, apiTokenPartyId)
 
 data SessionAccess = ReadSession | WriteSession (Maybe PartyId)
@@ -45,10 +45,14 @@ withCurrentSession access user action = case auApiTokenId user of
     lockRows "SELECT id FROM user_credential WHERE party_id IN (?,?) ORDER BY id" parties
     lockRows "SELECT id FROM api_token WHERE id=?" [PersistInt64 (fromSqlKey tokenKey)]
     current <- get tokenKey
+    -- Sample the clock after the lock waits: a session that was live at request
+    -- time must still be inside its validity window when the action runs.
+    now <- sessionClockEpoch
     case current of
       Just token
         | apiTokenActive token
         , apiTokenPartyId token == actor
-        , isAuthenticatableApiTokenLabel (apiTokenLabel token) -> do
+        , isAuthenticatableApiTokenLabel (apiTokenLabel token)
+        , apiTokenWithinValidity now token -> do
             Right <$> action
       _ -> pure (Left err401)

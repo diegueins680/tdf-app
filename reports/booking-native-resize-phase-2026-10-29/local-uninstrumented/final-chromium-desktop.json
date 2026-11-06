@@ -1,0 +1,248 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/playwright.final-chromium-desktop.config.mjs",
+    "rootDir": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-chromium-desktop",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-chromium-desktop.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "booking.spec.mjs",
+      "file": "booking.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "booking viewport check detects known client-width overflow @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1280,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:15:20.928Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-ecb69b4aceb2dcf794b4",
+          "file": "booking.spec.mjs",
+          "line": 150,
+          "column": 1
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12624,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:15:23.267Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-initial-viewport",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDExMjM3LAogICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICJpbm5lcldpZHRoIjogMzIwLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgInZpc3VhbFZpZXdwb3J0IjogewogICAgIndpZHRoIjogMzIwLAogICAgInNjYWxlIjogMQogIH0sCiAgIm92ZXJmbG93IjogZmFsc2UsCiAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICJzY3JvbGxZIjogNjQyLAogICJhbmNob3IiOiB7CiAgICAieCI6IDIxMi4yNSwKICAgICJ5IjogMTIzOS40Mzc1LAogICAgInJpZ2h0IjogMjcyLjIzNDM3NSwKICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICJoZWlnaHQiOiAzMiwKICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICJwbGFjZW1lbnQiOiBudWxsCiAgfSwKICAidG9vbHRpcCI6IHsKICAgICJ4IjogNTgsCiAgICAieSI6IDExOTguNSwKICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAid2lkdGgiOiAyNjIuMDQ2ODc1LAogICAgImhlaWdodCI6IDQwLjUsCiAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICJwbGFjZW1lbnQiOiAidG9wIgogIH0sCiAgImV2ZW50cyI6IFtdLAogICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICJvYnNlcnZlZFBvc2l0aW9uZXJDb25uZWN0ZWQiOiBudWxsLAogICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogbnVsbAp9"
+                    },
+                    {
+                      "name": "booking-resize-acknowledgement",
+                      "contentType": "application/json",
+                      "body": "ewogICJkZWxpdmVyZWQiOiB0cnVlLAogICJ0cnVzdGVkIjogdHJ1ZSwKICAiZXZlbnRBdCI6IDExMTA4LAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAiaW5uZXJIZWlnaHQiOiA3NDAsCiAgInRhc2tBdCI6IDExMTY0Cn0="
+                    },
+                    {
+                      "name": "booking-after-native-resize",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDExMjczLAogICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICJpbm5lcldpZHRoIjogMzIwLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgInZpc3VhbFZpZXdwb3J0IjogewogICAgIndpZHRoIjogMzIwLAogICAgInNjYWxlIjogMQogIH0sCiAgIm92ZXJmbG93IjogZmFsc2UsCiAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICJzY3JvbGxZIjogNjQyLAogICJhbmNob3IiOiB7CiAgICAieCI6IDIxMi4yNSwKICAgICJ5IjogMTIzOS40Mzc1LAogICAgInJpZ2h0IjogMjcyLjIzNDM3NSwKICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICJoZWlnaHQiOiAzMiwKICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICJwbGFjZW1lbnQiOiBudWxsCiAgfSwKICAidG9vbHRpcCI6IHsKICAgICJ4IjogNTgsCiAgICAieSI6IDExOTguNSwKICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAid2lkdGgiOiAyNjIuMDQ2ODc1LAogICAgImhlaWdodCI6IDQwLjUsCiAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICJwbGFjZW1lbnQiOiAidG9wIgogIH0sCiAgImV2ZW50cyI6IFtdLAogICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICJvYnNlcnZlZFBvc2l0aW9uZXJDb25uZWN0ZWQiOiBudWxsLAogICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogbnVsbAp9"
+                    },
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiAxMTQwOSwKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICAgInNjcm9sbFkiOiAxNTI3LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMTIuMjUsCiAgICAgICJ5IjogMzU0LjQzNzUsCiAgICAgICJyaWdodCI6IDI3Mi4yMzQzNzUsCiAgICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMzg2LAogICAgICAicmlnaHQiOiAzMjAuMDQ2ODc1LAogICAgICAid2lkdGgiOiAyNjIuMDQ2ODc1LAogICAgICAiaGVpZ2h0IjogNDAuNSwKICAgICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgICJldmVudHMiOiBbXSwKICAgICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IG51bGwsCiAgICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IG51bGwKICB9LAogICJhZnRlclNjcm9sbCI6IHsKICAgICJhdCI6IDExNDQ0LAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgICAic2Nyb2xsWSI6IDE1NjcsCiAgICAiYW5jaG9yIjogewogICAgICAieCI6IDIxMi4yNSwKICAgICAgInkiOiAzMTQuNDM3NSwKICAgICAgInJpZ2h0IjogMjcyLjIzNDM3NSwKICAgICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAzNDYsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgImV2ZW50cyI6IFtdLAogICAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogbnVsbCwKICAgICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogbnVsbAogIH0sCiAgImVwc2lsb24iOiAxCn0="
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-3ce95e578e7b352a01b0",
+          "file": "booking.spec.mjs",
+          "line": 173,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5170,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:15:36.548Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-initial-viewport",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDM4NjEsCiAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgImlubmVyV2lkdGgiOiAzMjAsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJzY3JvbGxXaWR0aCI6IDMyMCwKICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAid2lkdGgiOiAzMjAsCiAgICAic2NhbGUiOiAxCiAgfSwKICAib3ZlcmZsb3ciOiBmYWxzZSwKICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgInNjcm9sbFkiOiA2NDIsCiAgImFuY2hvciI6IHsKICAgICJ4IjogMjEyLjI1LAogICAgInkiOiAxMjM5LjQzNzUsCiAgICAicmlnaHQiOiAyNzIuMjM0Mzc1LAogICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgImhlaWdodCI6IDMyLAogICAgInRleHQiOiAiMDQ6MDAiLAogICAgInBsYWNlbWVudCI6IG51bGwKICB9LAogICJ0b29sdGlwIjogewogICAgIngiOiA1OCwKICAgICJ5IjogMTE5OC41LAogICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAiaGVpZ2h0IjogNDAuNSwKICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgInBsYWNlbWVudCI6ICJ0b3AiCiAgfSwKICAiZXZlbnRzIjogW10sCiAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IG51bGwsCiAgInNhbWVPYnNlcnZlZFBvc2l0aW9uZXIiOiBudWxsCn0="
+                    },
+                    {
+                      "name": "booking-resize-acknowledgement",
+                      "contentType": "application/json",
+                      "body": "ewogICJkZWxpdmVyZWQiOiB0cnVlLAogICJ0cnVzdGVkIjogdHJ1ZSwKICAiZXZlbnRBdCI6IDM3MjksCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJpbm5lckhlaWdodCI6IDc0MCwKICAidGFza0F0IjogMzc5MQp9"
+                    },
+                    {
+                      "name": "booking-after-native-resize",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDM4OTUsCiAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgImlubmVyV2lkdGgiOiAzMjAsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJzY3JvbGxXaWR0aCI6IDMyMCwKICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAid2lkdGgiOiAzMjAsCiAgICAic2NhbGUiOiAxCiAgfSwKICAib3ZlcmZsb3ciOiBmYWxzZSwKICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgInNjcm9sbFkiOiA2NDIsCiAgImFuY2hvciI6IHsKICAgICJ4IjogMjEyLjI1LAogICAgInkiOiAxMjM5LjQzNzUsCiAgICAicmlnaHQiOiAyNzIuMjM0Mzc1LAogICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgImhlaWdodCI6IDMyLAogICAgInRleHQiOiAiMDQ6MDAiLAogICAgInBsYWNlbWVudCI6IG51bGwKICB9LAogICJ0b29sdGlwIjogewogICAgIngiOiA1OCwKICAgICJ5IjogMTE5OC41LAogICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAiaGVpZ2h0IjogNDAuNSwKICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgInBsYWNlbWVudCI6ICJ0b3AiCiAgfSwKICAiZXZlbnRzIjogW10sCiAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IG51bGwsCiAgInNhbWVPYnNlcnZlZFBvc2l0aW9uZXIiOiBudWxsCn0="
+                    },
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiA0MDIwLAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgICAic2Nyb2xsWSI6IDE1MjcsCiAgICAiYW5jaG9yIjogewogICAgICAieCI6IDIxMi4yNSwKICAgICAgInkiOiAzNTQuNDM3NSwKICAgICAgInJpZ2h0IjogMjcyLjIzNDM3NSwKICAgICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAzODYsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgImV2ZW50cyI6IFtdLAogICAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogbnVsbCwKICAgICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogbnVsbAogIH0sCiAgImFmdGVyU2Nyb2xsIjogewogICAgImF0IjogNDA1MSwKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICAgInNjcm9sbFkiOiAxNTY3LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMTIuMjUsCiAgICAgICJ5IjogMzE0LjQzNzUsCiAgICAgICJyaWdodCI6IDI3Mi4yMzQzNzUsCiAgICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMzQ2LAogICAgICAicmlnaHQiOiAzMjAuMDQ2ODc1LAogICAgICAid2lkdGgiOiAyNjIuMDQ2ODc1LAogICAgICAiaGVpZ2h0IjogNDAuNSwKICAgICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgICJldmVudHMiOiBbXSwKICAgICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IG51bGwsCiAgICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IG51bGwKICB9LAogICJlcHNpbG9uIjogMQp9"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-9379661b561a698b59d2",
+          "file": "booking.spec.mjs",
+          "line": 173,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T15:15:19.001Z",
+    "duration": 26835.796000000002,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
