@@ -22565,7 +22565,7 @@
     },
     {
       "path": "docs/music-releases/track-search-delivery-2026-10-26.md",
-      "sha256": "5c6391c7fbc43ee218222a9e784af6eee5c384bd7d96a618609daeb34ee24e37",
+      "sha256": "111dc05e5e7a75ee95ab9535e544f5fb6c996a5af44b9d8b2945c951cfde775a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

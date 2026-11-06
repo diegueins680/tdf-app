@@ -1,4 +1,8 @@
-# Hosted518 qualification — current evidence supplement
+# Archive reconciliation — 2026-11-06
+
+This documentation-only follow-up now incorporates protected main `81a06faa06731f866333a0b89fb266720c4fa065`. Its prerequisite PR #640 was merged as `e1cec5b59723c2ff9828ac4fce45abb930d73055`, which is reachable from that main. The 2026-10-27 hosted observations below and the archived JSON remain historical, source-bound records; their pending-merge statements describe that original checkpoint. They do not establish current product behavior, production activation, or a new runtime qualification. Reconciliation verifies archive hashes and deterministic reconstruction, preserves main's product sources and specifications, and requires fresh checks and review for this follow-up itself.
+
+# Hosted518 qualification — historical evidence supplement
 
 The approved518candidate now has successful hosted productCI. [The hosted A-I report](../../reports/music-track-search-evidence-20261026/hosted-518c/README.md) and [machine summary](../../reports/music-track-search-evidence-20261026/hosted-518c/summary.json) record the exact02:36UTC snapshot.
 
