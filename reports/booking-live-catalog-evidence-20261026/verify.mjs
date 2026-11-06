@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {chromium,devices,expect} from '/private/tmp/tdf-music-current-main-integration-20261023/node_modules/@playwright/test/index.mjs';
+import {writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+const base='https://www.tdfrecords.net',api='https://api.tdfrecords.net',source='63c56aaf919a07e919a61280311be1dc809cd6fe';
+const dir='/private/tmp/tdf-booking-live-catalog-20261026';const cases=[];const browser=await chromium.launch({headless:true});
+const hash=x=>createHash('sha256').update(x).digest('hex');
+try {for(const [mode,options] of [['desktop-dark',{viewport:{width:1280,height:800},colorScheme:'dark'}],['Pixel7-light',{...devices['Pixel 7'],colorScheme:'light'}]]) {
+ const context=await browser.newContext({...options,locale:'es-EC',timezoneId:'America/Guayaquil',serviceWorkers:'block'});
+ const writes=[],errors=[],reads=[],synthetic=[];let entryBytes;
+ await context.addInitScript(()=>localStorage.setItem('tdf-hq-ui/locale','es'));
+ await context.route('**/*',async route=>{const q=route.request(),u=new URL(q.url()),path=u.pathname.replace(/^\/api(?=\/)/,'');
+  if(u.origin!==base&&u.origin!==api)return route.abort();
+  if(q.method()!=='GET'){writes.push({method:q.method(),path});return route.abort();}
+  if(!['fetch','xhr'].includes(q.resourceType()))return u.origin===base?route.continue():route.abort();
+  if(['/session','/health','/services/catalog/public'].includes(path))return route.continue();
+  synthetic.push(path);
+  if(path.includes('/engineers'))return route.fulfill({json:[]});
+  if(path.includes('/reviews'))return route.fulfill({json:{items:[],summary:{count:0,average:0},nextCursor:null}});
+  return route.fulfill({status:404,json:{error:'Not included in the read-only production probe'}});
+ });
+ const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+ page.on('response',r=>{const u=new URL(r.url()),path=u.pathname.replace(/^\/api(?=\/)/,'');if(['/session','/health','/services/catalog/public'].includes(path))reads.push({host:u.host,path,status:r.status()});});
+ const catalogPromise=page.waitForResponse(r=>new URL(r.url()).pathname.replace(/^\/api(?=\/)/,'')==='/services/catalog/public');
+ await page.goto(base+'/reservar',{waitUntil:'domcontentloaded'});
+ const entry=await page.locator('script[type="module"][src]').first().getAttribute('src');
+ const entryResponse=await context.request.get(new URL(entry,base).href);assert.equal(entryResponse.status(),200);entryBytes=await entryResponse.body();assert.ok(entryBytes.toString().includes(source));
+ const response=await catalogPromise;assert.equal(response.status(),200);const catalog=await response.json();
+ const rows=Array.isArray(catalog)?catalog:catalog.sceItems;assert.ok(Array.isArray(rows));const active=rows.filter(x=>x.scActive===true);assert.ok(active.length>1);
+ const name=page.getByRole('textbox',{name:'Nombre completo',exact:true});await expect(name).toBeEnabled();await expect(name).toHaveValue('');
+ const service=page.getByRole('combobox',{name:/^Servicio\b/});await expect(service).toBeVisible();const before=await service.innerText();await service.click();
+ const choices=page.getByRole('option');await expect(choices).toHaveCount(active.length);await choices.nth(1).click();
+ const after=await service.innerText();assert.notEqual(after,before);await expect(name).toHaveValue('');
+ await page.setViewportSize({width:320,height:740});await expect(page.getByText('Paso 1 de 3',{exact:true})).toBeVisible();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ const session=await context.request.get(api+'/session');assert.equal(session.status(),200);assert.equal(await session.json(),null);
+ assert.ok(reads.some(r=>r.path==='/health'&&r.status===200));assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
+ await page.getByTestId('public-booking-card').screenshot({path:dir+'/catalog-'+mode+'.png'});
+ cases.push({mode,observedAt:new Date().toISOString(),source,entry,entrySha256:hash(entryBytes),catalogFormat:Array.isArray(catalog)?'legacy array':'canonical envelope',publicActiveServices:active.length,catalogResponseSha256:hash(JSON.stringify(catalog)),renderedOptionsMatch:true,serviceChoiceChanges:true,contactFieldsUntouched:true,anonymousSessionConfirmed:true,horizontalOverflow320:false,pageErrors:errors,businessWrites:writes,realReadResponses:reads,syntheticPaths:synthetic,passed:true});await context.close();
+}} finally {await browser.close();writeFileSync(dir+'/results.json',JSON.stringify({base,scope:'Actual canonical production frontend and real anonymous GET health/session/public catalog only. Optional engineers/reviews and unknown reads use fixtures/refusals, all external and business writes blocked. No contact submission, booking, provider or recovery-outage test.',cases},null,2));}
+console.log(JSON.stringify(cases));

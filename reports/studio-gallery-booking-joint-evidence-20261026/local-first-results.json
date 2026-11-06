@@ -1,0 +1,498 @@
+{
+  "stats": {
+    "startTime": "2026-10-27T00:08:41.077Z",
+    "duration": 232051.9,
+    "expected": 39,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 10737,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2724,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 11776,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3678,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12449,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4565,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 13736,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3792,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2017,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2091,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1950,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4844,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2106,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2404,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 9476,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2887,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3475,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2282,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2471,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 6590,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2104,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2790,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 9968,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "unexpected",
+      "results": [
+        {
+          "status": "failed",
+          "durationMs": 1966,
+          "errors": [
+            "Error: ENOSPC: no space left on device, mkdir '/private/tmp/tdf-studio-gallery-booking-joint-20261026/browser/test-results/public-welcome-welcome-and-c13a2-pixels-critical-mobile-flow-chromium-phone'\n\n   95 |   })).violations.filter(({ impact }) => ['serious', 'critical'].includes(impact))\n   96 |     .map(({ id, impact, nodes }) => ({ id, impact, nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })) })));\n>  97 |   await testInfo.attach(`${name}-axe.json`, { body: JSON.stringify(violations), contentType: 'application/json' });\n      |                  ^\n   98 |   expect(violations).toEqual([]);\n   99 | }\n  100 |\n    at expectAccessible (/private/tmp/tdf-studio-gallery-safari-20261026/e2e/web/public-welcome.spec.mjs:97:18)\n    at /private/tmp/tdf-studio-gallery-safari-20261026/e2e/web/public-welcome.spec.mjs:279:3",
+            "Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, write",
+            "Error: ENOSPC: no space left on device, open '/private/tmp/tdf-studio-gallery-booking-joint-20261026/browser/test-results/public-welcome-welcome-and-c13a2-pixels-critical-mobile-flow-chromium-phone/error-context.md'",
+            "Error: ENOSPC: no space left on device, write",
+            "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2806,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2109,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2391,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 6102,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2075,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2561,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 9888,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3244,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2708,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2945,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2425,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 6303,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2940,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3842,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 10212,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3934,
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

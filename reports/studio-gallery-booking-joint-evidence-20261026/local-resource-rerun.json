@@ -1,0 +1,24 @@
+{
+  "stats": {
+    "startTime": "2026-10-27T00:16:36.649Z",
+    "duration": 6051.977999999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3302,
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "sourceHead": "c219279b33ce13337f71ddee8d14171f5adfc069",
+  "ciCheckout": "2867b8202c1281148543810f8abec45e0c896108",
+  "identicalGitTree": "195b4cdbfb585239a4ff5538a07b5b9528b81eaa",
+  "gitTreeVerification": "GitHub git/commits API confirmed source and merge-ref whole-tree equality.",
+  "run": 40363305592,
+  "uiQuality": {
+    "job": 121715704717,
+    "result": "SUCCESS",
+    "tests": 3461,
+    "suites": 306,
+    "initialGzipBytes": 336419,
+    "preloads": 5
+  },
+  "personaAttempt1": {
+    "job": 121715704852,
+    "result": "FAIL",
+    "passed": 564,
+    "skipped": 22,
+    "failed": 2,
+    "failures": [
+      {
+        "project": "webkit-iphone",
+        "test": "Marketplace cart stays reachable after adding on a small phone",
+        "observation": "Close-cart click exceeded30s while waiting for button stability after item removal. Source/test/theme byte-identical to protected main78fa."
+      },
+      {
+        "project": "webkit-critical",
+        "test": "studio photos open with keyboard, fit small screens and restore focus",
+        "observation": "Axe color-contrast serious violation on title and close button, reported1.01ratio/#121c25foreground/#111b24background. Retained screenshot shows legible settled text. Cause not established."
+      }
+    ],
+    "artifact": 12670936783,
+    "artifactSha256": "40a8661e5ba0b34c13c95d90784341d912fb76609640ead7ec494cc39511a739"
+  },
+  "personaAttempt2": {
+    "job": 121751522297,
+    "result": "SUCCESS",
+    "passed": 566,
+    "skipped": 22,
+    "failed": 0,
+    "deletionRolloutCases": 10,
+    "discoveryCases": 25,
+    "sourceUnchanged": true,
+    "action": "One failed-job rerun on unchanged approved source; no test, source, rule or workflow modification."
+  },
+  "repoQualityAttempt2": {
+    "job": 121751524566,
+    "result": "SUCCESS"
+  },
+  "integration": {
+    "state": "PENDING",
+    "latestProtectedMain": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+    "qualifiedCandidateParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "requiredChecksPassed": 19,
+    "requiredChecksTotal": 20,
+    "remainingContext": "main-integration-admission",
+    "remainingStatus": "Waiting for PR #623; base e05d003669a930d54b4fe7dd71d72d09335c11ae",
+    "sourceReview": {
+      "commit": "c219279b33ce13337f71ddee8d14171f5adfc069",
+      "reviewer": "tdfrecords",
+      "id": 5656062817,
+      "submittedAt": "2026-10-26T17:11:29Z",
+      "state": "APPROVED"
+    },
+    "strictPolicy": true,
+    "requiredIndependentApprovals": 1,
+    "dismissStaleReviews": true,
+    "adminsEnforced": true,
+    "unresolvedReviewThreads": 0,
+    "nextAction": "Wait for preceding owned PRs. Compose actual final protected main, qualify the combination and obtain a fresh review if source head changes. Current c219approval cannot authorize a future head.",
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "limitations": [
+    "Do not relabel attempt1aspassing. A passing retry would establish current execution success, not resolve the unproven intermittent cause.",
+    "Desktop opacity negative control can reproduce low contrast and normal visible-state checks pass; it does not prove the WebKit failure cause.",
+    "No source changes proposed while reproduction is in progress; approved PRhead remains intact."
+  ],
+  "observedAt": "2026-10-26T18:27:53.164965+00:00"
+}

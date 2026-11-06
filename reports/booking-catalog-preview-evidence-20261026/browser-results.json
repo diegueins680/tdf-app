@@ -1,0 +1,56 @@
+{
+  "stats": {
+    "startTime": "2026-10-26T23:16:23.793Z",
+    "duration": 34488.454,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 11487
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2977
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12100
+        }
+      ]
+    },
+    {
+      "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4116
+        }
+      ]
+    }
+  ]
+}

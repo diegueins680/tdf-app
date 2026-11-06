@@ -1,0 +1,152 @@
+{
+  "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "gallery": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+  "booking": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+  "requirements": 148,
+  "foreignWholeObjectsPreserved": 146,
+  "catalogBaseDecisionsPreserved": 1341,
+  "catalogCount": 1342,
+  "materialInputs": {
+    "tdf-hq-ui/src/components/StudioGallery.tsx": {
+      "source": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+      "sha256": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6"
+    },
+    "tdf-hq-ui/src/components/StudioGallery.test.tsx": {
+      "source": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+      "sha256": "fc58e06828af223b5bb382b87d7fb26f76240d058af7e699cf3cc1dbc3487af3"
+    },
+    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": {
+      "source": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+      "sha256": "2819d1faed38a5727f09f8b7085553ad10e00954da29e4c149ceded3fb339232"
+    },
+    "e2e/web/public-welcome.spec.mjs": {
+      "source": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+      "sha256": "5102a2614b4f1ba3f9f94a8f65666e1610cfdb7172513ee8edf938028142c494"
+    },
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": {
+      "source": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+      "sha256": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b"
+    },
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": {
+      "source": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+      "sha256": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293"
+    },
+    "e2e/web/booking-catalog-recovery.spec.mjs": {
+      "source": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+      "sha256": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595"
+    }
+  },
+  "qualificationBeforeCommit": {
+    "checkoutHead": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+    "workingMergeHead": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+    "node": "22.14.0",
+    "unitTests": 19,
+    "suites": 2,
+    "typecheck": "PASS",
+    "scopedLint": "PASS",
+    "strictCatalogCandidates": 1342,
+    "strictJsonCsv": "PASS",
+    "inventoryTraceability": "PASS",
+    "notes": "Runtime/tests/images remain exact approved feature inputs; backend/API/SQL/workflow/deps/Mobile exact protectedc66. No new native/backend/full-UI execution claim."
+  },
+  "preparedHead": "de192a14e572da05b6cc5f41c95739914d133c2d",
+  "compiledFrontend": {
+    "source": "de192a14e572da05b6cc5f41c95739914d133c2d",
+    "entry": "/assets/index-Bho4exI9.js",
+    "sha256": "f12c33e90fbf251a238ce9743523c1a866ea3b0176fc726e777db4b1973b8104",
+    "gzipInitialJsBytes": 336456,
+    "preloads": 5
+  },
+  "hostedPreview": {
+    "before": {
+      "observedAt": "2026-10-27T00:17:18.512Z",
+      "base": "https://ceff9917.tdf-app.pages.dev",
+      "source": "de192a14e572da05b6cc5f41c95739914d133c2d",
+      "entry": "/assets/index-CoOYQzvk.js",
+      "sha256": "89b88e5e572089dca147a35d2801e0de432b58f6f253669e08decf2fd3e4077f"
+    },
+    "after": {
+      "observedAt": "2026-10-27T00:18:05.370Z",
+      "base": "https://ceff9917.tdf-app.pages.dev",
+      "source": "de192a14e572da05b6cc5f41c95739914d133c2d",
+      "entry": "/assets/index-CoOYQzvk.js",
+      "sha256": "89b88e5e572089dca147a35d2801e0de432b58f6f253669e08decf2fd3e4077f"
+    },
+    "exitCode": 0,
+    "scope": "Actual immutable Cloudflare preview artifact; all business/session APIs synthetic, all external traffic and business writes blocked. No production or persistence claim.",
+    "stats": {
+      "startTime": "2026-10-27T00:17:20.171Z",
+      "duration": 45102.054000000004,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "localBrowserVerification": {
+    "initial": {
+      "startTime": "2026-10-27T00:08:41.077Z",
+      "duration": 232051.9,
+      "expected": 39,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "failedCaseReason": "ENOSPC while writing axe attachment and failure artifacts; original source/assertions unchanged.",
+    "isolatedRerun": {
+      "startTime": "2026-10-27T00:16:36.649Z",
+      "duration": 6051.977999999999,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "uniqueCasesWithPassingEvidence": 40,
+    "attempts": 2,
+    "resourceRecovery": "3.24GiB was available on follow-up;1MiB fsync probe passed. No cleanup performed; only the interrupted case was repeated.",
+    "scope": "Four local browser projects with synthetic API/session data, all external traffic and business writes blocked. Not WebKit or physical devices."
+  },
+  "actualJointJourney": "Four actual-preview Chromium desktop/Pixel7-emulated cases: welcome -> studio -> six640px thumbnails -> keyboard-open1280px photo -> Escape/focus -> original reserve CTA -> error or empty catalog -> keyboard retry -> edited contact fields retained -> scheduling -> mobile marker -> zero overflow at320px, scoped axe, zero page errors/business writes.",
+  "sourcePRs": {
+    "gallery": {
+      "number": 628,
+      "head": "c219279b33ce13337f71ddee8d14171f5adfc069",
+      "unchanged": true
+    },
+    "booking": {
+      "number": 636,
+      "head": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+      "unchanged": true,
+      "actualIndependentApproval": "tdfrecords2026-10-26T23:46:30Z"
+    }
+  },
+  "delivery": {
+    "preparedBranchPublished": true,
+    "jointPreviewVerified": true,
+    "sourcePRsChanged": false,
+    "jointPreparationApproved": false,
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "limits": [
+    "Preparationde combines approved gallery and booking feature inputs over protectedc66. Later actual main63c56a/#625 is not included; these results are not attributed to that newer main.",
+    "No new full3516/3517suite, native backend/SQL runtime, physical-device, human/provider/booking-persistence, WebKit or conversion claim.",
+    "Current booking9b6 fullCI40421134285 is still running; its previous8bd593/22/1failure remains retained.",
+    "Existing source PR approvals do not approve this combined preparation. Do not merge it as a shortcut around the protected sequence. Final required main composition, CI and independent review remain necessary."
+  ],
+  "evidenceSha256": {
+    "reports/studio-gallery-booking-joint-evidence-20261026/source-admission.json": "38fc73723e413a3593507c1958f657aabbe18a27ed891a147b20af5ade48bf72",
+    "reports/studio-gallery-booking-joint-evidence-20261026/hosted-playwright.config.mjs": "b8fbbbe32505356a1c413033d14b39ed743ddf6dd5a5599996fafe570709e097",
+    "reports/studio-gallery-booking-joint-evidence-20261026/local-resource-rerun.json": "6753d114c87a9fdc5eeeae333f16e67f9f2979d4f291a097db14070e95c13a5f",
+    "reports/studio-gallery-booking-joint-evidence-20261026/booking-mobile.png": "a2a09aff1abc255b3d596d5121359fc623b31d7c07cdb67478c6318dc1534616",
+    "reports/studio-gallery-booking-joint-evidence-20261026/local-playwright.config.mjs": "f4ed5d442d817a4bfa2b241bf09ce7cf123c3140a99fedf3798bcfa949d0a3b8",
+    "reports/studio-gallery-booking-joint-evidence-20261026/REPLAY.txt": "37f355d2e294ecaf5c4608a25197c2b0b3592d6a168a3978d38e53c65c2fc543",
+    "reports/studio-gallery-booking-joint-evidence-20261026/resource-rerun-playwright.config.mjs": "f3d06ebc12ef8624ff088488570221f803cd19a2e2a5f11348aa3614e31cea8d",
+    "reports/studio-gallery-booking-joint-evidence-20261026/gallery-desktop.png": "cb95ea824b395fb9ff821b9b8957d482402f95c91847514937980581171f4128",
+    "reports/studio-gallery-booking-joint-evidence-20261026/joint-studio-booking.spec.mjs": "61c21a336da9f19cbfc037aa9760519ed7df9461d027dc19aad920c22a793894",
+    "reports/studio-gallery-booking-joint-evidence-20261026/verify-hosted.mjs": "16713fcfab383aa9477b7d660643c30ffbfd48a9eb5a99429757c31266b8c75f",
+    "reports/studio-gallery-booking-joint-evidence-20261026/local-first-results.json": "eb06d79bc32fafb1889d1cd7954b41cfc31ec9680d16259914f95543aef1231a",
+    "reports/studio-gallery-booking-joint-evidence-20261026/hosted-joint-results.json": "753f12f8f769b49c6027177dcf45ee59d8750b036192d57bdedabce5ddf8cfd2"
+  }
+}
