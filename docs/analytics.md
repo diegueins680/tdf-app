@@ -13,6 +13,31 @@ Both surfaces emit the **same event names** and the **same property shapes** so 
 
 Both surfaces fall back to a **no-op client** if no PostHog key is configured. Calls to `capture` / `identify` / `reset` are safe in dev, in preview builds, in tests.
 
+## Web credential boundary
+
+The web client uses PostHog only for sanitized event capture and identity. It sets
+`advanced_disable_flags: true`: SDK `/flags` and remote configuration requests
+otherwise include persisted initial-person URLs outside the event `before_send`
+callback. A slow recovery-route chunk can leave a reset credential in that URL
+while analytics starts or identifies a session. Disabling only feature flag
+*evaluation* does not disable that request.
+
+TDF application flags remain authoritative in the session API `featureFlags`
+response. The web application does not consume PostHog feature flags, surveys,
+remote site apps or experiments that depend on `/flags`. Adding such a dependency
+requires a separately reviewed privacy boundary. Event capture, public campaign
+attribution, identification and the existing event-envelope sanitizer remain active.
+See the [SDK configuration contract](https://posthog.com/docs/libraries/js/config).
+
+`e2e/web/analytics-privacy.spec.mjs` exercises the actual bundled SDK with a
+synthetic reset URL before route cleanup, both anonymously and with a synthetic
+identified session. All business and telemetry traffic is intercepted. The test
+emulates ordinary visitor browser metadata because the SDK deliberately drops
+bot events; it requires real decoded pageview/identify requests rather than
+accepting an empty capture as privacy evidence. No real credentials, account,
+mail, provider receipt or universal privacy guarantee is involved. SDK local
+persistence and provider consent/retention remain separate audit surfaces.
+
 ## Environment variables
 
 ### Mobile

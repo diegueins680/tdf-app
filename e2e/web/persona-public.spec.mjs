@@ -295,7 +295,7 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
 
   await expect(page).toHaveURL(/\/fans$/);
   expect(signupPayload).toMatchObject({
-    firstName: 'Per 01 elena', lastName: '', email: 'per-01.elena@persona.test',
+    firstName: 'Cuenta TDF', lastName: '', email: 'per-01.elena@persona.test',
     termsAccepted: true, termsVersion: 'tdf-account-terms-v1',
     password: 'fictional-password-not-a-secret',
     marketingOptIn: false,

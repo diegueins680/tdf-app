@@ -468,6 +468,11 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     };
   });
 
+  // AUTHORITY-094 (2026-11-01) adds four ownership columns and two Party
+  // foreign keys to social_sync_account. Production batches and synthetic
+  // batches over the current schema verify that shape; only a caller that
+  // renders a manifest prefix ending before that migration opts out.
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
@@ -520,7 +525,7 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     '  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
     ');',
     body,
-    buildSchemaVerificationSql({ includePsqlHeader: false }),
+    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded }),
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
@@ -721,6 +726,10 @@ export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
 
 export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
+  // Production verification expects the full AUTHORITY-094 social shape; only a
+  // batch rendered from a manifest prefix that stops before that migration
+  // passes false (see buildMigrationBatchSql).
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
@@ -1639,7 +1648,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 13 OR (
+  ) <> ${socialDesignationIncluded ? 17 : 13} OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1661,7 +1670,11 @@ BEGIN
         ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
         ('social_sync_account', 'platform', 'character varying', 'NO'),
         ('social_sync_account', 'external_user_id', 'character varying', 'NO'),
-        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),${socialDesignationIncluded ? `
+        ('social_sync_account', 'delivery_designated', 'boolean', 'NO'),
+        ('social_sync_account', 'connected_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_at', 'timestamp with time zone', 'YES'),` : ''}
         ('social_sync_post', 'account_id', 'bigint', 'YES'),
         ('social_sync_post', 'platform', 'character varying', 'NO'),
         ('social_sync_post', 'external_post_id', 'character varying', 'NO'),
@@ -1719,7 +1732,7 @@ BEGIN
       'public.social_sync_post'::regclass,
       'public.social_discovery_review'::regclass
     ) AND contype = 'f' AND convalidated
-  ) <> 7 THEN
+  ) <> ${socialDesignationIncluded ? 9 : 7} THEN
     RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
   END IF;
 
@@ -1933,6 +1946,19 @@ BEGIN
        OR actual.is_nullable <> expected.is_nullable
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+    WHERE t.tgrelid=to_regclass('public.commerce_ledger_transaction')
+      AND t.tgname='trg_commerce_ledger_header_immutable'
+      AND p.oid=to_regprocedure('public.commerce_protect_posted_ledger_header()')
+      AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+      AND t.tgtype=19 AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND p.proconfig @> ARRAY['search_path=pg_catalog']::text[]
+      AND NOT p.prosecdef AND p.prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Posted ledger header immutability guard is missing or changed';
   END IF;
   -- Replaying an older CREATE OR REPLACE FUNCTION can discard proconfig while
   -- leaving its migration receipt and trigger binding intact. Inspect both

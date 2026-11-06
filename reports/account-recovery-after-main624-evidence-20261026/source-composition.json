@@ -1,0 +1,16 @@
+{
+  "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "oldHead": "723079c89cec4fff3eefa83f968226e2e4e5e8a5",
+  "requirements": 147,
+  "foreignNormativeRowsExact": true,
+  "ownedAuthRowOnlyImplementationAndTestMappings": true,
+  "catalogDecisions": 1341,
+  "retiredIds": {
+    "3ad9915d69339318f9ff": "0ebaf6c35df246735cd0",
+    "4b3f6f86992b9c64f7a3": "b855e017c65163224770"
+  },
+  "retiredObjectsExactImmutableEd9": true,
+  "bothReconciliationHistoriesPreserved": true,
+  "authCodeAndTestsExact723": true,
+  "migrationManifestExactMain": true
+}

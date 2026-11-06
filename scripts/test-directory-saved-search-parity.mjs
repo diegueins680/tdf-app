@@ -22,10 +22,16 @@ const position = manifest.findIndex((entry) => entry.id === migrationId);
 assert.ok(position > 0, 'Register the reviewed additive migration before this qualification');
 
 function sql(input) {
-  return execFileSync('psql', ['-XqAt', '-v', 'ON_ERROR_STOP=1', '-d', database], {
-    input, encoding: 'utf8', env: environment, cwd: root,
-    maxBuffer: 64 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe'],
-  }).trim();
+  try {
+    return execFileSync('psql', ['-XqAt', '-v', 'ON_ERROR_STOP=1', '-d', database], {
+      input, encoding: 'utf8', env: environment, cwd: root,
+      maxBuffer: 64 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch (error) {
+    // Migration notices can otherwise hide the final PostgreSQL diagnostic in
+    // truncated CI output. Keep failure fatal and omit connection arguments.
+    throw new Error(`PostgreSQL qualification failed (exit ${error.status ?? error.code}, signal ${error.signal ?? 'none'}):\n${String(error.stderr ?? '').slice(-16384)}`);
+  }
 }
 function apply(path) { return sql(readFileSync(new URL(path, new URL('../', import.meta.url)), 'utf8')); }
 async function batch(entries) {
@@ -39,15 +45,29 @@ async function batch(entries) {
 assert.equal(sql("SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p','v','m','f','S');"), '0', 'Use a new empty disposable database');
 apply('scripts/__tests__/fixtures/production-schema-20260814.sql');
 apply('scripts/__tests__/fixtures/catalog-production-source-fixture.sql');
-sql(await batch(manifest.slice(0, position)));
-const originalTrigger = sql("SELECT pg_get_functiondef('directory_enqueue_saved_search_alerts()'::regprocedure);");
-sql(`INSERT INTO party(id,display_name,is_org,created_at) VALUES(900050,'Synthetic historical alert owner',false,now());
- INSERT INTO directory_saved_search(account_party_id,name,canonical_query,query_hash,alerts_enabled)
- VALUES(900050,'Historical JSON and hash sentinel','{"entityType":"all","q":"sentinel"}',repeat('9',64),false);`);
 const savedRowsSql = 'SELECT jsonb_agg(to_jsonb(saved) ORDER BY id) FROM directory_saved_search saved;';
-const originalRows = sql(savedRowsSql);
 const complete = await batch(manifest);
-sql(complete);
+// Capture the historical boundary inside one complete production replay.
+// A prefix cannot satisfy startup guards introduced by later migrations.
+// Injection precedes the target's checksum block; migration bodies, checksums,
+// receipts, ordering and the final current-schema verification stay unchanged.
+const checkpointMarker = String.raw`\echo Checking ${migrationId}`;
+assert.equal(complete.split(checkpointMarker).length, 2, 'Require one exact historical boundary');
+const checkpoint = `CREATE SCHEMA directory_alert_qualification;
+ CREATE TABLE directory_alert_qualification.before_target(
+   original_trigger text NOT NULL, saved_rows jsonb NOT NULL, prefix_ids jsonb NOT NULL);
+ INSERT INTO party(id,display_name,is_org,created_at) VALUES(900050,'Synthetic historical alert owner',false,now());
+ INSERT INTO directory_saved_search(account_party_id,name,canonical_query,query_hash,alerts_enabled)
+ VALUES(900050,'Historical JSON and hash sentinel','{"entityType":"all","q":"sentinel"}',repeat('9',64),false);
+ INSERT INTO directory_alert_qualification.before_target
+ SELECT pg_get_functiondef('directory_enqueue_saved_search_alerts()'::regprocedure),
+   (${savedRowsSql.slice(0, -1)}),
+   (SELECT jsonb_agg(migration_id ORDER BY migration_id COLLATE "C") FROM public.tdf_schema_migration);`;
+sql(complete.replace(checkpointMarker, `${checkpoint}\n${checkpointMarker}`));
+assert.deepEqual(JSON.parse(sql('SELECT prefix_ids FROM directory_alert_qualification.before_target;')),
+  manifest.slice(0, position).map(entry => entry.id).sort(), 'Checkpoint precedes target and successor migrations');
+const originalTrigger = sql('SELECT original_trigger FROM directory_alert_qualification.before_target;');
+const originalRows = sql('SELECT saved_rows FROM directory_alert_qualification.before_target;');
 assert.equal(sql('SELECT count(*) FROM tdf_schema_migration;'), String(manifest.length));
 const ledgerSql = 'SELECT jsonb_agg(to_jsonb(ledger) ORDER BY migration_id) FROM tdf_schema_migration ledger;';
 const originalLedger = sql(ledgerSql);

@@ -1,0 +1,370 @@
+{
+  "observedAt": "2026-10-26T22:13:20.970135+00:00",
+  "protectedMain": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "executionSource": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+  "executionTree": "61067a0130c282bb006c5366d695108bd71ee501",
+  "problem": "Spanish expired-reset screen displayed rawEnglish Invalid or expired token, obscuring a recoverable step.",
+  "expectedBenefit": "Understand expired links in activeES/EN language and requestanotherlink without losing originaldestination. Impactonactivation/retention remains unmeasured.",
+  "implementation": "Existingendpoint-scopedreset-token400/401classification andlocalizedcopy unchanged723. Normalmergeactual2e; regenerated4conflictedindices, preserved147normatives andallhistory; no parallelproductimplementation.",
+  "observedBenefit": {
+    "nativeJourneyChecks": 14,
+    "nativeJourney": "Real synthetic signup/revokedsession/recoverymail/expiredlink/replacementreset/oldpasswordrejected/newpasswordaccepted/usedtokenrejected/oldandactivepriorsessionsrevoked/singlepersistedcredential/originalintentpreserved",
+    "staticLocalizedCases": 8,
+    "staticScope": "ES/EN × desktop/Pixel7emulated ×400/401, friendlycopy/tokenremoved/newrequestlanguageandintent; ALLbusinessAPI/sessionresponsesmocked."
+  },
+  "sourceCorrespondence": {
+    "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "oldHead": "723079c89cec4fff3eefa83f968226e2e4e5e8a5",
+    "requirements": 147,
+    "foreignNormativeRowsExact": true,
+    "ownedAuthRowOnlyImplementationAndTestMappings": true,
+    "catalogDecisions": 1341,
+    "retiredIds": {
+      "3ad9915d69339318f9ff": "0ebaf6c35df246735cd0",
+      "4b3f6f86992b9c64f7a3": "b855e017c65163224770"
+    },
+    "retiredObjectsExactImmutableEd9": true,
+    "bothReconciliationHistoriesPreserved": true,
+    "authCodeAndTestsExact723": true,
+    "migrationManifestExactMain": true
+  },
+  "ui": {
+    "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+    "entry": "/assets/index-DMf-7Dv1.js",
+    "sha256": "013ced97f662b7a7cca1702e630ff04a6839c161d05b0bcd18f25109e7be401e",
+    "tests": 3520,
+    "suites": 309,
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "bundleGzip": 336531,
+    "preloads": 5
+  },
+  "native": {
+    "source": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "backendTree": "31c739558ac9a830403f27b122838fe725343324",
+    "startedAt": "2026-10-26T21:47:31.312146+00:00",
+    "status": "PASS",
+    "compiler": "9.10.3",
+    "resolver": "lts-24.42",
+    "command": [
+      "stack",
+      "--no-terminal",
+      "test",
+      "--force-dirty",
+      "--jobs",
+      "2",
+      "tdf-hq",
+      "--copy-bins",
+      "--local-bin-path",
+      "/private/tmp/tdf-account-recovery-main624-native-20261026/bin"
+    ],
+    "scope": "Fresh canonical Stack compile and aggregate unit tests on immutable protectedmain2e. PostgreSQL/external runners and HTTP journey qualified separately; pending tests are not passes.",
+    "exitCode": 0,
+    "finishedAt": "2026-10-26T22:09:15.287592+00:00",
+    "binary": "/private/tmp/tdf-account-recovery-main624-native-20261026/bin/tdf-hq-exe",
+    "binarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+    "haskellAggregate": {
+      "examples": 4039,
+      "failures": 0,
+      "pending": 21
+    }
+  },
+  "runtime": {
+    "startedAt": "2026-10-26T22:10:31.280865+00:00",
+    "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+    "tree": "61067a0130c282bb006c5366d695108bd71ee501",
+    "binarySource": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "binarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+    "sourceStatus": [],
+    "steps": [
+      {
+        "step": "compile-loopback-bind-adapter",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonloopback-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonlocal-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "init",
+        "exitCode": 0
+      },
+      {
+        "step": "start",
+        "exitCode": 0
+      },
+      {
+        "step": "create",
+        "exitCode": 0
+      },
+      {
+        "step": "full-schema",
+        "exitCode": 0
+      },
+      {
+        "step": "build-web",
+        "exitCode": 0
+      },
+      {
+        "step": "browser",
+        "exitCode": 0
+      },
+      {
+        "step": "drop",
+        "exitCode": 0
+      },
+      {
+        "step": "stop",
+        "exitCode": 0
+      }
+    ],
+    "cleanup": {
+      "runtimesStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "status": "VERIFIED-synthetic-local-only",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "mailScope": "Actual native MIME generation/SMTP transport to non-relaying loopback synthetic inbox; no real mailbox, TLS/provider/deliverability claim.",
+    "harnessSha256": {
+      "run.py": "b3f3104b6b33af62498705aa80c25293f2d23c4db672128c7491eab184678a73",
+      "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+      "browser.mjs": "37b84eee2e8d329f878fa27b8f20850dffb5f6df5b2d7972c8f62cf3fee778f9",
+      "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+    },
+    "migrations": 222,
+    "ledgerHeaderTriggerEnabled": "O",
+    "frontend": {
+      "entry": "/assets/index-BR3ZGccC.js",
+      "sha256": "8a58e11d0bc2f8fa8da9089fc451025e013516a6299063216017e696a1e65167",
+      "sourceVerified": true,
+      "freshCompilation": true
+    },
+    "networkIsolation": {
+      "fourListenersLoopbackOnly": true,
+      "lanRequestsDenied": true,
+      "unlistedLanPortDeniedWithPositiveControl": true,
+      "nonlocalTcpDeniedWithPositiveControl": true,
+      "scope": "Services forced to literal127.0.0.1 and four LAN ingress probes refused. SBPL allows local-machine PostgreSQL/SMTP destination ports only; separate positive-outside/denied-inside GitHub443 TCP control sends no application data. Bounded observed controls, not a theorem about all network traffic."
+    },
+    "actualVersion": {
+      "buildTime": "2026-10-26T22:08:29Z",
+      "commit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "journey": {
+      "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+      "checks": {
+        "protectedIntentPreserved": true,
+        "uiSignupAndOriginalIntent": true,
+        "revokedSessionReturnsToLoginWithIntent": true,
+        "nativeLocalizedMailPreservesIntent": true,
+        "tokenRemovedFromVisibleUrl": true,
+        "expiredResetRejectedInUi": true,
+        "resetUiReturnsToOriginalIntent": true,
+        "oldPasswordRejected": true,
+        "newPasswordAuthenticatesSameParty": true,
+        "resetTokenSingleUse": true,
+        "earlierResetStillRejected": true,
+        "oldSessionRejected": true,
+        "activePriorSessionRevokedByReset": true,
+        "singlePersistedCredential": true
+      },
+      "blockedExternal": 10,
+      "blockedMutations": 0,
+      "blockedMutationPaths": [],
+      "pageErrors": 0,
+      "partyId": 4,
+      "status": "PASS"
+    },
+    "finishedAt": "2026-10-26T22:11:48.789477+00:00"
+  },
+  "static": {
+    "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+    "hash": "013ced97f662b7a7cca1702e630ff04a6839c161d05b0bcd18f25109e7be401e",
+    "base": "http://127.0.0.1:4297",
+    "startedAt": "2026-10-26T22:11:15.015Z",
+    "status": "PASS_STATIC_CLIENT_SYNTHETIC_BUSINESS",
+    "cases": [
+      {
+        "language": "es",
+        "formFactor": "desktop-web",
+        "status": 400,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      },
+      {
+        "language": "es",
+        "formFactor": "desktop-web",
+        "status": 401,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      },
+      {
+        "language": "es",
+        "formFactor": "Pixel7-emulated-web",
+        "status": 400,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      },
+      {
+        "language": "es",
+        "formFactor": "Pixel7-emulated-web",
+        "status": 401,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      },
+      {
+        "language": "en",
+        "formFactor": "desktop-web",
+        "status": 400,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      },
+      {
+        "language": "en",
+        "formFactor": "desktop-web",
+        "status": 401,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      },
+      {
+        "language": "en",
+        "formFactor": "Pixel7-emulated-web",
+        "status": 400,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      },
+      {
+        "language": "en",
+        "formFactor": "Pixel7-emulated-web",
+        "status": 401,
+        "confirms": 1,
+        "requests": 1,
+        "blockedExternal": 2,
+        "unexpectedMutations": 0,
+        "pageErrors": [],
+        "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+        "requestPayload": {
+          "email": "static-reset@persona.test"
+        },
+        "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+      }
+    ],
+    "productionBusinessWrites": 0,
+    "actualBusinessRequestsForwarded": 0,
+    "humans": 0,
+    "scope": "Hash-bound actual optimized static client. Every API, session, reset and email-request response is synthetic and intercepted; all external traffic blocked. No production account, token, password, email, API persistence or cookie revocation claim.",
+    "browserClosed": true,
+    "finishedAt": "2026-10-26T22:11:30.175Z"
+  },
+  "repo": {
+    "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+    "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "observedAt": "2026-10-26T21:58:23.897082+00:00",
+    "repoQuality": {
+      "command": "bash scripts/quality-repo.sh",
+      "exitCode": 0,
+      "completeInvocation": true,
+      "logSha256": "d1d389224c7455323ed947ebaa91c6c95ebd73273e1a5b8b99d4b0ebdbee0eb5"
+    },
+    "catalog": {
+      "reportSha256": "1d7bfe7002c79c16509018963f14ade28771b1193d2af7a0546e12f0292f7f01",
+      "candidates": 1341,
+      "filesScanned": 2400,
+      "unreviewed": 0,
+      "stale": 0,
+      "jsonExitCode": 0,
+      "csvExitCode": 0
+    },
+    "newSourceAdmission": {
+      "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "head": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+      "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mappedChangedSurfaces": [
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+        "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.ts"
+      ],
+      "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+    },
+    "backendWholeTreeExactMain": "31c739558ac9a830403f27b122838fe725343324"
+  },
+  "evidenceDirectory": "reports/account-recovery-after-main624-evidence-20261026",
+  "earlierFailure": "First strict-env attempt lacked/usr/sbin/lsof and stopped before creating any resource. Preserved log; correctedPATH only, no assertion/guard/sourcechange.",
+  "status": "LOCAL_QUALIFICATION_COMPLETE;FINAL_METADATA_COMMIT_PUBLICATION_CURRENT_HEAD_CI_REVIEW_PENDING",
+  "limits": [
+    "Namedfinite tests, not mathematicalcompletecorrectness proof. Existingcriticalformal/financialrelease restrictions unchanged.",
+    "Nativebinary compiledactual2e; localUI/browser executed553. Metadata-successor may reuse byteequalinputs without relabeling execution.",
+    "SMTPnonrelayingloopback only, no realmailbox/TLS/providerdeliverability claim.",
+    "No productionaccounts/businesswrites/backenddeployment/provideractivation/physicaldevice/humanbenefit."
+  ]
+}

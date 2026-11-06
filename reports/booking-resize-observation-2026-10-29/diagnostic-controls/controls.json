@@ -1,0 +1,9 @@
+{
+  "finalDiagnosticSourceSha256": "64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87",
+  "helperOnlyFault": "1 actual edge failure/rootfits320; initial guard unchanged, later+event attachment present",
+  "rootOptionRemoval": "1actual rootfailure; fullfinaltestbody, soleproductoption removed",
+  "exactCorrectSourceAndDistRestored": true,
+  "correctDistUICompilationCommit": "a5535c59e49064fec535daa3682a4a1dc31c68f4",
+  "allOwnedServersStoppedAndAliasesRemoved": true,
+  "scope": "Diagnostic sensitivity/immutable failure protection, not WebKit cause or product repair."
+}

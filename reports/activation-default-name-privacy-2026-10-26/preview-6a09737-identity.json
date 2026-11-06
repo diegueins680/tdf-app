@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-10-27T02:27:49.792Z",
+  "page": "https://317e5922.tdf-app.pages.dev",
+  "expectedCommit": "6a097370d59d3c2b72ee2d387dc633b3eca98d96",
+  "observedCommit": "6a097370d59d3c2b72ee2d387dc633b3eca98d96",
+  "asset": "https://317e5922.tdf-app.pages.dev/assets/index-eI5KR1SF.js",
+  "sha256": "c7937f0940cd42a95b71a7c0bbaaa08ac263ed26283bb5f1bc844d42a2dff608",
+  "scope": "Anonymous GET actual provider-listed preview. No API calls/businesswrites. First disk-write preparation failure retained separately."
+}

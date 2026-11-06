@@ -1,0 +1,17 @@
+{
+  "run": 40287087139,
+  "branchHead": "6d0b1090cebf6b96fa7a840cb4062871b6ac0914",
+  "actualCheckout": "f1c0519e72fbc3d4c206440fe3bf03c499a82d89",
+  "exactHeadTree": "e408ce8527d2ebdd5cc7b905098f8f5e70d6ed14 (verified against native Git merge and branch head)",
+  "archiveBytes": 50917202,
+  "archiveSha256": "e7b7116f44fb1b402f72a0150bc9ad32d4577bef2f7c0f8d2e61b111a87c0283",
+  "platforms": [
+    "iPhoneSimulator"
+  ],
+  "nativeBinarySha256": "55b01d304f522c8d65c365202f6427f7eaea25a24e5484cdc66d55d96aaf71b7",
+  "nativeDocumentPickerModulePresent": true,
+  "javascriptPickerPresent": true,
+  "runtime": "1.0.1-interactions-audio.1",
+  "otaEnabled": false,
+  "scope": "Isolated simulator application with test identity and loopback API; no physical device or store distribution"
+}

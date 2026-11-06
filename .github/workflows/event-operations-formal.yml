@@ -48,6 +48,9 @@ jobs:
           printf '%s\n' '{"status":"not-executed","reason":"Prerequisite checks or installation have not completed"}' > "${{ runner.temp }}/payment-proof/result.json"
           printf '%s\n' '{"status":"not-executed","reason":"Money wire obligations have not executed"}' > "${{ runner.temp }}/payment-proof/music-money-wire.json"
           printf '%s\n' '{"execution":{"passed":false},"release":{"decision":"BLOCKED","executionAllowed":false},"reason":"Fallback only when report.json is unavailable; inspect failed/timed-out prerequisite and generation steps"}' > "${{ runner.temp }}/assurance-fallback.json"
+      - name: Check Mobile gitlink reachability from Mobile main
+        run: sh scripts/check-mobile-gitlink-ancestry.sh
+
       - name: Check specification inventory and evidence admission
         timeout-minutes: 5
         run: |
@@ -58,6 +61,8 @@ jobs:
           python scripts/specification-conformance.py --check
           python scripts/test-specification-conformance.py
           python scripts/check-public-routes.py
+          python scripts/check-admin-guards.py
+          python scripts/check-webhook-signatures.py
           python scripts/test-public-routes.py
           python scripts/check-state-machines.py --static
           python scripts/test-state-machines.py --static
@@ -73,6 +78,10 @@ jobs:
           python scripts/verify-music-money-wire.py > "${{ runner.temp }}/payment-proof/music-money-wire-output.json"
           mv "${{ runner.temp }}/payment-proof/music-money-wire-output.json" "${{ runner.temp }}/payment-proof/music-money-wire.json"
           python scripts/test-music-money-wire-verifier.py
+      - name: Prove Domo quote arithmetic lemmas and negative controls
+        run: python formal/payments/domo_quote_arithmetic.py
+      - name: Prove Domo cancellation refund lemmas and negative controls
+        run: python formal/payments/domo_cancellation_refund.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15
@@ -139,6 +148,9 @@ jobs:
       - name: Verify completion client model wiring
         run: node --test scripts/__tests__/event-task-completion-client.test.mjs
 
+      - name: Check bounded player selection and recovery with negative controls
+        run: node --test scripts/test-player-session-model.mjs
+
       - name: Download pinned formal tools
         shell: bash
         run: |
@@ -150,12 +162,21 @@ jobs:
           curl --fail --location --retry 3 \
             https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar \
             --output "${RUNNER_TEMP}/tdf-formal-tools/alloy-6.2.0.jar"
+          curl --fail --location --retry 3 \
+            https://github.com/apalache-mc/apalache/releases/download/v0.62.4/apalache.tgz \
+            --output "${RUNNER_TEMP}/tdf-formal-tools/apalache-0.62.4.tgz"
 
       - name: Check event operations models
         env:
           TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
           ALLOY_JAR: ${{ runner.temp }}/tdf-formal-tools/alloy-6.2.0.jar
         run: node scripts/verify-system-evidence.mjs --output "${{ runner.temp }}/formal-evidence"
+
+      - name: Prove payment outcome invariants inductively (Apalache)
+        env:
+          TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
+          APALACHE_TGZ: ${{ runner.temp }}/tdf-formal-tools/apalache-0.62.4.tgz
+        run: bash scripts/verify-inductive-proofs.sh
 
       - name: Preserve verification evidence, including failed executions
         if: always()
@@ -179,6 +200,15 @@ jobs:
 
       - name: Check recovery time constraint on isolated PostgreSQL
         run: sh scripts/test-recovery-time-postgres.sh
+
+      - name: Check public artist visibility SQL on isolated PostgreSQL
+        run: sh scripts/test-artist-visibility-postgres.sh
+
+      - name: Check artist tip idempotency migration on isolated PostgreSQL
+        run: sh scripts/test-artist-tip-idempotency-postgres.sh
+
+      - name: Check social delivery designation migration on isolated PostgreSQL
+        run: sh scripts/test-social-designation-postgres.sh
 
   postgres-api:
     runs-on: ubuntu-latest

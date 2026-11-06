@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-10-26T22:14:38.769742+00:00",
+  "plaintextFilesChecked": 18,
+  "knownCredentialFormats": 0,
+  "archiveMembersChecked": 7,
+  "ownedPortsClosed": {
+    "55589": true,
+    "18859": true,
+    "18860": true,
+    "4295": true,
+    "4297": true
+  },
+  "scope": "Named format scan, not a general proof of secret absence; synthetic account/credentials only in tests."
+}

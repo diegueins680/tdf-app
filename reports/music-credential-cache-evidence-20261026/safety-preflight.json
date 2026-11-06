@@ -1,0 +1,12 @@
+{
+  "recordedAt": "2026-10-26T19:29:19.614418+00:00",
+  "status": "PASS_LOCAL_HARNESS_PREFLIGHT_ONLY",
+  "harnessSha256": "0231299a3306f26f88145374275864fc5a2b8adffb221ade8c3cecea31e58959",
+  "httpRedirectOpenersChecked": 2,
+  "redirectTrapRequests": 0,
+  "wrongWriteCasesBlocked": 4,
+  "allowedWriteReachedFakeLocalTransport": true,
+  "ownedLoopbackServersClosed": true,
+  "applicationOrPostgresExecuted": false,
+  "externalOrObjectRequests": false
+}

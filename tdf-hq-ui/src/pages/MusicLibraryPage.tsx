@@ -35,24 +35,19 @@ import { useSession } from '../session/SessionContext';
 const loudnessFor = (metadata: Record<string, unknown>): number | null =>
   typeof metadata['loudness_lufs'] === 'number' ? metadata['loudness_lufs'] : null;
 
-const resolveTrack = async (entry: MusicLibraryTrack): Promise<PlayerTrack> => {
+const prepareTrack = (entry: MusicLibraryTrack): PlayerTrack => {
   if (!entry.available || !entry.trackId || !entry.releaseId || !entry.releaseVersionId) {
     throw new Error(`${entry.title} ya no está disponible.`);
   }
-  const sources = await Promise.all(entry.sources.map(async (source) => {
-    const access = await musicReleases.getAssetAccess(source.assetId);
-    return {
-      url: access.url,
-      assetId: source.assetId,
-      expiresAt: access.expiresAt,
-      quality: musicSourceQuality(source.technicalMetadata, access.mediaType),
-      mediaType: access.mediaType,
-      preview: source.role === 'preview_audio',
-    };
+  const sources = entry.sources.map((source) => ({
+    url: '',
+    assetId: source.assetId,
+    quality: musicSourceQuality(source.technicalMetadata, source.mediaType),
+    mediaType: source.mediaType,
+    preview: source.role === 'preview_audio',
   }));
   if (sources.length === 0) throw new Error(`${entry.title} no tiene audio autorizado.`);
-  const previewOnly = entry.sources.some((source) => source.role === 'preview_audio')
-    && !entry.sources.some((source) => source.role === 'stream_audio');
+  const hasPreview = entry.sources.some((source) => source.role === 'preview_audio');
   return {
     id: entry.trackId,
     recordingId: entry.recordingId,
@@ -61,7 +56,7 @@ const resolveTrack = async (entry: MusicLibraryTrack): Promise<PlayerTrack> => {
     title: entry.title,
     artist: entry.displayArtist ?? 'Artista',
     durationMs: entry.durationMs,
-    previewEndMs: previewOnly ? 30000 : null,
+    previewEndMs: hasPreview ? 30000 : null,
     loudnessLufs: entry.sources.map((source) => loudnessFor(source.technicalMetadata)).find((value) => value !== null) ?? null,
     sources,
   };
@@ -82,22 +77,21 @@ export default function MusicLibraryPage() {
 
   const refreshLibrary = () => queryClient.invalidateQueries({ queryKey: ['music-playlists'] });
 
-  const playEntries = async (entries: MusicLibraryTrack[], selectedRecordingId?: string, startPositionMs?: number) => {
-    setBusy(true); setError(null);
+  const playEntries = (entries: MusicLibraryTrack[], selectedRecordingId?: string, startPositionMs?: number) => {
+    setError(null);
     try {
-      const playable = entries.filter((entry) => entry.available && entry.sources.length > 0);
-      const resolved = await Promise.allSettled(playable.map(resolveTrack));
-      const queue = resolved.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
-      const selectedEntry = selectedRecordingId
-        ? playable.find((entry) => entry.recordingId === selectedRecordingId)
-        : playable[0];
-      const selected = queue.find((track) => track.recordingId === selectedEntry?.recordingId) ?? queue[0];
+      const playable = entries.filter((entry) => entry.available && entry.trackId && entry.releaseId && entry.releaseVersionId && entry.sources.length > 0);
+      const queue = playable.map(prepareTrack);
+      const selected = selectedRecordingId
+        ? queue.find((track) => track.recordingId === selectedRecordingId)
+        : queue[0];
       if (!selected) throw new Error('No hay pistas autorizadas disponibles en esta colección.');
+      // Queue metadata contains asset IDs, never delivery credentials. Actual
+      // authorization belongs to the current generation of the global engine.
       window.dispatchEvent(new CustomEvent(PLAYER_LOAD_TRACK_EVENT, {
         detail: { track: selected, queue, autoplay: true, startPositionMs },
       }));
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo cargar la colección.'); }
-    finally { setBusy(false); }
   };
 
   const createPlaylist = async () => {

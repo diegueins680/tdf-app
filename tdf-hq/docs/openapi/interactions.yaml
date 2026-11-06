@@ -674,13 +674,20 @@ paths:
           minimum: 1
           maximum: 50
           default: 20
+      - name: sourceEvent
+        in: query
+        required: false
+        description: Opt into source-memory reports for one authorized event; absent preserves the comment inbox.
+        schema: {type: string, pattern: '^[1-9][0-9]*$'}
       responses:
         '200':
           description: Current authorized state; Cache-Control no-store
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InteractionPage'
+                oneOf:
+                - $ref: '#/components/schemas/InteractionPage'
+                - $ref: '#/components/schemas/EventMemorySourceReportPage'
         '400':
           description: Invalid input
         '401':
@@ -920,6 +927,58 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/InteractionAuthor'
+          sourceModeration:
+            $ref: '#/components/schemas/EventMemorySourceControls'
+    EventMemorySourceControls:
+      type: object
+      required: [supported, eventId, state, sourceRevision, canReport, canHide, canRestore, canRemove]
+      properties:
+        supported: {type: boolean}
+        eventId: {type: string}
+        state: {type: string, enum: [visible, hidden, removed]}
+        sourceRevision: {type: string, description: Opaque source revision; preserve exactly when submitting a command.}
+        canReport: {type: boolean}
+        canHide: {type: boolean}
+        canRestore: {type: boolean}
+        canRemove: {type: boolean}
+    EventMemorySourceReport:
+      type: object
+      required: [id, entityKey, eventId, version, source, caption, mediaType, mediaUrl, author, openReports, reportsReferToEarlierContent, reasons, audit]
+      properties:
+        id: {type: string, format: uuid}
+        entityKey: {type: string}
+        eventId: {type: string}
+        version: {type: integer, minimum: 1}
+        source: {$ref: '#/components/schemas/EventMemorySourceControls'}
+        caption: {type: string, nullable: true}
+        mediaType: {type: string}
+        mediaUrl: {type: string}
+        author:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/InteractionAuthor'}]
+        openReports: {type: integer, minimum: 0}
+        reportsReferToEarlierContent: {type: boolean}
+        reasons: {type: array, maxItems: 20, items: {type: string}}
+        audit:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            required: [operation, reason, previousState, newState, createdAt]
+            properties:
+              operation: {type: string}
+              reason: {type: string}
+              previousState: {type: string, nullable: true}
+              newState: {type: string}
+              createdAt: {type: string, format: date-time}
+    EventMemorySourceReportPage:
+      type: object
+      required: [supported, canReview, items, nextCursor]
+      properties:
+        supported: {type: boolean}
+        canReview: {type: boolean}
+        items: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/EventMemorySourceReport'}}
+        nextCursor: {type: string, format: uuid, nullable: true}
     InteractionPage:
       type: object
       additionalProperties: false
@@ -1236,6 +1295,30 @@ components:
             enum:
             - reviewed
             - dismissed
+      - type: object
+        additionalProperties: false
+        required: [operation, reason, expectedSourceRevision]
+        properties:
+          operation: {type: string, enum: [source.report]}
+          reason: {type: string, minLength: 1, maxLength: 1000}
+          expectedSourceRevision: {type: string}
+      - type: object
+        additionalProperties: false
+        required: [operation, reason, expectedVersion, expectedSourceRevision]
+        properties:
+          operation: {type: string, enum: [source.hide, source.remove, source.restore]}
+          reason: {type: string, minLength: 1, maxLength: 1000}
+          expectedVersion: {type: integer, minimum: 1}
+          expectedSourceRevision: {type: string}
+      - type: object
+        additionalProperties: false
+        required: [operation, reason, expectedVersion, expectedSourceRevision, decision]
+        properties:
+          operation: {type: string, enum: [source.report.resolve]}
+          reason: {type: string, minLength: 1, maxLength: 1000}
+          expectedVersion: {type: integer, minimum: 1}
+          expectedSourceRevision: {type: string}
+          decision: {type: string, enum: [reviewed, dismissed]}
     InteractionCommandRequest:
       type: object
       additionalProperties: false
@@ -1255,6 +1338,7 @@ components:
           format: uuid
           nullable: true
         version: *id007
+        state: {type: string, enum: [visible, hidden, removed]}
         replay: *id010
         reported: *id010
         mode: *id009

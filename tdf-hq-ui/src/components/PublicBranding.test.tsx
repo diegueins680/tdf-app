@@ -291,3 +291,25 @@ it('keeps the authenticated feature menu out of the guest header', async () => {
   try { expect(container.querySelector('button[aria-haspopup="dialog"]')).toBeNull(); }
   finally { await view.cleanup(); container.remove(); }
 });
+
+
+it.each([
+  ['/social/eventos/141?utm_source=invitation#momentos', '/social/eventos/141?utm_source=invitation#momentos'],
+  // The legacy public alias deliberately strips query/hash in the shared redirect sanitizer.
+  ['/eventos/141?utm_campaign=community#momentos', '/eventos/141'],
+])(
+  'retains the approved event return target in the public signup invitation: %s', async (route, expectedTarget) => {
+    activeSession = null;
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const view = await renderBranding(container, route);
+    try {
+      const links = [...container.querySelectorAll<HTMLAnchorElement>('a[href*="signup=1"]')];
+      expect(links.length).toBeGreaterThan(0);
+      for (const link of links) {
+        const destination = new URL(link.getAttribute('href') ?? '', 'https://tdf.test');
+        expect(destination.searchParams.get('signup')).toBe('1');
+        expect(destination.searchParams.get('redirect')).toBe(expectedTarget);
+      }
+    } finally { await view.cleanup(); }
+  },
+);

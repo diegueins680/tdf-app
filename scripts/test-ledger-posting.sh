@@ -15,3 +15,4 @@ python3 "$repo_root/scripts/__tests__/ledger-posting-upgrade.py"
 python3 "$repo_root/scripts/__tests__/ledger-posting-snapshot.py" --negative-controls
 python3 "$repo_root/scripts/__tests__/ledger-posting-namespace.py" --negative-controls
 node "$repo_root/scripts/__tests__/ledger-startup-namespace.mjs"
+node "$repo_root/scripts/__tests__/ledger-event-identity.mjs" --negative-controls

@@ -139,6 +139,46 @@ export interface MusicPublicReleaseSummary {
   coverAssetId: string | null;
 }
 
+// Search returns one currently discoverable recording in an authorized release
+// context. These are deferred references, never storage URLs or credentials.
+export interface MusicPublicTrackSearchHit {
+  trackId: string;
+  recordingId: string;
+  releaseId: string;
+  releaseVersionId: string;
+  releaseSlug: string;
+  releaseTitle: string;
+  title: string;
+  displayArtist: string;
+  durationMs: number | null;
+  sources: MusicPublicRelease['tracks'][number]['sources'];
+}
+
+function parseMusicTrackSearchResponse(value: unknown): MusicPublicTrackSearchHit[] {
+  const record = (item: unknown): item is Record<string, unknown> =>
+    typeof item === 'object' && item !== null && !Array.isArray(item);
+  const exactFields = <Field extends string>(item: unknown, fields: Field[]): item is Record<Field, unknown> =>
+    record(item) && Object.keys(item).length === fields.length && fields.every((field) => Object.prototype.hasOwnProperty.call(item, field));
+  const text = (item: unknown): item is string => typeof item === 'string' && item.trim().length > 0;
+  const uuid = (item: unknown): boolean => typeof item === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
+  const source = (item: unknown): boolean =>
+    exactFields(item, ['assetId', 'role', 'mediaType', 'technicalMetadata']) && uuid(item.assetId) &&
+    (item.role === 'stream_audio' || item.role === 'preview_audio') && text(item.mediaType) &&
+    record(item.technicalMetadata) && Object.entries(item.technicalMetadata).every(([key, number]) =>
+      (key === 'bitrate_kbps' || key === 'loudness_lufs') && typeof number === 'number' && Number.isFinite(number));
+  const hit = (item: unknown): boolean =>
+    exactFields(item, ['trackId', 'recordingId', 'releaseId', 'releaseVersionId', 'releaseSlug', 'releaseTitle', 'title', 'displayArtist', 'durationMs', 'sources']) &&
+    uuid(item.trackId) && uuid(item.recordingId) && uuid(item.releaseId) && uuid(item.releaseVersionId) &&
+    text(item.releaseSlug) && text(item.releaseTitle) && text(item.title) && text(item.displayArtist) &&
+    (item.durationMs === null || (typeof item.durationMs === 'number' && Number.isSafeInteger(item.durationMs) && item.durationMs >= 0)) &&
+    Array.isArray(item.sources) && item.sources.length > 0 && item.sources.every(source);
+  // A generic transport can successfully receive a proxy's HTML or malformed
+  // JSON. Reject it before it can crash the independent directory renderer.
+  if (!Array.isArray(value) || value.length > 100 || !value.every(hit)) throw new Error('Invalid music search response.');
+  return value as MusicPublicTrackSearchHit[];
+}
+
 export interface MusicAssetAccess {
   url: string;
   expiresAt: string;
@@ -494,14 +534,47 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
   }
 };
 
+export interface MusicPublicCatalogPage {
+  limit?: number;
+  offset?: number;
+  signal?: AbortSignal;
+}
+
 export const musicReleases = {
+  searchTracks: (query: string, page?: MusicPublicCatalogPage) => {
+    const term = query.trim();
+    if (Array.from(term).length > 200) throw new RangeError('Music search query must contain at most 200 characters.');
+    const params = new URLSearchParams();
+    if (term) params.set('q', term);
+    if (page?.limit !== undefined) {
+      if (!Number.isSafeInteger(page.limit) || page.limit < 1 || page.limit > 100) throw new RangeError('Search limit must be an integer from 1 to 100.');
+      params.set('limit', String(page.limit));
+    }
+    if (page?.offset !== undefined) {
+      if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Search offset must be a nonnegative safe integer.');
+      params.set('offset', String(page.offset));
+    }
+    const suffix = params.toString();
+    const path = apiPath(`/search${suffix ? `?${suffix}` : ''}`);
+    const response = page?.signal ? get<unknown>(path, { signal: page.signal }) : get<unknown>(path);
+    return response.then(parseMusicTrackSearchResponse);
+  },
   listMine: (artistPartyId?: number) => get<MusicReleaseSummary[]>(apiPath(`/studio/releases${artistPartyId ? `?artistPartyId=${artistPartyId}` : ''}`)),
-  listPublic: (query = '', artistPartyId?: number) => {
+  listPublic: (query = '', artistPartyId?: number, page?: MusicPublicCatalogPage) => {
     const params = new URLSearchParams();
     if (query.trim()) params.set('q', query.trim());
     if (artistPartyId) params.set('artistPartyId', String(artistPartyId));
+    if (page?.limit !== undefined) {
+      if (!Number.isSafeInteger(page.limit) || page.limit < 1 || page.limit > 100) throw new RangeError('Catalog limit must be an integer from 1 to 100.');
+      params.set('limit', String(page.limit));
+    }
+    if (page?.offset !== undefined) {
+      if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Catalog offset must be a nonnegative safe integer.');
+      params.set('offset', String(page.offset));
+    }
     const suffix = params.toString();
-    return get<MusicPublicReleaseSummary[]>(apiPath(`/releases${suffix ? `?${suffix}` : ''}`));
+    const path = apiPath(`/releases${suffix ? `?${suffix}` : ''}`);
+    return page?.signal ? get<MusicPublicReleaseSummary[]>(path, { signal: page.signal }) : get<MusicPublicReleaseSummary[]>(path);
   },
   getPublic: (slug: string) => get<MusicPublicRelease>(apiPath(`/releases/${encodeURIComponent(slug)}`)),
   getAssetAccess: (assetId: string) => get<MusicAssetAccess>(apiPath(`/assets/${assetId}/access`)),

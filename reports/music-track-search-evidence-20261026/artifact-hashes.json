@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "scope": "Current packet leaves except this self-referential manifest; later root-owned compiled-http evidence is separate",
+  "files": {
+    "README-before-post-qualification.md": {
+      "bytes": 4047,
+      "sha256": "33d3e4cd0c72426e4952df14f42ae68d83d831b437d2cd77010cbd40811e1645"
+    },
+    "README.md": {
+      "bytes": 4588,
+      "sha256": "c1d4653fd9426554d194c7554ce1685487fcbeac7d28da4e4c1c3a9d0d7f5f43"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 9857,
+      "sha256": "20522e2ae3373b142252d24cea32be1cf947d9bab1e1145dc4f4928542f81012"
+    },
+    "artifact-hashes-before-post-qualification.json": {
+      "bytes": 1921,
+      "sha256": "8696448e1ded6677a55bc37f2293bcd5b90da207890dc9c534170a82bdefd85a"
+    },
+    "backend-source-review.json": {
+      "bytes": 293392,
+      "sha256": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4"
+    },
+    "catalog-source-review.json": {
+      "bytes": 3243,
+      "sha256": "eff39526cb8fb87767135afb7403355efdb488c2a98efbd66cee1ed97439cbfa"
+    },
+    "compiled-http/backend-committed-inputs.json": {
+      "bytes": 120776,
+      "sha256": "f55f76acfa6bebd3cd84cbf71159254e669cb677e9c8bff5b2bd31b89300177e"
+    },
+    "compiled-http/fixture.mjs": {
+      "bytes": 1573,
+      "sha256": "e151f6b975fd11027f638fa6bdefdb28e27fac4039290fb3654ac8dbbb5faaa1"
+    },
+    "compiled-http/qualification-summary.json": {
+      "bytes": 824,
+      "sha256": "d5e7a468081f6098504e18dc4c799b2e45fecb145733eddef9b3b75f701f49d1"
+    },
+    "compiled-http/results.json": {
+      "bytes": 24383,
+      "sha256": "82d74e2e5df61e25814b610d680abbc32eacc018e741384b2eab104e8a00fa05"
+    },
+    "compiled-http/review-manifest.json": {
+      "bytes": 8677,
+      "sha256": "a39e99237387f74bf45ea740f0300581eb95c3d690c84fde47c0db4659e4bc31"
+    },
+    "compiled-http/run.py": {
+      "bytes": 27273,
+      "sha256": "e074113c7e06780178c2786cde0e240e31672e4ecb00245c8cce3affe1c00a85"
+    },
+    "compiled-http/syntax-and-pure-safety.json": {
+      "bytes": 1170,
+      "sha256": "feb8e81ccc7b3731e252dd7087f6bcbbaa0ccbcb2053bd74f338f0467b6a2df2"
+    },
+    "frontend-qualification.json": {
+      "bytes": 5012,
+      "sha256": "0c79dba1a214fd3841386dfcf08b730c1d6508f1419052592c5b6d7911a11e4e"
+    },
+    "local-execution-evidence.tar.gz": {
+      "bytes": 184077,
+      "sha256": "5fc5d4f01a82476cccb608a1f6bc55784d4169909a89c50bc68c56e5e5d77d0a"
+    },
+    "machine-report-before-post-qualification.json": {
+      "bytes": 10329,
+      "sha256": "05fd60c22e7ef0e7bd67b2bbd8ae76a2079c8049712ba4826827f5d54753c1ee"
+    },
+    "model-design-report.json": {
+      "bytes": 30762,
+      "sha256": "dca3d6c478e0426d3626bc73b278626ac6aa90a2accb47c32b9d47d9c0c76712"
+    },
+    "model-qualification.json": {
+      "bytes": 3361,
+      "sha256": "b9c9d16495a03c6be621f87b3728a46790f13ce3e68b9b6f581ea4eec14997d4"
+    },
+    "native-mobile-flow-qualification.json": {
+      "bytes": 24570,
+      "sha256": "ec31c1c7781965eb24c1f8f486616e6f081cc112ddfa7736fa892e89fe907f79"
+    },
+    "native-mobile-flow-v3-failure.json": {
+      "bytes": 40383,
+      "sha256": "4cf2c7e38487e3fcd3a5e7daf84f36f4585b5084510f6235247dbf975a26fc10"
+    },
+    "native-qualification.json": {
+      "bytes": 31489,
+      "sha256": "9ff3fcc717f8448776c6597103c27edf17e71e1f8fea06a2de3e01dd9419d385"
+    },
+    "post-qualification-evidence.tar.gz": {
+      "bytes": 835431,
+      "sha256": "4e497059822e72cff6d64cf9d2d5ef13551d906f616b57708ba382535d7152e7"
+    },
+    "post-qualification-member-hashes.json": {
+      "bytes": 16956,
+      "sha256": "db14d8d0e90de39d199e5e61416b29f3255383735f7b9dd31d10c37f5bfbaa87"
+    },
+    "post-qualification-source-inputs.json": {
+      "bytes": 3572,
+      "sha256": "19f0e38a10d62a54307feb2c98d67f20d6daed29d2341269a3570f033d4d614b"
+    },
+    "post-qualification-summary.json": {
+      "bytes": 7172,
+      "sha256": "f97977f570d5f4d085226dea96f21ff898f5d6bc9271ccb66f8fed85403ce515"
+    },
+    "qualification-summary.json": {
+      "bytes": 5095,
+      "sha256": "561ac3f5fa335758eab3064484cdfc99dfb352ae0cfe600c78838b2ceed7e895"
+    },
+    "qualified-source-inputs.json": {
+      "bytes": 3156,
+      "sha256": "7c93548b7f7ac4435da10b6c78623e39ee4480a12a9496370793cf1601c05032"
+    },
+    "sql-qualification.json": {
+      "bytes": 1612,
+      "sha256": "c2a092318e9cfd4b1f43db692ad519ffc213c21e1f5b0e2346c71da3ac87c313"
+    }
+  }
+}

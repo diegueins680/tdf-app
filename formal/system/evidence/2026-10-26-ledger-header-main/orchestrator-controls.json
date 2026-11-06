@@ -1,0 +1,27 @@
+{
+  "driverSha256": "fc12a7ce6abdab8a8f7f05388c4bb47c592a7cac6933e4ef15f6f48cef41b6e2",
+  "selftestSource": "import ast,subprocess,sys,os,tempfile,json\nfrom pathlib import Path\np=Path(sys.argv[1]); tree=ast.parse(p.read_text()); fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='run')\nwith tempfile.TemporaryDirectory(prefix='tdf-header-driver-control-') as td:\n scope={'subprocess':subprocess,'root':Path(td),'out':Path(td),'env':os.environ.copy(),'report':{'steps':[]},'save':lambda:None}\n exec(compile(ast.Module(body=[fn],type_ignores=[]),str(p),'exec'),scope)\n run=scope['run']; checked=[]\n for label,cmd,expected,mustFail in [('zero',[sys.executable,'-c','pass'],None,False),('nonzero',[sys.executable,'-c','raise SystemExit(7)'],None,True),('wrong-marker',[sys.executable,'-c','raise SystemExit(7)'],'required marker',True),('named-rejection',[sys.executable,'-c','import sys; print(\"required marker\",file=sys.stderr);sys.exit(1)'],'required marker',False)]:\n  failed=False\n  try:run(label,cmd,expected=expected)\n  except AssertionError:failed=True\n  if failed!=mustFail:raise RuntimeError('Harness failed control '+label)\n  checked.append(label)\n print(json.dumps({'optimization':sys.flags.optimize,'controls':checked,'passed':True}))\n",
+  "runs": [
+    {
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-c",
+        "<selftest>",
+        "/tmp/tdf-ledger-header-main-qualified-driver-20261026.py"
+      ],
+      "stdout": "zero PASS\nnamed-rejection EXPECTED REJECTION\n{\"optimization\": 0, \"controls\": [\"zero\", \"nonzero\", \"wrong-marker\", \"named-rejection\"], \"passed\": true}\n",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-O",
+        "-c",
+        "<selftest>",
+        "/tmp/tdf-ledger-header-main-qualified-driver-20261026.py"
+      ],
+      "stdout": "zero PASS\nnamed-rejection EXPECTED REJECTION\n{\"optimization\": 1, \"controls\": [\"zero\", \"nonzero\", \"wrong-marker\", \"named-rejection\"], \"passed\": true}\n",
+      "exitCode": 0
+    }
+  ]
+}

@@ -6,5 +6,5 @@ export interface PlayerAssetAuthorization {
   mediaType: string;
 }
 
-export const authorizePlayerAsset = (assetId: string): Promise<PlayerAssetAuthorization> =>
-  get<PlayerAssetAuthorization>(`/music/assets/${encodeURIComponent(assetId)}/access`);
+export const authorizePlayerAsset = (assetId: string, signal?: AbortSignal): Promise<PlayerAssetAuthorization> =>
+  get<PlayerAssetAuthorization>(`/music/assets/${encodeURIComponent(assetId)}/access`, { signal });

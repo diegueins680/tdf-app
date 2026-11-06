@@ -1,0 +1,8 @@
+{
+  "sourceCommit": "a5d8b29987acfeb460a86e662fd5ead53ab379e8",
+  "phone": "3passedCLI0 andownpreviewstopped",
+  "desktop": "NOT_RUN: initial socket bind41039 raised EADDRINUSE before aliases/server/browser; no test result exists",
+  "interpretation": "Sequential fixed-port preflight encountered a still-unavailable address after clean prior teardown; no active listener was killed. Exact TIME_WAIT attribution is not independently proven.",
+  "correction": "Separate unused local ports41041desktop,41042Firefox. Same source/build/test bodies/assertions; run only unexecuted profiles.",
+  "oldAttemptRetained": true
+}

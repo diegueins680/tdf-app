@@ -114,6 +114,8 @@ run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant In
 run_tlc LedgerNamespace.tla LedgerNamespace.cfg ledger-namespace
 run_negative_tlc LedgerNamespacePosting.cfg ledger-namespace-posting 'Invariant PostedBalanced is violated' LedgerNamespace.tla
 run_negative_tlc LedgerNamespaceEntry.cfg ledger-namespace-entry 'Invariant PostedBalanced is violated' LedgerNamespace.tla
+run_tlc LedgerHeader.tla LedgerHeader.cfg ledger-header
+run_negative_tlc LedgerHeaderMutable.cfg ledger-header-mutable 'Invariant PostedHeaderFrozen is violated' LedgerHeader.tla
 
 run_tlc MigrationLedger.tla MigrationLedger.cfg migration-ledger
 run_negative_tlc MigrationLedgerRecordAfterCommit.cfg migration-ledger-record-after-commit 'Invariant EffectsRecorded is violated' MigrationLedger.tla
@@ -254,6 +256,7 @@ run_negative_tlc DirectoryClaimReviewConcurrent.cfg directory-claim-race 'Invari
 run_negative_tlc DirectoryClaimReviewModuleOnly.cfg directory-claim-module-only 'Invariant AdminRoleRequired is violated' DirectoryClaimReview.tla
 run_negative_tlc DirectoryClaimReviewSelfReview.cfg directory-claim-self-review 'Invariant SeparatedReview is violated' DirectoryClaimReview.tla
 run_negative_tlc DirectoryClaimReviewReplay.cfg directory-claim-replay 'Invariant NoReplayRegrant is violated' DirectoryClaimReview.tla
+run_negative_tlc DirectoryClaimReviewRevokeKeepsGrant.cfg directory-claim-revoke-keeps-grant 'Invariant RevocationWithdrawsGrant is violated' DirectoryClaimReview.tla
 run_tlc SignupIdentity.tla SignupIdentity.cfg signup-identity
 run_negative_tlc SignupIdentityPublicClaim.cfg signup-public-claim 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
 run_negative_tlc SignupIdentityUnreviewed.cfg signup-unreviewed 'Invariant ReviewedManagement is violated' SignupIdentity.tla

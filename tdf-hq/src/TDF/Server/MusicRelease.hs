@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -8,10 +9,11 @@ module TDF.Server.MusicRelease
 
 import Control.Exception (throwIO, try)
 import Control.Monad (unless, when)
+import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Crypto.Hash (Digest, SHA256, hash)
-import Data.Aeson (ToJSON, Value, encode, object, (.=))
+import Data.Aeson (Result(..), ToJSON, Value, encode, fromJSON, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -47,6 +49,7 @@ musicReleasePublicServer =
   :<|> getPublicRelease
   :<|> Assets.getPublicMusicAssetAccess
   :<|> recordAnonymousPlaybackEvent
+  :<|> searchPublicTracks
 
 musicReleaseProtectedServer :: AuthedUser -> ServerT MusicReleaseProtectedAPI AppM
 musicReleaseProtectedServer user =
@@ -182,8 +185,12 @@ listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffse
   let limit = max 1 (min 100 (fromMaybe 24 requestedLimit))
       offset = max 0 (fromMaybe 0 requestedOffset)
       normalizedQuery = T.strip (fromMaybe "" query)
+  -- Match recording titles only through a currently authorized delivery asset.
+  -- EXISTS retains one row per release even when several renditions match.
+  -- Reuse directory normalization while retaining literal non-Latin matching.
   jsonRows
-    "SELECT jsonb_build_object(\
+    "WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query)\
+    \ SELECT jsonb_build_object(\
     \ 'id',public.id,'artistPartyId',public.artist_party_id,'slug',public.canonical_slug,\
     \ 'kind',public.release_kind,'versionId',public.release_version_id,'versionNumber',public.version_number,\
     \ 'title',public.title,'subtitle',public.subtitle,'versionTitle',public.version_title,\
@@ -191,15 +198,28 @@ listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffse
     \ 'originalReleaseDate',public.original_release_date,'releaseAtUtc',public.release_at_utc,\
     \ 'labelName',public.label_name,'catalogNumber',public.catalog_number,'publishedAt',public.published_at,\
     \ 'coverAssetId',(SELECT asset.id FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.asset_role='cover_display' AND asset.processing_state='ready' ORDER BY asset.created_at DESC LIMIT 1)\
-    \) FROM music_public_release public\
-    \ WHERE (?='' OR public.title ILIKE '%' || ? || '%' OR public.display_artist ILIKE '%' || ? || '%')\
+    \) FROM music_public_release public CROSS JOIN input\
+    \ WHERE (input.raw_query='' OR (\
+    \   (input.query<>'' AND directory_normalize_text(public.title) LIKE '%' || input.query || '%')\
+    \   OR strpos(lower(public.title),lower(input.raw_query))>0\
+    \   OR (input.query<>'' AND directory_normalize_text(public.display_artist) LIKE '%' || input.query || '%')\
+    \   OR strpos(lower(public.display_artist),lower(input.raw_query))>0\
+    \   OR EXISTS (SELECT 1 FROM music_release_track track\
+    \     JOIN music_recording recording ON recording.id=track.recording_id\
+    \     JOIN music_asset audio ON audio.release_version_id=track.release_version_id\
+    \       AND audio.recording_id=recording.id\
+    \     WHERE track.release_version_id=public.release_version_id\
+    \       AND ((input.query<>'' AND directory_normalize_text(recording.canonical_title) LIKE '%' || input.query || '%')\
+    \         OR strpos(lower(recording.canonical_title),lower(input.raw_query))>0)\
+    \       AND audio.asset_role IN ('stream_audio','preview_audio')\
+    \       AND music_public_asset_accessible(audio.id,?::text))))\
     \   AND (?::bigint IS NULL OR public.artist_party_id=?::bigint)\
     \   AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=public.release_version_id\
     \     AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW())\
     \     AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories)))\
     \       OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories)))))\
     \ ORDER BY public.published_at DESC, public.id LIMIT ? OFFSET ?"
-    [ PersistText normalizedQuery, PersistText normalizedQuery, PersistText normalizedQuery
+    [ PersistText normalizedQuery, PersistText normalizedQuery, optionalText territory
     , optionalInt64 artistPartyId, optionalInt64 artistPartyId
     , optionalText territory, optionalText territory, optionalText territory
     , PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)
@@ -225,7 +245,7 @@ getPublicRelease rawSlug edgeCountry = do
     \    'displayArtist',track.display_artist,'durationMs',recording.duration_ms,\
     \    'explicitContent',recording.explicit_content,\
     \    'sources',COALESCE((SELECT jsonb_agg(jsonb_build_object('assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,'technicalMetadata',asset.technical_metadata) ORDER BY asset.asset_role,asset.created_at)\
-    \       FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id))),'[]'::jsonb)\
+    \       FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id)) AND music_public_asset_accessible(asset.id,?::text)),'[]'::jsonb)\
     \  ) ORDER BY track.disc_number,track.track_number)\
     \  FROM music_release_track track JOIN music_recording recording ON recording.id=track.recording_id\
     \  WHERE track.release_version_id=public.release_version_id),'[]'::jsonb),\
@@ -237,7 +257,7 @@ getPublicRelease rawSlug edgeCountry = do
     \   AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW())\
     \   AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories)))\
     \     OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories)))))"
-    [PersistText slug, optionalText territory, optionalText territory, optionalText territory]
+    [optionalText territory, PersistText slug, optionalText territory, optionalText territory, optionalText territory]
 
 listMyReleases :: AuthedUser -> Maybe Int64 -> AppM [Value]
 listMyReleases user requestedArtistId = do
@@ -515,8 +535,8 @@ listFavorites user edgeCountry = do
   requirePublicFeature
   territory <- Assets.trustedEdgeTerritory edgeCountry
   jsonRows
-    "SELECT jsonb_build_object('recordingId',recording.id,'trackId',public.resolved_track_id,'title',recording.canonical_title,'durationMs',recording.duration_ms,'createdAt',favorite.created_at,'available',public.release_version_id IS NOT NULL,'releaseId',public.id,'releaseVersionId',public.release_version_id,'slug',public.canonical_slug,'displayArtist',public.display_artist,'sources',COALESCE((SELECT jsonb_agg(jsonb_build_object('assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,'technicalMetadata',asset.technical_metadata) ORDER BY asset.asset_role,asset.created_at) FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id))),'[]'::jsonb)) FROM music_favorite favorite JOIN music_recording recording ON recording.id=favorite.recording_id LEFT JOIN LATERAL (SELECT candidate.*,track.id AS resolved_track_id FROM music_public_release candidate JOIN music_release_track track ON track.release_version_id=candidate.release_version_id WHERE track.recording_id=recording.id AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=candidate.release_version_id AND (rule.release_track_id IS NULL OR rule.release_track_id=track.id) AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND rule.listening_policy<>'none' AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))) ORDER BY candidate.published_at DESC LIMIT 1) public ON TRUE WHERE favorite.party_id=? ORDER BY favorite.created_at DESC"
-    [optionalText territory,optionalText territory,optionalText territory,PersistInt64 (currentPartyId user)]
+    "SELECT jsonb_build_object('recordingId',recording.id,'trackId',public.resolved_track_id,'title',recording.canonical_title,'durationMs',recording.duration_ms,'createdAt',favorite.created_at,'available',public.release_version_id IS NOT NULL,'releaseId',public.id,'releaseVersionId',public.release_version_id,'slug',public.canonical_slug,'displayArtist',public.display_artist,'sources',COALESCE((SELECT jsonb_agg(jsonb_build_object('assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,'technicalMetadata',asset.technical_metadata) ORDER BY asset.asset_role,asset.created_at) FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id)) AND music_public_asset_accessible(asset.id,?::text)),'[]'::jsonb)) FROM music_favorite favorite JOIN music_recording recording ON recording.id=favorite.recording_id LEFT JOIN LATERAL (SELECT candidate.*,track.id AS resolved_track_id FROM music_public_release candidate JOIN music_release_track track ON track.release_version_id=candidate.release_version_id WHERE track.recording_id=recording.id AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=candidate.release_version_id AND (rule.release_track_id IS NULL OR rule.release_track_id=track.id) AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND rule.listening_policy<>'none' AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))) ORDER BY candidate.published_at DESC LIMIT 1) public ON TRUE WHERE favorite.party_id=? ORDER BY favorite.created_at DESC"
+    [optionalText territory,optionalText territory,optionalText territory,optionalText territory,PersistInt64 (currentPartyId user)]
 
 addFavorite :: AuthedUser -> Maybe Text -> MusicFavoriteRequest -> AppM NoContent
 addFavorite user edgeCountry MusicFavoriteRequest{..} = do
@@ -541,8 +561,8 @@ listPlaylists user edgeCountry = do
   requirePublicFeature
   territory <- Assets.trustedEdgeTerritory edgeCountry
   jsonRows
-    "SELECT jsonb_build_object('id',playlist.id,'name',playlist.name,'visibility',playlist.visibility,'createdAt',playlist.created_at,'updatedAt',playlist.updated_at,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',item.id,'recordingId',recording.id,'trackId',public.resolved_track_id,'position',item.position,'addedAt',item.added_at,'title',recording.canonical_title,'durationMs',recording.duration_ms,'available',public.release_version_id IS NOT NULL,'releaseId',public.id,'releaseVersionId',public.release_version_id,'slug',public.canonical_slug,'displayArtist',public.display_artist,'sources',COALESCE((SELECT jsonb_agg(jsonb_build_object('assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,'technicalMetadata',asset.technical_metadata) ORDER BY asset.asset_role,asset.created_at) FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id))),'[]'::jsonb)) ORDER BY item.position) FROM music_playlist_item item JOIN music_recording recording ON recording.id=item.recording_id LEFT JOIN LATERAL (SELECT candidate.*,track.id AS resolved_track_id FROM music_public_release candidate JOIN music_release_track track ON track.release_version_id=candidate.release_version_id WHERE track.recording_id=recording.id AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=candidate.release_version_id AND (rule.release_track_id IS NULL OR rule.release_track_id=track.id) AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND rule.listening_policy<>'none' AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))) ORDER BY candidate.published_at DESC LIMIT 1) public ON TRUE WHERE item.playlist_id=playlist.id),'[]'::jsonb)) FROM music_playlist playlist WHERE playlist.owner_party_id=? ORDER BY playlist.updated_at DESC,playlist.id"
-    [optionalText territory,optionalText territory,optionalText territory,PersistInt64 (currentPartyId user)]
+    "SELECT jsonb_build_object('id',playlist.id,'name',playlist.name,'visibility',playlist.visibility,'createdAt',playlist.created_at,'updatedAt',playlist.updated_at,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',item.id,'recordingId',recording.id,'trackId',public.resolved_track_id,'position',item.position,'addedAt',item.added_at,'title',recording.canonical_title,'durationMs',recording.duration_ms,'available',public.release_version_id IS NOT NULL,'releaseId',public.id,'releaseVersionId',public.release_version_id,'slug',public.canonical_slug,'displayArtist',public.display_artist,'sources',COALESCE((SELECT jsonb_agg(jsonb_build_object('assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,'technicalMetadata',asset.technical_metadata) ORDER BY asset.asset_role,asset.created_at) FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id)) AND music_public_asset_accessible(asset.id,?::text)),'[]'::jsonb)) ORDER BY item.position) FROM music_playlist_item item JOIN music_recording recording ON recording.id=item.recording_id LEFT JOIN LATERAL (SELECT candidate.*,track.id AS resolved_track_id FROM music_public_release candidate JOIN music_release_track track ON track.release_version_id=candidate.release_version_id WHERE track.recording_id=recording.id AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=candidate.release_version_id AND (rule.release_track_id IS NULL OR rule.release_track_id=track.id) AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND rule.listening_policy<>'none' AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))) ORDER BY candidate.published_at DESC LIMIT 1) public ON TRUE WHERE item.playlist_id=playlist.id),'[]'::jsonb)) FROM music_playlist playlist WHERE playlist.owner_party_id=? ORDER BY playlist.updated_at DESC,playlist.id"
+    [optionalText territory,optionalText territory,optionalText territory,optionalText territory,PersistInt64 (currentPartyId user)]
 
 createPlaylist :: AuthedUser -> MusicPlaylistCreateRequest -> AppM Value
 createPlaylist user MusicPlaylistCreateRequest{..} = do
@@ -730,8 +750,8 @@ listPlaybackHistory user edgeCountry = do
   requirePublicFeature
   territory <- Assets.trustedEdgeTerritory edgeCountry
   jsonRows
-    "SELECT jsonb_build_object('recordingId',history.recording_id,'trackId',public.resolved_track_id,'releaseVersionId',public.release_version_id,'positionMs',history.last_position_ms,'playCount',history.play_count,'lastPlayedAt',history.last_played_at,'title',recording.canonical_title,'durationMs',recording.duration_ms,'available',public.release_version_id IS NOT NULL,'releaseId',public.id,'slug',public.canonical_slug,'displayArtist',public.display_artist,'sources',COALESCE((SELECT jsonb_agg(jsonb_build_object('assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,'technicalMetadata',asset.technical_metadata) ORDER BY asset.asset_role,asset.created_at) FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id))),'[]'::jsonb)) FROM music_playback_history history JOIN music_recording recording ON recording.id=history.recording_id LEFT JOIN LATERAL (SELECT candidate.*,track.id AS resolved_track_id FROM music_public_release candidate JOIN music_release_track track ON track.release_version_id=candidate.release_version_id WHERE track.recording_id=recording.id AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=candidate.release_version_id AND (rule.release_track_id IS NULL OR rule.release_track_id=track.id) AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND rule.listening_policy<>'none' AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))) ORDER BY (candidate.release_version_id=history.last_release_version_id) DESC,candidate.published_at DESC LIMIT 1) public ON TRUE WHERE history.party_id=? ORDER BY history.last_played_at DESC LIMIT 200"
-    [optionalText territory,optionalText territory,optionalText territory,PersistInt64 (currentPartyId user)]
+    "SELECT jsonb_build_object('recordingId',history.recording_id,'trackId',public.resolved_track_id,'releaseVersionId',public.release_version_id,'positionMs',history.last_position_ms,'playCount',history.play_count,'lastPlayedAt',history.last_played_at,'title',recording.canonical_title,'durationMs',recording.duration_ms,'available',public.release_version_id IS NOT NULL,'releaseId',public.id,'slug',public.canonical_slug,'displayArtist',public.display_artist,'sources',COALESCE((SELECT jsonb_agg(jsonb_build_object('assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,'technicalMetadata',asset.technical_metadata) ORDER BY asset.asset_role,asset.created_at) FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.recording_id=recording.id AND asset.asset_role IN ('stream_audio','preview_audio') AND asset.processing_state='ready' AND (asset.asset_role<>'preview_audio' OR music_preview_matches(asset.id)) AND music_public_asset_accessible(asset.id,?::text)),'[]'::jsonb)) FROM music_playback_history history JOIN music_recording recording ON recording.id=history.recording_id LEFT JOIN LATERAL (SELECT candidate.*,track.id AS resolved_track_id FROM music_public_release candidate JOIN music_release_track track ON track.release_version_id=candidate.release_version_id WHERE track.recording_id=recording.id AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=candidate.release_version_id AND (rule.release_track_id IS NULL OR rule.release_track_id=track.id) AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND rule.listening_policy<>'none' AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))) ORDER BY (candidate.release_version_id=history.last_release_version_id) DESC,candidate.published_at DESC LIMIT 1) public ON TRUE WHERE history.party_id=? ORDER BY history.last_played_at DESC LIMIT 200"
+    [optionalText territory,optionalText territory,optionalText territory,optionalText territory,PersistInt64 (currentPartyId user)]
 
 createInfringementReport :: AuthedUser -> Maybe Text -> MusicInfringementReportRequest -> AppM Value
 createInfringementReport user idempotencyHeader MusicInfringementReportRequest{..} = do
@@ -908,3 +928,76 @@ allStates =
   , "changes_requested","approved","scheduled","published","suspended","cancelled"
   , "replacement_pending","takedown_scheduled","withdrawn"
   ]
+
+-- | Keep this endpoint after the established handlers: its authorized metadata
+-- projection does not change release-detail or library visibility semantics.
+searchPublicTracks :: Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> AppM (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
+searchPublicTracks edgeCountry query requestedLimit requestedOffset =
+  search `catchError` \failure -> throwError failure
+    { errHeaders = ("Cache-Control", "private, no-store")
+        : filter ((/= "Cache-Control") . fst) (errHeaders failure)
+    }
+  where
+    search :: AppM (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
+    search = do
+      requirePublicFeature
+      territory <- Assets.trustedEdgeTerritory edgeCountry
+      let rawQuery = T.strip (fromMaybe "" query)
+          limit = fromMaybe 13 requestedLimit
+          offset = fromMaybe 0 requestedOffset
+      when (T.length rawQuery > 200) $
+        throwError (badRequest "q is limited to 200 characters")
+      unless (limit >= 1 && limit <= 100 && offset >= 0) $
+        throwError (badRequest "limit must be 1-100 and offset must be nonnegative")
+      values <- if T.null rawQuery then pure [] else jsonRows
+        "WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query)\
+        \, matching AS MATERIALIZED (\
+        \ SELECT track.id track_id,recording.id recording_id,public.id release_id,\
+        \   public.release_version_id,public.canonical_slug release_slug,public.title release_title,\
+        \   recording.canonical_title title,\
+        \   COALESCE(NULLIF(track.display_artist,''),public.display_artist) display_artist,\
+        \   recording.duration_ms,public.published_at,track.disc_number,track.track_number\
+        \ FROM music_public_release public\
+        \ JOIN music_release_track track ON track.release_version_id=public.release_version_id\
+        \ JOIN music_recording recording ON recording.id=track.recording_id CROSS JOIN input\
+        \ WHERE strpos(lower(recording.canonical_title),lower(input.raw_query))>0\
+        \   OR strpos(lower(track.display_artist),lower(input.raw_query))>0\
+        \   OR strpos(lower(public.title),lower(input.raw_query))>0\
+        \   OR strpos(lower(public.display_artist),lower(input.raw_query))>0\
+        \   OR (input.query<>'' AND (\
+        \     strpos(directory_normalize_text(recording.canonical_title),input.query)>0\
+        \     OR strpos(directory_normalize_text(track.display_artist),input.query)>0\
+        \     OR strpos(directory_normalize_text(public.title),input.query)>0\
+        \     OR strpos(directory_normalize_text(public.display_artist),input.query)>0)))\
+        \, authorized AS MATERIALIZED (SELECT context.*,delivery.sources FROM matching context\
+        \ JOIN LATERAL (SELECT jsonb_agg(jsonb_build_object(\
+        \   'assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,\
+        \   'technicalMetadata',jsonb_strip_nulls(jsonb_build_object(\
+        \     'bitrate_kbps',CASE WHEN jsonb_typeof(asset.technical_metadata->'bitrate_kbps')='number'\
+        \       THEN asset.technical_metadata->'bitrate_kbps' END,\
+        \     'loudness_lufs',CASE WHEN jsonb_typeof(asset.technical_metadata->'loudness_lufs')='number'\
+        \       THEN asset.technical_metadata->'loudness_lufs' END)))\
+        \   ORDER BY asset.asset_role,asset.created_at,asset.id) sources\
+        \   FROM music_asset asset WHERE asset.release_version_id=context.release_version_id\
+        \     AND asset.recording_id=context.recording_id\
+        \     AND asset.asset_role IN ('stream_audio','preview_audio')\
+        \     AND music_public_asset_accessible(asset.id,?::text)\
+        \   HAVING count(*)>0) delivery ON TRUE)\
+        \, chosen AS (SELECT DISTINCT ON (recording_id) * FROM authorized\
+        \ ORDER BY recording_id,published_at DESC,release_id,disc_number,track_number,track_id)\
+        \ SELECT jsonb_build_object('trackId',track_id,'recordingId',recording_id,\
+        \   'releaseId',release_id,'releaseVersionId',release_version_id,\
+        \   'releaseSlug',release_slug,'releaseTitle',release_title,'title',title,\
+        \   'displayArtist',display_artist,'durationMs',duration_ms,'sources',sources)\
+        \ FROM chosen ORDER BY published_at DESC,release_id,disc_number,track_number,track_id\
+        \ LIMIT ? OFFSET ?"
+        [ PersistText rawQuery, PersistText rawQuery, optionalText territory
+        , PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)
+        ]
+      hits <- mapM decodeHit values
+      pure (addHeader ("private, no-store" :: Text) hits)
+    decodeHit :: Value -> AppM MusicPublicTrackSearchHit
+    decodeHit value = case fromJSON value of
+      Success hit -> pure hit
+      Error _ -> throwError err500

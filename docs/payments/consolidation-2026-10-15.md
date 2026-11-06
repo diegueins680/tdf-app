@@ -102,7 +102,7 @@ raising an unrelated constraint error still makes the fixture fail. This changes
 test admission, not production SQL. Historical CI remains failed; the follow-up
 head requires its own current checks and review.
 
-## Full-schema provider diagnostic: unresolved
+## Full-schema provider diagnostic: unresolved in #551
 
 Directly running all 304 provider tests against a disposable database built
 from the full 207-entry manifest produced **119 failures**. This is a diagnostic,
@@ -138,3 +138,11 @@ No production migration, provider request, real-money transaction, feature
 activation, or deployment was performed for this consolidation. Production
 preflight, data backup, the canonical guarded executor and independent review
 remain release requirements.
+
+## Follow-up repair under qualification
+
+PR #596 adds exact durable operation binding for PlaceToPay/PayPhone and moves
+the provider runtime harness to the complete 209-entry schema. The failing
+207-entry diagnostic above retains its historical scope; it is not reclassified
+as a pass. See [the follow-up record](provider-domain-validation-2026-10-16.md)
+for new execution evidence, remaining qualification and activation exclusions.

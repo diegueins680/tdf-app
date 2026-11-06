@@ -1,0 +1,248 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/playwright.final-firefox.config.mjs",
+    "rootDir": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-firefox",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-firefox.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "booking.spec.mjs",
+      "file": "booking.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "booking viewport check detects known client-width overflow @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3100,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:16:21.029Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-firefox/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-firefox/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-123ccb36f5d09e83ed64",
+          "file": "booking.spec.mjs",
+          "line": 150,
+          "column": 1
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14716,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:16:26.019Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-initial-viewport",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDEyNTAyLAogICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICJpbm5lcldpZHRoIjogMzIwLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgInZpc3VhbFZpZXdwb3J0IjogewogICAgIndpZHRoIjogMzIwLAogICAgInNjYWxlIjogMQogIH0sCiAgIm92ZXJmbG93IjogZmFsc2UsCiAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICJzY3JvbGxZIjogNjQyLAogICJhbmNob3IiOiB7CiAgICAieCI6IDIxMi4yMTY2NTk1NDU4OTg0NCwKICAgICJ5IjogMTIzOS41NjY2NTAzOTA2MjUsCiAgICAicmlnaHQiOiAyNzIuMTgzMzM0MzUwNTg1OTQsCiAgICAid2lkdGgiOiA1OS45NjY2NzQ4MDQ2ODc1LAogICAgImhlaWdodCI6IDMyLAogICAgInRleHQiOiAiMDQ6MDAiLAogICAgInBsYWNlbWVudCI6IG51bGwKICB9LAogICJ0b29sdGlwIjogewogICAgIngiOiA1OCwKICAgICJ5IjogMTE5OS41LAogICAgInJpZ2h0IjogMzE5LjY0OTk5Mzg5NjQ4NDQsCiAgICAid2lkdGgiOiAyNjEuNjQ5OTkzODk2NDg0NCwKICAgICJoZWlnaHQiOiA0MC41LAogICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAicGxhY2VtZW50IjogInRvcCIKICB9LAogICJldmVudHMiOiBbXSwKICAib2JzZXJ2YXRpb25UcnVuY2F0ZWQiOiBmYWxzZSwKICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogbnVsbCwKICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IG51bGwKfQ=="
+                    },
+                    {
+                      "name": "booking-resize-acknowledgement",
+                      "contentType": "application/json",
+                      "body": "ewogICJkZWxpdmVyZWQiOiB0cnVlLAogICJ0cnVzdGVkIjogdHJ1ZSwKICAiZXZlbnRBdCI6IDEyMzUyLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAiaW5uZXJIZWlnaHQiOiA3NDAsCiAgInRhc2tBdCI6IDEyNDIzCn0="
+                    },
+                    {
+                      "name": "booking-after-native-resize",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDEyNTM5LAogICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICJpbm5lcldpZHRoIjogMzIwLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgInZpc3VhbFZpZXdwb3J0IjogewogICAgIndpZHRoIjogMzIwLAogICAgInNjYWxlIjogMQogIH0sCiAgIm92ZXJmbG93IjogZmFsc2UsCiAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICJzY3JvbGxZIjogNjQyLAogICJhbmNob3IiOiB7CiAgICAieCI6IDIxMi4yMTY2NTk1NDU4OTg0NCwKICAgICJ5IjogMTIzOS41NjY2NTAzOTA2MjUsCiAgICAicmlnaHQiOiAyNzIuMTgzMzM0MzUwNTg1OTQsCiAgICAid2lkdGgiOiA1OS45NjY2NzQ4MDQ2ODc1LAogICAgImhlaWdodCI6IDMyLAogICAgInRleHQiOiAiMDQ6MDAiLAogICAgInBsYWNlbWVudCI6IG51bGwKICB9LAogICJ0b29sdGlwIjogewogICAgIngiOiA1OCwKICAgICJ5IjogMTE5OS41LAogICAgInJpZ2h0IjogMzE5LjY0OTk5Mzg5NjQ4NDQsCiAgICAid2lkdGgiOiAyNjEuNjQ5OTkzODk2NDg0NCwKICAgICJoZWlnaHQiOiA0MC41LAogICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAicGxhY2VtZW50IjogInRvcCIKICB9LAogICJldmVudHMiOiBbXSwKICAib2JzZXJ2YXRpb25UcnVuY2F0ZWQiOiBmYWxzZSwKICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogbnVsbCwKICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IG51bGwKfQ=="
+                    },
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiAxMjgyNCwKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICAgInNjcm9sbFkiOiAxNTI4LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMTIuMjE2NjU5NTQ1ODk4NDQsCiAgICAgICJ5IjogMzUzLjU2NjY1MDM5MDYyNSwKICAgICAgInJpZ2h0IjogMjcyLjE4MzMzNDM1MDU4NTk0LAogICAgICAid2lkdGgiOiA1OS45NjY2NzQ4MDQ2ODc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAzODYsCiAgICAgICJyaWdodCI6IDMxOS42NDk5OTM4OTY0ODQ0LAogICAgICAid2lkdGgiOiAyNjEuNjQ5OTkzODk2NDg0NCwKICAgICAgImhlaWdodCI6IDQwLjUsCiAgICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICAiZXZlbnRzIjogW10sCiAgICAib2JzZXJ2YXRpb25UcnVuY2F0ZWQiOiBmYWxzZSwKICAgICJvYnNlcnZlZFBvc2l0aW9uZXJDb25uZWN0ZWQiOiBudWxsLAogICAgInNhbWVPYnNlcnZlZFBvc2l0aW9uZXIiOiBudWxsCiAgfSwKICAiYWZ0ZXJTY3JvbGwiOiB7CiAgICAiYXQiOiAxMjg3NSwKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICAgInNjcm9sbFkiOiAxNTY4LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMTIuMjE2NjU5NTQ1ODk4NDQsCiAgICAgICJ5IjogMzEzLjU2NjY1MDM5MDYyNSwKICAgICAgInJpZ2h0IjogMjcyLjE4MzMzNDM1MDU4NTk0LAogICAgICAid2lkdGgiOiA1OS45NjY2NzQ4MDQ2ODc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAzNDYsCiAgICAgICJyaWdodCI6IDMxOS42NDk5OTM4OTY0ODQ0LAogICAgICAid2lkdGgiOiAyNjEuNjQ5OTkzODk2NDg0NCwKICAgICAgImhlaWdodCI6IDQwLjUsCiAgICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICAiZXZlbnRzIjogW10sCiAgICAib2JzZXJ2YXRpb25UcnVuY2F0ZWQiOiBmYWxzZSwKICAgICJvYnNlcnZlZFBvc2l0aW9uZXJDb25uZWN0ZWQiOiBudWxsLAogICAgInNhbWVPYnNlcnZlZFBvc2l0aW9uZXIiOiBudWxsCiAgfSwKICAiZXBzaWxvbiI6IDEKfQ=="
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-4ec70f7e44ac5b69035f",
+          "file": "booking.spec.mjs",
+          "line": 173,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7269,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:16:41.458Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-initial-viewport",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDUyMjcsCiAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgImlubmVyV2lkdGgiOiAzMjAsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJzY3JvbGxXaWR0aCI6IDMyMCwKICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAid2lkdGgiOiAzMjAsCiAgICAic2NhbGUiOiAxCiAgfSwKICAib3ZlcmZsb3ciOiBmYWxzZSwKICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgInNjcm9sbFkiOiA2NDIsCiAgImFuY2hvciI6IHsKICAgICJ4IjogMjEyLjIxNjY1OTU0NTg5ODQ0LAogICAgInkiOiAxMjM5LjU2NjY1MDM5MDYyNSwKICAgICJyaWdodCI6IDI3Mi4xODMzMzQzNTA1ODU5NCwKICAgICJ3aWR0aCI6IDU5Ljk2NjY3NDgwNDY4NzUsCiAgICAiaGVpZ2h0IjogMzIsCiAgICAidGV4dCI6ICIwNDowMCIsCiAgICAicGxhY2VtZW50IjogbnVsbAogIH0sCiAgInRvb2x0aXAiOiB7CiAgICAieCI6IDU4LAogICAgInkiOiAxMTk5LjUsCiAgICAicmlnaHQiOiAzMTkuNjQ5OTkzODk2NDg0NCwKICAgICJ3aWR0aCI6IDI2MS42NDk5OTM4OTY0ODQ0LAogICAgImhlaWdodCI6IDQwLjUsCiAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICJwbGFjZW1lbnQiOiAidG9wIgogIH0sCiAgImV2ZW50cyI6IFtdLAogICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICJvYnNlcnZlZFBvc2l0aW9uZXJDb25uZWN0ZWQiOiBudWxsLAogICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogbnVsbAp9"
+                    },
+                    {
+                      "name": "booking-resize-acknowledgement",
+                      "contentType": "application/json",
+                      "body": "ewogICJkZWxpdmVyZWQiOiB0cnVlLAogICJ0cnVzdGVkIjogdHJ1ZSwKICAiZXZlbnRBdCI6IDUwNjgsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJpbm5lckhlaWdodCI6IDc0MCwKICAidGFza0F0IjogNTEzOQp9"
+                    },
+                    {
+                      "name": "booking-after-native-resize",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDUyNjQsCiAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgImlubmVyV2lkdGgiOiAzMjAsCiAgImNsaWVudFdpZHRoIjogMzIwLAogICJzY3JvbGxXaWR0aCI6IDMyMCwKICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAid2lkdGgiOiAzMjAsCiAgICAic2NhbGUiOiAxCiAgfSwKICAib3ZlcmZsb3ciOiBmYWxzZSwKICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgInNjcm9sbFkiOiA2NDIsCiAgImFuY2hvciI6IHsKICAgICJ4IjogMjEyLjIxNjY1OTU0NTg5ODQ0LAogICAgInkiOiAxMjM5LjU2NjY1MDM5MDYyNSwKICAgICJyaWdodCI6IDI3Mi4xODMzMzQzNTA1ODU5NCwKICAgICJ3aWR0aCI6IDU5Ljk2NjY3NDgwNDY4NzUsCiAgICAiaGVpZ2h0IjogMzIsCiAgICAidGV4dCI6ICIwNDowMCIsCiAgICAicGxhY2VtZW50IjogbnVsbAogIH0sCiAgInRvb2x0aXAiOiB7CiAgICAieCI6IDU4LAogICAgInkiOiAxMTk5LjUsCiAgICAicmlnaHQiOiAzMTkuNjQ5OTkzODk2NDg0NCwKICAgICJ3aWR0aCI6IDI2MS42NDk5OTM4OTY0ODQ0LAogICAgImhlaWdodCI6IDQwLjUsCiAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICJwbGFjZW1lbnQiOiAidG9wIgogIH0sCiAgImV2ZW50cyI6IFtdLAogICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICJvYnNlcnZlZFBvc2l0aW9uZXJDb25uZWN0ZWQiOiBudWxsLAogICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogbnVsbAp9"
+                    },
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiA1NDg5LAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgICAic2Nyb2xsWSI6IDE1MjgsCiAgICAiYW5jaG9yIjogewogICAgICAieCI6IDIxMi4yMTY2NTk1NDU4OTg0NCwKICAgICAgInkiOiAzNTMuNTY2NjUwMzkwNjI1LAogICAgICAicmlnaHQiOiAyNzIuMTgzMzM0MzUwNTg1OTQsCiAgICAgICJ3aWR0aCI6IDU5Ljk2NjY3NDgwNDY4NzUsCiAgICAgICJoZWlnaHQiOiAzMiwKICAgICAgInRleHQiOiAiMDQ6MDAiLAogICAgICAicGxhY2VtZW50IjogbnVsbAogICAgfSwKICAgICJ0b29sdGlwIjogewogICAgICAieCI6IDU4LAogICAgICAieSI6IDM4NiwKICAgICAgInJpZ2h0IjogMzE5LjY0OTk5Mzg5NjQ4NDQsCiAgICAgICJ3aWR0aCI6IDI2MS42NDk5OTM4OTY0ODQ0LAogICAgICAiaGVpZ2h0IjogNDAuNSwKICAgICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgICJldmVudHMiOiBbXSwKICAgICJvYnNlcnZhdGlvblRydW5jYXRlZCI6IGZhbHNlLAogICAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IG51bGwsCiAgICAic2FtZU9ic2VydmVkUG9zaXRpb25lciI6IG51bGwKICB9LAogICJhZnRlclNjcm9sbCI6IHsKICAgICJhdCI6IDU1MjMsCiAgICAiY29tcGF0TW9kZSI6ICJDU1MxQ29tcGF0IiwKICAgICJpbm5lcldpZHRoIjogMzIwLAogICAgImNsaWVudFdpZHRoIjogMzIwLAogICAgInNjcm9sbFdpZHRoIjogMzIwLAogICAgInZpc3VhbFZpZXdwb3J0IjogewogICAgICAid2lkdGgiOiAzMjAsCiAgICAgICJzY2FsZSI6IDEKICAgIH0sCiAgICAib3ZlcmZsb3ciOiBmYWxzZSwKICAgICJkZXZpY2VQaXhlbFJhdGlvIjogMSwKICAgICJzY3JvbGxZIjogMTU2OCwKICAgICJhbmNob3IiOiB7CiAgICAgICJ4IjogMjEyLjIxNjY1OTU0NTg5ODQ0LAogICAgICAieSI6IDMxMy41NjY2NTAzOTA2MjUsCiAgICAgICJyaWdodCI6IDI3Mi4xODMzMzQzNTA1ODU5NCwKICAgICAgIndpZHRoIjogNTkuOTY2Njc0ODA0Njg3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMzQ2LAogICAgICAicmlnaHQiOiAzMTkuNjQ5OTkzODk2NDg0NCwKICAgICAgIndpZHRoIjogMjYxLjY0OTk5Mzg5NjQ4NDQsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgImV2ZW50cyI6IFtdLAogICAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgICAib2JzZXJ2ZWRQb3NpdGlvbmVyQ29ubmVjdGVkIjogbnVsbCwKICAgICJzYW1lT2JzZXJ2ZWRQb3NpdGlvbmVyIjogbnVsbAogIH0sCiAgImVwc2lsb24iOiAxCn0="
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029/final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-39a361c42b58357bec9a",
+          "file": "booking.spec.mjs",
+          "line": 173,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T15:16:19.215Z",
+    "duration": 31190.299000000003,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

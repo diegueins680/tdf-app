@@ -398,6 +398,38 @@ describe('StripeCheckoutModal', () => {
     });
   });
 
+  it.each([
+    new Error('Stripe error: Stripe API error: Object (fromList [("request_log_url", "https://dashboard.stripe.com/acct_private/workbench/logs?object=req_private")])'),
+    Object.assign(new Error('Stripe API error: No valid payment method types; req_private'), { status: 500 }),
+    Object.assign(new Error('Ticket card payments are temporarily unavailable. Please try again later.'), { status: 503 }),
+    Object.assign(new Error('Internal provider diagnostic req_private'), { status: 502 }),
+  ])('hides provider diagnostics and preserves buyer details after checkout failure: %s', async (error) => {
+    createPaymentIntent.mockRejectedValueOnce(error);
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Card payments are temporarily unavailable. Please try again later.');
+    expect(alert).not.toHaveTextContent(/fromList|dashboard\.stripe|req_private|Internal provider/);
+    expect(screen.getByLabelText(/Your Name/i)).toHaveValue('Buyer');
+    expect(screen.getByLabelText(/Email/i)).toHaveValue('buyer@example.test');
+    expect(screen.getByRole('button', { name: /Continue to Payment/i })).toBeEnabled();
+    expect(screen.queryByTestId('stripe-payment-element')).not.toBeInTheDocument();
+    expect(mockOnSuccess).not.toHaveBeenCalled();
+    expect(createPaymentIntent).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps actionable inventory refusals visible', async () => {
+    createPaymentIntent.mockRejectedValueOnce(Object.assign(new Error('Tickets or promo code are no longer available'), { status: 409 }));
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tickets or promo code are no longer available');
+  });
+
   it('does not reserve inventory when the payment client is unavailable and preserves input for retry', async () => {
     loadCheckoutStripe.mockResolvedValueOnce(null);
     renderModal();

@@ -1,0 +1,26 @@
+{
+  "observedAt": "2026-10-26T06:55:32.949522+00:00",
+  "repo": "diegueins680/TDF-mobile",
+  "pr": 172,
+  "head": "f5197c69ca1eeddbb7664b1c6b87f9c192548e6d",
+  "run": 40282201755,
+  "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40282201755",
+  "status": "completed",
+  "conclusion": "success",
+  "jest": {
+    "suites": 98,
+    "tests": 684
+  },
+  "signingAndArtifactGuards": {
+    "tests": 12,
+    "status": "PASS"
+  },
+  "expoDoctor": {
+    "checks": 17,
+    "passed": 17
+  },
+  "logSha256": "165f1eed5ca3c7a6f52efd49fba881249ef73ffa464704bca806604dd8ad2275",
+  "independentReview": "PENDING",
+  "autoMerge": false,
+  "physicalDeviceAndStoreRelease": "NOT VERIFIED"
+}
