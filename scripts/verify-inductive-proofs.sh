@@ -153,6 +153,18 @@ apalache_expect "${I}" CInitLock IndInv IndInv 1 NoError "SessionInvoiceIssue-co
 apalache_expect "${I}" CInitLock IndInv Safe 0 NoError "SessionInvoiceIssue-implication"
 apalache_expect "${I}" CInitNoLock Init Safe 6 Error "SessionInvoiceIssueNoLock-reachable-violation"
 
+K=ContractSend.tla
+
+# CONTRACT-SEND-001: "sent" only after SMTP accepted the PDF, and every
+# accepted message has a delivery row even if the request stops.
+tlc_expect "${K}" ContractSend.cfg pass
+tlc_expect "${K}" ContractSendUnconfigured.cfg pass
+tlc_expect "${K}" ContractSendRecordAfter.cfg violation
+apalache_expect "${K}" CInitRecordFirst Init IndInv 0 NoError "ContractSend-initiation"
+apalache_expect "${K}" CInitRecordFirst IndInv IndInv 1 NoError "ContractSend-consecution"
+apalache_expect "${K}" CInitRecordFirst IndInv Safe 0 NoError "ContractSend-implication"
+apalache_expect "${K}" CInitRecordAfter Init Safe 4 Error "ContractSendRecordAfter-reachable-violation"
+
 L=LogoutIntent.tla
 CURRENT_MODEL_DIR="${AUTH_MODEL_DIR}"
 

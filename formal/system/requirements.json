@@ -15745,7 +15745,9 @@
         "Mobile contracts client"
       ],
       "authorization": "Unchanged: validateContractsAccess requires the operations role for create, PDF and send.",
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/ContractSend.tla"
+      ],
       "critical": true,
       "status": "specified and implemented",
       "implementation": [
@@ -15761,7 +15763,7 @@
       "tests": [
         "tdf-hq/test/TDF/Contracts/StoreSpec.hs"
       ],
-      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41; formal/system/audit-2026-10-31-phase1.md section 43; formal/payments/README.md",
       "id": "CONTRACT-SEND-001",
       "title": "A contract is reported as sent only after the mail transport accepts it",
       "statement": "POST /contracts/{id}/send must email the contract PDF to the recipient and answer status sent only after SMTP accepted the message; without email configuration it must refuse with 503 instead of claiming success.",
@@ -15800,7 +15802,7 @@
       "failure": "Not configured 503; transport refusal 502 with the failure recorded.",
       "recovery": "A delivery left without outcome means the process stopped during SMTP; staff resend after checking the recipient.",
       "observability": "contract_delivery rows plus the existing [Email] smtp_attempt and smtp_accepted logs.",
-      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id.",
+      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id. Formal model formal/payments/ContractSend.tla: Apalache proves SentMeansAccepted, NoUnrecordedMail, AcceptedMeansMailed and UnavailableIsInert inductively for up to four requests, configured or not; TLC explores three; writing the delivery row only after SMTP violates NoUnrecordedMail in both tools (scripts/verify-inductive-proofs.sh).",
       "confidence": "Handler tests with an injected transport; no live SMTP run.",
       "ambiguity": [
         "SMTP acceptance is not delivery to the inbox.",

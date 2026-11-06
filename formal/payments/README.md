@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001.
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001.
 
 ## Contract
 
@@ -156,3 +156,25 @@ by review and by the PostgreSQL test of the lock and the two-key race
 (`scripts/test-session-invoice-issue.sh`), not by mechanical refinement. A
 second document issued deliberately after a settled attempt, or by staff after
 verifying the portal, is allowed by design.
+
+## Contract delivery by email (CONTRACT-SEND-001)
+
+`ContractSend.tla` models `POST /contracts/{id}/send` (`sendH` in
+`TDF.Contracts.Server`): 503 without email configuration, otherwise a
+`contract_delivery` row, the SMTP call, and the row marked accepted ("sent") or
+failed (502). Requests may stop at any step. It sits here because the proof
+runner covers this directory; it is not a payment.
+
+`Safe` = `SentMeansAccepted` ("sent" only after the transport accepted the PDF and
+the row says accepted), `NoUnrecordedMail` (every accepted message has a row),
+`AcceptedMeansMailed` and `UnavailableIsInert` (503 records and sends nothing).
+
+| Obligation | Tool | Result |
+|---|---|---|
+| Bounded exploration, 3 requests, configured and unconfigured | TLC 1.7.2 | no violation |
+| Row written after SMTP, 1 request | TLC | `Safe` violated, as expected: a stop after SMTP accepted leaves no row |
+| `Init ⇒ IndInv`, `IndInv ∧ Next ⇒ IndInv′`, `IndInv ⇒ Safe`, current code | Apalache 0.62.4 | **proved** for any nonempty set of up to four requests, configured or not |
+| Row written after SMTP: reachable violation | Apalache | counterexample found, as expected |
+
+Not covered: a transport that accepts the message and then raises (the row is
+then marked failed although mail went out), and delivery beyond SMTP acceptance.

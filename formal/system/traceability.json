@@ -15746,7 +15746,9 @@
         "Mobile contracts client"
       ],
       "authorization": "Unchanged: validateContractsAccess requires the operations role for create, PDF and send.",
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/ContractSend.tla"
+      ],
       "critical": true,
       "status": "specified and implemented",
       "implementation": [
@@ -15762,7 +15764,7 @@
       "tests": [
         "tdf-hq/test/TDF/Contracts/StoreSpec.hs"
       ],
-      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41; formal/system/audit-2026-10-31-phase1.md section 43; formal/payments/README.md",
       "id": "CONTRACT-SEND-001",
       "title": "A contract is reported as sent only after the mail transport accepts it",
       "statement": "POST /contracts/{id}/send must email the contract PDF to the recipient and answer status sent only after SMTP accepted the message; without email configuration it must refuse with 503 instead of claiming success.",
@@ -15801,7 +15803,7 @@
       "failure": "Not configured 503; transport refusal 502 with the failure recorded.",
       "recovery": "A delivery left without outcome means the process stopped during SMTP; staff resend after checking the recipient.",
       "observability": "contract_delivery rows plus the existing [Email] smtp_attempt and smtp_accepted logs.",
-      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id.",
+      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id. Formal model formal/payments/ContractSend.tla: Apalache proves SentMeansAccepted, NoUnrecordedMail, AcceptedMeansMailed and UnavailableIsInert inductively for up to four requests, configured or not; TLC explores three; writing the delivery row only after SMTP violates NoUnrecordedMail in both tools (scripts/verify-inductive-proofs.sh).",
       "confidence": "Handler tests with an injected transport; no live SMTP run.",
       "ambiguity": [
         "SMTP acceptance is not delivery to the inbox.",
@@ -16617,6 +16619,7 @@
     "formal/payments/CaptureAccounting.cfg": "1c3cfc664c1a702b0f7db89a5aa631f94670e5297fd3ce38b1329f7f2aad743c",
     "formal/payments/CaptureAccounting.tla": "78c86aa59ebfd73c24fda852348978875a5f60f8925d5f4fbc8e0e7ebb104172",
     "formal/payments/CaptureAccountingLegacy.cfg": "eaba43f7267541499daabeb5e4e512679b2ab36b34154c28dbfaaa1b1f078c30",
+    "formal/payments/ContractSend.tla": "dfbadd379f4483a913275990701ad966c7f2a2bd360ff4f50aef9cdaa9bf8b7f",
     "formal/payments/ProviderInbox.cfg": "c338fd5ea2fc6cb09f6b3c84757a49607180238a24816a60abd8ed81a688b716",
     "formal/payments/ProviderInbox.tla": "d8031c066a1ae6b2662f8ea6a058721a6ca9a570b21d7f4db7a0d530c54ca557",
     "formal/payments/ProviderInboxLegacy.cfg": "f220fe509efe3db485668e3a10cb130e83b28d603bbbc9dde8ec41faae57cba1",
@@ -16984,7 +16987,7 @@
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
-    "scripts/verify-inductive-proofs.sh": "bdc696fdbdd5ad1379f5824d7e38a76d5d3f9d199f36e3017327d4333e61e5bd",
+    "scripts/verify-inductive-proofs.sh": "caf0011c50a06e810aef118aa7437d9aaf4ed38c29826f94d94a24c072fb6b16",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -31384,6 +31387,12 @@
         "relationship": "tests"
       }
     ],
+    "formal/payments/ContractSend.tla": [
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": [
       {
         "requirement": "EVT-PLANNING-UX-001",
@@ -39269,7 +39278,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "bdc696fdbdd5ad1379f5824d7e38a76d5d3f9d199f36e3017327d4333e61e5bd",
+      "sha256": "caf0011c50a06e810aef118aa7437d9aaf4ed38c29826f94d94a24c072fb6b16",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63846,7 +63855,6 @@
     "UI-EVENT-FINANCE-PRECISION-001",
     "SYS-UI-TEST-WORKER-001",
     "CONTRACT-STORE-001",
-    "CONTRACT-SEND-001",
     "ID-PARTY-REFERENCE-REGISTRY-001"
   ],
   "stateMachines": [
@@ -64964,7 +64972,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6bb697c6647a9ab5dcd79bd4634c68455e72aca99784c9b2d30e202a34015a8a",
+      "sourceSha256": "74294648f8acecf36712ceeb4dc09b4f6078a2f6fd957d6bf2c300993bca963e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -64992,7 +65000,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6bb697c6647a9ab5dcd79bd4634c68455e72aca99784c9b2d30e202a34015a8a",
+      "sourceSha256": "74294648f8acecf36712ceeb4dc09b4f6078a2f6fd957d6bf2c300993bca963e",
       "definition": {
         "states": [
           "absent",
@@ -65022,7 +65030,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6bb697c6647a9ab5dcd79bd4634c68455e72aca99784c9b2d30e202a34015a8a",
+      "sourceSha256": "74294648f8acecf36712ceeb4dc09b4f6078a2f6fd957d6bf2c300993bca963e",
       "definition": {
         "export": [
           "queued",
