@@ -1,5 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { beginThumbnailDiagnostics, captureThumbnailFailure } from './helpers/thumbnail-failure-diagnostics.mjs';
+
+const diagnosticRecorders = new WeakMap();
+test.afterEach(async ({ page }, info) => {
+  const recorder = diagnosticRecorders.get(page);
+  diagnosticRecorders.delete(page);
+  await captureThumbnailFailure(page, info, recorder);
+});
 
 // Synthetic content exists only inside this browser test; no provider/account writes.
 const validImage = readFileSync(new URL('./fixtures/thumbnail-valid.png', import.meta.url));
@@ -11,6 +19,8 @@ async function fixture(page, baseURL, verified) {
     ['Cb7VGZJ6apo', 'Llama Este Pez @ Sereno Moreno Live Set Pt 2'],
     ['f2BabxM1Pjc', 'Federico Molinari @ TDF Electro Sessions'],
   ];
+  const diagnostic = await beginThumbnailDiagnostics(page, videos.map(([id]) => id));
+  diagnosticRecorders.set(page, diagnostic);
   const recordings = videos.map(([id, title], index) => ({
     id, code: `test-${id}`, title, contributors: [], sortOrder: index, revision: 1,
     resources: [{ id, providerCode: 'youtube', kind: 'video', externalCode: id,
@@ -23,6 +33,7 @@ async function fixture(page, baseURL, verified) {
     const request = route.request(); const url = new URL(request.url());
     if (url.hostname === 'i.ytimg.com') {
       requests.push(url.pathname);
+      diagnostic.noteRequest(url.href);
       if (url.pathname.includes('f2BabxM1Pjc')) return route.fulfill({ contentType: 'image/png', body: validImage });
       if (url.pathname.includes('ooPsIHsikYU') && url.pathname.endsWith('hqdefault.jpg')) {
         return route.fulfill({ contentType: 'image/png', body: placeholderImage });

@@ -10893,7 +10893,9 @@
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "playwright.discovery.config.mjs",
         "tdf-hq-ui/src/api/directory.test.ts",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-migration.sh",
+        "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/DiscoveryFallbackPrivacy.tla",
