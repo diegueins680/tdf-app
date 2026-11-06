@@ -283,5 +283,47 @@
     "scope": "Browser APIs and publication URLs are synthetic. No physical Android device or connected provider publication. Initial regression run failed because mock call history was not reset between tests; reset isolation and frozen-source repeat passed. Hosted final-head checks/fresh approval remain required.",
     "deployment": false,
     "activation": false
+  },
+  "identityRegistryFollowup": {
+    "sqlIntroduction": "09fd7babb92e45c1da1b9e5017de53b6378b4f7c",
+    "parentRevision": "7ab198f88f70ce7f27f0e97c34089d4145ce6929",
+    "failure": "Hosted backend quality failed because the identity Party reference registry did not include the two video model references. Full Haskell suite itself passed4271/0 failures/23 pending on7ab.",
+    "change": "Append forward registry migration as246, preserve245-entry prefix and original video SQL, install archive guards for ownership and conversion subjects. Rollback takes exclusive locks and refuses any stored campaign/evidence.",
+    "checks": [
+      {
+        "log": "video-identity-migration.log",
+        "sha256": "f031a5db65ac238d125d6c31d15dd49cae961ef930699cefe95c1232acdafcd2",
+        "result": "PostgreSQL16: migration replay, campaign/conversion dependencies, archive insert/update rejection, populated rollback rejection, empty rollback/reapply and existing identity concurrency/ACL checks PASS"
+      },
+      {
+        "log": "identity-unit.log",
+        "sha256": "aa58829a06f142f57a7127543a4022fe81da578a3462a7f7863936bef1b9d102",
+        "result": "9 unit tests PASS"
+      },
+      {
+        "log": "identity-catalog-controls.log",
+        "sha256": "002ed7db8adf5752a4c1f533101da2e091bd3b3dc2c91b854273e3f94b727f38",
+        "result": "10 history/prefix controls PASS"
+      },
+      {
+        "log": "capacity-composed-tests.log",
+        "sha256": "046500b6bb2b397fc0612531c07b534a1aac984a4f1945cd37cbfdfe169f23cd",
+        "result": "68 focused web tests PASS on unchanged7ab web source"
+      },
+      {
+        "log": "capacity-composed-typecheck.log",
+        "sha256": "374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3",
+        "result": "TypeScript PASS on unchanged7ab web source"
+      },
+      {
+        "log": "capacity-composed-lint.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "result": "Focused lint PASS on unchanged7ab web source"
+      }
+    ],
+    "database": "Dedicated tdf_lpg_identity_20261106_test removed; isolated server stopped.",
+    "scope": "Actual local PostgreSQL16, not productionPG17 or final hosted CI. No production SQL or campaign activation. The7ab hosted run passed web/mobile/contracts/migrations/browser and failed the registry gate; final commit must pass all checks again.",
+    "deployment": false,
+    "activation": false
   }
 }

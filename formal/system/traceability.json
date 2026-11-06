@@ -16323,7 +16323,7 @@
         "An explicitly approved command can expose the selected video on the artist public TDF profile."
       ],
       "authorization": "Current-session/current-role locks cover all management. Self artist or strict administrator is checked first; otherwise the current canonical directory subject, manager actor, active private-view/edit grants and eligible profile state are rechecked under manager/profile shared locks in the same transaction. Featuring additionally requires can_publish, published/allowed profile visibility, saved rights/technical checks and the exact campaign revision.",
-      "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration.",
+      "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration. Both new Party references participate in canonical identity dependency discovery and reject inserts/reassignments to archived identities.",
       "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
       "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
       "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
@@ -16350,7 +16350,11 @@
         "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
         "scripts/verify-video-campaign-access.mjs",
         "scripts/quality-repo.sh",
-        ".github/workflows/catalog-list-audit.yml"
+        ".github/workflows/catalog-list-audit.yml",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
@@ -16364,7 +16368,9 @@
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-        "scripts/__tests__/video-campaign-access.test.mjs"
+        "scripts/__tests__/video-campaign-access.test.mjs",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
       ],
       "formalModels": [
         "scripts/verify-video-campaign-access.mjs"
@@ -16405,7 +16411,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f7e2be57118023b5855c199358105305ccdf0cbc26e2af919ed9582b638a31a2",
+    "docs/catalog-persistence/catalog-list-decisions.json": "023bbd098cf40c273db16be0158c9241088db70614eb36570e3b9c342b1bc6ed",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -16807,7 +16813,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "b7ae16b29a00ecc3f55154d0e3e951ebc64e826d2cd00f7ea218f1abe65b4ce3",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -16957,7 +16963,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "f40271dcc6cfab8be8f2b8a9ddcee61de11dc06cc0c69a40da1e2a9f1c63e2f7",
+    "scripts/production-migrations.json": "b4b40f427e0d440ff0d3c54ecfeed00086cb857501627cd6a2684c277a058360",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -17020,7 +17026,7 @@
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
-    "scripts/test-identity-reconciliation.sh": "7a0a057ed0d5aa4c453a7ca50ab81a644f0ff184c664b16f2c131ac577b04175",
+    "scripts/test-identity-reconciliation.sh": "68ef02f07b10ee6d6eb8d4bf5f95dab2d8791f54e34a3ffd68a7a61726a57cef",
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
@@ -17737,6 +17743,8 @@
     "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql": "25e481954ec23478d7636d28754d5578f397e02094487279bedb527ba790e251",
     "tdf-hq/sql/2026-11-04_session_invoice_issue.sql": "edd0e25051291561a1fbe2cfaf37c7956c10475814fc72570a8af31af5729298",
     "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql": "e2ae1da6c06c7d68b8a17a1b20ebf1903be36adc0c64447d8eb319dd430f3000",
+    "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql": "02185d6050fe65042d41f79e6b3ab26ea6c71fe3b8d47b298698cbf736d25407",
+    "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/src/TDF/API.hs": "c5a3b1529b86339f16f10d2697107df71d932a93564021a3fc4c7ba37ecf8016",
     "tdf-hq/src/TDF/API/Admin.hs": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
@@ -17994,6 +18002,7 @@
     "tdf-hq/test/integration/ticket_manual_review_fixture.sql": "6958af8af06ccb89a3f8fdc28b17493d5d4c590da5499b56033eb1c32ea549d5",
     "tdf-hq/test/integration/ticket_order_quantity_limit.sql": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
     "tdf-hq/test/integration/ticket_tax_invoices.sql": "42f6d4b99f5606dacdb33c7925b8c4e4756e05d5e1ebfaeb2b5882894ca219ea",
+    "tdf-hq/test/sql/identity_reconciliation.sql": "03917f0481ccaeb39cbd5338efe34361e231e20b8ce1ad1317a0fb21a933342c",
     "tdf-hq/test/sql/music_correction_asset_graph.sql": "38b7f28265b110df62c8dcfac76a88ce2c978b2a280b464c7229c08b0ae5175e",
     "tdf-hq/test/sql/music_ddex_operations.sql": "89a95fec6d389d28987667a2e254358eed5b9c2c2cdc6e96ab4389b36377ae32",
     "tdf-hq/test/sql/music_payment_outcomes.sql": "80e711c6b9f7b6b4c9631982b34dc3a8f57140d8b6c5075aed2e2fbe419d9ec3",
@@ -31656,6 +31665,14 @@
       {
         "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
       }
     ],
     "scripts/artist-image-download.mjs": [
@@ -32034,6 +32051,28 @@
       {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/sql/identity_reconciliation.sql": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": [
@@ -33491,7 +33530,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "b7ae16b29a00ecc3f55154d0e3e951ebc64e826d2cd00f7ea218f1abe65b4ce3",
+      "sha256": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36340,7 +36379,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "f40271dcc6cfab8be8f2b8a9ddcee61de11dc06cc0c69a40da1e2a9f1c63e2f7",
+      "sha256": "b4b40f427e0d440ff0d3c54ecfeed00086cb857501627cd6a2684c277a058360",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38124,11 +38163,19 @@
     {
       "id": "SURFACE-f86d69da75ef0aa1",
       "path": "scripts/test-identity-reconciliation.sh",
-      "sha256": "7a0a057ed0d5aa4c453a7ca50ab81a644f0ff184c664b16f2c131ac577b04175",
+      "sha256": "68ef02f07b10ee6d6eb8d4bf5f95dab2d8791f54e34a3ffd68a7a61726a57cef",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ID-PARTY-REFERENCE-REGISTRY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "tests"
         }
       ]
@@ -53862,6 +53909,30 @@
       ]
     },
     {
+      "id": "SURFACE-6c31eed2462274ac",
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+      "sha256": "02185d6050fe65042d41f79e6b3ab26ea6c71fe3b8d47b298698cbf736d25407",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-90d083a2052615df",
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+      "sha256": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -59553,9 +59624,18 @@
     {
       "id": "SURFACE-fff0fc437764ddd9",
       "path": "tdf-hq/test/sql/identity_reconciliation.sql",
-      "sha256": "828c7f39954946095a3a6ab2aee2337bd41c36ed8b6bd2319c1295f26000b224",
+      "sha256": "03917f0481ccaeb39cbd5338efe34361e231e20b8ce1ad1317a0fb21a933342c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-26ab041327eb7c59",
@@ -64086,7 +64166,6 @@
     "SURFACE-94dff14f64d2e213",
     "SURFACE-c1ded07314607a0a",
     "SURFACE-2156981b9c95285d",
-    "SURFACE-fff0fc437764ddd9",
     "SURFACE-d3c3c6a421007e12",
     "SURFACE-a9181c3d1f2e9fa0",
     "SURFACE-5a64e0ed1f9e7c79",
@@ -65552,7 +65631,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73535cf03ceb0d56f4ddf133a89a04d7b1c6e9c694451db3525aea1d764baee",
+      "sourceSha256": "22c64d0904c64136c6891522bd2a3159a4d5cfd1b021ed2751389c12fdc5c535",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65580,7 +65659,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73535cf03ceb0d56f4ddf133a89a04d7b1c6e9c694451db3525aea1d764baee",
+      "sourceSha256": "22c64d0904c64136c6891522bd2a3159a4d5cfd1b021ed2751389c12fdc5c535",
       "definition": {
         "states": [
           "absent",
@@ -65610,7 +65689,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73535cf03ceb0d56f4ddf133a89a04d7b1c6e9c694451db3525aea1d764baee",
+      "sourceSha256": "22c64d0904c64136c6891522bd2a3159a4d5cfd1b021ed2751389c12fdc5c535",
       "definition": {
         "export": [
           "queued",

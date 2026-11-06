@@ -16322,7 +16322,7 @@
         "An explicitly approved command can expose the selected video on the artist public TDF profile."
       ],
       "authorization": "Current-session/current-role locks cover all management. Self artist or strict administrator is checked first; otherwise the current canonical directory subject, manager actor, active private-view/edit grants and eligible profile state are rechecked under manager/profile shared locks in the same transaction. Featuring additionally requires can_publish, published/allowed profile visibility, saved rights/technical checks and the exact campaign revision.",
-      "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration.",
+      "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration. Both new Party references participate in canonical identity dependency discovery and reject inserts/reassignments to archived identities.",
       "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
       "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
       "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
@@ -16349,7 +16349,11 @@
         "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
         "scripts/verify-video-campaign-access.mjs",
         "scripts/quality-repo.sh",
-        ".github/workflows/catalog-list-audit.yml"
+        ".github/workflows/catalog-list-audit.yml",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
@@ -16363,7 +16367,9 @@
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-        "scripts/__tests__/video-campaign-access.test.mjs"
+        "scripts/__tests__/video-campaign-access.test.mjs",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
       ],
       "formalModels": [
         "scripts/verify-video-campaign-access.mjs"

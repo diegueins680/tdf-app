@@ -382,12 +382,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "969410f2f45854cc54fc",
+      "currentId": "806180f5957fc4a7520f",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 245,
-      "change": "Preserve every object of the protected 244-entry storage manifest and all SQL; append only the original draft-only campaign migration with its original introduction ancestor. No deployment, provider activation or release waiver.",
+      "valueCount": 246,
+      "change": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -496,6 +496,17 @@
           "sourceEntryCanonicalSha256": "2530e2e5813e50276d2882a93a6f0daad7362a42de39338a9012de36105ae13e",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete parent review retained unchanged; no independent approval inferred."
+        },
+        {
+          "sourceRevision": "7ab198f88f70ce7f27f0e97c34089d4145ce6929",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "f7e2be57118023b5855c199358105305ccdf0cbc26e2af919ed9582b638a31a2",
+          "sourceEntry": {
+            "id": "969410f2f45854cc54fc"
+          },
+          "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
         }
       ],
       "previousCurrentIds": [
@@ -524,7 +535,8 @@
         "050f309300a1688162fa",
         "d7fc1df6cbade4a92d25",
         "255ec943da9a86e36cc7",
-        "be0b1503a04f9fa295ee"
+        "be0b1503a04f9fa295ee",
+        "969410f2f45854cc54fc"
       ],
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
@@ -7976,7 +7988,8 @@
             "a2bb0e828d5b94c1cb31"
           ]
         }
-      ]
+      ],
+      "previousCurrentId": "969410f2f45854cc54fc"
     }
   ]
 }
