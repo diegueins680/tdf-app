@@ -10,13 +10,13 @@ El perfil público existente ID 51 se volvió a consultar el 5 de noviembre: nom
 
 ## Revisión antes del lanzamiento
 
-Los cortes son candidatos identificados por cambios espectrales, con separación mínima de 60 segundos; requieren tu revisión musical y ajuste fino a frase o compás si corresponde. La exportación conserva la composición horizontal completa para no perder las manos, instrumentos o la segunda cámara. El audio lleva una atenuación de 1,2 dB para dejar margen a la recodificación y fundidos mínimos en los extremos. No se añadió compresión.
+La documentación histórica propone cortes detectados por cambios espectrales, con separación mínima de 60 segundos. No se han vuelto a escuchar ni renderizar. Al recuperar el original, seleccionar por interés musical y visual y ajustar a frase o compás. El tratamiento histórico propone conservar la composición horizontal completa dentro del cuadro vertical, atenuar 1,2 dB y usar fundidos mínimos, sin compresión añadida. Son parámetros pendientes de comprobar, no evidencia de archivos entregados. Si el archivo es una copia comprimida, solicitar el original de cámara antes de decidir la versión de lanzamiento.
 
-Faltan enlaces de alojamiento del original y las piezas, créditos definitivos, fecha y cuentas oficiales del artista. Se mantienen vacíos los enlaces en `campana.json`; el asistente permite guardarlo como borrador, pero no marcarlo listo sin archivos.
+Faltan enlaces de alojamiento del original y las piezas, créditos definitivos, fecha y cuentas oficiales del artista. Se mantienen vacíos los enlaces en `campaign.json`; el asistente permite guardarlo como borrador, pero no marcarlo listo sin archivos.
 
 ## Calendario
 
-D0 será la fecha que elijas tras revisar. El calendario actualizado cubre exactamente 14 días, de D−2 a D+11 inclusive, sin fecha externa. El detalle vigente por canal, archivo candidato, texto, CTA, enlace y métrica está en [calendar.csv](calendar.csv) y [campaign.json](campaign.json). Los textos de las secciones inferiores son la propuesta histórica y quedan sustituidos por esos dos archivos. No se ha reservado ningún horario en las redes.
+D0 será la fecha que elijas tras revisar. El calendario actualizado cubre exactamente 14 días, de D−2 a D+11 inclusive, sin fecha externa. El detalle vigente por canal, archivo candidato, texto, CTA, enlace y métrica está en [calendar.csv](calendar.csv) y [campaign.json](campaign.json). Los textos inferiores reflejan esa misma propuesta revisable. No se ha reservado ningún horario en las redes.
 
 | Día | Enfoque | Archivo | Canales |
 | --- | --- | --- | --- |
@@ -39,11 +39,11 @@ Bio propuesta: «Liquid Paper Girl en vivo en TDF. Mira la sesión y sigue al ar
 1. Revisa los videos y portadas. Confirma créditos y permisos.
 2. Aloja el original en el almacenamiento del artista y obtén un enlace reproducible. El asistente reutiliza el nuevo almacenamiento recuperable de main, sujeto a cuota, conciliación y despliegue; guardar el original privado no lo vuelve público.
 3. Abre `/mi-artista/campanas` cuando la nueva función esté desplegada. Un administrador debe elegir Liquid Paper Girl; el propio artista solo puede gestionar su identidad autorizada.
-4. Importa `campana.json`, añade los enlaces del video y de cada pieza, revisa los textos y guarda el borrador.
+4. Importa `campaign.json`, añade los enlaces del video y de cada pieza, revisa los textos y guarda el borrador.
 5. En el paso de revisión verifica el video, el calendario y el recorrido de registro/seguimiento.
 6. Tras la aprobación, publica manualmente desde cada cuenta y registra la URL de la publicación en la pieza correspondiente. Descargar un plan no marca piezas como publicadas.
 
-Las portadas verticales PNG sirven para Stories o como portada del video; las versiones SVG son editables. Las portadas horizontales pueden acompañar la sesión completa.
+Portadas previstas: horizontal para la sesión, vertical por extracto y adaptación a Stories. No hay PNG/SVG de la sesión accesibles en esta entrega. Deben prepararse con fotogramas reales o material autorizado al recuperar el video; no usar las capturas sintéticas de prueba del producto como material del artista.
 
 ## Texto para el video completo
 
@@ -125,7 +125,7 @@ Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendi
 
 ### tiktok · D-2 · clip-01.mp4
 
-Muy pronto: Liquid Paper Girl en vivo. Descubre el perfil en TDF y sigue al artista.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+Muy pronto: Liquid Paper Girl en vivo. Descubre el perfil en TDF y sigue al artista. Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
 https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-1
 
@@ -133,7 +133,7 @@ Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendi
 
 ### tiktok · D-1 · clip-01.mp4
 
-Una escucha para mañana. Liquid Paper Girl en vivo, desde su perfil en TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+Una escucha para mañana. Liquid Paper Girl en vivo, desde su perfil en TDF. Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
 https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-2
 
@@ -141,7 +141,7 @@ Métrica principal: Registros completados en TDF. Archivo candidato; revisión p
 
 ### tiktok · D0 · clip-02.mp4
 
-Liquid Paper Girl · Live session. Mira la sesión completa en TDF, sin registro inicial. Para seguir al artista, crea tu cuenta o inicia sesión.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+Liquid Paper Girl · Live session. Mira la sesión completa en TDF, sin registro inicial. Para seguir al artista, crea tu cuenta o inicia sesión. Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
 https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-3
 
@@ -149,7 +149,7 @@ Métrica principal: Registros completados en TDF. Archivo candidato; revisión p
 
 ### tiktok · D+2 · clip-03.mp4
 
-Un momento para volver a escuchar. Mira la sesión completa de Liquid Paper Girl en TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+Un momento para volver a escuchar. Mira la sesión completa de Liquid Paper Girl en TDF. Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
 https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-4
 
@@ -157,7 +157,7 @@ Métrica principal: Registros completados en TDF. Archivo candidato; revisión p
 
 ### tiktok · D+5 · clip-04.mp4
 
-¿Qué sonido te llamó la atención? Descubre el resto de la interpretación de Liquid Paper Girl en TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+¿Qué sonido te llamó la atención? Descubre el resto de la interpretación de Liquid Paper Girl en TDF. Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
 https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-5
 
@@ -173,7 +173,7 @@ Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendi
 
 ### tiktok · D+11 · clip-06.mp4
 
-La sesión sigue disponible. Mira el video de Liquid Paper Girl y, si quieres seguir al artista, entra a tu cuenta de TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+La sesión sigue disponible. Mira el video de Liquid Paper Girl y, si quieres seguir al artista, entra a tu cuenta de TDF. Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
 https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-7
 

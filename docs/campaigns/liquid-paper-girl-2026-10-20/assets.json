@@ -32,12 +32,13 @@
     "visualTreatment": "Full landscape composition preserved within a vertical layout; blurred duplicate background. Original artist footage and repository TDF wordmark."
   },
   "blockers": [
-    "Backend deployment requires the dedicated production SSH identity and guarded migration release.",
-    "Saving a production campaign requires an authorized TDF session and the deployed API.",
-    "Original source and derived assets need artist-controlled playable URLs; current ordinary upload limit is 50 MiB.",
-    "No verified Instagram/TikTok artist handle, final session title, recording date or credits supplied.",
-    "No connected provider publishing credentials/audit observed; manual export is supported.",
-    "Publication requires Diego reviewing musical cuts, credits and file permissions."
+    "Original attachment and historical derived files are not accessible; full inspection, musical selection and rendering remain blocked.",
+    "Backend production release executor is unfinished in ops/hetzner/README.md; source integration alone cannot authorize deployment.",
+    "Saving a production campaign requires an authorized TDF session and deployed API; only the importable review plan exists here.",
+    "Private original upload uses the existing recoverable storage service and current quota; it does not grant public access or ensure a playable public URL.",
+    "No verified Instagram/TikTok artist handle, final recording date, credits or rights approval supplied.",
+    "No authorized per-artist provider connection available; manual export is supported.",
+    "Musical cuts, credits and file permissions require review before publication."
   ],
   "currentAudit": {
     "date": "2026-11-05",

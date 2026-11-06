@@ -1,0 +1,75 @@
+{
+  "checkedCodeRevision": "b8873ebfddf0a6efefbf5249c270cfbdd41e8073",
+  "protectedBase": "d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8",
+  "productionDeployment": false,
+  "campaignActivated": false,
+  "mediaProducedThisRun": false,
+  "checks": [
+    {
+      "name": "web",
+      "log": "qualified-web-full.log",
+      "sha256": "8579a55abca8919b3567b3a2fb50f7303d23be6439d75b88d6429c340e6b8ac4",
+      "result": "354 suites / 4001 tests; PASS"
+    },
+    {
+      "name": "backend",
+      "log": "qualified-stack-retry.log",
+      "sha256": "87a00c7b18a0e15cb9562c63134aff858052c0e3b641e76f7bf3a82142be3d4f",
+      "result": "4224 examples / 0 failures / 23 pending; PASS"
+    },
+    {
+      "name": "postgres-manager",
+      "log": "manager-stack-test.log",
+      "sha256": "d0fbe30850e1de432183d45c83bf296e00bab4687cba5546e8e1a8272f85d8eb",
+      "result": "Actual manager helper with PG16; 4224 examples / 0 failures / 22 pending"
+    },
+    {
+      "name": "browser",
+      "log": "access-final-browser.log",
+      "sha256": "8a0cd596f6af0522b675aa47d347040107317fb58316d79eca66b9c38ecda3d2",
+      "result": "18 desktop and 360px Android-emulation cases; synthetic API"
+    },
+    {
+      "name": "repository",
+      "log": "qualified-repo-quality-retry.log",
+      "sha256": "c6286e0648aa3e3d81daec5a535aeda44a7e5bc816210d621ef4b87553f6a747",
+      "result": "PASS after socket/disk recovery"
+    },
+    {
+      "name": "catalog-json",
+      "log": "qualified-reviewed-catalog-json.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "1402 reviewed / 0 stale; PASS"
+    },
+    {
+      "name": "catalog-csv",
+      "log": "qualified-reviewed-catalog-csv.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "PASS"
+    },
+    {
+      "name": "catalog-controls",
+      "log": "qualified-catalog-controls.log",
+      "sha256": "bc39050700b24930a3887e1d784a99f0a69020010784e9002448641e26c98e63",
+      "result": "10 controls; PASS"
+    },
+    {
+      "name": "generated-api",
+      "log": "qualified-generated-api.log",
+      "sha256": "868f06c20934b7aa608b83a6508e0903265488faa7763d6ad927a5e504e86d54",
+      "result": "2 clients; exact merged Mobile source pin"
+    },
+    {
+      "name": "mobile",
+      "log": "mobile-tests.log",
+      "sha256": "34e193da7db72f2197a541f8c36a4301345ebb28e82d22ed825fdbe4fb418d90",
+      "result": "98 suites / 653 tests; PASS"
+    }
+  ],
+  "limits": [
+    "Log hashes bind local observations, not signed attestations.",
+    "No native/store release, physical Android or authenticated production campaign test.",
+    "Campaign plans are importable files, not already saved production records.",
+    "Provider integration remains manual; no social account or dispatch was activated."
+  ]
+}
