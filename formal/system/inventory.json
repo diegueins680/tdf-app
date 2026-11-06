@@ -3277,7 +3277,7 @@
     {
       "id": "SURFACE-0e316b7ebb7a6b2c",
       "path": "e2e/web/storage-upload-recovery.spec.mjs",
-      "sha256": "2929438fa40f8fce723da34a89249135ee811e72f3ba7004a955fdf22dffb90a",
+      "sha256": "9ba8f8b0971a3568352fb46ffc77e5091c49ac50ec5f8a9b0dcc0c09603823dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9385,13 +9385,13 @@
     {
       "id": "SURFACE-f6f49d0601363c2e",
       "path": "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
-      "sha256": "3babeeb1c94a7e77919e7aaa9d817be2a7232f918d34080b5c1e5fedbd5eab82",
+      "sha256": "74e0e9bbd074c245150edef4b0561ad2c700064a9300024201611188b3e28e86",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-21774e08e94e915e",
       "path": "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts",
-      "sha256": "7d58530d1b0c7cef442bd39786963b6ed66cf726e8120f515bf2a3341e1a7fec",
+      "sha256": "96b4122312d56f09d7c3a1e0b84796547020c2adf32b3bf7e8cff77449ac5d03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29362,7 +29362,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5053f63989f53b0c44239cecd184c7046e503ba2b115ae1cf7a31486d223ed94",
+      "sha256": "ef8b89de0010540610dbaae2574ce278b995b51fd98f9dc88a7a20b0d8726176",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
