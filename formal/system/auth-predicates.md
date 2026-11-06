@@ -256,3 +256,11 @@ dependencies, flags, source paths and all other reviewed sources are unchanged.
 The original three-stanza review and runtime receipts above retain their original
 commit identities. Fresh solver/replay and adversarial checks qualify only their
 scoped predicates; full refinement and release remain separate and blocked.
+
+The subsequent protected-main composition uses `d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8`,
+including the container diagnostic and ticket eligibility integrations. All
+190 current main requirement records remain exact; the cache requirement is
+appended. The two Cabal registrations and the explicit middleware/wiring/API/test file
+manifest are unchanged from `ce763107100e39a94c7caae7876d2632ae9c47de`. Other main handler/test
+changes prevent a whole-backend identity claim. Fresh predicate verification
+binds the final composition; older execution receipts retain their identities.

@@ -335,6 +335,15 @@
       "change": "Normal composition of existing633 with protected main e524. Preserve the complete current library/executable/test layout and add exactly TDF.MusicRelease.CredentialCache to library exposed-modules and TDF.MusicCredentialCacheSpec to test other-modules. Removing these two lines reproduces protected main Cabal bytes. Original three-stanza registrations and their43b1 receipts remain historical.",
       "semanticReview": "No dependency, bound, source path, existing module registration, extension, GHC/CPP flag or Stack input changes. The unchanged original middleware maps only Cache-Control on eight fixed credential operations, forwarding the request and inner application; Server.mkApp and outer Boot.wrapApp add that idempotent wrapper without changing authContext, dispatch, private storage or recovery. All other pinned sources and translators equal protected main. Original review records and obligation claims/domains/assumptions/limitations are preserved.",
       "qualification": "Fresh source-bound solver/replay and adversarial controls required on the combined source. Metadata binding alone establishes no HTTP correctness, full refinement, independent GitHub approval or release permission."
+    },
+    {
+      "reviewedAgainst": "d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8",
+      "nativeExecutionSource": "ce763107100e39a94c7caae7876d2632ae9c47de",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "currentSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "change": "Normal composition of current protected d6 main (including682and660/661/662) after the ce763 qualification. Current Cabal remains exact main plus the two existing credential-cache registrations. All current190 requirement records are preserved before addingMCC191.",
+      "semanticReview": "The explicit NoStore/wiring/publicAPI/test files listed by native-45-ce763-receipt remain byte-identical to ce763. Other transitive main handler/test inputs changed, so whole-backend identity is false and no ce763 binary or execution is relabelled as this composition. The new ticket handlers do not alter the translated predicates; all pinned sources except the reviewed two-line Cabal extension equal current main. Fresh scoped solver/replay/controls bind the final composition; fresh final-head hosted compilation/tests remain required.",
+      "qualification": "Fresh final-head hosted checks and independent review remain mandatory. No old runtime/HTTP/formal receipt is relabelled and no full-refinement or release clearance is claimed."
     }
   ]
 }

@@ -179,3 +179,31 @@ This baseline is pinned to c66, not a claim about a later main advance. No
 production flag, payment behavior, original master or other worktree is changed.
 
 The new composition passed 36 metadata regression cases, 45 CI-selection/pipeline checks and both generated-client freshness checks. Strict catalog JSON/CSV checks passed with 1,341 candidates/rows and no stale/unreviewed decision. These 45 CI-policy tests are separate from the historical 45 compiled cache cases. Final ordered freshness and committed source admission remain recorded separately; no current-head runtime or full223 execution is inferred.
+
+
+## Current protected-main composition — 6 November 2026
+
+The normal composition retains protected main `d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8`, all
+244 canonical migrations, exact Mobile `14318a730f96b2053f71885091bbc05cffc3294d`
+and all190 main requirement records, then appends the existing credential-cache
+requirement. The current library layout adds only two module registrations.
+The middleware still changes only Cache-Control for its original eight operations.
+
+The old public Servant test fixture lacked the current non-target search route;
+adding that fifth empty typed handler preserves every original assertion. On
+`ce763107100e39a94c7caae7876d2632ae9c47de`, canonical Stack/GHC9.10.3 compiled the whole
+library/executables/test suite, and the selected45 tests passed without failures,
+including three actual mkApp HTTP boundary cases. The explicit NoStore/wiring/API/test file manifest remains byte-identical
+after composing current main; that binary and execution retain their ce763
+identity. Other transitive main handler/test inputs prevent a whole-backend
+identity or final-composition execution claim; fresh hosted checks remain required. Disabling the policy in a private controlled copy
+produced20 expected failures among the same42 middleware/router cases.
+
+Fresh scoped cart checks passed9 Chromium-desktop/phone and Firefox cases with
+unchanged budgets and no retries/skips. Local WebKit remains unavailable and
+hosted verification is required. All35 original report/capsule files and the original scoped formal contract
+remain byte-identical. The original delivery text is an unchanged prefix to this
+section. Earlier execution identities are not upgraded to the current schema or source. No production HTTP, object bytes,
+cache purge, provider compliance, deployment or credential revocation is claimed.
+Fresh final-source predicate/control checks, metadata/admission and hosted
+mandatory CI/review remain separate qualifications.
