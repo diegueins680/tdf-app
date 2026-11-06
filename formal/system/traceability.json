@@ -17271,7 +17271,7 @@
     "services/campaign-platform/backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
     "services/campaign-platform/deploy.py": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
     "services/campaign-platform/deploy_sandbox.py": "5df04f820eb7c868703359feec18848063ddb9183f4c4a57fb50f5f091d299f2",
-    "services/campaign-platform/domain.py": "27a6f9f17c2c46390739e48a2d6fbf8c67b730c2b7eef0e657ce0152ea408da1",
+    "services/campaign-platform/domain.py": "552dc1f3173a481331aec0bf3ad7a5c65f99e3d56ffa79790fb4ea188b385063",
     "services/campaign-platform/drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
     "services/campaign-platform/facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
     "services/campaign-platform/graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
@@ -17296,7 +17296,7 @@
     "services/campaign-platform/tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
     "services/campaign-platform/tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
     "services/campaign-platform/tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
-    "services/campaign-platform/tests/test_domain.py": "09eca7ff737436de14ded95ed9bcf8d4650cd47cfaed41666d14fd532168a975",
+    "services/campaign-platform/tests/test_domain.py": "fdc061c69d50f06db4c588686058552da6632334d6f270ddfbdb4ec29f98281b",
     "services/campaign-platform/tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
     "services/campaign-platform/tests/test_http.py": "17449bc6a0b7965bef8b404c9e21ceb6da34f7abc85eef02d89fc2d2d5f19b1d",
     "services/campaign-platform/tests/test_notifications.py": "aa5b5f2e6e9998a3d1b0fe7c09ea26f98a52d6e675d0555afa9b8b8e60a27055",
@@ -40394,7 +40394,7 @@
     {
       "id": "SURFACE-4d817f76014e9965",
       "path": "services/campaign-platform/domain.py",
-      "sha256": "27a6f9f17c2c46390739e48a2d6fbf8c67b730c2b7eef0e657ce0152ea408da1",
+      "sha256": "552dc1f3173a481331aec0bf3ad7a5c65f99e3d56ffa79790fb4ea188b385063",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40706,7 +40706,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "09eca7ff737436de14ded95ed9bcf8d4650cd47cfaed41666d14fd532168a975",
+      "sha256": "fdc061c69d50f06db4c588686058552da6632334d6f270ddfbdb4ec29f98281b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
