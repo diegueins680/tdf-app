@@ -1,9 +1,9 @@
-import json, tempfile, threading, unittest, urllib.request, urllib.error
+import concurrent.futures, contextlib, hashlib, http.client, json, tempfile, threading, unittest, urllib.request, urllib.error
 from pathlib import Path
 from unittest.mock import patch
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from server import Server, PREFIX, upstream_actor
+from server import Handler, Server, PREFIX, upstream_actor
 from domain import Store, uid
 from providers import Providers, Vault
 from cryptography.fernet import Fernet
@@ -28,6 +28,89 @@ class HttpBoundaryTests(unittest.TestCase):
   except urllib.error.HTTPError as e:return e.code,e.read(),dict(e.headers)
  def create(self):
   return json.loads(self.req('/campaigns',{'name':'Lanzamiento','objective':'Escuchar música'})[1])['id']
+ @contextlib.contextmanager
+ def pending_upload(self,identifier,who='user1'):
+  reading=threading.Event();original_setup=Handler.setup
+  class Reader:
+   def __init__(self,handler,stream):self.handler=handler;self.stream=stream
+   def __getattr__(self,name):return getattr(self.stream,name)
+   def read(self,size=-1):
+    if self.handler.command=='PUT' and self.handler.path.endswith('/uploads/'+identifier):reading.set()
+    return self.stream.read(size)
+  def setup(handler):
+   original_setup(handler);handler.rfile=Reader(handler,handler.rfile)
+  connection=http.client.HTTPConnection('127.0.0.1',self.server.server_port,timeout=5)
+  finished=False
+  with patch.object(Handler,'setup',setup):
+   try:
+    connection.putrequest('PUT',PREFIX+'/uploads/'+identifier)
+    for key,value in {'Authorization':'Bearer '+who,'Origin':'https://www.tdfrecords.net','Content-Length':'6','Upload-Offset':'0'}.items():connection.putheader(key,value)
+    connection.endheaders();connection.send(b'abc')
+    self.assertTrue(reading.wait(2),'Upload did not reach its body read')
+    def finish():
+     nonlocal finished
+     connection.send(b'def');response=connection.getresponse();body=response.read();finished=True
+     return response.status,body
+    yield finish
+   finally:
+    if not finished:
+     try:connection.send(b'def');connection.getresponse().read()
+     except OSError:pass
+    connection.close()
+ def test_slow_upload_keeps_other_users_and_worker_writes_available(self):
+  cid=self.create();aid=json.loads(self.req('/campaigns/'+cid+'/uploads',{'name':'slow.mp4','size':6})[1])['id']
+  with self.store.db(True) as db:db.execute('INSERT INTO jobs(id,kind,payload,due_at) VALUES(?,"heartbeat","{}",0)',(uid(),))
+  pool=concurrent.futures.ThreadPoolExecutor(max_workers=2)
+  try:
+   with self.pending_upload(aid) as finish:
+    session=pool.submit(self.req,'/session',who='user2');claim=pool.submit(self.store.claim)
+    self.assertEqual(session.result(timeout=2)[0],200)
+    self.assertEqual(claim.result(timeout=2)['kind'],'heartbeat')
+    self.assertEqual(self.req('/uploads/'+aid,method='PUT',raw=b'xyz',headers={'Upload-Offset':'0'})[0],409)
+    self.assertEqual(self.req('/assets/'+aid,{},method='DELETE')[0],409)
+    self.assertEqual(finish()[0],200)
+  finally:pool.shutdown(wait=True)
+  self.assertEqual(self.req('/assets/'+aid)[1],b'abcdef')
+  with self.store.db() as db:
+   row=db.execute('SELECT uploaded,status,sha256 FROM assets WHERE id=?',(aid,)).fetchone()
+   self.assertEqual(tuple(row),(6,'ready',hashlib.sha256(b'abcdef').hexdigest()))
+ def test_upload_rechecks_editor_permission_after_receiving_bytes(self):
+  cid=self.create();self.req('/session',who='user2')
+  owner={'id':1,'name':'Usuario 1','admin':False}
+  self.store.member(owner,cid,{'user_id':2,'role':'editor'})
+  aid=json.loads(self.req('/campaigns/'+cid+'/uploads',{'name':'revoked.mp4','size':6})[1])['id']
+  with self.pending_upload(aid,who='user2') as finish:
+   self.store.member(owner,cid,{'user_id':2,'role':'viewer'})
+   self.assertEqual(finish()[0],404)
+  with self.store.db() as db:
+   row=db.execute('SELECT uploaded,reserved,status FROM assets WHERE id=?',(aid,)).fetchone()
+   self.assertEqual(tuple(row),(0,6,'uploading'))
+  self.assertFalse((Path(self.tmp.name)/'assets'/aid).exists())
+ def test_failed_offset_commit_keeps_reservation_and_retry_replaces_uncommitted_tail(self):
+  cid=self.create();aid=json.loads(self.req('/campaigns/'+cid+'/uploads',{'name':'retry.mp4','size':6})[1])['id']
+  with self.store.db(True) as db:db.execute('CREATE TRIGGER reject_upload_commit BEFORE UPDATE OF uploaded ON assets BEGIN SELECT RAISE(ABORT,"synthetic commit failure"); END')
+  self.assertEqual(self.req('/uploads/'+aid,method='PUT',raw=b'badbad',headers={'Upload-Offset':'0'})[0],500)
+  with self.store.db(True) as db:
+   row=db.execute('SELECT uploaded,reserved,status FROM assets WHERE id=?',(aid,)).fetchone()
+   self.assertEqual(tuple(row),(0,6,'uploading'));db.execute('DROP TRIGGER reject_upload_commit')
+  self.assertEqual(self.req('/uploads/'+aid,method='PUT',raw=b'abc',headers={'Upload-Offset':'0'})[0],200)
+  self.assertEqual((Path(self.tmp.name)/'assets'/aid).read_bytes(),b'abc')
+  self.assertEqual(self.req('/uploads/'+aid,method='PUT',raw=b'def',headers={'Upload-Offset':'3'})[0],200)
+  self.assertEqual(self.req('/assets/'+aid)[1],b'abcdef')
+ def test_tiktok_photo_references_protect_each_asset_including_provider_fetch(self):
+  cid=self.create();photos=[]
+  for name in ('cover.jpg','second.jpg'):
+   aid=json.loads(self.req('/campaigns/'+cid+'/uploads',{'name':name,'size':3})[1])['id'];photos.append(aid)
+   self.assertEqual(self.req('/uploads/'+aid,method='PUT',raw=b'jpg',headers={'Upload-Offset':'0'})[0],200)
+  pid=uid()
+  with self.store.db(True) as db:db.execute('INSERT INTO pieces(id,campaign,name,platform,format,copy,destination,due_at,settings,created_at) VALUES(?,?,"Photos","tiktok","photo","","",1,?,1)',(pid,cid,json.dumps({'tiktok':{'images':photos}})))
+  for status in ('draft','approved','publishing','processing','published'):
+   with self.subTest(status=status):
+    with self.store.db(True) as db:db.execute('UPDATE pieces SET status=? WHERE id=?',(status,pid))
+    for aid in photos:
+     self.assertEqual(self.req('/assets/'+aid,{},method='DELETE')[0],409)
+     self.assertEqual(self.req('/assets/'+aid)[1],b'jpg')
+  with self.store.db() as db:self.assertEqual(db.execute('SELECT sum(reserved) FROM assets WHERE campaign=?',(cid,)).fetchone()[0],6)
  def test_unauthenticated_session_denied(self):self.assertEqual(self.req('/session',who='bad')[0],401)
  def test_sandbox_prefix_and_designated_admin_are_enforced_over_http(self):
   state=Path(self.tmp.name)/'tdf-campaign-platform-sandbox';state.mkdir()

@@ -1,5 +1,5 @@
 """TDF authenticated campaign service, behind the existing HTTPS edge."""
-import hashlib, hmac, http.server, json, mimetypes, os, re, socket, sys, time, urllib.error, urllib.parse, urllib.request
+import contextlib, fcntl, hashlib, hmac, http.server, json, mimetypes, os, re, socket, sys, tempfile, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 from domain import Store, Denied, uid
 from providers import Providers, Vault, ProviderError
@@ -14,6 +14,17 @@ def make_runtime():
 def signed_media_url(config,asset):
  expires=str(int(time.time())+7200);sig=hmac.new(config['MEDIA_KEY'].encode(),(asset+':'+expires).encode(),hashlib.sha256).hexdigest()
  return config['PUBLIC_BASE']+'/media/'+asset+'?expires='+expires+'&signature='+sig
+
+@contextlib.contextmanager
+def asset_lock(config,identifier):
+ # One host, including multiple service processes. Keep lock inodes permanently:
+ # unlinking a released lock would allow two callers to lock different inodes.
+ directory=Path(config['STATE_DIR'])/'asset-locks';directory.mkdir(mode=0o700,exist_ok=True)
+ with (directory/(identifier+'.lock')).open('a+b') as lock:
+  try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:raise Denied('El archivo está en uso. Comprueba el offset y vuelve a intentarlo.',409) from None
+  try:yield
+  finally:fcntl.flock(lock,fcntl.LOCK_UN)
 
 def upstream_actor(headers,config):
  forwarded={k:headers[k] for k in ('Authorization','Cookie') if headers.get(k)}
@@ -210,36 +221,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
    if action=='export' and method=='GET':self.respond(200,s.detail(actor,cid),extra={'Content-Disposition':'attachment; filename="campana.json"'});return
   m=re.fullmatch('/uploads/([0-9a-f]{32})',path)
   if m:
-   with s.db(True) as d:
+   if method=='PUT':return self.receive_upload(actor,m[1])
+   with s.db() as d:
     a=d.execute('SELECT * FROM assets WHERE id=?',(m[1],)).fetchone()
     if not a:raise Denied('Archivo no encontrado.',404)
     s.access(d,actor,a['campaign'],'edit')
     if method=='GET':self.respond(200,{'offset':a['uploaded'],'size':a['reserved'],'status':a['status']});return
-    if method=='PUT':
-     if a['status']!='uploading':raise Denied('Carga ya completada.',409)
-     try:n=int(self.headers.get('Content-Length','0'));offset=int(self.headers.get('Upload-Offset','-1'))
-     except ValueError:raise Denied('Carga inválida.')
-     if offset!=a['uploaded'] or n<=0 or n>4*1024*1024 or offset+n>a['reserved']:raise Denied('Offset o tamaño de fragmento inválido.',409)
-     target=Path(cfg['STATE_DIR'])/'assets'/a['path'];target.parent.mkdir(exist_ok=True)
-     # Reserved quota is committed before creating bytes; truncate only uncommitted tail of this upload.
-     with target.open('r+b' if target.exists() else 'w+b') as f:
-      f.truncate(offset);f.seek(offset);remaining=n
-      while remaining:
-       chunk=self.rfile.read(min(65536,remaining))
-       if not chunk:raise Denied('Carga interrumpida; reanuda desde el último offset confirmado.',409)
-       f.write(chunk);remaining-=len(chunk)
-      f.flush();os.fsync(f.fileno())
-     completed=offset+n==a['reserved'];digest=None
-     if completed:
-      h=hashlib.sha256()
-      with target.open('rb') as f:
-       for block in iter(lambda:f.read(1024*1024),b''):h.update(block)
-      digest=h.hexdigest()
-     d.execute('UPDATE assets SET uploaded=?,size=?,sha256=?,status=? WHERE id=?',(offset+n,offset+n,digest,'ready' if completed else 'uploading',a['id']));self.respond(200,{'offset':offset+n,'status':'ready' if completed else 'uploading','sha256':digest});return
   m=re.fullmatch('/assets/([0-9a-f]{32})',path)
   if m and method=='DELETE':
    data=self.read_json()
-   with s.db(True) as d:
+   with s.db() as d:
+    a=d.execute('SELECT * FROM assets WHERE id=? AND status!="deleted"',(m[1],)).fetchone()
+    if not a:raise Denied('Archivo no encontrado.',404)
+    s.access(d,actor,a['campaign'],'manage')
+   with asset_lock(cfg,m[1]),s.db(True) as d:
     a=d.execute('SELECT * FROM assets WHERE id=? AND status!="deleted"',(m[1],)).fetchone()
     if not a:raise Denied('Archivo no encontrado.',404)
     c=s.access(d,actor,a['campaign'],'manage')
@@ -249,7 +244,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
     for job in d.execute('SELECT payload FROM jobs WHERE campaign=? AND state IN ("queued","running")',(a['campaign'],)):
      if json.loads(job['payload']).get('source')==a['id']:raise Denied('El archivo está en uso por un trabajo pendiente.',409)
     for row in d.execute('SELECT settings FROM pieces WHERE campaign=?',(a['campaign'],)):
-     if a['id'] in json.loads(row['settings']).get('children',[]):raise Denied('El archivo forma parte de un carrusel.',409)
+     settings=json.loads(row['settings'])
+     if a['id'] in settings.get('children',[]):raise Denied('El archivo forma parte de un carrusel.',409)
+     if a['id'] in settings.get('tiktok',{}).get('images',[]):raise Denied('El archivo forma parte de una publicación de fotos de TikTok.',409)
     target=Path(cfg['STATE_DIR'])/'assets'/a['path']
     if target.exists():target.unlink()
     d.execute('UPDATE assets SET status="deleted",reserved=0 WHERE id=?',(a['id'],));s.audit(d,actor['id'],'asset.delete',a['campaign'],a['id'],{'name':a['name'],'sha256':a['sha256'],'original':bool(a['original'])})
@@ -261,6 +258,51 @@ class Handler(http.server.BaseHTTPRequestHandler):
     s.access(d,actor,a['campaign'])
    return self.send_asset(a)
   raise Denied('Ruta no encontrada.',404)
+ def check_upload(self,d,actor,identifier,offset,size):
+  a=d.execute('SELECT * FROM assets WHERE id=?',(identifier,)).fetchone()
+  if not a:raise Denied('Archivo no encontrado.',404)
+  self.server.store.access(d,actor,a['campaign'],'edit')
+  if a['status']!='uploading':raise Denied('Carga ya completada.',409)
+  if offset!=a['uploaded'] or size<=0 or size>4*1024*1024 or offset+size>a['reserved']:raise Denied('Offset o tamaño de fragmento inválido.',409)
+  return a
+ def receive_upload(self,actor,identifier):
+  # An early refusal must not parse unread request bytes as another HTTP request.
+  self.close_connection=True
+  try:size=int(self.headers.get('Content-Length','0'));offset=int(self.headers.get('Upload-Offset','-1'))
+  except ValueError:raise Denied('Carga inválida.') from None
+  s=self.server.store;cfg=self.server.config
+  with s.db() as d:self.check_upload(d,actor,identifier,offset,size)
+  with asset_lock(cfg,identifier):
+   with s.db() as d:self.check_upload(d,actor,identifier,offset,size)
+   # Receive only one bounded chunk for this asset, without holding any SQLite
+   # transaction. Other users, worker claims and unrelated uploads stay usable.
+   with tempfile.TemporaryFile(dir=cfg['STATE_DIR']) as staged:
+    remaining=size
+    while remaining:
+     chunk=self.rfile.read(min(65536,remaining))
+     if not chunk:raise Denied('Carga interrumpida; reanuda desde el último offset confirmado.',409)
+     staged.write(chunk);remaining-=len(chunk)
+    # Permission/offset may have changed while the body was in flight.
+    with s.db() as d:a=self.check_upload(d,actor,identifier,offset,size)
+    target=Path(cfg['STATE_DIR'])/'assets'/a['path'];target.parent.mkdir(exist_ok=True)
+    with target.open('r+b' if target.exists() else 'w+b') as output:
+     output.truncate(offset);output.seek(offset);staged.seek(0)
+     for chunk in iter(lambda:staged.read(65536),b''):output.write(chunk)
+     output.flush();os.fsync(output.fileno())
+   completed=offset+size==a['reserved'];digest=None
+   if completed:
+    h=hashlib.sha256()
+    with target.open('rb') as source:
+     for block in iter(lambda:source.read(1024*1024),b''):h.update(block)
+    digest=h.hexdigest()
+   # File I/O and the full-file digest also stay outside the global write lock.
+   # A crash/rejected commit leaves only an uncommitted tail, truncated on retry.
+   with s.db(True) as d:
+    current=self.check_upload(d,actor,identifier,offset,size)
+    if current['path']!=a['path'] or current['reserved']!=a['reserved']:raise Denied('La carga cambió. Comprueba el offset.',409)
+    status='ready' if completed else 'uploading'
+    d.execute('UPDATE assets SET uploaded=?,size=?,sha256=?,status=? WHERE id=?',(offset+size,offset+size,digest,status,identifier))
+  self.respond(200,{'offset':offset+size,'status':status,'sha256':digest})
  def send_asset(self,a):
   target=Path(self.server.config['STATE_DIR'])/'assets'/a['path'];size=target.stat().st_size;start=0;end=size-1;status=200;raw=self.headers.get('Range')
   if raw:

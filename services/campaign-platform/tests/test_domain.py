@@ -149,6 +149,21 @@ class CampaignTests(unittest.TestCase):
   with self.store.db() as d:
    self.assertEqual(d.execute('SELECT kind FROM jobs WHERE piece=?',(pid,)).fetchone()[0],'verify_youtube')
    self.assertEqual(d.execute('SELECT status FROM pieces WHERE id=?',(pid,)).fetchone()[0],'processing')
+ def test_external_video_cannot_be_edited_even_when_blocked_or_cancelled(self):
+  with self.store.db(True) as db:db.execute('UPDATE accounts SET platform="youtube" WHERE id=?',(self.account,))
+  pid=self.piece(platform='youtube',format='video');self.approve()
+  data={'platform':'youtube','format':'video','account':self.account,'copy':'Replacement','due_at':time.time()}
+  for status in ('blocked','cancelled','draft'):
+   with self.subTest(status=status):
+    with self.store.db(True) as db:db.execute('UPDATE pieces SET external_id="existing-private-video",status=? WHERE id=?',(status,pid))
+    before=self.store.detail(self.a,self.cid)
+    with self.assertRaises(Denied) as denied:self.store.piece(self.a,self.cid,data,pid)
+    self.assertEqual(denied.exception.status,409)
+    self.assertEqual(self.store.detail(self.a,self.cid),before)
+  with self.store.db(True) as db:db.execute('UPDATE pieces SET status="blocked" WHERE id=?',(pid,))
+  self.store.youtube_checks(self.a,self.cid,{'piece':pid,'version':1,'video_id':'existing-private-video','checks_passed':True})
+  piece=self.store.detail(self.a,self.cid)['pieces'][0]
+  self.assertEqual(piece['external_id'],'existing-private-video');self.assertEqual(piece['status'],'processing')
  def test_analytics_preserves_pending_and_maps_actual_watch_time(self):
   from unittest.mock import patch
   adapter=Providers(self.store,Vault(Fernet.generate_key()),{})
