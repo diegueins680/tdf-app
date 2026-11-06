@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -82,7 +83,7 @@ function DirectoryNotificationContext({ kind, id }: { kind: string; id: string }
     {(!valid || query.isError) && <Alert severity="info">Este recurso ya no está disponible para tu cuenta o tu acceso ha cambiado.</Alert>}
     {data && kind === 'application' && <><Typography>{value('title')}</Typography><ApplicationRow application={data} authorProfileId={value('authorProfileId')} /></>}
     {data && kind === 'invitation' && <InvitationCard invitation={data as unknown as DirectoryInvitation} />}
-    {data && kind === 'review' && <><Typography>{profileName('authorProfile')} → {profileName('subjectProfile')}</Typography><Typography>{typeof data['rating'] === 'number' ? data['rating'] : ''} / 5</Typography><Typography>{value('body')}</Typography><Chip label={value('status')} /></>}
+    {data && kind === 'review' && <><Typography>{profileName('authorProfile')} → {profileName('subjectProfile')}</Typography><Typography>{typeof data['rating'] === 'number' ? data['rating'] : ''} / 5</Typography><MarkdownText>{value('body')}</MarkdownText><Chip label={value('status')} /></>}
     {data && kind === 'alert' && <><Typography>{value('searchName')}</Typography><Typography>{value('title')}</Typography>{path && <Button component={RouterLink} to={path}>Ver resultado</Button>}</>}
     <Button component={RouterLink} to="/mis-clasificados">Volver a mis perfiles y clasificados</Button>
   </Stack></Container>;
@@ -185,7 +186,7 @@ function ApplicationRow({ application, authorProfileId }: { application: Record<
   const message = typeof application['message'] === 'string' ? application['message'] : '';
   const applicationStatus = typeof application['status'] === 'string' ? application['status'] : 'submitted';
   const awaitingDecision = ['submitted', 'viewed', 'shortlisted'].includes(applicationStatus);
-  return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Stack spacing={1}><Typography fontWeight={800}>{profileName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{message}</Typography>{applicationStatus === 'accepted' && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}{(Boolean(mutation.error) || Boolean(conversation.error)) && <Alert severity="error">{(mutation.error ?? conversation.error)?.message}</Alert>}<Stack direction="row" gap={1} flexWrap="wrap"><Chip size="small" label={applicationStatus} />{awaitingDecision && <><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('accepted')}>Aceptar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button></>}{applicationStatus === 'accepted' && <Button size="small" variant="contained" onClick={() => conversation.mutate()} disabled={!applicantProfileId || !conversationMessage.trim() || conversation.isPending}>Abrir conversación</Button>}</Stack></Stack></Paper>;
+  return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Stack spacing={1}><Typography fontWeight={800}>{profileName}</Typography><MarkdownText>{message}</MarkdownText>{applicationStatus === 'accepted' && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}{(Boolean(mutation.error) || Boolean(conversation.error)) && <Alert severity="error">{(mutation.error ?? conversation.error)?.message}</Alert>}<Stack direction="row" gap={1} flexWrap="wrap"><Chip size="small" label={applicationStatus} />{awaitingDecision && <><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('accepted')}>Aceptar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button></>}{applicationStatus === 'accepted' && <Button size="small" variant="contained" onClick={() => conversation.mutate()} disabled={!applicantProfileId || !conversationMessage.trim() || conversation.isPending}>Abrir conversación</Button>}</Stack></Stack></Paper>;
 }
 
 function InvitationPanel() {
@@ -227,7 +228,7 @@ function InvitationCard({ invitation }: { invitation: DirectoryInvitation }) {
       <Box><Typography variant="h6" fontWeight={800}>{invitation.participantRole === 'sender' ? `Invitaste a ${other.name}` : `${other.name} te invitó`}</Typography><Typography color="text.secondary">Actúas como {mine.name}{invitation.classified ? ` · ${invitation.classified.title}` : ' · invitación general'}</Typography></Box>
       <Chip label={invitation.status} color={invitation.status === 'accepted' || invitation.status === 'conversation_open' ? 'success' : 'default'} />
     </Stack>
-    <Typography sx={{ whiteSpace: 'pre-wrap' }}>{invitation.message}</Typography>
+    <MarkdownText>{invitation.message}</MarkdownText>
     {canConverse && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}
     {(Boolean(transition.error) || Boolean(conversation.error)) && <Alert severity="error">{(transition.error ?? conversation.error)?.message}</Alert>}
     <Stack direction="row" gap={1} flexWrap="wrap">

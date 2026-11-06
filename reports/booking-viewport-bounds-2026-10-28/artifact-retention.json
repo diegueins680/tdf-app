@@ -1,0 +1,73 @@
+{
+  "retainedPublicly": "All local fixtures, result JSON, numerical qualifications, logs and screenshots; original hosted failure trace/PNG/context.",
+  "localDuplicateTraceZIPsRetainedPrivately": [
+    {
+      "path": "corrected-output/corrected-booking-viewport-cfe46-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "bytes": 18803,
+      "sha256": "fcb684e327243ba307759b462402d9d3d90daa2ed765f8b636c68854f6a43938"
+    },
+    {
+      "path": "corrected-output/corrected-booking-viewport-cfe46-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "bytes": 18463,
+      "sha256": "9d15de7068fd493c57a95afe70d0db1e49a531d0dac7b2a65d8a238fa2a838a9"
+    },
+    {
+      "path": "corrected-output/corrected-booking-viewport-cfe46-erflow-critical-mobile-flow-firefox/trace.zip",
+      "bytes": 162810,
+      "sha256": "d71ec7a04292d07a852fb9d592db2722e2a555730387b7a86c922cedc2469d87"
+    },
+    {
+      "path": "mutant-standards-output/mutant-standards-booking-v-a934d-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "bytes": 19771,
+      "sha256": "932d69a8b1beac88d495bdc3938a50ebf6dab86d55ecdd060a38cecf14f3b579"
+    },
+    {
+      "path": "persistent-output/persistent-public-booking--b56c1-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "bytes": 3697592,
+      "sha256": "dad844ec47ca302c5168cced2ed67231cfba5cda59aecac9a519ba62ece8893d"
+    },
+    {
+      "path": "persistent-output/persistent-public-booking--b56c1-etails-critical-mobile-flow-firefox/trace.zip",
+      "bytes": 5009474,
+      "sha256": "c4b8081d52eaf32ee296faff8647a8796124dac4edbdbf3d5df9a16c68697d7a"
+    },
+    {
+      "path": "persistent-standards-output/corrected-persistent-stand-cb05e-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "bytes": 3536126,
+      "sha256": "4707803d9b4af3295010b85b0ff594a8c7f7c0354f9fd9205b990d88626545d2"
+    },
+    {
+      "path": "persistent-standards-output/corrected-persistent-stand-cb05e-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "bytes": 3457576,
+      "sha256": "59d596cc22cd182f107492b0e2c698c933f6cd67443abe03d00bea320b4b4c49"
+    },
+    {
+      "path": "persistent-standards-output/corrected-persistent-stand-cb05e-etails-critical-mobile-flow-firefox/trace.zip",
+      "bytes": 4904611,
+      "sha256": "1130a1de3deb930e821749a13ee36bc990cd719c8fa03f0df5a0f8ebd1e42b2a"
+    },
+    {
+      "path": "transient-standards-output/corrected-transient-standa-412e2-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "bytes": 3601708,
+      "sha256": "12474af72c4c316a3b9254ef53d7ed4d6d51e2d2b2c223200f0f066fdd7f2384"
+    },
+    {
+      "path": "transient-standards-output/corrected-transient-standa-412e2-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "bytes": 3833905,
+      "sha256": "35ae3c13584b6179abb19855198d0d77da9fd7cddfc02bfe30f5396774c9608a"
+    },
+    {
+      "path": "transient-standards-output/corrected-transient-standa-412e2-etails-critical-mobile-flow-firefox/trace.zip",
+      "bytes": 4875900,
+      "sha256": "584a639267bda137cb52e70e25f08c41c2fc137fdcd990a091bdaae5c5100d5c"
+    }
+  ],
+  "reason": "Avoid repeating the unchanged compiled application resources in each local browser trace. No claim depends on unavailable public trace internals; raw results/numerical attachments and exact reproduction fixtures are retained.",
+  "originalHostedArtifact": {
+    "id": 12865431888,
+    "bytes": 105189397,
+    "sha256": "9014d67c1dcfe955964821252ab1c1ea037cf2fceb91f8d11d0137c013ce8b3f",
+    "fullZIPRetainedPrivately": true,
+    "selectedFailureTracePubliclyRetained": true
+  }
+}

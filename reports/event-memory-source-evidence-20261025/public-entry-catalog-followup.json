@@ -1,0 +1,49 @@
+{
+  "recordedAt": "2026-10-26T18:54:36.319431+00:00",
+  "qualifiedApplicationSource": "87c3ed19473b0f19d03a39f4c592d47e2dd3dcb2",
+  "reviewedPriorHead": "8a3d0b4b02a5d4c24d3d15b97a92e75d9506f8bd",
+  "sourceChanges": "Catalog decision, generated discovery/traceability and reports only; all258 actual HTTP/runtime hashes remain exact",
+  "initialHostedCatalog": {
+    "status": "FAIL",
+    "run": "https://github.com/diegueins680/tdf-app/actions/runs/40380340230",
+    "unreviewedCandidate": "cc7bc1104dae33fddfde",
+    "staleDecisions": 0
+  },
+  "cause": "The first local strict scans ran before the new route test was tracked. The audit intentionally only scans tracked source; the synthetic loading/session hook fixture therefore missed the first1346 inventory. After commit CI correctly discovered1347 candidates. No CI or scanner guard was relaxed.",
+  "review": {
+    "file": "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
+    "line": 6,
+    "name": "state",
+    "fields": [
+      "loading",
+      "session"
+    ],
+    "classification": "genuine-technical-constant",
+    "reason": "Mocked useSession fixture fields, not a runtime business/role/consent registry; existing authenticated session and server authority remain required"
+  },
+  "finalTrackedCatalog": {
+    "candidates": 1347,
+    "strictJson": "PASS",
+    "strictCsv": "PASS",
+    "historyControlsPassed": 8,
+    "traceabilityCheck": "PASS"
+  },
+  "supersedes": "Only the incomplete catalog admission scope in public-entry-qualification.json. Its3540 tests/311suites and actual API/browser source87 receipts remain unchanged and valid.",
+  "preview": "Published preview at immutable8a was not accepted: actual API CORS denied its origin. See public-entry-preview141-cors-blocked.json.",
+  "logs": {
+    "/private/tmp/tdf-event-memory-public-entry-catalog-tracked-strict-json-v1.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/private/tmp/tdf-event-memory-public-entry-catalog-tracked-strict-csv-v1.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/private/tmp/tdf-event-memory-public-entry-catalog-tracked-controls-v1.log": {
+      "sha256": "dfce214f0b99b86654ed1a1b89b6471f1932038ed1ef3c598fc4a95d94b1d869",
+      "bytes": 1954
+    }
+  },
+  "productionWrites": 0,
+  "realInvitations": 0
+}

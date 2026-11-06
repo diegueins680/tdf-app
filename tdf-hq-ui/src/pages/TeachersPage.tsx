@@ -1,3 +1,5 @@
+import UserProfileLink from '../components/UserProfileLink';
+import MarkdownText from '../components/MarkdownText';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,7 +10,6 @@ import {
   Box,
   Button,
   Card,
-  CardActionArea,
   CardContent,
   Chip,
   Divider,
@@ -421,9 +422,9 @@ export default function TeachersPage() {
                         bgcolor: teacher.id === selectedTeacherId ? 'rgba(59,130,246,0.04)' : 'background.paper',
                       }}
                     >
-                      <CardActionArea onClick={() => setSelectedTeacherId(teacher.id)} sx={{ p: 1.5 }}>
+                      <Box sx={{ p: 1.5 }}>
                         <Stack direction="row" spacing={1.5} alignItems="center">
-                          <Avatar
+                          <UserProfileLink partyId={teacher.id} label={teacher.name}><Avatar
                             sx={{
                               bgcolor: teacher.color ?? '#2563eb',
                               color: '#fff',
@@ -433,9 +434,9 @@ export default function TeachersPage() {
                             }}
                           >
                             {teacher.name.charAt(0)}
-                          </Avatar>
+                          </Avatar></UserProfileLink>
                           <Box sx={{ flexGrow: 1 }}>
-                            <Typography fontWeight={700}>{teacher.name}</Typography>
+                            <UserProfileLink partyId={teacher.id}><Typography fontWeight={700}>{teacher.name}</Typography></UserProfileLink>
                             <Typography variant="body2" color="text.secondary">
                               {teacher.headline ?? 'Profesor'}
                             </Typography>
@@ -452,7 +453,8 @@ export default function TeachersPage() {
                             )}
                           </Box>
                         </Stack>
-                      </CardActionArea>
+                      <Button size="small" onClick={() => setSelectedTeacherId(teacher.id)} sx={{ mt: 1 }}>Ver clases</Button>
+                      </Box>
                     </Card>
                   ))}
                 </Stack>
@@ -617,9 +619,9 @@ export default function TeachersPage() {
                                 {formatRange(row.startAt, row.endAt)} {row.location ? `· ${row.location}` : ''}
                               </Typography>
                               {row.notes && (
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                                   {row.notes}
-                                </Typography>
+                                </MarkdownText>
                               )}
                             </Box>
                           </Stack>

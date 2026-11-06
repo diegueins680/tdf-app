@@ -244,5 +244,22 @@
     },
     "packet": "reports/player-listener-disposal-evidence-20261027/hosted-e9/README.md",
     "acceptanceBoundary": "Original 23 statuses retain their capture scope. Hosted checks add E9 execution evidence, not full acceptance or production qualification."
+  },
+  "documentationIntegration": {
+    "observedAt": "2026-11-06",
+    "observedProtectedBaseline": "81a06faa06731f866333a0b89fb266720c4fa065",
+    "originalHoldResolvedBy": {
+      "pullRequest": 629,
+      "mergeCommit": "8250081de10fd21b4854be8736080bbcfd97bfab",
+      "ancestorOfObservedBaseline": true
+    },
+    "historicalQualifiedSource": "e9f23483c7d4164a4551e6a90d6b82e6b09fd13a",
+    "historicalCICheckout": "aacc4cecb7ddb42ac2869930af6513caa1e5d1d5",
+    "currentRequirementRecordsPreserved": 190,
+    "currentMigrationEntriesPreserved": 244,
+    "newRuntimeExecution": false,
+    "sourceCandidateApprovalInherited": false,
+    "productionDeploymentClaimed": false,
+    "scope": "Documentation and immutable historical evidence preservation. Fresh branch-policy checks and independent review remain separate."
   }
 }

@@ -1,5 +1,11 @@
 #!/bin/sh
 set -eu
+test_memory_browser=false
+case "$#" in
+  0) ;;
+  1) if [ "$1" = --event-memories ]; then test_memory_browser=true; else echo 'Unsupported browser runner option' >&2; exit 2; fi ;;
+  *) echo 'Unsupported browser runner options' >&2; exit 2 ;;
+esac
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 # Resolve and freeze a local Docker endpoint; never allocate fixtures on a remote context.
 if [ -n "${DOCKER_CONTEXT:-}" ] || [ -z "${DOCKER_HOST:-}" ]; then
@@ -38,12 +44,21 @@ test -f "$test_autogen/Paths_tdf_hq.hs" || {
   echo 'Build the canonical backend first: cd tdf-hq && stack build tdf-hq:exe:tdf-hq-exe' >&2
   exit 1
 }
+if [ "$test_memory_browser" = true ]; then
+  test_backend_bin="$(stack path --local-install-root)/bin/tdf-hq-exe"
+  test -x "$test_backend_bin" || { echo 'The canonical backend executable is required for event memories' >&2; exit 1; }
+fi
 mkdir -p .stack-work/event-raci-browser
 stack exec -- ghc -O0 -threaded -isrc -itest -i"$test_autogen" -outputdir .stack-work/event-raci-browser \
   test/EventRaciBrowserMain.hs -o .stack-work/event-raci-browser/event-raci-browser
 test_database=tdf_event_raci_browser_test
+test_database_image=postgres:16-alpine
+if [ "$test_memory_browser" = true ]; then
+  # The complete historical schema needs vector, as in canonical backend CI.
+  test_database_image=pgvector/pgvector:pg17
+fi
 test_container_id=$(docker run --rm -d -p 127.0.0.1::5432 \
-  -e POSTGRES_PASSWORD=event-browser-test-only -e POSTGRES_DB="$test_database" postgres:16-alpine)
+  -e POSTGRES_PASSWORD=event-browser-test-only -e POSTGRES_DB="$test_database" "$test_database_image")
 attempt=0
 until docker exec "$test_container_id" psql -h 127.0.0.1 -X -U postgres -d "$test_database" -qAtc 'SELECT 1' >/dev/null 2>&1; do
   attempt=$((attempt + 1))
@@ -72,3 +87,15 @@ EVENT_RACI_BROWSER_RUNNER="$repo_root/scripts/run-event-raci-browser.mjs" \
 EVENT_OPERATIONS_TEST_DSN="host=127.0.0.1 port=$test_port user=postgres password=event-browser-test-only dbname=$test_database" \
   .stack-work/event-raci-browser/event-raci-browser
 echo 'Real RACI session/API/PostgreSQL browser verification passed.'
+if [ "$test_memory_browser" = true ]; then
+  # Reuse this exact owned, loopback-only PostgreSQL container. The HTTP runner
+  # creates/drops its own separate database; no application environment is loaded.
+  TDF_TEST_NATIVE_POSTGRES=1 \
+  TDF_TEST_NATIVE_POSTGRES_PORT="$test_port" \
+  TDF_TEST_NATIVE_POSTGRES_USER=postgres \
+  TDF_TEST_POSTGRES_PASSWORD=event-browser-test-only \
+    python3 "$repo_root/scripts/test-event-memories-http.py" \
+      --binary "$test_backend_bin" --source-moderation --browser \
+      --output "$repo_root/artifacts/event-memory-browser"
+  echo 'Real event memories/signup/API/PostgreSQL browser verification passed.'
+fi

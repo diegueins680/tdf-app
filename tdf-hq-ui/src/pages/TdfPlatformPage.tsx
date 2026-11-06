@@ -31,7 +31,9 @@ import type { ArtistProfileDTO } from '../api/types';
 import { Records, type RecordsResourceDTO } from '../api/records';
 import { STUDIO_MAP_URL } from '../config/appConfig';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import ArtistProfileImage from '../components/ArtistProfileImage';
 import { formatNumberForUser } from '../utils/formatters';
+import StudioGallery from '../components/StudioGallery';
 
 const GENERAL_SIGNUP_PATH = '/login?signup=1';
 const FAN_SIGNUP_PATH = '/login?signup=1&intent=follow_artists&redirect=/fans';
@@ -322,7 +324,7 @@ const formatFollowerCount = (value: number) =>
   value === 1 ? '1 seguidor' : `${formatNumberForUser(value)} seguidores`;
 
 const artistImageFor = (artist: ArtistProfileDTO, index: number, recordsImages: string[]) =>
-  getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ??
+  getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug, artist.apDisplayName) ??
   recordsImages[index % Math.max(recordsImages.length, 1)] ??
   FALLBACK_ARTIST_IMAGE.url;
 
@@ -536,12 +538,12 @@ function ArtistCarousel({
             color: COLOR_TEXT_MUTED,
           }}
         >
-          <Box
-            component="img"
-            src={artistImageFor(artist, index, recordsImages)}
+          <ArtistProfileImage
+            artistName={artist.apDisplayName}
+            imageUrl={artistImageFor(artist, index, recordsImages)}
             alt={`Imagen de ${artist.apDisplayName}`}
-            loading="lazy"
-            decoding="async"
+            width={640}
+            height={ARTIST_CARD_IMAGE_HEIGHT_PX}
             sx={{
               width: '100%',
               height: ARTIST_CARD_IMAGE_HEIGHT_PX,
@@ -812,6 +814,7 @@ export default function TdfPlatformPage() {
             </Grid>
 
           </Grid>
+          <StudioGallery />
         </Container>
       </Box>
 

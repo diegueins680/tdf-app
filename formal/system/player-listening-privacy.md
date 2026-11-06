@@ -67,6 +67,12 @@ change, remove/move, explicit clear, or other queue edit takes precedence over
 old saved listening state. An empty current queue after a user edit remains
 intentional; checking only whether a current track exists is insufficient.
 
+A fresh pending cookie session may have no cached descriptor, so its initial
+null owner is unresolved rather than established anonymous ownership. Resolving
+that first owner preserves hydration eligibility and any newer explicit queue
+intent. Resolving anonymous consumes this initial exception too: a later login
+is an actual owner change and cannot revive the old account's saved envelope.
+
 Initial matching-owner restoration is different from an in-application owner
 transition. A rapid A -> B -> A (or anonymous -> account -> anonymous) must not
 revive the old envelope merely because the intermediate owner's 250 ms save has

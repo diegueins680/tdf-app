@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-03T04:36:05.281566+00:00",
+  "baseline658": "8e18b249084f3b411ed927e85ea1aaf94eb8e2ad",
+  "incomingMain": "c44d32816821051cf7a97096779c99bc1614e7fc",
+  "composition": "99519f38013d25bdb18cdc1616203d2e37ebed9d",
+  "qualifiedSource": "6e7eae299afd6a71915a7bfc39b8036cd04ab58e",
+  "problem": "Distinct historical legacy refund identities can each pass a per-request execution fence and call the provider for one order. Original handler counterexamples made two sequential or concurrent callbacks despite uncertain responses. This establishes duplicate execution attempts, not a claim about real provider charges.",
+  "correction": "Preserve the complete-history guard under explicit READ COMMITTED Event-to-order locks. Require exactly the target unbound identity, recheck canonical binding and event association, then attempt the existing pending-only claim and commit before provider IO. Ambiguous history returns409 without choosing, deleting or resetting identities; canonical allocated successive partial refunds retain their route.",
+  "preservation": {
+    "baseline658": "8e18b249084f3b411ed927e85ea1aaf94eb8e2ad",
+    "oldParent657": "4fccfc657c699f359e4c04d99d6c065989ab753c",
+    "incomingMain": "c44d32816821051cf7a97096779c99bc1614e7fc",
+    "external657Merge": "1261a62a615716275921e2ba44dc2cb0ca2aeb8c",
+    "exactResidualPatches": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "exactResidual": true,
+        "originalSHA256": "d085146112093caf0691742a4b75fb0447962b4cca1f15cf4235875503bb028c",
+        "composedSHA256": "d085146112093caf0691742a4b75fb0447962b4cca1f15cf4235875503bb028c"
+      },
+      {
+        "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "exactResidual": true,
+        "originalSHA256": "9f16b64fc95718163c918f6de987ac3e808b6a40aa71ac0bce78ea9c3757b4b8",
+        "composedSHA256": "9f16b64fc95718163c918f6de987ac3e808b6a40aa71ac0bce78ea9c3757b4b8"
+      },
+      {
+        "path": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "exactResidual": true,
+        "originalSHA256": "195b45463f4b51fd09f15ff37d357977e5c059794c3584453ce44c5662d13fcf",
+        "composedSHA256": "195b45463f4b51fd09f15ff37d357977e5c059794c3584453ce44c5662d13fcf"
+      }
+    ],
+    "otherRequirementsExact": 169,
+    "totalRequirements": 170,
+    "incomingDecisionsExact": 1371,
+    "totalDecisions": 1372,
+    "singleOriginalDecisionExact": "edc4bc7cc2815c51a093",
+    "radio694PathsByteExact": [
+      "e2e/web/radio-navigation.spec.mjs",
+      "formal/system/mobile-entry-ux.md",
+      "formal/system/player-session.md",
+      "playwright.config.mjs",
+      "playwright.music-native.config.mjs",
+      "scripts/__tests__/music-browser-config.test.mjs",
+      "tdf-hq-ui/src/App.tsx",
+      "tdf-hq-ui/src/components/RadioWidget.tsx",
+      "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+      "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
+      "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
+      "tdf-hq-ui/src/utils/radioRouteVisibility.ts"
+    ],
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq-ui",
+      "tdf-mobile",
+      "package.json",
+      "package-lock.json",
+      "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/stack.yaml.lock",
+      ".github/workflows",
+      "scripts/quality-repo.sh",
+      "scripts/run-music-release-worker-once.sh",
+      "scripts/lib/test-child-completion.mjs"
+    ],
+    "scope": "All unrelated main694 source and requirement edits preserved; no new financial policy, SQL, dependency or assertion changes.",
+    "composition": "99519f38013d25bdb18cdc1616203d2e37ebed9d"
+  },
+  "properties": [
+    {
+      "id": "PAY-LEGACY-REFUND-HISTORY-001",
+      "designAssurance": "BOUNDED_VERIFIED",
+      "bounds": "20 inputs,89 states,92 transitions; two approvers, stable history and atomic claim abstraction.",
+      "currentCombinedImplementation": "PARTIAL until fresh current-main90-case qualification."
+    },
+    {
+      "id": "AmbiguousHistoryNeverPosts",
+      "assurance": "BOUNDED_VERIFIED",
+      "controls": "Omitted-history and pending-only mutants produce POST witnesses for pending/pending and pending/rejected histories."
+    },
+    {
+      "id": "AtMostOnePost",
+      "assurance": "BOUNDED_VERIFIED",
+      "scope": "Finite atomic-claim model with uncertain responses and retained claims; no SQL/Haskell refinement or direct-writer guarantee."
+    }
+  ],
+  "verification": {
+    "currentLocal": "19 finite-model checks;8catalog controls; inherited radio-config controls; strict JSON/CSV; inventory/conformance generation and checks; immutable source admission and full repository quality pass.",
+    "priorRuntime": "Exact prior8e source: all90 cases once within407 PostgreSQL examples/0failures, full228schema applied/replayed,4091full examples/0failures/21pending,23worker scenarios and682browser cases. These retain their actual8e and213bbc checkout identities.",
+    "originalCounterexamples": "Original1667 cycle:6 of88 actual handler cases failed before repair; final90 cases passed against227 migrations. Original4452-full-example and older API/serving observations remain historical.",
+    "currentRuntime": "NOT_EXECUTED locally. Fresh main-target canonical Stack/GHC9.10.3 must qualify all90 intended cases within407 PostgreSQL examples and all228 migrations. Prior source evidence is not a fresh combined execution.",
+    "external657": "Merged by tdfrecords as1261a62a; parents/tree/approval verified. Not merged by this agent. Main then advanced through unrelated radio694 as c44d; all incoming radio source and unrelated requirements preserved.",
+    "runnerSetup": "Initial copied later-tier runner referenced a not-yet-present contract and stopped before any test execution. Restored the actual658 input scope and retained the diagnostic; no specification or application change."
+  },
+  "assurance": {
+    "wholeRequirements": 170,
+    "wholeImplementation": "170UNPROVEN",
+    "wholeRefinement": "170UNPROVEN",
+    "canonicalConditionalSMTLemmas": 11,
+    "newTheorems": 0,
+    "release": "BLOCKED",
+    "limits": [
+      "Finite claim model does not prove PostgreSQL locking or Haskell refinement.",
+      "Cooperating Event/order writers and stable identities assumed; mixed old binaries, direct deletion/reparenting and historical reconciliation remain outside this guard.",
+      "Stored authorization changes after initial checks, original payment/provider authenticity, partial-money ticket allocation and uncertain-provider recovery remain separate obligations.",
+      "Ambiguous legitimate legacy activity may require manual reconciliation. No new execution identity or production history rewrite is supplied."
+    ]
+  },
+  "integration": {
+    "existingPR": 658,
+    "base": "main",
+    "draft": false,
+    "autoMerge": false,
+    "freshChecksAndCurrentReview": "Required on the published current-main head; no old review/status borrowed.",
+    "messagesOrReviewerRequestsSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Qualify fresh current-main90 cases/full228 and all required checks; obtain current-head approval through ordinary controls.",
+    "Recheck latest main, strict20checks, review, threads and ordinary admission before any merge; verify actual merge tree/parents.",
+    "Then serial659/660/661; existing662 pricing remains the next independent source repair."
+  ],
+  "evidence": {
+    "archive": "reports/refund-history-main694-2026-11-03/evidence.tar.gz",
+    "sha256": "240beb3045c135dea7e0114d760ed1eb1a65e991bf40076ffcca24c7c34f90eb",
+    "regularFiles": 117,
+    "independentlyVerifiedManifestEntries": 116,
+    "manifest": "reports/refund-history-main694-2026-11-03/manifest.json"
+  }
+}

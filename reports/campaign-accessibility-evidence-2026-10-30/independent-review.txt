@@ -1,0 +1,53 @@
+Independent final review: campaign accessibility counterexample retention
+Review completed: 2026-10-29 local; supplied browser receipts dated 2026-10-30 UTC.
+Source M: 3a69b75c87024c917080cf200f0ce63246275aed
+Baseline: cd091a3c81d5ab70e175d339860fa1921ca1f0c3
+Result: zero blocking defects identified within the scoped diagnostic correction and evidence review.
+
+Scope and authority:
+The correction addresses an established verification defect: campaign audits projected axe results down to IDs/targets and lost the data needed to diagnose native failures. It does not repair or identify the original WebKit contrast cause. I reviewed source/contract, exact assertion parity, real browser result artifacts and attachment bodies, fault-control code/results, source restoration and committed Git/filesystem correspondence. I performed no browser/test/compiler/database/server execution or remote action for this review. This receipt is not a GitHub approval, release authorization or complete proof.
+
+Assertion and product preservation:
+I independently reversed only the declared capture imports/signature/observations/full-result attachment edits and removed the new negative fixture; the remaining campaign test bytes equal main CD exactly. The original all-violations assertion for WCAG2A/2AA/21AA/22AA, overflow assertion, all control names/focus/selection checks, timeouts and retries are preserved. The compact map remains only for its unchanged empty-array assertion; every axe violation remains in the separately attached full result. No severity filter, contrast threshold change, polling until green, new wait, animation manipulation, clipped-node exclusion or product style change is introduced. The entire UI, backend, ops, workflow and lock tree/blob identities remain exact baseline CD; the Mobile gitlink remains unchanged.
+
+Contract adequacy:
+SYS-VERIFY-CAMPAIGN-001 is correctly noncritical and conditional on successful axe execution, inspectable live page and writable artifact storage. The final Markdown accurately describes clipped Creativos as post-failure screenshot evidence, not an atomic measurement during axe. It explicitly records that geometry reads can perturb layout/timing; before/after samples are distinct from the async scan; rectangular intersections do not establish painted/hit-tested visibility, transforms/path clips/occlusion, visual viewport or iframe/shadow behavior; and WAAPI inspection does not see MUI RAF scroll. Page/attachment errors can still abort before the original assertion and are never converted to success. No artifact guarantee under teardown/IO fault or original-cause inference is claimed.
+
+Actual committed-source evidence inspected:
+verification-state.json is ALL_LOCAL_CHECKS_PASSED for M, with actual exits 0 for root quality, fresh assurance and final browser run. qualified/results.json has exactly six passed cases, no skipped/flaky/unexpected results and every retry 0: Chromium desktop and Firefox each execute original 320/1280 campaigns plus the new real-axe/real-Playwright-attachment control. This is the fresh final matrix, distinct from the earlier working-source six passes. The browser receipt accurately says main-CD compiled UI component was reused because product source is byte-identical; it does not claim a new whole-app build/version identity for M.
+
+I independently decoded both final JSON reporter base64 attachment bodies, strictly validated their binding to the saved decoded files and SHA256, and inspected real check data. Each contains the actual color-contrast counterexample fg #eeeeee / bg #ffffff, ratio 1.16, checks/data/related nodes/html/targets/failureSummary and unfiltered violations. The unselected Creativos fixture records clip intersection width 0 before and after, with positive tab bounds and clipping ancestors. These actual assertions establish finite counterexample retention, not cause of the original product failure.
+
+Fault sensitivity and retained harness history:
+Two source fault variants each fail the new control in both browser projects: restoring the byte-exact original main lossy projection causes two intended missing-node-array assertions; suppressing attachment causes two intended attachment-count assertions expected 1 / got 0. I independently reconstructed both variant source hashes from the restored helper, matched the old projection to main Git and checked raw log hashes/assertion locations. This is TWO variants with FOUR browser-case assertion failures, not four independent faults or complete mutation coverage. Compilation errors, timeouts and generic exit 1 are not accepted as control success.
+The initial controller ran both faults but its overly narrow postvalidator recognized only toEqual and rejected the valid toBe failure. Corrected fresh confirmed control results are retained separately; no product/test assertion was weakened. The initial receipt's MacChromium-only scope label is retained with an explicit erratum; actual results and final receipt correctly identify Chromium plus Firefox. The initial source sealer's nonexistent standalone attachment-file assumption failed closed; corrected collection strictly decodes the actual JSON reporter base64 bodies, with old collector/history retained and no browser/test change. I directly verified the decoded output files are byte-exact those final reporter bodies.
+
+Final source freshness:
+I independently verified all 1419 filesystem and corresponding Git/Mobile hashes (1319 main blobs plus 100 Mobile blobs at 7000df1da934aa467e443ad267c0a8caa1e9cb72), clean worktree and restored helper 47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1. Digest: 8bcbc2098d068294c649f8824a166966fba69107ad30deb9c0164d6b4f517f0c. The Markdown outside the generic fingerprint is separately Git-bound, SHA256 db5a9d3dc2ff37687b8064a4ed0b1a1ca1441dd6eb8d350516430a3538e969ff. All 157 incoming requirement objects are structurally exact and the complete historical catalog decision file is byte-exact CD; the sole added SYS requirement brings total 158. Root-quality/admission/catalog receipts report actual exit0, with 8 catalog cases. Fresh assurance runner succeeds while preserving 158 whole and 316 implementation/refinement obligations UNPROVEN, 11 inherited conditional SMT claims and release BLOCKED. No new complete implementation or verification-pipeline theorem is established.
+
+Empirical and integration limits:
+This is TESTED evidence for supported-browser diagnostic retention only. The original WebKit contrast cause remains UNKNOWN and UNREPAIRED. Twenty-five nonreproducing Mac Chromium scans and separate PR673 green hosted samples do not erase PR671's failed gate or establish absence of the failure mode. Pinned Playwright 1.59.1 WebKit is unsupported on this mac12 host; neither fresh local matrix nor fault controls qualify WebKit. Fresh published-head CI/current-head review/FIFO/main/protection requirements remain external integration obligations; none is waived by this receipt. Source-bound diagnostics can enable a later evidence-driven correction but are not a paint-readiness guard or product repair.
+
+Reviewed source hashes:
+- e2e/web/campaign-accessibility.spec.mjs: 4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d
+- e2e/web/helpers/campaign-accessibility.mjs: 47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1
+- formal/system/campaign-accessibility-evidence.md: db5a9d3dc2ff37687b8064a4ed0b1a1ca1441dd6eb8d350516430a3538e969ff
+- formal/system/requirements.json: 0c71d654be958c85e6524f6b28529b527a83f3b7e5395b125fefdb8aae82bb34
+
+Receipt hashes (artifact root /private/tmp/tdf-campaign-tab-contrast-qualification-20261030):
+- verification-state.json: 9099b7d74fac36a9f61bbe1d7c913e2f0ac40233419c08c6a17cf4a14c6e7de9
+- source-correspondence.json: d0cbdeb100aec6bf2ec58ce37caeb64ec33dbf8446b63b03594e68bfa9102462
+- root-quality-result.json: 3f652da0337c62765f75b9638532cd568723caf200ee3511acb0b5c14ab4bd59
+- qualified-browser-execution.json: fe5036a4e1632f950c352e783187f0abbe019eb7b11969e96f6830712364fd72
+- qualified/results.json: bcc8c1744d6bdbff4a20903906be82c4a7e6a312bbeb83f47c038e52e46779c9
+- qualified-decoded-attachment-0.json: 581365a668573a75ac8d05a5861ac310f0f18c99afd225b0a48a8641c39591aa
+- qualified-decoded-attachment-1.json: fc20b5b6a5b0c22c44fa470b92d7a12ccaccec127272c21ca96697ccc45b541f
+- controls.json: 221bdd7de53ff1cf51aef621c3d76e54634e52fdf64a4a7a452ef10940f39b03
+- lossy-original-projection-confirmed.log: 7400506b23cc9511ba2dc0176ef313c2c198959a24cd08ff0c1dde3e69ae6ad2
+- suppressed-evidence-confirmed.log: 42a9c500e0f7095c410e1d63c7fb033a0629e7ea58a22511b1b1a1073b2ee600
+- lossy-original-projection-confirmed/results.json: a6fc0b6020db0a172b61c386b6a040495d73208c171062020775d2fd31d61f72
+- suppressed-evidence-confirmed/results.json: f80c64c62d807c6e3150172c8569b91a5cf0fb867c035632d6d223fd8fd6ba2f
+- initial-control-harness-history.json: b04c76a905187873595febace6c0035498fdeb9e30cae9c5fa5f746e80bf8c45
+- initial-seal-collector-history.json: 4fcdfd59b673f9817f22a8528ef77499d56c15f84e4d92f6c05bffa6653dabb6
+- diagnostic-scope-erratum.json: 098c904f8649e0e35a8ea1d348daa1d85174d62ebc00d493466ad669c1965b20
+- assurance-committed/report.json: 38d94eb1a4c3f57ba26442f832cf5ada0f468712dcb7b00e73d51fb8a3138c3e

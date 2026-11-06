@@ -1,0 +1,21 @@
+{
+  "recordedAt": "2026-10-26T18:32:05.097642+00:00",
+  "attempt1": {
+    "status": "HARNESS_INITIALIZATION_FAILED_BEFORE_SERVICES_OR_HTTP",
+    "exitCode": 1,
+    "failure": "HTTP opener variable shadowed imported http.cookiejar module at initialization",
+    "log": "http-run.log",
+    "logSha256": "279d213c850de595ecc61f934629c367fc362222139be328cc9ec01c34f1b60e",
+    "harnessSha256": "71f3037ccabe636e70ebf9572d19ebf7b44484d18ba9ab1cbba32e7768e700fe",
+    "ownedEmptyOutput": "/private/tmp/tdf-audio-http-5f-bohi5nbf",
+    "postgresOrBackendStarted": false,
+    "applicationRequestsExecuted": false
+  },
+  "revision2": {
+    "file": "run-v2.py",
+    "sha256": "862655da814fdce59df31d8a091d763d55f9b915a3d680f85e408d65355cbf44",
+    "change": "Rename HTTP opener only in initialization and use; all assertions, timeouts, fixture generation, source guards, sandbox and cleanup unchanged.",
+    "astSyntax": "PASS",
+    "notYetExecuted": true
+  }
+}

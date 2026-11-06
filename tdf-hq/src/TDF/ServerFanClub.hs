@@ -82,6 +82,7 @@ import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(
                                          , CreatorBadge(..)
                                          , Unique(..), FanClubElectionId, FanClubCandidacyId, artistProfileHeroImageUrl)
 import qualified TDF.Models             as M
+import qualified TDF.Profiles.ArtistVisibility as ArtistVisibility
 import qualified TDF.Catalog.Models     as Catalog
 import           Data.Time.Clock        (diffUTCTime)
 
@@ -103,7 +104,9 @@ badRequestText msg =
 fanClubPublicGetClub :: Int64 -> AppM FanClubDTO
 fanClubPublicGetClub artistId = do
   artistKey <- either throwError pure (validateFanClubArtistPathId artistId)
-  mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+  -- The club of a hidden artist answers like an absent club (ART-PUBLIC-VISIBILITY-001).
+  listed <- runDB (ArtistVisibility.artistPartyPubliclyListed artistKey)
+  mClub <- if listed then runDB (getBy (UniqueFanClubArtist artistKey)) else pure Nothing
   case mClub of
     Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
     Just (Entity cid club) -> runDB $ do
@@ -125,7 +128,8 @@ fanClubPublicGetEvents :: Int64 -> AppM [FanClubEventDTO]
 fanClubPublicGetEvents artistId = do
   artistKey <- either throwError pure (validateFanClubArtistPathId artistId)
   runDB $ do
-    mClub <- getBy (UniqueFanClubArtist artistKey)
+    listed <- ArtistVisibility.artistPartyPubliclyListed artistKey
+    mClub <- if listed then getBy (UniqueFanClubArtist artistKey) else pure Nothing
     case mClub of
       Nothing -> pure []
       Just (Entity cid _) -> do

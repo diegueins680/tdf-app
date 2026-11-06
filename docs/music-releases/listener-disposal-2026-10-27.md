@@ -65,3 +65,12 @@ The [hosted evidence packet](../../reports/player-listener-disposal-evidence-202
 The immutable [Cloudflare preview](https://e79de665.tdf-app.pages.dev/buscar?q=rock) passes anonymous directory smoke checks at two viewports: one paused source-free engine, no page errors and stable source identity. No Play, login, write, real account or authorized media journey is performed. Vercel separately reports a rate-limit failure.
 
 At the recorded gate observation, 19 of 20 protected checks pass. FIFO admission waits for PR628, and E9 still requires independent review; auto-merge remains off. No production deployment or full acceptance is recorded. Physical devices, real delivery/revocation, SLOs, complete WCAG, rollback drills and mathematical refinement remain incomplete.
+
+
+## Historical evidence integration — 6 November 2026
+
+The candidate statuses and hosted follow-up above describe the E9 capture on 27 October, including its failed ancillary attempt and its separate successful retry. They do not describe new execution on this documentation integration.
+
+The original draft hold is resolved: [PR #629](https://github.com/diegueins680/tdf-app/pull/629) merged as `8250081de10fd21b4854be8736080bbcfd97bfab`, which is reachable from the observed protected baseline `81a06faa06731f866333a0b89fb266720c4fa065`. This integration preserves E9 and checkout AACC as the historical execution identities. The current baseline's 190 requirement records, 244-entry migration registry, runtime sources, dependencies, workflows and Mobile revision remain unchanged.
+
+Archive integrity, safe member paths, deterministic packaging replay and metadata freshness are checked separately for this documentation change. They establish preservation and correspondence; they do not transfer E9's runtime execution, independent approval or deployment status to this commit or to current production. Fresh protected-branch checks and current independent review remain required.
