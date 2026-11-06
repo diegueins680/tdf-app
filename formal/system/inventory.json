@@ -7339,13 +7339,13 @@
     {
       "id": "SURFACE-3d4135d76491b843",
       "path": "tdf-hq-ui/src/api/contentStorage.security.test.ts",
-      "sha256": "22a4a6034c3ab308b7ac48b7b334150f9d8364e3ebc6296818a86af9a859cf61",
+      "sha256": "44eee77ba04e283569b9155f2a9f1a822b0b03d344dca5d30732fc89d56c3655",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f5e3b068d2a95882",
       "path": "tdf-hq-ui/src/api/contentStorage.ts",
-      "sha256": "dbf244091ccd32b0795529650987b420b550286dc831a87ea579e529d558b46f",
+      "sha256": "e1085b81a6da16ea70886fba116fb4ab7b9dac0897285ce5c7db9c6f41715770",
       "semanticConformance": "not-established-by-discovery"
     },
     {

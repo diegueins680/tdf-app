@@ -75,7 +75,7 @@ export async function downloadStorageUrl(url: string, fileName: string): Promise
   const timer = setTimeout(() => controller.abort(), 30_000);
   try {
   const response = await fetch(`${resolveApiBase()}/storage/files/${identifier}`, {
-    credentials: 'include', cache: 'no-store', headers: authorization ? { Authorization: authorization } : {},
+    credentials: 'include', cache: 'no-store', redirect: 'error', headers: authorization ? { Authorization: authorization } : {},
     signal: controller.signal,
   });
   if (!response.ok) throw new Error('Storage file unavailable');

@@ -17058,8 +17058,8 @@
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "e926290d808f7fed23fe6c52cf24ced83ebdfb77212787ce44b3a85860558d84",
     "tdf-hq-ui/src/api/client.ts": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
-    "tdf-hq-ui/src/api/contentStorage.security.test.ts": "22a4a6034c3ab308b7ac48b7b334150f9d8364e3ebc6296818a86af9a859cf61",
-    "tdf-hq-ui/src/api/contentStorage.ts": "dbf244091ccd32b0795529650987b420b550286dc831a87ea579e529d558b46f",
+    "tdf-hq-ui/src/api/contentStorage.security.test.ts": "44eee77ba04e283569b9155f2a9f1a822b0b03d344dca5d30732fc89d56c3655",
+    "tdf-hq-ui/src/api/contentStorage.ts": "e1085b81a6da16ea70886fba116fb4ab7b9dac0897285ce5c7db9c6f41715770",
     "tdf-hq-ui/src/api/courses.ts": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
     "tdf-hq-ui/src/api/directory.test.ts": "ee9c96a31856a1945af7e3f238974a43533d8ebf7f32f0cdadea2dcf834fa9ed",
     "tdf-hq-ui/src/api/directory.ts": "6d1b860759bb5841d85ff693ddfe7580cb56561eb9614f8eaef01f07c424fdc3",
@@ -40437,7 +40437,7 @@
     {
       "id": "SURFACE-3d4135d76491b843",
       "path": "tdf-hq-ui/src/api/contentStorage.security.test.ts",
-      "sha256": "22a4a6034c3ab308b7ac48b7b334150f9d8364e3ebc6296818a86af9a859cf61",
+      "sha256": "44eee77ba04e283569b9155f2a9f1a822b0b03d344dca5d30732fc89d56c3655",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40449,7 +40449,7 @@
     {
       "id": "SURFACE-f5e3b068d2a95882",
       "path": "tdf-hq-ui/src/api/contentStorage.ts",
-      "sha256": "dbf244091ccd32b0795529650987b420b550286dc831a87ea579e529d558b46f",
+      "sha256": "e1085b81a6da16ea70886fba116fb4ab7b9dac0897285ce5c7db9c6f41715770",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

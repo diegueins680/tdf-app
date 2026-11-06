@@ -23,7 +23,7 @@ it('only sends TDF authentication to exact canonical storage URLs', async () => 
 it('does not deliver bytes after an account or session change', async () => {
   fetchMock.mockResolvedValue({ ok: true, blob: async () => { epoch += 1; return new Blob(['private']); } } as Response);
   await expect(storage.downloadStorageUrl(url, 'private.pdf')).rejects.toThrow('Session changed');
-  expect(fetchMock).toHaveBeenCalledWith(url, expect.objectContaining({ cache: 'no-store', credentials: 'include', headers: { Authorization: 'Bearer tdf-session' } }));
+  expect(fetchMock).toHaveBeenCalledWith(url, expect.objectContaining({ cache: 'no-store', credentials: 'include', redirect: 'error', headers: { Authorization: 'Bearer tdf-session' } }));
 });
 
 it('never downloads an unauthorized response body', async () => {
