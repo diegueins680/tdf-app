@@ -23,7 +23,9 @@ while retaining draft data if the release must be reversed.
 1. Open **Lanzar video** from the artist editor.
 2. Paste a playable HTTPS video link, or use the existing upload service for a
    video within its current 50 MiB limit. The editor never raises that quota.
-3. Choose Instagram, TikTok or both and generate an editable relative calendar.
+3. Choose Instagram, TikTok or both and generate an editable 14-day relative
+   calendar (D−2 through D+11). An optional proposed date is stored only as draft
+   metadata. There is no scheduler attached to this field.
 4. Add the prepared audiovisual files, cuts and copy. Save to continue later.
 5. Review the real video preview and download the JSON plan or copy per-piece
    text and attributed links. An imported plan must name the selected artist.
@@ -66,26 +68,64 @@ causality, cross-device attribution or complete measurement of delayed returns.
 Anonymous views use existing configured PostHog; provider reach/plays are not
 invented and are not included in these backend counters.
 
+Metrics also return an additive `byPiece` array with source, piece, registrations
+and follows. The dashboard presents these verified TDF creations separately
+from unavailable social reach. Counts are unique per campaign, account and kind;
+they are first accepted request attribution, not causal evidence or a count of
+unique anonymous visitors. Existing accounts do not become registration conversions.
+Shared bio links cannot distinguish multiple posts without a reviewed per-piece
+link change. Unknown provider playback remains unavailable, not zero.
+
+Public TDF featuring now additionally requires `rightsConfirmed=true` and
+`technicalReviewed=true` on the exact saved revision. Older drafts remain
+readable and editable; absent checks fail closed only at publication. Editing
+content or duplicating a plan clears these confirmations in the editor. Credits
+can be recorded without inventing missing people or roles. Draft save, review
+save, export and proposed dates create no public or external action.
+
 Artist profile links preserve allowlisted campaign parameters inside the safe
 login return route. Registration does not auto-follow an artist; the existing
 explicit follow confirmation is retained.
 
 ## Provider prerequisites
 
-Official documentation checked on 2026-10-20:
+Official documentation rechecked on 2026-11-05:
 
 - TikTok Direct Post requires a registered app, approved and user-authorized
   `video.publish`, current creator-info retrieval and the applicable audit.
   Unaudited clients' posts remain private:
   https://developers.tiktok.com/docs/en/content-posting-api-get-started
-- Meta's platform overview describes account/product prerequisites:
-  https://developers.facebook.com/documentation/instagram-platform
-  The detailed content-publishing page was inaccessible during this review;
-  no account-specific publishing eligibility is asserted.
+- Meta's official Instagram collection documents its Facebook Login path:
+  professional account linked to a Page, authorized tokens and the publication
+  permissions (`instagram_basic`, `instagram_content_publish`,
+  `pages_read_engagement`; Page discovery uses `pages_show_list`). Consumer
+  accounts are excluded and Stories publication in this path requires a business
+  account. Reels use a container, readiness check and a distinct publish request;
+  readiness is not publication. The documented formats include MP4/MOV,
+  H.264/HEVC, AAC48kHz and recommended9:16. Verify current account limits before
+  an actual upload:
+  https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api
+  The direct Meta content-publishing pages returned429/unavailable here. No
+  per-artist eligibility, token grants or Instagram Login path is inferred from
+  the Facebook Login documentation.
+- TikTok additionally requires current creator information, manual privacy
+  selection and explicit review/consent. No default privacy or app approval is
+  invented. Its developer guidelines restrict promotional overlays; review
+  separate TikTok assets against the applicable manual/API route:
+  https://developers.tiktok.com/docs/en/content-sharing-guidelines
 
 No authorized per-artist provider connection was available in this environment.
 Manual export works independently of provider approval; no automatic publisher
 is presented as connected or functional.
+
+The separate `/campaign-platform` service and PR667 already contain provider
+authorization, encrypted tokens, resumable assets and explicit publication
+controls for existing campaigns. This PostgreSQL launch workspace does not
+silently copy those credentials, enroll an artist or dispatch through that
+service. Unifying its provider execution with these drafts remains a dependency;
+manual export is the usable route in this candidate. The WhatsApp acquisition
+sequences in `docs/campaign-automation.md` and the TDF Sessions x Domo recruitment
+panel have different purposes and receive no changes or enrollments here.
 
 ## Verification
 

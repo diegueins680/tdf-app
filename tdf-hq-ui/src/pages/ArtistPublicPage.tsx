@@ -475,7 +475,7 @@ export default function ArtistPublicPage() {
                     aria-label={isFollowing ? `Dejar de seguir a ${artist.apDisplayName}` : resumeFollow ? t('artistFollow.resumeAction') : `Seguir a ${artist.apDisplayName}`}
                     sx={{ textTransform: 'none' }}
                   >
-                    {isFollowing ? 'Siguiendo' : resumeFollow ? t('artistFollow.resumeAction') : 'Seguir'}
+                    {isFollowing ? 'Dejar de seguir' : resumeFollow ? t('artistFollow.resumeAction') : 'Seguir'}
                   </Button>
                 )}
                 {isSelf && (

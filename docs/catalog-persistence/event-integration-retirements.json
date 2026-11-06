@@ -147,14 +147,17 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "49d1c72ba174118670bf",
-      "reason": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
-      "previousReplacementId": "21babc54d68f0c44d55e",
+      "replacementId": "fd606f7d00f82c78cb20",
+      "reason": "Preserve the generated protected main registry and add only the existing artist launch route. This is generated dispatch metadata, not a separate business catalog or permission grant.",
+      "previousReplacementId": "49d1c72ba174118670bf",
       "currentResolution": {
-        "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-        "valueCount": 157,
-        "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+        "id": "fd606f7d00f82c78cb20",
+        "valueCount": 164,
+        "sourceParents": [
+          "41c2f474b9c72df3b2c0bdda85bf10ba727bbed4",
+          "0669caf0eb01cfbd92203bde62f0be45ad98691a"
+        ],
+        "justification": "Preserve the generated protected main registry and add only the existing artist launch route. This is generated dispatch metadata, not a separate business catalog or permission grant."
       },
       "previousResolution": {
         "originalDecision": {
@@ -678,16 +681,17 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "d7fc1df6cbade4a92d25",
-      "reason": "Preserve the complete 238-entry manifest reviewed as 050f3093 (canonical sha256 f79154170832ca4128536ebec5de5d80f220e5ac864e208bb94745023d89d179) byte for byte and append only 2026-11-04_contract_store, which creates the contract and contract_delivery tables so contracts are stored in the database instead of files outside the persistent volume and each send request is recorded before SMTP is contacted (CONTRACT-STORE-001, CONTRACT-SEND-001). Both tables are new; no existing row changes. The entire 238-entry review graph is preserved by canonical hash. This 239-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
-      "previousReplacementId": "050f309300a1688162fa",
+      "replacementId": "ec609a88cbff126e05a9",
+      "reason": "Preserve all 239 protected main migration entries and SQL bytes; append only the existing draft-only video campaign migration with original introduction SHA. This review grants no production deployment or activation.",
+      "previousReplacementId": "d7fc1df6cbade4a92d25",
       "currentResolution": {
-        "id": "d7fc1df6cbade4a92d25",
-        "valueCount": 239,
+        "id": "ec609a88cbff126e05a9",
+        "valueCount": 240,
         "sourceParents": [
-          "663a127de6c99d2eb73bc204940ceb39269c30b9"
+          "41c2f474b9c72df3b2c0bdda85bf10ba727bbed4",
+          "0669caf0eb01cfbd92203bde62f0be45ad98691a"
         ],
-        "justification": "Preserve the complete 238-entry manifest reviewed as 050f3093 (canonical sha256 f79154170832ca4128536ebec5de5d80f220e5ac864e208bb94745023d89d179) byte for byte and append only 2026-11-04_contract_store, which creates the contract and contract_delivery tables so contracts are stored in the database instead of files outside the persistent volume and each send request is recorded before SMTP is contacted (CONTRACT-STORE-001, CONTRACT-SEND-001). Both tables are new; no existing row changes. The entire 238-entry review graph is preserved by canonical hash. This 239-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+        "justification": "Preserve all 239 protected main migration entries and SQL bytes; append only the existing draft-only video campaign migration with original introduction SHA. This review grants no production deployment or activation."
       },
       "change": "Preserve the complete 238-entry manifest reviewed as 050f3093 (canonical sha256 f79154170832ca4128536ebec5de5d80f220e5ac864e208bb94745023d89d179) byte for byte and append only 2026-11-04_contract_store, which creates the contract and contract_delivery tables so contracts are stored in the database instead of files outside the persistent volume and each send request is recorded before SMTP is contacted (CONTRACT-STORE-001, CONTRACT-SEND-001). Both tables are new; no existing row changes. The entire 238-entry review graph is preserved by canonical hash. This 239-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
       "sourceReviewReferences": [

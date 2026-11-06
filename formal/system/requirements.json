@@ -16029,7 +16029,7 @@
       "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
       "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
       "recovery": "Retry an uncertain save with the same UUID, body and expected revision. Reconcile a changed saved version rather than overwrite it.",
-      "observability": "Owner metrics show historical verified registration/follow creations; existing configured analytics can record profile views. External reach and causal attribution are not claimed.",
+      "observability": "Owner metrics show historical verified registration/follow creations; existing configured analytics can record profile views. External reach and causal attribution are not claimed. Per-piece source breakdown is additive; shared bio destinations cannot identify distinct posts.",
       "source": "Diego approved organic registrations/follows campaign prompt on 2026-10-17 and requested execution on 2026-10-20.",
       "implementation": [
         "tdf-hq/src/TDF/VideoCampaigns.hs",
@@ -16055,7 +16055,8 @@
         "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-        "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts"
+        "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
+        "e2e/web/video-campaigns.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16063,7 +16064,6 @@
       "critical": false,
       "ambiguity": [
         "Production deployment and an authenticated campaign save are not verified.",
-        "Mobile generated contracts require repository write access.",
         "Video encoding and provider publishing are not background services in this implementation.",
         "One-hour authenticated attribution is first accepted piece and does not prove causality or cross-device returns."
       ],
@@ -16075,7 +16075,7 @@
       "property": "Artist-scoped drafts are durable and publishing remains explicitly separate from preparation.",
       "contract": "docs/artists/video-campaigns.md",
       "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused.",
-      "evidence": "PR #599 and exact-revision CI; rendered review package is delivered separately."
+      "evidence": "PR #599, paired Mobile contract PR and current-revision test receipts. Historical media measurements are retained but original and derivative bytes are unavailable in this run."
     }
   ]
 }
