@@ -1293,6 +1293,7 @@
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+      "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.tsx",
       "tdf-hq-ui/src/pages/NotificationPage.tsx",
       "tdf-hq-ui/src/pages/OperationsControlCenterPage.partySelector.test.ts",
@@ -10529,9 +10530,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-35214bb78cbc255a",
+      "path": "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
+      "sha256": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-ce5da75bdb773e8c",
       "path": "tdf-hq-ui/src/pages/NotFoundPage.tsx",
-      "sha256": "5dc0e948b325fa19bc385deeca497925a8846ed2f212d55a439b0032a00fe0d1",
+      "sha256": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29299,7 +29306,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6358327cf10b8f6f65a4fef5618bc5d7a6691082ddc68c2c7eed2e6bf35a6b63",
+      "sha256": "7e2e09d8171c7dbb8f4ab576571641fb2ee1f6b82bd3a2601f1af4ce02bfc10d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
