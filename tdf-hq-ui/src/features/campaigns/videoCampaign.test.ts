@@ -66,6 +66,61 @@ describe('artist video campaigns', () => {
     const url = new URL(campaignLink(51, 'campaign', doc.pieces[0]!));
     expect(url.searchParams.get('utm_content')).toBe('clip_1-A');
   });
+  it('refuses an overflowing missing calendar atomically without discarding imported pieces', () => {
+    const template = createCampaignPieces('Artist', ['instagram'])[0]!;
+    const existing = Array.from({ length: 24 }, (_, i) => ({ ...template, id: `imported-${i}`, caption: `Edited copy ${i}` }));
+    const snapshot = existing.map((piece) => ({ ...piece }));
+    expect(importedCampaignSchema.safeParse({ ...emptyVideoCampaign(), artistId: 51,
+      campaignId: '126f208c-2b38-47c1-952b-6ba633122c87', pieces: existing }).success).toBe(true);
+    expect(() => prepareMissingCampaignPieces('Artist', ['instagram', 'tiktok'], existing))
+      .toThrow(/7 espacios.*quedan 6.*30/);
+    expect(existing).toEqual(snapshot);
+    expect(validateVideoCampaign({ ...emptyVideoCampaign(), pieces: existing })).toBeNull();
+  });
+  it('fills the exact remaining capacity with a complete seven-piece calendar', () => {
+    const template = createCampaignPieces('Artist', ['instagram'])[0]!;
+    const existing = Array.from({ length: 23 }, (_, i) => ({ ...template, id: `imported-${i}` }));
+    const prepared = prepareMissingCampaignPieces('Artist', ['instagram', 'tiktok'], existing);
+    expect(prepared).toHaveLength(30);
+    expect(prepared.slice(0, 23)).toEqual(existing);
+    expect(prepared.filter((p) => p.channel === 'tiktok')).toHaveLength(7);
+    expect(validateVideoCampaign({ ...emptyVideoCampaign(), pieces: prepared })).toBeNull();
+    expect(importedCampaignSchema.safeParse({ ...emptyVideoCampaign(), artistId: 51,
+      campaignId: '126f208c-2b38-47c1-952b-6ba633122c87', pieces: prepared }).success).toBe(true);
+  });
+  it('rejects more than thirty pieces consistently before saving, exporting or importing', () => {
+    const template = createCampaignPieces('Artist', ['instagram'])[0]!;
+    const pieces = Array.from({ length: 31 }, (_, i) => ({ ...template, id: `imported-${i}` }));
+    const doc = { ...emptyVideoCampaign(), pieces };
+    expect(validateVideoCampaign(doc)).toMatch(/30 piezas/);
+    expect(importedCampaignSchema.safeParse({ ...doc, artistId: 51,
+      campaignId: '126f208c-2b38-47c1-952b-6ba633122c87' }).success).toBe(false);
+  });
+  it('preserves every valid prefix while completing calendars within capacity or refusing atomically', () => {
+    const options: ('instagram' | 'tiktok')[][] = [['instagram'], ['tiktok'], ['instagram', 'tiktok']];
+    let cases = 0;
+    for (const channels of options) for (let count = 0; count <= 30; count++) {
+      for (const mixed of channels.length === 2 ? [false, true] : [false]) {
+        const template = createCampaignPieces('Artist', channels)[0]!;
+        const existing = Array.from({ length: count }, (_, i) => ({ ...template,
+          channel: mixed ? channels[i % channels.length]! : channels[0]!, id: `imported-${i}`, caption: `Edited ${i}` }));
+        const before = existing.map((piece) => ({ ...piece }));
+        const missing = channels.filter((channel) => !existing.some((piece) => piece.channel === channel));
+        if (count + missing.length * 7 > 30) {
+          expect(() => prepareMissingCampaignPieces('Artist', channels, existing)).toThrow(/30/);
+        } else {
+          const result = prepareMissingCampaignPieces('Artist', channels, existing);
+          expect(result).toHaveLength(count + missing.length * 7);
+          expect(result.slice(0, count)).toEqual(before);
+          expect(new Set(result.map((piece) => piece.id)).size).toBe(result.length);
+          for (const channel of missing) expect(result.filter((piece) => piece.channel === channel)).toHaveLength(7);
+        }
+        expect(existing).toEqual(before);
+        cases++;
+      }
+    }
+    expect(cases).toBe(124);
+  });
   it('retains an imported objective and rejects an empty or excessive goal', () => {
     const doc = emptyVideoCampaign();
     doc.objective = 'Priorizar nuevos registros en TDF';

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T17:41:43.257Z",
+  "generatedAt": "2026-11-06T18:57:45.452Z",
   "repositoryRoot": ".",
   "filesScanned": 2616,
-  "candidateCount": 1403,
+  "candidateCount": 1404,
   "byClassification": {
-    "dynamic-business-catalog": 918,
+    "dynamic-business-catalog": 919,
     "genuine-technical-constant": 73,
     "governed-reference-data": 143,
     "security-system-registry": 269
@@ -4222,7 +4222,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 327,
+      "consumerCount": 328,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -4314,6 +4314,7 @@
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
@@ -4324,8 +4325,7 @@
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
-        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
-        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx"
+        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -8544,7 +8544,7 @@
       "lines": [
         168
       ],
-      "consumerCount": 260,
+      "consumerCount": 261,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -8620,6 +8620,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/fans/artistAudience.ts",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
@@ -8640,8 +8641,7 @@
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
-        "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.tsx"
+        "tdf-hq-ui/src/pages/EventTaskPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -9366,7 +9366,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 254,
+      "consumerCount": 255,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -9428,6 +9428,7 @@
         "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
@@ -9439,8 +9440,7 @@
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
-        "tdf-hq-ui/src/pages/BookingsPage.tsx",
-        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx"
+        "tdf-hq-ui/src/pages/BookingsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -15402,7 +15402,7 @@
       "lines": [
         140
       ],
-      "consumerCount": 223,
+      "consumerCount": 224,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -15458,6 +15458,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
@@ -15479,8 +15480,7 @@
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -15979,7 +15979,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 215,
+      "consumerCount": 216,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -16031,6 +16031,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
@@ -16052,8 +16053,7 @@
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -16197,7 +16197,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 259,
+      "consumerCount": 260,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -16259,6 +16259,7 @@
         "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
@@ -16270,8 +16271,7 @@
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
-        "tdf-hq-ui/src/pages/BookingsPage.tsx",
-        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx"
+        "tdf-hq-ui/src/pages/BookingsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -22726,7 +22726,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 221,
+      "consumerCount": 222,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -22789,6 +22789,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
@@ -22810,8 +22811,7 @@
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -38231,6 +38231,268 @@
       "similarCandidateIds": []
     },
     {
+      "id": "382d3969b992e260fde4",
+      "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+      "sourceKind": "test",
+      "surface": "web",
+      "domain": "product-navigation",
+      "kind": "array",
+      "name": "options",
+      "line": 100,
+      "values": [
+        "instagram",
+        "tiktok"
+      ],
+      "valueCount": 2,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        100
+      ],
+      "consumerCount": 264,
+      "backendConsumers": [
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+        "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
+        "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+        "tdf-hq/src/TDF/API/Admin.hs",
+        "tdf-hq/src/TDF/API/Bands.hs",
+        "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/API/Instagram.hs",
+        "tdf-hq/src/TDF/API/InstagramOAuth.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/API/Sessions.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
+        "tdf-hq/src/TDF/Server/SocialSync.hs",
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/ServerFuture.hs",
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
+        "tdf-hq/src/TDF/VideoCampaigns.hs",
+        "tdf-hq/test/EventOperationsHttpMain.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs",
+        "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
+        "tdf-hq/test/integration/catalog_backfill_postgres.sql",
+        "tdf-hq/test/integration/event_raci_editor_context_assertions.sql",
+        "tdf-hq/test/integration/interactions/entity-properties.sql"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/bands.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/api/eventTaskCompletion.transport.test.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/social-v2.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/radio.test.ts",
+        "tdf-hq-ui/src/api/radio.ts",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/api/socialInbox.test.ts",
+        "tdf-hq-ui/src/api/socialInbox.ts",
+        "tdf-hq-ui/src/components/AssetDialogs.tsx",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
+        "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+        "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+        "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
+        "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
+        "tdf-hq-ui/src/hooks/useAutoSave.ts",
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
+        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
+        "tdf-hq-ui/src/pages/BookingsPage.tsx",
+        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/app/(tabs)/_layout.tsx",
+        "tdf-mobile/app/(tabs)/more.tsx",
+        "tdf-mobile/app/access-requests/index.tsx",
+        "tdf-mobile/app/access-requests/new.tsx",
+        "tdf-mobile/app/access-requests/review.tsx",
+        "tdf-mobile/app/catalogEditor.tsx",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/app/eventDetail.tsx",
+        "tdf-mobile/app/merch/preferences.tsx",
+        "tdf-mobile/app/reputation/consents.tsx",
+        "tdf-mobile/app/reputation/preferences.tsx",
+        "tdf-mobile/app/userProfile.tsx",
+        "tdf-mobile/src/api/artists.ts",
+        "tdf-mobile/src/api/catalogs.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/partySelector.ts",
+        "tdf-mobile/src/components/PartySelector.tsx",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-mobile/src/lib/eventMomentsRepository.ts",
+        "tdf-mobile/src/lib/formatters.ts",
+        "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
+        "tdf-mobile/src/lib/nativeGoogleSignin.ts",
+        "tdf-mobile/src/providers/AuthProvider.tsx",
+        "tdf-mobile/src/theme/ThemeProvider.tsx"
+      ],
+      "automationConsumers": [
+        ".github/workflows/artist-enrichment-daily.yml",
+        ".github/workflows/check-messaging-token.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        ".github/workflows/interaction-verification.yml",
+        ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "scripts/__tests__/artist-image-download.test.mjs",
+        "scripts/__tests__/browser-vendor.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-operations-pluscal.test.mjs",
+        "scripts/__tests__/event-operations-schema-rehearsal.test.mjs",
+        "scripts/__tests__/event-raci-browser-runner.test.mjs",
+        "scripts/__tests__/fixtures/event-report.mjs",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/music-test-database.test.mjs",
+        "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+        "scripts/__tests__/payment-staging-inspection.test.mjs",
+        "scripts/__tests__/playwright-image.test.mjs",
+        "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/ai-workflow-doctor.mjs",
+        "scripts/artist-enrichment.mjs",
+        "scripts/artist-image-download.mjs",
+        "scripts/audit-formal-methods.mjs",
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
+        "scripts/ci-change-scope.mjs",
+        "scripts/continuous-improvement-loop-dirty-worktree.mjs",
+        "scripts/continuous-improvement-loop.mjs",
+        "scripts/diagnose-social.mjs",
+        "scripts/discover-improvement-idea.mjs",
+        "scripts/identity-reconciliation.mjs",
+        "scripts/install-flyctl.mjs",
+        "scripts/interactions/test-api.py",
+        "scripts/lib/continuous-improvement-loop.mjs",
+        "scripts/lib/discovery.mjs",
+        "scripts/lib/formal-methods-audit.mjs",
+        "scripts/lib/identity-reconciliation.mjs",
+        "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/lib/music-playback-identity-probe.mjs",
+        "scripts/lib/production-release.mjs",
+        "scripts/lib/sri-invoice.mjs",
+        "scripts/operations-load-test.mjs",
+        "scripts/production-catalog-inventory.mjs"
+      ],
+      "apiAndIntegrationConsumers": [
+        ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/refresh-instagram-token.mjs",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/bands.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/api/eventTaskCompletion.transport.test.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/social-v2.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/radio.test.ts",
+        "tdf-hq-ui/src/api/radio.ts",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/api/socialInbox.test.ts",
+        "tdf-hq-ui/src/api/socialInbox.ts",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.test.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts",
+        "tdf-hq-ui/src/services/instagramAuth.ts",
+        "tdf-hq-ui/src/utils/instagramTraffic.test.ts",
+        "tdf-hq-ui/src/utils/instagramTraffic.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/src/TDF/API/Admin.hs",
+        "tdf-hq/src/TDF/API/Bands.hs",
+        "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/API/Instagram.hs",
+        "tdf-hq/src/TDF/API/InstagramOAuth.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/API/Sessions.hs",
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/src/api/artists.ts",
+        "tdf-mobile/src/api/catalogs.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/partySelector.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Treating an inert capacity-test matrix as editable business data would obscure the fixed supported-channel coverage; the matrix must remain aligned with the existing SocialChannel union.",
+      "justification": "This options tuple is local to a Jest finite capacity regression and enumerates the existing Instagram/TikTok channel combinations. Its values only drive calls to the real generator in tests; it creates no runtime selector, catalog, provider connection, persisted value or publication. User-authored campaign pieces continue through the unchanged server 30-piece cap. The scanner cross-file consumer matches are lexical occurrences, not imports of this test-local tuple.",
+      "exactDuplicateIds": [
+        "f7bf7d7a483d435dc242",
+        "4938b423200035b5e47c",
+        "0596df32a146b2d78942"
+      ],
+      "similarCandidateIds": [
+        "4938b423200035b5e47c"
+      ]
+    },
+    {
       "id": "f7bf7d7a483d435dc242",
       "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
       "sourceKind": "production",
@@ -38352,6 +38614,7 @@
       "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
       "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
       "exactDuplicateIds": [
+        "382d3969b992e260fde4",
         "4938b423200035b5e47c",
         "0596df32a146b2d78942"
       ],
@@ -38491,10 +38754,13 @@
       "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
       "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
       "exactDuplicateIds": [
+        "382d3969b992e260fde4",
         "f7bf7d7a483d435dc242",
         "0596df32a146b2d78942"
       ],
-      "similarCandidateIds": []
+      "similarCandidateIds": [
+        "382d3969b992e260fde4"
+      ]
     },
     {
       "id": "9c81a0d1656a3da224d8",
@@ -72734,7 +73000,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 531,
+      "consumerCount": 532,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -75786,7 +76052,7 @@
       "domain": "campaigns-promotion",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 252,
+      "line": 259,
       "values": [
         "draft",
         "prepared",
@@ -75796,7 +76062,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        252
+        259
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -84037,7 +84303,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 208,
+      "consumerCount": 209,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -84089,6 +84355,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
@@ -84110,8 +84377,7 @@
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -150528,6 +150794,7 @@
       "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
       "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
       "exactDuplicateIds": [
+        "382d3969b992e260fde4",
         "f7bf7d7a483d435dc242",
         "4938b423200035b5e47c"
       ],

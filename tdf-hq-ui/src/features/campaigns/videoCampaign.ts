@@ -39,6 +39,8 @@ export function emptyVideoCampaign(): VideoCampaignDocument {
     status: 'draft', channels: ['instagram', 'tiktok'], pieces: [] };
 }
 
+const MAX_CAMPAIGN_PIECES = 30;
+
 export const importedCampaignSchema = z.object({
   artistId: z.number().int().positive().safe(),
   campaignId: z.string().uuid(),
@@ -53,7 +55,7 @@ export const importedCampaignSchema = z.object({
     format: z.string().max(50), caption: z.string().max(2200), assetUrl: z.string(),
     sourceStart: z.number().finite().min(0), sourceEnd: z.number().finite().min(0),
     status: z.enum(['draft', 'prepared', 'exported', 'published_manual']), publishedUrl: z.string(),
-  })).max(30),
+  })).max(MAX_CAMPAIGN_PIECES),
 });
 
 export function campaignLink(artistId: number, campaignId: string, piece: Pick<VideoPiece, 'channel' | 'id'>): string {
@@ -94,8 +96,12 @@ export function safeVideoUrl(value: string): boolean {
 
 export function prepareMissingCampaignPieces(artist: string, channels: SocialChannel[], pieces: VideoPiece[]): VideoPiece[] {
   const missing = channels.filter((channel) => !pieces.some((p) => p.channel === channel));
+  const calendar = createCampaignPieces(artist, missing);
+  if (pieces.length + calendar.length > MAX_CAMPAIGN_PIECES) {
+    throw new Error(`El calendario necesita ${calendar.length} espacios y solo quedan ${Math.max(0, MAX_CAMPAIGN_PIECES - pieces.length)} (máximo ${MAX_CAMPAIGN_PIECES} piezas). Se conservaron las piezas existentes.`);
+  }
   const used = new Set(pieces.map((p) => p.id));
-  const added = createCampaignPieces(artist, missing).map((piece) => {
+  const added = calendar.map((piece) => {
     let id = piece.id;
     let suffix = 2;
     while (used.has(id)) id = `${piece.id}-${suffix++}`;
@@ -115,6 +121,7 @@ export function validateVideoCampaign(doc: VideoCampaignDocument): string | null
   if (!safeVideoUrl(doc.videoUrl) || !safeVideoUrl(doc.coverUrl)) return 'Usa enlaces HTTPS válidos para video y portada.';
   if (!Number.isFinite(doc.durationSeconds) || doc.durationSeconds < 0 || doc.durationSeconds > 43200) return 'Revisa la duración del video.';
   if (!doc.channels.length) return 'Selecciona al menos una red social.';
+  if (doc.pieces.length > MAX_CAMPAIGN_PIECES) return `La campaña admite hasta ${MAX_CAMPAIGN_PIECES} piezas.`;
   if (doc.pieces.some((p) => !/^[a-zA-Z0-9_-]{1,100}$/.test(p.id)))
     return 'El identificador de cada pieza debe usar letras sin acentos, números, guiones o guiones bajos (hasta 100 caracteres).';
   if (new Set(doc.channels).size !== doc.channels.length || new Set(doc.pieces.map((p) => p.id)).size !== doc.pieces.length)

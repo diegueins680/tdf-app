@@ -28220,6 +28220,22 @@
       },
       "reviewBatch": "video-campaign-import-2026-11-06",
       "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "382d3969b992e260fde4",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Treating an inert capacity-test matrix as editable business data would obscure the fixed supported-channel coverage; the matrix must remain aligned with the existing SocialChannel union.",
+      "justification": "This options tuple is local to a Jest finite capacity regression and enumerates the existing Instagram/TikTok channel combinations. Its values only drive calls to the real generator in tests; it creates no runtime selector, catalog, provider connection, persisted value or publication. User-authored campaign pieces continue through the unchanged server 30-piece cap. The scanner cross-file consumer matches are lexical occurrences, not imports of this test-local tuple.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+        "line": 100
+      },
+      "reviewBatch": "pr599-piece-cap-2026-11-06",
+      "reviewMethod": "manual-fixture-boundary-review"
     }
   ]
 }

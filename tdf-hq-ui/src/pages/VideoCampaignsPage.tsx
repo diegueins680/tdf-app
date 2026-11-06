@@ -232,7 +232,14 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
         onChange={(e) => patch({ proposedLaunchDate: e.target.value })} />
       <Alert severity="info">Publicación manual disponible. Las conexiones de publicación automática aún no están habilitadas en este asistente.</Alert>
       <Button disabled={!doc.channels.some((c) => !doc.pieces.some((p) => p.channel === c))}
-        onClick={() => patch({ pieces: prepareMissingCampaignPieces(artistName, doc.channels, doc.pieces) })}>Preparar textos y calendario</Button>
+        onClick={() => {
+          try {
+            const pieces = prepareMissingCampaignPieces(artistName, doc.channels, doc.pieces);
+            patch({ pieces }); setError('');
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'No pudimos preparar el calendario. Las piezas existentes se conservan.');
+          }
+        }}>Preparar textos y calendario</Button>
     </>}
     {step === 2 && <>
       {!doc.pieces.length && <Alert severity="info">Selecciona las redes y prepara el calendario en el paso anterior.</Alert>}

@@ -155,6 +155,30 @@ const completeCampaign = (): VideoCampaign => ({
   },
 });
 
+it('explains insufficient calendar capacity and saves every existing imported edit and identity', async () => {
+  const row = completeCampaign();
+  const template = row.content.pieces[0]!;
+  row.content.pieces = Array.from({ length: 24 }, (_, i) => ({ ...template, id: `imported-${i}`, caption: `Texto revisado ${i}` }));
+  const originalPieces = row.content.pieces.map((piece) => ({ ...piece }));
+  persisted = [row]; show();
+  fireEvent.click(await screen.findByRole('button', { name: 'Continuar' }));
+  fireEvent.change(screen.getByLabelText('Título de la sesión'), { target: { value: 'Edición preservada' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  fireEvent.click(screen.getByLabelText('TikTok'));
+  fireEvent.click(screen.getByRole('button', { name: 'Preparar textos y calendario' }));
+  expect(await screen.findByText(/7 espacios.*quedan 6.*30/)).toBeInTheDocument();
+  expect(screen.getByLabelText('TikTok')).toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
+  expect(save).toHaveBeenCalledTimes(1);
+  expect(save.mock.calls[0]?.[1]).toBe(row.id);
+  expect(save.mock.calls[0]?.[2]).toBe(3);
+  expect(save.mock.calls[0]?.[3].title).toBe('Edición preservada');
+  expect(save.mock.calls[0]?.[3].channels).toEqual(['instagram', 'tiktok']);
+  expect(save.mock.calls[0]?.[3].pieces).toEqual(originalPieces);
+  expect(feature).not.toHaveBeenCalled();
+});
+
 async function openReview() {
   show(); fireEvent.click(await screen.findByRole('button', { name: 'Continuar' }));
   for (let step = 0; step < 3; step += 1) {
