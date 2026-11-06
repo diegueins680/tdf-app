@@ -1,0 +1,10 @@
+{
+  "assurance-receipts.tar.gz": "a028a66abac160dbff48b933513531edb169cc2a1ffcceaa9726e50c7ca5109e",
+  "catalog-freshness.json": "b7014c7e94d3b8998820f5d5e2084da45a550c36c02dd76bb03612d64a46ae33",
+  "catalog-preservation.json": "42bc1a4a103cfc1ba0d4cdc7d1b961381d6aa301f1721f78bef951cbebfbd60e",
+  "development-diagnostics.tar.gz": "1fa661b2d3688acc4c12d19a2b83a725e5ee60716092ebfaa72ec2ad48013626",
+  "execution-receipts.tar.gz": "709f6e65d34a53d4a306a3495e0bdf51d8eb404ac14b0916a954cc582254557f",
+  "execution-sources.json": "9e4de363ea42fdd6a7e8acaf39a57ddce9a7addbff661701c8a543b831e4f1e4",
+  "independent-review.txt": "40502c7fce4169801eb764dc76405952d0aa49d021605b08ae8dd52ee170f106",
+  "source-seal.json": "38a402eb759cf7a1f0e5198867fbdbc635d8cd532774e5c56c50b196219eeda2"
+}
