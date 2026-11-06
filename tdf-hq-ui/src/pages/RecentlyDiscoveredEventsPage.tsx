@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -143,9 +144,9 @@ export default function RecentlyDiscoveredEventsPage() {
                     <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                       {post.detectedTerms.map((term) => <Chip key={term} size="small" label={term} variant="outlined" />)}
                     </Stack>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <MarkdownText inline variant="body2">
                       {firstNonEmptyString(post.caption?.trim(), 'La publicación no incluye texto.')}
-                    </Typography>
+                    </MarkdownText>
                     {post.permalink && (
                       <Button component="a" href={post.permalink} target="_blank" rel="noreferrer" size="small" startIcon={<OpenInNewIcon />} sx={{ alignSelf: 'flex-start' }}>
                         Abrir publicación fuente

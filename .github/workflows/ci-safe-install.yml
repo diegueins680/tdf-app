@@ -11,6 +11,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'audit-ci.jsonc'
+      - 'third_party/**'
       - '.npmrc'
       - '.github/workflows/**'
   push:
@@ -24,6 +25,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'audit-ci.jsonc'
+      - 'third_party/**'
       - '.npmrc'
       - '.github/workflows/**'
 
@@ -43,6 +45,8 @@ jobs:
         run: npm ci
       - name: npm audit
         run: ./node_modules/.bin/audit-ci --config ./audit-ci.jsonc
+      - name: Browser component integrity and advisories
+        run: node scripts/check-browser-vendor.mjs --audit
       - name: Build (if present)
         run: npm run -s --if-present build
       - name: Test (if present)
