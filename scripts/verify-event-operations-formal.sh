@@ -256,6 +256,7 @@ run_negative_tlc DirectoryClaimReviewConcurrent.cfg directory-claim-race 'Invari
 run_negative_tlc DirectoryClaimReviewModuleOnly.cfg directory-claim-module-only 'Invariant AdminRoleRequired is violated' DirectoryClaimReview.tla
 run_negative_tlc DirectoryClaimReviewSelfReview.cfg directory-claim-self-review 'Invariant SeparatedReview is violated' DirectoryClaimReview.tla
 run_negative_tlc DirectoryClaimReviewReplay.cfg directory-claim-replay 'Invariant NoReplayRegrant is violated' DirectoryClaimReview.tla
+run_negative_tlc DirectoryClaimReviewRevokeKeepsGrant.cfg directory-claim-revoke-keeps-grant 'Invariant RevocationWithdrawsGrant is violated' DirectoryClaimReview.tla
 run_tlc SignupIdentity.tla SignupIdentity.cfg signup-identity
 run_negative_tlc SignupIdentityPublicClaim.cfg signup-public-claim 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
 run_negative_tlc SignupIdentityUnreviewed.cfg signup-unreviewed 'Invariant ReviewedManagement is violated' SignupIdentity.tla

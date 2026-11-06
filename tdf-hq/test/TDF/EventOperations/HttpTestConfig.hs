@@ -25,6 +25,7 @@ httpTestConfig = AppConfig
   , instagramVerifyToken = Nothing
   , sessionCookieName = "tdf_session", sessionCookieDomain = Nothing, sessionCookiePath = "/"
   , sessionCookieSecure = False, sessionCookieSameSite = "Lax", sessionCookieMaxAgeSeconds = Nothing
+  , sessionTokenTtlSeconds = 3600
   , stripeSecretKey = Nothing, stripePublishableKey = Nothing, stripeWebhookSecret = Nothing
   , contextualReputationEnabled = False, publicReputationProjectionEnabled = False
   , singleFeatureOnboardingExperimentEnabled = False

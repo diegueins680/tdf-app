@@ -1,0 +1,5 @@
+Independent read-only review found no scoped implementation blocker. Positive quantity is checked before negation; the tier/event/stock predicates are on the atomic UPDATE; one changed row is required in the completion transaction. Existing observed-ID persistence precedes completion and remains after rollback. No event lock or lock-order inversion was added.
+
+Recommendations implemented before final qualification: exact model input/state/transition assertions; bracketed positive-boundary counter cleanup; clear exactly the second fixture's now-unused tier only after its order/ticket references move, in the same setup transaction.
+
+The actual concurrent handler cases expose the unconditional decrement. Their provider barrier does not deterministically force two stale stock reads. The stale-precheck counterexample is bounded design evidence, not a claimed PostgreSQL mutation schedule. Required independent GitHub review remains separate.

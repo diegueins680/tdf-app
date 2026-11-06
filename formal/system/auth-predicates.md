@@ -195,3 +195,72 @@ and recovery SQL are unchanged. Earlier context reviews above retain their
 original baselines; the JSON records the current manifest hashes and review.
 Fresh scoped solver/replay/mutation and independent certificate checks are
 required. This review does not promote full refinement or release readiness.
+
+## Interactive session expiry context review — 2026-10-31
+
+Against protected main `234ff6f7faf1aecf347c8e92a374228f4ec07aaa`, candidate
+`feat/session-token-expiry-20261031` (ID-SESSION-004) changes three pinned
+authorization inputs. `Auth.hs` keeps all six translated predicates and their
+signatures byte-identical and adds `isInteractiveSessionLabel`,
+`apiTokenWithinValidity` and `sessionClockEpoch`, used only as additional
+denying guards in `loadAuthedUser`, the locked session witness and
+`lookupUsernameFromToken`; the only new import is `Data.Int (Int64)`.
+`Models.hs` keeps `RoleEnum` byte-identical and appends two nullable `Int64`
+fields to `ApiToken`. The Cabal manifest moves `src` into a `library` without
+changing module registrations, dependency bounds, GHC options, Stack resolver or
+lock. `RecordsIngestion.hs` is byte-identical. The three hashes are refreshed
+after reviewing those complete diffs; claims, assumptions, translation and
+negative controls are unchanged and every obligation requires fresh execution.
+
+## Credential-cache build-context review (2026-10-26)
+
+The proposed context review compares protected main
+`9b7aa4648d4158f6da84fbb5e794267cd4953177` with credential-cache candidate
+`43b1b4b00715c5564525d7bce1fa838bf6366122`. The Cabal digest changes from
+`1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb` to
+`ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869`.
+Removing exactly the three added `other-modules` registrations reconstructs
+protected main byte for byte. Dependencies, source paths, extensions, compiler
+options, CPP flags and Stack/lock are unchanged. All other pinned source files
+and both source translators retain their protected-main bytes. Prior review
+entries and every obligation, assumption and limitation are preserved.
+
+The new uniquely named middleware forwards the unchanged request and inner
+application; it maps response `Cache-Control` for eight fixed music credential
+operations. Its imports are existing `Data.List`, `Data.Text`,
+`Network.HTTP.Types` and `Network.Wai`. `Server.mkApp` and `App.Boot.wrapApp`
+add the wrapper without changing `authContext`, handler dispatch, the translated
+authorization definitions or recovery arithmetic. The registered Hspec module
+exports `spec`; neither added module introduces a binding override, Template
+Haskell, CPP, foreign import or `unsafePerformIO`. HTTP correctness, credentials,
+sessions and deployment remain outside these predicate/arithmetic contracts.
+
+Specification CI run `40389587503`, job `121806768054`, rejected the unreviewed
+Cabal digest before authorization/recovery translation. Its retained artifact
+`12681639748` (ZIP SHA-256
+`4aacba501323d6ab33ad727aeeb4fa6cc5f189e7fabc35e696a64e08d2137c2a`) is historical
+failure evidence, rather than a refutation of a translated obligation. A fresh
+isolated replay must qualify this review; no historical result is relabeled.
+Full implementation/refinement remains **UNPROVEN**, and the full release gate
+remains **BLOCKED**. Fresh independent CPC checking remains required in addition
+to the source-bound SMT, witnesses, mutations and same-solver serialized replay.
+
+## Current protected-main credential-cache composition — 2026-11-06
+
+The normal composition retains protected main `e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324` and the original
+credential-cache implementation. The current library layout needs exactly two
+new registrations: `TDF.MusicRelease.CredentialCache` in library exposed modules
+and `TDF.MusicCredentialCacheSpec` in test modules. Removing those two lines
+reproduces the current main Cabal file byte for byte. Existing storage modules,
+dependencies, flags, source paths and all other reviewed sources are unchanged.
+The original three-stanza review and runtime receipts above retain their original
+commit identities. Fresh solver/replay and adversarial checks qualify only their
+scoped predicates; full refinement and release remain separate and blocked.
+
+The subsequent protected-main composition uses `d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8`,
+including the container diagnostic and ticket eligibility integrations. All
+190 current main requirement records remain exact; the cache requirement is
+appended. The two Cabal registrations and the explicit middleware/wiring/API/test file
+manifest are unchanged from `ce763107100e39a94c7caae7876d2632ae9c47de`. Other main handler/test
+changes prevent a whole-backend identity claim. Fresh predicate verification
+binds the final composition; older execution receipts retain their identities.

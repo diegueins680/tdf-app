@@ -1,0 +1,40 @@
+ACCEPT — scoped independent review of ROOT's current UI qualification/harness; zero blocking findings.
+
+Source 5e60c4ced02b02dd20eb8f0574a9bd61bea62065; main 234ff6f7faf1aecf347c8e92a374228f4ec07aaa; normal old parent ec7b43b9cf4c34144e5a7176e454a56f20ee73bb. I authored this UI source reconciliation/preparation. I do not characterize that authored preparation as independently reviewed by me. This receipt independently assesses ROOT-authored qualification, sealer, controls, raw evidence and generic packaging, and confirms exact source correspondence. The original ROOT-authored money implementation already has its separately retained scoped review.
+
+Actual current raw Jest reports76 passing tests/four suites; typecheck, lint, production build, root QA, admission and catalogue8 all record exit0. I inspected the raw output and receipt hashes rather than rerunning them. Current local full UI suite is explicitly NOT_RUN. The3811/327 full suite and26 real bundled formatter browser cases remain bound to original 83533/oldEC7 history, not fresh 5e60 execution. The formatter property's retained browser assumption is read under that explicit historicalEvidence scope; no current Chromium/Firefox/WebKit/HTTP execution is asserted. Fresh selected hosted full UI CI on the published head remains mandatory before integration.
+
+Independently rehashed all 1435 registered FS/Git/Mobile bindings, all 911 complete UI input files independently enumerated from Git, and all 52 assurance artifacts. The entire UI, dependency manifests and Mobile match EC7; backend/scripts/workflows/operations match protected main 234. No CSV684 change was imported. All prior reports/evidence remain exact. The sole owned catalogue decision beyond main 1354 is the already-reviewed caafb Page synthetic fixture, so current strict inventory 1355 is correct; no stale1354 audit is borrowed.
+
+The UI seal requires exactly the seven qualification phase exits and matching commit/provenance/input sets,76/four, clean source/removed aliases, explicit full-local NOT_RUN, blocked release and unchanged proof metrics. All12 extracted-binder controls report their intended assertion rejections, valid-before/restored-after and disk bytes unchanged. They are evidence-admission controls, not product mutants or a theorem of the verification pipeline. Original core21/3/4 faults, Page wiring6 assertions, full 3811 and browser26 receipts remain immutable historical evidence on the unchanged UI component.
+
+Both candidates preserve all 159 new protected-main normative objects and the exact owned requirement for 160 total, explicitly taking main's authorized PAY-CHECKOUT-001/003 amendments rather than claiming every old-parent object stayed unchanged. Historical reports/evidence from both parents retain their Git blob identities. Auth/recovery source-context assumptions remain unchanged. Fresh assurance provenance agrees with rehashed sources and all 52 evidence artifacts, with 160 whole requirements and320 implementation/refinement obligations still UNPROVEN, eleven inherited conditional SMT claims and release BLOCKED/executionAllowed false. No new complete proof is claimed.
+
+The reviewed generic report-only packager preserves the source commit, requires actual receipts and manual reading of this receipt, archives owned qualification files without following symlinks, adds exactly four report paths, commits a normal report-only child, then invokes a verifier that checks all four Git/FS blobs and every unique safe archive member against its manifest. These packaging/commit/archive checks are future operations, not already completed claims in this review. The ACCEPT marker is a manual packaging precondition, not GitHub approval. Fresh current-head hosted checks, independent approval, strict main ancestry, FIFO and protection remain required; no old approval is borrowed. The next child is673 for range and684 for browser precision.
+
+No independent tests, compiler/build, AST controls, browser, database, Docker, provider or production runtime was executed by this reviewer. I performed source/artifact reads, Git identity comparisons and cryptographic rehashing only. No code, metadata, refs, PR/readiness/auto-merge/review state or remote state was changed. No serving executable, deployment, global correctness or universal cleanup guarantee is established. Unrelated gallery/worker counterexamples remain unrepaired and their causes are not inferred from successful samples.
+
+Companion independent checks: /private/tmp/tdf-main643-final-independent-checks-20261030T2302.json
+SHA256: 749b1ac69c1df48f2fc7fe2e71e2838304e98f0482e2d52728be783aabf560aa
+
+Exact source/raw receipt/harness SHA256:
+ae88ba5e5e3c06f5321541fa79a9b097dd052cdee91de36443e52f0c86a1aeb5  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/preparation-state.json
+37c4c3385039291523b866f9cae9018127aea31eb26dbae71260f5a83c96b8c0  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/source-correspondence.json
+bea8f45666a666457c369b07009e0bd7b176a5f8417ac693a741230bdc5bd38f  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/seal-binding-controls.json
+6ac032accf22a328b94ec5e32da951735a44e9a87a92ac6adbb00a2edb39465c  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/seal-execution.json
+b8ef91c8f03fbef6e4a250fb9c88366e27652822ea23d9b51d43e130ca552ee6  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/assurance-committed/report.json
+427add8026c191698747f9c83045e1c63a3527a63f5524421998cfcbc708c1c6  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/assurance-committed/sources.json
+d9ab4295e37ea86b7679306b7f653a2d0b2128e2632cc334de0105ad535c2ea5  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/ui-quality.json
+2c7c3b27e9034090966f767b3535327ec4cda08b2ebf1c9d8855215ff3de8a70  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/ui-qualified-inputs.json
+9c21da65e393168a0d7cf6dfdeb51259444048ab90dcf3da890d2c62ef491e3e  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/final-targeted.log
+374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/final-typecheck.log
+28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/final-lint.log
+355d142a47bef17b87266a4876b15bb845e450a66b07130fd44da858a3995fad  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/final-build.log
+ceeac8e1217f5b44ed32760b777f38305b5139a2d0dd27bfef9a0ab16bd15b4f  /private/tmp/tdf-browser-precision-main643-qualification-20261030T2302/final-root-quality.log
+7a97535ce0b3ae8790260bbfc7d2d80d63d7b186cde65f814a1bcb8fc7bf89e2  /private/tmp/tdf-browser-precision-main643-seal-20261030T2302.py
+626e0ac56328793e6ec3f528a87786fbd02910975903b93ea24330507ebafca7  /private/tmp/tdf-browser-precision-main643-seal-controls-20261030T2302.py
+31b055269c3a21305bcaac7559fe51421df603ac7d67cdc2f319e0bf97fb7ddd  /private/tmp/tdf-main643-package-20261030T2302.py
+27d9f59e9475295fe59ae9546b5452495279ae20bbd75b1a9338ff8ddb043514  /private/tmp/tdf-verify-report-archive-20261030.py
+1fb729d2150589ce5074884f77f9747b5b79ca6ad717ba7e6c72c733e24a65c5  /private/tmp/tdf-browser-precision-main643-20261030T2302/formal/system/event-finance-browser-precision.md
+
+Reviewed at UTC 2026-10-30T23:34:44.052274+00:00

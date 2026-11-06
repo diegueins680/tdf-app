@@ -1,8 +1,10 @@
+import MarkdownText from '../../components/MarkdownText';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Alert, Avatar, Box, Button, Card, CardActionArea, CardContent, LinearProgress, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardActionArea, CardContent, LinearProgress, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { resolveDirectoryPreviewImage } from '../../utils/directoryPreviewImage';
+import ArtistProfileImage from '../../components/ArtistProfileImage';
 import { Directory, type DirectorySearchQuery } from '../../api/directory';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from './useDirectorySearch';
 
@@ -65,12 +67,12 @@ export default function CommunityDiscovery() {
       {items.map((item) => <Card key={`${item.type}:${item.id}`} component="article" variant="outlined">
         <CardActionArea component={Link} to={directoryResultPath(item)} sx={{ height: '100%', alignItems: 'start' }}>
           <CardContent>
-            <Avatar src={resolveDirectoryPreviewImage(item.imageUrl) ?? '/artist-fallback.svg'} alt="" sx={{ width: 72, height: 72, mb: 2 }} />
+            <ArtistProfileImage artistName={item.title} imageUrl={resolveDirectoryPreviewImage(item.imageUrl)} alt="" width={72} height={72} sx={{ borderRadius: '50%', mb: 2 }} />
             <Typography component="h3" variant="h6">{item.title}</Typography>
             {item.subtitle && <Typography variant="body2">{item.subtitle}</Typography>}
             <Typography variant="body2" color="text.secondary">{[item.location.city, item.location.countryCode].filter(Boolean).join(' · ')}</Typography>
             <Typography variant="body2">{item.taxonomy?.genreIds.map((id) => taxonomies.data?.genres.find((genre) => genre.id === id)?.name).filter(Boolean).join(' · ')}</Typography>
-            {item.summary && <Typography variant="body2" mt={1} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary}</Typography>}
+            {item.summary && <MarkdownText disableLinks inline variant="body2" mt={1} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary}</MarkdownText>}
             <Typography color="primary" mt={2}>Ver perfil</Typography>
           </CardContent>
         </CardActionArea>

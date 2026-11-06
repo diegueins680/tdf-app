@@ -1,3 +1,5 @@
+import UserProfileLink from '../UserProfileLink';
+import MarkdownText from '../MarkdownText';
 import { useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
@@ -163,14 +165,14 @@ export default function ExperienceReviews({ targetKind, targetId, title = 'Rese√
             <Box key={review.id}>
               {index > 0 && <Divider sx={{ mb: 2 }} />}
               <Stack direction="row" spacing={1.25} alignItems="flex-start">
-                <Avatar src={review.author.avatarUrl ?? undefined}>{review.author.name.slice(0, 1).toUpperCase()}</Avatar>
+                <UserProfileLink partyId={review.author.partyId} label={review.author.name}><Avatar src={review.author.avatarUrl ?? undefined}>{review.author.name.slice(0, 1).toUpperCase()}</Avatar></UserProfileLink>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.75} alignItems={{ sm: 'center' }}>
-                    <Typography fontWeight={700}>{review.author.name}</Typography>
+                    <UserProfileLink partyId={review.author.partyId}><Typography fontWeight={700}>{review.author.name}</Typography></UserProfileLink>
                     <Chip icon={<VerifiedIcon />} label="Interacci√≥n verificada" size="small" color="success" variant="outlined" />
                   </Stack>
                   <Rating value={review.rating} readOnly size="small" aria-label={`${review.rating} de 5 estrellas`} />
-                  {review.body && <Typography sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>{review.body}</Typography>}
+                  {review.body && <MarkdownText sx={{ mt: 0.5, }}>{review.body}</MarkdownText>}
                   <Typography variant="caption" color="text.secondary">
                     {new Date(review.createdAt).toLocaleDateString()}
                   </Typography>

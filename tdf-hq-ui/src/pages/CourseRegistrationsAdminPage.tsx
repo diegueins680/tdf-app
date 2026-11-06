@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import MarkdownText from '../components/MarkdownText';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -46,6 +47,10 @@ import {
   type CourseRegistrationReceiptDTO,
 } from '../api/courses';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import { useOptionalSession } from '../session/SessionContext';
+import { useOwnedTabDraft } from '../session/useOwnedTabDraft';
+import { parseFormMetadata } from '../session/recoverableDraft';
+import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { DriveFileInfo } from '../services/googleDrive';
@@ -4917,10 +4922,30 @@ export default function CourseRegistrationsAdminPage() {
     anchorEl: HTMLElement;
     entry: CourseRegistrationFollowUpDTO;
   } | null>(null);
-  const [notesDraft, setNotesDraft] = useState('');
   const [showNotesComposer, setShowNotesComposer] = useState(false);
-  const [receiptForm, setReceiptForm] = useState<ReceiptFormState>(emptyReceiptForm);
-  const [followUpForm, setFollowUpForm] = useState<FollowUpFormState>(emptyFollowUpForm);
+  const recoverySession = useOptionalSession();
+  const recoveryOwnerId = recoverySession?.loading ? null : recoverySession?.session?.partyId ?? null;
+  const { i18n: recoveryLocale } = useTranslation();
+  const recoveryScope = `course-registration:${selectedDossier?.reg.crId ?? 'none'}`;
+  const notesRecovery = useOwnedTabDraft('', {
+    ownerId: selectedDossier ? recoveryOwnerId : null, scope: `${recoveryScope}:notes`,
+    parse: (value) => typeof value === 'string' ? value : undefined,
+  });
+  const { value: notesDraft, setValue: setNotesDraft, setBaseline: setNotesBaseline, restored: notesRestored } = notesRecovery;
+  const currentNotesRecovery = useRef(notesRecovery);
+  currentNotesRecovery.current = notesRecovery;
+  const receiptDraft = useOwnedTabDraft(emptyReceiptForm(), {
+    ownerId: selectedDossier ? recoveryOwnerId : null, scope: `${recoveryScope}:receipt`,
+    parse: (value) => parseFormMetadata(value, emptyReceiptForm()),
+  });
+  const followUpDraft = useOwnedTabDraft(emptyFollowUpForm(), {
+    ownerId: selectedDossier ? recoveryOwnerId : null, scope: `${recoveryScope}:follow-up`,
+    parse: (value) => parseFormMetadata(value, emptyFollowUpForm()),
+  });
+  const { value: receiptForm, setValue: setReceiptForm, restored: receiptRestored } = receiptDraft;
+  const { value: followUpForm, setValue: setFollowUpForm, restored: followUpRestored } = followUpDraft;
+  const latestAttachmentDrafts = useRef({ receiptDraft, followUpDraft });
+  latestAttachmentDrafts.current = { receiptDraft, followUpDraft };
   const [showReceiptComposer, setShowReceiptComposer] = useState(false);
   const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
@@ -4937,6 +4962,12 @@ export default function CourseRegistrationsAdminPage() {
     () => ['admin', 'course-registrations', { slug, status, limit }],
     [slug, status, limit],
   );
+
+  useEffect(() => {
+    if (notesRestored) setShowNotesComposer(true);
+    if (receiptRestored) setShowReceiptComposer(true);
+    if (followUpRestored) { setShowFollowUpComposer(true); setShowFollowUpDetails(true); }
+  }, [receiptRestored, followUpRestored, notesRestored]);
 
   const selectedDossierSlug = selectedDossier?.reg.crCourseSlug ?? '';
   const selectedDossierId = selectedDossier?.reg.crId ?? null;
@@ -6582,12 +6613,10 @@ export default function CourseRegistrationsAdminPage() {
       setDossierContextMenuAnchor(null);
       setReceiptMenuTarget(null);
       setFollowUpMenuTarget(null);
-      setNotesDraft('');
+      setNotesBaseline('');
       setShowNotesComposer(false);
-      setReceiptForm(emptyReceiptForm());
       setShowReceiptUrlField(false);
       setShowReceiptComposer(false);
-      setFollowUpForm(emptyFollowUpForm());
       setShowFollowUpUrlField(false);
       setShowFollowUpDetails(false);
       setShowFollowUpComposer(false);
@@ -6598,21 +6627,19 @@ export default function CourseRegistrationsAdminPage() {
     setDossierContextMenuAnchor(null);
     setReceiptMenuTarget(null);
     setFollowUpMenuTarget(null);
-    setNotesDraft(selectedDossier.reg.crAdminNotes ?? '');
+    setNotesBaseline(selectedDossier.reg.crAdminNotes ?? '');
     setShowNotesComposer(false);
-    setReceiptForm(emptyReceiptForm());
     setShowReceiptUrlField(false);
     setShowReceiptComposer(selectedDossier.intent === 'markPaid');
-    setFollowUpForm(emptyFollowUpForm());
     setShowFollowUpUrlField(false);
     setShowFollowUpDetails(false);
     setShowFollowUpComposer(false);
     setDossierFlash(null);
-  }, [selectedDossier]);
+  }, [selectedDossier, setNotesBaseline]);
 
   useEffect(() => {
-    setNotesDraft(dossierQuery.data?.crdRegistration.crAdminNotes ?? '');
-  }, [dossierQuery.data?.crdRegistration.crId, dossierQuery.data?.crdRegistration.crAdminNotes]);
+    setNotesBaseline(dossierQuery.data?.crdRegistration.crAdminNotes ?? '');
+  }, [dossierQuery.data?.crdRegistration.crId, dossierQuery.data?.crdRegistration.crAdminNotes, setNotesBaseline]);
 
   const handleRefresh = () => {
     const shouldRefreshCohorts = cohortsQuery.isError;
@@ -6775,6 +6802,8 @@ export default function CourseRegistrationsAdminPage() {
   const handleSaveNotes = () => {
     if (!selectedDossier || selectedDossierId == null) return;
     setDossierFlash(null);
+    const submittedNotes = notesDraft;
+    const ownsNotes = notesRecovery.isCurrentOwner;
     void updateNotesMutation
       .mutateAsync({
         id: selectedDossierId,
@@ -6782,21 +6811,24 @@ export default function CourseRegistrationsAdminPage() {
         notes: trimToNull(notesDraft),
       })
       .then(() => {
+        if (!ownsNotes()) return;
+        if (currentNotesRecovery.current.value === submittedNotes) notesRecovery.discard(submittedNotes);
         setDossierFlash({ severity: 'success', message: 'Notas guardadas.' });
       })
       .catch((err: Error) => {
+        if (!ownsNotes()) return;
         setDossierFlash({ severity: 'error', message: err.message });
       });
   };
 
   const handleOpenNotesComposer = () => {
-    setNotesDraft(getPersistedNotesValue());
+    notesRecovery.discard(getPersistedNotesValue());
     setShowNotesComposer(true);
     setDossierFlash(null);
   };
 
   const handleHideNotesComposer = () => {
-    setNotesDraft(getPersistedNotesValue());
+    notesRecovery.discard(getPersistedNotesValue());
     setShowNotesComposer(false);
     setDossierFlash(null);
   };
@@ -6832,6 +6864,8 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleSubmitReceipt = () => {
     if (!selectedDossier || selectedDossierId == null) return;
+    const ownsComposer = receiptDraft.isCurrentOwner;
+    const submittedDraft = JSON.stringify(receiptForm);
     const fileUrl = trimToNull(receiptForm.fileUrl);
     if (!fileUrl) {
       setDossierFlash({ severity: 'error', message: 'Sube un comprobante o pega una URL válida.' });
@@ -6858,13 +6892,15 @@ export default function CourseRegistrationsAdminPage() {
     setDossierFlash(null);
     void action
       .then(() => {
-        resetReceiptComposer();
+        if (!ownsComposer()) return;
+        if (JSON.stringify(latestAttachmentDrafts.current.receiptDraft.value) === submittedDraft) resetReceiptComposer();
         setDossierFlash({
           severity: 'success',
           message: receiptForm.editingId == null ? 'Comprobante guardado.' : 'Comprobante actualizado.',
         });
       })
       .catch((err: Error) => {
+        if (!ownsComposer()) return;
         setDossierFlash({ severity: 'error', message: err.message });
       });
   };
@@ -6919,6 +6955,8 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleSubmitFollowUp = () => {
     if (!selectedDossier || selectedDossierId == null) return;
+    const ownsComposer = followUpDraft.isCurrentOwner;
+    const submittedDraft = JSON.stringify(followUpForm);
     const notes = trimToNull(followUpForm.notes);
     if (!notes) {
       setDossierFlash({ severity: 'error', message: 'Agrega una nota para registrar el seguimiento.' });
@@ -6948,13 +6986,15 @@ export default function CourseRegistrationsAdminPage() {
     setDossierFlash(null);
     void action
       .then(() => {
-        resetFollowUpComposer();
+        if (!ownsComposer()) return;
+        if (JSON.stringify(latestAttachmentDrafts.current.followUpDraft.value) === submittedDraft) resetFollowUpComposer();
         setDossierFlash({
           severity: 'success',
           message: followUpForm.editingId == null ? 'Seguimiento guardado.' : 'Seguimiento actualizado.',
         });
       })
       .catch((err: Error) => {
+        if (!ownsComposer()) return;
         setDossierFlash({ severity: 'error', message: err.message });
       });
   };
@@ -7410,9 +7450,9 @@ export default function CourseRegistrationsAdminPage() {
               </Stack>
             </>
           ) : hasSavedNotes ? (
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+            <MarkdownText variant="body2" color="text.secondary">
               {persistedNotes}
-            </Typography>
+            </MarkdownText>
           ) : (
             <Stack spacing={0.75} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
@@ -7493,14 +7533,17 @@ export default function CourseRegistrationsAdminPage() {
             {showReceiptComposer && (
               <Grid item xs={12} md={showReceiptReviewPane ? 6 : 12} data-testid="course-registration-receipt-composer-pane">
                 <Stack spacing={1.5}>
+                  {receiptRestored && <Alert severity="info">{recoveryLocale.language.startsWith('en') ? 'We restored your unsaved receipt fields in this tab.' : 'Recuperamos los campos del comprobante sin guardar de esta pestaña.'}</Alert>}
                   {showReceiptUploadWidget && (
                     <GoogleDriveUploadWidget
+                      recoveryScope={`course-receipt:${selectedDossierId ?? 'none'}`}
+                      formRecoveryAvailable={receiptDraft.persistenceAvailable}
                       label={
                         receiptForm.fileName
                           ? `Archivo listo: ${receiptForm.fileName}`
                           : 'Subir comprobante (imagen/PDF)'
                       }
-                      helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
+                      helperText="Elige dónde guardar el comprobante; conservaremos su enlace en esta inscripción."
                       accept="application/pdf,image/*"
                       multiple={false}
                       onComplete={handleReceiptUpload}
@@ -7674,9 +7717,9 @@ export default function CourseRegistrationsAdminPage() {
                             ) : null}
                           </Stack>
                           {showReceiptNotes && (
-                            <Typography variant="body2" color="text.secondary">
+                            <MarkdownText variant="body2" color="text.secondary">
                               {receiptNotes}
-                            </Typography>
+                            </MarkdownText>
                           )}
                         </Stack>
                       </Paper>
@@ -9379,8 +9422,11 @@ export default function CourseRegistrationsAdminPage() {
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
                                   />
+                                  {followUpRestored && <Alert severity="info">{recoveryLocale.language.startsWith('en') ? 'We restored your unsaved follow-up in this tab.' : 'Recuperamos el seguimiento sin guardar de esta pestaña.'}</Alert>}
                                   {showFollowUpUploadWidget && (
                                     <GoogleDriveUploadWidget
+                                      recoveryScope={`course-follow-up:${selectedDossierId ?? 'none'}`}
+                                      formRecoveryAvailable={followUpDraft.persistenceAvailable}
                                       label={
                                         followUpForm.attachmentName
                                           ? `Adjunto listo: ${followUpForm.attachmentName}`
@@ -9561,9 +9607,9 @@ export default function CourseRegistrationsAdminPage() {
                                     {followUpSubject && (
                                       <Typography variant="subtitle2">{followUpSubject}</Typography>
                                     )}
-                                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    <MarkdownText variant="body2" color="text.secondary">
                                       {entry.crfNotes}
-                                    </Typography>
+                                    </MarkdownText>
                                     {entry.crfAttachmentUrl && (
                                       <Link
                                         href={entry.crfAttachmentUrl}
