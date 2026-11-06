@@ -8,6 +8,11 @@ export default function GoogleDriveCallbackPage() {
   const result = useGoogleDriveCallback();
 
   useEffect(() => {
+    if (window.opener && (result.ok || result.message)) {
+      window.opener.postMessage({ type: 'tdf-drive-connected', state: new URLSearchParams(window.location.search).get('state'), ok: result.ok }, window.location.origin);
+      window.close();
+      return;
+    }
     if (result.ok && result.returnTo) {
       navigate(result.returnTo, { replace: true });
     } else if (result.ok) {
@@ -33,9 +38,7 @@ export default function GoogleDriveCallbackPage() {
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
         <Stack spacing={2} alignItems="center">
           <Alert severity="error">
-            No pudimos autorizar Google Drive: {result.message}
-            <br />
-            Verifica el redirect configurado en Google: {import.meta.env.VITE_GOOGLE_DRIVE_REDIRECT_URI ?? 'no definido'}
+            No pudimos conectar Google Drive. Cierra esta ventana y vuelve a intentarlo desde el formulario; tus cambios se conservan.
           </Alert>
           <Button variant="contained" onClick={() => navigate('/', { replace: true })}>
             Volver

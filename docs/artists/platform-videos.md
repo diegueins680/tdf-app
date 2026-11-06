@@ -48,7 +48,7 @@ An iframe open/load is **not a playback**. External-provider play/progress SDK m
 
 ## Roj(o) rollout and protected gates
 
-The deduplicated canonical profile is Party 520, slug `rojo`, administered by TDF until verified claim. It uses the already approved full-session thumbnail (real performance image with the official TDF logo), confirmed members, recording date and explicit release context. It references the existing YouTube master; it does not upload another video. The Records recording already exists and is reused.
+The canonical profile is resolved through slug `rojo`, administered by TDF until verified claim. An anonymous Core read on 6 November 2026 returned Party 535 and the existing YouTube master `uRNyIMLiqU8`; the historical Party 520 endpoint returned 404. Always retain the current resolved profile identity through authentication, rather than hard-coding the historical identifier or creating another artist. This observation changes no profile, campaign or publication. The profile uses the already approved full-session thumbnail (real performance image with the official TDF logo), confirmed members, recording date and explicit release context. The Records recording already exists and is reused.
 
 Deployment must pass the existing source/CI/review/admission and release controls. Keep existing campaign/source PRs; do not bypass protected review with a CMS/Caddy/manual deployment. The currently deployed player must be checked anonymously on mobile and desktop before migration: actual playback and audio, source fallback, follow intent through auth, canonical identity and visible TDF/YouTube subscription route.
 
