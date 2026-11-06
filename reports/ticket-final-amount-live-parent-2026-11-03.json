@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-03T02:20:19.070297+00:00",
+  "baseline661": "f302b3da87a5e40934b2bdf5426dff64b686be49",
+  "incoming660": "6b814cc05f4eff9bc497d2d810d888735c0131ba",
+  "composition": "4b1fb21bb9dc01d4aa1ec96d73221adc1e374d72",
+  "qualifiedSource": "6edeab6ea9b042bc61e1f4f37940dbb97c09cdd4",
+  "mainObserved": "261d10dff011529dfaa93bc139cb53af5280bcdc",
+  "problem": "Three original actual-handler counterexamples admitted fee-inclusive totals of 100,000,000 or 101,999,999, created cancelled order history and returned 503 through missing configuration instead of refusing 400 before hold effects. No incorrect charge or universal provider rejection was established.",
+  "correction": "Preserve the existing three-line guard validating the computed final amount with quantity 1 before the new legacy Stripe hold transaction. Keep the established internal 0..99,999,999 envelope, fee formula, discounts, free checkout and stored historical replay.",
+  "priority": "P2 financial input admission; small prerequisite for existing higher-impact price/promo followups while protected main controls run.",
+  "preservation": {
+    "baseline661": "f302b3da87a5e40934b2bdf5426dff64b686be49",
+    "oldParent660": "0a9228b0a00eb93ea0924cfec7c149ec0caacad5",
+    "incoming660": "6b814cc05f4eff9bc497d2d810d888735c0131ba",
+    "exactResidualPatches": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "exactResidual": true,
+        "originalPatchSHA256": "06191025a02da8bbb43a30f813d305ae73f71cfbd438c022a692a6227f20ce9b",
+        "composedPatchSHA256": "06191025a02da8bbb43a30f813d305ae73f71cfbd438c022a692a6227f20ce9b"
+      },
+      {
+        "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "exactResidual": true,
+        "originalPatchSHA256": "434cc4eb0ae763ae8283b27c391f0a45bbc1c31d5729eb664cf957190fd4c9fc",
+        "composedPatchSHA256": "434cc4eb0ae763ae8283b27c391f0a45bbc1c31d5729eb664cf957190fd4c9fc"
+      }
+    ],
+    "otherRequirementsExact": 169,
+    "totalRequirements": 170,
+    "catalogFileExact": true,
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq-ui",
+      "tdf-mobile",
+      "package.json",
+      "package-lock.json",
+      "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/stack.yaml.lock",
+      ".github/workflows",
+      "scripts/quality-repo.sh",
+      "scripts/run-music-release-worker-once.sh",
+      "tdf-hq/src/TDF/Ticketing",
+      "scripts/__tests__/ticket-admission-model.test.mjs"
+    ],
+    "arithmeticCheckerAndNormativeContractExact": true,
+    "productionDelta": "3handlerlines only; sameexistingtotalvalidator, no fee policy/provider maximum change.",
+    "composition": "4b1fb21bb9dc01d4aa1ec96d73221adc1e374d72"
+  },
+  "properties": [
+    {
+      "id": "EVT-LEGACY-FINAL-AMOUNT-001",
+      "statement": "A new legacy checkout validates its fee-inclusive total against the established internal envelope before durable stock/order/ticket/promo effects, preserving zero and stored replay behavior.",
+      "currentImplementationAssurance": "PARTIAL until fresh 123-case Stack/PostgreSQL qualification."
+    }
+  ],
+  "arithmetic": {
+    "claims": [
+      {
+        "id": "all_supported_faces_fit",
+        "negation": "unsat",
+        "assurance": "PROVEN",
+        "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+      },
+      {
+        "id": "all_larger_faces_exceed",
+        "negation": "unsat",
+        "assurance": "PROVEN",
+        "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+      },
+      {
+        "id": "fee_arithmetic_fits_current_int64",
+        "negation": "unsat",
+        "assurance": "PROVEN",
+        "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+      }
+    ],
+    "counterexample": {
+      "face": 98039216,
+      "final": 100000000
+    },
+    "assumptions": [
+      "Integer arithmetic, discounted face between0 and99,999,999 inclusive, fee bps400, floor division and buyer rounding from the checked source formula.",
+      "Current64-bit Int; existing base validation plus valid promo keeps face within these bounds.",
+      "The conservative99,999,999 internal admission envelope is the requirement; this is not a universal Stripe maximum."
+    ],
+    "limitations": [
+      "Manual abstraction with exact source/formula hashes and syntax checks, not a Haskell semantics/refinement proof.",
+      "Source can change after this one-shot check; committed source seal and implementation regression tests supply separate evidence.",
+      "No provider contact, PostgreSQL guarantee, account/currency/card validation or financial charge attestation."
+    ],
+    "z3Version": "4.13.3",
+    "normalOptimizedAgree": true,
+    "policyMutationRejectedInBothModes": true,
+    "scope": "Three existing conditional claims in a manual Integer model re-established; source/formula hashes and syntax assumptions checked. No Haskell, SQL or provider refinement."
+  },
+  "verification": {
+    "currentLocal": "23 unchanged finite-model checks; eight catalog controls; strict JSON/CSV; full repository quality; generated inventory/conformance and immutable source admission pass.",
+    "historicalRuntime": "Original f302/b7ded: seven baseline cases with three failures, then nine new cases pass; 4,485 full examples, zero failures, 21 pending, 227 migrations. The older 913-operation API snapshot, serving identity and browser failure remain historical.",
+    "currentRuntime": "NOT_EXECUTED locally. Require nine new plus 114 parent cases: 123 intended cases within the expected 440-example PostgreSQL group, full 228-entry manifest and canonical Stack/GHC 9.10.3.",
+    "parent660": "Local 23 models, repository quality, source admission and metadata pass at 21a4; source publication 6b814. Fresh 114-case hosted qualification is pending at child preparation. No complete parent hosted pass is inferred.",
+    "environment": "Owned verification dependencies reused; the exact pinned Mobile checkout initialized. No fresh canonical install, native-lock completeness or local Haskell build claimed."
+  },
+  "assurance": {
+    "wholeRequirements": 170,
+    "criticalRequirements": 133,
+    "wholeImplementation": "170UNPROVEN",
+    "wholeRefinement": "170UNPROVEN",
+    "canonicalInheritedConditionalSMTLemmas": 11,
+    "separateExistingManualArithmeticClaimsRechecked": 3,
+    "newTheorems": 0,
+    "release": "BLOCKED",
+    "limits": [
+      "The manual arithmetic model assumes the checked bounds, 400-bps floor formula and 64-bit Int; future policy requires requalification.",
+      "Positive fixtures reach the existing missing-configuration 503; no successful payment or provider amount attestation.",
+      "Historical financial records are not rewritten; currency/account/payment-method-specific limits and tiny-positive minimums remain separate.",
+      "Price/owner snapshots, actual-reservation deadlines under 666, uncertain provider execution and partial-refund ticket allocation remain separate obligations."
+    ]
+  },
+  "integration": {
+    "existingPR": 661,
+    "base": "fix/legacy-ticket-eligibility-race-20261028",
+    "draft": true,
+    "autoMerge": false,
+    "upstream": "654 integrated into protected main as 261d; 657 awaits fresh main checks/current review; 658 and 659 are ready and qualified; 660 is locally qualified with fresh hosted execution pending.",
+    "freshHeadReview": "Required for main integration; no old review borrowed.",
+    "messagesOrReviewerRequestsSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Qualify all 123 handler cases with the full 228-entry manifest; keep draft until relevant workflows pass.",
+    "Integrate 657/658/659 serially with all 20 strict checks, current review and ordinary admission.",
+    "Existing 662 prices, 663 promo, 664 terms and 666 reservation-time checks remain separate focused followups."
+  ],
+  "evidence": {
+    "archive": "reports/ticket-final-amount-live-parent-2026-11-03/evidence.tar.gz",
+    "sha256": "bc0b0af0a8320fb2c4d3f9fa93f9b979466a33144ff5ebe003a62047bdc4bb9c",
+    "regularFiles": 116,
+    "independentlyVerifiedManifestEntries": 115,
+    "manifest": "reports/ticket-final-amount-live-parent-2026-11-03/manifest.json"
+  }
+}
