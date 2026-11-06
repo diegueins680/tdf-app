@@ -142,6 +142,17 @@ apalache_expect "${P}" CInitFence IndInv IndInv 1 NoError "ProviderInbox-consecu
 apalache_expect "${P}" CInitFence IndInv Safe 0 NoError "ProviderInbox-implication"
 apalache_expect "${P}" CInitLegacy Init Safe 6 Error "ProviderInboxLegacy-reachable-violation"
 
+I=SessionInvoiceIssue.tla
+
+# PAY-INVOICE-ISSUE-001: the SRI script runs at most once per key, and two
+# unresolved attempts are never open together without portal verification.
+tlc_expect "${I}" SessionInvoiceIssue.cfg pass
+tlc_expect "${I}" SessionInvoiceIssueNoLock.cfg violation
+apalache_expect "${I}" CInitLock Init IndInv 0 NoError "SessionInvoiceIssue-initiation"
+apalache_expect "${I}" CInitLock IndInv IndInv 1 NoError "SessionInvoiceIssue-consecution"
+apalache_expect "${I}" CInitLock IndInv Safe 0 NoError "SessionInvoiceIssue-implication"
+apalache_expect "${I}" CInitNoLock Init Safe 6 Error "SessionInvoiceIssueNoLock-reachable-violation"
+
 L=LogoutIntent.tla
 CURRENT_MODEL_DIR="${AUTH_MODEL_DIR}"
 

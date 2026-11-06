@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001.
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001.
 
 ## Contract
 
@@ -125,3 +125,34 @@ authenticated. Money conversion round-trips every minor amount and rejects
 sub-cent precision. These are properties, not proofs: they cover the generated
 response shapes.
 
+
+## Session invoice issuance (PAY-INVOICE-ISSUE-001)
+
+`SessionInvoiceIssue.tla` models requests to `POST /invoices/{sessionId}/generate`
+for one session and one request fingerprint. Each request carries an idempotency
+key and may carry portal verification. The SRI portal is not idempotent, so an
+attempt answered with an error or an unconfirmed status counts as unresolved, as
+does a reservation with no answer. Requests may stop at any step.
+
+| Variant | Meaning |
+|---|---|
+| `Lock = TRUE` | current code: key lookup, sibling check and reservation in one transaction after `pg_advisory_xact_lock` |
+| `Lock = FALSE` | check and reservation as separate steps (negative control) |
+
+`Safe` = `OneRunPerKey` (the SRI script starts at most once per key) and
+`NoBlindDuplicate` (two unresolved attempts under different keys are never open
+together unless one was made after verifying the portal).
+
+| Obligation | Tool | Result |
+|---|---|---|
+| Bounded exploration, 3 requests, 3 keys, current code | TLC 1.7.2 | no violation (12,139 states) |
+| Separate check and reservation, 2 requests, 2 keys | TLC | `Safe` violated, as expected: both requests pass the check before either reserves |
+| `Init ⇒ IndInv`, `IndInv ∧ Next ⇒ IndInv′`, `IndInv ⇒ Safe`, current code | Apalache 0.62.4 | **proved** for any nonempty sets of up to four requests and four keys |
+| Separate check and reservation: reachable violation | Apalache | counterexample found, as expected |
+
+The proof covers executions of any length. Equating one transaction under the
+advisory lock with one atomic step, and the code with the model, is established
+by review and by the PostgreSQL test of the lock and the two-key race
+(`scripts/test-session-invoice-issue.sh`), not by mechanical refinement. A
+second document issued deliberately after a settled attempt, or by staff after
+verifying the portal, is allowed by design.

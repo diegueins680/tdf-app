@@ -15644,9 +15644,11 @@
         "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
         "scripts/test-session-invoice-issue.sh"
       ],
-      "formalModels": [],
-      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. On PostgreSQL in CI (scripts/test-session-invoice-issue.sh, a pending example fails the run): the advisory lock runs through the query API, and of two concurrent new keys for the same request exactly one reserves while the other is refused as an unsettled sibling.",
-      "evidence": "formal/system/audit-2026-10-31-phase1.md section 40",
+      "formalModels": [
+        "formal/payments/SessionInvoiceIssue.tla"
+      ],
+      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. On PostgreSQL in CI (scripts/test-session-invoice-issue.sh, a pending example fails the run): the advisory lock runs through the query API, and of two concurrent new keys for the same request exactly one reserves while the other is refused as an unsettled sibling. Formal model formal/payments/SessionInvoiceIssue.tla: Apalache proves OneRunPerKey and NoBlindDuplicate inductively for any nonempty sets of up to four requests and keys; TLC explores three requests and keys; separating the sibling check from the reservation (no lock) violates Safe in both tools (scripts/verify-inductive-proofs.sh).",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md sections 40 and 43; formal/payments/README.md",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "Unit and SQLite reservation tests; no end-to-end run against the SRI portal.",

@@ -457,3 +457,14 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
 - Las bases `named` y `path-named` se recalculan desde el texto de los requisitos en cada comprobación, así que no pueden divergir; `--write` regenera el registro y conserva las entradas revisadas. 8 pruebas unitarias; el workflow formal ejecuta la comprobación y las pruebas.
 - **Número exacto (sustituye la heurística de F-05):** de 513 rutas mutantes compiladas, 17 están atribuidas (14 `named`, 3 `path-named`) y **496 no aparecen en ningún requisito**. La cifra de la fase 1 (101 cubiertas de 508) contaba coincidencias de prefijo, que no establecen que un requisito cubra la ruta.
 - **Límite:** la descripción compilada no incluye el nombre del manejador, así que la atribución sale del texto de los requisitos, no del análisis del manejador. Atribuir no es conformidad. Reducir las 496 rutas sin requisito es trabajo de especificación por dominio (empezando por `/social-events` con 70, `/admin` con 51 y `/music` con 35), no de herramientas; cualquier ruta nueva sin clasificar hace fallar CI.
+
+## 43. F-04 — modelo de la emisión de facturas SRI por sesión (2026-11-06)
+
+- **`PAY-INVOICE-ISSUE-001` deja de estar sin modelo.** `formal/payments/SessionInvoiceIssue.tla` modela peticiones para una sesión y una huella de petición, cada una con su clave y, opcionalmente, verificación del portal. Una petición puede detenerse en cualquier paso.
+  - `OneRunPerKey`: el script SRI se inicia como máximo una vez por clave.
+  - `NoBlindDuplicate`: dos intentos sin resolver con claves distintas nunca están abiertos a la vez salvo que uno se haya hecho tras verificar el portal.
+- **Resultados** (`scripts/verify-inductive-proofs.sh`, ejecutado en el workflow formal):
+  - TLC 1.7.2, 3 peticiones y 3 claves: sin violación (12 139 estados).
+  - Apalache 0.62.4: `Init ⇒ IndInv`, `IndInv ∧ Next ⇒ IndInv′` e `IndInv ⇒ Safe` **demostrados** para cualquier conjunto no vacío de hasta cuatro peticiones y cuatro claves, en ejecuciones de cualquier longitud.
+  - Control negativo: con la comprobación de intentos hermanos y la reserva en pasos separados (sin bloqueo asesor), TLC y Apalache encuentran la carrera revisada en el PR #701.
+- **Límite:** la equivalencia entre una transacción bajo `pg_advisory_xact_lock` y un paso atómico del modelo se establece por revisión y por la prueba de PostgreSQL en CI, no por refinamiento mecánico. Quedan 72 requisitos críticos sin modelo.
