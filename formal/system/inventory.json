@@ -971,6 +971,7 @@
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
       "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
+      "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
       "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
@@ -3133,7 +3134,7 @@
     {
       "id": "SURFACE-a759d468f3ebc8d5",
       "path": "e2e/web/event-discovery-filters.spec.mjs",
-      "sha256": "b806ed541e6515011d3a9dc05215b3622833e9449ef305951fa00c755a2edea3",
+      "sha256": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8609,9 +8610,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-67b757b19f11e973",
+      "path": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
+      "sha256": "7497a1d38c2e6e9a5327bd53405eb76d993fe3c7ea63ca70ed8f0965a29677cd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8817f81a71124ed7",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
-      "sha256": "264576414ab6a66abf0bcd72895b2b3c6637735ff26e42f4274c38c03a75652c",
+      "sha256": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10879,7 +10886,7 @@
     {
       "id": "SURFACE-c4651b845e2e6ad1",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
-      "sha256": "d957de5b4e438dd3ed6c834e1cf0d3e50e37108ab712bc5f4e9bfd9038967700",
+      "sha256": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29404,7 +29411,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2185cb58074c4167206ee84b6770a6d7dde6981d8b4b047328b466724c88c957",
+      "sha256": "19cea4b6fcfba1c4316fadde436b62d65de531c3f0776435b870b4f85624bdd2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
