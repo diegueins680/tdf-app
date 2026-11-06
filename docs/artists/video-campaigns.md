@@ -29,7 +29,7 @@ while retaining draft data if the release must be reversed.
 1. Open **Lanzar video** from the artist editor.
 2. Paste a playable HTTPS video link, or use the existing upload service for a
    video through the existing recoverable storage widget after saving the draft. It keeps the source private, binds recovery to the campaign UUID, and uses current account quota and destination controls; it never raises quotas. A public playable destination still needs separate permission review.
-3. Choose Instagram, TikTok or both and generate an editable 14-day relative
+3. Edit the primary objective (default: TDF registrations and artist follows), choose Instagram, TikTok or both and generate an editable 14-day relative
    calendar (D−2 through D+11). An optional proposed date is stored only as draft
    metadata. There is no scheduler attached to this field.
 4. Add the prepared audiovisual files and copy. Expand advanced options to edit source cuts and manual publication records. Save to continue later.
@@ -126,7 +126,7 @@ Official documentation rechecked on 2026-11-05:
   https://developers.tiktok.com/docs/en/content-sharing-guidelines
 
 No authorized per-artist provider connection was available in this environment.
-Manual export works independently of provider approval; no automatic publisher
+The chosen objective persists through save/resume, import, duplication and export. The dashboard still measures only verified TDF registrations/follows; free-text objectives do not enable extra measurement or actions. Manual export works independently of provider approval; no automatic publisher
 is presented as connected or functional.
 
 The separate `/campaign-platform` service and PR667 already contain provider

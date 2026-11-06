@@ -16209,7 +16209,8 @@
         "Campaign UUID and expected revision",
         "Instagram/TikTok copy and relative calendar",
         "Explicit follow command",
-        "Allowlisted campaign attribution"
+        "Allowlisted campaign attribution",
+        "Editable primary campaign objective, retained on save/resume and template import/export"
       ],
       "state": {
         "initial": "draft",
@@ -17219,8 +17220,8 @@
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
     "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
     "tdf-hq-ui/src/features/campaigns/videoAttribution.ts": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5",
-    "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": "698a69afba57ebc9a3a7bfc3f66574e5e2af9f6f010557a605b582d66267c480",
-    "tdf-hq-ui/src/features/campaigns/videoCampaign.ts": "cd8c70c01da8deeb3fb4a5b4d2c3b432e0c8580582d2fa08bc8ef12ff5456ffe",
+    "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": "a205905fbc33d458c8a52e12e56e7153e1377f8566ff80b6f12ecde983d07fdd",
+    "tdf-hq-ui/src/features/campaigns/videoCampaign.ts": "dd0a90ed7868b22cb383060e1e04f740ed79c09b740e534078ee6801c056339b",
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": "f3a51d5be321a6539137c208f42aeea6146b48d90aef3e1a9ee048c6ebac836c",
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx": "eab1076340f853beda8044ffe0b7fa249d5f714d3a825a561a4120569db32f95",
     "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
@@ -17391,8 +17392,8 @@
     "tdf-hq-ui/src/pages/TrialLessonsPage.tsx": "4eefae7511a9e5a78e7d111e4b9543d3e97caadfc041eeffe98da75ef6178033",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "430333d10523c16fae08cd4c186c67251ae6c9bd7731e60caadd7e9d6f2c4496",
-    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "5cf0c6d7e30e37f3cc351deaefccdb170465a6fcd90d404fde506c5e28511a94",
-    "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "61eea0e682a380d30b437c428d22669ab89c907a2d158640b7f1e52a99b726bb",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "efaadd4b20ebbc709b285fb18e8fc03ba7d4c90d1f45df30511e578a209b8931",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "3350964c767a59e56c5b00c7e90875c48246ce5f9daf7f2cd6ce42e324ec7310",
     "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
     "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
@@ -17802,7 +17803,7 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "3d03e935ad1a83fe73ee42622d55b5eb3d8eb66e7bf858145c3bba74e71042c5",
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
-    "tdf-hq/src/TDF/VideoCampaigns.hs": "08f4cf1218188924e229edcce7135aa949769d421dd259ee808d2d14b37774cf",
+    "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "ba78293ff4d336cf07c6b78ff8ae5fe72497885ca5c5046f4380e396adeafdbc",
@@ -17878,7 +17879,7 @@
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "772dbe703b1b80ffa120ab9a5a4cf6cb97f808eb0e1a837ee710d6cb48dfd4e5",
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "f74652162b14f0fe4516da6cb4aa45806d75cd9eae289935b6fcd37f35f713bb",
-    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "7fea44634ee76cdea4058df77d311cb5468cca280c32cbbba4f5cdef9dfa6a7d",
+    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -43443,7 +43444,7 @@
     {
       "id": "SURFACE-ef8d7dd772a97cb8",
       "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-      "sha256": "698a69afba57ebc9a3a7bfc3f66574e5e2af9f6f010557a605b582d66267c480",
+      "sha256": "a205905fbc33d458c8a52e12e56e7153e1377f8566ff80b6f12ecde983d07fdd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43455,7 +43456,7 @@
     {
       "id": "SURFACE-6552f4e924597742",
       "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
-      "sha256": "cd8c70c01da8deeb3fb4a5b4d2c3b432e0c8580582d2fa08bc8ef12ff5456ffe",
+      "sha256": "dd0a90ed7868b22cb383060e1e04f740ed79c09b740e534078ee6801c056339b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47269,7 +47270,7 @@
     {
       "id": "SURFACE-d3678204a317aed3",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-      "sha256": "5cf0c6d7e30e37f3cc351deaefccdb170465a6fcd90d404fde506c5e28511a94",
+      "sha256": "efaadd4b20ebbc709b285fb18e8fc03ba7d4c90d1f45df30511e578a209b8931",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47281,7 +47282,7 @@
     {
       "id": "SURFACE-1e42b51a3ed57a58",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-      "sha256": "61eea0e682a380d30b437c428d22669ab89c907a2d158640b7f1e52a99b726bb",
+      "sha256": "3350964c767a59e56c5b00c7e90875c48246ce5f9daf7f2cd6ce42e324ec7310",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57079,7 +57080,7 @@
     {
       "id": "SURFACE-53869c6b64312cae",
       "path": "tdf-hq/src/TDF/VideoCampaigns.hs",
-      "sha256": "08f4cf1218188924e229edcce7135aa949769d421dd259ee808d2d14b37774cf",
+      "sha256": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58567,7 +58568,7 @@
     {
       "id": "SURFACE-7881cee644a10784",
       "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
-      "sha256": "7fea44634ee76cdea4058df77d311cb5468cca280c32cbbba4f5cdef9dfa6a7d",
+      "sha256": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65372,7 +65373,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
+      "sourceSha256": "96d6585130ec5b3fe7cb154ffb95a700aa974604523db685511270e6e54f34cd",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65400,7 +65401,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
+      "sourceSha256": "96d6585130ec5b3fe7cb154ffb95a700aa974604523db685511270e6e54f34cd",
       "definition": {
         "states": [
           "absent",
@@ -65430,7 +65431,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
+      "sourceSha256": "96d6585130ec5b3fe7cb154ffb95a700aa974604523db685511270e6e54f34cd",
       "definition": {
         "export": [
           "queued",

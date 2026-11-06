@@ -66,6 +66,18 @@ describe('artist video campaigns', () => {
     const url = new URL(campaignLink(51, 'campaign', doc.pieces[0]!));
     expect(url.searchParams.get('utm_content')).toBe('clip_1-A');
   });
+  it('retains an imported objective and rejects an empty or excessive goal', () => {
+    const doc = emptyVideoCampaign();
+    doc.objective = 'Priorizar nuevos registros en TDF';
+    const imported = importedCampaignSchema.parse({ ...doc, artistId: 51,
+      campaignId: '126f208c-2b38-47c1-952b-6ba633122c87' });
+    expect(imported.objective).toBe(doc.objective);
+    expect(validateVideoCampaign(imported)).toBeNull();
+    doc.objective = ' ';
+    expect(validateVideoCampaign(doc)).toMatch(/objetivo/);
+    doc.objective = 'a'.repeat(201);
+    expect(validateVideoCampaign(doc)).toMatch(/objetivo/);
+  });
 });
 
 it('keeps optional proposed dates inert and rejects impossible calendar dates', () => {

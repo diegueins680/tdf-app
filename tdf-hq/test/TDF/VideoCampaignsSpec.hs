@@ -5,7 +5,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ask, runReaderT)
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
-import Data.Aeson (Value, object, (.=))
+import Data.Aeson (Value(..), object, (.=))
+import qualified Data.Aeson.KeyMap as KM
 import Data.Either (isLeft)
 import qualified Data.Set as Set
 import qualified Data.Text as T
@@ -85,6 +86,15 @@ spec = do
       C.campaignScope (actor [Artist, Artist]) Nothing `shouldSatisfy` isLeft
   describe "video campaign validation" $ do
     it "accepts incomplete draft preparation" $ C.validateDocument draft `shouldBe` Right ()
+    it "preserves legacy objectives while validating a chosen campaign goal" $ do
+      let withGoal goal = case draft of
+            Object fields -> Object (KM.insert "objective" goal fields)
+            _ -> error "Expected object draft fixture"
+      C.validateDocument (withGoal (String "Priorizar nuevos seguidores en TDF")) `shouldBe` Right ()
+      C.validateDocument (withGoal (String " ")) `shouldSatisfy` isLeft
+      C.validateDocument (withGoal (String (T.replicate 201 "a"))) `shouldSatisfy` isLeft
+      C.validateDocument (withGoal (Bool True)) `shouldSatisfy` isLeft
+      C.validateDocument (withGoal Null) `shouldSatisfy` isLeft
     it "rejects missing document fields" $
       C.validateDocument (object ["status" .= ("published" :: String)]) `shouldSatisfy` isLeft
     it "admits only piece IDs compatible with attribution and login return parameters" $ do

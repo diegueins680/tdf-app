@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T05:12:54.964Z",
+  "generatedAt": "2026-11-06T05:39:37.589Z",
   "repositoryRoot": ".",
   "filesScanned": 2613,
   "candidateCount": 1402,
@@ -38361,7 +38361,7 @@
       "domain": "product-navigation",
       "kind": "array",
       "name": "channels",
-      "line": 38,
+      "line": 39,
       "values": [
         "instagram",
         "tiktok"
@@ -38369,7 +38369,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        38
+        39
       ],
       "consumerCount": 79,
       "backendConsumers": [
@@ -75530,7 +75530,7 @@
       "domain": "campaigns-promotion",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 197,
+      "line": 200,
       "values": [
         "draft",
         "prepared",
@@ -75540,7 +75540,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        197
+        200
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -84038,7 +84038,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 349,
+      "consumerCount": 350,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -84358,7 +84358,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 349,
+      "consumerCount": 350,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",

@@ -16208,7 +16208,8 @@
         "Campaign UUID and expected revision",
         "Instagram/TikTok copy and relative calendar",
         "Explicit follow command",
-        "Allowlisted campaign attribution"
+        "Allowlisted campaign attribution",
+        "Editable primary campaign objective, retained on save/resume and template import/export"
       ],
       "state": {
         "initial": "draft",

@@ -15,6 +15,7 @@ import Control.Monad (unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Data.Aeson
+import qualified Data.Aeson.KeyMap as KM
 import Data.Aeson.Types (Parser, parseEither)
 import qualified Data.ByteString.Lazy as BL
 import Data.Char (isControl, isAscii, isAlphaNum)
@@ -113,6 +114,9 @@ validateDocument value
   where
     parseDocument = withObject "CampaignDocument" $ \o -> do
       title <- o .: "title" :: Parser Text
+      objective <- (if KM.member "objective" o then Just <$> o .: "objective" else pure Nothing) :: Parser (Maybe Text)
+      unless (maybe True (\goal -> not (T.null (T.strip goal)) && T.length goal <= 200) objective)
+        (fail "Invalid objective")
       status <- o .: "status" :: Parser Text
       video <- o .: "videoUrl" :: Parser Text
       cover <- o .: "coverUrl" :: Parser Text

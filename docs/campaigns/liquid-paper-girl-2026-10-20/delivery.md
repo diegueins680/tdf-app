@@ -1,4 +1,4 @@
-# Estado de entrega · 5 de noviembre de 2026
+# Estado de preparación · 6 de noviembre de 2026, antes de integración
 
 La campaña permanece en borrador, con USD 0 de pauta y sin publicaciones, programaciones externas, mensajes o invitaciones. El paquete importable es una propuesta revisable, no una campaña ya guardada en producción.
 
@@ -46,3 +46,7 @@ La siguiente revisión puede aprobar textos y calendario, pero no debe considera
 Preparar una red nueva añade únicamente sus piezas y conserva las ediciones de las otras redes, incluso al quitar y volver a seleccionar un canal. La generación repetida no duplica piezas y evita colisiones con identificadores importados. Importación, validación de documentos y backend exigen identificadores ASCII de letras, números, guiones o guiones bajos, compatibles con la atribución y el retorno de autenticación. Ambos casos tienen pruebas de regresión.
 
 CI detectó y se corrigieron dos requisitos de verificación: checkout completo para consultar la procedencia histórica de migraciones, y revisión explícita de las tres adiciones del registro Cabal. Las pruebas de procedencia se conservan; los predicados verificados no cambian. La ejecución formal fresca pasa y su decisión de release permanece BLOCKED.
+
+El objetivo principal es editable y persistente, con registros y seguidores del artista en TDF como valor inicial. El plan importado conserva su objetivo y el editor lo muestra al revisar. Los objetivos libres no habilitan métricas, gasto o acciones adicionales. La validación final enfocada cubre 47 pruebas web; el backend conserva la compatibilidad de documentos anteriores sin ese campo.
+
+Este documento conserva la preparación anterior al merge: consultar el PR para los checks y el estado final. La revisión del objetivo requirió repetir una compilación que coincidió con una edición de fuente; aquel fallo de `null` queda conservado y no se promueve a prueba aprobada. La calificación final exige la repetición con fuente congelada y CI del commit publicado.

@@ -166,6 +166,9 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     </>}
     {step === 1 && <>
       <Typography variant="h6">Conseguir registros y seguidores en TDF</Typography>
+      <TextField label="Objetivo principal" value={doc.objective ?? 'Registros y seguidores del artista en TDF'}
+        onChange={(e) => patch({ objective: e.target.value })}
+        helperText="Puedes priorizar registros o seguidores. El panel mide estas dos acciones dentro de TDF." />
       <Typography>Campaña orgánica. D0 es el día del estreno que elijas después de revisar las piezas.</Typography>
       {(['instagram', 'tiktok'] as SocialChannel[]).map((c) => <FormControlLabel key={c} label={c === 'instagram' ? 'Instagram' : 'TikTok'}
         control={<Checkbox checked={doc.channels.includes(c)} onChange={(_e, checked) => patch({
@@ -209,6 +212,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     </>}
     {step === 3 && <>
       <Typography variant="h6">{doc.title}</Typography>
+      <Typography>Objetivo: {doc.objective ?? 'Registros y seguidores del artista en TDF'}</Typography>
       <Typography>{artistName} · {doc.pieces.length} piezas · 14 días · USD 0 de pauta</Typography>
       <Typography sx={{ overflowWrap: 'anywhere' }}>{doc.videoUrl || 'Falta el enlace del video completo.'}</Typography>
       <SessionVideoPreview url={doc.videoUrl} title={doc.title} />

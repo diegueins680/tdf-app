@@ -14,6 +14,7 @@ export interface VideoPiece {
 }
 export interface VideoCampaignDocument {
   title: string;
+  objective?: string;
   videoUrl: string;
   coverUrl: string;
   durationSeconds: number;
@@ -34,7 +35,7 @@ export interface VideoCampaign {
   updatedAt: string;
 }
 export function emptyVideoCampaign(): VideoCampaignDocument {
-  return { title: 'Mi live session', videoUrl: '', coverUrl: '', durationSeconds: 0,
+  return { title: 'Mi live session', objective: 'Registros y seguidores del artista en TDF', videoUrl: '', coverUrl: '', durationSeconds: 0,
     status: 'draft', channels: ['instagram', 'tiktok'], pieces: [] };
 }
 
@@ -42,6 +43,7 @@ export const importedCampaignSchema = z.object({
   artistId: z.number().int().positive().safe(),
   campaignId: z.string().uuid(),
   title: z.string().min(1).max(200), videoUrl: z.string(), coverUrl: z.string(),
+  objective: z.string().trim().min(1).max(200).optional(),
   durationSeconds: z.number().finite().min(0).max(43200), status: z.enum(['draft', 'ready']),
   proposedLaunchDate: z.string().max(10).optional(), credits: z.string().max(12000).optional(),
   rightsConfirmed: z.boolean().optional(), technicalReviewed: z.boolean().optional(),
@@ -108,6 +110,8 @@ export function validateVideoCampaign(doc: VideoCampaignDocument): string | null
     || Number.isNaN(Date.parse(doc.proposedLaunchDate)) || new Date(doc.proposedLaunchDate).toISOString().slice(0, 10) !== doc.proposedLaunchDate)) return 'Revisa la fecha propuesta.';
   if ((doc.credits?.length ?? 0) > 12000) return 'Los créditos admiten hasta 12000 caracteres.';
   if (!doc.title.trim() || doc.title.length > 200) return 'Escribe un título de hasta 200 caracteres.';
+  if (doc.objective !== undefined && (typeof doc.objective !== 'string' || !doc.objective.trim() || doc.objective.length > 200))
+    return 'Escribe un objetivo de hasta 200 caracteres.';
   if (!safeVideoUrl(doc.videoUrl) || !safeVideoUrl(doc.coverUrl)) return 'Usa enlaces HTTPS válidos para video y portada.';
   if (!Number.isFinite(doc.durationSeconds) || doc.durationSeconds < 0 || doc.durationSeconds > 43200) return 'Revisa la duración del video.';
   if (!doc.channels.length) return 'Selecciona al menos una red social.';

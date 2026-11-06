@@ -41,6 +41,8 @@ it('saves a real API draft and resumes it after leaving the editor', async () =>
   show();
   fireEvent.click(await screen.findByRole('button', { name: 'Crear campaña' }));
   fireEvent.change(screen.getByLabelText('Título de la sesión'), { target: { value: 'Liquid Paper Girl · Live session' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  fireEvent.change(screen.getByLabelText('Objetivo principal'), { target: { value: 'Priorizar nuevos seguidores en TDF' } });
   fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
   expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
   expect(save).toHaveBeenCalledTimes(1);
@@ -49,6 +51,8 @@ it('saves a real API draft and resumes it after leaving the editor', async () =>
   fireEvent.click(screen.getByRole('button', { name: 'Volver a campañas' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Continuar' }));
   expect(screen.getByLabelText('Título de la sesión')).toHaveValue('Liquid Paper Girl · Live session');
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  expect(screen.getByLabelText('Objetivo principal')).toHaveValue('Priorizar nuevos seguidores en TDF');
 });
 
 it('preserves the draft and reports a failed save so it can be retried', async () => {

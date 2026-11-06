@@ -9016,13 +9016,13 @@
     {
       "id": "SURFACE-ef8d7dd772a97cb8",
       "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-      "sha256": "698a69afba57ebc9a3a7bfc3f66574e5e2af9f6f010557a605b582d66267c480",
+      "sha256": "a205905fbc33d458c8a52e12e56e7153e1377f8566ff80b6f12ecde983d07fdd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6552f4e924597742",
       "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
-      "sha256": "cd8c70c01da8deeb3fb4a5b4d2c3b432e0c8580582d2fa08bc8ef12ff5456ffe",
+      "sha256": "dd0a90ed7868b22cb383060e1e04f740ed79c09b740e534078ee6801c056339b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11044,13 +11044,13 @@
     {
       "id": "SURFACE-d3678204a317aed3",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-      "sha256": "5cf0c6d7e30e37f3cc351deaefccdb170465a6fcd90d404fde506c5e28511a94",
+      "sha256": "efaadd4b20ebbc709b285fb18e8fc03ba7d4c90d1f45df30511e578a209b8931",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1e42b51a3ed57a58",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-      "sha256": "61eea0e682a380d30b437c428d22669ab89c907a2d158640b7f1e52a99b726bb",
+      "sha256": "3350964c767a59e56c5b00c7e90875c48246ce5f9daf7f2cd6ce42e324ec7310",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16816,7 +16816,7 @@
     {
       "id": "SURFACE-53869c6b64312cae",
       "path": "tdf-hq/src/TDF/VideoCampaigns.hs",
-      "sha256": "08f4cf1218188924e229edcce7135aa949769d421dd259ee808d2d14b37774cf",
+      "sha256": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17464,7 +17464,7 @@
     {
       "id": "SURFACE-7881cee644a10784",
       "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
-      "sha256": "7fea44634ee76cdea4058df77d311cb5468cca280c32cbbba4f5cdef9dfa6a7d",
+      "sha256": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20990,7 +20990,7 @@
     },
     {
       "path": "docs/artists/video-campaigns.md",
-      "sha256": "36d89374db41b5511bf76398ab729671eff46eeeae150308603b2aaf82ce7a05",
+      "sha256": "55c4e2ae3e287bfd9b57db524e85365a81b3441055a0113e30e2bce4c27cfa4d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29411,7 +29411,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
+      "sha256": "96d6585130ec5b3fe7cb154ffb95a700aa974604523db685511270e6e54f34cd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

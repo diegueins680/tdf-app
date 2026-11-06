@@ -120,5 +120,50 @@
       "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "7fea44634ee76cdea4058df77d311cb5468cca280c32cbbba4f5cdef9dfa6a7d"
     },
     "scope": "Local working source hashes; fresh hosted CI remains required on the committed follow-up."
+  },
+  "editableObjective": {
+    "webTests": 47,
+    "browserTests": 18,
+    "checks": [
+      {
+        "name": "focused-web",
+        "log": "objective-final-web.log",
+        "sha256": "43710bd4868899e2e98f227a138c3a2a06e2c4433cd646f28ec5126ae8383bab",
+        "result": "PASS"
+      },
+      {
+        "name": "web-build",
+        "log": "objective-final-build.log",
+        "sha256": "d68aa7926698d81ede8cca6ddb2bd660c6035a00f11f49ae13fe8d7bb62819d4",
+        "result": "PASS"
+      },
+      {
+        "name": "web-lint",
+        "log": "objective-final-lint.log",
+        "sha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+        "result": "PASS"
+      },
+      {
+        "name": "browser",
+        "log": "objective-browser.log",
+        "sha256": "6e1caf49e74f79c7384bf8226d3769660057ba50104bb52f8bae2e5bc709e58f",
+        "result": "PASS"
+      },
+      {
+        "name": "catalog",
+        "log": "objective-catalog.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "result": "PASS"
+      }
+    ],
+    "backendQualification": "Frozen-source retry and fresh committed-head CI required. Prior mixed-build null-goal failure is preserved and is not counted as passing.",
+    "sourceSha256": {
+      "tdf-hq-ui/src/features/campaigns/videoCampaign.ts": "dd0a90ed7868b22cb383060e1e04f740ed79c09b740e534078ee6801c056339b",
+      "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": "a205905fbc33d458c8a52e12e56e7153e1377f8566ff80b6f12ecde983d07fdd",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "3350964c767a59e56c5b00c7e90875c48246ce5f9daf7f2cd6ce42e324ec7310",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "efaadd4b20ebbc709b285fb18e8fc03ba7d4c90d1f45df30511e578a209b8931",
+      "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
+      "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046"
+    }
   }
 }
