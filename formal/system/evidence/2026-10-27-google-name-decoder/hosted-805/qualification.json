@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-27T04:24:24.247863+00:00",
+  "requirementId": "AUTH-ENTRY-002",
+  "status": "TESTED",
+  "actualCheckout": "80578a61d3c1086039f3ff9e103031c56b0515fe",
+  "workflowHead": "d56b337bec10299484aba457a6874cee22f970db",
+  "currentCandidateAtRecording": "985be1ca49908260d57ca608e1faf278115ed10c",
+  "identicalTree": "3734b78af47d20f286d54a0a3c3e7de49b9c6496",
+  "actualCheckoutRetainedInBranchAncestry": true,
+  "workflowRun": 40444046735,
+  "backendJob": 121991132659,
+  "overallWorkflowConclusion": "cancelled",
+  "overallBackendJobConclusion": "cancelled",
+  "completedBuildTestStep": {
+    "number": 10,
+    "name": "Build and test backend once",
+    "conclusion": "success",
+    "started_at": "2026-10-27T03:30:14Z",
+    "completed_at": "2026-10-27T03:43:02Z"
+  },
+  "fullModuleRegression": {
+    "examples": 15,
+    "failures": 0,
+    "pending": 0,
+    "imports": "real TDF.ServerAuth; explicit --fail-on=empty selection"
+  },
+  "nativeSourceProbe": {
+    "examples": 19,
+    "failures": 0,
+    "pending": 0,
+    "restoredFallbackExamples": 19,
+    "restoredFallbackFailures": 8,
+    "sources": {
+      "tdf-hq/src/TDF/ServerAuth.hs": "48686841bfe8bb363c2652390574e0de1ae99807e344b9f2f9623ac249158613",
+      "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
+      "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
+      "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
+      "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
+      "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+      "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+      "tdf-hq/tdf-hq.cabal": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a"
+    },
+    "tools": {
+      "python": "3.11.2",
+      "stack": "3.3.1",
+      "ghc": "9.10.3",
+      "hspec": "2.11.17",
+      "aeson": "2.2.5.0",
+      "text": "2.1.3",
+      "time": "1.12.2"
+    }
+  },
+  "aggregateHspec": {
+    "examples": 4058,
+    "failures": 0,
+    "pending": 21,
+    "scope": "Separate external runners are not counted as executed by pending aggregate examples"
+  },
+  "priorAssuranceInputsStillMatch": 1363,
+  "priorAssuranceInputCheck": "Current unchanged candidate files, and exact pinned Mobile Git blobs; no new solver execution or full-requirement proof is claimed.",
+  "backendInputsBound": 451,
+  "personaFailure": {
+    "job": 121991132632,
+    "artifact": 12707933949,
+    "originalArtifactBytes": 70100372,
+    "originalArtifactSha256": "4a6673c0b46fcf431981a805a3af377a7508a4b3129f3ef30cb9247961a3d2ea",
+    "passed": 593,
+    "failed": 1,
+    "skipped": 22,
+    "node": "22.23.3",
+    "playwright": "1.59.1",
+    "webkit": "26.4",
+    "test": "marketplace-cart.spec.mjs:116 webkit-iphone",
+    "timing": {
+      "failedActionStart": 711865.803,
+      "timeoutTeardownStart": 711937.429,
+      "millisecondsUntilTimeoutTeardown": 71.626,
+      "originalTestTimeoutMs": 30000,
+      "failure": "Entire-test deadline expired during last cart close action",
+      "interpretation": "Cumulative deadline exhaustion is observed; persistent product malfunction and underlying timing variance are not established/resolved by this receipt."
+    }
+  },
+  "completeRequirementProofs": 0,
+  "limitations": [
+    "Successful build/test STEP is distinct from overall cancelled workflow/job.",
+    "Full module validation uses synthetic JSON and pure selector calls, not Google HTTP or account persistence.",
+    "No complete implementation/refinement, arbitrary schedules, provider truthfulness, historical-name remediation or deployment correspondence is proved.",
+    "Current candidate CI and canonical FIFO admission remain separate required merge gates."
+  ],
+  "artifacts": {
+    "README.md": "46983e2f5a087c97a5372537a97282ad9d673a93bd756b08a9f08d097d4ed019",
+    "backend-inputs.json": "523329aecc5004bf87a6531d7c5962ba0aa2e096a8dd52d9f54c47e3049fe12b",
+    "backend-job.json": "3ce6362ff83dc05b501a61d47d63d89ad6e8cc5a383df717bcc512f4dd28563c",
+    "backend-job.log.gz": "aae4fc7bd421e21f731451f8b675d827be2ad0982f9344487b2c95b10f4e24ed",
+    "cart-timeout-context.md.gz": "dc91eaa5883edfc06ebfffc936ff24e94cbc6dbf0b1c6f27f45c504772559f3c",
+    "cart-timeout-timing.json": "20bda5d498b5f3356428187ce78ea9d18a4757f684fc16080ee68f33c41e83a2",
+    "cart-timeout-trace.zip": "3c38082c20215fbfb1530a10ee34baadf6bd2dd9d0811d2a499da2d612b165f7",
+    "cart-timeout.png": "214b15e48e19996c20059903a49fbe05168b2d5bcc894508bf336dca913afbf2",
+    "full-module-group.log": "e677066618c7feab13c2feb013fd761340cacfb096a0c36fe75f99865784566d",
+    "native.json": "35c053aaa656751f7c31a9ef2f4a2990d5042e1478182207668ab2de3501f268",
+    "persona-success.log.gz": "764b62a8ad742de9e95e52c020b48d4010e9ca0617702c4ba0ccc9285e8ba414"
+  },
+  "laterPersonaSuccess": {
+    "workflowRun": 40446969997,
+    "job": 122001043138,
+    "actualCheckout": "f2723ec0867d8f3a4a6cf003f94db16c26efcd29",
+    "candidateHead": "985be1ca49908260d57ca608e1faf278115ed10c",
+    "identicalTree": "3734b78af47d20f286d54a0a3c3e7de49b9c6496",
+    "fullInvocation": {
+      "passed": 594,
+      "failed": 0,
+      "skipped": 22
+    },
+    "additionalInvocations": [
+      "10",
+      "25"
+    ],
+    "underlyingTimingVarianceResolved": false,
+    "scope": "A second execution with identical source passed; no test, deadline, action, retry or implementation was changed. Original failure is retained."
+  }
+}
