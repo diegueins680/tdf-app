@@ -71,5 +71,54 @@
     "No native/store release, physical Android or authenticated production campaign test.",
     "Campaign plans are importable files, not already saved production records.",
     "Provider integration remains manual; no social account or dispatch was activated."
-  ]
+  ],
+  "reviewFollowup": {
+    "checks": [
+      {
+        "name": "web-regressions",
+        "log": "review-regression-web.log",
+        "sha256": "3ceab81989a510051c2954f6b8c5ad2c47e5cdf44eb378102f7fc6317405caec",
+        "result": "4 suites / 46 tests; PASS"
+      },
+      {
+        "name": "backend-regressions",
+        "log": "review-regression-stack.log",
+        "sha256": "6c6ddc4d2f72349d3bfea1c72a86ca89635de64049304b69792a6547ba17a9e4",
+        "result": "4225 examples / 0 failures / 23 pending; PASS"
+      },
+      {
+        "name": "browser-regressions",
+        "log": "review-regression-browser.log",
+        "sha256": "9c25de5a91494bcf3279769707e6cf33fa1ec2fee93146146098ab88ab4a9798",
+        "result": "18 cases; PASS"
+      },
+      {
+        "name": "build-regressions",
+        "log": "review-regression-build.log",
+        "sha256": "c4acd616706e29a947bc3313453e5d5fda4e00e33762ef42b8e0b1a2666cf143",
+        "result": "PASS"
+      },
+      {
+        "name": "lint-regressions",
+        "log": "review-regression-lint.log",
+        "sha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+        "result": "PASS"
+      },
+      {
+        "name": "catalog-regressions",
+        "log": "review-regression-catalog.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "result": "1402 reviewed; no candidate ID changes; PASS"
+      }
+    ],
+    "sourceSha256": {
+      "tdf-hq-ui/src/features/campaigns/videoCampaign.ts": "cd8c70c01da8deeb3fb4a5b4d2c3b432e0c8580582d2fa08bc8ef12ff5456ffe",
+      "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": "698a69afba57ebc9a3a7bfc3f66574e5e2af9f6f010557a605b582d66267c480",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "61eea0e682a380d30b437c428d22669ab89c907a2d158640b7f1e52a99b726bb",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "5cf0c6d7e30e37f3cc351deaefccdb170465a6fcd90d404fde506c5e28511a94",
+      "tdf-hq/src/TDF/VideoCampaigns.hs": "08f4cf1218188924e229edcce7135aa949769d421dd259ee808d2d14b37774cf",
+      "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "7fea44634ee76cdea4058df77d311cb5468cca280c32cbbba4f5cdef9dfa6a7d"
+    },
+    "scope": "Local working source hashes; fresh hosted CI remains required on the committed follow-up."
+  }
 }

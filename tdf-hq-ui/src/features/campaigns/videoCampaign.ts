@@ -47,7 +47,7 @@ export const importedCampaignSchema = z.object({
   rightsConfirmed: z.boolean().optional(), technicalReviewed: z.boolean().optional(),
   channels: z.array(z.enum(['instagram', 'tiktok'])).min(1).max(2),
   pieces: z.array(z.object({
-    id: z.string().min(1).max(100), channel: z.enum(['instagram', 'tiktok']), day: z.number().int().min(-3).max(13),
+    id: z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/), channel: z.enum(['instagram', 'tiktok']), day: z.number().int().min(-3).max(13),
     format: z.string().max(50), caption: z.string().max(2200), assetUrl: z.string(),
     sourceStart: z.number().finite().min(0), sourceEnd: z.number().finite().min(0),
     status: z.enum(['draft', 'prepared', 'exported', 'published_manual']), publishedUrl: z.string(),
@@ -90,6 +90,19 @@ export function safeVideoUrl(value: string): boolean {
   } catch { return false; }
 }
 
+export function prepareMissingCampaignPieces(artist: string, channels: SocialChannel[], pieces: VideoPiece[]): VideoPiece[] {
+  const missing = channels.filter((channel) => !pieces.some((p) => p.channel === channel));
+  const used = new Set(pieces.map((p) => p.id));
+  const added = createCampaignPieces(artist, missing).map((piece) => {
+    let id = piece.id;
+    let suffix = 2;
+    while (used.has(id)) id = `${piece.id}-${suffix++}`;
+    used.add(id);
+    return { ...piece, id };
+  });
+  return [...pieces, ...added];
+}
+
 export function validateVideoCampaign(doc: VideoCampaignDocument): string | null {
   if (doc.proposedLaunchDate && (!/^\d{4}-\d{2}-\d{2}$/.test(doc.proposedLaunchDate)
     || Number.isNaN(Date.parse(doc.proposedLaunchDate)) || new Date(doc.proposedLaunchDate).toISOString().slice(0, 10) !== doc.proposedLaunchDate)) return 'Revisa la fecha propuesta.';
@@ -98,6 +111,8 @@ export function validateVideoCampaign(doc: VideoCampaignDocument): string | null
   if (!safeVideoUrl(doc.videoUrl) || !safeVideoUrl(doc.coverUrl)) return 'Usa enlaces HTTPS válidos para video y portada.';
   if (!Number.isFinite(doc.durationSeconds) || doc.durationSeconds < 0 || doc.durationSeconds > 43200) return 'Revisa la duración del video.';
   if (!doc.channels.length) return 'Selecciona al menos una red social.';
+  if (doc.pieces.some((p) => !/^[a-zA-Z0-9_-]{1,100}$/.test(p.id)))
+    return 'El identificador de cada pieza debe usar letras sin acentos, números, guiones o guiones bajos (hasta 100 caracteres).';
   if (new Set(doc.channels).size !== doc.channels.length || new Set(doc.pieces.map((p) => p.id)).size !== doc.pieces.length)
     return 'Hay redes o piezas duplicadas.';
   if (doc.pieces.some((p) => !doc.channels.includes(p.channel))) return 'Cada pieza debe pertenecer a una red seleccionada.';

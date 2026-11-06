@@ -1,4 +1,4 @@
-import { campaignLink, createCampaignPieces, emptyVideoCampaign, importedCampaignSchema, safeVideoUrl, validateVideoCampaign } from './videoCampaign';
+import { campaignLink, createCampaignPieces, emptyVideoCampaign, importedCampaignSchema, prepareMissingCampaignPieces, safeVideoUrl, validateVideoCampaign } from './videoCampaign';
 
 describe('artist video campaigns', () => {
   it('builds inert organic plans with attribution per channel and piece', () => {
@@ -43,6 +43,28 @@ describe('artist video campaigns', () => {
     expect(importedCampaignSchema.safeParse({ ...emptyVideoCampaign(), artistId: 51 }).success).toBe(false);
     expect(importedCampaignSchema.safeParse({ ...emptyVideoCampaign(), artistId: 51,
       campaignId: '126f208c-2b38-47c1-952b-6ba633122c87' }).success).toBe(true);
+  });
+  it('adds only missing channels, retains edits and avoids imported ID collisions and repeated generation', () => {
+    const existing = createCampaignPieces('Artist', ['instagram']);
+    existing[0]!.id = 'tiktok-1';
+    existing[0]!.caption = 'Mi texto revisado';
+    const prepared = prepareMissingCampaignPieces('Artist', ['instagram', 'tiktok'], existing);
+    expect(prepared).toHaveLength(14);
+    expect(prepared.slice(0, 7)).toEqual(existing);
+    expect(new Set(prepared.map((p) => p.id)).size).toBe(14);
+    expect(prepareMissingCampaignPieces('Artist', ['instagram', 'tiktok'], prepared)).toEqual(prepared);
+  });
+  it('requires IDs that survive attribution and the authentication return path', () => {
+    const doc = emptyVideoCampaign();
+    doc.pieces = createCampaignPieces('Artist', ['instagram']);
+    doc.pieces[0]!.id = 'sesión 1';
+    expect(validateVideoCampaign(doc)).toMatch(/identificador/);
+    expect(importedCampaignSchema.safeParse({ ...doc, artistId: 51,
+      campaignId: '126f208c-2b38-47c1-952b-6ba633122c87' }).success).toBe(false);
+    doc.pieces[0]!.id = 'clip_1-A';
+    expect(validateVideoCampaign(doc)).toBeNull();
+    const url = new URL(campaignLink(51, 'campaign', doc.pieces[0]!));
+    expect(url.searchParams.get('utm_content')).toBe('clip_1-A');
   });
 });
 

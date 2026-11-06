@@ -87,6 +87,20 @@ spec = do
     it "accepts incomplete draft preparation" $ C.validateDocument draft `shouldBe` Right ()
     it "rejects missing document fields" $
       C.validateDocument (object ["status" .= ("published" :: String)]) `shouldSatisfy` isLeft
+    it "admits only piece IDs compatible with attribution and login return parameters" $ do
+      let payload key = object
+            [ "title" .= ("Session" :: String), "status" .= ("draft" :: String)
+            , "videoUrl" .= ("" :: String), "coverUrl" .= ("" :: String)
+            , "durationSeconds" .= (610 :: Int), "channels" .= ["tiktok" :: String]
+            , "pieces" .= [object
+                [ "id" .= key, "channel" .= ("tiktok" :: String)
+                , "day" .= (0 :: Int), "caption" .= ("Ver sesion" :: String)
+                , "assetUrl" .= ("" :: String), "status" .= ("draft" :: String)
+                , "publishedUrl" .= ("" :: String)
+                , "sourceStart" .= (0 :: Int), "sourceEnd" .= (30 :: Int) ] ] ]
+      C.validateDocument (payload ("clip_1-A" :: String)) `shouldBe` Right ()
+      C.validateDocument (payload ("clip 1" :: String)) `shouldSatisfy` isLeft
+      C.validateDocument (payload ("sesión-1" :: String)) `shouldSatisfy` isLeft
     it "does not admit external publishing or incomplete review-ready campaigns" $ do
       let payload status = object
             [ "title" .= ("Session" :: String), "status" .= status

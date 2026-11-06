@@ -23,8 +23,8 @@ El recorrido público conserva la atribución al volver del registro/inicio de s
 
 ## Validación y límites
 
-- Web completa: 354 suites y 4.001 pruebas aprobadas con dependencias del lockfile.
-- Backend completo: 4.224 casos, cero fallos, 23 pendientes explícitos en la última ejecución Stack/GHC9.10.3. La prueba específica del permiso de colaboradores sí pasó contra PostgreSQL16; aquella ejecución tuvo 22 pendientes.
+- Web completa anterior a las dos correcciones de revisión: 354 suites y 4.001 pruebas aprobadas con dependencias del lockfile. Después de corregir la generación de redes faltantes y validar identificadores compatibles con atribución: 46 pruebas enfocadas aprobadas, build y lint aprobados.
+- Backend completo tras la revisión: 4.225 casos, cero fallos y 23 pendientes explícitos con Stack/GHC9.10.3. La prueba específica del permiso de colaboradores sí pasó contra PostgreSQL16; aquella ejecución tuvo 22 pendientes.
 - Navegador: 18 casos aprobados en Chrome de escritorio y emulación Android de 360 px, con APIs sintéticas. No equivale a dispositivo Android físico, cuentas sociales conectadas o escrituras en producción.
 - PostgreSQL16 aislado: persistencia entre conexiones, dos espacios de artista, migración repetible, escrituras CAS concurrentes y deduplicación de conversiones. Bases propias eliminadas y clúster propio detenido.
 - Política finita: 16.384 combinaciones y 13 controles que retiran una guarda. Es evidencia acotada, no prueba universal de SQL, autenticación o concurrencia.
@@ -34,9 +34,15 @@ La máquina agotó el disco durante una copia de compilación. Se liberaron solo
 
 ## Pendientes que impiden completar el lanzamiento
 
-1. **Video ausente.** Falta una ruta o descarga accesible del adjunto de unos 10:10. Las medidas históricas 1080p/610,08 s y seis intervalos no son una inspección actual. No hay MP4, portadas o Stories entregados en esta ejecución; faltan escucha completa, selección musical/visual, subtítulos si hay voz y render final. No sustituir por el liveset histórico de 47:05.
+1. **Video ausente.** Falta una ruta o descarga accesible del adjunto de unos 10:10. Las medidas históricas 1080p/610,08 s y seis intervalos no son una inspección actual. Las búsquedas conectadas por nombre exacto de archivo, artista y «Liquid» no devolvieron archivos. El volumen Videos rechaza la lectura incluso fuera del sandbox. No hay MP4, portadas o Stories entregados en esta ejecución; faltan escucha completa, selección musical/visual, subtítulos si hay voz y render final. No sustituir por el liveset histórico de 47:05.
 2. **Identidad y derechos.** Faltan enlaces oficiales cruzados, imagen autorizada, ubicación, géneros, fecha y créditos. Permanecen sin inventar; no se conceden derechos por coincidencia de nombre.
 3. **Proveedores.** Faltan conexión autorizada de cada artista, permisos y aprobación/auditoría del producto correspondiente. La documentación oficial y el recorrido manual están en la guía. No se conectaron ni desconectaron cuentas ajenas.
 4. **Integración protegida y despliegue.** El PR principal necesita sus controles y revisión actuales. `ops/hetzner/README.md` declara pendiente el ejecutor de releases: la preparación informa `executionAllowed: false` y la vía directa está retirada. No se elude ese bloqueo mediante SSH, Compose, Caddy o flags. Merge, despliegue y activación son hitos distintos; no hay evidencia de despliegue de esta función.
 
 La siguiente revisión puede aprobar textos y calendario, pero no debe considerar publicables los archivos ausentes. Ninguna migración de esta entrega siembra campañas ni activa envíos.
+
+## Correcciones de revisión
+
+Preparar una red nueva añade únicamente sus piezas y conserva las ediciones de las otras redes, incluso al quitar y volver a seleccionar un canal. La generación repetida no duplica piezas y evita colisiones con identificadores importados. Importación, validación de documentos y backend exigen identificadores ASCII de letras, números, guiones o guiones bajos, compatibles con la atribución y el retorno de autenticación. Ambos casos tienen pruebas de regresión.
+
+CI detectó y se corrigieron dos requisitos de verificación: checkout completo para consultar la procedencia histórica de migraciones, y revisión explícita de las tres adiciones del registro Cabal. Las pruebas de procedencia se conservan; los predicados verificados no cambian. La ejecución formal fresca pasa y su decisión de release permanece BLOCKED.

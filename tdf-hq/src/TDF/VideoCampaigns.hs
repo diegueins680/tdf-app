@@ -17,7 +17,7 @@ import Control.Monad.Reader (ReaderT, asks)
 import Data.Aeson
 import Data.Aeson.Types (Parser, parseEither)
 import qualified Data.ByteString.Lazy as BL
-import Data.Char (isControl)
+import Data.Char (isControl, isAscii, isAlphaNum)
 import Data.Int (Int64)
 import Data.List (nub)
 import Data.Maybe (fromMaybe, isJust)
@@ -143,6 +143,7 @@ validateDocument value
       start <- o .: "sourceStart" :: Parser Double
       end <- o .: "sourceEnd" :: Parser Double
       unless (T.length key > 0 && T.length key <= 100 && channel `elem` channels
+        && T.all (\c -> isAscii c && (isAlphaNum c || c == '-' || c == '_')) key
         && day >= -3 && day <= 13 && T.length caption <= 2200
         && safeMediaUrl asset && safeMediaUrl published
         && state `elem` ["draft", "prepared", "exported", "published_manual"]

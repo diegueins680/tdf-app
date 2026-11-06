@@ -10,7 +10,7 @@ import { VideoCampaigns } from '../api/videoCampaigns';
 import { getActiveSession, useSession, type SessionUser } from '../session/SessionContext';
 import { getAuthSessionEpoch } from '../session/authEvents';
 import { hasStrictAdminAccess } from '../utils/accessControl';
-import { campaignLink, createCampaignPieces, emptyVideoCampaign, importedCampaignSchema, safeVideoUrl, validateVideoCampaign,
+import { campaignLink, prepareMissingCampaignPieces, emptyVideoCampaign, importedCampaignSchema, safeVideoUrl, validateVideoCampaign,
   type SocialChannel, type VideoCampaign, type VideoCampaignDocument, type VideoPiece } from '../features/campaigns/videoCampaign';
 
 const steps = ['Video', 'Objetivo y redes', 'Piezas y calendario', 'Revisión'];
@@ -176,7 +176,8 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
         slotProps={{ inputLabel: { shrink: true } }} helperText="Solo referencia del borrador. No programa publicaciones."
         onChange={(e) => patch({ proposedLaunchDate: e.target.value })} />
       <Alert severity="info">Publicación manual disponible. Las conexiones de publicación automática aún no están habilitadas en este asistente.</Alert>
-      <Button disabled={doc.pieces.length > 0 || !doc.channels.length} onClick={() => patch({ pieces: createCampaignPieces(artistName, doc.channels) })}>Preparar textos y calendario</Button>
+      <Button disabled={!doc.channels.some((c) => !doc.pieces.some((p) => p.channel === c))}
+        onClick={() => patch({ pieces: prepareMissingCampaignPieces(artistName, doc.channels, doc.pieces) })}>Preparar textos y calendario</Button>
     </>}
     {step === 2 && <>
       {!doc.pieces.length && <Alert severity="info">Selecciona las redes y prepara el calendario en el paso anterior.</Alert>}

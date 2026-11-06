@@ -62,6 +62,28 @@ it('preserves the draft and reports a failed save so it can be retried', async (
   await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
 });
 
+it('prepares a newly selected or reselected channel without replacing the other channel edits', async () => {
+  show(); fireEvent.click(await screen.findByRole('button', { name: 'Crear campaña' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  fireEvent.click(screen.getByLabelText('TikTok'));
+  fireEvent.click(screen.getByRole('button', { name: 'Preparar textos y calendario' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  fireEvent.change(screen.getAllByLabelText('Texto de la publicación')[0]!, { target: { value: 'Mi edición de Instagram' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+  fireEvent.click(screen.getByLabelText('TikTok'));
+  fireEvent.click(screen.getByRole('button', { name: 'Preparar textos y calendario' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  expect(screen.getAllByLabelText('Texto de la publicación')).toHaveLength(14);
+  expect(screen.getAllByLabelText('Texto de la publicación')[0]).toHaveValue('Mi edición de Instagram');
+  fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+  fireEvent.click(screen.getByLabelText('TikTok'));
+  fireEvent.click(screen.getByLabelText('TikTok'));
+  fireEvent.click(screen.getByRole('button', { name: 'Preparar textos y calendario' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  expect(screen.getAllByLabelText('Texto de la publicación')).toHaveLength(14);
+  expect(screen.getAllByLabelText('Texto de la publicación')[0]).toHaveValue('Mi edición de Instagram');
+});
+
 it('does not show the editor or query campaigns to anonymous visitors', async () => {
   session = null; list.mockClear(); show();
   expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toBeInTheDocument();
