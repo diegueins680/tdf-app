@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 513,
+    "total": 516,
     "named": 14,
     "path-named": 1,
     "reviewed": 0,
-    "unspecified": 498,
+    "unspecified": 501,
     "covered": 15
   },
   "routes": [
@@ -461,6 +461,24 @@
     {
       "method": "PUT",
       "path": "/artists/me/profile",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "PUT",
+      "path": "/artists/video-campaigns/{campaignKey}",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/artists/video-campaigns/{campaignKey}/conversion",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/artists/video-campaigns/{campaignKey}/feature",
       "basis": "unspecified",
       "requirements": []
     },
