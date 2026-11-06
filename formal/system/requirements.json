@@ -14496,7 +14496,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/deposit_policy_arithmetic.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable.",
@@ -14552,7 +14554,7 @@
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql"
       ],
-      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
+      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals). Z3 (formal/payments/deposit_policy_arithmetic.py, pinned 4.13.3, run in the formal workflow): for every valid policy and Int64 inputs, an admitted deposit leaves a positive balance, stays within the approved share and is not below the minimum or computed deposit; a higher minimum never turns full payment into a deposit; controls show both full-payment guards are needed.",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",

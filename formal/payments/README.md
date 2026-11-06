@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001.
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001.
 
 ## Contract
 
@@ -214,3 +214,21 @@ whose true product overflows can match the parent amount, and three in-range car
 amounts can wrap to a nonnegative wrong total. Atomic rejection of an overflowing
 cart (no partial rows) is a property of the calling transaction, tested in
 `tdf-hq/test`, not proved here.
+
+## Deposit policy (PAY-DEPOSIT-POLICY-001)
+
+`deposit_policy_arithmetic.py` (Z3 4.13.3, pinned) encodes
+`TDF.Commerce.DepositPolicy.applyDepositPolicy` for any policy that
+`validateDepositPolicy` accepts and any Int64 total and computed deposit, and
+proves that an admitted deposit:
+
+- leaves a balance of at least 1 minor unit (so a deposit is never the whole price);
+- is within the approved share (`deposit * 10000 <= total * fullPaymentAboveBps`);
+- is never below the minimum or the computed deposit;
+
+that a nonpositive total always charges the total, and that raising the minimum
+never turns a full payment into a deposit. Witnesses with the default policy (5.00,
+90%) reach a plain deposit, a deposit raised to the minimum and a full payment.
+Without the `raised >= total` guard a 100% threshold admits a zero-balance deposit;
+without the share guard a deposit exceeds the share. Which policy version the
+callers load is covered by the course and Domo tests and triggers, not here.

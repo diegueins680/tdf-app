@@ -14497,7 +14497,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/deposit_policy_arithmetic.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable.",
@@ -14553,7 +14555,7 @@
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql"
       ],
-      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
+      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals). Z3 (formal/payments/deposit_policy_arithmetic.py, pinned 4.13.3, run in the formal workflow): for every valid policy and Int64 inputs, an admitted deposit leaves a positive balance, stays within the approved share and is not below the minimum or computed deposit; a higher minimum never turns full payment into a deposit; controls show both full-payment guards are needed.",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
@@ -16289,7 +16291,7 @@
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "97b5305bf61ed6bf1b89385b7bc7cf3314646985f1da00cc2f36e072278b215f",
+    ".github/workflows/event-operations-formal.yml": "f5355f67f7afa9b1caa9e4c9304ca2b392bf3b6cf6e17edd05672723b50c0c5f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -16641,6 +16643,7 @@
     "formal/payments/StripeIntentOutcomeLegacyAssumed.cfg": "4ee4910e438960debc6a0ea55f4e4fb080b8a0bc07bd34bd226d0ae0be95abb4",
     "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg": "0318b9637e5ccb2bf641b0e7816ee64e3b944e7662a9870e6ec8a477871d2dbf",
     "formal/payments/checkout_money_arithmetic.py": "254176487a793ba4d596c2cbb8d17c38c91e88fc6df8f905d54badd82aadd7a9",
+    "formal/payments/deposit_policy_arithmetic.py": "710b7baf9a1b678665a8d43c8d9a95040154717413ea39920ee5ef444fff9324",
     "formal/payments/domo_cancellation_refund.py": "6c0c8bdca1c70caff40c8f46f645aa482cc943ee9f1ac3ec6cef333c41b4bc40",
     "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
@@ -30689,6 +30692,12 @@
         "relationship": "tests"
       }
     ],
+    "formal/payments/deposit_policy_arithmetic.py": [
+      {
+        "requirement": "PAY-DEPOSIT-POLICY-001",
+        "relationship": "formalModels"
+      }
+    ],
     "functions/_shared/event-report-data.mjs": [
       {
         "requirement": "EVT-REPORT-LINK-001",
@@ -31993,7 +32002,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "97b5305bf61ed6bf1b89385b7bc7cf3314646985f1da00cc2f36e072278b215f",
+      "sha256": "f5355f67f7afa9b1caa9e4c9304ca2b392bf3b6cf6e17edd05672723b50c0c5f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63887,7 +63896,6 @@
     "PAY-ADAPTER-BINDING-001",
     "AUTH-ADMIN-GUARD-001",
     "AUTH-SOCIAL-OAUTH-001",
-    "PAY-DEPOSIT-POLICY-001",
     "EVT-REPORT-LINK-001",
     "WEB-CONTENT-001",
     "PAY-EVENT-REPORT-RANGE-001",
@@ -65012,7 +65020,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "83e9c15e0128d99b6451aba3184a045f8624ee62c09c45086db4131577661e21",
+      "sourceSha256": "daa1cd6160b54458085a7cbd37f1cae5cb00d3985bb0ce18027315f0f88f9b46",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65040,7 +65048,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "83e9c15e0128d99b6451aba3184a045f8624ee62c09c45086db4131577661e21",
+      "sourceSha256": "daa1cd6160b54458085a7cbd37f1cae5cb00d3985bb0ce18027315f0f88f9b46",
       "definition": {
         "states": [
           "absent",
@@ -65070,7 +65078,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "83e9c15e0128d99b6451aba3184a045f8624ee62c09c45086db4131577661e21",
+      "sourceSha256": "daa1cd6160b54458085a7cbd37f1cae5cb00d3985bb0ce18027315f0f88f9b46",
       "definition": {
         "export": [
           "queued",
