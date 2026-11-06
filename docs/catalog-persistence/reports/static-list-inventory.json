@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T04:37:36.780Z",
+  "generatedAt": "2026-11-06T04:42:14.875Z",
   "repositoryRoot": ".",
   "filesScanned": 2607,
   "candidateCount": 1396,
@@ -25388,12 +25388,12 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs"
       ],
-      "decision": "unreviewed",
-      "disposition": "",
-      "specializedModel": "",
-      "priority": "",
-      "risk": "",
-      "justification": "",
+      "decision": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
+      "justification": "Reviewed all 78 transport method keys: getVenue reads the existing GET /social-events/venues/{id} endpoint so the events page can name venues referenced by loaded events that fall outside the bounded venue list page. The key is typed HTTP dispatch, not a selectable venue or business catalog; persisted Venue rows remain authoritative. The prior 77-method review is retained as previousDecision.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },

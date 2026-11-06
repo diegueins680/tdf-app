@@ -21402,176 +21402,36 @@
       }
     },
     {
-      "id": "afc970c544841f583bdc",
+      "id": "2511cbba2fc7279bc28a",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
-      "justification": "Reviewed all 77 existing transport method keys: the two additions read existing authenticated social artist list/detail endpoints for canonical-ID autocomplete. These keys are typed HTTP dispatch, not selectable artist or business data. Persisted ArtistProfile and EventArtist rows remain authoritative. The complete prior 75-method review and its provenance are retained as previousDecision.",
+      "justification": "Reviewed all 78 transport method keys: getVenue reads the existing GET /social-events/venues/{id} endpoint so the events page can name venues referenced by loaded events that fall outside the bounded venue list page. The key is typed HTTP dispatch, not a selectable venue or business catalog; persisted Venue rows remain authoritative. The prior 77-method review is retained as previousDecision.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
       "reviewBatch": "event-discovery-filtering-2026-11-04",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
         "line": 598,
-        "valueCount": 77
+        "valueCount": 78
       },
-      "previousDecisions": [
-        {
-          "id": "561cffe910e93eef6dca",
-          "classification": "genuine-technical-constant",
-          "disposition": "retain-in-code",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P3-retain",
-          "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-          "justification": "Typed API-client methods add author memory edits/deletion and public media upload; method names are transport mechanics and no selectable business catalog.",
-          "reviewed": true,
-          "reviewMethod": "successor-of-reviewed-decision",
-          "reviewBatch": "event-memories-2026-10-25",
-          "evidence": {
-            "file": "tdf-hq-ui/src/api/socialEvents.ts",
-            "line": 581
-          },
-          "mergedDecision": {
-            "id": "c69afb90768a2e78770a",
-            "classification": "genuine-technical-constant",
-            "disposition": "retain-in-code",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P3-retain",
-            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-            "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-            "reviewed": true,
-            "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "ticket-tax-invoices-2026-10-06",
-            "evidence": {
-              "file": "tdf-hq-ui/src/api/socialEvents.ts",
-              "line": 576
-            }
-          },
-          "previousDecision": {
-            "id": "620eb81ffe787eca6636",
-            "classification": "genuine-technical-constant",
-            "disposition": "retain-in-code",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P3-retain",
-            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-            "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
-            "reviewed": true,
-            "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "ticket-credit-notes-2026-10-06",
-            "evidence": {
-              "file": "tdf-hq-ui/src/api/socialEvents.ts",
-              "line": 577
-            },
-            "mergedDecision": {
-              "id": "c69afb90768a2e78770a",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-              "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "ticket-tax-invoices-2026-10-06",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 576
-              }
-            }
-          }
-        },
-        {
-          "id": "48cbf22770303d844cdc",
-          "classification": "genuine-technical-constant",
-          "disposition": "retain-in-code",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P3-retain",
-          "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
-          "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
-          "reviewed": true,
-          "reviewMethod": "successor-of-reviewed-decision",
-          "reviewBatch": "ticket-receipt-preview-2026-10-24",
-          "evidence": {
-            "file": "tdf-hq-ui/src/api/socialEvents.ts",
-            "line": 580
-          },
-          "mergedDecision": {
-            "id": "c69afb90768a2e78770a",
-            "classification": "genuine-technical-constant",
-            "disposition": "retain-in-code",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P3-retain",
-            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-            "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-            "reviewed": true,
-            "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "ticket-tax-invoices-2026-10-06",
-            "evidence": {
-              "file": "tdf-hq-ui/src/api/socialEvents.ts",
-              "line": 576
-            }
-          },
-          "previousDecision": {
-            "id": "620eb81ffe787eca6636",
-            "classification": "genuine-technical-constant",
-            "disposition": "retain-in-code",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P3-retain",
-            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-            "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
-            "reviewed": true,
-            "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "ticket-credit-notes-2026-10-06",
-            "evidence": {
-              "file": "tdf-hq-ui/src/api/socialEvents.ts",
-              "line": 577
-            },
-            "mergedDecision": {
-              "id": "c69afb90768a2e78770a",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-              "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "ticket-tax-invoices-2026-10-06",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 576
-              }
-            }
-          }
-        }
-      ],
-      "supersededReviews": [
-        {
-          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
-          "sourceDecisionId": "48cbf22770303d844cdc",
-          "sourceDecisionSha256": "d0122e0027c1c7297c180b0448c75e7e36f9624693c402eba70a6e38d5625114",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
-          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
-        }
-      ],
       "previousDecision": {
-        "id": "34210b76e81fd04cffae",
+        "id": "afc970c544841f583bdc",
         "classification": "genuine-technical-constant",
         "disposition": "retain-in-code",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P3-retain",
         "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
-        "justification": "Reviewed the combined 75 transport methods: main adds the event/order-scoped receipt read, while memories add author edit/delete and event media upload. Both parent registries are preserved; method keys are implementation dispatch, not selectable business catalogs.",
+        "justification": "Reviewed all 77 existing transport method keys: the two additions read existing authenticated social artist list/detail endpoints for canonical-ID autocomplete. These keys are typed HTTP dispatch, not selectable artist or business data. Persisted ArtistProfile and EventArtist rows remain authoritative. The complete prior 75-method review and its provenance are retained as previousDecision.",
         "reviewed": true,
-        "reviewMethod": "combined-reviewed-parent-successor",
-        "reviewBatch": "event-memories-main-integration-2026-10-25",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "reviewBatch": "event-discovery-filtering-2026-11-04",
         "evidence": {
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
-          "line": 582,
-          "valueCount": 75
+          "line": 598,
+          "valueCount": 77
         },
         "previousDecisions": [
           {
@@ -21712,7 +21572,164 @@
             "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
             "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
           }
-        ]
+        ],
+        "previousDecision": {
+          "id": "34210b76e81fd04cffae",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
+          "justification": "Reviewed the combined 75 transport methods: main adds the event/order-scoped receipt read, while memories add author edit/delete and event media upload. Both parent registries are preserved; method keys are implementation dispatch, not selectable business catalogs.",
+          "reviewed": true,
+          "reviewMethod": "combined-reviewed-parent-successor",
+          "reviewBatch": "event-memories-main-integration-2026-10-25",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/socialEvents.ts",
+            "line": 582,
+            "valueCount": 75
+          },
+          "previousDecisions": [
+            {
+              "id": "561cffe910e93eef6dca",
+              "classification": "genuine-technical-constant",
+              "disposition": "retain-in-code",
+              "specializedModel": "technical_constant_allowlist",
+              "priority": "P3-retain",
+              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+              "justification": "Typed API-client methods add author memory edits/deletion and public media upload; method names are transport mechanics and no selectable business catalog.",
+              "reviewed": true,
+              "reviewMethod": "successor-of-reviewed-decision",
+              "reviewBatch": "event-memories-2026-10-25",
+              "evidence": {
+                "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                "line": 581
+              },
+              "mergedDecision": {
+                "id": "c69afb90768a2e78770a",
+                "classification": "genuine-technical-constant",
+                "disposition": "retain-in-code",
+                "specializedModel": "technical_constant_allowlist",
+                "priority": "P3-retain",
+                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+                "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+                "reviewed": true,
+                "reviewMethod": "successor-of-reviewed-decision",
+                "reviewBatch": "ticket-tax-invoices-2026-10-06",
+                "evidence": {
+                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                  "line": 576
+                }
+              },
+              "previousDecision": {
+                "id": "620eb81ffe787eca6636",
+                "classification": "genuine-technical-constant",
+                "disposition": "retain-in-code",
+                "specializedModel": "technical_constant_allowlist",
+                "priority": "P3-retain",
+                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+                "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+                "reviewed": true,
+                "reviewMethod": "successor-of-reviewed-decision",
+                "reviewBatch": "ticket-credit-notes-2026-10-06",
+                "evidence": {
+                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                  "line": 577
+                },
+                "mergedDecision": {
+                  "id": "c69afb90768a2e78770a",
+                  "classification": "genuine-technical-constant",
+                  "disposition": "retain-in-code",
+                  "specializedModel": "technical_constant_allowlist",
+                  "priority": "P3-retain",
+                  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+                  "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+                  "reviewed": true,
+                  "reviewMethod": "successor-of-reviewed-decision",
+                  "reviewBatch": "ticket-tax-invoices-2026-10-06",
+                  "evidence": {
+                    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                    "line": 576
+                  }
+                }
+              }
+            },
+            {
+              "id": "48cbf22770303d844cdc",
+              "classification": "genuine-technical-constant",
+              "disposition": "retain-in-code",
+              "specializedModel": "technical_constant_allowlist",
+              "priority": "P3-retain",
+              "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
+              "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
+              "reviewed": true,
+              "reviewMethod": "successor-of-reviewed-decision",
+              "reviewBatch": "ticket-receipt-preview-2026-10-24",
+              "evidence": {
+                "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                "line": 580
+              },
+              "mergedDecision": {
+                "id": "c69afb90768a2e78770a",
+                "classification": "genuine-technical-constant",
+                "disposition": "retain-in-code",
+                "specializedModel": "technical_constant_allowlist",
+                "priority": "P3-retain",
+                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+                "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+                "reviewed": true,
+                "reviewMethod": "successor-of-reviewed-decision",
+                "reviewBatch": "ticket-tax-invoices-2026-10-06",
+                "evidence": {
+                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                  "line": 576
+                }
+              },
+              "previousDecision": {
+                "id": "620eb81ffe787eca6636",
+                "classification": "genuine-technical-constant",
+                "disposition": "retain-in-code",
+                "specializedModel": "technical_constant_allowlist",
+                "priority": "P3-retain",
+                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+                "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+                "reviewed": true,
+                "reviewMethod": "successor-of-reviewed-decision",
+                "reviewBatch": "ticket-credit-notes-2026-10-06",
+                "evidence": {
+                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                  "line": 577
+                },
+                "mergedDecision": {
+                  "id": "c69afb90768a2e78770a",
+                  "classification": "genuine-technical-constant",
+                  "disposition": "retain-in-code",
+                  "specializedModel": "technical_constant_allowlist",
+                  "priority": "P3-retain",
+                  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+                  "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+                  "reviewed": true,
+                  "reviewMethod": "successor-of-reviewed-decision",
+                  "reviewBatch": "ticket-tax-invoices-2026-10-06",
+                  "evidence": {
+                    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                    "line": 576
+                  }
+                }
+              }
+            }
+          ],
+          "supersededReviews": [
+            {
+              "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+              "sourceDecisionId": "48cbf22770303d844cdc",
+              "sourceDecisionSha256": "d0122e0027c1c7297c180b0448c75e7e36f9624693c402eba70a6e38d5625114",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+              "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+            }
+          ]
+        }
       }
     },
     {
