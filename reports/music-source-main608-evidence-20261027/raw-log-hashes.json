@@ -1,0 +1,14 @@
+{
+  "candidate.log": {
+    "bytes": 132327,
+    "sha256": "a5c969432b356640ba57b583818a8f462c39367a61f84fa72d30452961d4ac6b"
+  },
+  "inventory-before-merge-failure.log": {
+    "bytes": 739,
+    "sha256": "5caf4da22fef8caf803009ffd3243630fb8808bd1436d4416811aa74770d4f5a"
+  },
+  "metadata-commit-no-change.log": {
+    "bytes": 248,
+    "sha256": "e08c7e29d68fbc94661c7984d13fef5d5eec926fdb9fa7e93507f37bad1cec91"
+  }
+}
