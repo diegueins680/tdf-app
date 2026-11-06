@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-10-26T20:10:43.757955+00:00",
+  "runtimeSource": "43b1b4b00715c5564525d7bce1fa838bf6366122",
+  "runtimeTree": "d6bc6a9f63276d68e783687408b2d8336abb597b",
+  "applicationBinarySha256": "9d87e3d4ec955f82aaed5b0cdb7e9d0a1631b5dfe56a61df7aaaf36eff576537",
+  "actualVersion": {
+    "buildTime": "2026-10-26T19:59:20Z",
+    "commit": "43b1b4b00715c5564525d7bce1fa838bf6366122",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "canonicalStackBuildExitCode": 0,
+  "compiledAffectedTests": {
+    "examples": 45,
+    "failures": 0,
+    "testBinarySha256": "6e793621c7c9c6f2f37cb5ff5224f9437f2c3a7d1fe02418a2908d2d257f2f5a"
+  },
+  "httpQualification": {
+    "status": "PASS-real-compiled-http-synthetic-metadata-only",
+    "assertions": 54,
+    "steps": 65,
+    "responseCacheControl": "private, no-store",
+    "expirySeconds": 300,
+    "original34AssertionsRetained": true,
+    "cleanup": {
+      "backendStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "objectRequests": 0
+  },
+  "proofContext": {
+    "originalCiRun": 40389587503,
+    "originalCiJob": 121806768054,
+    "originalFailure": "Cabal reviewed-source pin guard rejected before Auth/Recovery translation; no counterexample reported.",
+    "reviewReceipt": "reports/music-credential-cache-formal-context-review-20261026.json",
+    "sourceDerivedAuthInputs": 17,
+    "sourceDerivedRecoveryInputs": 14,
+    "regressionTests": 16,
+    "fullAssuranceInputs": 41,
+    "independentCertificateObligations": 14,
+    "distinctIndependentCertificates": 12,
+    "wholeImplementationRequirements": "147 UNPROVEN",
+    "release": "BLOCKED"
+  },
+  "scope": "Synthetic asset/account fixtures on ownedPG16/full222schema with real compiledHTTP/session/signing; no object retrieval, browser media, production rollout, CDN enforcement, stale-cache purge, URL revocation or SLO claim.",
+  "runtimeSourceBodiesUnchangedByLaterFormalMetadataReview": true
+}
