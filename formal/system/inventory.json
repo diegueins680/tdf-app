@@ -638,7 +638,6 @@
       "scripts/test-verification-report.py",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
-      "scripts/test-weekly-platform-metrics.py",
       "scripts/test-whatsapp-consent.sh",
       "scripts/test-whatsapp-redelivery.sh",
       "scripts/test_mail_deliverability_monitor.py",
@@ -668,7 +667,6 @@
       "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
-      "scripts/weekly-platform-metrics.py",
       "scripts/wrap-catalog-canonical-schema.mjs"
     ],
     "streaming": [
@@ -6303,13 +6301,13 @@
     {
       "id": "SURFACE-5c0faab232af0d35",
       "path": "scripts/test-persistent-uploads-container-diagnostics.py",
-      "sha256": "a2e35a6d897b0cfeeaa5f8ccfd60b3f33ea896399e4c8b3172c2cdfb6bcd0da7",
+      "sha256": "9d53526e954744bf8bb9b8ae9520d3edc781e19baea9e85dfe4796fbf8a582ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "29f52440066cf054433220032739ba270253a37bb39f5f01c694827eb87cdc30",
+      "sha256": "3e2657400ab6306b4b6f89568cefb5bbec665db31dc87ff006460d889612de1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6625,12 +6623,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-d0a29d547d2a49db",
-      "path": "scripts/test-weekly-platform-metrics.py",
-      "sha256": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-da68a6be269c4e94",
       "path": "scripts/test-whatsapp-consent.sh",
       "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
@@ -6802,12 +6794,6 @@
       "id": "SURFACE-df96772a4b1d23c5",
       "path": "scripts/verify-system-evidence.mjs",
       "sha256": "01928fc197382c5a4a0e0e4107ed5311771d276217715b8bc88d42bb9f85ac17",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-00fd92180a50abfd",
-      "path": "scripts/weekly-platform-metrics.py",
-      "sha256": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20793,13 +20779,6 @@
       "kind": "requirement-candidate"
     },
     {
-      "path": "docs/analytics/weekly-platform-metrics.md",
-      "sha256": "afdbf3589c89084874fdb3f265e4eaa2679596067f69ff8bf6f1e28d07dcfa71",
-      "authority": "inferred",
-      "authorityBasis": "Status: implemented offline preparation; disposable PostgreSQL 16 execution qualified.",
-      "kind": "requirement-candidate"
-    },
-    {
       "path": "docs/architecture/artist-catalog-unification.md",
       "sha256": "16af46856dd8fb92bfdd7edc8b9df6d4a78d2a4aedc7e33c96f5f71145a76a19",
       "authority": "inferred",
@@ -28641,7 +28620,7 @@
     },
     {
       "path": "formal/system/container-cleanup-evidence.md",
-      "sha256": "06459f62da7706bcb864b47748f04995b393a4332193b81fcfdba94afc634e11",
+      "sha256": "181744cbbb5ca91a21ed3b209d883e802906db9a0a4b8149d133127c98be9e0e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29299,7 +29278,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6367dfa2fdb72f18017c15da2ad5d6577eecf4861adf88ca7e038cf2464ca2b7",
+      "sha256": "79877e1ad858342567bd68e150a561add1927239191bb8dae6bf619178d4b32e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
