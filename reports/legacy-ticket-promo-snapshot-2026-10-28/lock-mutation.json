@@ -1,0 +1,13 @@
+{
+  "control": "Remove only legacy promo snapshot SELECT FOR UPDATE; retain Event/Tier/Inventory/claim locks and every comparison",
+  "correctSha256": "54f7ecb8770f5b7ee98d8cbc97ec9c160e9f1ca95d21f32609f7899de8273df8",
+  "mutantSha256": "8dc774ada37afa96a1ba2fd79bb78d305a033540b449685352b2a02a33686b68",
+  "match": "legacy-ticket-promo-snapshot/locks",
+  "expected": "1 actual FIFO example fails because stale free order is created",
+  "exitCode": 1,
+  "actualExpectedFailureDetected": true,
+  "correctSourceRestored": true,
+  "persistedOutcome": "13|0|paid|3|3|1",
+  "receiptParserDiagnostic": "Initial detector expected standard but-got text; this explicit expectationFailure prints Claim ignored committed promo terms. Actual single-test fail and zero-value SPI already recorded; independently queried persisted outcome. No test assertion changed or rerun-to-green.",
+  "logSha256": "933578e2b59a163968a77279ff412d5a08623e0834a43410b586b33a3f21e8b2"
+}
