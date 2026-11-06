@@ -4800,8 +4800,9 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         case admission of
                             Left refused -> pure (Left refused)
                             Right () -> Right <$> do
+                                admissionTime <- TicketInventory.ticketReservationTime
                                 reserved <- TicketInventory.reserveTicketInventory
-                                    eventKey tierKey ticketPurchaseQuantity now
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
                                 if not reserved
                                     then pure Nothing
                                     else do
@@ -5394,8 +5395,14 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                 either (liftIO . throwIO) pure pricing
                                 promotion <- lockTicketPurchasePromo mPromoCodeEnt
                                 either (liftIO . throwIO) pure promotion
+                                admissionTime <- TicketInventory.ticketReservationTime
+                                forM_ mPromoCodeEnt $ \(Entity _ promo) ->
+                                    either (const $ liftIO $ throwIO err409
+                                        {errBody = "Promotion is outside its validity window; reload before buying"})
+                                        pure (validatePromoCodeDateWindow admissionTime
+                                            (SM.promoCodeValidFrom promo) (SM.promoCodeValidUntil promo))
                                 reserved <- TicketInventory.reserveTicketInventory
-                                    eventKey tierKey ticketPurchaseQuantity now
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
                                 if reserved then createReservedOrder else pure Nothing
                             )
                             envPool
