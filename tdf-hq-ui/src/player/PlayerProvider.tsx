@@ -155,8 +155,8 @@ const orderedSources = (track: PlayerTrack | null, selectedQuality: PlayerQualit
   const requested = selectedQuality === 'auto' ? automaticQuality() : selectedQuality;
   // Asset-bound tracks may only fall back to another freshly authorized asset.
   // A stale direct URL must not downgrade a protected recording after denial.
-  const sources = track.sources.some((item) => item.assetId || item.legacySourceId)
-    ? track.sources.filter((item) => item.assetId || item.legacySourceId) : track.sources;
+  const sources = track.sources.some((item) => Boolean(item.assetId) || Boolean(item.legacySourceId))
+    ? track.sources.filter((item) => Boolean(item.assetId) || Boolean(item.legacySourceId)) : track.sources;
   const seen = new Set<string>();
   const unique = sources.filter((item) => {
     const key = item.assetId ?? (item.legacySourceId ? `legacy:${item.legacySourceId}` : item.url);

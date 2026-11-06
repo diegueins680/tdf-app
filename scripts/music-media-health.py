@@ -6,12 +6,11 @@ import http.client
 import ipaddress
 import json
 import os
-from pathlib import Path
+import re
 import socket
 import ssl
 import subprocess
 import sys
-import tempfile
 import time
 import uuid
 from datetime import datetime, timezone
@@ -38,6 +37,11 @@ def public_addresses(host):
 
 def safe_address(value):
     ip = ipaddress.ip_address(value)
+    # IPv4 translation can route a seemingly global IPv6 answer to a private
+    # IPv4 destination (RFC 6052). Refuse these and transition mechanisms.
+    if ip.version == 6 and any(ip in ipaddress.ip_network(prefix) for prefix in
+        ('64:ff9b::/96', '64:ff9b:1::/48', '::ffff:0:0:0/96')):
+        return False
     return (ip.is_global and not ip.is_multicast and not ip.is_unspecified
             and not getattr(ip, 'ipv4_mapped', None) and not getattr(ip, 'sixtofour', None)
             and not getattr(ip, 'teredo', None))
@@ -118,18 +122,25 @@ def fetch_prefix(url, *, signed=False, env=None, resolver=public_addresses, conn
                 raise ProbeFailure('unsupported', permanent=True)
             # An absolute deadline also bounds servers dribbling a byte at a time.
             data = bytearray()
-            while len(data) <= MAX_BYTES:
+            ended = False
+            while len(data) < MAX_BYTES:
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     raise ProbeFailure('timeout')
                 if conn.sock:
                     conn.sock.settimeout(min(3, remaining))
-                block = response.read1(min(65536, MAX_BYTES + 1 - len(data)))
+                block = response.read1(min(65536, MAX_BYTES - len(data)))
                 if not block:
+                    ended = True
                     break
                 data.extend(block)
-            complete = code == 200 and len(data) <= MAX_BYTES
-            return bytes(data[:MAX_BYTES]), complete
+            length = response.getheader('Content-Length', '')
+            whole_range = re.fullmatch(r'bytes 0-(\d+)/(\d+)', response.getheader('Content-Range', ''))
+            complete = (code == 200 and (ended or (length.isdigit() and int(length) == len(data))))
+            if code == 206 and whole_range:
+                last, total = map(int, whole_range.groups())
+                complete = last + 1 == total == len(data) and total <= MAX_BYTES
+            return bytes(data), complete
         finally:
             conn.close()
     raise ProbeFailure('transport')
@@ -138,25 +149,22 @@ def fetch_prefix(url, *, signed=False, env=None, resolver=public_addresses, conn
 def probe(url, *, signed=False, env=None):
     try:
         data, complete = fetch_prefix(url, signed=signed, env=env)
-        with tempfile.TemporaryDirectory(prefix='tdf-media-check-') as directory:
-            file = Path(directory) / 'media'
-            file.write_bytes(data)
-            # Local bytes only. Protocol whitelist prevents playlist/container
-            # indirection from causing a second, unchecked network fetch.
-            check = subprocess.run(['ffprobe', '-v', 'error', '-protocol_whitelist', 'file',
-                '-show_entries', 'stream=codec_type,codec_name', '-of', 'json', str(file)],
-                capture_output=True, timeout=5, check=False)
-            try:
-                streams = json.loads(check.stdout).get('streams', [])
-            except (ValueError, TypeError):
-                streams = []
-            if check.returncode == 0 and any(s.get('codec_type') == 'audio' and s.get('codec_name') for s in streams):
-                decode = subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-protocol_whitelist', 'file',
-                    '-i', str(file), '-map', '0:a:0', '-t', '0.25', '-f', 'null', '-'],
-                    capture_output=True, timeout=5, check=False)
-                if decode.returncode == 0:
-                    return 'valid', 'decodable'
-            return ('permanent', 'unsupported') if complete else ('temporary', 'inconclusive')
+        # Feed only these bytes through a pipe. Media containers cannot open
+        # network URLs or local file references, including nested playlists.
+        check = subprocess.run(['ffprobe', '-v', 'error', '-protocol_whitelist', 'pipe',
+            '-show_entries', 'stream=codec_type,codec_name', '-of', 'json', 'pipe:0'],
+            input=data, capture_output=True, timeout=5, check=False)
+        try:
+            streams = json.loads(check.stdout).get('streams', [])
+        except (ValueError, TypeError):
+            streams = []
+        if check.returncode == 0 and any(s.get('codec_type') == 'audio' and s.get('codec_name') for s in streams):
+            decode = subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-protocol_whitelist', 'pipe',
+                '-i', 'pipe:0', '-map', '0:a:0', '-t', '0.25', '-f', 'null', '-'],
+                input=data, capture_output=True, timeout=5, check=False)
+            if decode.returncode == 0:
+                return 'valid', 'decodable'
+        return ('permanent', 'unsupported') if complete else ('temporary', 'inconclusive')
     except ProbeFailure as error:
         return ('permanent' if error.permanent else 'temporary'), error.reason
     except (TimeoutError, subprocess.TimeoutExpired, socket.timeout):

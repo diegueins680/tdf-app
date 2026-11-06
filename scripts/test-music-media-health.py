@@ -36,7 +36,8 @@ class Connection:
 class Checks(unittest.TestCase):
     def test_rejects_nonpublic_and_transition_addresses(self):
         for address in ['127.0.0.1','10.1.2.3','169.254.169.254','192.168.0.1','0.0.0.0','::1','fc00::1',
-                        'fe80::1','::ffff:127.0.0.1','2002:7f00:1::','2001::1','224.0.0.1']:
+                        'fe80::1','::ffff:127.0.0.1','2002:7f00:1::','2001::1','224.0.0.1',
+                        '64:ff9b::a00:1','64:ff9b:1::a00:1','::ffff:0:a00:1']:
             with self.subTest(address=address): self.assertFalse(health.safe_address(address))
         self.assertTrue(health.safe_address('1.1.1.1'))
     def test_rejects_unsafe_url_shapes(self):
@@ -58,6 +59,11 @@ class Checks(unittest.TestCase):
     def test_pins_dns_and_bounds_a_server_ignoring_ranges(self):
         data, complete = self.fetch([Response(body=b'x'*(health.MAX_BYTES+100))])
         self.assertEqual(len(data),health.MAX_BYTES);self.assertFalse(complete)
+    def test_full_and_partial_range_responses_have_distinct_verdicts(self):
+        data, complete = self.fetch([Response(206, {'Content-Range':'bytes 0-8/9'}, b'not audio')])
+        self.assertEqual(data,b'not audio'); self.assertTrue(complete)
+        _, complete = self.fetch([Response(206, {'Content-Range':'bytes 0-8/10000'}, b'not audio')])
+        self.assertFalse(complete)
     def test_checks_redirect_target_again(self):
         def resolve(host): return ['127.0.0.1'] if host=='private.example' else ['1.1.1.1']
         with self.assertRaises(health.ProbeFailure) as error:

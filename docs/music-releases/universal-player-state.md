@@ -57,8 +57,8 @@ Checks use one HTTPS request chain with at most three redirects, at most 1MiB
 of media, a 25s network deadline, bounded DNS children and 5s local probe/decode
 commands. All DNS answers must be public, and TCP uses a checked address while
 TLS still verifies the original hostname. Every redirect is checked again;
-object-store credentials never follow redirects. ffmpeg/ffprobe may read local
-bytes only. Partial/inconclusive containers remain temporary. This is a bounded
+object-store credentials never follow redirects. ffmpeg/ffprobe receive only the checked sample through a pipe; nested media
+cannot open local files or network URLs. Partial/inconclusive containers remain temporary. This is a bounded
 sample check, not a guarantee that every byte of an entire recording decodes.
 
 Only two matching permanent failures, separated by at least 30min, suppress

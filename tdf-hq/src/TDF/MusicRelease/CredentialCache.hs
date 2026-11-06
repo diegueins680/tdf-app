@@ -26,6 +26,7 @@ isCredentialRequest request =
   -- spelling omit the response policy; retain internal path segments exactly.
   case dropWhileEnd T.null (pathInfo request) of
     ["music", "assets", _, "access"] -> readMethod method
+    ["music", "legacy", _, "access"] -> readMethod method
     ["music", "entitlements", _, "download"] -> method == "POST"
     ["music", "downloads", "free"] -> method == "POST"
     ["music", "releases", _, "versions", _, "uploads"] -> method == "POST"

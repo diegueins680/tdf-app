@@ -1,5 +1,69 @@
 # Unified playback — implementation and remaining obligations
 
+## Delivery candidate — 6 November 2026
+
+This checkpoint supersedes the implementation gaps described in the historical
+notes below. It is **not a production-delivery claim**.
+
+The candidate normally composes historical #670, #695 and protected main through
+#633/#630. One native engine now handles artist queues, radio, search, releases,
+and direct StreamingPlayer audio/video. External provider pages open separately;
+TDF does not extract their streams. Explicit pause also survives delayed ended
+notifications and queue stepping. The source watchdog cannot be extended by
+repeated waiting or nonadvancing clock events. Saved radio volume migrates into
+the shared transport without replacing an existing global preference.
+
+Source-versioned health, bounded safe probes, ingestion/periodic reconciliation,
+public suppression/restoration, authenticated owner/team/admin diagnostics and
+revalidation are implemented. Current-source grants are checked at selection and
+periodically during visible playback. The state/intent model, assumptions and
+limits are in [universal-player-state.md](universal-player-state.md).
+
+Executed local qualification:
+
+- UI: 354 suites / 4,022 tests; application types and production build pass.
+- Backend: canonical Stack build; 4,215 examples, zero failures, 22 declared
+  external-runner pending cases. The later protected cache integration requires
+  its fresh combined build and tests; old results retain their source scope.
+- Actual HTTP/PostgreSQL workflow passes publication, territorial delivery,
+  entitlements, correction, takedown, and the new authentication, owner/team/admin,
+  diagnostic, suppression and restoration checks. Storage responses in this
+  fixture are synthetic; it is not a real object-store upload pass.
+- All 246 migrations apply/replay in the complete canonical schema; historical
+  rollback detection, health-policy restoration and guard-removal controls pass.
+- Twelve probe tests include unsafe-address/redirect rejection, bounded media,
+  native sample decoding and IPv4-translation address refusal. The latter fixed
+  a concrete acceptance counterexample during review.
+- Thirty-nine native Chromium/phone/Firefox journeys pass, followed by all three
+  corrected radio-navigation journeys. The updated assertions target the shared
+  transport while retaining decoder identity, clock, volume and interruption
+  checks. WebKit installation refuses this macOS12 host; no local WebKit or
+  physical-device pass is claimed.
+
+Companion [Mobile #181](https://github.com/diegueins680/TDF-mobile/pull/181)
+publishes matching generated clients at b88e923. It stays draft because Mobile
+main separately added video declarations in #180; do not overwrite that work.
+The root pins the exact published companion rather than silently changing Mobile
+main. Full Mobile runtime/device behavior is outside this client-only change.
+
+Fresh hosted CI, independent approval, resolved threads and ordinary protected
+admission remain required. Production read-only observation found image config
+ID 3ea36cf73ee4, public version 4dac175d, 213 migrations, and all five
+music_releases flags false in production and sandbox. The guarded routine
+Hetzner executor remains unfinished in the runbook. No application rollout,
+production migration, music activation or production playback acceptance has run.
+A backend-first coordinated release must establish recovery, apply the reviewed
+migration delta, run an isolated canary and qualify storage before the dependent
+frontend can go live. Retain the current image/database/assets/uploads recovery
+path; do not roll a database backup over newer user data.
+
+Remaining limits include bounded sampling rather than whole-file remote decoding,
+up to500 diagnostic rows per read, the existing 10,000-release adapter bound,
+physical legacy/canonical/resource provenance reconciliation, authorized provider
+credential behavior, real storage ingestion acceptance, physical devices and
+production delivery.
+
+
 ## Implemented in this candidate
 
 Radio catalog selections and previews now call PlayerProvider. RadioWidget no

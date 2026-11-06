@@ -16481,12 +16481,17 @@
         "tdf-hq-ui/src/player/MediaHealthPanel.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/assetAccess.ts",
-        "tdf-hq/docs/openapi/media-health.yaml"
+        "tdf-hq/docs/openapi/media-health.yaml",
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs"
       ],
       "tests": [
         "scripts/test-music-media-health.mjs",
         "scripts/test-music-media-health.py",
-        "tdf-hq-ui/src/player/PlayerProvider.test.tsx"
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/test-music-release-api-e2e.mjs",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "formalModels": [],
       "status": "specified and implemented",
