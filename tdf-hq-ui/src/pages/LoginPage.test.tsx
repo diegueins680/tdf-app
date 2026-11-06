@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { fireEvent, screen, waitFor } from '@testing-library/dom';
 
 const GOOGLE_CREDENTIAL =
   'e30.eyJlbWFpbCI6ImFuZHJlYUBleGFtcGxlLmNvbSIsIm5hbWUiOiJBbmRyZWEifQ.signature';
@@ -183,6 +183,38 @@ describe('LoginPage Google signup consent flow', () => {
       expect(document.querySelector(`a[href="/account/terms${suffix}.html"]`)).not.toBeNull();
       expect(document.querySelector(`a[href="/account/privacy${suffix}.html"]`)).not.toBeNull();
     } finally { await cleanup(); }
+  });
+
+  it('replaces Google Sign-In with a system-browser hand-off inside the Instagram in-app browser', async () => {
+    const userAgent = jest.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21F90 Instagram 334.0.0.0.0 (iPhone15,3; iOS 17_5; es_EC; es; scale=3.00; 1290x2796)',
+    );
+    const cleanup = await renderLoginPage('/login?signup=1&redirect=%2Feventos%2F211');
+    try {
+      await waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+      expect(screen.queryByText('Google login test button')).toBeNull();
+      expect(screen.queryByText('Google signup test button')).toBeNull();
+      expect(screen.getAllByTestId('in-app-browser-notice').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Estás en el navegador de Instagram').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText(/Google no permite crear la cuenta desde aquí/)).toBeTruthy();
+      // jsdom serves the page over http://localhost, where no Safari/Chrome
+      // hand-off exists (see inAppBrowser.test.ts for the https hrefs), so the
+      // notice must still offer the copy-link escape hatch.
+      expect(screen.getAllByRole('button', { name: 'Copiar enlace' }).length).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByRole('link', { name: 'Abrir en Safari' })).toBeNull();
+      expect(screen.getByText('Mínimo 8 caracteres. Es una contraseña nueva solo para TDF: no es la de Google ni la de tu correo.')).toBeTruthy();
+    } finally { userAgent.mockRestore(); await cleanup(); }
+  });
+
+  it('keeps Google Sign-In in a regular mobile browser', async () => {
+    const userAgent = jest.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+    );
+    const cleanup = await renderLoginPage('/login');
+    try {
+      await waitFor(() => expect(screen.queryByText('Google login test button')).not.toBeNull());
+      expect(screen.queryByTestId('in-app-browser-notice')).toBeNull();
+    } finally { userAgent.mockRestore(); await cleanup(); }
   });
 
   it('recognizes only the server consent precondition', () => {
@@ -467,9 +499,9 @@ describe('LoginPage Google signup consent flow', () => {
         findButton('Crear e ingresar')?.click();
         await flushPromises();
       });
-      // The display name starts from the email and can be changed later.
+      // Account creation must not turn the private email into a public name.
       expect(signupRequestMock).toHaveBeenCalledWith(expect.objectContaining({
-        firstName: 'Andrea', lastName: '', email: 'andrea@example.com', termsAccepted: true,
+        firstName: 'Cuenta TDF', lastName: '', email: 'andrea@example.com', termsAccepted: true,
         termsVersion: 'tdf-account-terms-v1', marketingOptIn: false,
       }), expect.objectContaining({ client: expect.anything() }));
       expect(signupRequestMock.mock.calls[0]?.[0]).not.toHaveProperty('phone', expect.anything());

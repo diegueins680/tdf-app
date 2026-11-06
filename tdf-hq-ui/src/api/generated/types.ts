@@ -371,6 +371,75 @@ export interface paths {
         patch: operations["operationsDecideApproval"];
         trace?: never;
     };
+    "/storage/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the current account's storage allowance and selected default */
+        get: operations["getContentStorageAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/me/destination": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change the default for future uploads without moving existing files */
+        put: operations["setContentStorageDestination"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List owned TDF uploads and pending cleanup intents */
+        get: operations["listContentStorageFiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download an owned private managed file; public files use the assets mount */
+        get: operations["downloadPrivateContentStorageFile"];
+        put?: never;
+        post?: never;
+        /** Persist an owner-authorized deletion intent and remove its managed bytes */
+        delete: operations["deleteContentStorageFile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/drive/upload": {
         parameters: {
             query?: never;
@@ -1198,6 +1267,129 @@ export interface paths {
         get: operations["getDirectoryProfileEventRsvpFeed"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/me/memory-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read explicit internal memory invitation consent */
+        get: operations["getEventMemoryPreferences"];
+        /** Opt into or withdraw internal memory invitations */
+        put: operations["setEventMemoryPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/memory-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read aggregate memory campaign metrics as current organizer */
+        get: operations["getEventMemoryCampaign"];
+        /** Enable or disable an organizer-owned campaign */
+        put: operations["setEventMemoryCampaign"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/memory-invitations/{deliveryId}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an attributed event opening without granting access */
+        post: operations["openEventMemoryInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/moments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the currently authorized event moment feed */
+        get: operations["listSocialEventMoments"];
+        put?: never;
+        /** Publish an image video audio or text memory */
+        post: operations["createSocialEventMoment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/moments/{momentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edit the description as the current author with optimistic concurrency */
+        put: operations["editSocialEventMoment"];
+        post?: never;
+        /** Delete the current author source and retire its interaction target */
+        delete: operations["deleteSocialEventMoment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/moments/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a public raster image up to 10 MiB */
+        post: operations["uploadSocialEventMomentImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/moments/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a public image up to 10 MiB or audio or video up to 25 MiB */
+        post: operations["uploadSocialEventMomentMedia"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6609,7 +6801,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. */
+        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. Revoking an approved claim (status revoked, AUTHORITY-097) requires a non-empty reason, deactivates every manager grant the claim created in the same transaction and is terminal. */
         patch: operations["decideDirectoryClaim"];
         trace?: never;
     };
@@ -7156,6 +7348,46 @@ export interface paths {
          * @description Browser approval is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, quote, checkout, environment, and provider binding before recording the deposit and reserving the date.
          */
         post: operations["capturePublicDomoPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel the quote and record its refund obligation (PAY-DOMO-CANCEL-001)
+         * @description Releases the quote and its date hold. Collected money is priced by the single approved cancellation policy version (AUTHORITY-093, by lead time before the event) and recorded as an immutable cancellation with the retained and refundable amounts. The quote holder is not an authenticated party, so a refund due is recorded as an open obligation that an operator turns into a refund request; replaying returns the stored record.
+         */
+        post: operations["cancelPublicDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a Domo quote as an operator and request the policy refund
+         * @description Strict administrators only. The approved cancellation policy prices the refund (customer ladder or full refund when TDF cancels) and the refund request is created in the same transaction with the administrator as requester; a different party must approve it. Called on a customer-cancelled quote with an open obligation, it creates that refund request.
+         */
+        post: operations["adminCancelDomoQuote"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8908,6 +9140,31 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        StorageFileDTO: {
+            /** Format: uuid */
+            fileId: string;
+            fileName: string;
+            /** Format: int64 */
+            byteSize: number;
+            /** @enum {string} */
+            status: "uploading" | "completed" | "cancelled";
+            /** @enum {string} */
+            visibility: "private" | "public";
+        };
+        StorageAccountDTO: {
+            /** @description Existing unmetered files require operator reconciliation before new TDF storage grows */
+            legacyUsageVerified: boolean;
+            /** Format: int64 */
+            allowanceBytes: number;
+            /** Format: int64 */
+            usedBytes: number;
+            /** Format: int64 */
+            reservedBytes: number;
+            /** @enum {string|null} */
+            defaultDestination: "tdf" | "google_drive" | null;
+            /** Format: int64 */
+            revision: number;
+        };
         InvoiceLineDTO: {
             /** Format: int64 */
             lineId: number;
@@ -9164,6 +9421,7 @@ export interface components {
             /** @enum {string} */
             defaultSort: "newest" | "oldest" | "relevant";
             mentionedPeople?: components["schemas"]["InteractionAuthor"][];
+            sourceModeration?: components["schemas"]["EventMemorySourceControls"];
         };
         InteractionPage: {
             items: components["schemas"]["InteractionComment"][];
@@ -9292,6 +9550,67 @@ export interface components {
             reason: string;
             /** @enum {string} */
             decision: "reviewed" | "dismissed";
+        } | {
+            /** @enum {string} */
+            operation: "source.report";
+            reason: string;
+            expectedSourceRevision: string;
+        } | {
+            /** @enum {string} */
+            operation: "source.hide" | "source.remove" | "source.restore";
+            reason: string;
+            expectedVersion: number;
+            expectedSourceRevision: string;
+        } | {
+            /** @enum {string} */
+            operation: "source.report.resolve";
+            reason: string;
+            expectedVersion: number;
+            expectedSourceRevision: string;
+            /** @enum {string} */
+            decision: "reviewed" | "dismissed";
+        };
+        EventMemorySourceControls: {
+            supported: boolean;
+            eventId: string;
+            /** @enum {string} */
+            state: "visible" | "hidden" | "removed";
+            /** @description Opaque source revision; preserve exactly when submitting a command. */
+            sourceRevision: string;
+            canReport: boolean;
+            canHide: boolean;
+            canRestore: boolean;
+            canRemove: boolean;
+        };
+        EventMemorySourceReport: {
+            /** Format: uuid */
+            id: string;
+            entityKey: string;
+            eventId: string;
+            version: number;
+            source: components["schemas"]["EventMemorySourceControls"];
+            caption: string | null;
+            mediaType: string;
+            mediaUrl: string;
+            author: components["schemas"]["InteractionAuthor"] | null;
+            openReports: number;
+            reportsReferToEarlierContent: boolean;
+            reasons: string[];
+            audit: {
+                operation: string;
+                reason: string;
+                previousState: string | null;
+                newState: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+        };
+        EventMemorySourceReportPage: {
+            supported: boolean;
+            canReview: boolean;
+            items: components["schemas"]["EventMemorySourceReport"][];
+            /** Format: uuid */
+            nextCursor: string | null;
         };
         InteractionCommandRequest: {
             /** Format: uuid */
@@ -9304,6 +9623,8 @@ export interface components {
             /** Format: uuid */
             reactionTypeId?: string | null;
             version?: number;
+            /** @enum {string} */
+            state?: "visible" | "hidden" | "removed";
             replay?: boolean;
             reported?: boolean;
             mode?: string;
@@ -9525,8 +9846,13 @@ export interface components {
             verifiedPurchase: true;
             /** @enum {string} */
             badge: "Compra verificada";
-            /** @description Public name/avatar according to buyer privacy preferences */
+            /** @description Public identity according to buyer privacy preferences; partyId and avatarUrl are omitted for anonymous buyers */
             author: {
+                /** Format: int64 */
+                partyId?: number;
+                name?: string;
+                avatarUrl?: string | null;
+            } & {
                 [key: string]: unknown;
             };
             dimensions: {
@@ -10401,6 +10727,46 @@ export interface components {
         PublicDomoQuoteAcceptRequest: {
             /** @enum {boolean} */
             termsAccepted: true;
+        };
+        PublicDomoQuoteCancelRequest: {
+            /** @enum {boolean} */
+            confirmCancellation: true;
+            cancellationNote?: string;
+        };
+        PublicDomoCancellation: {
+            /** Format: uuid */
+            quoteId: string;
+            quoteStatus: string;
+            /** @enum {string} */
+            canceller: "customer" | "tdf";
+            policyVersion?: number | null;
+            /** Format: date-time */
+            cancelledAt: string;
+            /** @description Whole 24-hour periods before the event start; negative after it */
+            leadDays: number;
+            inProgress: boolean;
+            retainedBasisPoints: number;
+            /** Format: int64 */
+            depositCollectedMinor: number;
+            /** Format: int64 */
+            balanceCollectedMinor: number;
+            /** Format: int64 */
+            retainedMinor: number;
+            /**
+             * Format: int64
+             * @description retainedMinor + refundDueMinor equals the collected money
+             */
+            refundDueMinor: number;
+            currency: string;
+            /** @enum {string} */
+            refundStatus: "none" | "awaiting_operator" | "requested";
+            /** @description True when the quote was cancelled earlier and the stored record is returned */
+            alreadyCancelled: boolean;
+        };
+        DomoQuoteCancelRequest: {
+            /** @enum {string} */
+            canceller: "customer" | "tdf";
+            note?: string;
         };
         PublicDomoQuoteLine: {
             code: string;
@@ -12082,6 +12448,54 @@ export interface components {
             workflowStateId?: string;
             sortOrder?: number;
             notes?: string | null;
+        };
+        EventMemoryPreference: {
+            /** @default false */
+            inApp: boolean;
+            supportsExtendedMoments: boolean;
+        };
+        EventMemoryCampaign: {
+            /** @default false */
+            enabled: boolean;
+            eventFinished: boolean;
+            dispatcherEnabled?: boolean;
+            candidates: number;
+            consented: number;
+            invitations: number;
+            reminders: number;
+            opened: number;
+            published: number;
+            moments: number;
+            uniqueAuthors: number;
+        };
+        /** @description Text requires a nonblank caption and absent or empty media URL. Other types require an absolute HTTPS media URL. Authenticated Party supplies authorship. */
+        EventMomentCreate: {
+            /** @deprecated */
+            emCreateAuthorName?: string;
+            emCreateCaption?: string;
+            emCreateMediaUrl?: string;
+            /** @enum {string} */
+            emCreateMediaType: "image" | "video" | "audio" | "text";
+            emCreateMediaWidth?: number;
+            emCreateMediaHeight?: number;
+            emCreateMediaDurationMs?: number;
+        };
+        EventMomentEdit: {
+            emeCaption: string;
+            /** Format: date-time */
+            emeExpectedUpdatedAt: string;
+        };
+        EventMomentUpload: {
+            eiuEventId: string;
+            eiuFileName: string;
+            eiuPath: string;
+            /** Format: uri */
+            eiuPublicUrl: string;
+            /**
+             * Format: uri
+             * @description Legacy alias for the public media URL
+             */
+            eiuImageUrl: string;
         };
         EventMomentReactionRequest: {
             /**
@@ -16122,6 +16536,8 @@ export interface components {
         /** @enum {string} */
         ExperienceReviewSourceKind: "event_ticket_order" | "marketplace_order" | "service_booking" | "service_storefront_order";
         ExperienceReviewAuthor: {
+            /** Format: int64 */
+            partyId?: number;
             name: string;
             /** Format: uri */
             avatarUrl?: string | null;
@@ -18026,6 +18442,200 @@ export interface operations {
             };
         };
     };
+    getContentStorageAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Decimal bytes, including capacity reserved by uncertain uploads */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageAccountDTO"];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setContentStorageDestination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    destination: "tdf" | "google_drive";
+                    /** Format: int64 */
+                    expectedRevision: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated account preference */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageAccountDTO"];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preference was edited concurrently; reread before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listContentStorageFiles: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account-scoped files, ordered by immutable ID */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageFileDTO"][];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadPrivateContentStorageFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner-authenticated attachment */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: string;
+                    "X-Content-Type-Options"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description File missing or not owned by the current account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored bytes unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteContentStorageFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File deletion confirmed; metadata and tombstone retained */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No owned file */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Upload is still running; wait before retrying deletion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deletion intent retained for retry; cleanup unconfirmed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     uploadDriveFile: {
         parameters: {
             query?: never;
@@ -18043,6 +18653,18 @@ export interface operations {
                     folderId?: string;
                     name?: string;
                     accessToken?: string;
+                    /**
+                     * @description Explicit authority; user mode never falls back to TDF credentials
+                     * @enum {string}
+                     */
+                    authMode?: "user" | "server";
+                    /** @enum {string} */
+                    destination?: "tdf" | "google_drive";
+                    /**
+                     * @description New managed uploads default to private; public is restricted to passive image
+                     * @enum {string}
+                     */
+                    visibility?: "private" | "public";
                     idempotencyKey?: string;
                 };
             };
@@ -18216,6 +18838,8 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                /** @description Opt into source-memory reports for one authorized event; absent preserves the comment inbox. */
+                sourceEvent?: string;
             };
             header?: never;
             path?: never;
@@ -18229,7 +18853,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InteractionPage"];
+                    "application/json": components["schemas"]["InteractionPage"] | components["schemas"]["EventMemorySourceReportPage"];
                 };
             };
             /** @description Invalid input */
@@ -21126,6 +21750,590 @@ export interface operations {
                 content?: never;
             };
             /** @description Profile is missing */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventMemoryPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMemoryPreference"];
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setEventMemoryPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": boolean;
+            };
+        };
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMemoryPreference"];
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventMemoryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMemoryCampaign"];
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setEventMemoryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": boolean;
+            };
+        };
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMemoryCampaign"];
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    openEventMemoryInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                deliveryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        recorded: boolean;
+                    };
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSocialEventMoments: {
+        parameters: {
+            query?: {
+                /** @description Include audio and text. Legacy clients receive only image and video. */
+                extended?: boolean;
+            };
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMoment"][];
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createSocialEventMoment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventMomentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMoment"];
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    editSocialEventMoment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                momentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventMomentEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful authorized operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMoment"];
+                };
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteSocialEventMoment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                momentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful authorized operation */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid identifier or payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unavailable or not authorized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    uploadSocialEventMomentImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Public file accepted with MIME extension and signature validation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMomentUpload"];
+                };
+            };
+            /** @description Invalid type signature file name or size */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public-file uploads unavailable for private events */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Parent event unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    uploadSocialEventMomentMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Public file accepted with MIME extension and signature validation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMomentUpload"];
+                };
+            };
+            /** @description Invalid type signature file name or size */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public-file uploads unavailable for private events */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Parent event unavailable */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -32207,6 +33415,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Revocation without a reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Authentication required */
             401: {
                 headers: {
@@ -33500,6 +34715,126 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoQuoteCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded cancellation outcome */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoCancellation"];
+                };
+            };
+            /** @description Cancellation not confirmed or note too long */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote is completed or expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved cancellation policy exists; nothing was cancelled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminCancelDomoQuote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomoQuoteCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded cancellation including the linked refund request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Malformed quoteId */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin role or module access missing */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote cannot be cancelled or the refund request was refused */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved cancellation policy exists */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

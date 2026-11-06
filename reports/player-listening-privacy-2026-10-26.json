@@ -1,0 +1,1869 @@
+{
+  "schemaVersion": 1,
+  "status": "PRIVATE_PREPARED_MAIN4B81_METADATA_ONLY_NOT_PUBLISHED_OR_APPROVED",
+  "branch": "integrate/player-listening-main4b81-20261027",
+  "initialPlaybackBaseline": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+  "integrationBaseline": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "scope": "Client-owned local listening state and latest user-intent precedence; no server/private-byte/secureerase/cross-tab proof",
+  "audit": {
+    "sourceBaseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "receipt": "/private/tmp/tdf-player-account-audit-20261026/receipt.json",
+    "receiptSha256": "d07311da523daad8996b8719654994b37ebf3c115fb3410e75c71ae05c0dd61b",
+    "designAssessment": "/private/tmp/tdf-player-account-audit-20261026/design-assessment.json",
+    "designAssessmentSha256": "9aca38c0a97e4dd1e6d48e543eb8b83c04039196a26437e0510a99de2fc582fb",
+    "reproduction": {
+      "scratch": "/private/tmp/tdf-player-account-audit-20261026",
+      "command": "cd /private/tmp/tdf-player-account-audit-20261026/tdf-hq-ui && NODE_OPTIONS=--experimental-vm-modules node ../node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/player/PlayerAccountBoundary.audit.test.tsx",
+      "result": "PASS 1 deterministic diagnostic scenario,4 observed identity transitions",
+      "sha256": {
+        "tdf-hq-ui/src/player/PlayerAccountBoundary.audit.test.tsx": "a5c80c7f814bc1604007dc932b8003d8fa0f769ca39829013c5a6a81a7ca6729",
+        "run.log": "901dc28040b31a365c9838f233ece804f3a4074db1efb46adc663530ceb60aae",
+        "observations.json": "1f2332291fc4bbef394d2b91a0623f203b0b799af75b55c45fdc2e9c45e84de5"
+      },
+      "doubles": [
+        "session API snapshot/logout/reconcile mocked",
+        "catalog appearance metadata mocked",
+        "analytics disabled through existing bridge mock",
+        "routed AppRoutes replaced by synthetic identity/player controls",
+        "JSDOM media play/pause/load/currentSrc/paused doubles, synthetic public URLs",
+        "matchMedia/ResizeObserver layout adapters"
+      ],
+      "realNetworkCalls": 0
+    },
+    "findings": {
+      "retainedState": "A prior listener's selected public track title,queue IDs and resume position remain visible/restored after logout to anonymous,login as another principal,reload,and direct account switch.",
+      "rootCause": "SessionQueryProvider correctly remounts all child component state on auth-scope occurrence; replacement PlayerProvider unconditionally loads unscoped persistent localStorage key tdf-global-player/v1. Session personal-data cleanup does not register or clear this key.",
+      "playbackContinuity": "Old native element is replaced and paused on logout; no automatic play restart observed. This is state carryover, not proved cross-account continuous audio.",
+      "retention": "Positions from both synthetic principals coexist in the same persistent positions map after queue replacement; no owner/expiry field in observed saved object.",
+      "serverPrivateBytes": "NOT_TESTED_OR_CLAIMED. Fixture tracks are explicitly synthetic public content; no actual delivery or backend authorization was exercised."
+    },
+    "policyAssessment": {
+      "explicit": "ADR004 says queue,position and preferences persist; existing library docs isolate favorites,playlists,history by listener and analytics sessions rotate with identity.",
+      "unresolved": "No located explicit local queue persistence policy chooses device-wide shared public queue versus account-private listening state at logout/account switch.",
+      "classification": "Confirmed cross-principal client listening-state carryover; user-visible privacy/UX concern on shared browsers, not evidence of a server authorization bypass.",
+      "possibleNextDecision": "Separate harmless device preferences from listening state; root must choose desired anonymous-to-account and account-change retention policy before implementation."
+    }
+  },
+  "newerBaselineDesiredFailure": {
+    "sourceBaseline": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+    "log": "/private/tmp/tdf-player-identity-baseline-failure-20261026.log",
+    "sha256": "1c97e19d4da8fcb1ed9443b2133895448b59fc9d276f7d115e9a9a7567f3fe24",
+    "outcome": "Expected failure: old selected public track remains after logout; not corrected-source pass"
+  },
+  "preliminaryRuntimeObservations": {
+    "reportedBy": "root/source owner before requested composition/latest-intent correction",
+    "totalTests": 74,
+    "identityCases": 14,
+    "engineCases": 39,
+    "sessionCases": 21,
+    "lint": "reported PASS",
+    "admittedAsFinalContractQualification": false,
+    "build": "pending",
+    "nativeInstalledMatrix": "pending"
+  },
+  "desiredPolicy": {
+    "devicePreferences": [
+      "volume",
+      "muted",
+      "quality"
+    ],
+    "listeningScope": [
+      "queue",
+      "selection/title",
+      "positions",
+      "shuffle",
+      "repeat"
+    ],
+    "owner": "Valid positive safe integer,explicit anonymous null,or unknown undefined; strict own-property equality",
+    "sameOwnerReadiness": "Hydrate matching paused snapshot only if no user queue edit; fresh selection,clear,reorder and intentional empty queue win",
+    "composition": "SessionProvider -> identity-aware PlayerProvider -> keyed SessionQueryProvider -> App",
+    "preferences": "Current device preferences retained through actual owner changes; fast pre-save switch regression required",
+    "rapidOwnerReturn": "Actual A/B/A or anonymous/account/anonymous transitions clear listening state even before intermediate250ms persistence; a stale matching disk tag must not revive it."
+  },
+  "formal": {
+    "requirement": "MEDIA-MUSIC-PRIVACY-001",
+    "contract": "formal/system/player-listening-privacy.md",
+    "classification": "PARTIAL release acceptance; named local behaviors TESTED",
+    "mathematicalProof": false,
+    "existingPlayerModelCoversIdentity": false,
+    "initialInheritedRequirements": 142,
+    "initialTotalRequirements": 143,
+    "initialInheritedPlayerRowSha256": "7adda48f90f0ace1be14a05e8b2d74571291f651feeb5acd9799ecdb749259da",
+    "intentionalInheritedDelta": {
+      "requirement": "MEDIA-MUSIC-PLAYER-001",
+      "field": "implementation",
+      "appendOnlyPath": "tdf-hq-ui/src/session/SessionProviders.tsx",
+      "contractMapping": "formal/system/player-session.md ownership/navigation correspondence only",
+      "otherFieldsMustRemainExact": true
+    },
+    "other141InheritedRequirementObjectsExact": true,
+    "ownedPlayerOtherFieldsExact": true,
+    "proofStatus": "TESTED; no mathematical or model-checked identity claim",
+    "integrationInheritedRequirements": 149,
+    "integrationForeignParentObjectsExact": 148,
+    "integrationOwnedPlayerOnlyImplementationAppend": true,
+    "integrationTotalRequirements": 150
+  },
+  "limits": [
+    "Client identity readiness is not server authentication",
+    "No private media byte access or immediate revocation proof",
+    "No cross-tab coordination,secure erasure or storage-tamper defense",
+    "Null ownership cannot isolate anonymous humans",
+    "Rollback to older unscoped loader can restore the privacy gap",
+    "WebKit,physical-device,fullWCAG,target rollback and deployed acceptance not established",
+    "The named nonempty/every-valid source guard is exercised; arbitrary malformed saved fields are not comprehensively verified",
+    "Analytics principal isolation is not changed or established by this local persistence increment"
+  ],
+  "integration": {
+    "pr": 629,
+    "ci": "PENDING exact normal-merge candidate; prior fc5 technical CI is historical and not reused as fresh current-candidate evidence",
+    "merge": "NORMAL_MERGE_PREPARED_NOT_COMMITTED",
+    "deployment": null,
+    "productionWrites": 0,
+    "serverMigrations": 0,
+    "newMediaDependencies": false,
+    "normalMergeParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "sourceQualificationBoundary": "The86-test/27-browser receipt predates this main merge but all six qualified b625 runtime/test source hashes remain exact. It does not qualify unrelated inherited main changes or replace exact-candidate hosted CI.",
+    "p0MergedFoundation": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "target": "New focused privacy PR targetingmain; P0 already merged"
+  },
+  "requiredNativeIdentityCase": {
+    "path": "e2e/web/music-player-native.spec.mjs",
+    "scope": "Actual generated-media decode of freshB during held same-owner session response,then query-scope resolution preserves SAMEelement/source/selection; session and metadata remain synthetic",
+    "execution": "PASS in all3installed projects on corrected b625969 source",
+    "installedMatrixCounts": {
+      "total": 27,
+      "realNative": 24,
+      "explicitlyMocked": 3,
+      "newIdentityRealCases": 3,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0
+    },
+    "hostedMatrixCounts": null,
+    "serverAuthProof": false
+  },
+  "sourceCommit": "b6259692c11c7b502b974cf6bee7d4ca189925f7",
+  "traceability": [
+    {
+      "requirement": "MEDIA-MUSIC-PRIVACY-001",
+      "property": "strict current-owner restoration and owner-change reset",
+      "implementation": [
+        "SessionProviders identity",
+        "PlayerProvider owner epoch/storage guard"
+      ],
+      "test": "PlayerIdentity.test.tsx 23cases with declared media/API doubles",
+      "status": "TESTED locally; release PARTIAL"
+    },
+    {
+      "requirement": "PLAYER-002/005/006 with identity hydration",
+      "property": "fresh same-owner B survives readiness/query scope with same decoder",
+      "implementation": [
+        "SessionProviders player above query scope",
+        "PlayerProvider queueIntentRef and guarded hydration"
+      ],
+      "test": "PW-MUSIC-NATIVE-08 across3 installed projects,real generated AAC/FLAC; synthetic API",
+      "status": "TESTED locally; no identity model/refinement proof"
+    },
+    {
+      "requirement": "MEDIA-MUSIC-PRIVACY-001 failure boundary",
+      "property": "Matching-owner corrupt track does not crash player outside App error boundary",
+      "implementation": "PlayerProvider isTrack nonempty/every existing source predicate",
+      "test": "Actual-App [validSource,null] saved-state baseline EXPECTED_FAIL then corrected emptyqueue and explicit validB PASS",
+      "status": "TESTED named case only; no exhaustive malformed storage proof"
+    }
+  ],
+  "performance": {
+    "startupSLO": "UNMEASURED for this privacy increment",
+    "beforeAfterP95": null,
+    "buildInitialGzipBytes": 336907,
+    "measurementBoundary": "Build size only; browser case durations are functional regression observations,not p95 playback initiation or production reliability."
+  },
+  "acceptance": {
+    "AC-006": "TESTED conditional stable client owner; actual owner changes intentionally end listening session. Local real decoder navigation/bootstrap cases; hosted and production pending.",
+    "AC-007": "TESTED for one canonical engine in named App/browser journeys; no whole-platform or cross-tab exclusion claim.",
+    "AC-010/011": "UNVERIFIED by this increment: backend/private byte authorization and revocation unchanged.",
+    "AC-013": "PARTIAL: Chromium desktop/phone emulation and Firefox; WebKit,physical device and target production pending.",
+    "AC-017": "PARTIAL: new identity behavior TESTED only; existing bounded design model excludes it.",
+    "AC-018": "PARTIAL: local scoped checks pass at six-source commit; hosted exact integration candidate pending.",
+    "AC-022": "PARTIAL: known old-loader rollback privacy gap documented; target rollback drill not executed.",
+    "AC-023": "TESTED actual App composition and existing UI real decoder journey locally; production pending.",
+    "remainingUniversalAcceptance": "Not established by this scoped local persistence increment; no upload/catalog/search/processing/fullWCAG/production completeness claim."
+  },
+  "historicalSourceQualification": {
+    "receipt": "/private/tmp/tdf-player-listening-identity-qualified-20261026.json",
+    "receiptSha256": "74b26219b5c0c148cf0f915848b8d2c6446e722dd5d79ed4746f4e362084ac40",
+    "commitReceipt": "/private/tmp/tdf-player-listening-identity-committed-20261026.json",
+    "commitReceiptSha256": "a0f4a38f07f5a9fa7588c37076d257387cb03ce0edf96eaeb1651d97894b28c5",
+    "committedSixSourceHashesMatch": true,
+    "sourceSha256": {
+      "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "tdf-hq-ui/src/session/SessionProviders.tsx": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
+      "tdf-hq-ui/src/player/PlayerProvider.tsx": "f79611dd4a798f8490dfae7acdb5cc23687cd051f4c242c304af17039dd97aa3",
+      "tdf-hq-ui/src/player/queue.ts": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "6c9d95071825657a5b6b70bda2765be0c939000084618ea315a54ad2ae2b8046",
+      "e2e/web/music-player-native.spec.mjs": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e"
+    },
+    "actualComposition": "SessionProvider -> PlayerProvider -> keyed SessionQueryProvider -> App; the authoritative audio element remains outside the query occurrence subtree.",
+    "unitSessionTests": {
+      "result": "PASS85/85 in8suites",
+      "newIdentityCases": 22,
+      "media": "Declared JSDOM media doubles",
+      "log": "/private/tmp/tdf-player-identity-corrected-tests-final-20261026.log"
+    },
+    "lint": "PASS scoped source+identity test",
+    "build": {
+      "result": "PASS tsc plus Vite plus budget",
+      "node": "22.14.0",
+      "initialGzipBytes": 336894,
+      "log": "/private/tmp/tdf-player-identity-corrected-build-20261026.log"
+    },
+    "native": {
+      "status": "PASS27/27",
+      "realNativeCases": 24,
+      "explicitMockedCases": 3,
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone",
+        "firefox-critical"
+      ],
+      "webKit": "NOT_RUN_LOCAL",
+      "port": 4224,
+      "log": "/private/tmp/tdf-player-identity-native-qualified-20261026.log",
+      "artifacts": "/private/tmp/tdf-player-identity-native-qualified-20261026",
+      "stats": {
+        "startTime": "2026-10-26T06:38:31.708Z",
+        "duration": 244862.12800000003,
+        "expected": 27,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 7805,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 3143,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 8275,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 2842,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 8455,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "music-options-axe.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 4572,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 5990,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "expired-delivery-recovery.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 12274,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 6847,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 3327,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 8587,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 2945,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 8645,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "music-options-axe.json",
+              "path": null
+            },
+            {
+              "name": "compact-options.png",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 4659,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 6021,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "expired-delivery-recovery.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 12445,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 11582,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 4380,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 10739,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 4472,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 11604,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "music-options-axe.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 7003,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 7920,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "expired-delivery-recovery.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 13530,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 3888,
+          "realNative": false,
+          "attachments": [
+            {
+              "name": "music-player-axe.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 3560,
+          "realNative": false,
+          "attachments": [
+            {
+              "name": "music-player-axe.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 5552,
+          "realNative": false,
+          "attachments": [
+            {
+              "name": "music-player-axe.json",
+              "path": null
+            }
+          ]
+        }
+      ],
+      "newCriticalCase": "PW-MUSIC-NATIVE-08 validates cached same-owner bootstrap preserves a newer explicit track and the same real native decoder across query/App remount.",
+      "scope": "Real generated AAC/FLAC pipeline and loopback byte delivery; synthetic catalogue/session/authorization metadata. Existing PW-MUSIC-01 is explicitly mocked. Desktop browsers and phone emulation on macOS; no physical device or OS lockscreen guarantee."
+    },
+    "logSha256": {
+      "/private/tmp/tdf-player-identity-corrected-tests-final-20261026.log": "95eef94316bbe2e35023d20254da2c50b63841cbe5bb24cec426327e4aa00ff9",
+      "/private/tmp/tdf-player-identity-corrected-lint-final-20261026.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "/private/tmp/tdf-player-identity-corrected-build-20261026.log": "6b65f0db2acb0716277f44f5f022cbbbeb9e472c2f57f7f6b1381707c86e29c4",
+      "/private/tmp/tdf-player-identity-baseline-failure-20261026.log": "1c97e19d4da8fcb1ed9443b2133895448b59fc9d276f7d115e9a9a7567f3fe24",
+      "/private/tmp/tdf-player-identity-native-qualified-20261026.log": "eec361c2ababba5be62993c1db0315168d20d5c7434ba7cbe2ceab10906a8c6a",
+      "/private/tmp/tdf-player-identity-native-qualified-20261026/results.json": "d717f7324981e5527c0305ccb94ffdb6b89db5d5aa97067a6dbee4b809882f30"
+    },
+    "bundleSha256": {
+      "tdf-hq-ui/dist/index.html": "d7c539b458e4846a36f15df95baf9d5095d6ca595a63e898ad53016fb0055ed7",
+      "tdf-hq-ui/dist/assets/index-Bv3cxIHr.js": "adf3821b7a7c11c84de9508ccdec3885205c7c5dd723bafdacf3bdc0e68081b0"
+    },
+    "testBuildEnvironment": "Full build Node22.14.0; native fixture VITE_API_BASE=http://127.0.0.1:19099, preview4224; no production network/data.",
+    "priorAttempts": {
+      "initialObjectHasOwnCompile": "FAILED_TS2550 and corrected with hasOwnProperty.call before final qualification",
+      "initialLintLauncher": "Missing hoisted eslint path, corrected without source workaround",
+      "initialNativeSandbox": "EPERM loopback bind, escalated approved command",
+      "oldNative": "Rejected architecture variant interrupted during setup; explicitly historical only",
+      "doctor": "Direct Node ai doctor13OK5WARN0ERROR; GH auth warn and isolated untracked memory/Mobile warnings, no credentials changed."
+    },
+    "sourceCommit": "a0120daa3493c04e358b50c6d60af1cacfc60a31"
+  },
+  "sourceQualification": {
+    "receipt": "/private/tmp/tdf-player-corrupt-source-qualified-20261026.json",
+    "receiptSha256": "ad47b69e0649797865ff0db33845fa907a25a5badb9f03f1098519ef0b29a8d1",
+    "commitReceipt": "/private/tmp/tdf-player-corrupt-source-committed-20261026.json",
+    "commitReceiptSha256": "fc693527088c43d6dddda01fe9de8433710c4e919803d395e69dd00d01ce30a1",
+    "sourceCommit": "b6259692c11c7b502b974cf6bee7d4ca189925f7",
+    "committedSixSourceHashesMatch": true,
+    "qualificationBeforeCommit": true,
+    "qualificationActualHead": "de2cd2725ee769e98111c73ab01d345bc6791dd7",
+    "sourceSha256": {
+      "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "tdf-hq-ui/src/session/SessionProviders.tsx": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
+      "tdf-hq-ui/src/player/PlayerProvider.tsx": "4f1981b2830bc5cd71b1d4279a25771c234bee1b4c4612d467b36ad4e22b233a",
+      "tdf-hq-ui/src/player/queue.ts": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "1c3b69fcee274bf425973960622a2aeb9ef9dc2eba003d82a8ad9df29709b06d",
+      "e2e/web/music-player-native.spec.mjs": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e"
+    },
+    "baselineCounterexample": {
+      "sourceProviderSha256": "f79611dd4a798f8490dfae7acdb5cc23687cd051f4c242c304af17039dd97aa3",
+      "testSourceSha256": "1c3b69fcee274bf425973960622a2aeb9ef9dc2eba003d82a8ad9df29709b06d",
+      "result": "EXPECTED_FAIL1case(22othercasesnotselected) under unchangedde2cd/a012 runtime",
+      "trigger": "Explicit matching owner101 restores a synthetic public track with sources [valid,null]. Actual App/session composition crashes in orderedSources reading null.assetId; whole application controls disappear.",
+      "log": "/private/tmp/tdf-player-corrupt-source-baseline-20261026.log",
+      "sha256": "14d8ef17d025ce3a3fa705bb01d4671014541949cb38172aadf679d66476f880"
+    },
+    "implementation": "Require a nonempty source list and every member to satisfy the existing source predicate; reject whole corrupt track. No source authorization,URL parsing,network policy,backend,dependency or player ownership change.",
+    "verification": {
+      "unit": {
+        "passed": 86,
+        "failed": 0,
+        "suites": 8,
+        "identityCases": 23,
+        "scope": "Actual App/session plus declared media/API doubles; regression also proves explicit validB can play after corrupt saved track is discarded."
+      },
+      "lint": "PASS",
+      "build": {
+        "result": "PASS tsc+Vite+budget",
+        "node": "22.14.0",
+        "initialGzipBytes": 336907
+      },
+      "native": {
+        "stats": {
+          "startTime": "2026-10-26T07:05:25.445Z",
+          "duration": 239629.503,
+          "expected": 27,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "realNativeCases": 24,
+        "explicitMockedCases": 3,
+        "projects": [
+          "chromium-desktop",
+          "chromium-phone",
+          "firefox-critical"
+        ],
+        "cases": [
+          {
+            "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 7938,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 3388,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 8534,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 2976,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 8602,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 4627,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 6101,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 12283,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 6516,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 3809,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 8372,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 2861,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 8619,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 4630,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 6055,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 12435,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 11341,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 4139,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 10023,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 3996,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 10924,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 6588,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 7432,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 13315,
+            "realNative": true
+          },
+          {
+            "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 3783,
+            "realNative": false
+          },
+          {
+            "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 3524,
+            "realNative": false
+          },
+          {
+            "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+            "project": "firefox-critical",
+            "status": "passed",
+            "durationMs": 5572,
+            "realNative": false
+          }
+        ],
+        "artifacts": "/private/tmp/tdf-player-corrupt-source-native-qualified-20261026",
+        "scope": "Real generated AAC/FLAC bytes and unmodified native methods/clocks; synthetic API/catalogue/session/authorization metadata; phone browser emulation on macOS. No local WebKit or physical OS acceptance."
+      }
+    },
+    "logEvidence": {
+      "baseline": {
+        "path": "/private/tmp/tdf-player-corrupt-source-baseline-20261026.log",
+        "sha256": "14d8ef17d025ce3a3fa705bb01d4671014541949cb38172aadf679d66476f880"
+      },
+      "unit": {
+        "path": "/private/tmp/tdf-player-corrupt-source-tests-20261026.log",
+        "sha256": "1c028849e9cfdc5a7f8f2f2be5c6b982dd92274704cdb8fc4baef2d6288bc03e"
+      },
+      "lint": {
+        "path": "/private/tmp/tdf-player-corrupt-source-lint-20261026.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "build": {
+        "path": "/private/tmp/tdf-player-corrupt-source-build-20261026.log",
+        "sha256": "5e94069563a4c16ac8622c1a3e7e3f9ed5b00510560a7622e8ad29242105a9ec"
+      },
+      "nativeInitialBindFailure": {
+        "path": "/private/tmp/tdf-player-corrupt-source-native-20261026.log",
+        "sha256": "a8a90a318e0acf1db4fce31aa935dc702faf8b46fdc5c6de15d952ffb176d83b"
+      },
+      "native": {
+        "path": "/private/tmp/tdf-player-corrupt-source-native-qualified-20261026.log",
+        "sha256": "482c08f824ea68d43bec086bb0e0ba499612fa1ccd9c8f2dd7caa4ad4e1b310a"
+      }
+    },
+    "browserResultsSha256": "def5da806a85bef7b68e721a35d81f0ad1f4577da5d1e5b593460bed0d2b9d5e",
+    "builtBundleSha256": {
+      "tdf-hq-ui/dist/index.html": "58995e310b5729a24398b944e1efbed330c77072a1d6db72361d1019a1409e81",
+      "tdf-hq-ui/dist/assets/index-BtLDFXti.js": "cb2ac079d3ea63330c6cab0fb3595151780f65e4fa04662c0239c6fe0e5064b2"
+    },
+    "launchIssue": "First default launcher failed sandbox EPERM loopback bind4224 before cases. Tool-required approved loopback rerun completed27/27 with no retries/skips/assertion changes.",
+    "notClaimed": [
+      "secure disk erase",
+      "server-verified cached identity",
+      "private media delivery authorization proof",
+      "cross-tab guarantees",
+      "startup p95 SLO",
+      "production acceptance",
+      "clean committed build/release attestation",
+      "merge",
+      "deployment"
+    ]
+  },
+  "reopenedReview": {
+    "candidate": "Matched-owner saved source array [validSource,null] may pass existing some-valid validation then throw in orderedSources. Moving player above AppErrorBoundary can worsen impact.",
+    "status": "CLOSED by nonempty/every-valid source guard at b625969; actualApp regression and final86/native27 pass",
+    "historicalSource": "a0120daa3493c04e358b50c6d60af1cacfc60a31",
+    "historical85And27Retained": true,
+    "finalCorrectedSourceQualification": "PASS locally; source-bound receipt retained",
+    "metadataRegenerationAfterFinalSourceFreeze": "Generated; strictJSON/CSV and36metadata tests PASS"
+  },
+  "historicalMetadataValidation": {
+    "status": "PASS",
+    "totalTests": 25,
+    "commands": [
+      {
+        "command": "python3 scripts/test-requirement-declarations.py",
+        "tests": 9,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-metadata-declarations-20261026.log",
+        "sha256": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034"
+      },
+      {
+        "command": "python3 scripts/test-specification-inventory.py",
+        "tests": 6,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-metadata-inventory-20261026.log",
+        "sha256": "6c9a48165a96fdc7f8e9bed311cd1efc5904c9c24b76ada7159779c5d3781b9e"
+      },
+      {
+        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+        "tests": 10,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-metadata-conformance-20261026.log",
+        "sha256": "bdacbe10aa610229a505131dc411f511e90f4f3144bb5c934f5562cb9dfe040e"
+      }
+    ],
+    "additionalSurfaceGuard": {
+      "command": "python3 scripts/test-new-specification-surfaces.py",
+      "tests": 11,
+      "result": "PASS",
+      "log": "/private/tmp/tdf-player-privacy-metadata-surfaces-20261026.log",
+      "sha256": "6b029fe54b914f95e7290338ecbd637637b0bba4ae88d729a7cf0c40449eeed9"
+    },
+    "totalIncludingAdditionalSurfaceGuard": 36
+  },
+  "historicalCatalogValidation": {
+    "status": "PASS strictJSON andCSV,zero unreviewed/stale",
+    "initialParentActiveDecisions": 1339,
+    "unchangedActiveParentObjects": 1338,
+    "supersededParentObjectsPreservedExactInHistory": 1,
+    "activeSuccessorsIndividuallyReviewed": 1,
+    "finalActiveDecisions": 1339,
+    "supersededDecisionId": "dfec3f046ad1157e0f0c",
+    "successorDecisionId": "5ed33d9cd50e8f195d05",
+    "history": "docs/catalog-persistence/catalog-list-decisions.json reconciliation.privacyQueueRestoreSuccessor",
+    "reason": "Internal queue reducer adds guarded restore dispatch; all9 tags individually reviewed as implementation mechanics,not a business or authorization catalog.",
+    "initialInvocationError": "First diagnostic omitted --decisions,so1339 unreviewed result is not an admitted strict pass. Subsequent explicit decision-file pre-successor scans are diagnostic only; final post-review JSON/CSV must pass.",
+    "mobilePin": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "newFixtureCandidates": 0,
+    "catalogUnitTests": {
+      "command": "node --test scripts/__tests__/catalog-list-audit.test.mjs",
+      "result": "PASS",
+      "log": "/private/tmp/tdf-player-privacy-catalog-tests-20261026.log",
+      "sha256": "0b4d8bb3b788dc6114423c92fff7da5466e98ae85d527616ea0828b8642d2653",
+      "scope": "Auditor/regression mechanics,not proof of media authorization",
+      "tests": 8
+    },
+    "filesScanned": 2392,
+    "strictCommands": [
+      {
+        "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+        "result": "PASS exit0",
+        "log": "/private/tmp/tdf-player-identity-catalog-final-json-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+        "artifactSha256": "2e7096b210439c1851307475ccf8322e09648def80b4410bb7d749da0d23a317"
+      },
+      {
+        "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+        "result": "PASS exit0",
+        "log": "/private/tmp/tdf-player-identity-catalog-final-csv-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "artifactSha256": "b87e51983e4e5df141ffb796da35a31f199486a256f58d6cfc674e60d55a557f"
+      }
+    ],
+    "activeCandidateIdsExactlyMatchDecisions": true,
+    "all1339OriginalDecisionObjectsPreservedActiveOrHistory": true,
+    "allOtherReconciliationFieldsExact": true
+  },
+  "plannedIntegrationParent": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "protectedMainBaseline": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "preIntegrationMetadataValidation": {
+    "sourceCommit": "b6259692c11c7b502b974cf6bee7d4ca189925f7",
+    "status": "PASS",
+    "declarationsInventoryConformanceTests": 25,
+    "additionalSurfaceGuardTests": 11,
+    "total": 36,
+    "commands": [
+      {
+        "command": "python3 scripts/test-requirement-declarations.py",
+        "tests": 9,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-corrected-metadata-declarations-20261026.log",
+        "sha256": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034"
+      },
+      {
+        "command": "python3 scripts/test-specification-inventory.py",
+        "tests": 6,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-corrected-metadata-inventory-20261026.log",
+        "sha256": "4e47e20ccb255c5085ff5197b270f69fcc65fd854378e8b76085f21eb31d8717"
+      },
+      {
+        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+        "tests": 10,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-corrected-metadata-conformance-20261026.log",
+        "sha256": "5dc72e683820accc287a0845b00ec2f37a58b5ef0952f09f3a5a5a7f88b45d00"
+      },
+      {
+        "command": "python3 scripts/test-new-specification-surfaces.py",
+        "tests": 11,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-corrected-metadata-surfaces-20261026.log",
+        "sha256": "b7c7ee9e9c2b48dfc13a4f75350043594a8ae84840cfba1d075a63f2f9d610d6"
+      }
+    ]
+  },
+  "metadataValidation": {
+    "integrationParent": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "status": "PASS_PRIVATE_PREPARED_STRUCTURAL_CHECKS",
+    "total": 36,
+    "suites": [
+      9,
+      6,
+      10,
+      11
+    ],
+    "ciContractCases": 46,
+    "generatedClients": 2,
+    "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "apiAvailabilityAndResponseStatus": "PASS25deferrals/8statuscontracts unchanged; public-route admission PASS",
+    "freshness": "PASS retry ordered inventory->conformance generation and both --check operations; original exit120/ENOSPC retained separately.",
+    "scope": "Structural metadata only; no runtime/currentbinary/hostedCI/review/production qualification.",
+    "logsSha256": {
+      "api-policies.log": "836e594c31c73b948a751a597724b8e3abe89dc7246920f427733b03be943a6e",
+      "test-new-specification-surfaces.py.log": "f649dea40e7222b50d643232583a8416613b0bd02ce5d8f63e9e803ff94fce6c",
+      "conformance-generate.log": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+      "inventory-generate.log": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+      "public-routes.log": "4ad03c0d0d33fb8f67aded7ef3baabfe5ddd1edc69f54946b871f0987a449c99",
+      "test-specification-conformance.py.log": "be789bb827ead5071c5ba1694e2a0a890ec901cc60bcbcbc3bdb1b6e303135c2",
+      "generated-api.log": "ec414fe10f3e065edca49796e2bd783b512a5a18b8b22b0bcf69ccc8cd8575cb",
+      "test-requirement-declarations.py.log": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034",
+      "ci-contracts.log": "0cc401afb4cb412b5fc70e456afc9ec373eeb1a316f79e454a6d5404ad93891c",
+      "test-specification-inventory.py.log": "c31bb3d555c64368831f6bd0f28613dfc561becbcf69d91822da6605c562768e",
+      "prepared-source-admission.log": "57ef89d271abe393635b1cca94260379c8450b1a0ced068c63d9c9b6cff29e3e"
+    }
+  },
+  "preIntegrationCatalogValidation": {
+    "status": "PASS strictJSON/CSV zero unreviewed/stale",
+    "parentActiveDecisions": 1339,
+    "unchangedActiveParentObjects": 1338,
+    "supersededParentObjectsPreservedExactInHistory": 1,
+    "activeSuccessorsIndividuallyReviewed": 1,
+    "finalActiveDecisions": 1339,
+    "history": "docs/catalog-persistence/catalog-list-decisions.json reconciliation.privacyQueueRestoreSuccessor",
+    "sourceCommit": "b6259692c11c7b502b974cf6bee7d4ca189925f7",
+    "commands": [
+      {
+        "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+        "result": "PASS exit0",
+        "log": "/private/tmp/tdf-player-privacy-corrected-catalog-json-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+        "artifactSha256": "74487334418887be30ea22497a19926ec9a97e245bc2e6961c7d0a5bdb30c03f"
+      },
+      {
+        "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+        "result": "PASS exit0",
+        "log": "/private/tmp/tdf-player-privacy-corrected-catalog-csv-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "artifactSha256": "b87e51983e4e5df141ffb796da35a31f199486a256f58d6cfc674e60d55a557f"
+      }
+    ]
+  },
+  "catalogValidation": {
+    "integrationParent": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "status": "PASS_PRIVATE_STRICT_JSON_CSV",
+    "candidateCount": 1341,
+    "csvRows": 1341,
+    "unreviewed": 0,
+    "stale": 0,
+    "jsonExitCode": 0,
+    "csvExitCode": 0,
+    "unchangedActiveParentObjects": 1340,
+    "supersededParentObjectsPreservedExactInHistory": 1,
+    "activeExistingPrivacySuccessorExact": true,
+    "allMainReconciliationAndTopLevelFieldsExact": true,
+    "sourceChangesByMetadataOwner": 0,
+    "scope": "Actual scanner outputs and individual existing queue successor/history review; no policy exemptions or blanket classifications."
+  },
+  "historicalIntegrationBaselines": [
+    {
+      "base": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+      "protectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+      "metadataValidation": {
+        "integrationParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+        "status": "PASS",
+        "declarationsInventoryConformanceTests": 25,
+        "additionalSurfaceGuardTests": 11,
+        "total": 36,
+        "commands": [
+          {
+            "command": "python3 scripts/test-requirement-declarations.py",
+            "tests": 9,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-declarations-20261026.log",
+            "sha256": "5684d13977a1f6829bcd5f644c72b35ab6f8d42951d571a5f230c4cc35a359f3"
+          },
+          {
+            "command": "python3 scripts/test-specification-inventory.py",
+            "tests": 6,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-inventory-20261026.log",
+            "sha256": "da0aaad5f5ebcc8d1b02fcbafe214619caaba6bc31ceb3b4067d888286802e25"
+          },
+          {
+            "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+            "tests": 10,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-conformance-20261026.log",
+            "sha256": "bba5bc50afd90ea5d09fe4ad186afb37d5dcff983bfbc2e4b1717c2da92f3271"
+          },
+          {
+            "command": "python3 scripts/test-new-specification-surfaces.py",
+            "tests": 11,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-surfaces-20261026.log",
+            "sha256": "578371a87275d8bcb9483075ee2bb7cc6cd4fae3e6fa8f3f9772c890ecb8fb63"
+          }
+        ],
+        "finalFreshness": "PASS inventory --check and traceability --check; git diff --check PASS",
+        "preservationAssertions": "PASS145 requirements:143 foreign parent objects exact,owned PLAYER implementation append only,newPRIVACY identical to7056 checkpoint;1339 parent decision objects retained1338active+1fullhistory with1reviewed successor;all6 final source hashes exact"
+      },
+      "catalogValidation": {
+        "status": "PASS strictJSON/CSV zero unreviewed/stale",
+        "finalActiveDecisions": 1339,
+        "unchangedActiveParentObjects": 1338,
+        "supersededParentObjectsPreservedExactInHistory": 1,
+        "activeSuccessorsIndividuallyReviewed": 1,
+        "history": "docs/catalog-persistence/catalog-list-decisions.json reconciliation.privacyQueueRestoreSuccessor",
+        "integrationParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+        "commands": [
+          {
+            "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+            "result": "PASS exit0",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-catalog-json-20261026.log",
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+            "artifactSha256": "ee1f3bfa0faa0542868773ef8cd553e499d40b5648cf4e72eb31b2328b84b90f"
+          },
+          {
+            "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+            "result": "PASS exit0",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-catalog-csv-20261026.log",
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+            "artifactSha256": "ee61542038f0f39242fc39913e36b48861fceb73f0c041ed00a4090f7df764c0"
+          }
+        ],
+        "sourceSixFingerprintsRemainQualified": true,
+        "all1339OriginalParentDecisionsPreservedActiveOrHistory": true,
+        "allOtherReconciliationFieldsExact": true
+      },
+      "scope": "Historical prior parent integration evidence; not relabeled as latest main execution."
+    },
+    {
+      "scope": "Historical prior protected-main checkpoint, not relabeled as current execution.",
+      "checkpoint": "2dc5c6a8308c8a8eeac1cf08d4d75788f179544b",
+      "evidence": {
+        "integrationBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+        "protectedMainBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+        "formal": {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
+          "contract": "formal/system/player-listening-privacy.md",
+          "classification": "PARTIAL release acceptance; named local behaviors TESTED",
+          "mathematicalProof": false,
+          "existingPlayerModelCoversIdentity": false,
+          "initialInheritedRequirements": 142,
+          "initialTotalRequirements": 143,
+          "initialInheritedPlayerRowSha256": "7adda48f90f0ace1be14a05e8b2d74571291f651feeb5acd9799ecdb749259da",
+          "intentionalInheritedDelta": {
+            "requirement": "MEDIA-MUSIC-PLAYER-001",
+            "field": "implementation",
+            "appendOnlyPath": "tdf-hq-ui/src/session/SessionProviders.tsx",
+            "contractMapping": "formal/system/player-session.md ownership/navigation correspondence only",
+            "otherFieldsMustRemainExact": true
+          },
+          "other141InheritedRequirementObjectsExact": true,
+          "ownedPlayerOtherFieldsExact": true,
+          "proofStatus": "TESTED; no mathematical or model-checked identity claim",
+          "integrationInheritedRequirements": 145,
+          "integrationForeignParentObjectsExact": 144,
+          "integrationOwnedPlayerOnlyImplementationAppend": true,
+          "integrationTotalRequirements": 146
+        },
+        "metadataValidation": {
+          "integrationParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "status": "PASS",
+          "declarationsInventoryConformanceTests": 25,
+          "additionalSurfaceGuardTests": 11,
+          "total": 36,
+          "commands": [
+            {
+              "command": "python3 scripts/test-requirement-declarations.py",
+              "tests": 9,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main78-metadata-declarations-20261026.log",
+              "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+            },
+            {
+              "command": "python3 scripts/test-specification-inventory.py",
+              "tests": 6,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main78-metadata-inventory-20261026.log",
+              "sha256": "185bc6b98b5e5d79277ed5cf3b050f01a21888c5c3f7db83a702ab919e13752a"
+            },
+            {
+              "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+              "tests": 10,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main78-metadata-conformance-20261026.log",
+              "sha256": "c3641e91a584663d8289424b8fb029e81fe07d6d9287f412f0d25f0878b57fd6"
+            },
+            {
+              "command": "python3 scripts/test-new-specification-surfaces.py",
+              "tests": 11,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main78-metadata-surfaces-20261026.log",
+              "sha256": "75f378eaa1addde234c3f1fd8d4e1e3a2a6fe6e7a7e7237d10dd2ce37c1f3b33"
+            }
+          ],
+          "finalFreshness": "PASS inventory --check,traceability --check,and git diff --check",
+          "preservationAssertions": "PASS146 requirements:144 foreign main objects exact,PLAYER implementation append only,PRIVACY unchanged;all1339 main decisions retainedactive/history;newmain reconciliation exact;222-entry manifest byte-identical;all6b625 fingerprints unchanged"
+        },
+        "catalogValidation": {
+          "status": "PASS strictJSON/CSV zero unreviewed/stale",
+          "finalActiveDecisions": 1339,
+          "unchangedActiveParentObjects": 1338,
+          "supersededParentObjectsPreservedExactInHistory": 1,
+          "activeSuccessorsIndividuallyReviewed": 1,
+          "history": "docs/catalog-persistence/catalog-list-decisions.json reconciliation.privacyQueueRestoreSuccessor",
+          "integrationParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "commands": [
+            {
+              "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-main78-catalog-json-20261026.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+              "artifactSha256": "25bd1bae6efbd5a2f6a2ec98943c4ffa755c4f1d2a6f28df3620efd0b5f493ea"
+            },
+            {
+              "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-main78-catalog-csv-20261026.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+              "artifactSha256": "ceb6eb709c1ebabd4f7b017e1c608603956e65ac6a8dc71d06baa6dd057f43df"
+            }
+          ],
+          "all1339MainDecisionObjectsPreservedActiveOrHistory": true,
+          "allNewMainReconciliationFieldsExact": true
+        },
+        "sourceAdmission": {
+          "status": "PASS committed-descendant canonical source admission",
+          "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "preparedReceipt": "/private/tmp/tdf-player-privacy-main78-prepared-source-admission-20261026.json",
+          "preparedReceiptSha256": "a6ddc275790cf7717a70b813b02daf4e935d48ff9e347097abd4009f072d3f0d",
+          "mappedChangedSurfaces": [
+            "e2e/web/music-player-native.spec.mjs",
+            "tdf-hq-ui/src/App.tsx",
+            "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+            "tdf-hq-ui/src/player/PlayerProvider.tsx",
+            "tdf-hq-ui/src/player/queue.ts",
+            "tdf-hq-ui/src/session/SessionProviders.tsx"
+          ],
+          "exactPostCommitCommand": "python3 scripts/check-new-specification-surfaces.py --base 78fa351b469c1d2031df3232204dd722ac480e3b --head HEAD",
+          "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations. This is structural source/fingerprint mapping admission,not semantic verification or production acceptance.",
+          "preparedStatus": "PASS prepared-tree six mappings/fingerprints; committed-descendant check pending",
+          "command": "python3 scripts/check-new-specification-surfaces.py --base 78fa351b469c1d2031df3232204dd722ac480e3b --head HEAD",
+          "validatedMergedCommit": "bbbe56ca2cd96cdfdf0b7c539621d831982be322",
+          "committedReceipt": {
+            "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+            "head": "bbbe56ca2cd96cdfdf0b7c539621d831982be322",
+            "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+            "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+            "mappedChangedSurfaces": [
+              "e2e/web/music-player-native.spec.mjs",
+              "tdf-hq-ui/src/App.tsx",
+              "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+              "tdf-hq-ui/src/player/PlayerProvider.tsx",
+              "tdf-hq-ui/src/player/queue.ts",
+              "tdf-hq-ui/src/session/SessionProviders.tsx"
+            ],
+            "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+          },
+          "committedReceiptPath": "/private/tmp/tdf-player-privacy-main78-committed-source-admission-20261026.json",
+          "committedReceiptSha256": "a3b865a9bbc9301528f916b7d9ac0657a7ac5ffd78a25ca8f26609c76ef802e5"
+        }
+      }
+    },
+    {
+      "scope": "Historical9b qualification; not relabeled as2e execution.",
+      "checkpoint": "c7cf749a040f64117114c75e96295e8b4508781c",
+      "evidence": {
+        "integrationBaseline": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+        "protectedMainBaseline": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+        "formal": {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
+          "contract": "formal/system/player-listening-privacy.md",
+          "classification": "PARTIAL release acceptance; named local behaviors TESTED",
+          "mathematicalProof": false,
+          "existingPlayerModelCoversIdentity": false,
+          "initialInheritedRequirements": 142,
+          "initialTotalRequirements": 143,
+          "initialInheritedPlayerRowSha256": "7adda48f90f0ace1be14a05e8b2d74571291f651feeb5acd9799ecdb749259da",
+          "intentionalInheritedDelta": {
+            "requirement": "MEDIA-MUSIC-PLAYER-001",
+            "field": "implementation",
+            "appendOnlyPath": "tdf-hq-ui/src/session/SessionProviders.tsx",
+            "contractMapping": "formal/system/player-session.md ownership/navigation correspondence only",
+            "otherFieldsMustRemainExact": true
+          },
+          "other141InheritedRequirementObjectsExact": true,
+          "ownedPlayerOtherFieldsExact": true,
+          "proofStatus": "TESTED; no mathematical or model-checked identity claim",
+          "integrationInheritedRequirements": 146,
+          "integrationForeignParentObjectsExact": 145,
+          "integrationOwnedPlayerOnlyImplementationAppend": true,
+          "integrationTotalRequirements": 147
+        },
+        "metadataValidation": {
+          "integrationParent": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+          "status": "PASS",
+          "total": 36,
+          "commands": [
+            {
+              "command": "python3 scripts/test-requirement-declarations.py",
+              "tests": 9,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main9b-declarations-20261026.log",
+              "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+            },
+            {
+              "command": "python3 scripts/test-specification-inventory.py",
+              "tests": 6,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main9b-inventory-tests-20261026.log",
+              "sha256": "1515d350396fefb42f832bf05a35f10ac373c6be78933e534c179d03bc6381a1"
+            },
+            {
+              "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+              "tests": 10,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main9b-conformance-tests-20261026.log",
+              "sha256": "bb0123615533807dafd34e643b1b61ad605ecab626d977b3513a052a436a1b4a"
+            },
+            {
+              "command": "python3 scripts/test-new-specification-surfaces.py",
+              "tests": 11,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-main9b-surfaces-tests-20261026.log",
+              "sha256": "1c16844ce0ee90fe37b38ba01389e96b5b17db15d6428c6c730a3c81e7f96192"
+            }
+          ],
+          "freshness": "PASS inventory --check and traceability --check; git diff --check PASS",
+          "preservationAssertions": "147requirements:145foreignmainobjects exact;PLAYER only SessionProviders implementation append;PRIVACY unchanged;1338maincatalogactiveexact+exactoldqueuehistory+one reviewed successor;all main reconciliation intact;all six b625 source hashes and222manifest exact"
+        },
+        "catalogValidation": {
+          "integrationParent": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+          "status": "PASS strictJSON/CSV zero unreviewed/stale",
+          "finalActiveDecisions": 1339,
+          "unchangedActiveParentObjects": 1338,
+          "supersededParentObjectsPreservedExactInHistory": 1,
+          "activeSuccessorsIndividuallyReviewed": 1,
+          "allNewMainReconciliationFieldsExact": true,
+          "commands": [
+            {
+              "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-main9b-catalog-json-20261026.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+              "artifactSha256": "378f3ba3848869fa8411ddea3639c65066ccff576c7c27a5ce513105c8222605"
+            },
+            {
+              "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-main9b-catalog-csv-20261026.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+              "artifactSha256": "6bfe04641cd0f0d82b128d2dec213002752d9f311e1f5f8a9419b6b879687826"
+            }
+          ],
+          "all1339MainDecisionObjectsPreservedActiveOrHistory": true
+        },
+        "sourceAdmission": {
+          "status": "PENDING_CURRENT_COMMITTED_DESCENDANT_CHECK",
+          "base": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+          "command": "python3 scripts/check-new-specification-surfaces.py --base 9b7aa4648d4158f6da84fbb5e794267cd4953177 --head HEAD",
+          "scope": "Structural material-source mappings/freshness only, not semantic verification or production acceptance.",
+          "preparedStatus": "PASS six mapped fingerprints; immutable merged-descendant admission pending local merge commit",
+          "preparedReceipt": {
+            "path": "/private/tmp/tdf-player-privacy-main9b-prepared-preservation-20261026.json",
+            "sha256": "40680e37232157c8938cea470c5a669868f4c885a9b3b64b09a87672a83367a6"
+          }
+        },
+        "currentMainReconciliation": {
+          "priorHead": "2dc5c6a8308c8a8eeac1cf08d4d75788f179544b",
+          "main": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+          "method": "normal merge; five generated/canonical conflicts only; no runtime conflict or edit",
+          "sixQualifiedSourceHashesUnchanged": true,
+          "packageGraphAndLockUnchanged": true,
+          "nativeBrowserQualification": "Historical b625 qualified27/27 identity retained; not rerun or relabeled.",
+          "inheritedRelevantApiChange": "musicReleases.listPublic gains limit/offset/signal; getAssetAccess and player resolution are unchanged.",
+          "currentUnitStatus": "PASS86/86 eight suites under Node22.14.0",
+          "production": "NOT_DEPLOYED_OR_VERIFIED",
+          "pendingFeatureHeadsExcluded": [
+            "legacyPR624",
+            "sourceAvailabilityPR626",
+            "credentialCachePR633"
+          ],
+          "unitLog": {
+            "path": "/private/tmp/tdf-player-privacy-main9b-unit-20261026.log",
+            "sha256": "31a9cb691c5f5bc0b8605f1ba3ab29d8b79802e9dc3c981e6861099f5b60b041",
+            "scope": "Actual App/session composition plus declared synthetic API/media doubles; no new native/production claim."
+          },
+          "preparedPreservation": {
+            "path": "/private/tmp/tdf-player-privacy-main9b-prepared-preservation-20261026.json",
+            "sha256": "40680e37232157c8938cea470c5a669868f4c885a9b3b64b09a87672a83367a6"
+          }
+        }
+      },
+      "committedQualification": {
+        "path": "/private/tmp/tdf-player-privacy-main9b-final-qualified-20261026.json",
+        "sha256": "63a71b88f8e18c7f5d0d1b2a3821ed0f4f8413d3aaa139ed7a2e2f549b9e7d1e"
+      }
+    },
+    {
+      "main": "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "retainedAt": "2026-10-26T23:41:28.521641+00:00",
+      "metadataValidation": {
+        "integrationParent": "2e01bbe1263e8761fa2692bd951f828c01142449",
+        "status": "PASS",
+        "total": 36,
+        "commands": [
+          {
+            "command": "python3 scripts/test-requirement-declarations.py",
+            "tests": 9,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-main2e-declarations-20261026.log",
+            "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+          },
+          {
+            "command": "python3 scripts/test-specification-inventory.py",
+            "tests": 6,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-main2e-inventory-tests-20261026.log",
+            "sha256": "f6fcc570909995100b109116a1e15c23b994f90c6e16a1076590dcc9ad9357f3"
+          },
+          {
+            "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+            "tests": 10,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-main2e-conformance-tests-20261026.log",
+            "sha256": "6644c1af90cb2a327b3ddc2489d528ea6a9068b1d7add0f2d4830560f0101e1d"
+          },
+          {
+            "command": "python3 scripts/test-new-specification-surfaces.py",
+            "tests": 11,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-main2e-surfaces-tests-20261026.log",
+            "sha256": "1a8781cda69e672d7370941b2b52d740684515c55c4a0e5a24f06009bcea7d57"
+          }
+        ],
+        "freshness": "PASS inventory --check and traceability --check; git diff --check PASS",
+        "preservationAssertions": "148 requirements:146foreign main objects exact; PLAYER only SessionProviders implementation append; ownPRIVACY unchanged. All1341 main catalog objects preserved1340active+one exact oldqueue inhistory with one reviewed active successor; every main reconciliation/top-level field retained;222manifest andall sixb625 hashes exact."
+      },
+      "catalogValidation": {
+        "integrationParent": "2e01bbe1263e8761fa2692bd951f828c01142449",
+        "status": "PASS strictJSON/CSV zero unreviewed/stale",
+        "finalActiveDecisions": 1341,
+        "unchangedActiveParentObjects": 1340,
+        "supersededParentObjectsPreservedExactInHistory": 1,
+        "activeSuccessorsIndividuallyReviewed": 1,
+        "commands": [
+          {
+            "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+            "result": "PASS exit0",
+            "log": "/private/tmp/tdf-player-privacy-main2e-catalog-json-20261026.log",
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+            "artifactSha256": "c8cb16f65f55e179844f72a29b7ef3c8a20435316f49d9c3248f0e215c5deecd"
+          },
+          {
+            "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+            "result": "PASS exit0",
+            "log": "/private/tmp/tdf-player-privacy-main2e-catalog-csv-20261026.log",
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+            "artifactSha256": "0d412b28a8913eeba89c4c4f46ea95ae91da1d8435401515edaa55a522fbfacd"
+          }
+        ],
+        "all1341MainDecisionObjectsPreservedActiveOrHistory": true,
+        "allNewMainReconciliationFieldsExact": true,
+        "otherTopLevelCatalogFieldsExactMain": true
+      },
+      "sourceAdmission": {
+        "status": "PENDING_ROOT_NORMAL_MERGE_COMMIT",
+        "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+        "command": "python3 scripts/check-new-specification-surfaces.py --base 2e01bbe1263e8761fa2692bd951f828c01142449 --head HEAD",
+        "scope": "Prepared structural mappings then immutable descendant check after root commit; no semantic proof or production claim.",
+        "preparedStatus": "PASS six changed material paths map to current canonical rows and current generated fingerprints; immutable root-committed descendant check pending",
+        "preparedReceipt": {
+          "path": "/private/tmp/tdf-player-privacy-main2e-prepared-preservation-20261026.json",
+          "sha256": "c9abb9e462058e2bdb2d4350c4fc4cb19990915c87942e423cf87c16ff75be17"
+        }
+      },
+      "currentMainReconciliation": {
+        "priorHead": "c7cf749a040f64117114c75e96295e8b4508781c",
+        "main": "2e01bbe1263e8761fa2692bd951f828c01142449",
+        "method": "normal merge after protected legacyPR624; five generated/canonical conflicts only",
+        "sixQualifiedSourceHashesUnchanged": true,
+        "packageGraphAndLockUnchanged": true,
+        "nativeBrowserQualification": "Historical b62527 cases retain original receipt; no rerun or relabel.",
+        "currentUnitStatus": "Not repeated: unchanged six source/test hashes and package graph; prior fresh9b86/8 retained with c7 immutable qualification.",
+        "production": "NOT_DEPLOYED_OR_VERIFIED",
+        "pendingFeatureHeadsExcluded": [
+          "sourceAvailabilityPR626",
+          "credentialCachePR633"
+        ],
+        "preparedPreservation": {
+          "path": "/private/tmp/tdf-player-privacy-main2e-prepared-preservation-20261026.json",
+          "sha256": "c9abb9e462058e2bdb2d4350c4fc4cb19990915c87942e423cf87c16ff75be17"
+        }
+      }
+    },
+    {
+      "main": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+      "retainedAt": "2026-10-27T02:08:23.215158+00:00",
+      "privateRefreshPreviousContext": {
+        "branch": "fix/player-listening-identity-20261026",
+        "status": "IMPLEMENTED_COMMITTED_LOCALLY_TESTED_NOT_RELEASED",
+        "integrationBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+        "plannedIntegrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+        "protectedMainBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+        "metadataValidation": {
+          "integrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "status": "PASS",
+          "total": 36,
+          "commands": [
+            {
+              "command": "python3 scripts/test-requirement-declarations.py",
+              "tests": 9,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/declarations.log",
+              "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+            },
+            {
+              "command": "python3 scripts/test-specification-inventory.py",
+              "tests": 6,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/inventory-tests.log",
+              "sha256": "905de6d4975c4d56bdc3fa6639ec8638abacb03fab8b32e1ec7e1e5d59757f52"
+            },
+            {
+              "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+              "tests": 10,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/conformance-tests.log",
+              "sha256": "6cff289c8f9b10024d769cb88905c9ec223516b69c45d06f37a492e612bfb224"
+            },
+            {
+              "command": "python3 scripts/test-new-specification-surfaces.py",
+              "tests": 11,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/surfaces-tests.log",
+              "sha256": "19db965d48e52660e6144657258866330f0c36e52fd48ef26b1713f1ebb54d6f"
+            }
+          ],
+          "generatedClients": {
+            "result": "PASS",
+            "clients": 2,
+            "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d"
+          },
+          "preservationAssertions": "149 requirements:147foreign main objects exact; PLAYER only SessionProviders implementation append; ownPRIVACY unchanged. All1341 main catalog objects preserved1340active+one exact oldqueue inhistory with one reviewed active successor; every main reconciliation/top-level field retained including2634/archived6ff;223manifest andall sixb625 hashes exact.",
+          "freshness": "PASS final inventory --check and traceability --check; git diff --check PASS"
+        },
+        "catalogValidation": {
+          "integrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "status": "PASS strictJSON/CSV zero unreviewed/stale",
+          "finalActiveDecisions": 1341,
+          "unchangedActiveParentObjects": 1340,
+          "supersededParentObjectsPreservedExactInHistory": 1,
+          "activeSuccessorsIndividuallyReviewed": 1,
+          "all1341MainDecisionObjectsPreservedActiveOrHistory": true,
+          "allNewMainReconciliationFieldsExact": true,
+          "otherTopLevelCatalogFieldsExactMain": true,
+          "commands": [
+            {
+              "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/catalog-json.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+              "artifactSha256": "4b23dfb0975ba76772edc6bcaf5e9ae0effb74e60f22b41dd72fc3bce7fcfec9"
+            },
+            {
+              "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/catalog-csv.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+              "artifactSha256": "b0a9ac5e2be451f170279cfa48730dfba774debf53bd1a0f5d22b87ea0083d66"
+            }
+          ]
+        },
+        "sourceAdmission": {
+          "status": "PENDING_ROOT_NORMAL_MERGE_COMMIT",
+          "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "command": "python3 scripts/check-new-specification-surfaces.py --base c66a65a10a8e5e48f89172d61f6f57fb81697896 --head HEAD",
+          "scope": "Prepared structural mappings then immutable descendant check after root commit; no semantic proof or production claim.",
+          "preparedStatus": "PASS six mapped changed material paths; immutable committed descendant check pending root merge commit",
+          "preparedReceipt": {
+            "path": "/private/tmp/tdf-player-privacy-mainc66-20261026/preservation.json",
+            "sha256": "58310561bd4d94d4161d87274f843b2319defff848aa5fd0bf82ccf974d5e0e3"
+          }
+        },
+        "currentMainReconciliation": {
+          "priorHead": "fc5cedb5ff7abb28c10c89d543656b5da3e38559",
+          "main": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "method": "normal merge; six canonical/generated conflicts manually reconciled; no runtime edit",
+          "sixQualifiedSourceHashesUnchanged": true,
+          "packageGraphAndLockUnchanged": true,
+          "nativeBrowserQualification": "Historical b62527 cases and fc5 hosted evidence retain original source identities; no rerun or relabel.",
+          "currentUnitStatus": "Not repeated: all six qualified runtime/test source hashes and package graph remain exactfc5.",
+          "wholeBackendQualified": false,
+          "wholeBackendReason": "Current main introduces inherited SQL/test/migration inputs; historical compiled backend binaries and HTTP receipts do not qualify this whole merged backend.",
+          "production": "NOT_DEPLOYED_OR_VERIFIED",
+          "inheritedMigrationCount": 223,
+          "preparedPreservation": {
+            "path": "/private/tmp/tdf-player-privacy-mainc66-20261026/preservation.json",
+            "sha256": "58310561bd4d94d4161d87274f843b2319defff848aa5fd0bf82ccf974d5e0e3"
+          }
+        }
+      }
+    }
+  ],
+  "migrations": {
+    "count": 223,
+    "manifestSha256": "2ef157906e6bc8f922fd5f3f838b5daca8b1ef60f5943f5f7b136ec3f9225699",
+    "exactMainManifestBytes": true,
+    "privacyMigrations": 0,
+    "scope": "Inherited223-entry current-main manifest byte-identical; no migration execution claimed."
+  },
+  "sourceAdmission": {
+    "status": "PENDING_PRIVATE_ROOT_NORMAL_MERGE_COMMIT",
+    "base": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "command": "/private/tmp/tdf-event-memories-venv/bin/python3 scripts/check-new-specification-surfaces.py --base 4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "scope": "Prepared actual source mappings then immutable private descendant check after root commit; not publication or semantic proof.",
+    "preparedStatus": "PASS six changed material paths, actual source bytes and current canonical mappings; immutable private descendant check still pending root normal merge commit",
+    "preparedReceipt": {
+      "path": "/private/tmp/tdf-privacy-629-main4b81-20261027/prepared-source-admission.json",
+      "sha256": "57ef89d271abe393635b1cca94260379c8450b1a0ced068c63d9c9b6cff29e3e"
+    }
+  },
+  "parentReleaseSnapshot": {
+    "scope": "Historical parent P0 release snapshot supplied by root release engineer; NOT new privacy runtime qualification,backend activation or real production music acceptance. Local artifact hashes and named harness outcome fields independently checked while preparing privacy metadata.",
+    "p0": {
+      "pr": "https://github.com/diegueins680/tdf-app/pull/620",
+      "mergedAtUtc": "2026-10-26T07:51:49Z",
+      "mergeCommit": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+      "approvedCandidate": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+      "requiredChecks": 20,
+      "checksStatus": "ROOT_REPORTED_ALL_PASS",
+      "ci": "https://github.com/diegueins680/tdf-app/actions/runs/40284481007",
+      "freshReview": {
+        "reviewer": "TDfrecords",
+        "submittedAtUtc": "2026-10-26T07:25:59Z",
+        "state": "APPROVED root-reported fresh review"
+      }
+    },
+    "publishedParentClient": {
+      "rootObservedHttpStatus": 200,
+      "bundle": "https://www.tdfrecords.net/assets/index-BbZYQAQh.js",
+      "bundleSha256": "c26ca054054eb8f7e03a19c37e608bb02c9733dea22dd0b83128abdae431878c",
+      "embeddedCommit": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+      "results": "/private/tmp/tdf-audio-published-client-20261026/results.json",
+      "resultsSha256": "91bf5f4d9a874adb03a34702dff82ad60b3b80506f01f3ee8cfc581d14e4d36f",
+      "finishedAt": "2026-10-26T15:26:20.006Z",
+      "status": "VERIFIED-published-Chromium-native-decoding-with-synthetic-business-and-media",
+      "cases": [
+        {
+          "mode": "desktop",
+          "selectedRecordingOnly": true,
+          "playbackPersistsAcrossNavigation": true,
+          "nativePause": true,
+          "nativeResume": true,
+          "nextTrackDecodes": true,
+          "pageErrors": []
+        },
+        {
+          "mode": "mobile-web",
+          "selectedRecordingOnly": true,
+          "playbackPersistsAcrossNavigation": true,
+          "nativePause": true,
+          "nativeResume": true,
+          "nextTrackDecodes": true,
+          "pageErrors": []
+        }
+      ],
+      "harnessScope": "Production music_releases.public remains false. This is a counterfactual client-only check with synthetic successful catalog/access responses, not a delivered real-user music journey. Published canonical web with all API/auth/catalog/delivery metadata intercepted synthetic. Media bytes are injected silent WAV fixtures decoded by the real Chromium engine. No media prototype, playback clock or play/pause method replaced. External requests blocked. No real account, rights/territory authorization, provider, CDN transport, physical device or native-store acceptance claim.",
+      "syntheticSilentWavSha256": "7f81ab7656af6047b5324dece71b552ff3b24534c920e727c321cdff8f99845d",
+      "productionBusinessWrites": false,
+      "provenanceDirectory": "/private/tmp/tdf-audio-published-client-20261026",
+      "priorHarnessFailure": "Original separate-owner probe was PARTIAL due to a harness ReferenceError. Root corrected its own copy to pass the argument explicitly; no application code changed. This corrected harness result does not erase the original failure."
+    },
+    "productionReadonlySnapshot": {
+      "path": "/private/tmp/tdf-audio-production-readonly-20261026-v1.json",
+      "sha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+      "observedAt": "2026-10-26T07:06:13.603Z",
+      "inspectorSourceRevision": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+      "sourceWorktreeDirty": false,
+      "apiCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "appliedMigrationCount": 213,
+      "musicFlags": "All music_releases.* FALSE per root read-only inspection; published harness also records public music disabled. No activation performed or inferred."
+    },
+    "actualAuthorizedUploadToPlayback": "UNVERIFIED",
+    "backendMusicActivation": "NOT_PERFORMED_OR_CLAIMED"
+  },
+  "currentMainReconciliation": {
+    "priorHead": "58155236768627c47b7d3dc68591bd857e734513",
+    "main": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "method": "Private normal merge into integrate/player-listening-main4b81-20261027; six canonical/generated conflicts reconciled; source frozen.",
+    "publication": "PRIVATE_PREPARED_ONLY; published PR629 remains at58155236768627c47b7d3dc68591bd857e734513 with its own prior review/CI identity. This private composition has no new approval, hosted CI, publication or binary qualification.",
+    "requirements": {
+      "main": 149,
+      "foreignMainObjectsExact": 148,
+      "playerOnlySessionProvidersImplementationAppend": true,
+      "ownPrivacyUnchanged": true,
+      "total": 150
+    },
+    "catalog": {
+      "main": 1341,
+      "unchangedActive": 1340,
+      "oldQueueRetirementExact": true,
+      "ownSuccessorExact": true,
+      "allMainHistoryExact": true,
+      "active": 1341
+    },
+    "sixQualifiedSourceHashesUnchanged581AndFc5": true,
+    "sixSourceSha256": {
+      "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "tdf-hq-ui/src/session/SessionProviders.tsx": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
+      "tdf-hq-ui/src/player/PlayerProvider.tsx": "4f1981b2830bc5cd71b1d4279a25771c234bee1b4c4612d467b36ad4e22b233a",
+      "tdf-hq-ui/src/player/queue.ts": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "1c3b69fcee274bf425973960622a2aeb9ef9dc2eba003d82a8ad9df29709b06d",
+      "e2e/web/music-player-native.spec.mjs": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e"
+    },
+    "inheritedSourceFiveSha256": {
+      ".github/workflows/ci.yml": "834142e79aed673d4ba12ec7ca78e0b302d877dee72f97761fcd9e1e0f124190",
+      "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f"
+    },
+    "inheritedAuthSevenSha256": {
+      "tdf-hq-ui/src/api/auth.test.ts": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
+      "tdf-hq-ui/src/api/auth.ts": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "31583e47dca59d77c2e7e74b50ff4672ac2ebbdaae21240669a8a46408b78868",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "78299818099457a78e8e76f5aa63d06e416aa16a59bf470c88d3390296bff21a",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx": "23fac48ff6208ec8ca79f31118dfc63eb54d8184aedb0f8ad7f8fbe98a4b663a",
+      "tdf-hq-ui/src/utils/authErrorMessage.test.ts": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
+      "tdf-hq-ui/src/utils/authErrorMessage.ts": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8"
+    },
+    "wholeBackendQualified": false,
+    "wholeBackendReason": "Current main SOURCE handler/query and earlier inherited SQL/test inputs differ from the historical privacy qualification context. Exact six privacy paths do not qualify this whole backend or compose unmerged feature640 fixes.",
+    "historicalEvidence": "All125 prior nonowned report leaves unchanged; original privacy runtime/unit/native/compiled/hosted receipts retain exact source identities.",
+    "runtimeReruns": 0,
+    "packageGraphAndLockUnchanged": true,
+    "inheritedMigrationCount": 223,
+    "manifestExactMain": true,
+    "metadata": {
+      "tests": 36,
+      "ciContracts": 46,
+      "strictJsonCandidates": 1341,
+      "strictCsvRows": 1341,
+      "clients": 2,
+      "apiPolicies": "PASS unchanged25/8",
+      "publicRoutes": "PASS",
+      "preparedAdmission": 6,
+      "freshness": "PASS_RETRY_ORDERED_INVENTORY_AND_CONFORMANCE_CHECKS"
+    },
+    "immutableAdmission": "PENDING_ROOT_PRIVATE_NORMAL_MERGE_COMMIT",
+    "production": "NO_ACTIONS_OR_NEW_VERIFICATION",
+    "capacityInterruption": {
+      "status": "FAILED_ORIGINAL_FINAL_GENERATION_THEN_OWNED_CAPACITY_RECOVERY",
+      "originalConformanceGenerationExitCode": 120,
+      "originalLog": "/private/tmp/tdf-privacy-629-main4b81-20261027/final-conformance-generate.log",
+      "originalLogBytes": 0,
+      "originalStderr": "No retained raw stderr; actual tool exit120 and subsequent shell no-space-left-on-device responses observed. No invented original log.",
+      "followupFreshnessAndAdmission": "Not started: shell could not create output logs due ENOSPC.",
+      "traceAfterFailure": "Read-only valid JSON2874992bytes/150requirements; not accepted as a successful generation.",
+      "rootRecovery": "Root-owned feature640 regenerable compiler-cache cleanup actual0, receipt /private/tmp/tdf-track-search-hosted-518c-20261027/cache-cleanup.json; no source/evidence/qualified executable deletion.",
+      "retry": "Only ordered metadata generation/freshness/prepared admission, no runtime/fulltest rerun.",
+      "retryOutcome": {
+        "inventoryGenerateExit": 0,
+        "conformanceGenerateExit": 0,
+        "inventoryCheckExit": 0,
+        "conformanceCheckExit": 0,
+        "preparedSixAdmissionExit": 0,
+        "runtimeTestsRerun": false
+      }
+    }
+  }
+}

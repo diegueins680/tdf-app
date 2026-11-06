@@ -901,6 +901,11 @@ data GenerateSessionInvoiceReq = GenerateSessionInvoiceReq
   , gsiGenerateReceipt     :: Maybe Bool
   , gsiIssueSri            :: Maybe Bool
   , gsiCertificatePassword :: Maybe Text
+  , gsiIdempotencyKey      :: Maybe Text
+    -- ^ PAY-INVOICE-ISSUE-001: required when an SRI document is issued
+  , gsiSriPortalVerified   :: Maybe Bool
+    -- ^ staff confirmed in the SRI portal that an earlier unresolved attempt
+    -- for the same invoice issued nothing, so a new key may issue
   } deriving (Show, Generic)
 instance FromJSON GenerateSessionInvoiceReq where
   parseJSON raw = do

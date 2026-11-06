@@ -1,3 +1,5 @@
+import UserProfileLink from '../components/UserProfileLink';
+import MarkdownText from '../components/MarkdownText';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -327,12 +329,12 @@ function ReportDetail({ reportId }: { reportId: string }) {
           {summary.ifsPriority && <Chip label={`Prioridad: ${summary.ifsPriority}`} />}
         </Stack>
         <Card variant="outlined"><CardContent><Stack spacing={1.5}>
-          <Typography sx={{ whiteSpace: 'pre-wrap' }}>{report.ifrDescription}</Typography>
+          <MarkdownText>{report.ifrDescription}</MarkdownText>
           <Divider />
           <Typography><strong>Rol:</strong> {report.ifrAccountRole} · <strong>Entorno:</strong> {summary.ifsEnvironment} · <strong>Plataforma:</strong> {summary.ifsPlatform}</Typography>
-          {report.ifrReproductionSteps && <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Pasos:</strong>{'\n'}{report.ifrReproductionSteps}</Typography>}
-          {report.ifrExpectedResult && <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Esperado:</strong>{'\n'}{report.ifrExpectedResult}</Typography>}
-          {report.ifrActualResult && <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Ocurrió:</strong>{'\n'}{report.ifrActualResult}</Typography>}
+          {report.ifrReproductionSteps && <Box><Typography fontWeight={700}>Pasos:</Typography><MarkdownText>{report.ifrReproductionSteps}</MarkdownText></Box>}
+          {report.ifrExpectedResult && <Box><Typography fontWeight={700}>Esperado:</Typography><MarkdownText>{report.ifrExpectedResult}</MarkdownText></Box>}
+          {report.ifrActualResult && <Box><Typography fontWeight={700}>Ocurrió:</Typography><MarkdownText>{report.ifrActualResult}</MarkdownText></Box>}
           {summary.ifsDuplicateOf && <Alert severity="info">Este reporte es duplicado de <Link component={RouterLink} to={`/feedback/interno/${summary.ifsDuplicateOf}`}>{summary.ifsDuplicateOf}</Link>.</Alert>}
           {reportIsMutable && summary.ifsState === 'draft' && <Button variant="contained" onClick={() => action.mutate(() => InternalFeedback.submit(reportId))}>Enviar reporte</Button>}
         </Stack></CardContent></Card>
@@ -374,7 +376,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
           </Stack></CardContent></Card></Grid>
           <Grid item xs={12} md={6}><Card variant="outlined"><CardContent><Stack spacing={2}>
             <Typography variant="h6">Conversación</Typography>
-            {report.ifrComments.map((item) => <Box key={item.ifcmId} sx={{ borderLeft: 3, borderColor: item.ifcmKind === 'information_request' ? 'warning.main' : 'divider', pl: 1.5 }}><Typography variant="caption">{item.ifcmAuthorName} · {item.ifcmKind}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{item.ifcmBody}</Typography></Box>)}
+            {report.ifrComments.map((item) => <Box key={item.ifcmId} sx={{ borderLeft: 3, borderColor: item.ifcmKind === 'information_request' ? 'warning.main' : 'divider', pl: 1.5 }}><Typography variant="caption"><UserProfileLink partyId={item.ifcmAuthorPartyId}>{item.ifcmAuthorName}</UserProfileLink> · {item.ifcmKind}</Typography><MarkdownText>{item.ifcmBody}</MarkdownText></Box>)}
             {reportIsMutable && <>
               <TextField label={commentKind === 'information_response' ? 'Información solicitada' : 'Comentario'} value={comment} onChange={(event) => setComment(event.target.value)} multiline minRows={3} />
               <Button disabled={!comment.trim()} onClick={() => action.mutate(async () => { await InternalFeedback.comment(reportId, comment, commentKind); setComment(''); })}>Agregar comentario</Button>
@@ -444,7 +446,7 @@ function ReportsList() {
         {!reportsQuery.isLoading && !reportsQuery.data?.length && <EmptyState title="No hay reportes" description={canAdministerList ? 'Los borradores y reportes enviados aparecerán aquí.' : 'Crea reportes desde un caso de tu plan de auditoría activo para conservar su trazabilidad.'} actionLabel={canAdministerList ? 'Crear reporte' : undefined} actionHref={canAdministerList ? '/feedback/interno/nuevo' : undefined} />}
         <Grid container spacing={2}>{reportsQuery.data?.map((report) => <Grid item xs={12} md={6} key={report.ifsId}><Card variant="outlined"><CardContent><Stack spacing={1}><Stack direction="row" justifyContent="space-between" gap={1}><Typography variant="h6">{report.ifsTitle}</Typography><Chip size="small" label={STATE_LABELS[report.ifsState]} color={report.ifsBlocking ? 'error' : 'default'} /></Stack><Typography variant="body2">{internalReportTypeLabel(listCatalogs.categories, report.ifsReportType)} · {report.ifsModuleName}{report.ifsFeatureName ? ` / ${report.ifsFeatureName}` : ''}</Typography>{canAdministerList && <Typography variant="caption">Reportó: {report.ifsReporterName}</Typography>}<Button component={RouterLink} to={`/feedback/interno/${report.ifsId}`} variant="outlined">Abrir seguimiento</Button></Stack></CardContent></Card></Grid>)}</Grid>
         {canAdministerList && <AccountDeletionQueue />}
-        {canAdministerList && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.lfdDescription}</Typography><Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
+        {canAdministerList && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><MarkdownText variant="body2">{item.lfdDescription}</MarkdownText><Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
       </Stack>
     </PageShell>
   );

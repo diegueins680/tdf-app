@@ -20,6 +20,8 @@ const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
 const DomoQuoteCheckoutPage = lazy(() => import('../pages/DomoQuoteCheckoutPage'));
 const DirectorySearchPage = lazy(() => import('../pages/DirectorySearchPage'));
 const DirectoryPublicDetailPage = lazy(() => import('../pages/DirectoryPublicDetailPage'));
+const EventCommunityEntry = lazy(() => import('./EventCommunityEntry'));
+const SocialEventWorkspacePage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
@@ -107,6 +109,9 @@ export function renderPublicRoutes() {
       <Route path="/directorio/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="profile" /></PublicBranding>} />
       <Route path="/clasificados/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="classified" /></PublicBranding>} />
       <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
+      <Route path="/social/eventos/:eventId" element={<EventCommunityEntry />}>
+        <Route index element={<SocialEventWorkspacePage />} />
+      </Route>
       <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/pagos/retorno" element={<PublicBranding><ProviderPaymentReturnPage /></PublicBranding>} />

@@ -1,0 +1,227 @@
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+(node:92721) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.warn
+    MUI: You have provided an out-of-range value `115` for the select component.
+    Consider providing a value that matches one of the available options or ''.
+    The available values are ``.
+
+      64 |     await screen.findByRole('tab', { name: 'Identidades (4)' });
+      65 |     fireEvent.mouseDown(screen.getByLabelText('Artista'));
+    > 66 |     fireEvent.click(screen.getByRole('option', { name: 'Verde 70' }));
+         |               ^
+      67 |     await waitFor(() => expect(screen.getByRole('tab', { name: 'Identidades (3)' })).toBeVisible());
+      68 |     expect(run).not.toHaveBeenCalled();
+      69 |   } finally { client.clear(); }
+
+      at ../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/@mui/material/node/Select/SelectInput.js:400:17
+      at commitHookEffectListMount (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+      at commitPassiveMountOnFiber (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
+      at commitPassiveMountEffects_complete (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24930:9)
+      at commitPassiveMountEffects_begin (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24917:7)
+      at commitPassiveMountEffects (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24905:3)
+      at flushPassiveEffectsImpl (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:27078:3)
+      at flushPassiveEffects (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
+      at commitRootImpl (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:26974:5)
+      at commitRoot (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:26721:5)
+      at performSyncWorkOnRoot (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:26156:3)
+      at flushSyncCallbacks (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:12042:22)
+      at flushActQueue (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react/cjs/react.development.js:2667:24)
+      at act (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react/cjs/react.development.js:2582:11)
+      at ../../tdf-correctness-cycle-20261028/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.eventWrapper (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/react/dist/pure.js:106:28)
+      at fireEvent (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/dom/dist/events.js:12:35)
+      at fireEvent.<computed> [as click] (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/dom/dist/events.js:110:36)
+      at fireEvent.<computed> [as click] (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/react/dist/fire-event.js:15:52)
+      at Object.<anonymous> (src/pages/ArtistEnrichmentReviewPage.test.tsx:66:15)
+
+  console.warn
+    MUI: You have provided an out-of-range value `115` for the select component.
+    Consider providing a value that matches one of the available options or ''.
+    The available values are ``.
+
+      64 |     await screen.findByRole('tab', { name: 'Identidades (4)' });
+      65 |     fireEvent.mouseDown(screen.getByLabelText('Artista'));
+    > 66 |     fireEvent.click(screen.getByRole('option', { name: 'Verde 70' }));
+         |               ^
+      67 |     await waitFor(() => expect(screen.getByRole('tab', { name: 'Identidades (3)' })).toBeVisible());
+      68 |     expect(run).not.toHaveBeenCalled();
+      69 |   } finally { client.clear(); }
+
+      at ../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/@mui/material/node/Select/SelectInput.js:400:17
+      at commitHookEffectListMount (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+      at commitPassiveMountOnFiber (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
+      at commitPassiveMountEffects_complete (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24930:9)
+      at commitPassiveMountEffects_begin (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24917:7)
+      at commitPassiveMountEffects (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:24905:3)
+      at flushPassiveEffectsImpl (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:27078:3)
+      at flushPassiveEffects (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
+      at commitRootImpl (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:26974:5)
+      at commitRoot (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:26721:5)
+      at performSyncWorkOnRoot (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:26156:3)
+      at flushSyncCallbacks (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/cjs/react-dom.development.js:12042:22)
+      at flushActQueue (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react/cjs/react.development.js:2667:24)
+      at act (../../tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react/cjs/react.development.js:2582:11)
+      at ../../tdf-correctness-cycle-20261028/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.eventWrapper (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/react/dist/pure.js:106:28)
+      at fireEvent (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/dom/dist/events.js:12:35)
+      at fireEvent.<computed> [as click] (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/dom/dist/events.js:110:36)
+      at fireEvent.<computed> [as click] (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/react/dist/fire-event.js:15:52)
+      at Object.<anonymous> (src/pages/ArtistEnrichmentReviewPage.test.tsx:66:15)
+
+FAIL src/pages/ArtistEnrichmentReviewPage.test.tsx
+  ✕ scopes identity counts to the selected artist without hiding competing matches for its references (1836 ms)
+  ○ skipped explains verification and separates an external-image review from broken-link filtering
+  ○ skipped continues to show and filter genuine failures alongside an image-rights review
+
+  ● scopes identity counts to the selected artist without hiding competing matches for its references
+
+    Unable to find role="tab" and name "Identidades (3)"
+
+    Ignored nodes: comments, script, style
+    [36m<body[39m
+      [33mstyle[39m=[32m""[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiStack-root css-8mcjw0-MuiStack-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiBox-root css-1sx6a3f"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-wcvfuv-MuiStack-root"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1nkvxtv-MuiStack-root"[39m
+              [36m>[39m
+                [36m<h3[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-h3 css-1u0z2z2-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mEnriquecimiento de artistas[0m
+                [36m</h3>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-body1 css-k16oju-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mInventario completo, investigación, matching y publicación auditable.[0m
+                [36m</p>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1jvj2pq-MuiStack-root"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary css-1blvszr-MuiButtonBase-root-MuiButton-root"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[39m
+                  [36m/>[39m
+                  [0mActualizar[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-74d805-MuiButtonBase-root-MuiButton-root"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[39m
+                  [36m/>[39m
+                  [0mAuditar artista[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiBox-root css-1shm1bn"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1p1wt0d-MuiStack-root"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiFormControl-root css-1k0s2o6-MuiFormControl-root"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined css-1kfabtt-MuiFormLabel-root-MuiInputLabel-root"[39m
+                    [33mdata-shrink[39m=[32m"false"[39m
+                    [33mid[39m=[32m"artist-enrichment-status-label"[39m
+                  [36m>[39m
+                    [0mEstado[0m
+                  [36m</label>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl MuiInputBase-sizeSmall MuiSelect-root css-sc8y68-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33maria-expanded[39m=[32m"false"[39m
+                      [33maria-haspopup[39m=[32m"listbox"[39m
+                      [33maria-labelledby[39m=[32m"artist-enrichment-status-label"[39m
+                      [33mclass[39m=[32m"MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-trm6af-MuiNativeSelect-root-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input"[39m
+                      [33mrole[39m=[32m"combobox"[39m
+                      [33mtabindex[39m=[32m"0"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33maria-hidden[39m=[32m"true"[39m
+                        [33mclass[39m=[32m"notranslate"[39m
+                      [36m>[39m
+                        [0m​[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<input[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33maria-invalid[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"MuiSelect-nativeInput css-j0riat-MuiSelect-nativeInput"[39m
+                      [33mtabindex[39m=[32m"-1"[39m
+                      [33mvalue[39m=[32m""[39m
+                    [36m/>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiSelect-icon MuiSelect-iconOutlined css-1rfqz7c-MuiSvgIcon-root-MuiNativeSelect-root-MuiSelect-icon"[39m
+                      [33mdata-testid[39m=[32m"ArrowDropDownIcon"[39m
+                      [33mfocusable[39m=[32m"false"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M7 10l5 5 5-5z"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [36m<fieldset[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"MuiOutlinedInput-notchedOutline css-18p5xg2-MuiNotchedOutlined-root-MuiOutlinedInput-notchedOutline"[39m
+                    [36m>[39m
+                      [36m<legend[39m
+                        [33mclass[39m=[32m"css-1n64csd-MuiNotchedOutlined-root"[39m
+                      [36m>[39m
+                        [36m<span>[39m
+                          [0mEstado[0m
+                        [36m</span>[39m
+                      [36m</legend>[39m
+                    [36m</fieldset>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiFormControl-root css-1isx81n-MuiFormControl-root"[39m
+                [36m>[39m
+                  [36m<...
+
+      65 |     fireEvent.mouseDown(screen.getByLabelText('Artista'));
+      66 |     fireEvent.click(screen.getByRole('option', { name: 'Verde 70' }));
+    > 67 |     await waitFor(() => expect(screen.getByRole('tab', { name: 'Identidades (3)' })).toBeVisible());
+         |           ^
+      68 |     expect(run).not.toHaveBeenCalled();
+      69 |   } finally { client.clear(); }
+      70 | });
+
+      at waitForWrapper (../../tdf-correctness-cycle-20261028/node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+      at Object.<anonymous> (src/pages/ArtistEnrichmentReviewPage.test.tsx:67:11)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 2 skipped, 3 total
+Snapshots:   0 total
+Time:        5.893 s
+Ran all test suites within paths "src/pages/ArtistEnrichmentReviewPage.test.tsx".
+Test results written to: ../../tdf-artist-639-qualification-20261029/baseline-identity-scope.json

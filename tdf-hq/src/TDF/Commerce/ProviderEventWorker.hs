@@ -115,7 +115,7 @@ processReference env@Env{envPool} encryptionKey stats eventRef = do
         Right (Left summary) -> do
           runSqlPool
             (ProviderEvent.markProviderEventDeadLetter
-              eventRef Nothing Nothing Nothing summary now) envPool
+              eventRef attemptCount Nothing Nothing Nothing summary now) envPool
           pure claimedStats
             { pewDeadLettered = pewDeadLettered claimedStats + 1 }
         Right (Right payload) -> case ProviderEvent.pepProvider payload of
@@ -127,7 +127,7 @@ processReference env@Env{envPool} encryptionKey stats eventRef = do
             now claimedStats payload
           _ -> do
             runSqlPool
-              (ProviderEvent.markProviderEventDeadLetter eventRef Nothing Nothing Nothing
+              (ProviderEvent.markProviderEventDeadLetter eventRef attemptCount Nothing Nothing Nothing
                 "Unsupported provider event" now) envPool
             pure claimedStats
               { pewDeadLettered = pewDeadLettered claimedStats + 1 }
@@ -146,7 +146,7 @@ processPaypalPayload env envPool eventRef attemptCount now stats payload =
     Left summary -> do
       runSqlPool
         (ProviderEvent.markProviderEventDeadLetter
-          eventRef Nothing Nothing Nothing summary now) envPool
+          eventRef attemptCount Nothing Nothing Nothing summary now) envPool
       pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
     Right (environment, envelope) -> do
       processed <- tryAny $ processPaypalWebhookEventIO
@@ -175,14 +175,14 @@ processHostedPayload env envPool eventRef attemptCount now stats payload = do
       case prrDisposition of
         Reconciliation.ReconciliationProcessed -> do
           runSqlPool
-            (ProviderEvent.markProviderEventProcessed eventRef
+            (ProviderEvent.markProviderEventProcessed eventRef attemptCount
               prrCheckoutId prrAttemptId Nothing now) envPool
           pure stats { pewProcessed = pewProcessed stats + 1 }
         Reconciliation.ReconciliationRetry ->
           markRetry envPool eventRef attemptCount prrSummary now stats
         Reconciliation.ReconciliationDeadLetter -> do
           runSqlPool
-            (ProviderEvent.markProviderEventDeadLetter eventRef
+            (ProviderEvent.markProviderEventDeadLetter eventRef attemptCount
               prrCheckoutId prrAttemptId Nothing prrSummary now) envPool
           pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
 
@@ -199,17 +199,17 @@ applyOutcome envPool eventRef attemptCount now stats outcome =
     PaypalEventProcessed checkoutId attemptId refundId -> do
       runSqlPool
         (ProviderEvent.markProviderEventProcessed
-          eventRef checkoutId attemptId refundId now) envPool
+          eventRef attemptCount checkoutId attemptId refundId now) envPool
       pure stats { pewProcessed = pewProcessed stats + 1 }
     PaypalEventIgnored -> do
       runSqlPool
         (ProviderEvent.markProviderEventIgnored
-          eventRef Nothing Nothing Nothing now) envPool
+          eventRef attemptCount Nothing Nothing Nothing now) envPool
       pure stats { pewIgnored = pewIgnored stats + 1 }
     PaypalEventPermanentFailure summary checkoutId attemptId refundId -> do
       runSqlPool
         (ProviderEvent.markProviderEventDeadLetter
-          eventRef checkoutId attemptId refundId summary now) envPool
+          eventRef attemptCount checkoutId attemptId refundId summary now) envPool
       pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
     PaypalEventRetry summary ->
       markRetry envPool eventRef attemptCount summary now stats

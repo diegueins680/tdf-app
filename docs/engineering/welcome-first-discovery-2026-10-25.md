@@ -191,3 +191,34 @@ recursos de contenido pendientes permanecen explícitos.
 `/inicio` conserva su búsqueda y parámetros y añade una bienvenida previa; `/buscar` permanece directo. Las variantes `/inicio/` y `/Inicio` muestran la misma bienvenida. Los CTA de exploración enlazan destinos públicos existentes. `/tdf` adelanta estudio y servicios, conserva el registro contextual y sustituye el video del Domo por una fotografía ya publicada en la sección de formación, sin atribuir la identidad del anfitrión. No se utiliza una portada editorial arbitraria como foto del estudio. La imagen pesa aproximadamente 57 KiB y no añade reproducción automática.
 
 Los eventos nuevos `public_discovery_cta_clicked` contienen parámetros de ruta y destino fijos. No incluyen búsqueda, identidad o coordenadas, respetan el cliente de analítica existente y su fallo no interrumpe la navegación. Estos clics expresan interés, no activación. El backend, sus permisos, el contrato API, las migraciones, las dependencias y el pin Mobile permanecen sin cambios.
+
+
+## Galería con material aprobado — 26 de octubre
+
+El propietario suministró tres carpetas de Drive y autorizó escoger fotografías.
+La sección `/tdf#estudio` incorpora seis imágenes de archivo: sala de control,
+sala de grabación, instrumentos, trabajo en consola, batería y músicos reunidos.
+Las descripciones corresponden a lo observado, sin identificar personas ni
+prometer que todos los equipos históricos siguen disponibles. Se conserva
+la bienvenida y se enlaza a las reservas existentes.
+
+Los originales se preservan en privado con SHA-256 y procedencia. Solo se
+publican derivados WebP de 640 y 1280 píxeles, sin metadatos EXIF/XMP/ICC,
+mediante codificación técnica sin recreación ni alteración de la escena.
+La página sirve los archivos localmente: no requiere iniciar sesión en Drive
+ni cargar scripts de terceros para las fotografías.
+
+Contrato: galería pública sin registro, miniaturas con espacio reservado y
+carga diferida; apertura por teclado/táctil en diálogo etiquetado; imagen
+completa sin recorte, cierre por Escape o botón y devolución de foco; un
+fallo individual conserva navegación y demás fotos. El reintento de imagen
+ampliada efectúa una nueva petición local. Las versiones de 1280 píxeles
+solo se descargan al abrirlas. No se añade autoplay ni eventos de identidad.
+
+Verificación requerida: apertura/cierre/foco, imágenes reales cargadas,
+fallo de miniatura y ampliación con recuperación, accesibilidad automatizada
+y ausencia de desbordamiento en escritorio y móvil. Registro de fuentes y
+estados de entrega: `reports/studio-gallery-2026-10-26.json`. La galería
+responde al comentario 16:42:25; videos didácticos e identificación del
+anfitrión continúan pendientes. No constituye un resultado humano de
+usabilidad ni una mejora de activación medida.

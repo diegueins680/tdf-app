@@ -26,6 +26,8 @@ import           Data.Char          ( GeneralCategory(Format)
                                      )
 import qualified Data.Text         as T
 
+import           TDF.API.ContentStorage (ContentStorageAPI)
+
 import           TDF.API.Types      ( DriveTokenExchangeRequest
                                      , DriveTokenRefreshRequest
                                      , DriveTokenResponse
@@ -37,6 +39,9 @@ data DriveUploadForm = DriveUploadForm
   , duFolderId    :: Maybe Text
   , duName        :: Maybe Text
   , duAccessToken :: Maybe Text
+  , duAuthMode :: Maybe Text
+  , duDestination :: Maybe Text
+  , duVisibility :: Maybe Text
   , duIdempotencyKey :: Maybe Text
   } deriving (Generic)
 
@@ -47,12 +52,20 @@ instance FromMultipart Tmp DriveUploadForm where
     folder <- optionalText "folderId" multipart
     nameTxt <- optionalText "name" multipart
     token <- optionalAccessToken "accessToken" multipart
+    destination <- optionalText "destination" multipart
+    visibility <- optionalText "visibility" multipart
+    authMode <- optionalText "authMode" multipart
+    if maybe True (`elem` ["user", "server"]) authMode
+      then pure () else Left "authMode must be user or server"
     idempotencyKey <- optionalIdempotencyKey "idempotencyKey" multipart
     pure DriveUploadForm
       { duFile = file
       , duFolderId = folder
       , duName = nameTxt
       , duAccessToken = token
+      , duAuthMode = authMode
+      , duDestination = destination
+      , duVisibility = visibility
       , duIdempotencyKey = idempotencyKey
       }
     where
@@ -104,7 +117,7 @@ instance FromMultipart Tmp DriveUploadForm where
           (_, fileName : _) -> Left ("Unexpected file field: " <> T.unpack fileName)
           _ -> Right ()
         where
-          expectedInputs = ["folderId", "name", "accessToken", "idempotencyKey"]
+          expectedInputs = ["folderId", "name", "accessToken", "authMode", "destination", "visibility", "idempotencyKey"]
           expectedFiles = ["file"]
           unexpectedInputs =
             [ name
@@ -149,3 +162,4 @@ type DriveAPI =
   :<|> "drive" :> "token" :> "refresh"
     :> ReqBody '[JSON] DriveTokenRefreshRequest
     :> Post '[JSON] DriveTokenResponse
+  :<|> ContentStorageAPI

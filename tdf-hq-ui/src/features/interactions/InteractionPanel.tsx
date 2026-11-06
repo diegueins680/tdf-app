@@ -1,10 +1,13 @@
+import MarkdownText from '../../components/MarkdownText';
+import UserProfileLink from '../../components/UserProfileLink';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Avatar, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
   IconButton, Link, Menu, MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { buildLoginRedirectPath } from '../../utils/loginRouting';
 import { ApiError } from '../../api/client';
 import { Interactions } from '../../api/interactions';
 import type { InteractionCommand, InteractionComment, InteractionCommentContext, InteractionIdentity, InteractionPage, InteractionSort, InteractionSummary } from '../../api/interactions';
@@ -13,6 +16,7 @@ import { getAnalyticsClient } from '../../analytics/posthog';
 import { AccountControls } from './AccountControls';
 import { DiscussionControls } from './DiscussionControls';
 import { CommentComposer } from './CommentComposer';
+import { EventMemorySourceActions } from '../../components/events/EventMemoryModeration';
 import { createDiscussionCursorHistory, discussionWindowPages, commandAnalyticsEvents, discussionLink, getDisclosure, optimisticReaction, setDisclosure } from './model';
 
 const unavailable = (error: unknown) => error instanceof ApiError && [401, 403, 404].includes(error.status);
@@ -28,18 +32,9 @@ function CommentBody({ comment }: { comment: InteractionComment }) {
   if (comment.state !== 'visible') return <Typography color="text.secondary">
     {comment.state === 'deleted' ? 'Comentario eliminado' : comment.state === 'hidden' || comment.state === 'removed' ? 'Comentario retirado' : 'Comentario no disponible'}
   </Typography>;
-  const points = [...comment.body]; const nodes: ReactNode[] = []; let offset = 0;
-  const plain = (text: string, key: string) => text.split(/(https?:\/\/[^\s<>]+)/g).map((part, index) =>
-    /^https?:\/\//i.test(part) ? <Link key={`${key}-${index}`} href={part} target="_blank" rel="noopener noreferrer nofollow ugc">{part}</Link> : part);
-  for (const mention of comment.mentions) {
-    nodes.push(...plain(points.slice(offset, mention.start).join(''), String(offset)));
-    nodes.push(<Link component={RouterLink} key={`mention-${mention.start}`} to={`/perfil/${mention.partyId}`}>{points.slice(mention.start, mention.end).join('')}</Link>);
-    offset = mention.end;
-  }
-  nodes.push(...plain(points.slice(offset).join(''), String(offset)));
   return <Stack spacing={0.5}>
     {comment.legacyPresentation?.title && <Typography variant="subtitle2">{comment.legacyPresentation.title}</Typography>}
-    <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{nodes}</Typography>
+    <MarkdownText mentions={comment.mentions}>{comment.body}</MarkdownText>
     {comment.legacyPresentation?.mediaUrls?.filter((url) => /^https?:\/\//i.test(url) || /^\/[^/]/.test(url)).map((url, index) => <Link key={`${index}-${url}`} href={url} target="_blank" rel="noopener noreferrer nofollow ugc">Archivo adjunto {index + 1}</Link>)}
   </Stack>;
 }
@@ -77,8 +72,7 @@ function CommentCard({ comment, summary, run, onReply, focused, refresh, focusFa
     id={`comment-${comment.id}`} sx={{ py: 1.5, px: 1, borderRadius: 2, outlineOffset: 2,
       ...(focused ? { animation: 'discussion-focus 4s ease-out', '@keyframes discussion-focus': { from: { backgroundColor: 'rgba(124,58,237,.16)' }, to: { backgroundColor: 'transparent' } } } : {}) }}>
     <Stack direction="row" spacing={1} alignItems="center">
-      {comment.author && <Avatar src={comment.author.avatarUrl ?? undefined} alt="" sx={{ width: 28, height: 28 }} />}
-      <Typography variant="subtitle2">{comment.author?.displayName ?? 'Comentario'}</Typography>
+      {comment.author ? <UserProfileLink partyId={comment.author.id}><Avatar src={comment.author.avatarUrl ?? undefined} alt={comment.author.displayName} sx={{ width: 28, height: 28 }} /><Typography variant="subtitle2">{comment.author.displayName}</Typography></UserProfileLink> : <Typography variant="subtitle2">Comentario</Typography>}
       <Typography variant="caption" color="text.secondary" component="time" dateTime={comment.createdAt}>
         {new Date(comment.createdAt).toLocaleString()}{comment.editedAt ? ' · editado' : ''}
       </Typography>
@@ -187,6 +181,8 @@ export function InteractionPanel(props: PanelProps) {
   return <div ref={container}><InteractionPanelContent {...props} active={active} /></div>;
 }
 function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExpanded = false, beforeActivation, active }: PanelProps & { active: boolean }) {
+  const location = useLocation();
+  const loginPath = buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`);
   const { session } = useSession(); const authenticated = Boolean(session); const scope = session ? `account:${session.partyId ?? session.username}` : 'anonymous';
   const identity = { kind, entityKey }; const client = useQueryClient(); const sectionId = useId();
   const discussionToggle = useRef<HTMLButtonElement>(null);
@@ -239,6 +235,7 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
         variant={data.myReactionTypeId === item.id ? 'outlined' : 'text'} disabled={!data.canReact || reaction.isPending || (!item.selectable && data.myReactionTypeId !== item.id)}
         onClick={() => reaction.mutate(data.myReactionTypeId === item.id ? null : item.id)}>{item.emoji}{item.count > 0 ? ` ${item.count}` : ''}</Button>)}
       {authenticated && totalReactions > 0 && <Button onClick={() => setReactorsOpen(true)}>Ver reacciones</Button>}
+      {authenticated && kind === 'event_moment' && data.sourceModeration && <EventMemorySourceActions targetId={data.id} version={data.version} controls={data.sourceModeration} />}
       {data.commentable && <Button ref={discussionToggle} aria-expanded={expanded} aria-controls={sectionId} onClick={() => {
         setExpanded(!expanded); setDisclosure(disclosureKey, !expanded); track(expanded ? 'thread_collapsed' : 'thread_expanded', kind);
       }}>{expanded ? 'Ocultar comentarios' : data.commentCount > 0 ? `Ver los ${data.commentCount} comentarios` : 'Comentar'}</Button>}
@@ -256,7 +253,7 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
       </Stack>
       {(data.canManage || data.canModerate) && <DiscussionControls summary={data} scope={scope} run={run} />}
       {authenticated && <AccountControls scope={scope} canModerate={data.canModerate} />}
-      {!authenticated && <Typography><Link component={RouterLink} to="/login">Inicia sesión</Link> para participar.</Typography>}
+      {!authenticated && <Typography><Link component={RouterLink} to={loginPath}>Inicia sesión</Link> para participar.</Typography>}
       {data.commentPolicy === 'off' ? <Typography>Los comentarios están desactivados.</Typography> : !data.canComment && authenticated ? <Typography>No tienes permiso para comentar en esta publicación.</Typography> : null}
       {data.canComment && <CommentComposer targetId={data.id} onSave={(body, mentions, requestKey) => run({ operation: 'comment.create', body, mentions }, requestKey)} />}
       {context.isError && <Alert severity="info">El comentario enlazado ya no está disponible.</Alert>}

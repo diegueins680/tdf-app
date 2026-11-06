@@ -1,0 +1,14 @@
+{
+  "sourceRevision": "0a86d04b776b0b84a643a34ad66d21595383a840",
+  "sourceTree": "6a0c5682a9325f8d0c084e5d94244f21d2800628",
+  "sourceWorktreeDirty": false,
+  "binarySha256": "daa776863c09e239581d546bbacda59075784355ad8dd182ba23cd67cc524841",
+  "descriptionSha256": "7c356b0372ac65ed388381c318de1cdffde149283f38e62ab0bdf7ac37dc6be8",
+  "observedAt": "2026-11-04T22:16:35.524Z",
+  "status": "observed-not-conformance-approved",
+  "workflowRun": 41921346038,
+  "artifactId": 13369090188,
+  "artifactSha256": "b39ccef7b241c4ef1623c5dd9b3f46cb5583a18932e6a293052957827c3caa2d",
+  "candidateSha256": "ff49f9bbb0a4c5c5a153464be64d3de46e6440381b6ffba43ffb2ed7c56ec78e",
+  "review": "Exactly five new authenticated storage operations. All existing operation declarations and raw mounts are unchanged apart from generated ordinals. Compiler declaration discovery is not handler, JSON-schema, provider or production conformance."
+}

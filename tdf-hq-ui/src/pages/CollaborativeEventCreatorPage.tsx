@@ -41,6 +41,7 @@ import {
 } from '../api/socialEvents';
 import type { PartySelectorOption } from '../api/partySelector';
 import PageShell from '../components/PageShell';
+import TicketPricePreview from '../components/events/TicketPricePreview';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -64,8 +65,8 @@ const DURATION_OPTIONS = [
   { value: 480, label: '8 horas' },
 ];
 
-const loadDraft = (): CollaborativeEventDraft => {
-  const initial = buildInitialCollaborativeEventDraft();
+const loadDraft = (timezone: string): CollaborativeEventDraft => {
+  const initial = buildInitialCollaborativeEventDraft(DateTime.now().setZone(timezone));
   if (typeof window === 'undefined') return initial;
   try {
     const stored = JSON.parse(
@@ -75,6 +76,8 @@ const loadDraft = (): CollaborativeEventDraft => {
     return {
       ...initial,
       ...stored,
+      timezone: typeof stored.timezone === 'string' && stored.timezone.trim()
+        ? stored.timezone : initial.timezone,
       durationMinutes: stored.durationMinutes === null
         ? null
         : DURATION_OPTIONS.some(({ value }) => value === stored.durationMinutes)
@@ -98,7 +101,7 @@ const loadDraft = (): CollaborativeEventDraft => {
 };
 
 const eventDateLabel = (draft: CollaborativeEventDraft) => {
-  const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT);
+  const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT, { zone: draft.timezone });
   if (!start.isValid) return 'Fecha por definir';
   if (draft.durationMinutes === null) {
     return `${start.setLocale('es').toFormat("ccc d LLL · HH:mm")} · fin por confirmar`;
@@ -112,9 +115,9 @@ const roleLabel = (role: EventCollaboratorDraft['role']) =>
 
 export default function CollaborativeEventCreatorPage() {
   const { session } = useSession();
-  const { locale } = useLocalePreferences();
+  const { locale, timezone, currency } = useLocalePreferences();
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<CollaborativeEventDraft>(loadDraft);
+  const [draft, setDraft] = useState<CollaborativeEventDraft>(() => loadDraft(timezone));
   const [creationResult, setCreationResult] =
     useState<CollaborativeEventCreationResult | null>(null);
   const [collaboratorCandidate, setCollaboratorCandidate] = useState<PartySelectorOption | null>(null);
@@ -264,7 +267,7 @@ export default function CollaborativeEventCreatorPage() {
   };
 
   const startAnotherEvent = () => {
-    setDraft(buildInitialCollaborativeEventDraft());
+    setDraft(buildInitialCollaborativeEventDraft(DateTime.now().setZone(timezone)));
     setCreationResult(null);
   };
 
@@ -470,6 +473,13 @@ export default function CollaborativeEventCreatorPage() {
                       ))}
                     </TextField>
                   </Stack>
+                  <TextField
+                    label="Zona horaria del evento"
+                    value={draft.timezone}
+                    onChange={(event) => updateDraft('timezone', event.target.value)}
+                    helperText="La fecha y el cronograma usarán esta zona. Ejemplo: America/Guayaquil."
+                    required
+                  />
                   <Autocomplete<SocialVenueDTO, false, false, false>
                     options={venuesQuery.data ?? []}
                     loading={venuesQuery.isLoading}
@@ -611,10 +621,11 @@ export default function CollaborativeEventCreatorPage() {
                       onChange={(event) => updateDraft('price', event.target.value)}
                       inputProps={{ min: 0, step: 0.01 }}
                       InputProps={{ startAdornment: <Typography sx={{ mr: 1 }}>$</Typography> }}
-                      helperText="Déjalo vacío si todavía no está definido."
+                      helperText="Precio base, antes de comisiones. Déjalo vacío si todavía no está definido."
                       sx={{ flex: 1 }}
                     />
                   </Stack>
+                  <TicketPricePreview price={draft.price} currency={currency} locale={locale} />
                   <TextField
                     label="Enlace de tickets"
                     value={draft.ticketUrl}

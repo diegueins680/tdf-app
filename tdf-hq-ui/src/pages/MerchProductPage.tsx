@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Alert, Box, Button, Card, CardActionArea, CardContent, CardMedia, Chip, CircularProgress, FormControl, InputLabel, MenuItem, Select, Snackbar, Stack, Typography } from '@mui/material';
@@ -103,7 +104,7 @@ export default function MerchProductPage() {
             {product.availabilityMode === 'made_to_order' && <Chip color="info" label={language === 'en' ? 'Made to order' : 'Hecho bajo pedido'} />}
           </Stack>
           <Typography variant="h5">{selectedVariant ? formatMerchMoney(selectedVariant.priceMinor, selectedVariant.currency, language === 'en' ? 'en-US' : 'es-EC') : '—'}</Typography>
-          <Typography sx={{ whiteSpace: 'pre-wrap' }}>{product.description}</Typography>
+          <MarkdownText>{product.description}</MarkdownText>
           {productReputation.data && <Card variant="outlined"><CardContent><MerchReputationSummary summary={productReputation.data} compact /><Button component={RouterLink} to={`/merch/productos/${product.id}`} size="small">{language === 'en' ? 'Product reviews' : 'Valoraciones del producto'}</Button></CardContent></Card>}
           {storeReputation.data && <Card variant="outlined"><CardContent><MerchReputationSummary summary={storeReputation.data} compact /><Button component={RouterLink} to={`/merch/tiendas/${product.storeId}`} size="small">{language === 'en' ? 'Store reputation' : 'Reputación de la tienda'}</Button></CardContent></Card>}
           <FormControl fullWidth>

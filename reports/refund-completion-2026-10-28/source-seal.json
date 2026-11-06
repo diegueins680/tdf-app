@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "14ec243c7e7e220e516f2ab48f4f94fa76281aab",
+  "sourceTree": "345f96573980142b303b42f82183b7a2d8f462c7",
+  "parentCommit": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "sourceDigest": "49a0ef73a047f2a68bbed3a9e43fdfc3c938220e9f2cedc9853f1c211414fa85",
+  "registeredSourceFiles": 1408,
+  "executionSourceHashesMatchCommittedTreeAndMobilePin": true,
+  "cleanCommittedReporterPass": true,
+  "reporterRelease": "BLOCKED",
+  "sourceAdmissionPass": true,
+  "pullRequest": 652,
+  "parentPullRequest": 651,
+  "requiredReviewPending": true,
+  "mainCompositionPending": true,
+  "assuranceScope": "Full Haskell+PG tests TESTED; finite design BOUNDED_VERIFIED; no new whole-handler proof; provider transport is synthetic."
+}
