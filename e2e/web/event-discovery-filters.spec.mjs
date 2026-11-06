@@ -63,8 +63,16 @@ test('event city, artist union and past filters work at narrow widths @mobile-fl
   await expect(includePast).toBeChecked();
   await expect(page.getByText('2 eventos en esta página', { exact: true })).toBeVisible();
   await expect(page.getByText('Evento pasado', { exact: true })).toBeVisible();
-  await expect(page.getByText('Sala 225', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('Sala 250', { exact: true })).toBeVisible();
+  // Each venue appears in both the calendar and its event card. Require
+  // both labels and check visibility without an ambiguous global locator.
+  const expectVenueLabels = async (name) => {
+    const labels = page.getByText(name, { exact: true });
+    await expect(labels).toHaveCount(2);
+    await expect(labels.nth(0)).toBeVisible();
+    await expect(labels.nth(1)).toBeVisible();
+  };
+  await expectVenueLabels('Sala 225');
+  await expectVenueLabels('Sala 250');
   await expect(page).toHaveURL(/past=1/);
   await page.reload();
   await expect(page.getByRole('textbox', { name: 'Ciudad', exact: true })).toHaveValue('New York');
