@@ -8,8 +8,10 @@ interface Filters { city?: string; artistIds?: string[]; startAfter?: string; li
 const listEvents = jest.fn<(filters: Filters) => Promise<SocialEventDTO[]>>();
 const artists: SocialArtistDTO[] = [{ artistId: '7', artistName: 'Alpha' }, { artistId: '8', artistName: 'Beta' }];
 const empty = jest.fn<() => Promise<never[]>>().mockResolvedValue([]);
+const listedVenues = [{ venueId: 'v1', venueName: 'Sala Listada' }];
+const getVenue = jest.fn<(venueId: string) => Promise<{ venueId: string; venueName: string }>>();
 jest.unstable_mockModule('../api/socialEvents', () => ({ SocialEventsAPI: {
-  listEvents, listVenues: empty, listInvitations: empty, listTicketTiers: empty, listTicketOrders: empty,
+  listEvents, listVenues: async () => listedVenues, getVenue, listInvitations: empty, listTicketTiers: empty, listTicketOrders: empty,
   listArtists: async () => artists,
   getArtist: async (id: string) => artists.find(artist => artist.artistId === id),
 } }));
@@ -42,7 +44,10 @@ function mount(path = '/social/eventos') {
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(<MemoryRouter initialEntries={[path]}><QueryClientProvider client={client}><SocialEventsPage /><Location /></QueryClientProvider></MemoryRouter>);
 }
-beforeEach(() => { listEvents.mockReset().mockResolvedValue([]); });
+beforeEach(() => {
+  listEvents.mockReset().mockResolvedValue([]);
+  getVenue.mockReset().mockImplementation(async venueId => ({ venueId, venueName: `Sala ${venueId}` }));
+});
 afterEach(() => { cleanup(); client?.clear(); });
 
 it('keeps the past-events control available on an empty upcoming page and removes the time restriction', async () => {
@@ -119,4 +124,13 @@ it('keeps an explicitly selected date without events instead of snapping back to
   expect(screen.getByText(/Sin eventos programados para esta fecha/)).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Ver una fecha con eventos' }));
   await waitFor(() => expect(screen.queryByText(/Sin eventos programados para esta fecha/)).toBeNull());
+});
+
+it('resolves event venues missing from the bounded venue list by id', async () => {
+  listEvents.mockResolvedValue([{ ...future(3), eventVenueId: 'v1' }, { ...future(4), eventVenueId: 'v900' }]);
+  mount('/social/eventos?city=Quito');
+  expect((await screen.findAllByText('Sala v900')).length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Sala Listada').length).toBeGreaterThan(0);
+  expect(screen.queryByText('Venue por definir')).toBeNull();
+  expect(getVenue.mock.calls.map(([venueId]) => venueId)).toEqual(['v900']);
 });

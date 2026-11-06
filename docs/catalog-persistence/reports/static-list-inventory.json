@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T03:23:26.451Z",
+  "generatedAt": "2026-11-06T04:37:36.780Z",
   "repositoryRoot": ".",
   "filesScanned": 2607,
   "candidateCount": 1396,
@@ -1720,7 +1720,7 @@
         {
           "value": "getMyRsvp",
           "candidateIds": [
-            "afc970c544841f583bdc"
+            "2511cbba2fc7279bc28a"
           ]
         },
         {
@@ -1737,7 +1737,7 @@
         {
           "value": "getRsvpSummary",
           "candidateIds": [
-            "afc970c544841f583bdc"
+            "2511cbba2fc7279bc28a"
           ]
         },
         {
@@ -2063,7 +2063,7 @@
         {
           "value": "listRsvpFeed",
           "candidateIds": [
-            "afc970c544841f583bdc"
+            "2511cbba2fc7279bc28a"
           ]
         },
         {
@@ -25237,7 +25237,7 @@
       ]
     },
     {
-      "id": "afc970c544841f583bdc",
+      "id": "2511cbba2fc7279bc28a",
       "file": "tdf-hq-ui/src/api/socialEvents.ts",
       "sourceKind": "production",
       "surface": "web",
@@ -25262,6 +25262,7 @@
         "uploadMomentImage",
         "getEvent",
         "listVenues",
+        "getVenue",
         "listInvitations",
         "sendInvitation",
         "respondInvitation",
@@ -25324,7 +25325,7 @@
         "removeFromWaitlist",
         "getTicketQR"
       ],
-      "valueCount": 77,
+      "valueCount": 78,
       "recommendedClassification": "governed-reference-data",
       "lines": [
         598
@@ -25387,12 +25388,12 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs"
       ],
-      "decision": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
-      "justification": "Reviewed all 77 existing transport method keys: the two additions read existing authenticated social artist list/detail endpoints for canonical-ID autocomplete. These keys are typed HTTP dispatch, not selectable artist or business data. Persisted ArtistProfile and EventArtist rows remain authoritative. The complete prior 75-method review and its provenance are retained as previousDecision.",
+      "decision": "unreviewed",
+      "disposition": "",
+      "specializedModel": "",
+      "priority": "",
+      "risk": "",
+      "justification": "",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -72386,7 +72387,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 996,
+      "line": 1024,
       "values": [
         "expense",
         "income",
@@ -72397,7 +72398,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        996
+        1024
       ],
       "consumerCount": 22,
       "backendConsumers": [

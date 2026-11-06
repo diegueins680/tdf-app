@@ -360,15 +360,43 @@ export default function SocialEventsPage() {
     [eventTypesQuery.data?.items],
   );
 
+  const events = useMemo(() => (eventsQuery.data ?? []).slice(0, EVENT_PAGE_SIZE), [eventsQuery.data]);
+
+  // The venue list is one bounded page of the whole catalog, so a loaded
+  // event can reference a venue outside it. Resolve those venues by id
+  // instead of showing an assigned venue as undefined.
+  const listedVenueIds = useMemo(
+    () => new Set((venuesQuery.data ?? []).flatMap((v) => (v.venueId ? [v.venueId] : []))),
+    [venuesQuery.data],
+  );
+  const unlistedVenueIds = useMemo(
+    () => (venuesQuery.isSuccess
+      ? Array.from(new Set(events.flatMap((ev) => (ev.eventVenueId ? [ev.eventVenueId] : []))))
+        .filter((venueId) => !listedVenueIds.has(venueId))
+      : []),
+    [events, listedVenueIds, venuesQuery.isSuccess],
+  );
+  const unlistedVenueQueries = useQueries({
+    queries: unlistedVenueIds.map((venueId) => ({
+      queryKey: ['social-venue', venueId],
+      queryFn: () => SocialEventsAPI.getVenue(venueId),
+      retry: false,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
   const venueById = useMemo(() => {
     const map = new Map<string, string>();
     (venuesQuery.data ?? []).forEach((v) => {
       if (v.venueId) map.set(v.venueId, v.venueName);
     });
+    unlistedVenueQueries.forEach((query) => {
+      const venue = query.data;
+      if (venue?.venueId) map.set(venue.venueId, venue.venueName);
+    });
     return map;
-  }, [venuesQuery.data]);
+  }, [venuesQuery.data, unlistedVenueQueries]);
 
-  const events = useMemo(() => (eventsQuery.data ?? []).slice(0, EVENT_PAGE_SIZE), [eventsQuery.data]);
   const hasNextPage = (eventsQuery.data?.length ?? 0) > EVENT_PAGE_SIZE;
   const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || page > 1;
   const eventOverviewUiState = getSocialEventsOverviewUiState({
