@@ -16,6 +16,12 @@ fi
 STACK_ROOT_DIR="${STACK_ROOT:-$ROOT/.stack-root}"
 mkdir -p "$STACK_ROOT_DIR"
 
+node --test "$ROOT/scripts/__tests__/content-storage-model.test.mjs" "$ROOT/scripts/__tests__/content-storage-reconciliation.test.mjs"
+
+if [ -n "${TDF_TEST_POSTGRES_HOST:-}" ]; then
+  node "$ROOT/scripts/test-content-storage-postgres.mjs"
+fi
+
 echo "▶ Building and testing Haskell backend in one Stack invocation"
 build_args=(--no-terminal test --force-dirty tdf-hq)
 if [ -n "${BACKEND_BINARY_OUT:-}" ]; then

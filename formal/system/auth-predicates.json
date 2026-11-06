@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3"
+    "tdf-hq/tdf-hq.cabal": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8"
   },
   "obligations": [
     {
@@ -268,6 +268,22 @@
       "qualification": "Additive pin refresh: this record only binds the reviewed snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
     },
     {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "7b4b82519ecfdb0620ad320820d6c53b3404eb04",
+      "previousSha256": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+      "currentSha256": "5cfa6ae42dd128664bd520b493f6d596bf325dc12033eb00a935275d0002d5f1",
+      "change": "PR #703 (account storage and recoverable uploads) registers two new library modules, TDF.API.ContentStorage and TDF.ContentStorage, in exposed-modules. No other line of the cabal file changes.",
+      "semanticReview": "The change only lists new modules for compilation; it alters no build flag, dependency, language extension or existing module, and neither new module is a source of the verified predicates. The verified obligations are therefore unaffected and the pin is refreshed to the new file."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "8efa5afe186705545103db80c527a09133708ede",
+      "previousSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
+      "currentSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "change": "Merge preserves protected main build declarations and appends only TDF.API.ContentStorage and TDF.ContentStorage exposed modules.",
+      "semanticReview": "New module registration changes no existing module implementation, flag or dependency. Both parent source-context reviews are retained. Fresh solver/replay execution remains required; this pin refresh is not a proof or release authorization."
+    },
+    {
       "source": "tdf-hq/src/TDF/Auth.hs",
       "reviewedAgainst": "46cf174bacb5b65c3243433d3e73eca2659f6219",
       "previousSha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
@@ -284,6 +300,15 @@
       "change": "Normal current-main composition of existing PR690; retain complete paired session validity checks and current-main authorization/recovery source.",
       "semanticReview": "Only apiTokenWithinValidity and its adjacent comment differ from protected main: bounded admission inspects both nullable endpoints and requires 0 <= issued <= now < expires; both-null unbounded noninteractive compatibility remains and incomplete windows fail closed. Main secretTokenMatches export/definition, imports, six translated authorization definitions, all callers, Models, RecordsIngestion, Cabal and Stack are unchanged. This inherited authorization projection does not translate or prove the session-window helper.",
       "qualification": "Context review binds only this actual source composition. Old execution receipts retain original revisions. Fresh solver execution, serialized replay and mutation controls are required. Complete session/clock/HTTP/SQL refinement and production authorization remain UNPROVEN; this is not independent GitHub approval."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "reviewedAgainst": "e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324",
+      "previousSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "currentSha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
+      "change": "Normal integration of existing session-window correction with actual protected main including campaign evidence, 5GB storage authority, current Cabal/API and Mobile companion.",
+      "semanticReview": "Against actual protected e524, runtime Auth changes only apiTokenWithinValidity and its comment, exactly preserving main secretTokenMatches and all other source bytes. Bounded windows require both endpoints and 0 <= issued <= now < expires; both-null noninteractive compatibility remains. The six translated authorization definitions and their imports/callers are unchanged. Main storage Models/Cabal changes, Stack inputs and ingestion source are retained byte-exact and keep actual-main reviewed pins. This inherited authorization projection does not translate or prove the session-window helper.",
+      "qualification": "Source-context binding only; historical ac74/main41 and original c64 receipts retain their original revision/hash identities. Fresh solver, serialized replay, mutation controls and actual compiled regressions remain required. Complete session/clock/endpoint/SQL refinement and production authorization remain UNPROVEN; not independent GitHub approval."
     }
   ]
 }

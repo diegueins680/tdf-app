@@ -52,6 +52,9 @@ import type {
 } from '../api/types';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
+import { useOptionalSession } from '../session/SessionContext';
+import { useOwnedTabDraft } from '../session/useOwnedTabDraft';
+import { parseFormMetadata } from '../session/recoverableDraft';
 
 interface ArtistFormState {
   partyId: number | null;
@@ -290,7 +293,13 @@ export default function LabelArtistsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<ArtistProfileDTO | null>(null);
   const [selectedParty, setSelectedParty] = useState<PartySelectorOption | null>(null);
-  const [form, setForm] = useState<ArtistFormState>(buildEmptyForm);
+  const recoverySession = useOptionalSession();
+  const draftOwnerId = recoverySession?.loading ? null : recoverySession?.session?.partyId ?? null;
+  const editor = useOwnedTabDraft(buildEmptyForm(), {
+    ownerId: draftOwnerId, scope: 'label-artist-editor',
+    parse: (value) => parseFormMetadata(value, buildEmptyForm()),
+  });
+  const { value: form, setValue: setForm, restored: editorRestored, isCurrentOwner: isCurrentEditorOwner } = editor;
   const [formError, setFormError] = useState<string | null>(null);
   const [banner, setBanner] = useState<BannerState | null>(null);
   const [heroImageFileName, setHeroImageFileName] = useState('');
@@ -321,6 +330,25 @@ export default function LabelArtistsPage() {
   });
 
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
+  useEffect(() => {
+    if (!editorRestored || !artistsQuery.isSuccess || !isCurrentEditorOwner()) return;
+    let cancelled = false;
+    const ownerGuard = isCurrentEditorOwner;
+    const existing = artists.find((artist) => artist.apArtistId === form.partyId) ?? null;
+    setSelectedArtist(existing);
+    setDialogOpen(true);
+    if (form.partyId === null) { setSelectedParty(null); return; }
+    const partyId = form.partyId;
+    void Parties.getOne(partyId).then((party) => {
+      if (cancelled || !ownerGuard()) return;
+      setSelectedParty({ partyId, partyType: 'person', displayName: party.displayName, username: null,
+        avatarUrl: existing?.apHeroImageUrl ?? null, secondaryLabel: 'Borrador recuperado', accountStatus: 'no-account' });
+    }).catch(() => {
+      if (!cancelled && ownerGuard()) setFormError('Recuperamos los campos. Vuelve a seleccionar el contacto para confirmar su acceso.');
+    });
+    return () => { cancelled = true; };
+  }, [editorRestored, artistsQuery.isSuccess, form.partyId, artists, isCurrentEditorOwner]);
+
   const genreOptions = useMemo<CatalogItem[]>(
     () => (genresCatalogQuery.data?.items ?? [])
       .filter((genre) => genre.active && genre.workflowState === 'published')
@@ -450,7 +478,8 @@ export default function LabelArtistsPage() {
   };
 
   const upsertMutation = useMutation({
-    mutationFn: async (payload: { draft: ArtistFormState; originalDisplayName: string }) => {
+    mutationFn: async (payload: { draft: ArtistFormState; originalDisplayName: string; isCurrentOwner: () => boolean }) => {
+      if (!payload.isCurrentOwner()) throw new Error('La sesión del formulario cambió.');
       const { draft, originalDisplayName } = payload;
       if (!draft.partyId) {
         throw new Error('Selecciona un contacto del CRM para enlazar el perfil de artista.');
@@ -479,17 +508,19 @@ export default function LabelArtistsPage() {
       };
       return Admin.upsertArtistProfile(body);
     },
-    onSuccess: (dto) => {
+    onSuccess: (dto, request) => {
+      if (!request.isCurrentOwner()) return;
+      editor.discard();
       setBanner({ severity: 'success', message: `Perfil de ${dto.apDisplayName} guardado.` });
       setDialogOpen(false);
       setSelectedArtist(null);
-      setForm(buildEmptyForm());
       setFormError(null);
       void qc.invalidateQueries({ queryKey: ['admin', 'artists'] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['parties'] });
     },
-    onError: (err: unknown) => {
+    onError: (err: unknown, request) => {
+      if (!request.isCurrentOwner()) return;
       setFormError(err instanceof Error ? err.message : 'No se pudo guardar el perfil.');
     },
   });
@@ -628,7 +659,7 @@ export default function LabelArtistsPage() {
       return;
     }
     const originalName = selectedParty?.displayName ?? selectedArtist?.apDisplayName ?? '';
-    upsertMutation.mutate({ draft: form, originalDisplayName: originalName });
+    upsertMutation.mutate({ draft: form, originalDisplayName: originalName, isCurrentOwner: isCurrentEditorOwner });
   };
 
   const handlePromotionEdit = (slot: ArtistPromoSlotDTO) => {
@@ -1202,6 +1233,9 @@ export default function LabelArtistsPage() {
         <DialogTitle>{selectedArtist ? 'Editar perfil de artista' : 'Nuevo perfil de artista'}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
+            {editorRestored && <Alert severity="info">{locale.startsWith('en')
+              ? 'We restored your unsaved form in this tab. Select the file again if needed.'
+              : 'Recuperamos el formulario sin guardar de esta pestaña. Vuelve a seleccionar el archivo si hace falta.'}</Alert>}
             <PartySelector
               value={selectedParty}
               onChange={(value) => {
@@ -1243,13 +1277,17 @@ export default function LabelArtistsPage() {
               onChange={(event) => setForm((prev) => ({ ...prev, bio: event.target.value }))}
             />
             <GoogleDriveUploadWidget
-              label="Subir portada a Drive"
-              helperText="Sube la imagen principal a Google Drive; guardaremos el enlace."
+              recoveryScope={`artist-cover:${form.partyId ?? 'new'}`}
+              formRecoveryAvailable={editor.persistenceAvailable}
+              multiple={false}
+              label="Subir portada"
+              visibility="public"
+              helperText="Elige dónde guardar la imagen pública de tu perfil."
               onComplete={(files) => {
                 const uploadedHeroImageUrl = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
                 if (uploadedHeroImageUrl) {
                   setForm((prev) => ({ ...prev, heroImageUrl: uploadedHeroImageUrl }));
-                  setHeroImageFileName('Imagen en Drive');
+                  setHeroImageFileName('Imagen cargada');
                 }
               }}
               accept="image/*"
