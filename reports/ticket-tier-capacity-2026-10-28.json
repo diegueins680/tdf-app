@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-ticket-tier-capacity",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "1667d586b3901f9470baaedb6024a34e6e388118",
+  "sourceCommit": "59539a16e8352cdec469538b7cb62eacd169ff3a",
+  "mainObserved": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-06",
+    "priority": "P1",
+    "category": "inventory integrity / concurrency / core ticket journeys",
+    "consequence": "A normal organizer reduces capacity while a normal buyer purchases. Both operation orders, on direct purchase and free checkout, persist capacity1/sold3 from initially valid20/0.",
+    "status": "corrected-tested-awaiting-protected-integration"
+  },
+  "invariants": [
+    {
+      "id": "EVT-TIER-EDIT-BOUNDS-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "An edit commits all its fields only when requested total >= current sold, returning its entity in the same transaction.",
+      "assurance": "TESTED"
+    },
+    {
+      "id": "EVT-LEGACY-RESERVE-BOUNDS-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "Both legacy entry points reserve against locked current event/tier inventory and commit stock with order/tickets.",
+      "assurance": "TESTED"
+    }
+  ],
+  "contract": "formal/system/legacy-ticket-inventory.md",
+  "implementation": [
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "reusedUnchangedAuthority": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+  "regressionTests": [
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+  ],
+  "formalModels": [
+    "scripts/__tests__/ticket-admission-model.test.mjs"
+  ],
+  "authority": [
+    "Existing updateTicketTier rejection: quantity cannot be below sold quantity.",
+    "Existing Inventory.reserveTicketInventory and ticket admission capacity contract.",
+    "Both existing public purchase decoders bound quantity1–100."
+  ],
+  "correction": [
+    "Conditional current-sold predicate protects the complete tier edit; reload within the same transaction.",
+    "Both legacy reservation copies reuse the existing current Event→Tier inventory authority.",
+    "Keep reservation and order/ticket insertion atomic; retain Stripe terms, promo, idempotency and provider rollback paths.",
+    "Preserve400 for initially invalid tier total and409 for a concurrent conflict without partial edit."
+  ],
+  "counterexamples": {
+    "examples": 4,
+    "failures": 4,
+    "routes": [
+      "direct free purchase",
+      "zero-total legacy checkout"
+    ],
+    "orderings": [
+      "purchase first",
+      "edit first"
+    ],
+    "allFinalCapacity": 1,
+    "allFinalSold": 3,
+    "barrier": "Unchanged tier row lock only. No test-side inventory mutation; both business writes are actual handlers.",
+    "realProviderCalls": 0
+  },
+  "verification": {
+    "qualifiedScoped": {
+      "examples": 12,
+      "failures": 0,
+      "originalRaceCases": 4,
+      "additionalCompatibilityCases": 8,
+      "compatibility": [
+        "Empty unsold capacity0",
+        "Exact sold capacity",
+        "Capacity increase",
+        "Absent event capacity",
+        "Below and exact event capacity"
+      ],
+      "emailConfigured": false,
+      "stripeConfigured": false
+    },
+    "qualifiedFullStack": {
+      "examples": 4464,
+      "failures": 0,
+      "pending": 21,
+      "schemaMigrations": 227,
+      "appliedAndReplayed": true,
+      "freshUTF8Template0Database": true,
+      "seed": 20261028,
+      "externalPendingIsNotPassed": true
+    },
+    "servingExecutable": {
+      "explicitStackTarget": "tdf-hq:exe:tdf-hq-exe",
+      "buildPassed": true,
+      "committedBuildPassed": true,
+      "qualifiedCommit": "59539a16e8352cdec469538b7cb62eacd169ff3a",
+      "binarySha256": "544b0f81b19071788236e7192da4f23d21c864db30ee4a9f7549e8335082df9e",
+      "headStableThroughBuild": true,
+      "sourceHashesMatchQualifiedTestAndCommittedInputs": true,
+      "reproducibleBuildClaimed": false
+    },
+    "modelSuite": {
+      "tests": 21,
+      "failures": 0
+    },
+    "tierModel": {
+      "assurance": "BOUNDED_VERIFIED",
+      "inputs": 48,
+      "states": 606,
+      "transitions": 658,
+      "violations": [],
+      "property": "SoldNeverExceedsTierTotal",
+      "bounds": "Initial sold0/1,total2/4,requested0/1/4,quantity1/3,event capacity absent/4. Two writer phases; event capacity fixed per input.",
+      "coverage": "Both accepted/refused edits and accepted/refused purchases are reached.",
+      "negativeControls": [
+        {
+          "fault": "staleEditSold",
+          "states": 606,
+          "transitions": 658
+        },
+        {
+          "fault": "staleTierTotal",
+          "states": 598,
+          "transitions": 658
+        },
+        {
+          "fault": "omitTierLock",
+          "states": 642,
+          "transitions": 710
+        }
+      ],
+      "eachControlDetects": "Both commits appear before sold exceeds tier total; no SQL/Haskell refinement."
+    },
+    "repositoryQuality": {
+      "passed": true,
+      "platformSkips": 11,
+      "assertionsWeakened": false
+    },
+    "strictCatalog": {
+      "passed": true,
+      "allParentDecisionsAndOrderByteIdentical": 1353,
+      "newDecisions": 0
+    },
+    "specification": {
+      "sequentialInventoryThenConformance": true,
+      "checksPassed": true,
+      "otherRequirementsPreserved": 153,
+      "immutableChangedSurfaces": 3
+    },
+    "compiledAPI": {
+      "queriedAfterExplicitExecutableBuild": true,
+      "snapshotMatches": true,
+      "typedOperations": 913,
+      "rawMounts": 2,
+      "undocumented": 396,
+      "documentedWithoutTypedRoute": 25,
+      "statusDifferences": 8,
+      "existingGapsRemainOpen": true
+    },
+    "independentReview": {
+      "blockingFindings": 0,
+      "scope": "Read-only exact implementation, handler tests and bounded model review; not required GitHub approval"
+    },
+    "sourceCorrespondence": {
+      "registeredInputs": 1408,
+      "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "digest": "bcfe85c85974e6c43aaa2b53056893eac12647fa233092096782eb790ad74c29",
+      "committedGitBlobHashesVerified": true,
+      "newContractIndependentlyHashBound": true,
+      "cleanCommittedReporterPass": true
+    },
+    "developmentLimitations": [
+      "First additional compatibility compilation reused a refund-specific assertion type; corrected to a generic inventory409 assertion before the final12/0 and fresh4464/0 passes.",
+      "Test-only Stack target can leave an older serving executable. Its preliminary snapshot is diagnostic only; final snapshot follows an explicit serving-executable build."
+    ],
+    "assurance": {
+      "existingConditionalSMTClaimsProven": 11,
+      "fullSystemRequirementsUnproven": 154,
+      "implementationAndRefinementObligationsUnproven": 308,
+      "release": "BLOCKED",
+      "newWholeHandlerProof": false
+    }
+  },
+  "regressionProtection": {
+    "handlers": "Existing backend provider-retry lane exercises ProviderRetrySpec on the full migration schema.",
+    "model": "Existing backend CI explicitly runs ticket-admission-model.test.mjs; root quality alone is not this model run.",
+    "source": "Existing inventory/conformance/immutable surface admission retained."
+  },
+  "integration": {
+    "pullRequest": 659,
+    "url": "https://github.com/diegueins680/tdf-app/pull/659",
+    "draft": true,
+    "parentPullRequest": 658,
+    "parentBaseline": "1667d586b3901f9470baaedb6024a34e6e388118",
+    "merged": false,
+    "deployed": false,
+    "autoMergeEnabled": false,
+    "requiredGitHubApproval": "pending",
+    "hostedQualification": "pending",
+    "currentMainComposition": "pending",
+    "protectedQueue": "Root parent651 waiting636; independently approved651 is DIRTY against main e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7. No protected control/approved head mutation.",
+    "protections": "20 required contexts, strict base, stale-review dismissal, independent1review, conversation resolution and admin enforcement remain enabled.",
+    "readOnlyRootMergePreview": {
+      "textConflicts": [
+        "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "docs/catalog-persistence/reports/static-list-inventory.json",
+        "formal/system/inventory.json",
+        "formal/system/traceability.json"
+      ],
+      "method": "Legacy three-tree preview; binary outputs present, not qualification or complete conflict enumeration.",
+      "headIndexWorktreeChanged": false
+    },
+    "existingParentHostedFailure": "652 WebKit gallery failure retained; reuse existing648 and preserve assertions."
+  },
+  "scorecard": {
+    "scope": "This correction only; no platform percentage.",
+    "confirmedDefectsCorrected": 1,
+    "defectsIntegrated": 0,
+    "criticalInvariantsTested": 2,
+    "newWholeHandlerProofs": 0,
+    "originalRaceRegressionsCovered": 4,
+    "additionalCompatibilityCases": 8,
+    "boundedDesignInputs": 48,
+    "currentSourceEvidence": "59539a16e8352cdec469538b7cb62eacd169ff3a",
+    "architecturalReduction": {
+      "duplicateLegacyReservationImplementationsRemoved": 2,
+      "sharedExistingAuthority": "Inventory.reserveTicketInventory",
+      "productionLineDelta": -43
+    }
+  },
+  "remainingRisks": [
+    "Initially valid nonnegative stock and participating writers are assumptions; historical negative data, mixed old binaries and other writers are not repaired.",
+    "Default READ COMMITTED is qualified; alternate isolation availability is not promoted to a guarantee.",
+    "Workflow/privacy/price/currency/manager snapshots are separate from inventory authority.",
+    "Sale-window checks use handler-start now, not a database-time deadline.",
+    "No production financial records were changed, no provider was contacted and no deployment/merge occurred.",
+    "Legacy partial-money allocation and uncertain admission still require established product semantics; continue is not a selection of a pending option."
+  ],
+  "prioritizedBacklog": [
+    {
+      "id": "EVT-PURCHASE-ELIGIBILITY-SNAPSHOT",
+      "priority": "P1",
+      "status": "PARTIAL",
+      "evidence": "Independent source review: normal organizer updateEvent can move on_sale to postponed/cancelled while legacy buyer waits. Both legacy eligibility checks are before the Event lock; canonical createNew already revalidates current locked eligibility. Actual-handler counterexample is next, not yet observed.",
+      "next": "Use unchanged Event-lock barrier with actual organizer update and direct/free-checkout purchase; no provider IO. Revalidate locked row only after confirming red."
+    },
+    {
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "blocker": "Material product allocation rule pending; no proposed default inferred from continue."
+    },
+    {
+      "id": "PROTECTED-INTEGRATION",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "blocker": "FIFO636, parent651 conflicts with main, composition/hosted checks and required reviews remain."
+    }
+  ],
+  "nextHighestValueTask": "Reproduce normal lifecycle closure committing before a waiting legacy new hold, then validate current locked eligibility if confirmed.",
+  "evidenceDirectory": "reports/ticket-tier-capacity-2026-10-28"
+}

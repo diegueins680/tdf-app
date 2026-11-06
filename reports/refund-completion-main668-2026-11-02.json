@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-02T02:33:37.527622+00:00",
+  "sourceCommit": "f1869ea527a4c1f50a7fd080d6df9d34507acc72",
+  "protectedMain": "2ee0ece3d2086c3fc27373fc5d733450ab8587d4",
+  "approvedFinancialParent": "cfe4262182cc1b3c4091f69581e4ddb0a22900f0",
+  "approvedSecurityDependency": "aa5b9322ac9519f5ba34a897bf843f7bf8493f56",
+  "pullRequest": 652,
+  "status": "DRAFT; changed source requires fresh hosted CI and fresh exact-head review; no integration claim",
+  "problem": "A textual refund ID alone authorized refund completion, ticket retirement and inventory release for uncertain or mismatched provider evidence.",
+  "classification": "Confirmed financial implementation defect; existing approved repair preserved exactly, prepared against current protected main.",
+  "counterexample": {
+    "baseline": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
+    "cases": 48,
+    "failing": 40,
+    "falseCompletions": 36,
+    "scope": "Historical routed-handler PostgreSQL probe, not re-executed against new main. Main665 retains exact7147-line decision block; main668 handler is unchanged from main665."
+  },
+  "specification": "formal/system/legacy-stripe-refund-completion.md",
+  "invariants": [
+    {
+      "id": "PAY-STRIPE-REFUND-COMPLETION-001",
+      "assurance": "TESTED",
+      "currentCompositionRuntime": "PENDING; historical55-case green evidence and exact financial source identity do not replace fresh CI"
+    },
+    {
+      "id": "PAY-STRIPE-REFUND-OBSERVATION-001",
+      "assurance": "TESTED",
+      "currentCompositionRuntime": "PENDING; historical55-case green evidence and exact financial source identity do not replace fresh CI"
+    },
+    {
+      "id": "PAY-STRIPE-REFUND-ATOMIC-COMPLETION-001",
+      "assurance": "TESTED",
+      "currentCompositionRuntime": "PENDING; historical55-case green evidence and exact financial source identity do not replace fresh CI"
+    }
+  ],
+  "model": {
+    "assurance": "BOUNDED_VERIFIED",
+    "inputs": 224,
+    "states": 560,
+    "transitions": 896,
+    "complete": 1,
+    "held": 223,
+    "unsafeCompletionControlsDetected": 8,
+    "scope": "Finite design model; no refinement proof to Haskell, SQL, account/environment authenticity or whole workflow."
+  },
+  "composition": {
+    "source": "f1869ea527a4c1f50a7fd080d6df9d34507acc72",
+    "protectedMain": "2ee0ece3d2086c3fc27373fc5d733450ab8587d4",
+    "financialFilesExactCFE": [
+      "scripts/__tests__/ticket-admission-model.test.mjs",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+    ],
+    "allOtherProtectedSourceFilesExact": 2442,
+    "declaredChangedPaths": [
+      ".github/workflows/ci-safe-install.yml",
+      "scripts/__tests__/browser-vendor.test.mjs",
+      "scripts/__tests__/ticket-admission-model.test.mjs",
+      "scripts/check-browser-vendor.mjs",
+      "scripts/quality-repo.sh",
+      "tdf-hq-ui/jest.config.cjs",
+      "tdf-hq-ui/package.json",
+      "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt",
+      "tdf-hq-ui/src/utils/torrentAudio.ts",
+      "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+    ],
+    "qualityScript": "Exact protected main668 script plus both existing approved browser controls; no check removed",
+    "all161OtherProtectedNormsExact": true,
+    "combinedRequirements": 163,
+    "all1354ProtectedCatalogDecisionsExact": true,
+    "combinedCatalogDecisions": 1368,
+    "mobile": "c3b358caa7660a854ad7ac195cf99169638bf308",
+    "main668DependencyLockUnchangedFromMain665": true,
+    "priorCodeInputs": 2459,
+    "priorCodeInputsChangedOnlyByProtectedMain668": [
+      "scripts/quality-repo.sh",
+      "scripts/test-music-release-worker-runtime.mjs"
+    ],
+    "allEarlierUIAuditInstallModelInputsPreserved": true,
+    "schemaOperationsUnchanged": true,
+    "runtimeQualification": "Fresh hosted CI pending; prior result source receipts retained, no relabeling"
+  },
+  "localChecks": {
+    "install-current-lock": {
+      "exitCode": 0,
+      "sourceAtStart": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "sourceAtFinish": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "logSha256": "b1d41c1f2aef1dc6f1f1e372a841ea1e090904a894f0d71239ac8aab35306b18"
+    },
+    "current-audit": {
+      "exitCode": 0,
+      "sourceAtStart": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "sourceAtFinish": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "logSha256": "0b6dac30d9b3cbbaf6cc7424ce08ee71f025c741c92cbedb075c24f44f2027b6"
+    },
+    "browser-component-advisories": {
+      "exitCode": 0,
+      "sourceAtStart": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "sourceAtFinish": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "logSha256": "f3f6f1c7f9c8952e8df8c08d20e3a369615c52d05fe73a4d66e4e5bbb326acea"
+    },
+    "current-model": {
+      "exitCode": 0,
+      "sourceAtStart": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "sourceAtFinish": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "logSha256": "a1e3aa63879b0df8a15ec91a76a55cc5832b3c3a6010aecef8ee5a8650e986d0"
+    },
+    "dedicated-catalog-tests": {
+      "exitCode": 0,
+      "sourceAtStart": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "sourceAtFinish": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "logSha256": "5c256f097e58e359b1a21e7b4fbf3149b108d685ad5410d9e8bae336f2c6c964"
+    },
+    "frozen-repo-qa": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "b2813cecfac4abf7e40060c62e2e56aee45b2bb033ebbd612b14b6859a9e39df"
+    },
+    "frozen-assurance-controls": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "86912404b97ade906610d26010bbf3820a2d1e5cd06ce1cacef933117b03fb84"
+    },
+    "frozen-changed-source": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "7d7c3a0e89d01eaae5c7f9082a1f8d8f2a87da24f3cf1da678e7c6a1344cd65b"
+    },
+    "frozen-assurance": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "ec626ce5d91e90d163d98664fc58f21b408246e82dd04185ed45f89c3e44c445"
+    },
+    "ui-qualification": {
+      "exitCode": 1,
+      "sourceAtStart": "f4214f51c371f5ba15cc736e45b638c4c2a2676c",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "5b050adb6c8406fb5a0580f6337ca51b8c3af975a10d2d520fa5613b0fc1e587"
+    },
+    "ui-failure-isolation": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "091265bdaa07c253c036afb0a994e237aed7cf3c0ad61f60b4e72a909029d690"
+    },
+    "ui-production-build": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "50dcf55f753391943e10725ea71797cee96b1330468d57d28e178811343bc78c"
+    },
+    "main668-worker-controls": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "d246b45287f743eeeda34be08786e234533f8595d607ab57181bfdddeb783797"
+    },
+    "main668-source-admission": {
+      "exitCode": 0,
+      "sourceAtStart": "f1869ea527a4c1f50a7fd080d6df9d34507acc72",
+      "sourceAtFinish": "f1869ea527a4c1f50a7fd080d6df9d34507acc72",
+      "logSha256": "32dc62f48faa20f044c067422844140e1de193e3b16b684adfa0bfbb74e99505"
+    },
+    "main668-assurance": {
+      "exitCode": 0,
+      "sourceAtStart": "f1869ea527a4c1f50a7fd080d6df9d34507acc72",
+      "sourceAtFinish": "f1869ea527a4c1f50a7fd080d6df9d34507acc72",
+      "logSha256": "ae2e7a9495fe1ce85bf086ff9849b46b38283b92015599f8ffc37cc7f3ba47b9"
+    },
+    "main668-metadata-0": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "main668-metadata-1": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "main668-metadata-2": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5"
+    },
+    "main668-metadata-3": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6"
+    },
+    "main668-metadata-4": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d"
+    },
+    "main668-metadata-5": {
+      "exitCode": 0,
+      "sourceAtStart": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "sourceAtFinish": "24e47ef2cbb79467a4a1620c5987e8be88ea5096",
+      "logSha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e"
+    }
+  },
+  "ui": {
+    "aggregate": {
+      "suitesPassed": 325,
+      "suitesFailed": 3,
+      "testsPassed": 3796,
+      "testsFailed": 3
+    },
+    "isolatedUnchangedFailureSuites": {
+      "suites": 3,
+      "tests": 10,
+      "result": "PASS"
+    },
+    "failureScope": "One1000ms promo debounce expectation and two5000ms timeouts. Root cause unresolved. No full rerun, assertion removal, timeout change, or aggregate-green claim. Lint and typecheck passed before Jest; production build run separately."
+  },
+  "runtimeSetupLimitation": "npm ci --ignore-scripts succeeded. LocalUI used manually restored exact official darwin-x64 native resolver1.11.1 binary, hash-bound in receipt, runtime fallback disabled. No canonical native lock completeness claim and no unreviewed693code included.",
+  "formalAssurance": {
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 163,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 146,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 163,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 163,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "releaseDecision": "BLOCKED",
+    "scope": "Eleven inherited conditional SMT lemmas; all whole requirements and implementation/refinement obligations remain UNPROVEN. No new platform proof."
+  },
+  "freshHostedCI": "PENDING; old CFE/AA workflow results apply only to their actual source heads",
+  "review": "Prior CFE approval does not qualify this necessary changed head. Require fresh review, strict20 checks and latest-main reconciliation; no review requests or interpersonal messages sent.",
+  "remainingRisks": [
+    "Partial refund allocation",
+    "Admission while refund remains processing",
+    "Current actor/order snapshot fence across provider IO",
+    "Separate inventory release repair654",
+    "Provider account/environment binding",
+    "Accounting reconciliation and operational recovery",
+    "Local fullUI failure unresolved; hostedCI pending"
+  ],
+  "scorecard": {
+    "confirmedFinancialDefectsSelected": 1,
+    "correctedWithRegressionProtection": 1,
+    "integrated": 0,
+    "narrowInvariantsTracked": 3,
+    "freshRuntimeQualification": "PENDING",
+    "boundedModelControlsDetected": 8,
+    "sourceAdmissions": "PASS",
+    "requiredReview": "PENDING",
+    "noArbitraryNumericalScore": true
+  },
+  "next": "Qualify all55 handler regression cases and227 production schema operations on this changed head in fresh CI. Resolve failures from evidence; obtain required review naturally without unsolicited messages, respect ordinary main admission and protections.",
+  "evidence": {
+    "archive": "reports/refund-completion-main668-2026-11-02/evidence.tar.gz",
+    "sha256": "90744bf31662814cef87233252a0382aa16472a86fcd89650d2c47b98fce56ad",
+    "regularFiles": 106,
+    "manifestEntries": 105
+  }
+}

@@ -266,4 +266,87 @@ if apply_file tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime_rollback.sql; th
   exit 1
 fi
 
-echo "Domo quote migration passed clean rollback/reapply, inactive-rate preservation, immutable pricing, atomic date exclusion, accepted-terms gating, verified-payment evidence, exact-once deposit state, and evidence-aware rollback checks."
+# PAY-DOMO-CANCEL-001 (AUTHORITY-093): versioned cancellation policy and the
+# immutable cancellation record that carries the refund obligation.
+apply_file tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql
+apply_file tdf-hq/sql/2026-11-01_domo_cancellation_policy_rollback.sql
+apply_file tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql
+apply_file tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql
+apply_file tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql
+apply_file tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql
+apply_file tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql
+apply_file tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql
+
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM domo_cancellation_policy WHERE status='approved';")" \
+  "1" "Exactly one approved cancellation policy version"
+if psql_exec -c "UPDATE domo_cancellation_policy SET partial_retained_bps=1 WHERE status='approved';" >/dev/null 2>&1; then
+  echo "Approved Domo cancellation policy accepted a mutation" >&2
+  exit 1
+fi
+if psql_exec -c "INSERT INTO domo_cancellation_policy(version, full_refund_min_days, partial_refund_min_days, partial_retained_bps, status, approved_at, authority) VALUES (2, 31, 7, 2500, 'approved', NOW(), 'test');" >/dev/null 2>&1; then
+  echo "A second approved Domo cancellation policy was accepted" >&2
+  exit 1
+fi
+if psql_exec -c "INSERT INTO domo_cancellation_policy(version, full_refund_min_days, partial_refund_min_days, partial_retained_bps, status, authority) VALUES (3, 7, 7, 2500, 'draft', 'test');" >/dev/null 2>&1; then
+  echo "Inverted Domo cancellation thresholds were accepted" >&2
+  exit 1
+fi
+
+# A paid quote cannot be cancelled without its cancellation record.
+if psql_exec -c "UPDATE domo_event_quote_runtime SET quote_status='cancelled', fulfillment_status='cancelled' WHERE id='$domo_id';" >/dev/null 2>&1; then
+  echo "Paid Domo quote was cancelled without a cancellation record" >&2
+  exit 1
+fi
+assert_equal "$(psql_exec -Atc "SELECT quote_status FROM domo_event_quote_runtime WHERE id='$domo_id';")" \
+  "deposit_paid" "Paid quote unchanged after refused cancellation"
+# Conservation and shape constraints.
+if psql_exec -c "INSERT INTO domo_quote_cancellation(domo_quote_id, policy_version, canceller, actor_type, cancelled_at, event_starts_at, lead_days, in_progress, retained_basis_points, deposit_collected_minor, balance_collected_minor, retained_minor, refund_due_minor, currency, reason_code, refund_status) VALUES ('$domo_id', 1, 'customer', 'customer', NOW(), '2030-01-10 15:00:00+00', 40, FALSE, 0, 200704, 0, 1, 200704, 'USD', 'customer_request', 'awaiting_operator');" >/dev/null 2>&1; then
+  echo "Domo cancellation accepted money that is not conserved" >&2
+  exit 1
+fi
+if psql_exec -c "INSERT INTO domo_quote_cancellation(domo_quote_id, policy_version, canceller, actor_type, cancelled_at, event_starts_at, lead_days, in_progress, retained_basis_points, deposit_collected_minor, balance_collected_minor, retained_minor, refund_due_minor, currency, reason_code, refund_status) VALUES ('$domo_id', NULL, 'customer', 'customer', NOW(), '2030-01-10 15:00:00+00', 40, FALSE, 0, 200704, 0, 0, 200704, 'USD', 'customer_request', 'awaiting_operator');" >/dev/null 2>&1; then
+  echo "Domo cancellation with collected money accepted without a policy version" >&2
+  exit 1
+fi
+if psql_exec -c "INSERT INTO domo_quote_cancellation(domo_quote_id, policy_version, canceller, actor_type, cancelled_at, event_starts_at, lead_days, in_progress, retained_basis_points, deposit_collected_minor, balance_collected_minor, retained_minor, refund_due_minor, currency, reason_code, refund_status) VALUES ('$domo_id', 1, 'customer', 'operator', NOW(), '2030-01-10 15:00:00+00', 40, FALSE, 0, 200704, 0, 0, 200704, 'USD', 'customer_request', 'awaiting_operator');" >/dev/null 2>&1; then
+  echo "Operator cancellation accepted without an authenticated party" >&2
+  exit 1
+fi
+psql_exec -c "
+  BEGIN;
+  INSERT INTO domo_quote_cancellation(domo_quote_id, policy_version, canceller, actor_type, cancelled_at, event_starts_at, lead_days, in_progress, retained_basis_points, deposit_collected_minor, balance_collected_minor, retained_minor, refund_due_minor, currency, reason_code, refund_status)
+    VALUES ('$domo_id', 1, 'customer', 'customer', NOW(), '2030-01-10 15:00:00+00', 40, FALSE, 0, 200704, 0, 0, 200704, 'USD', 'customer_request', 'awaiting_operator');
+  UPDATE domo_event_quote_runtime SET quote_status='cancelled', fulfillment_status='cancelled' WHERE id='$domo_id';
+  COMMIT;
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM domo_quote_cancellation_open_refund WHERE domo_quote_id='$domo_id';")" \
+  "1" "Customer cancellation leaves one open refund obligation"
+if psql_exec -c "UPDATE domo_quote_cancellation SET refund_due_minor=1, retained_minor=200703 WHERE domo_quote_id='$domo_id';" >/dev/null 2>&1; then
+  echo "Domo cancellation record accepted a mutation" >&2
+  exit 1
+fi
+psql_exec -c "
+  INSERT INTO commerce_refund(id, checkout_id, payment_attempt_id, status, amount_minor, currency, reason_code, idempotency_key, requested_by)
+    VALUES ('d6000000-0000-4000-8000-000000000001', '$checkout_id', '$attempt_id', 'requested', 100000, 'USD', 'customer_request', 'domo-cancel-wrong-amount-0001', 2);
+" >/dev/null
+if psql_exec -c "UPDATE domo_quote_cancellation SET refund_id='d6000000-0000-4000-8000-000000000001', refund_status='requested', refund_linked_at=NOW() WHERE domo_quote_id='$domo_id';" >/dev/null 2>&1; then
+  echo "Domo cancellation linked a refund for a different amount" >&2
+  exit 1
+fi
+psql_exec -c "
+  INSERT INTO commerce_refund(id, checkout_id, payment_attempt_id, status, amount_minor, currency, reason_code, idempotency_key, requested_by)
+    VALUES ('d6000000-0000-4000-8000-000000000002', '$checkout_id', '$attempt_id', 'requested', 200704, 'USD', 'customer_request', 'domo-cancel:$domo_id', 2);
+  UPDATE domo_quote_cancellation SET refund_id='d6000000-0000-4000-8000-000000000002', refund_status='requested', refund_linked_at=NOW() WHERE domo_quote_id='$domo_id';
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM domo_quote_cancellation_open_refund WHERE domo_quote_id='$domo_id';")" \
+  "0" "Linked refund closes the obligation"
+if psql_exec -c "UPDATE domo_quote_cancellation SET refund_id='d6000000-0000-4000-8000-000000000001' WHERE domo_quote_id='$domo_id';" >/dev/null 2>&1; then
+  echo "Domo cancellation relinked its refund" >&2
+  exit 1
+fi
+if apply_file tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql; then
+  echo "Domo cancellation rollback removed financial history" >&2
+  exit 1
+fi
+
+echo "Domo quote migration passed cancellation policy and record invariants (single approved version, immutability, conservation, refund linkage), clean rollback/reapply, inactive-rate preservation, immutable pricing, atomic date exclusion, accepted-terms gating, verified-payment evidence, exact-once deposit state, and evidence-aware rollback checks."

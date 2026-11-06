@@ -56,6 +56,7 @@ jest.unstable_mockModule('../utils/logger', () => ({
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: null }),
   getStoredSessionToken: () => null,
+  getActiveSession: () => null,
 }));
 
 const { default: MarketplacePage } = await import('../pages/MarketplacePage');
