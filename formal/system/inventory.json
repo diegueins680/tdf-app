@@ -8467,13 +8467,13 @@
     {
       "id": "SURFACE-2d575081440ad9a8",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-      "sha256": "9bf75d68d372b18071f2eabe23873da3c68319bfd9cae602401acdc0496d72be",
+      "sha256": "a30d0eba8531c9ae9309cbb614bb6f6ffbd92c2e12373ec02fbe77d9c9b3d42b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a64f86cb6be0afe2",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-      "sha256": "e020cfd57d5552dd7b03fb86b0ade78bb3dca28574e4c49086ca1eb2da9ebdd7",
+      "sha256": "5e63153bfd164619f979545bdbcb04f541de0f8f4ab6401f82f27f261afb5811",
       "semanticConformance": "not-established-by-discovery"
     },
     {
