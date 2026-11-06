@@ -48,6 +48,9 @@ test('event city, artist union and past filters work at narrow widths @mobile-fl
   const input = page.getByRole('combobox', { name: 'Artistas', exact: true });
   await input.fill('Alpha');
   await page.getByRole('option', { name: 'Alpha · #7' }).click();
+  // The selector's value comes from the `artists` URL parameter; wait for the
+  // first pick to reach the request before adding the second one.
+  await expect.poll(() => reads.at(-1)?.artistId).toBe('7');
   await input.fill('Beta');
   await page.getByRole('option', { name: 'Beta · #8' }).click();
   await expect.poll(() => reads.at(-1)?.artistId).toBe('7,8');
