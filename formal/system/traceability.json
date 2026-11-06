@@ -16805,7 +16805,7 @@
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
-    "scripts/__tests__/disposable-postgres-url.test.mjs": "3fd9fbb8a587471a248c4b3bf7a2895ca1c81bbb588b8b20f832bda7cca766ac",
+    "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-planning-ux-model.test.mjs": "cabef2dc377be8160232951cdfb2c4eaa1b16f99ed104c409dd2649859ec01af",
@@ -17061,7 +17061,7 @@
     "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-route-requirements.py": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
-    "scripts/test-session-invoice-issue.sh": "a86f4b37dea0b116cb61f03e00a3ea4c7f4b1bb812e8eaecb2ead67d730b3f17",
+    "scripts/test-session-invoice-issue.sh": "c19f451e8899fab4bc6d76e3c97ad73b1f927e1beccae501d32f0c3fce663fc4",
     "scripts/test-social-designation-postgres.sh": "e83d08fc7e50b5fd5b8d1adb4058fec1348a7f4a73492ad33e30cf2839f78e86",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -33588,7 +33588,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "3fd9fbb8a587471a248c4b3bf7a2895ca1c81bbb588b8b20f832bda7cca766ac",
+      "sha256": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38913,7 +38913,7 @@
     {
       "id": "SURFACE-7b01e95a2191ef5a",
       "path": "scripts/test-session-invoice-issue.sh",
-      "sha256": "a86f4b37dea0b116cb61f03e00a3ea4c7f4b1bb812e8eaecb2ead67d730b3f17",
+      "sha256": "c19f451e8899fab4bc6d76e3c97ad73b1f927e1beccae501d32f0c3fce663fc4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

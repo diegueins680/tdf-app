@@ -170,21 +170,36 @@ if (${JSON.stringify(command)} === 'createdb') process.exit(Number(process.env.I
     assert.deepEqual(failedCreate.calls.map(({ command }) => command), ['createdb']);
     const ownedNames = new Set();
     for (const overrides of [
-      {}, { PGHOST: 'localhost' }, { PGHOST: 'postgres', CI: 'true' },
+      {}, { INVOICE_STUB_OUTPUT: '\u001b[32m2 examples, 0 failures\u001b[0m' },
+      { INVOICE_STUB_OUTPUT: '\u001b[1;32m12 examples, 0 failures\u001b[0m' },
+      { PGHOST: 'localhost' }, { PGHOST: 'postgres', CI: 'true' },
       { PGPORT: '1' }, { PGPORT: '65535' },
       { PGUSER: 'synthetic role host=remote.example' },
       { PGHOST: '', PGPORT: '', PGUSER: '', PGPASSWORD: '' },
       { INVOICE_STUB_OUTPUT: '0 examples, 0 failures' },
       { INVOICE_STUB_OUTPUT: '1 example, 0 failures' },
       { INVOICE_STUB_OUTPUT: 'no summary' },
+      { INVOICE_STUB_OUTPUT: '\u001b[32m0 examples, 0 failures\u001b[0m' },
+      { INVOICE_STUB_OUTPUT: '\u001b[32m1 example, 0 failures\u001b[0m' },
+      { INVOICE_STUB_OUTPUT: '\u001b[33m2 examples, 0 failures, 1 pending\u001b[0m' },
+      { INVOICE_STUB_OUTPUT: '\u001b[31m2 examples, 1 failure\u001b[0m' },
+      { INVOICE_STUB_OUTPUT: '\u001b[33m2 examples, 0 failures, 1 pending\u001b[0m', INVOICE_STUB_STACK_EXIT: '1' },
+      { INVOICE_STUB_OUTPUT: '\u001b[31m2 examples, 1 failure\u001b[0m', INVOICE_STUB_STACK_EXIT: '1' },
       { INVOICE_STUB_OUTPUT: '2 examples, 1 failure', INVOICE_STUB_STACK_EXIT: '1' },
       { INVOICE_STUB_OUTPUT: '1 example, 0 failures, 1 pending', INVOICE_STUB_STACK_EXIT: '1' },
     ]) {
       const { result, calls } = await run(overrides);
       const fails = overrides.INVOICE_STUB_STACK_EXIT === '1'
         || overrides.INVOICE_STUB_OUTPUT === '0 examples, 0 failures'
-        || overrides.INVOICE_STUB_OUTPUT === 'no summary';
+        || overrides.INVOICE_STUB_OUTPUT === '1 example, 0 failures'
+        || overrides.INVOICE_STUB_OUTPUT === 'no summary'
+        || overrides.INVOICE_STUB_OUTPUT === '\u001b[32m0 examples, 0 failures\u001b[0m'
+        || overrides.INVOICE_STUB_OUTPUT === '\u001b[32m1 example, 0 failures\u001b[0m'
+        || overrides.INVOICE_STUB_OUTPUT === '\u001b[33m2 examples, 0 failures, 1 pending\u001b[0m'
+        || overrides.INVOICE_STUB_OUTPUT === '\u001b[31m2 examples, 1 failure\u001b[0m';
       assert.equal(result.status === 0, !fails, result.stderr);
+      assert.equal(result.stdout, `${overrides.INVOICE_STUB_OUTPUT || clean.INVOICE_STUB_OUTPUT}\n`,
+        'raw Stack output, including ANSI SGR bytes, remains untouched');
       assert.deepEqual(calls.map(({ command }) => command), ['createdb', 'stack', 'dropdb']);
       const database = calls[0].args[0];
       assert.match(database, /^tdf_session_issue_test_[0-9]+$/);

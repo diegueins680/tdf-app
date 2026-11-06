@@ -39,7 +39,9 @@ output=$(stack test ${TDF_STACK_FLAGS:-} tdf-hq:test:tdf-hq-test --jobs 1 \
   --test-arguments='--match "Session invoice issuance on PostgreSQL" --fail-on=pending' 2>&1) || {
   printf '%s\n' "$output"; exit 1; }
 printf '%s\n' "$output"
-# A pending example means the database was not configured; a silent pass with
-# no examples would not prove the lock; require a positive count.
-printf '%s\n' "$output" | grep -Eq '^[1-9][0-9]* examples?, 0 failures' || {
+# A pending example means the database was not configured; require both known
+# PostgreSQL examples, allowing additional future cases. Preserve raw output
+# above; normalize only ANSI SGR styling in the summary-verification stream.
+summary_output=$(printf '%s\n' "$output" | sed "s/$(printf '\033')\[[0-9;]*m//g")
+printf '%s\n' "$summary_output" | grep -Eq '^([2-9]|[1-9][0-9]+) examples, 0 failures$' || {
   echo "session invoice PostgreSQL examples did not run" >&2; exit 1; }

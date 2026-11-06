@@ -3655,7 +3655,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "3fd9fbb8a587471a248c4b3bf7a2895ca1c81bbb588b8b20f832bda7cca766ac",
+      "sha256": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6505,7 +6505,7 @@
     {
       "id": "SURFACE-7b01e95a2191ef5a",
       "path": "scripts/test-session-invoice-issue.sh",
-      "sha256": "a86f4b37dea0b116cb61f03e00a3ea4c7f4b1bb812e8eaecb2ead67d730b3f17",
+      "sha256": "c19f451e8899fab4bc6d76e3c97ad73b1f927e1beccae501d32f0c3fce663fc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
