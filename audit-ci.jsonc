@@ -5,13 +5,5 @@
   "skip-dev": true,
   "show-found": true,
   "show-not-found": true,
-  "allowlist": [
-    {
-      "GHSA-2p57-rm9w-gvfp|webtorrent>torrent-discovery>bittorrent-tracker>ip": {
-        "active": true,
-        "notes": "WebTorrent is bundled only for the browser. bittorrent-tracker excludes its server and HTTP/UDP tracker modules from browser builds; the vulnerable ip import is confined to lib/server/parse-udp.js. Re-evaluate upstream before expiry.",
-        "expiry": "2026-10-31"
-      }
-    }
-  ]
+  "allowlist": []
 }

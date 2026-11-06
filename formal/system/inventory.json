@@ -65,7 +65,8 @@
       "e2e/web/records-thumbnails.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
-      "e2e/web/ticket-credential.spec.mjs"
+      "e2e/web/ticket-credential.spec.mjs",
+      "e2e/web/webtorrent-browser.spec.mjs"
     ],
     "fly.toml": [
       "fly.toml"
@@ -114,6 +115,7 @@
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
       "scripts/__tests__/artist-import-idempotency.test.mjs",
+      "scripts/__tests__/browser-vendor.test.mjs",
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
@@ -184,6 +186,7 @@
       "scripts/__tests__/music-test-database.test.mjs",
       "scripts/__tests__/music-track-search-model.test.mjs",
       "scripts/__tests__/music-worker-build.test.mjs",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -206,6 +209,7 @@
       "scripts/__tests__/startup-gates-postgres.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
+      "scripts/__tests__/test-child-completion.test.mjs",
       "scripts/__tests__/test-process-session.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
@@ -234,6 +238,7 @@
       "scripts/capture-music-directory-visuals.mjs",
       "scripts/catalog-list-audit.mjs",
       "scripts/check-api-availability.mjs",
+      "scripts/check-browser-vendor.mjs",
       "scripts/check-build-trust.mjs",
       "scripts/check-dependency-security.mjs",
       "scripts/check-generated-api.mjs",
@@ -326,6 +331,7 @@
       "scripts/lib/requirement_declarations.py",
       "scripts/lib/sri-invoice.mjs",
       "scripts/lib/studio-audit-safety.mjs",
+      "scripts/lib/test-child-completion.mjs",
       "scripts/lib/test-process-session.mjs",
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
@@ -1400,6 +1406,8 @@
       "tdf-hq-ui/src/utils/assertNever.ts",
       "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
       "tdf-hq-ui/src/utils/authErrorMessage.ts",
+      "tdf-hq-ui/src/utils/availableRadioStations.test.ts",
+      "tdf-hq-ui/src/utils/availableRadioStations.ts",
       "tdf-hq-ui/src/utils/bottomDock.test.tsx",
       "tdf-hq-ui/src/utils/bottomDock.ts",
       "tdf-hq-ui/src/utils/chatReadState.test.ts",
@@ -1482,6 +1490,7 @@
       "tdf-hq-ui/src/utils/torrentAudio.ts",
       "tdf-hq-ui/src/utils/vcard.test.ts",
       "tdf-hq-ui/src/utils/vcard.ts",
+      "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
       "tdf-hq-ui/src/vite-env.d.ts",
       "tdf-hq-ui/tsconfig.app.json",
       "tdf-hq-ui/tsconfig.jest.json",
@@ -2817,13 +2826,13 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "ece2be17e5f353890f78bb06c10d649a5280f6c0dbfb7e173083c36ba6c48891",
+      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "1a1d0607772d62318e98ffa9d6dd792708978263e902d00237e5417ae512ece8",
+      "sha256": "52f94697ac8910e69878eff3d5d2b232af77ae627a40e3311fc09da9cc526436",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3133,6 +3142,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-014b25a6dd6c1298",
+      "path": "e2e/web/webtorrent-browser.spec.mjs",
+      "sha256": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-660f7078dc0b381a",
       "path": "fly.toml",
       "sha256": "3d64e80552e75e29e68d012d579456a353ff17b104afd3839b5d554c83f6318e",
@@ -3303,13 +3318,13 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+      "sha256": "8d91a0e78d010cea8248104f499bd2565f3707184675b69492ec321fc7a4ceee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
+      "sha256": "610240f36804c862973abdb2b908badb5157a8bc2282f120d5c945706f7ddc42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3346,6 +3361,12 @@
       "id": "SURFACE-35a1af26327814c1",
       "path": "scripts/__tests__/artist-import-idempotency.test.mjs",
       "sha256": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3bda27b3da891bd5",
+      "path": "scripts/__tests__/browser-vendor.test.mjs",
+      "sha256": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3769,6 +3790,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6545235ef8b425c",
+      "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c8ab8af4db77fc7",
       "path": "scripts/__tests__/music-worker-timing.test.mjs",
       "sha256": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
@@ -3898,6 +3925,12 @@
       "id": "SURFACE-2814c9b72c5f2d05",
       "path": "scripts/__tests__/studio-internship-audit.test.mjs",
       "sha256": "630716fa1e50aa604476b1159a3ac8daed37b79c7dc9ebd557a6af25f2a33a57",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a1dd9455f7a2ce96",
+      "path": "scripts/__tests__/test-child-completion.test.mjs",
+      "sha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4066,6 +4099,12 @@
       "id": "SURFACE-4bf839700e64b995",
       "path": "scripts/check-api-availability.mjs",
       "sha256": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1e909f329835b442",
+      "path": "scripts/check-browser-vendor.mjs",
+      "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4621,6 +4660,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0ebd44c86ad332c6",
+      "path": "scripts/lib/test-child-completion.mjs",
+      "sha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cf6df3f57a9edc7c",
       "path": "scripts/lib/test-process-session.mjs",
       "sha256": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
@@ -4809,7 +4854,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "ab872beca4a6208d69ca737b7d12af1e925dae38fde6b9b1ba919f29c6331ba7",
+      "sha256": "9cd9e22d3154617abde56e0d3823781444b87a506f02e76a357749b2cdc5cfb9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4887,7 +4932,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5547,7 +5592,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "3d25115a7c4767df9537e4c4112ccad2ab88eada159a577925c8665206f0be29",
+      "sha256": "dad4f342d3d37afc43b498e49025682e83b1059cdd210dbc96cf5bc79c868125",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5883,7 +5928,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
+      "sha256": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6465,7 +6510,7 @@
     {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "6ac4e96dceddad2701acbf190327668b4f5b6d60ddbe407bd0042ff03de2f8a3",
+      "sha256": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6477,7 +6522,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
+      "sha256": "6e48d627640bfe135ab7a745a923782127cd324e8fd11dfd43c1f31ab2fa31ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7875,7 +7920,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "bc853c223ed2910db7b7cdd5b8612880d7c2da6cac67d5ab32f43aa0eeb5c0b4",
+      "sha256": "797f5c0e88c784688d181a0529f0a97193e8647ce9048481d3c0a84de5a735ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10635,13 +10680,13 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "b1dcd742b534ff8a1b4e49bac46b99b266d51ada21b3cf9799310ef99a79a508",
+      "sha256": "e86d2a823bf039b42f5f9bf7983896dcefdbf42675407cb3a67070ea5f3f8fbc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "239dff8584ac52d2ab5ef80d1e1a639a43fbeef220300d4b39333e8a8d40dfc6",
+      "sha256": "f8c466289b971f6f94b5f7ac671512e812aa40ccda60466be52e7a47b222f6db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11038,6 +11083,18 @@
       "id": "SURFACE-3b725d897439a2a6",
       "path": "tdf-hq-ui/src/utils/authErrorMessage.ts",
       "sha256": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-93b63525299c65ce",
+      "path": "tdf-hq-ui/src/utils/availableRadioStations.test.ts",
+      "sha256": "fb403dac0b0d3e81b4ff5651a231039a033f17520a3fbb0532cfcb14acb0cac8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3f2108df5cb42f5b",
+      "path": "tdf-hq-ui/src/utils/availableRadioStations.ts",
+      "sha256": "d3a756e5ee95d3cf375dfaa5535a43e0dd6469aa45eec7e7403ac19d32427eeb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11517,7 +11574,7 @@
     {
       "id": "SURFACE-8b33a680532e58df",
       "path": "tdf-hq-ui/src/utils/torrentAudio.ts",
-      "sha256": "e99fc7b1922238bc4f8b1f2dbfc9c5abc0898e34608f32216b6ef25e11a5e604",
+      "sha256": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11530,6 +11587,12 @@
       "id": "SURFACE-6caada1aa8461942",
       "path": "tdf-hq-ui/src/utils/vcard.ts",
       "sha256": "04eea6981d1563e975359f94e9dce5c7556254cf03c98f36284d66fd3fd04c05",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-79f181c24f4d078b",
+      "path": "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
+      "sha256": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19416,6 +19479,13 @@
     {
       "path": "QUICK_START_REFERENCE.md",
       "sha256": "94ca346334c6fe8646e7b2d5017c46bbfc4f6870ea9d7fbc12e658407d74362f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "RADIO-VALIDITY-CHECKPOINT.md",
+      "sha256": "c601927b131c5d62a5f72cf6348019b2b18e6e0cca3031cdc53b679ac4eb71ce",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27605,14 +27675,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "d58219378f9f95dfa6db5a2b1148d8576b41d6e64095805e8ea210b9daaffdd9",
+      "sha256": "fecc3f6a7bb2da3cb62767f0a22b190b4cd04a00a16e2e62ed7d8286258cf12f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "2b19aaf4ae97231ce6ecdd6e41115be72047dece08592b5a4044a4b56f2e1450",
+      "sha256": "80e14859fa727ff124a8b6ee6246b12fdfc7c4b48267054ae32361a641472dbd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27947,6 +28017,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-worker-completion-observation.md",
+      "sha256": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-worker-heartbeat-shutdown.md",
+      "sha256": "94e3d66490bc334092ae4ae8160ae688be56b9128621c20dce1f0dc393022a28",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-aux-write.md",
       "sha256": "2d8dee259c38886c7de44bb20df7085d406984d16647b2c41659792806e8f391",
       "authority": "inferred",
@@ -28130,7 +28214,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a15177e98f99604cb05426297c37f3bc8269d79212f1f94329e25b88d98a9866",
+      "sha256": "81f0d9a0df9d9bfdaf004cdac524f87751b2559b5bd5e6941dd065c82e71f9db",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28229,6 +28313,13 @@
     {
       "path": "formal/system/webhook-log-privacy.md",
       "sha256": "f4aad0ca7b00b52f4602aa60522282b7ada730d566b95ef9cfb14c33b67ffb17",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/webtorrent-browser.md",
+      "sha256": "34b42c7ca0b8c05ea098fc60d6594fc590e567ff893a6b7eeec9085f7f59defb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
