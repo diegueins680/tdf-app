@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T12:44:40.046Z",
+  "generatedAt": "2026-11-06T14:07:41.076Z",
   "repositoryRoot": ".",
   "filesScanned": 2611,
   "candidateCount": 1397,
@@ -92024,7 +92024,7 @@
       "lines": [
         15769
       ],
-      "consumerCount": 564,
+      "consumerCount": 565,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
