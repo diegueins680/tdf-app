@@ -21081,7 +21081,7 @@
     },
     {
       "path": "docs/content-storage/rollout.md",
-      "sha256": "d08dbc281afe1751f5ff9bd56689ce3a131fcda5b7d375cc0959e6bb102626f6",
+      "sha256": "fded741012354cb5e66adc09348b1a94236206aecc2933ba603a88855fa50bb8",
       "authority": "inferred",
       "authorityBasis": "Status: implementation candidate; production activation blocked by the open",
       "kind": "requirement-candidate"

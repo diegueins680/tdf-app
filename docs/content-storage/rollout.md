@@ -39,8 +39,8 @@ activation and is distinct from the already completed Mobile179 merge.
 The current connected GitHub integration again rejected Mobile blob publication
 with HTTP403 (`Resource not accessible by integration`). The reviewed local
 companion is preserved in `mobile-companion.patch`, based on published14318a7;
-root intentionally retains that published gitlink. The GitHub installation74714092 currently selects only tdf-app; TDF-mobile must
-be added by the account owner before publication is possible. Apply the patch
+root intentionally retains that published gitlink. TDF-mobile is absent from the GitHub installation74714092 repository selection;
+the account owner must add it before publication is possible. Apply the patch
 only to a clean14318a7 checkout from root using
 `git -C tdf-mobile apply --unidiff-zero ../docs/content-storage/mobile-companion.patch`.
 The patch contains regenerated
@@ -74,16 +74,26 @@ contract reconciliation remain blocked; do not point root at an unpublished SHA.
   Direct static/CDN mount access bypasses that authorization boundary and blocks
   activation. Purge pre-existing caches and prove private/staging denial.
 
-Current local follow-up validation: the web production build and focused lint/
-TypeScript passed; directed web recovery/security tests, including authenticated
-blob transport and private/public result separation, passed. Thirteen real
-PostgreSQL16 reservation/concurrency/replay/deletion cases and nine finite policy/
-reconciliation checks passed. Three new Mobile helper cases, Mobile TypeScript
-and focused lint passed on the unpublished companion. New AEAD/private-reader
-Hspec cases are authored but not yet a compiled pass. Canonical GHC9.10.3 is
-installed locally and its uncached dependency build is in progress. Hosted checks
-and the
-new compiler-derived API declaration and Mobile publication remain pending.
+Current local follow-up validation: canonical GHC9.10.3 compiled the backend
+and Hspec passed 4,270 examples, zero failures and 22 pending. The dedicated
+PostgreSQL16 runner passed ten security cases including the real loopback HTTP
+owner/foreign-account/resource-reader/session-revocation/static-path assertions.
+An initial run had six replay expectations for implicit public permission; the
+fixtures now choose public explicitly and two added cases reject unintended
+public sharing on private replay. Provider transport remains synthetic.
+
+The compiler-produced API description adds only authenticated
+`DELETE /drive/token` (204); existing declarations are unchanged apart from
+ordinals. Its exact candidate is adopted with provenance in
+`compiler-observation-20261106.json`. Discovery gaps remain tracked obligations.
+Web build, TypeScript, focused lint and directed security/recovery tests passed;
+the final private transport rerun passed seven cases, including redirect denial.
+Thirteen SQL reservation/concurrency/replay/deletion cases, nine finite policy/
+reconciliation checks, twenty browser credential/session cases and ten catalog
+provenance cases passed. The unpublished Mobile companion passed three new
+helper cases, TypeScript and focused lint. Hosted checks and independent review,
+Mobile publication/UI, historical inventory and actual provider/image/restore
+acceptance remain pending. These receipts do not enable production.
 
 The commands and historical receipts below are retained as prior evidence;
 they do not certify the current candidate or production.
