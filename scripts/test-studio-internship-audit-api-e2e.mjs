@@ -1207,6 +1207,9 @@ const concurrentRetestAndReopen = await Promise.all([
 ]);
 assert.ok(concurrentRetestAndReopen.every((status) => [200, 201, 409].includes(status)));
 assert.ok(concurrentRetestAndReopen.some((status) => status === 200 || status === 201));
+// The race may go either way: a recorded concurrent retest adds one immutable
+// execution to the test case; a retest refused with 409 adds none.
+const concurrentRetestRecorded = concurrentRetestAndReopen[1] !== 409;
 const reportAfterConcurrentRetest = await request(`/feedback/internal/${reportId}`, {
   token: admin.token,
 });
@@ -1458,9 +1461,10 @@ await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/evidence-li
 });
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
+const expectedExecutionCount = concurrentRetestRecorded ? 11 : 10;
 assert.deepEqual(
   executions.map((execution) => execution.itexExecutionNumber),
-  [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+  Array.from({ length: expectedExecutionCount }, (_, index) => expectedExecutionCount - index),
 );
 assert.equal(executions[0].itexId, reopenedCycleRetest.ifrtExecutionId);
 assert.equal(executions[0].itexStatus, 'verified');
@@ -1496,7 +1500,7 @@ const finalReport = await request(`/feedback/internal/${reportId}`, { token: adm
 assert.equal(finalReport.ifrSummary.ifsState, 'closed');
 assert.equal(finalReport.ifrAuditPlanMutable, false);
 assert.ok(finalReport.ifrHistory.length >= 10);
-assert.equal(finalReport.ifrRetests.length, 3);
+assert.equal(finalReport.ifrRetests.length, concurrentRetestRecorded ? 4 : 3);
 const finalizedExecutionOnlyAdminDraft = await request(
   `/feedback/internal/${executionOnlyAdminDraft.ifrSummary.ifsId}`,
   { token: admin.token },

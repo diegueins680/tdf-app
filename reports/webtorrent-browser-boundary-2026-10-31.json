@@ -1,0 +1,372 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-31",
+  "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+  "parent646": "0bda432f7339a86d0206e5f7abbb2763161c0c2a",
+  "sourceCommit": "0fbea9f229056a4f72796863d2966259576d891a",
+  "evidenceCommit": "Containing normal report-only child; four new Git blobs and every unique safe archive member checked from committed Git.",
+  "scope": "Remove the unused Node WebTorrent graph that blocks the unchanged production audit after exception expiry, while preserving the original browser module and adding separately enforced browser component provenance/notices/advisory checks.",
+  "problem": {
+    "classification": [
+      "Confirmed dependency/reliability defect",
+      "Unnecessary production Node dependency exposure; TDF exploitability UNKNOWN"
+    ],
+    "authority": [
+      "Existing browser-only torrentAudio URL import and worker lifecycle",
+      "Original low-and-above production audit policy and its 2026-10-31 expiry",
+      "GHSA-2p57-rm9w-gvfp and user correctness/security mandate"
+    ],
+    "counterexample": {
+      "parentHead": "0bda432f7339a86d0206e5f7abbb2763161c0c2a",
+      "failedHostedJob": "https://github.com/diegueins680/tdf-app/actions/runs/41153811249/job/124396068216",
+      "failure": "audit-ci rejected webtorrent>torrent-discovery>bittorrent-tracker>ip@2.0.1 after the sole exception became inactive at 2026-10-31T00:00:00Z; subsequent Safe Install build/test steps were skipped.",
+      "productionAttackPath": "Not established; the app consumes the official prebuilt browser module rather than the Node tracker server."
+    }
+  },
+  "correction": {
+    "browser": "Byte-exact official WebTorrent2.8.5 module, SHA256 98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae, moved to a reviewed local Vite asset; loader logic, worker URL/scope and worker bytes preserved.",
+    "dependencies": {
+      "oldPackages": 1522,
+      "newPackages": 1377,
+      "removed": 145,
+      "added": 0,
+      "allSurvivingVersionResolvedIntegrityExact": true
+    },
+    "auditPolicy": "Original low/skip-dev and remaining policy fields preserved; expired ip exception removed without renewal or replacement. Browser advisory check has no allowlist.",
+    "provenance": "All99 publisher source-map entries partitioned:83 npm files/58 identities,11 own/polyfill and5 webpack runtime files. All64 matching published candidate archives independently SRI/source/license checked by ROOT.",
+    "notices": "Supplied MIT/ISC/Apache2 and embedded/README attributions served publicly; nine matching archives lack standalone notices and exact webpack compiler version remains unknown. No legal completeness certification.",
+    "advisoryCoverage": "Fresh npm bulk advisory check queries59 identities: WebTorrent plus every matching-source candidate and every previous app-lock version for each mapped package. Candidate unions do not uniquely prove actual upstream build resolution.",
+    "newContract": "formal/system/webtorrent-browser.md"
+  },
+  "properties": [
+    {
+      "id": "SYS-WEBTORRENT-BROWSER-001",
+      "sourceCommit": "0fbea9f229056a4f72796863d2966259576d891a",
+      "status": "TESTED",
+      "statement": "Retain reviewed official browser bytes, worker behavior and supplied notices; omit unused Node torrent packages/aliases; enforce conservative component identity coverage and reject invalid static evidence or applicable low-or-higher advisories.",
+      "implementation": [
+        "scripts/check-browser-vendor.mjs",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "third_party/webtorrent/browser.json"
+      ],
+      "verification": [
+        "scripts/__tests__/browser-vendor.test.mjs",
+        "e2e/web/webtorrent-browser.spec.mjs",
+        ".github/workflows/ci-safe-install.yml"
+      ],
+      "assumptions": [
+        "Trusted official registry metadata/SRI, publisher source map, toolchain/semver and recorded local executions.",
+        "Mapped source candidates and previous locks are conservative advisory candidates; exact package build resolution and compiler identity remain qualified.",
+        "Finite supported-browser module/empty-client/worker lifecycle; no real peers, torrents, full playback or provider state tested."
+      ]
+    }
+  ],
+  "verification": {
+    "sourceSeal": {
+      "sourceCommit": "0fbea9f229056a4f72796863d2966259576d891a",
+      "parent646": "0bda432f7339a86d0206e5f7abbb2763161c0c2a",
+      "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "sourceDigest": "24c7e3fd7685d77a1a8d89e6c4927ebb8e5fd119fd2df2fed639d5d6a08e6982",
+      "registeredGitAndWorktreeHashesVerified": 1444,
+      "allChangedSourceGitAndWorktreeHashes": {
+        ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
+        "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
+        "docs/catalog-persistence/catalog-list-decisions.json": "41793f1003d8272b50a4c818f054dc2ecc494c7e1e113ff69a108e538f2a29de",
+        "docs/catalog-persistence/reports/list-consumer-matrix.csv": "60834bacb550c16746e5a6e218818d8d438e8ba965d2f8e2c92d9f64f963c9a7",
+        "docs/catalog-persistence/reports/static-list-inventory.json": "59e639dc1323794fe47d8eca1dd9d3d0df8169831ef1ce491b4273d38f6fdd58",
+        "e2e/web/webtorrent-browser.spec.mjs": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+        "formal/system/dependency-security.json": "fecc3f6a7bb2da3cb62767f0a22b190b4cd04a00a16e2e62ed7d8286258cf12f",
+        "formal/system/dependency-security.md": "80e14859fa727ff124a8b6ee6246b12fdfc7c4b48267054ae32361a641472dbd",
+        "formal/system/inventory.json": "d4a933241048ecdaf0e681646d2069f4218174091c831e73044e9130f7d58712",
+        "formal/system/requirements.json": "0416b5b8feaa1e82c57b7d78c4d08354e18767fba072e7c17291a7f635e77e39",
+        "formal/system/traceability.json": "c29e673e18729054f15a8321daf4f47db3d4ce080839fae84cd4a7fde0f3a9cb",
+        "formal/system/webtorrent-browser.md": "34b42c7ca0b8c05ea098fc60d6594fc590e567ff893a6b7eeec9085f7f59defb",
+        "package-lock.json": "8d91a0e78d010cea8248104f499bd2565f3707184675b69492ec321fc7a4ceee",
+        "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
+        "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
+        "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
+        "scripts/quality-repo.sh": "891c7514337481283e9ab38fd54bbd5660b5f79a09fd790a00295f83299a7636",
+        "tdf-hq-ui/jest.config.cjs": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
+        "tdf-hq-ui/package.json": "6e48d627640bfe135ab7a745a923782127cd324e8fd11dfd43c1f31ab2fa31ee",
+        "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
+        "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+        "third_party/webtorrent/README.md": "7802a0a24c0f79fef64cc9fbe0adfad05eea1063027134dc127fb8991ffffcb1",
+        "third_party/webtorrent/browser.json": "aaedd205fc6b19e8c850245e6a55fdeb7792bbac89d309a0b3a2e69fcea58dc6",
+        "third_party/webtorrent/bundled-provenance.json": "82971c29f4d319e78318ff66b933ddbfdbf30bc8d8ba83739a804a488722bede"
+      },
+      "assuranceArtifactHashesVerified": 52,
+      "all159ParentRequirementsExact": true,
+      "requirements": 160,
+      "implementationAndRefinementObligations": 320,
+      "wholeBackendTreeExactParent": true,
+      "historicalReportsAndEvidenceUnchanged": true,
+      "allParentCatalogDecisionsPreserved": true,
+      "individuallyReviewedNewTechnicalConstantTables": 13,
+      "lockPrune": {
+        "oldPackages": 1522,
+        "newPackages": 1377,
+        "removed": 145,
+        "added": 0,
+        "allSurvivingVersionResolvedIntegrityExact": true
+      },
+      "browserAssetSha256": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+      "browserNoticesSha256": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
+      "advisoryPackageIdentities": 59,
+      "uiTestSummary": [
+        "Test Suites: 324 passed, 324 total",
+        "Tests:       3761 passed, 3761 total",
+        "Snapshots:   0 total",
+        "Time:        586.388 s"
+      ],
+      "lintAndTypecheck": "Lint completed at initial6b beforeJest failure and all lint inputs remain exact; no fresh full quality-ui pass claimed. Current source fullJest and productionbuild pass separately; the productionbuild also runs a fresh tsc --noEmit typecheck.",
+      "actualExits": {
+        "browser-vendor-unit": 0,
+        "browser-vendor-live": 0,
+        "unchanged-production-audit": 0,
+        "ui-tests": 0,
+        "ui-build": 0,
+        "root-quality": 0,
+        "inventory-check": 0,
+        "conformance-check": 0
+      },
+      "browserStats": {
+        "startTime": "2026-10-31T02:33:12.859Z",
+        "duration": 9000.67,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "assertionDetectedFaults": 4,
+      "semanticMutationFailedAssertions": 5,
+      "rawBrowserLifecycles": [
+        {
+          "project": "chromium",
+          "lifecycle": {
+            "moduleType": "function",
+            "nativeWebRTC": true,
+            "webRTC": true,
+            "torrents": 0,
+            "workerState": "activated",
+            "scope": "/torrent-stream/",
+            "server": true,
+            "destroyed": true
+          }
+        },
+        {
+          "project": "firefox",
+          "lifecycle": {
+            "moduleType": "function",
+            "nativeWebRTC": true,
+            "webRTC": true,
+            "torrents": 0,
+            "workerState": "activated",
+            "scope": "/torrent-stream/",
+            "server": true,
+            "destroyed": true
+          }
+        }
+      ],
+      "formalMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 144,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 160,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "nativeResolverScope": "Exact optional1.11.1 official binaryverified separately because parent/finalrootlock omit platformbinding entry; firstfailure preserved; runtimefallback disabled during remainingqualification.",
+      "sourceCleanAfter": true,
+      "limitations": [
+        "TESTED finite static/config/advisory/UI/browser controls, not complete correctness or reachability proofs.",
+        "Publisher source map and matching-source candidates do not uniquely prove exact upstream build versions or binary derivation; webpack compilerversionunknown.",
+        "Nine candidate archives lack standalone license notices; supplied declarations/attributions retained, no legal completeness certification.",
+        "No real torrents, peers, production playback/provider/financial operations or WebKit/physical-device validation executed.",
+        "No fresh local Haskell/Mobile qualification; exact backend/Mobile inputs retain their historical source identities and new published CI remains required.",
+        "Existing eleven source-derived conditionalSMT claims retain trusted extraction/coherence/arithmetic assumptions; whole160requirements/320implementation-refinement remainUNPROVEN and formalreleaseBLOCKED.",
+        "Initialverification/native setup failures retained; only valid-before assertionnegativecontrols count as successful fault detection."
+      ],
+      "atUTC": "2026-10-31T02:41:38.944273+00:00"
+    },
+    "newUnitCases": 19,
+    "uiSuites": 324,
+    "uiTests": 3761,
+    "uiFailures": 0,
+    "uiSkipped": 0,
+    "actualBrowserProfiles": [
+      "chromium",
+      "firefox"
+    ],
+    "browserCases": 2,
+    "browserFailures": 0,
+    "browserSkipped": 0,
+    "semanticMutationVariants": 4,
+    "semanticMutationFailedAssertions": 5,
+    "evidenceCorruptionsRejected": 12,
+    "sourceHashesReverified": 1444,
+    "assuranceArtifactHashesReverified": 52,
+    "liveProductionAudit": "PASS without exceptions at the recorded source/time",
+    "liveBrowserAdvisories": {
+      "queriedIdentities": 59,
+      "knownAffected": 0,
+      "scope": "Recorded candidate union at scan time, not complete vulnerability or binary provenance clearance."
+    },
+    "lint": "Passed in initial6b serial quality-ui before Jest failed; exact current lint inputs preserved.",
+    "typecheck": "Fresh current-source production build runs tsc --noEmit and passed.",
+    "rootQuality": "PASS at current source with runtime resolver fallback disabled.",
+    "formalMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 160,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 144,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "Original qualified-source review plus evidence-control supplement; neither is a GitHub approval. Inventory authorship is excluded from agent independence; ROOT separately verified its artifacts."
+  },
+  "verificationHarnessCorrections": {
+    "initialSource": "6b85177c6076ce9b563088e86bff515aeb1bf210",
+    "queryMapping": "Jest ESM strips the URL query. Initial query-only mock mapping loaded the real browser bundle in JSDOM and failed WritableStream before0 tests. Preserve the prior optional-query semantics at the new relative path; actual-config regression and restore-defect mutation now protect both forms.",
+    "nativeSetup": "Initial clean install with ignored lifecycle scripts omitted an inherited optional native resolver binding. The resulting exact1.11.1 binding was independently matched to its official SRI/archive; further local automatic fallback was disabled. Missing platform lock entries remain a separate reproducibility limitation.",
+    "faultFixtureSetup": "An initial mutation-report format mismatch and missing copied UI dependencies were corrected; only four variants with successful unmodified fixtures and assertion failures count.",
+    "historicalFailures": "Original source6b failed receipts and subsequent counterexamples retain their own identities; no full quality-ui pass or old Haskell/Mobile result is relabeled current."
+  },
+  "regressionProtection": {
+    "repoGate": "Static verifier and19 controls in scripts/quality-repo.sh",
+    "safeInstall": "Unchanged npm production audit plus fail-closed browser component integrity/advisory step; third_party changes trigger workflow.",
+    "browserGate": "Actual-bundle/SW lifecycle test included in default persona @critical suite; local Chromium+Firefox passed. Unsupported native WebRTC is classified explicitly; unavailable WebKit was not run locally.",
+    "catalog": "All parent catalog decisions preserved,13 upstream technical switch tables individually reviewed, strict1367-candidate audit passes; auditor unchanged.",
+    "requirementPreservation": "All159 parent normative objects exact; new160th browser boundary records finite and unresolved scope."
+  },
+  "scorecard": {
+    "registeredRequirements": 160,
+    "criticalRegisteredRequirements": 126,
+    "wholeRequirements": {
+      "PROVEN": 0,
+      "UNPROVEN": 160
+    },
+    "implementationRefinementObligations": {
+      "PROVEN": 0,
+      "UNPROVEN": 320
+    },
+    "inheritedConditionalSmtClaimsRechecked": 11,
+    "primaryConfirmedFailureModeLocallyCorrected": 1,
+    "integratedAtCapture": 0,
+    "newRegressionControls": {
+      "unitCases": 19,
+      "browserCases": 2,
+      "semanticFaultVariants": 4,
+      "evidenceCorruptions": 12
+    },
+    "unnecessaryNodeLockPackagesRemoved": 145,
+    "sourceCurrent": "All corrected-scope receipts bind M; initial failures and historical backend/Mobile evidence retain previous identities."
+  },
+  "limitations": [
+    "TESTED finite static/config/advisory/UI/browser controls, not complete correctness or reachability proofs.",
+    "Publisher source map and matching-source candidates do not uniquely prove exact upstream build versions or binary derivation; webpack compilerversionunknown.",
+    "Nine candidate archives lack standalone license notices; supplied declarations/attributions retained, no legal completeness certification.",
+    "No real torrents, peers, production playback/provider/financial operations or WebKit/physical-device validation executed.",
+    "No fresh local Haskell/Mobile qualification; exact backend/Mobile inputs retain their historical source identities and new published CI remains required.",
+    "Existing eleven source-derived conditionalSMT claims retain trusted extraction/coherence/arithmetic assumptions; whole160requirements/320implementation-refinement remainUNPROVEN and formalreleaseBLOCKED.",
+    "Initialverification/native setup failures retained; only valid-before assertionnegativecontrols count as successful fault detection."
+  ],
+  "integration": {
+    "parentPullRequest": 646,
+    "childPullRequest": "To be created from this containing head; live state tracked in GitHub conversation and execution report.",
+    "merged": false,
+    "autoMerge": false,
+    "requiredNext": "Fresh published-head CI, required independent GitHub review, normal reviewed child integration into646, then fresh parent646 CI/review and strict20-context/FIFO protected-main admission.",
+    "manualDeployment": false,
+    "productionProviderFinancialOrDatabaseWrites": false
+  },
+  "outstanding": {
+    "confirmed": [
+      "Inherited platform-specific native optional resolver entries missing from the root lock; ordinary isolated --include=optional regeneration did not repair them.",
+      "Whole-platform conformance/proof and previously recorded security/financial work remain unresolved."
+    ],
+    "hypotheses": [
+      "Whether the inherited native-lock omission also affects the fresh Linux Safe Install path is UNKNOWN until published CI.",
+      "TDF production exploitability of the removed Node ip chain was not established."
+    ]
+  },
+  "nextHighestValueTask": "Qualify and review the published repair, integrate through646 under all protection controls, then refresh the already-tested financial corrections against resulting main; investigate native optional lock reproducibility independently.",
+  "archive": {
+    "path": "reports/webtorrent-browser-boundary-2026-10-31/evidence.tar.gz",
+    "sha256": "fadf4526793f3015c9698ad9ad81faf037a7edba9a7df042a01542978b61c8c0",
+    "bytes": 766112,
+    "innerFiles": 184,
+    "manifest": "reports/webtorrent-browser-boundary-2026-10-31/manifest.json"
+  },
+  "createdAtUTC": "2026-10-31T02:46:25.448596+00:00"
+}

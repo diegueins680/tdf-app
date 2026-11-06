@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-10-26T20:56:02.423657+00:00",
+  "pr": 624,
+  "mergedAt": "2026-10-26T20:53:17Z",
+  "mergedBy": "diegueins680",
+  "mergeCommit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "parents": [
+    "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+    "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f"
+  ],
+  "tree": "f64d801e110320edfeee4d789f03c2176b24cacb",
+  "testedComputedMerge": "c79de0ca05c0dc882ef6d5ad4c8af4a6fc071ae6",
+  "treeMatchesTestedCandidate": true,
+  "nativeGuardReceipt": "/private/tmp/tdf-624-root-final-native-guard-20261026.json",
+  "nativeGuardSha256": "eeb4af4be560a57a8b32514179aa528c580d4cdf916d03ddfa0b2c942830c184",
+  "mergeMethod": "Normal protected gh pr merge --merge --match-head-commit ba2729; no admin override",
+  "connectorAttempt": "Invalid action argument binding, no mutation; verified unmerged then CLI fallback",
+  "deploymentVerified": false,
+  "productionBackendFlagsOrDataChangedByRoot": false
+}

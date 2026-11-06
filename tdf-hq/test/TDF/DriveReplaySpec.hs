@@ -165,7 +165,7 @@ sendAs actor manager directory localName remoteName mime bytes = do
   uploadToDrive manager (toSqlKey actor) fixtureToken
     FileData { fdInputName = "file", fdFileName = remoteName
              , fdFileCType = mime, fdPayload = localPath }
-    mime (Just remoteName) (Just "syntheticFolder") (Just fixtureKey)
+    mime (Just remoteName) (Just "syntheticFolder") (Just fixtureKey) Nothing Nothing
 
 expectConflict :: Either SomeException DriveUploadDTO -> Expectation
 expectConflict outcome = case outcome of

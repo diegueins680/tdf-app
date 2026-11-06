@@ -1,0 +1,535 @@
+diff --git a/__tests__/uploadRecovery.test.ts b/__tests__/uploadRecovery.test.ts
+new file mode 100644
+index 0000000..1a338e6
+--- /dev/null
++++ b/__tests__/uploadRecovery.test.ts
+@@ -0,0 +1,46 @@
++import { uploadMedia } from '../src/api/upload';
++
++jest.mock('expo-crypto', () => ({ CryptoDigestAlgorithm: { SHA256: 'SHA-256' }, randomUUID: () => 'synthetic-upload-id', digestStringAsync: async () => 'a'.repeat(64) }));
++jest.mock('../src/lib/api', () => ({ API_BASE: 'https://api.tdf.test', UPLOAD_BASE: 'https://api.tdf.test/drive/upload' }));
++jest.mock('../src/api/client', () => ({
++  getAuthToken: () => 'Bearer synthetic-user',
++  captureAuthSession: () => ({ authorization: 'Bearer synthetic-user', signal: new AbortController().signal, version: 1 }),
++  assertAuthSession: jest.fn(),
++}));
++
++const fetchMock = jest.fn();
++beforeEach(() => { global.fetch = fetchMock; fetchMock.mockReset(); });
++const image = { uri: 'file:///synthetic-cover.png', mimeType: 'image/png', fileName: 'cover.png' };
++
++it('uses the actual DriveUploadDTO response and resolves private managed URLs against the API', async () => {
++  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ duFileId: 'synthetic', duPublicUrl: null, duWebContentLink: '/storage/files/synthetic' }) });
++  await expect(uploadMedia({ ...image, destination: 'tdf' })).resolves.toBe('https://api.tdf.test/storage/files/synthetic');
++  expect(fetchMock).toHaveBeenCalledTimes(1);
++  const options = fetchMock.mock.calls[0][1];
++  expect(options.headers.Authorization).toBe('Bearer synthetic-user');
++  expect(options.body.get('destination')).toBe('tdf');
++  expect(options.body.get('authMode')).toBe('server');
++  expect(options.body.get('idempotencyKey')).toBe('a'.repeat(64));
++});
++it('never replaces missing personal authorization with a shared-account upload', async () => {
++  await expect(uploadMedia({ ...image, destination: 'google_drive' })).rejects.toMatchObject({ code: 'storage_reconnect_required' });
++  expect(fetchMock).not.toHaveBeenCalled();
++});
++it('retains the retry identity and keeps provider internals out of the error', async () => {
++  fetchMock.mockResolvedValue({ ok: false, json: async () => ({ code: 'storage_service_unavailable', message: 'synthetic-secret' }) });
++  const request = uploadMedia({ ...image, destination: 'tdf', idempotencyKey: 'b'.repeat(64) });
++  await expect(request).rejects.toMatchObject({ idempotencyKey: 'b'.repeat(64), code: 'storage_service_unavailable' });
++  await expect(request).rejects.not.toThrow('synthetic-secret');
++});
++it('requires an explicit or previously saved destination before sending bytes', async () => {
++  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ defaultDestination: null }) });
++  await expect(uploadMedia(image)).rejects.toMatchObject({ code: 'storage_destination_required' });
++  expect(fetchMock).toHaveBeenCalledTimes(1);
++  expect(fetchMock.mock.calls[0][0]).toBe('https://api.tdf.test/storage/me');
++});
++
++it('preserves the retry identity when the transport outcome is unknown', async () => {
++  fetchMock.mockRejectedValue(new TypeError('synthetic-network-details'));
++  await expect(uploadMedia({ ...image, destination: 'tdf', idempotencyKey: 'c'.repeat(64) }))
++    .rejects.toMatchObject({ code: 'storage_outcome_unknown', idempotencyKey: 'c'.repeat(64) });
++});
+diff --git a/src/api/generated/types.ts b/src/api/generated/types.ts
+index 694f9b1..c6612a3 100644
+--- a/src/api/generated/types.ts
++++ b/src/api/generated/types.ts
+@@ -371,6 +371,75 @@ export interface paths {
+         patch: operations["operationsDecideApproval"];
+         trace?: never;
+     };
++    "/storage/me": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        /** Read the current account's storage allowance and selected default */
++        get: operations["getContentStorageAccount"];
++        put?: never;
++        post?: never;
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/storage/me/destination": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        get?: never;
++        /** Change the default for future uploads without moving existing files */
++        put: operations["setContentStorageDestination"];
++        post?: never;
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/storage/files": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        /** List owned TDF uploads and pending cleanup intents */
++        get: operations["listContentStorageFiles"];
++        put?: never;
++        post?: never;
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/storage/files/{fileId}": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        /** Download an owned private managed file; public files use the assets mount */
++        get: operations["downloadPrivateContentStorageFile"];
++        put?: never;
++        post?: never;
++        /** Persist an owner-authorized deletion intent and remove its managed bytes */
++        delete: operations["deleteContentStorageFile"];
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
+     "/drive/upload": {
+         parameters: {
+             query?: never;
+@@ -9071,6 +9140,31 @@ export interface paths {
+ export type webhooks = Record<string, never>;
+ export interface components {
+     schemas: {
++        StorageFileDTO: {
++            /** Format: uuid */
++            fileId: string;
++            fileName: string;
++            /** Format: int64 */
++            byteSize: number;
++            /** @enum {string} */
++            status: "uploading" | "completed" | "cancelled";
++            /** @enum {string} */
++            visibility: "private" | "public";
++        };
++        StorageAccountDTO: {
++            /** @description Existing unmetered files require operator reconciliation before new TDF storage grows */
++            legacyUsageVerified: boolean;
++            /** Format: int64 */
++            allowanceBytes: number;
++            /** Format: int64 */
++            usedBytes: number;
++            /** Format: int64 */
++            reservedBytes: number;
++            /** @enum {string|null} */
++            defaultDestination: "tdf" | "google_drive" | null;
++            /** Format: int64 */
++            revision: number;
++        };
+         InvoiceLineDTO: {
+             /** Format: int64 */
+             lineId: number;
+@@ -18348,6 +18442,200 @@ export interface operations {
+             };
+         };
+     };
++    getContentStorageAccount: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        requestBody?: never;
++        responses: {
++            /** @description Decimal bytes, including capacity reserved by uncertain uploads */
++            200: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content: {
++                    "application/json": components["schemas"]["StorageAccountDTO"];
++                };
++            };
++            /** @description Missing or invalid TDF session */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
++    setContentStorageDestination: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        requestBody: {
++            content: {
++                "application/json": {
++                    /** @enum {string} */
++                    destination: "tdf" | "google_drive";
++                    /** Format: int64 */
++                    expectedRevision: number;
++                };
++            };
++        };
++        responses: {
++            /** @description Updated account preference */
++            200: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content: {
++                    "application/json": components["schemas"]["StorageAccountDTO"];
++                };
++            };
++            /** @description Missing or invalid TDF session */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Preference was edited concurrently; reread before retrying */
++            409: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
++    listContentStorageFiles: {
++        parameters: {
++            query?: {
++                after?: string;
++                limit?: number;
++            };
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        requestBody?: never;
++        responses: {
++            /** @description Account-scoped files, ordered by immutable ID */
++            200: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content: {
++                    "application/json": components["schemas"]["StorageFileDTO"][];
++                };
++            };
++            /** @description Missing or invalid TDF session */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
++    downloadPrivateContentStorageFile: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path: {
++                fileId: string;
++            };
++            cookie?: never;
++        };
++        requestBody?: never;
++        responses: {
++            /** @description Owner-authenticated attachment */
++            200: {
++                headers: {
++                    "Content-Disposition"?: string;
++                    "Cache-Control"?: string;
++                    "X-Content-Type-Options"?: string;
++                    [name: string]: unknown;
++                };
++                content: {
++                    "application/octet-stream": string;
++                };
++            };
++            /** @description Missing or invalid TDF session */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description File missing or not owned by the current account */
++            404: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Stored bytes unavailable */
++            503: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
++    deleteContentStorageFile: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path: {
++                fileId: string;
++            };
++            cookie?: never;
++        };
++        requestBody?: never;
++        responses: {
++            /** @description File deletion confirmed; metadata and tombstone retained */
++            204: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Missing or invalid TDF session */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description No owned file */
++            404: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Upload is still running; wait before retrying deletion */
++            409: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Deletion intent retained for retry; cleanup unconfirmed */
++            503: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
+     uploadDriveFile: {
+         parameters: {
+             query?: never;
+@@ -18365,6 +18653,18 @@ export interface operations {
+                     folderId?: string;
+                     name?: string;
+                     accessToken?: string;
++                    /**
++                     * @description Explicit authority; user mode never falls back to TDF credentials
++                     * @enum {string}
++                     */
++                    authMode?: "user" | "server";
++                    /** @enum {string} */
++                    destination?: "tdf" | "google_drive";
++                    /**
++                     * @description New managed uploads default to private; public is restricted to passive image
++                     * @enum {string}
++                     */
++                    visibility?: "private" | "public";
+                     idempotencyKey?: string;
+                 };
+             };
+diff --git a/src/api/upload.ts b/src/api/upload.ts
+index cc67d4f..cfa8420 100644
+--- a/src/api/upload.ts
++++ b/src/api/upload.ts
+@@ -1,66 +1,95 @@
+ import { Platform } from 'react-native';
+-import { getAuthToken } from './client';
+-import { UPLOAD_BASE } from '../lib/api';
+-
+-const UPLOAD_URL = UPLOAD_BASE;
++import { CryptoDigestAlgorithm, digestStringAsync, randomUUID } from 'expo-crypto';
++import { assertAuthSession, captureAuthSession, getAuthToken } from './client';
++import { API_BASE, UPLOAD_BASE } from '../lib/api';
+ 
++export type UploadDestination = 'tdf' | 'google_drive';
+ export type UploadResponse = {
+-  publicUrl?: string;
+-  webViewLink?: string;
+-  webContentLink?: string;
+-  fileId?: string;
++  duPublicUrl?: string | null;
++  duWebViewLink?: string | null;
++  duWebContentLink?: string | null;
++  duFileId?: string;
+ };
+ 
+-export async function uploadMedia({
+-  uri,
+-  mimeType,
+-  fileName,
+-  uploadLabel = 'archivo',
+-}: {
++export class StorageUploadError extends Error {
++  constructor(message: string, readonly code: string, readonly idempotencyKey: string) {
++    super(message);
++    this.name = 'StorageUploadError';
++  }
++}
++
++type UploadInput = {
+   uri: string;
+   mimeType?: string;
+   fileName?: string;
+   uploadLabel?: string;
+-}): Promise<string> {
+-  if (!UPLOAD_URL) {
+-    throw new Error(`No se ha configurado EXPO_PUBLIC_UPLOAD_URL para subir ${uploadLabel}s.`);
++  destination?: UploadDestination;
++  visibility?: 'private' | 'public';
++  providerAccessToken?: string;
++  /** Retain this key when retrying the same selected file and destination. */
++  idempotencyKey?: string;
++};
++
++export async function uploadMedia(input: UploadInput): Promise<string> {
++  const binding = captureAuthSession(getAuthToken());
++  const key = input.idempotencyKey ?? await digestStringAsync(CryptoDigestAlgorithm.SHA256, randomUUID());
++  if (!/^[a-f0-9]{64}$/.test(key)) throw new StorageUploadError('Identidad de carga inválida.', 'storage_idempotency_invalid', key);
++  const controller = new AbortController();
++  const abort = () => controller.abort();
++  binding.signal.addEventListener('abort', abort, { once: true });
++  if (binding.signal.aborted) controller.abort();
++  const timer = setTimeout(abort, 120_000);
++  try {
++  let destination = input.destination;
++  if (!destination) {
++    const response = await fetch(`${API_BASE}/storage/me`, { headers: { Authorization: binding.authorization }, signal: controller.signal });
++    assertAuthSession(binding);
++    const account = await response.json() as { defaultDestination?: unknown };
++    if (!response.ok || !['tdf', 'google_drive'].includes(String(account.defaultDestination))) {
++      throw new StorageUploadError('Elige dónde guardar el archivo antes de subirlo.', 'storage_destination_required', key);
++    }
++    destination = account.defaultDestination as UploadDestination;
++  }
++  if (destination === 'google_drive' && !input.providerAccessToken) {
++    throw new StorageUploadError('Conecta tu Google Drive antes de reintentar. El destino no ha cambiado.', 'storage_reconnect_required', key);
+   }
+-  const token = getAuthToken();
++  assertAuthSession(binding);
+   const data = new FormData();
+-
+-  const name = fileName ?? uri.split('/').pop() ?? 'upload.bin';
+-  const type = mimeType || 'application/octet-stream';
+-  const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+-
+-  data.append('file', {
+-    uri: uploadUri,
+-    name,
+-    type
+-  } as unknown as Blob);
+-
+-  const res = await fetch(UPLOAD_URL, {
+-    method: 'POST',
+-    headers: {
+-      ...(token ? { Authorization: token } : {})
+-    },
+-    body: data
++  const name = input.fileName ?? input.uri.split('/').pop() ?? 'upload.bin';
++  const uri = Platform.OS === 'ios' ? input.uri.replace('file://', '') : input.uri;
++  data.append('file', { uri, name, type: input.mimeType || 'application/octet-stream' } as unknown as Blob);
++  data.append('destination', destination);
++  data.append('authMode', destination === 'tdf' ? 'server' : 'user');
++  data.append('visibility', input.visibility ?? 'private');
++  data.append('idempotencyKey', key);
++  if (destination === 'google_drive' && input.providerAccessToken) data.append('accessToken', input.providerAccessToken);
++  const response = await fetch(UPLOAD_BASE, {
++    method: 'POST', headers: { Authorization: binding.authorization }, body: data, signal: controller.signal,
+   });
+-
+-  if (!res.ok) {
+-    const text = await res.text().catch(() => res.statusText);
+-    throw new Error(text || `No se pudo subir el ${uploadLabel}`);
++  assertAuthSession(binding);
++  const result = await response.json().catch(() => ({})) as UploadResponse & { code?: string };
++  if (!response.ok) {
++    const code = result.code ?? 'storage_service_unavailable';
++    const message = code === 'storage_reconnect_required' ? 'Conecta de nuevo tu Google Drive y reintenta el mismo archivo.'
++      : code === 'storage_quota_exceeded' ? 'Tu espacio TDF está lleno. Libera espacio o elige tu propio almacenamiento.'
++      : 'No pudimos confirmar la carga. Conserva el archivo y reintenta con la misma identidad.';
++    throw new StorageUploadError(message, code, key);
++  }
++  const link = result.duPublicUrl || result.duWebContentLink || result.duWebViewLink;
++  if (!link) throw new StorageUploadError('No pudimos confirmar el archivo recibido.', 'storage_response_invalid', key);
++  const url = new URL(link, `${API_BASE}/`);
++  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || (url.protocol === 'http:' && !['localhost', '127.0.0.1', '10.0.2.2'].includes(url.hostname))) {
++    throw new StorageUploadError('El destino devolvió un enlace inválido.', 'storage_response_invalid', key);
++  }
++  return url.toString();
++  } catch (error) {
++    if (error instanceof StorageUploadError) throw error;
++    throw new StorageUploadError('No pudimos confirmar la carga. Reintenta el mismo archivo con la misma identidad.', 'storage_outcome_unknown', key);
++  } finally {
++    clearTimeout(timer);
++    binding.signal.removeEventListener('abort', abort);
+   }
+-
+-  const json = (await res.json().catch(() => ({}))) as UploadResponse;
+-  const url = json.publicUrl || json.webViewLink || json.webContentLink;
+-  if (!url) throw new Error('Subida exitosa pero no se devolvió URL pública');
+-  return url;
+ }
+ 
+-export async function uploadImage(input: {
+-  uri: string;
+-  mimeType?: string;
+-  fileName?: string;
+-}): Promise<string> {
+-  return uploadMedia({ ...input, uploadLabel: 'imagen' });
+-}
++export const uploadImage = (input: Omit<UploadInput, 'uploadLabel'>): Promise<string> =>
++  uploadMedia({ ...input, uploadLabel: 'imagen' });

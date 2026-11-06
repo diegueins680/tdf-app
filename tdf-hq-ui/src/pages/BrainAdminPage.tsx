@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -116,9 +117,9 @@ function SingleBrainEntryCard(props: SingleBrainEntryCardProps) {
                 Categoria: {entry.bedCategory}
               </Typography>
             )}
-            <Typography variant="body2" color="text.secondary">
+            <MarkdownText inline variant="body2" color="text.secondary">
               {bodyPreview}
-            </Typography>
+            </MarkdownText>
             {tagsSummary && (
               <Typography variant="body2" color="text.secondary">
                 Tags: {tagsSummary}
@@ -173,9 +174,9 @@ function BrainEntryCard(props: BrainEntryCardProps) {
             )}
             {entry.bedCategory && <Chip label={entry.bedCategory} variant="outlined" size="small" />}
           </Stack>
-          <Typography variant="body2" color="text.secondary">
+          <MarkdownText inline variant="body2" color="text.secondary">
             {bodyPreview}
-          </Typography>
+          </MarkdownText>
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {(entry.bedTags ?? []).map((tag) => (
               <Chip key={tag} label={tag} size="small" variant="outlined" />

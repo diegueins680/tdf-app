@@ -1,0 +1,10 @@
+{
+  "fixtureStatus": "FAILED",
+  "productControlStatus": "NOT_RUN",
+  "reason": "Copied runner regenerated its older41081 endpoint while config used41101; navigation refused before application assertions.",
+  "rawBrowserCases": {
+    "failed": 1,
+    "passed": 0
+  },
+  "evidencePromoted": false
+}

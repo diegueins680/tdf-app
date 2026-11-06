@@ -150,6 +150,8 @@ function claimActions(status: string): readonly (readonly [string, string])[] {
     case 'under_review': return [['approved', 'Aprobar'], ['rejected', 'Rechazar'], ['more_evidence_requested', 'Solicitar evidencia'], ['withdrawn', 'Retirar']];
     case 'more_evidence_requested': return [['submitted', 'Enviar a revisión'], ['withdrawn', 'Retirar']];
     case 'rejected': return [['submitted', 'Enviar a revisión']];
+    // AUTHORITY-097: revocation needs a stated reason; the backend rejects an empty one.
+    case 'approved': return [['revoked', 'Revocar']];
     default: return [];
   }
 }

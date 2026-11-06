@@ -1,0 +1,18 @@
+{
+  "artifact-retention.json": "b1e978744071a0a2eb3154ccdab69635f68d54ec459c37ccfc016531fbe9011c",
+  "assurance-receipts.tar.gz": "5d8e1a0936e6229fad6e54f8c52c1eb97ce9812731911a9e603d61c6534e52b2",
+  "catalog-freshness.json": "0ea0ba8b333c256721d01aaadeb83ceb9c240d219e62b5d2c553208a755faea7",
+  "check-width-comparison.py": "2a8b301bd8beba7947f813cb65181703647049778c16e2b240e9ce333b3673bf",
+  "control-qualification.json": "91c4e15148b2c0ec9bae9865b898c1b588355e0867b4023b3815f0527329a98f",
+  "development-diagnostics.tar.gz": "557c5ce4288a597efa0d827f4e198d194d949c1c4b27415ebcd5dc95f6a81dea",
+  "execution-receipts.tar.gz": "c52cdee18f7a901b9cb2db39e60b1e8ee6f6947709c341e666c72875cde6b47d",
+  "execution-sources.json": "f77e34456c613b21096c0e2c8bf31b91883bb057ea200b0f071ba67c34ecd9c9",
+  "independent-review.txt": "1c16641b7f7b00f1c3809826a406e92c40f0423ba4999a184c36c952ca23c361",
+  "source-seal.json": "dd002ea889accffc13789862e1abb95d930952c6dcd32ef9798b134a6a7f5260",
+  "width-proof-committed-optimized.json": "858ad48a2a056ea9e8e59d50a759035b7c89d57cbddfa3494f26e5c66e21826d",
+  "width-proof-committed.json": "858ad48a2a056ea9e8e59d50a759035b7c89d57cbddfa3494f26e5c66e21826d",
+  "width-proof-mutant-optimized.log": "5e34e9e88acd2aca1ef5ddb32d77963bae88f353f625ab4f17995cfa82ea23ca",
+  "width-proof-mutant.log": "5e34e9e88acd2aca1ef5ddb32d77963bae88f353f625ab4f17995cfa82ea23ca",
+  "width-proof-working-optimized.json": "858ad48a2a056ea9e8e59d50a759035b7c89d57cbddfa3494f26e5c66e21826d",
+  "width-proof-working.json": "858ad48a2a056ea9e8e59d50a759035b7c89d57cbddfa3494f26e5c66e21826d"
+}

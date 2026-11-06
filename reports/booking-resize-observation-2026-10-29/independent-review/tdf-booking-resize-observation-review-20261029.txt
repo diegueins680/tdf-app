@@ -1,0 +1,20 @@
+Independent read-only review: booking viewport event observation
+
+Parent/observed HEAD: 21628cdc8523bfd5ff4bd3259648400c0d1ed34d. Worktree: /private/tmp/tdf-provider-evidence-actualmain-20261028. Reviewed working e2e/contract diff and surrounding immutable initial guards. UI source equals its current HEAD blob: True. No browser, test, server, build, database or permission execution by this reviewer. This is source/diagnostic review, not runtime qualification, proof, GitHub approval or a product repair.
+
+Blocking findings: 0 within this scope.
+
+The observer is registered after the focused expected helper is visible and before setViewportSize. Window resize/orientationchange and visualViewport resize/scroll callbacks record only monotonic timestamps/types. The style MutationObserver records inline style, placement and connection state; it does not read bounding boxes/computed styles, force Popper updates, scroll, dismiss, alter CSS or mutate application state. It observes existing behavior, with the documented possibility of scheduling perturbation.
+
+The initial same-evaluation viewport result is unconditionally attached and remains the exact object used by the original assertions. The additional failure predicate only chooses whether to collect later geometry; it does not determine acceptance or substitute a later result. Root, helper presence/text/edges, scale, focus/name and secondary scroll checks retain their assertions and tolerances. The extra geometry runs on helper-only failures as well as root/scale failures, closing the observed diagnostic gap. The newly recorded event array is a copied snapshot; subsequent events cannot rewrite the already serialized initial result. A later fit cannot heal the first result.
+
+Normal stop disconnects MutationObserver and removes each exact listener before the original assertions. Passive-listener registration and removal use compatible default capture. The stop function deletes itself; the bounded event array remains for diagnostic measurement only. If resize/readiness/attachment fails earlier, test page teardown destroys page-scoped observers/listeners. No persistent product lifecycle or cross-page subscription is added. Diagnostic timers/frames retain their existing finite observations, not polling to a fit.
+
+Interpretation limitations must remain attached to any causal conclusion. The 128-entry event cap has no explicit truncation flag: when full, absence of subsequent events is unknown. Attribute mutations are delivered in batches; reading current inline style for each record can repeat the final state and does not reconstruct every intermediate transform or one-to-one Popper forceUpdate calls. The observer watches the originally found positioner; it does not follow a replacement node. An event delivered before observer registration is outside its timeline. Therefore absence of a recorded update cannot alone prove Popper never updated. The observer can help establish native-event delivery/order relative to the first measurement and visible transform changes, but it is not a complete engine trace. Any actual probe should inspect cap saturation, node connectivity/replacement and these batching limits before claiming a missing signal.
+
+The contract explicitly marks current21628 initial overlay fit FAILED, retains root and overlay obligations, acknowledges observer effects and does not promote observation to repair/proof. Local nine positives, injected helper-only failure and sole-option root negative are underway separately; no result is promoted here. Hosted WebKit still supplies the required failing engine evidence. Existing gallery work remains separate.
+
+Reviewed exact SHA256 values:
+e2e/web/booking-catalog-recovery.spec.mjs: 8fbe56ee108e5b6d176b16a3f6019b33bf22b62cf273a7c6b4684ee7cfe35ac2
+formal/system/booking-tooltip-viewport.md: c608ac06c28a8efd03a5565dc2b21a529fa0439ce9f0c9476fcec6b26b04f58e
+tdf-hq-ui/src/pages/PublicBookingPage.tsx: 3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3
