@@ -2,7 +2,8 @@
 
 Production activation remains blocked. PR703 and Mobile179 are already merged;
 this security follow-up starts from root main c47c2a8d8851a58a828dec830704f8c352496c20
-and its exact Mobile14318a7 pin. No production upload, deployment, inventory
+and its exact Mobile14318a7 pin. The candidate also retains the subsequent
+main7a41f893 music-credential cache protection from PR633. No production upload, deployment, inventory
 application or provider operation is performed by this change.
 
 The candidate adds `CONTENT_STORAGE_UPLOADS_ENABLED` (disabled by default),
@@ -35,7 +36,11 @@ activation and is distinct from the already completed Mobile179 merge.
 The current connected GitHub integration again rejected Mobile blob publication
 with HTTP403 (`Resource not accessible by integration`). The reviewed local
 companion is preserved in `mobile-companion.patch`, based on published14318a7;
-root intentionally retains that published gitlink. Apply the patch only to a clean14318a7 checkout using `git apply --unidiff-zero docs/content-storage/mobile-companion.patch` from the appropriate repository path. The patch contains regenerated
+root intentionally retains that published gitlink. The GitHub installation74714092 currently selects only tdf-app; TDF-mobile must
+be added by the account owner before publication is possible. Apply the patch
+only to a clean14318a7 checkout from root using
+`git -C tdf-mobile apply --unidiff-zero ../docs/content-storage/mobile-companion.patch`.
+The patch contains regenerated
 API types plus native authority/session tests. Its publication and successor
 contract reconciliation remain blocked; do not point root at an unpublished SHA.
 
@@ -67,7 +72,9 @@ blob transport and private/public result separation, passed. Thirteen real
 PostgreSQL16 reservation/concurrency/replay/deletion cases and nine finite policy/
 reconciliation checks passed. Three new Mobile helper cases, Mobile TypeScript
 and focused lint passed on the unpublished companion. New AEAD/private-reader
-Hspec cases are authored but not yet a compiled pass. Hosted CI is queued; the
+Hspec cases are authored but not yet a compiled pass. Canonical GHC9.10.3 is
+installed locally and its uncached dependency build is in progress. Hosted checks
+and the
 new compiler-derived API declaration and Mobile publication remain pending.
 
 The commands and historical receipts below are retained as prior evidence;
@@ -134,9 +141,12 @@ The PostgreSQL runner creates and drops only its own new nonce `_test` database.
 Never point it at a remote production host. The browser fixture is isolated from
 real providers; its localhost assertions do not establish production behavior.
 
-## Mobile companion
+## Historical Mobile companion receipt (prior to PR703)
 
-`mobile-companion.patch` contains the exact source and regenerated client changes
+The following identifiers and test counts describe the earlier companion only;
+the current patch and published pin are described at the start of this document.
+
+`mobile-companion.patch` contained the exact source and regenerated client changes
 from local Mobile commit `53a381c18c3db51a2810d9f05b3e133d6af9d6e9`, based on
 `bee23755401f1a3cb6c31fbfb7b42f5c6ccc032f`. That main tree equals the root's
 current `f4c7aba45dc153db8809dbe194bc826ff615ef88` pin. The connected integration
