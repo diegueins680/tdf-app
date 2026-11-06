@@ -16483,7 +16483,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/assetAccess.ts",
         "tdf-hq/docs/openapi/media-health.yaml",
-        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs"
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+        "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql"
       ],
       "tests": [
         "scripts/test-music-media-health.mjs",
@@ -16492,7 +16493,8 @@
         "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-music-release-api-e2e.mjs",
-        "scripts/test-automatic-migrations-production-schema.sh"
+        "scripts/test-automatic-migrations-production-schema.sh",
+        "scripts/test-event-memory-source-moderation.sh"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16504,7 +16506,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented bounded persisted validation, server projection and owner revalidation; local SQL/probe tests pass. Full authenticated HTTP/browser/hosted deployment acceptance remains pending."
+        "reason": "Implemented bounded persisted validation, server projection and owner revalidation; local SQL, safe-probe and authenticated HTTP tests pass. Hosted CI, full storage ingestion, catalog provenance, provider/device and production acceptance remain pending."
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health.",
       "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof.",
@@ -17942,6 +17944,7 @@
     "tdf-hq/sql/2026-11-04_session_invoice_issue.sql": "edd0e25051291561a1fbe2cfaf37c7956c10475814fc72570a8af31af5729298",
     "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql": "e2ae1da6c06c7d68b8a17a1b20ebf1903be36adc0c64447d8eb319dd430f3000",
     "tdf-hq/sql/2026-11-06_music_media_health.sql": "9f2d489a9b8e9738c403fc47f948dd45afcfbbc6e214f16da34e3b824cda5315",
+    "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql": "592367892c4b881a20ed3deeb4f632e9412fb10d1c023e2bc97282eb11ba2725",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/src/TDF/API.hs": "21206a27a841d24759917b0ad59d402971bcf45f15ef7e3537804b8e92f191f2",
     "tdf-hq/src/TDF/API/Admin.hs": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
@@ -30489,6 +30492,10 @@
       {
         "requirement": "SOCIAL-EVENT-MODERATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-SOURCE-HEALTH-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/eventMemoryModeration.test.ts": [
@@ -32352,6 +32359,12 @@
       },
       {
         "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql": [
+      {
+        "requirement": "MEDIA-SOURCE-HEALTH-001",
         "relationship": "implementation"
       }
     ],
@@ -38222,6 +38235,10 @@
       "requirements": [
         {
           "requirement": "SOCIAL-EVENT-MODERATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-SOURCE-HEALTH-001",
           "relationship": "tests"
         }
       ]
@@ -54279,7 +54296,12 @@
       "path": "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql",
       "sha256": "592367892c4b881a20ed3deeb4f632e9412fb10d1c023e2bc97282eb11ba2725",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-SOURCE-HEALTH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c4cd603babd8c4c",
@@ -64297,7 +64319,6 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
-    "SURFACE-ab3099868d05b56f",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-87ed7351125c499c",
     "SURFACE-1c1ef431782f3c8d",
@@ -65974,7 +65995,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a4c3252a01ee6ff88ade7142d5008e6c9a8f57f4a84c9c5136cd48b4d34c4a1f",
+      "sourceSha256": "b7d2bf151bf99c94103d239dabc13317b177b91dc3efc9ba528f3b00e3bed7cd",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -66002,7 +66023,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a4c3252a01ee6ff88ade7142d5008e6c9a8f57f4a84c9c5136cd48b4d34c4a1f",
+      "sourceSha256": "b7d2bf151bf99c94103d239dabc13317b177b91dc3efc9ba528f3b00e3bed7cd",
       "definition": {
         "states": [
           "absent",
@@ -66032,7 +66053,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a4c3252a01ee6ff88ade7142d5008e6c9a8f57f4a84c9c5136cd48b4d34c4a1f",
+      "sourceSha256": "b7d2bf151bf99c94103d239dabc13317b177b91dc3efc9ba528f3b00e3bed7cd",
       "definition": {
         "export": [
           "queued",

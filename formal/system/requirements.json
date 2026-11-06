@@ -16482,7 +16482,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/assetAccess.ts",
         "tdf-hq/docs/openapi/media-health.yaml",
-        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs"
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+        "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql"
       ],
       "tests": [
         "scripts/test-music-media-health.mjs",
@@ -16491,7 +16492,8 @@
         "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-music-release-api-e2e.mjs",
-        "scripts/test-automatic-migrations-production-schema.sh"
+        "scripts/test-automatic-migrations-production-schema.sh",
+        "scripts/test-event-memory-source-moderation.sh"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16503,7 +16505,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented bounded persisted validation, server projection and owner revalidation; local SQL/probe tests pass. Full authenticated HTTP/browser/hosted deployment acceptance remains pending."
+        "reason": "Implemented bounded persisted validation, server projection and owner revalidation; local SQL, safe-probe and authenticated HTTP tests pass. Hosted CI, full storage ingestion, catalog provenance, provider/device and production acceptance remain pending."
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health.",
       "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof.",

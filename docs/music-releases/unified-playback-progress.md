@@ -27,9 +27,9 @@ Executed local qualification:
   assertion failing; after modeling its paused/canplay event, all76 provider tests
   pass. Final whole-suite hosted qualification remains required. Application types,
   changed-source lint and production build pass.
-- Backend: canonical Stack build; 4,215 examples, zero failures, 22 declared
-  external-runner pending cases. The later protected cache integration requires
-  its fresh combined build and tests; old results retain their source scope.
+- Backend: integrated canonical Stack build passes; 4,263 examples, zero
+  failures, 22 declared external-runner pending cases, including the protected
+  credential-cache and current-main integration.
 - Actual HTTP/PostgreSQL workflow passes publication, territorial delivery,
   entitlements, correction, takedown, and the new authentication, owner/team/admin,
   diagnostic, suppression and restoration checks. Storage responses in this

@@ -22740,7 +22740,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "f54427b660f3fcb2c26c58a1229b55917d3293f63ced99b9861851b5dda72168",
+      "sha256": "89da9c29ea4efc725ead75b84419a3ccf116eecad9ebc2cfbb5ac168911a47ad",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29502,7 +29502,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a4c3252a01ee6ff88ade7142d5008e6c9a8f57f4a84c9c5136cd48b4d34c4a1f",
+      "sha256": "b7d2bf151bf99c94103d239dabc13317b177b91dc3efc9ba528f3b00e3bed7cd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
