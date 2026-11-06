@@ -148,6 +148,13 @@ jobs:
       - name: Install pinned specification verification dependencies
         run: python -m pip install -r formal/system/requirements-verification.txt
 
+      - name: Verify retrieved recovery inputs with actual pinned age
+        timeout-minutes: 5
+        run: |
+          sudo install -d -m 700 /opt/tdf/recovered-inputs-test-tools
+          sudo python3 scripts/install-recovery-tools.py --destination /opt/tdf/recovered-inputs-test-tools/age
+          sudo env TDF_RECOVERY_TOOLS=/opt/tdf/recovered-inputs-test-tools/age TDF_REQUIRE_ACTUAL_RECOVERY_INPUTS=1 PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-coordinated-restoration-inputs.py
+
       - name: Run repository checks
         run: npm run quality:repo
 

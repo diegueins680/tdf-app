@@ -35,6 +35,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-coordinated-recovery-bundl
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-coordinated-capture.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-coordinated-encryption.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-coordinated-retrieval.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-coordinated-restoration-inputs.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovered-application-content.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-production-recovery-sources.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-production-writer-fence.py"

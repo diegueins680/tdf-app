@@ -9,6 +9,20 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
+test('recovery-input qualification requires real Linux age controls in PR and image lanes', async () => {
+  const workflow = parseYaml(await readFile(path.join(root, '.github/workflows/ci.yml'), 'utf8'));
+  const steps = workflow.jobs['repo-quality'].steps;
+  const step = steps.find(entry => entry.name === 'Verify retrieved recovery inputs with actual pinned age');
+  assert.ok(step, 'PRs must run actual age composition, not only portable crypto seams');
+  assert.match(step.run, /sudo python3 scripts\/install-recovery-tools\.py --destination /);
+  assert.match(step.run, /sudo env .*TDF_REQUIRE_ACTUAL_RECOVERY_INPUTS=1 .*python3 scripts\/test-coordinated-restoration-inputs\.py/);
+  assert.ok(steps.indexOf(step) < steps.findIndex(entry => entry.name === 'Run repository checks'));
+  const image = await readFile(path.join(root, '.github/workflows/build.yml'), 'utf8');
+  assert.match(image, /sudo env .*TDF_REQUIRE_ACTUAL_RECOVERY_INPUTS=1 .*python3 scripts\/test-coordinated-restoration-inputs\.py/);
+  const portable = await readFile(path.join(root, 'scripts/quality-repo.sh'), 'utf8');
+  assert.match(portable, /python3 "\$ROOT\/scripts\/test-coordinated-restoration-inputs\.py"/);
+});
+
 test('PostgreSQL runner uses the CI service and deletes only its newly created test database', () => {
   const script = `
     . "$1"
