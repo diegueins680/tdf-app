@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import Link, { type LinkProps } from '@mui/material/Link';
-import Alert from '@mui/material/Alert';
+import { Alert, Link, type LinkProps } from '@mui/material';
 import { downloadStorageUrl, storageFileIdFromUrl } from '../api/contentStorage';
 
 export default function PrivateAttachmentLink({ href, fileName, children, ...props }:
