@@ -94,6 +94,37 @@ class RouteRequirementsTest(unittest.TestCase):
         self.assertTrue(any("duplicate ledger entry" in e for e in errors))
         self.assertTrue(any("summary" in e for e in errors))
 
+    def test_get_only_requirement_does_not_cover_a_mutating_method(self):
+        requirements = [{"id": "READ-ONLY", "inputs": ["GET /contacts?limit&offset"]}]
+        for method in routes.MUTATING:
+            with self.subTest(method=method):
+                derived = routes.derive([(method, "/contacts")], requirements)
+                self.assertEqual(derived[(method, "/contacts")], ("unspecified", []))
+
+    def test_explicit_write_does_not_cover_a_different_mutating_method(self):
+        requirements = [{"id": "CREATE", "statement": "POST /contacts creates a contact."}]
+        derived = routes.derive([("PUT", "/contacts")], requirements)
+        self.assertEqual(derived[("PUT", "/contacts")], ("unspecified", []))
+        self.assertEqual(routes.derive([("POST", "/contacts")], requirements)[("POST", "/contacts")],
+                         ("named", ["CREATE"]))
+
+    def test_independent_bare_path_is_preserved_beside_a_qualified_read(self):
+        requirements = [{"id": "MIXED", "statement":
+                         "GET /contacts is read-only. Writes are submitted through /submissions."}]
+        derived = routes.derive([("POST", "/contacts"), ("POST", "/submissions")], requirements)
+        self.assertEqual(derived[("POST", "/contacts")], ("unspecified", []))
+        self.assertEqual(derived[("POST", "/submissions")], ("path-named", ["MIXED"]))
+
+    def test_actual_get_only_requirements_do_not_authorize_the_mutating_counterparts(self):
+        requirements = routes.requirement_list(routes.load(routes.ROOT / routes.REQUIREMENTS))
+        for path, rid in [("/parties", "DATA-CRM-001"),
+                          ("/trials/v1/subjects", "COURSE-SUBJECT-001")]:
+            with self.subTest(path=path, requirement=rid):
+                selected = [r for r in requirements if r["id"] == rid]
+                self.assertEqual(len(selected), 1)
+                derived = routes.derive([("POST", path)], selected)
+                self.assertEqual(derived[("POST", path)], ("unspecified", []))
+
     def test_repository_ledger_is_current(self):
         self.assertEqual(routes.main([]), 0)
 

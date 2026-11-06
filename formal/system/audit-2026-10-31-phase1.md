@@ -454,9 +454,9 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
   - `path-named`: un requisito nombra la ruta sin método y es el único método mutante en ella;
   - `reviewed`: atribución revisada, con requisitos y nota obligatoria;
   - `unspecified`: deuda visible.
-- Las bases `named` y `path-named` se recalculan desde el texto de los requisitos en cada comprobación, así que no pueden divergir; `--write` regenera el registro y conserva las entradas revisadas. 8 pruebas unitarias; el workflow formal ejecuta la comprobación y las pruebas.
-- **Número exacto (sustituye la heurística de F-05):** de 513 rutas mutantes compiladas, 17 están atribuidas (14 `named`, 3 `path-named`) y **496 no aparecen en ningún requisito**. La cifra de la fase 1 (101 cubiertas de 508) contaba coincidencias de prefijo, que no establecen que un requisito cubra la ruta.
-- **Límite:** la descripción compilada no incluye el nombre del manejador, así que la atribución sale del texto de los requisitos, no del análisis del manejador. Atribuir no es conformidad. Reducir las 496 rutas sin requisito es trabajo de especificación por dominio (empezando por `/social-events` con 70, `/admin` con 51 y `/music` con 35), no de herramientas; cualquier ruta nueva sin clasificar hace fallar CI.
+- Las bases `named` y `path-named` se recalculan desde el texto de los requisitos en cada comprobación, así que no pueden divergir; `--write` regenera el registro y conserva las entradas revisadas. 12 pruebas unitarias; el workflow formal ejecuta la comprobación y las pruebas.
+- **Número exacto (sustituye la heurística de F-05):** de 513 rutas mutantes compiladas, 15 están atribuidas (14 `named`, 1 `path-named`) y **498 no aparecen en ningún requisito**. La cifra de la fase 1 (101 cubiertas de 508) contaba coincidencias de prefijo, que no establecen que un requisito cubra la ruta.
+- **Límite:** la descripción compilada no incluye el nombre del manejador, así que la atribución sale del texto de los requisitos, no del análisis del manejador. Atribuir no es conformidad. Reducir las 498 rutas sin requisito es trabajo de especificación por dominio (empezando por `/social-events` con 70, `/admin` con 51 y `/music` con 35), no de herramientas; cualquier ruta nueva sin clasificar hace fallar CI.
 
 ## 43. F-04 — modelo de la emisión de facturas SRI por sesión (2026-11-06)
 

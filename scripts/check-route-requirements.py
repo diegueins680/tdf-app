@@ -67,7 +67,9 @@ def named_routes(requirements):
         text = json.dumps(requirement, ensure_ascii=False)
         for method, path in ROUTE_TEXT.findall(text):
             by_route[(method, normalize(path))].add(requirement["id"])
-        for path in PATH_TEXT.findall(text):
+        # Qualified occurrences establish authority only for their named method.
+        # Preserve independent bare-path mentions elsewhere in the requirement.
+        for path in PATH_TEXT.findall(ROUTE_TEXT.sub("", text)):
             by_path[normalize(path)].add(requirement["id"])
     return by_route, by_path
 

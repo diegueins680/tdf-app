@@ -4,10 +4,10 @@
   "summary": {
     "total": 513,
     "named": 14,
-    "path-named": 3,
+    "path-named": 1,
     "reviewed": 0,
-    "unspecified": 496,
-    "covered": 17
+    "unspecified": 498,
+    "covered": 15
   },
   "routes": [
     {
@@ -2031,10 +2031,8 @@
     {
       "method": "POST",
       "path": "/parties",
-      "basis": "path-named",
-      "requirements": [
-        "DATA-CRM-001"
-      ]
+      "basis": "unspecified",
+      "requirements": []
     },
     {
       "method": "PUT",
@@ -3003,10 +3001,8 @@
     {
       "method": "POST",
       "path": "/trials/v1/subjects",
-      "basis": "path-named",
-      "requirements": [
-        "COURSE-SUBJECT-001"
-      ]
+      "basis": "unspecified",
+      "requirements": []
     },
     {
       "method": "DELETE",
