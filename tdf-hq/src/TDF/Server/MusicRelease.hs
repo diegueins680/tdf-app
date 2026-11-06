@@ -40,6 +40,8 @@ import qualified TDF.Server.MusicReleaseCatalog as Catalog
 import qualified TDF.Server.MusicReleaseDDEX as DDEX
 import qualified TDF.Server.MusicReleaseAssets as Assets
 import qualified TDF.Server.MusicReleaseUpload as Upload
+import qualified TDF.Profiles.ArtistVisibility as ArtistVisibility
+import Database.Persist.Sql (toSqlKey)
 
 type AppM = ReaderT Env Handler
 
@@ -50,10 +52,14 @@ musicReleasePublicServer =
   :<|> Assets.getPublicMusicAssetAccess
   :<|> recordAnonymousPlaybackEvent
   :<|> searchPublicTracks
+  :<|> getArtistFeaturedTrack False
+  :<|> getLegacyMediaAccess
 
 musicReleaseProtectedServer :: AuthedUser -> ServerT MusicReleaseProtectedAPI AppM
 musicReleaseProtectedServer user =
        listMyReleases user
+  :<|> listMediaHealth user
+  :<|> revalidateMediaHealth user
   :<|> createRelease user
   :<|> Catalog.getMusicReleaseVersion user
   :<|> createCorrectionVersion user
@@ -71,6 +77,8 @@ musicReleaseProtectedServer user =
   :<|> Upload.completeMusicUpload user
   :<|> Upload.confirmMusicUpload user
   :<|> Upload.cancelMusicUpload user
+  :<|> getOwnFeaturedTrack user
+  :<|> setOwnFeaturedTrack user
   :<|> listFavorites user
   :<|> addFavorite user
   :<|> removeFavorite user
@@ -1001,3 +1009,79 @@ searchPublicTracks edgeCountry query requestedLimit requestedOffset =
     decodeHit value = case fromJSON value of
       Success hit -> pure hit
       Error _ -> throwError err500
+
+
+-- Public reads return only a currently eligible reference. Owner reads retain an
+-- unavailable selection so an artist can diagnose, replace or clear it.
+getArtistFeaturedTrack :: Bool -> Int64 -> Maybe Text
+  -> AppM (Headers '[Header "Cache-Control" Text] Value)
+getArtistFeaturedTrack includeUnavailable artistId edgeCountry = do
+  requirePublicFeature
+  when (artistId <= 0) (throwError err400)
+  territory <- Assets.trustedEdgeTerritory edgeCountry
+  value <- jsonOne err404
+    "SELECT jsonb_build_object('artistPartyId',?::bigint,\
+    \ 'recordingId',CASE WHEN ?::boolean OR choice.available THEN choice.recording_id END,\
+    \ 'legacyReleaseId',CASE WHEN ?::boolean OR choice.available THEN choice.legacy_release_id END,\
+    \ 'available',COALESCE(choice.available,FALSE),'updatedAt',CASE WHEN ?::boolean OR choice.available THEN choice.updated_at END)\
+    \ FROM (SELECT 1) anchor LEFT JOIN LATERAL (\
+    \ SELECT selection.*,music_artist_featured_track_eligible(selection.artist_party_id,\
+    \ selection.recording_id,selection.legacy_release_id,?::text) available\
+    \ FROM music_artist_featured_track selection WHERE selection.artist_party_id=?\
+    \ ) choice ON TRUE"
+    [ PersistInt64 artistId, PersistBool includeUnavailable, PersistBool includeUnavailable
+    , PersistBool includeUnavailable, optionalText territory, PersistInt64 artistId ]
+  pure (addHeader ("private, no-store" :: Text) value)
+
+getOwnFeaturedTrack :: AuthedUser -> Maybe Text
+  -> AppM (Headers '[Header "Cache-Control" Text] Value)
+getOwnFeaturedTrack user = getArtistFeaturedTrack True (currentPartyId user)
+
+setOwnFeaturedTrack :: AuthedUser -> Maybe Text -> MusicArtistFeaturedTrackRequest
+  -> AppM (Headers '[Header "Cache-Control" Text] Value)
+setOwnFeaturedTrack user edgeCountry MusicArtistFeaturedTrackRequest{..} = do
+  unless (musicFeaturedArtistPartyId == currentPartyId user) (throwError err403)
+  requirePublicFeature
+  territory <- Assets.trustedEdgeTerritory edgeCountry
+  saved <- runDB (rawSql
+    "SELECT music_set_artist_featured_track(?::bigint,?::uuid,?::bigint,?::text)"
+    [ PersistInt64 (currentPartyId user), maybe PersistNull toPersistValue musicFeaturedRecordingId
+    , maybe PersistNull PersistInt64 musicFeaturedLegacyReleaseId, optionalText territory ]
+    :: SqlPersistT IO [Single Bool])
+  unless (saved == [Single True]) $
+    throwError (badRequest "Choose one currently public track belonging to your artist profile.")
+  getOwnFeaturedTrack user edgeCountry
+
+-- Legacy membership is public only while the exact artist remains public.
+-- A stored URL is never an access credential for a private TDF object.
+getLegacyMediaAccess :: Text -> AppM (Headers '[Header "Cache-Control" Text] Value)
+getLegacyMediaAccess sourceId = do
+  rows <- runDB (rawSql
+    "SELECT artist_party_id FROM music_media_source WHERE source_kind='legacy' AND source_id=? AND music_media_eligible('legacy',source_id)"
+    [PersistText sourceId] :: SqlPersistT IO [Single Int64])
+  artistId <- case rows of
+    [Single artist] -> pure artist
+    _ -> throwError err404
+  listed <- runDB (ArtistVisibility.artistPartyPubliclyListed (toSqlKey artistId))
+  unless listed (throwError err404)
+  value <- jsonOne err404
+    "SELECT jsonb_build_object('url',locator->>'url','mediaType','audio/mpeg','sourceVersion',source_version) FROM music_media_source WHERE source_kind='legacy' AND source_id=? AND artist_party_id=? AND music_media_eligible('legacy',source_id)"
+    [PersistText sourceId,PersistInt64 artistId]
+  pure (addHeader ("private, no-store" :: Text) value)
+
+listMediaHealth :: AuthedUser -> AppM (Headers '[Header "Cache-Control" Text] [Value])
+listMediaHealth user = do
+  values <- jsonRows
+    "SELECT jsonb_build_object('sourceKind',s.source_kind,'sourceId',s.source_id,'sourceVersion',s.source_version,'artistPartyId',s.artist_party_id,'status',COALESCE(h.status,'pending'),'reason',h.reason,'checkedAt',h.checked_at,'nextCheckAt',h.next_check_at) FROM music_media_source s LEFT JOIN music_media_health h USING(source_kind,source_id,source_version) WHERE ?::boolean OR s.artist_party_id=? OR music_can(?,s.artist_party_id,'release.read') ORDER BY h.checked_at DESC NULLS FIRST,s.source_kind,s.source_id LIMIT 500"
+    [PersistBool (hasStrictAdminAccess user),PersistInt64 (currentPartyId user),PersistInt64 (currentPartyId user)]
+  pure (addHeader ("private, no-store" :: Text) values)
+
+revalidateMediaHealth :: AuthedUser -> Text -> Text
+  -> AppM (Headers '[Header "Cache-Control" Text] Value)
+revalidateMediaHealth user kind sourceId = do
+  -- A single database statement rechecks current ownership and queues only the
+  -- current source version. Repeated clicks coalesce; they cannot clear invalid.
+  value <- jsonOne err404
+    "WITH allowed AS (SELECT * FROM music_media_source s WHERE source_kind=? AND source_id=? AND (?::boolean OR artist_party_id=? OR music_can(?,artist_party_id,'release.edit'))), queued AS (INSERT INTO music_media_health(source_kind,source_id,source_version) SELECT source_kind,source_id,source_version FROM allowed ON CONFLICT(source_kind,source_id,source_version) DO UPDATE SET next_check_at=LEAST(music_media_health.next_check_at,NOW()) RETURNING source_kind,source_id) SELECT jsonb_build_object('queued',TRUE) FROM queued"
+    [PersistText kind,PersistText sourceId,PersistBool (hasStrictAdminAccess user),PersistInt64 (currentPartyId user),PersistInt64 (currentPartyId user)]
+  pure (addHeader ("private, no-store" :: Text) value)

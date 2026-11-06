@@ -414,6 +414,19 @@ jobs:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
         run: node scripts/test-music-source-projection.mjs
 
+      - name: Verify artist featured-track persistence and public selection
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_featured_test
+        run: node scripts/test-artist-featured-track.mjs
+
+      - name: Verify media health suppression and restoration
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_health_test
+        run: node scripts/test-music-media-health.mjs
+
+      - name: Verify bounded SSRF-safe media probes
+        run: python3 scripts/test-music-media-health.py
+
       - name: Verify authorized recording search and metadata boundaries
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test

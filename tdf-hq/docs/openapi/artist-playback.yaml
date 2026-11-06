@@ -1,0 +1,79 @@
+openapi: 3.0.0
+paths:
+  /music/artists/{artistPartyId}/featured-track:
+    get:
+      operationId: getArtistFeaturedTrack
+      tags: [Music releases]
+      summary: Read the artist's currently public featured track reference
+      description: Requires music_releases.public. Rechecks artist membership, published context and current public asset authorization for canonical recordings. Unavailable references are omitted. No signed URL or media grant is returned.
+      parameters:
+        - { name: artistPartyId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Current reference or the default catalogue order
+          headers:
+            Cache-Control: { schema: { type: string }, description: 'private, no-store' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistFeaturedTrack' }
+        '400': { description: Invalid artist identifier }
+        '404': { description: Public music disabled }
+  /music/me/featured-track:
+    get:
+      operationId: getOwnArtistFeaturedTrack
+      tags: [Music releases]
+      summary: Read the authenticated artist's saved preference, including unavailable references
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Authenticated owner's preference; never another Party's
+          headers:
+            Cache-Control: { schema: { type: string }, description: 'private, no-store' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistFeaturedTrack' }
+        '401': { description: Authentication required }
+        '404': { description: Public music disabled }
+    put:
+      operationId: setOwnArtistFeaturedTrack
+      tags: [Music releases]
+      summary: Select or clear the authenticated artist's featured track
+      description: artistPartyId must match the authenticated Party even for an administrator. Only a currently public recording or legacy release belonging to that artist can be selected. Null or omitted source fields clear the preference. Saving does not publish a recording, grant media access or interrupt playback. Concurrent writes use the last successful server write.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MusicArtistFeaturedTrackRequest' }
+      responses:
+        '200':
+          description: Authoritative saved preference
+          headers:
+            Cache-Control: { schema: { type: string }, description: 'private, no-store' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistFeaturedTrack' }
+        '400': { description: Invalid, ambiguous, foreign or unavailable selection }
+        '401': { description: Authentication required }
+        '403': { description: Request belongs to another authenticated Party }
+        '404': { description: Public music disabled }
+components:
+  schemas:
+    ArtistFeaturedTrack:
+      type: object
+      additionalProperties: false
+      required: [artistPartyId, recordingId, legacyReleaseId, available, updatedAt]
+      properties:
+        artistPartyId: { type: integer, format: int64, minimum: 1 }
+        recordingId: { type: string, format: uuid, nullable: true }
+        legacyReleaseId: { type: integer, format: int64, minimum: 1, nullable: true }
+        available: { type: boolean, description: Current public reference eligibility; actual decoding is validated by the player. }
+        updatedAt: { type: string, format: date-time, nullable: true }
+    MusicArtistFeaturedTrackRequest:
+      type: object
+      additionalProperties: false
+      required: [artistPartyId]
+      properties:
+        artistPartyId: { type: integer, format: int64, minimum: 1 }
+        recordingId: { type: string, format: uuid, nullable: true }
+        legacyReleaseId: { type: integer, format: int64, minimum: 1, nullable: true }

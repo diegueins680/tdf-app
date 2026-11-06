@@ -1114,7 +1114,17 @@ fanPublicServer =
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool $ do
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
-        pure (map toArtistReleaseDTO releases)
+        -- Keep invalid references for owner/admin reads; public callers receive
+        -- only currently eligible media. A changed URL has a different version.
+        invalid <- rawSql
+          "SELECT s.source_id FROM music_media_source s JOIN music_media_health h USING(source_kind,source_id,source_version) WHERE s.source_kind='legacy' AND s.artist_party_id=? AND h.status='invalid'"
+          [PersistInt64 artistIdValid] :: SqlPersistT IO [Single Text]
+        let unavailable key slot = Single (T.pack (show (fromSqlKey key)) <> ":" <> slot) `elem` invalid
+            publicRelease entity@(Entity key _) = let dto = toArtistReleaseDTO entity in dto
+              { arSpotifyUrl = if unavailable key "spotify" then Nothing else arSpotifyUrl dto
+              , arYoutubeUrl = if unavailable key "youtube" then Nothing else arYoutubeUrl dto
+              }
+        pure (map publicRelease releases)
 
     fanArtistFans :: Int64 -> Maybe Int -> Maybe Int -> AppM ArtistFansResponse
     fanArtistFans artistId mPage mPageSize = do

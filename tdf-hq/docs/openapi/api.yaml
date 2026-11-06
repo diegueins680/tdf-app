@@ -9,6 +9,10 @@ servers:
     description: Development server
 
 paths:
+  /music/artists/{artistPartyId}/featured-track:
+    $ref: './artist-playback.yaml#/paths/~1music~1artists~1{artistPartyId}~1featured-track'
+  /music/me/featured-track:
+    $ref: './artist-playback.yaml#/paths/~1music~1me~1featured-track'
   /invoices:
     get:
       operationId: listInvoices
@@ -10289,8 +10293,16 @@ paths:
         '503':
           description: Persisted automatic assignment policy is unavailable or inconsistent
 
+  /music/legacy/{sourceId}/access:
+    $ref: './media-health.yaml#/paths/~1music~1legacy~1{sourceId}~1access'
+  /music/media-health:
+    $ref: './media-health.yaml#/paths/~1music~1media-health'
+  /music/media-health/{sourceKind}/{sourceId}/revalidate:
+    $ref: './media-health.yaml#/paths/~1music~1media-health~1{sourceKind}~1{sourceId}~1revalidate'
+
 security:
   - bearerAuth: [ ]
+
 
 components:
   securitySchemes:
@@ -10489,6 +10501,10 @@ components:
         defaultDestination: { type: string, enum: [tdf, google_drive], nullable: true }
         revision: { type: integer, format: int64, minimum: 0 }
 
+    ArtistFeaturedTrack:
+      $ref: './artist-playback.yaml#/components/schemas/ArtistFeaturedTrack'
+    MusicArtistFeaturedTrackRequest:
+      $ref: './artist-playback.yaml#/components/schemas/MusicArtistFeaturedTrackRequest'
     InvoiceLineDTO:
       type: object
       required:

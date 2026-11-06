@@ -1,0 +1,71 @@
+paths:
+  /music/legacy/{sourceId}/access:
+    get:
+      operationId: getPublicLegacyMediaAccess
+      security: []
+      parameters:
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Current public source; private files keep their existing access controls
+          headers:
+            Cache-Control: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, mediaType, sourceVersion]
+                properties:
+                  url: { type: string }
+                  mediaType: { type: string }
+                  sourceVersion: { type: string }
+        '404': { description: Missing, hidden artist, removed source or confirmed invalid media }
+  /music/media-health:
+    get:
+      operationId: listOwnMusicMediaHealth
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: At most 500 current owner/team sources; administrators may inspect all sources
+          headers:
+            Cache-Control: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MusicMediaHealth' }
+        '401': { description: Authentication required }
+  /music/media-health/{sourceKind}/{sourceId}/revalidate:
+    post:
+      operationId: revalidateOwnMusicMedia
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: sourceKind, in: path, required: true, schema: { type: string, enum: [asset, legacy] } }
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Revalidation queued without clearing an existing invalid verdict
+          headers:
+            Cache-Control: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [queued]
+                properties: { queued: { type: boolean } }
+        '401': { description: Authentication required }
+        '404': { description: Source missing or caller cannot manage its artist }
+components:
+  schemas:
+    MusicMediaHealth:
+      type: object
+      required: [sourceKind, sourceId, sourceVersion, artistPartyId, status, reason, checkedAt, nextCheckAt]
+      properties:
+        sourceKind: { type: string, enum: [asset, legacy] }
+        sourceId: { type: string }
+        sourceVersion: { type: string }
+        artistPartyId: { type: integer, format: int64 }
+        status: { type: string, enum: [pending, valid, temporary, invalid] }
+        reason: { type: string, nullable: true }
+        checkedAt: { type: string, format: date-time, nullable: true }
+        nextCheckAt: { type: string, format: date-time }

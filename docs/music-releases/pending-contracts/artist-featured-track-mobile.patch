@@ -1,0 +1,202 @@
+diff --git a/src/api/generated/types.ts b/src/api/generated/types.ts
+index fd7a719..7345a87 100644
+--- a/src/api/generated/types.ts
++++ b/src/api/generated/types.ts
+@@ -6,2 +6,43 @@
+ export interface paths {
++    "/music/artists/{artistPartyId}/featured-track": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        /**
++         * Read the artist's currently public featured track reference
++         * @description Requires music_releases.public. Rechecks artist membership, published context and current public asset authorization for canonical recordings. Unavailable references are omitted. No signed URL or media grant is returned.
++         */
++        get: operations["getArtistFeaturedTrack"];
++        put?: never;
++        post?: never;
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
++    "/music/me/featured-track": {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        /** Read the authenticated artist's saved preference, including unavailable references */
++        get: operations["getOwnArtistFeaturedTrack"];
++        /**
++         * Select or clear the authenticated artist's featured track
++         * @description artistPartyId must match the authenticated Party even for an administrator. Only a currently public recording or legacy release belonging to that artist can be selected. Null or omitted source fields clear the preference. Saving does not publish a recording, grant media access or interrupt playback. Concurrent writes use the last successful server write.
++         */
++        put: operations["setOwnArtistFeaturedTrack"];
++        post?: never;
++        delete?: never;
++        options?: never;
++        head?: never;
++        patch?: never;
++        trace?: never;
++    };
+     "/invoices": {
+@@ -9033,2 +9074,22 @@ export interface components {
+     schemas: {
++        ArtistFeaturedTrack: {
++            /** Format: int64 */
++            artistPartyId: number;
++            /** Format: uuid */
++            recordingId: string | null;
++            /** Format: int64 */
++            legacyReleaseId: number | null;
++            /** @description Current public reference eligibility; actual decoding is validated by the player. */
++            available: boolean;
++            /** Format: date-time */
++            updatedAt: string | null;
++        };
++        MusicArtistFeaturedTrackRequest: {
++            /** Format: int64 */
++            artistPartyId: number;
++            /** Format: uuid */
++            recordingId?: string | null;
++            /** Format: int64 */
++            legacyReleaseId?: number | null;
++        };
+         InvoiceLineDTO: {
+@@ -16592,2 +16653,130 @@ export type $defs = Record<string, never>;
+ export interface operations {
++    getArtistFeaturedTrack: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path: {
++                artistPartyId: number;
++            };
++            cookie?: never;
++        };
++        requestBody?: never;
++        responses: {
++            /** @description Current reference or the default catalogue order */
++            200: {
++                headers: {
++                    /** @description private, no-store */
++                    "Cache-Control"?: string;
++                    [name: string]: unknown;
++                };
++                content: {
++                    "application/json": components["schemas"]["ArtistFeaturedTrack"];
++                };
++            };
++            /** @description Invalid artist identifier */
++            400: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Public music disabled */
++            404: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
++    getOwnArtistFeaturedTrack: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        requestBody?: never;
++        responses: {
++            /** @description Authenticated owner's preference; never another Party's */
++            200: {
++                headers: {
++                    /** @description private, no-store */
++                    "Cache-Control"?: string;
++                    [name: string]: unknown;
++                };
++                content: {
++                    "application/json": components["schemas"]["ArtistFeaturedTrack"];
++                };
++            };
++            /** @description Authentication required */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Public music disabled */
++            404: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
++    setOwnArtistFeaturedTrack: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        requestBody: {
++            content: {
++                "application/json": components["schemas"]["MusicArtistFeaturedTrackRequest"];
++            };
++        };
++        responses: {
++            /** @description Authoritative saved preference */
++            200: {
++                headers: {
++                    /** @description private, no-store */
++                    "Cache-Control"?: string;
++                    [name: string]: unknown;
++                };
++                content: {
++                    "application/json": components["schemas"]["ArtistFeaturedTrack"];
++                };
++            };
++            /** @description Invalid */
++            400: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Authentication required */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Request belongs to another authenticated Party */
++            403: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Public music disabled */
++            404: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
+     listInvoices: {

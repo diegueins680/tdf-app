@@ -188,7 +188,10 @@ export function dispatchReleaseToRadio(
           title: release.arTitle,
           artist: release.artistName?.trim() ? release.artistName.trim() : 'Artista TDF',
           artworkUrl: release.arCoverImageUrl,
-          sources: [{ url: action.url, quality: 'high', mediaType: 'audio/mpeg' }],
+          sources: [{ url: action.url, quality: 'high', mediaType: 'audio/mpeg',
+            ...(normalizedStreamUrl === release.arSpotifyUrl?.trim() ? { legacySourceId: `${release.arReleaseId}:spotify` }
+              : normalizedStreamUrl === release.arYoutubeUrl?.trim() ? { legacySourceId: `${release.arReleaseId}:youtube` } : {}),
+          }],
         },
         autoplay: true,
       } satisfies LoadPlayerTrackDetail,
