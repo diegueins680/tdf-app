@@ -5,7 +5,12 @@ from domain import uid
 def tick(store,config):
  if not config.get('SMTP_HOST') or not config.get('SMTP_FROM'):return
  with store.db(True) as d:
-  rows=d.execute('SELECT n.*,p.email,p.channels FROM notices n JOIN notification_preferences p ON p.owner=n.owner WHERE n.created_at>? ORDER BY n.created_at LIMIT 50',(time.time()-86400,)).fetchall()
+  rows=d.execute('''SELECT n.*,p.email,p.channels FROM notices n
+   JOIN notification_preferences p ON p.owner=n.owner
+   WHERE n.created_at>? AND p.email IS NOT NULL AND p.email!=''
+   AND EXISTS (SELECT 1 FROM json_each(p.channels) WHERE value='email')
+   AND coalesce(json_extract(n.delivered,'$.email'),'') IN ('',0)
+   ORDER BY n.created_at,n.id LIMIT 50''',(time.time()-86400,)).fetchall()
   for n in rows:
    delivered=json.loads(n['delivered']);channels=json.loads(n['channels'])
    if not n['email'] or 'email' not in channels or delivered.get('email'):continue
