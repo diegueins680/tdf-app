@@ -8806,7 +8806,8 @@
         "e2e/web/radio-navigation.spec.mjs",
         "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
-        "scripts/test-prepare-native-session.py"
+        "scripts/test-prepare-native-session.py",
+        "tdf-hq-ui/src/api/records.test.ts"
       ],
       "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
@@ -17089,7 +17090,8 @@
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
-    "tdf-hq-ui/src/api/records.ts": "fe30ae8c45915cc8b3448dc2d6691cf529f1bd4b06c02360ae23fcb3654b6342",
+    "tdf-hq-ui/src/api/records.test.ts": "ac9df36a14e53a23056ad247e175d433ac74f7a9dcc18aa0c0ef4393afe40c77",
+    "tdf-hq-ui/src/api/records.ts": "808dd38791b019e186d12bf28de0635b475a299772ddfa5abd2c5d82e3202ee9",
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
     "tdf-hq-ui/src/api/reviews.test.ts": "8837534fbfd77370f757db7a66df90d5b023b584592eda5433602d2504c1f7f2",
     "tdf-hq-ui/src/api/reviews.ts": "8fc0a3b74789b159185572e537899ad62139fd8b784a32ec8639d3c6da792dcb",
@@ -27263,6 +27265,12 @@
       }
     ],
     "scripts/test-prepare-native-session.py": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/records.test.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "tests"
@@ -41232,14 +41240,19 @@
     {
       "id": "SURFACE-9fc748d33d6ec423",
       "path": "tdf-hq-ui/src/api/records.test.ts",
-      "sha256": "ce3af8f69a15897f6bef6ddc2e269bed4c6ef259965c9adc0f1e242e78d4f75b",
+      "sha256": "ac9df36a14e53a23056ad247e175d433ac74f7a9dcc18aa0c0ef4393afe40c77",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b38100408189d548",
       "path": "tdf-hq-ui/src/api/records.ts",
-      "sha256": "fe30ae8c45915cc8b3448dc2d6691cf529f1bd4b06c02360ae23fcb3654b6342",
+      "sha256": "808dd38791b019e186d12bf28de0635b475a299772ddfa5abd2c5d82e3202ee9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62761,7 +62774,6 @@
     "SURFACE-322b94aa1844c92d",
     "SURFACE-cdf54a14bb564ff8",
     "SURFACE-c9774767b7d89167",
-    "SURFACE-9fc748d33d6ec423",
     "SURFACE-2df58bc03840f152",
     "SURFACE-7accc7ad1a31e5c3",
     "SURFACE-35fb74a3b967a1f6",
@@ -65136,7 +65148,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "68ab0c2df8142ff4bfab65bdce5fe7f5ed83b67aede354b6d827352942f64754",
+      "sourceSha256": "3588b0b946f63aea0a126c3ca2f60b97f4150f95853870680843aaca5ffa4e80",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65164,7 +65176,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "68ab0c2df8142ff4bfab65bdce5fe7f5ed83b67aede354b6d827352942f64754",
+      "sourceSha256": "3588b0b946f63aea0a126c3ca2f60b97f4150f95853870680843aaca5ffa4e80",
       "definition": {
         "states": [
           "absent",
@@ -65194,7 +65206,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "68ab0c2df8142ff4bfab65bdce5fe7f5ed83b67aede354b6d827352942f64754",
+      "sourceSha256": "3588b0b946f63aea0a126c3ca2f60b97f4150f95853870680843aaca5ffa4e80",
       "definition": {
         "export": [
           "queued",
