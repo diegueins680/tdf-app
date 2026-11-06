@@ -16177,7 +16177,8 @@
         "scripts/test-content-storage-security-runtime.sh",
         "tdf-hq-ui/src/api/contentStorage.security.test.ts",
         "tdf-hq-ui/src/services/storageCredentials.test.ts",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
@@ -17224,6 +17225,7 @@
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
     "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
+    "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": "ee41fbd65bf1bb564f3af51c7d2988d75e2e3b8839f021df377a3f2668feb47f",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts": "5320c5e075e90040393e9ce60a532a93b7ba36cf746c65a49ebde1f212632f7e",
     "tdf-hq-ui/src/hooks/useMetaTags.test.tsx": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
@@ -31853,6 +31855,12 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": [
       {
         "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
@@ -44000,7 +44008,12 @@
       "path": "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
       "sha256": "ee41fbd65bf1bb564f3af51c7d2988d75e2e3b8839f021df377a3f2668feb47f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-21774e08e94e915e",
@@ -62960,7 +62973,6 @@
     "SURFACE-0d5ab7a9a3d37f12",
     "SURFACE-1f682f486e2ce6c2",
     "SURFACE-94c8dc99e7bd6dcd",
-    "SURFACE-f6f49d0601363c2e",
     "SURFACE-d7bacb6bb39fbb83",
     "SURFACE-6ebfd481fe3b0e51",
     "SURFACE-5969a542a219a1d4",
@@ -65203,7 +65215,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b705e3e9f33f904d627a464d8fff96c009ad845b61ce2c9d361c1ffd73303049",
+      "sourceSha256": "a5326116607a1a660a6d849036d26908a024e4808e66be688fb5f69eedf61c04",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65231,7 +65243,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b705e3e9f33f904d627a464d8fff96c009ad845b61ce2c9d361c1ffd73303049",
+      "sourceSha256": "a5326116607a1a660a6d849036d26908a024e4808e66be688fb5f69eedf61c04",
       "definition": {
         "states": [
           "absent",
@@ -65261,7 +65273,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b705e3e9f33f904d627a464d8fff96c009ad845b61ce2c9d361c1ffd73303049",
+      "sourceSha256": "a5326116607a1a660a6d849036d26908a024e4808e66be688fb5f69eedf61c04",
       "definition": {
         "export": [
           "queued",

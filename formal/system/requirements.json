@@ -16176,7 +16176,8 @@
         "scripts/test-content-storage-security-runtime.sh",
         "tdf-hq-ui/src/api/contentStorage.security.test.ts",
         "tdf-hq-ui/src/services/storageCredentials.test.ts",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
