@@ -16664,7 +16664,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "dc70c8d4605ed428372d2282ba12b4aa81532400ebe8d31aac7c790eebe70f01",
-    "formal/system/route-requirements.json": "2db3b39b59d3b3bd18d9ce088e21035a5430d8685ec4f9248016cd7a5a90430c",
+    "formal/system/route-requirements.json": "98c39e1752016bf603e74ca2b4d6347ca8aa919a9ba1132d4b487be6864d2a43",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -16797,7 +16797,7 @@
     "scripts/check-mobile-gitlink-ancestry.sh": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-route-requirements.py": "283e83466e44b24f161206224c322d5bc054bc55fafec1da7bc82643e901aba5",
+    "scripts/check-route-requirements.py": "8ff8f425dffcdda7e12d938ed019d638fca5efdb1649cda8e27d535784026730",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
     "scripts/ci-change-scope.mjs": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
@@ -16977,7 +16977,7 @@
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
-    "scripts/test-route-requirements.py": "c6251ecb1102099fb298739b461bb86e917842fcac7246c229c8cec853a1d32c",
+    "scripts/test-route-requirements.py": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
     "scripts/test-session-invoice-issue.sh": "636fc8c32e54ec4c895368f9c3bf7bac8cfd5bacb9b28ee27a677e8961ebae09",
     "scripts/test-social-designation-postgres.sh": "e83d08fc7e50b5fd5b8d1adb4058fec1348a7f4a73492ad33e30cf2839f78e86",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
@@ -34821,7 +34821,7 @@
     {
       "id": "SURFACE-fbfd163470f37a47",
       "path": "scripts/check-route-requirements.py",
-      "sha256": "283e83466e44b24f161206224c322d5bc054bc55fafec1da7bc82643e901aba5",
+      "sha256": "8ff8f425dffcdda7e12d938ed019d638fca5efdb1649cda8e27d535784026730",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38748,7 +38748,7 @@
     {
       "id": "SURFACE-5067a6940763ffc3",
       "path": "scripts/test-route-requirements.py",
-      "sha256": "c6251ecb1102099fb298739b461bb86e917842fcac7246c229c8cec853a1d32c",
+      "sha256": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
