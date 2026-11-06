@@ -52,6 +52,7 @@
       "e2e/web/helpers/campaign-accessibility.mjs",
       "e2e/web/helpers/local-api-fixture.mjs",
       "e2e/web/helpers/review-paint.mjs",
+      "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
       "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
@@ -230,6 +231,7 @@
       "scripts/__tests__/studio-internship-audit.test.mjs",
       "scripts/__tests__/test-child-completion.test.mjs",
       "scripts/__tests__/test-process-session.test.mjs",
+      "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
@@ -3250,6 +3252,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6596022002894a3",
+      "path": "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
+      "sha256": "3a7a6255e3755c6ed77b68ccaf9ee55d5e90f3dcfcc592c5d1dd385fcceca73a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-829d3149f60357d4",
       "path": "e2e/web/legacy-provider-playback.spec.mjs",
       "sha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
@@ -3336,7 +3344,7 @@
     {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
-      "sha256": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
+      "sha256": "083a14966fa40a26bbfc42bccadf07a76a574e349739c0a2be1f01fa7e7fd01b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4243,6 +4251,12 @@
       "id": "SURFACE-f108b694973ffac6",
       "path": "scripts/__tests__/test-process-session.test.mjs",
       "sha256": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7bc4681a8149dda7",
+      "path": "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
+      "sha256": "4de7e379b64c7f7b7021ac351f8095569892fb9608f669b4e70d23965bf2f67a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29833,7 +29847,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d9a74294b939901217f7538ba272924a99f86bbec0280c9eb03e9951d488a613",
+      "sha256": "b5ae8729d1b6569889b5435b56cf31293a27801cbce6b036c16669cbdeac3ef2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

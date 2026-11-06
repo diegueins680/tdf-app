@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T16:31:31.533Z",
+  "generatedAt": "2026-11-06T18:26:21.096Z",
   "repositoryRoot": ".",
-  "filesScanned": 2614,
+  "filesScanned": 2615,
   "candidateCount": 1395,
   "byClassification": {
     "dynamic-business-catalog": 912,
@@ -4736,7 +4736,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1177,
+      "consumerCount": 1178,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5024,7 +5024,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1177,
+      "consumerCount": 1178,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -7388,7 +7388,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 701,
+      "consumerCount": 702,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -7554,6 +7554,7 @@
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/archive/shows-data.json",
         "scripts/build-catalog-decisions.mjs",
@@ -7572,8 +7573,7 @@
         "scripts/lib/music-playback-identity-probe.mjs",
         "scripts/lib/music-test-database.mjs",
         "scripts/lib/music_money_conformance.py",
-        "scripts/lib/music_payment_conformance.py",
-        "scripts/lib/openclaw-cdp.mjs"
+        "scripts/lib/music_payment_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -8236,7 +8236,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1177,
+      "consumerCount": 1178,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -8865,7 +8865,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1543,
+      "consumerCount": 1544,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -19096,7 +19096,7 @@
       "lines": [
         649
       ],
-      "consumerCount": 727,
+      "consumerCount": 728,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -19263,6 +19263,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/archive/shows-data.json",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -19280,8 +19281,7 @@
         "scripts/lib/music-api-s3-probe.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
         "scripts/lib/music-playback-identity-probe.mjs",
-        "scripts/lib/music-test-database.mjs",
-        "scripts/lib/music_money_conformance.py"
+        "scripts/lib/music-test-database.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -26114,7 +26114,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
         "tdf-hq/sql/2026-09-18_notification_navigation.sql",
@@ -26198,6 +26198,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/onboarding-real-browser.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/privacy-request-ledger.py",
@@ -26371,7 +26372,7 @@
       "lines": [
         990
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -26470,6 +26471,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -26508,8 +26510,7 @@
         "scripts/test-player-session-model.mjs",
         "scripts/test-privacy-request-ledger.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/test-state-machines.py"
+        "scripts/test-service-booking-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -27502,7 +27503,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 759,
+      "consumerCount": 760,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -27673,6 +27674,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/archive/shows-data.json",
         "scripts/build-catalog-decisions.mjs",
@@ -27689,8 +27691,7 @@
         "scripts/lib/music-api-s3-probe.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
         "scripts/lib/music-playback-identity-probe.mjs",
-        "scripts/lib/music-test-database.mjs",
-        "scripts/lib/music_money_conformance.py"
+        "scripts/lib/music-test-database.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -28840,7 +28841,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1039,
+      "consumerCount": 1040,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32047,7 +32048,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 733,
+      "consumerCount": 734,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32216,6 +32217,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -32233,8 +32235,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/lib/invoice_receipt_conformance.py",
-        "scripts/lib/music-api-s3-probe.mjs",
-        "scripts/lib/music-ddex-enqueue-probe.mjs"
+        "scripts/lib/music-api-s3-probe.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -35363,7 +35364,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 733,
+      "consumerCount": 734,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -35532,6 +35533,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -35549,8 +35551,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/lib/invoice_receipt_conformance.py",
-        "scripts/lib/music-api-s3-probe.mjs",
-        "scripts/lib/music-ddex-enqueue-probe.mjs"
+        "scripts/lib/music-api-s3-probe.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -39409,7 +39410,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 710,
+      "consumerCount": 711,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -39577,6 +39578,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/shows-data.json",
@@ -39594,8 +39596,7 @@
         "scripts/lib/invoice_receipt_conformance.py",
         "scripts/lib/music-api-s3-probe.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
-        "scripts/lib/music-playback-identity-probe.mjs",
-        "scripts/lib/music-test-database.mjs"
+        "scripts/lib/music-playback-identity-probe.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -41856,7 +41857,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 290,
+      "consumerCount": 291,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -41982,6 +41983,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -42020,8 +42022,7 @@
         "scripts/test-music-ddex-package.mjs",
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/test-music-release-platform-migration.sh",
-        "scripts/test-music-release-worker-runtime.mjs",
-        "scripts/test-music-s3-local.mjs"
+        "scripts/test-music-release-worker-runtime.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -50872,7 +50873,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 227,
+      "consumerCount": 228,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -50996,6 +50997,7 @@
         "scripts/__tests__/generated-api-conformance.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/check-api-availability.mjs",
         "scripts/check-mobile-distribution.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -51088,7 +51090,7 @@
       "lines": [
         81
       ],
-      "consumerCount": 184,
+      "consumerCount": 185,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -51207,6 +51209,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/generated-api-conformance.test.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/check-mobile-distribution.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/interactions/test-concurrency.py",
@@ -53272,7 +53275,7 @@
       "lines": [
         1103
       ],
-      "consumerCount": 33,
+      "consumerCount": 34,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
@@ -53304,6 +53307,7 @@
       "automationConsumers": [
         "scripts/__tests__/ci-job-admission.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/archive/create-manual-shows.py",
         "scripts/ci-job-admission.mjs",
         "scripts/codex-logical-correctness-loop.sh",
@@ -55979,7 +55983,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1205,
+      "consumerCount": 1206,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -56341,7 +56345,7 @@
       "lines": [
         332
       ],
-      "consumerCount": 1081,
+      "consumerCount": 1082,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -57823,7 +57827,7 @@
       "lines": [
         405
       ],
-      "consumerCount": 1180,
+      "consumerCount": 1181,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -58712,7 +58716,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 771,
+      "consumerCount": 772,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -58884,6 +58888,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -58900,8 +58905,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/lib/invoice_receipt_conformance.py",
-        "scripts/lib/music-api-s3-probe.mjs",
-        "scripts/lib/music-ddex-enqueue-probe.mjs"
+        "scripts/lib/music-api-s3-probe.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -60428,7 +60432,7 @@
       "lines": [
         215
       ],
-      "consumerCount": 70,
+      "consumerCount": 71,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -60480,6 +60484,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/continuous-improvement-loop.mjs",
@@ -60548,7 +60553,7 @@
       "lines": [
         45
       ],
-      "consumerCount": 147,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -60651,6 +60656,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -60688,8 +60694,7 @@
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-player-session-model.mjs",
         "scripts/test-privacy-request-ledger.py",
-        "scripts/test-proof-certificates.py",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-proof-certificates.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -60751,7 +60756,7 @@
       "lines": [
         56
       ],
-      "consumerCount": 145,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -60852,6 +60857,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -60890,8 +60896,7 @@
         "scripts/test-player-session-model.mjs",
         "scripts/test-privacy-request-ledger.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/test-state-machines.py"
+        "scripts/test-service-booking-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -60950,7 +60955,7 @@
       "lines": [
         67
       ],
-      "consumerCount": 112,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -61029,6 +61034,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -61068,8 +61074,7 @@
         "scripts/verification-report.py",
         "scripts/verify-alloy-controls.mjs",
         "scripts/verify-invoice-receipt-api.mjs",
-        "scripts/verify-payment-intent-expiry.py",
-        "scripts/verify-proof-certificates.py"
+        "scripts/verify-payment-intent-expiry.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -67871,7 +67876,7 @@
         1401,
         1413
       ],
-      "consumerCount": 76,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -67948,6 +67953,7 @@
         "scripts/__tests__/formal-methods-audit.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/lib/formal-methods-audit.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -68010,7 +68016,7 @@
         1263,
         1310
       ],
-      "consumerCount": 76,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -68087,6 +68093,7 @@
         "scripts/__tests__/formal-methods-audit.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/lib/formal-methods-audit.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -68145,7 +68152,7 @@
       "lines": [
         825
       ],
-      "consumerCount": 76,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -68222,6 +68229,7 @@
         "scripts/__tests__/formal-methods-audit.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/lib/formal-methods-audit.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -68279,7 +68287,7 @@
         889,
         1355
       ],
-      "consumerCount": 76,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -68356,6 +68364,7 @@
         "scripts/__tests__/formal-methods-audit.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/lib/formal-methods-audit.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -68412,7 +68421,7 @@
       "lines": [
         1075
       ],
-      "consumerCount": 76,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -68489,6 +68498,7 @@
         "scripts/__tests__/formal-methods-audit.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/lib/formal-methods-audit.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -70315,7 +70325,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1185,
+      "consumerCount": 1186,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -71493,7 +71503,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1039,
+      "consumerCount": 1040,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -72423,7 +72433,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 530,
+      "consumerCount": 531,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -72616,6 +72626,7 @@
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-feature-registry.mjs",
@@ -72628,8 +72639,7 @@
         "scripts/check-mobile-distribution.mjs",
         "scripts/check-mobile-gitlink-ancestry.sh",
         "scripts/check-new-specification-surfaces.py",
-        "scripts/ci-change-scope.mjs",
-        "scripts/continuous-improvement-loop-forever.mjs"
+        "scripts/ci-change-scope.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/check-generated-api.mjs",
@@ -75598,7 +75608,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 733,
+      "consumerCount": 734,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75767,6 +75777,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ux-review-real-browser.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -75784,8 +75795,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/lib/invoice_receipt_conformance.py",
-        "scripts/lib/music-api-s3-probe.mjs",
-        "scripts/lib/music-ddex-enqueue-probe.mjs"
+        "scripts/lib/music-api-s3-probe.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -80687,7 +80697,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 51,
+      "consumerCount": 52,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/MerchReputation.hs",
         "tdf-hq/src/TDF/App/StartupResponse.hs",
@@ -80730,6 +80740,7 @@
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-test-database.test.mjs",
         "scripts/__tests__/music-track-search-model.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
         "scripts/inspect-payment-staging.mjs",
@@ -89267,7 +89278,7 @@
       "lines": [
         14352
       ],
-      "consumerCount": 1178,
+      "consumerCount": 1179,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -90291,7 +90302,7 @@
       "lines": [
         14754
       ],
-      "consumerCount": 1178,
+      "consumerCount": 1179,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -92362,7 +92373,7 @@
         17215,
         17267
       ],
-      "consumerCount": 1177,
+      "consumerCount": 1178,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -94530,7 +94541,7 @@
       "lines": [
         18804
       ],
-      "consumerCount": 1188,
+      "consumerCount": 1189,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -111288,7 +111299,7 @@
         398,
         406
       ],
-      "consumerCount": 220,
+      "consumerCount": 221,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -111411,6 +111422,7 @@
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/create-manual-shows.py",
         "scripts/artist-enrichment.mjs",
@@ -122788,7 +122800,7 @@
       "lines": [
         91
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -122888,6 +122900,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -122926,8 +122939,7 @@
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-player-session-model.mjs",
         "scripts/test-privacy-request-ledger.py",
-        "scripts/test-proof-certificates.py",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-proof-certificates.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -123652,7 +123664,7 @@
       "lines": [
         266
       ],
-      "consumerCount": 86,
+      "consumerCount": 87,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -123710,6 +123722,7 @@
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/music-track-search-model.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
         "scripts/catalog-list-audit.mjs",
@@ -158548,7 +158561,7 @@
       "lines": [
         51
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -158648,6 +158661,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -158686,8 +158700,7 @@
         "scripts/test-player-session-model.mjs",
         "scripts/test-privacy-request-ledger.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/test-state-machines.py"
+        "scripts/test-service-booking-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -158747,7 +158760,7 @@
       "lines": [
         63
       ],
-      "consumerCount": 112,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -158826,6 +158839,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -158865,8 +158879,7 @@
         "scripts/verification-report.py",
         "scripts/verify-alloy-controls.mjs",
         "scripts/verify-invoice-receipt-api.mjs",
-        "scripts/verify-payment-intent-expiry.py",
-        "scripts/verify-proof-certificates.py"
+        "scripts/verify-payment-intent-expiry.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -158919,7 +158932,7 @@
       "lines": [
         66
       ],
-      "consumerCount": 69,
+      "consumerCount": 70,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -158973,6 +158986,7 @@
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/build-ddex-ern432-package.sh",
@@ -161400,7 +161414,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 605,
+      "consumerCount": 606,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -163458,7 +163472,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1177,
+      "consumerCount": 1178,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
