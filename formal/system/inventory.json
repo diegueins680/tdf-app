@@ -10876,7 +10876,7 @@
     {
       "id": "SURFACE-c4651b845e2e6ad1",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
-      "sha256": "2a9b117eac17b2fe811bc1274a284c65850386c614e2b1b3118a1c97889a56b4",
+      "sha256": "2685f2ed047acbbf80f124e1dff5a82f28152bff67148ffa2587fe093b02851c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10888,7 +10888,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "f66a5571b1bb5a76754145baa670aa36e8bb991bdea6fc05b1b8d03029143641",
+      "sha256": "81c47ba84fc7c1b1a3b97726511b0c4611d62abcd06a9fdb5b2fcb64e1cc8694",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -28,7 +28,11 @@ jest.unstable_mockModule('../components/events/EventTaxDocumentsPanel', () => ({
 jest.unstable_mockModule('../components/RefundManagementPanel', () => ({ RefundManagementPanel: () => null }));
 // Native calendar rendering is exercised by the browser suite. Jest's CJS
 // picker entry cannot resolve this workspace's nested @mui/system peer.
-jest.unstable_mockModule('@mui/x-date-pickers/DateCalendar', () => ({ DateCalendar: () => null }));
+jest.unstable_mockModule('@mui/x-date-pickers/DateCalendar', () => ({
+  DateCalendar: ({ onChange }: { onChange: (value: { toISODate: () => string }) => void }) => (
+    <button type="button" onClick={() => onChange({ toISODate: () => '2099-05-10' })}>Elegir 2099-05-10</button>
+  ),
+}));
 const { default: SocialEventsPage } = await import('./SocialEventsPage');
 
 const future = (id: number, artist = artists[0]): SocialEventDTO => ({ eventId: String(id), eventTitle: `Evento ${id}`, eventStart: '2099-05-03T20:00:00Z', eventArtists: [artist] });
@@ -102,4 +106,17 @@ it('does not let an older city response replace a newer search and distinguishes
   await screen.findByRole('alert', { name: '' });
   await screen.findByText('No pudimos cargar los eventos. Intenta de nuevo.');
   expect(screen.queryByText(/No hay eventos que coincidan/)).toBeNull();
+});
+
+it('keeps an explicitly selected date without events instead of snapping back to the first event date', async () => {
+  listEvents.mockResolvedValue([future(4)]);
+  mount('/social/eventos');
+  await screen.findByText('1 evento en esta página');
+  await waitFor(() => expect(screen.queryByText(/Sin eventos programados para esta fecha/)).toBeNull());
+  fireEvent.click(screen.getByRole('button', { name: 'Elegir 2099-05-10' }));
+  await screen.findByText(/Sin eventos programados para esta fecha/);
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.getByText(/Sin eventos programados para esta fecha/)).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Ver una fecha con eventos' }));
+  await waitFor(() => expect(screen.queryByText(/Sin eventos programados para esta fecha/)).toBeNull());
 });

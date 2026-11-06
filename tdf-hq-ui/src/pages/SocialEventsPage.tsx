@@ -433,15 +433,15 @@ export default function SocialEventsPage() {
     return parsed.setLocale('es').toFormat('cccc d LLL yyyy');
   }, [selectedCalendarDate]);
 
+  // Re-anchor the calendar only when the loaded results change (new filters,
+  // page or refetch). A date the person picks explicitly is kept even when it
+  // has no events, so the empty-date explanation and its shortcut stay usable.
   useEffect(() => {
-    if (calendarDateOptions.includes(selectedCalendarDate)) return;
-    if (calendarDateOptions.length > 0) {
-      setSelectedCalendarDate(calendarDateOptions[0] ?? '');
-      return;
-    }
-    const today = DateTime.local().toISODate() ?? '';
-    if (selectedCalendarDate !== today) setSelectedCalendarDate(today);
-  }, [calendarDateOptions, selectedCalendarDate]);
+    setSelectedCalendarDate((current) => {
+      if (calendarDateOptions.includes(current)) return current;
+      return calendarDateOptions[0] ?? DateTime.local().toISODate() ?? '';
+    });
+  }, [calendarDateOptions]);
 
   const invitationQueries = useQueries({
     queries:
