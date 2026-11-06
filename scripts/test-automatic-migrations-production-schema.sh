@@ -79,6 +79,7 @@ start_and_verify
 expected_migrations="$(node -p "require('${repo_root}/scripts/production-migrations.json').migrations.length")"
 applied_migrations="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public.tdf_schema_migration;')"
 test "${applied_migrations}" = "${expected_migrations}"
+echo "PASS complete ${expected_migrations}-migration application and initial startup"
 psql "${database_url}" -X -v ON_ERROR_STOP=1 \
   -f "${repo_root}/tdf-hq/test/integration/contextual_reputation_preference_save_postgres.sql" >/dev/null
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
@@ -109,8 +110,14 @@ done
 for migration in ${music_migrations}; do
   psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${repo_root}/tdf-hq/sql/${migration}.sql" >/dev/null
 done
+# Reapplying the historical preview wrapper intentionally replaces the public
+# access function. Restore the later health wrapper too; otherwise this fixture
+# correctly remains in the rolled-back health state despite its retained ledger.
+psql "${database_url}" -X -v ON_ERROR_STOP=1 \
+  -f "${repo_root}/tdf-hq/sql/2026-11-06_music_media_health.sql" >/dev/null
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
+echo "PASS historical rollback detection and current media policy restoration"
 
 # Both historical orders occurred: late registration can apply an older view
 # after a newer privacy repair is already recorded in the immutable ledger.
@@ -187,6 +194,7 @@ SQL
   fi
 }
 
+assert_gate_rejected 'CREATE OR REPLACE FUNCTION music_public_asset_accessible(target_asset_id uuid,territory_code text) RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;' "Music source health policy or schema is missing"
 assert_gate_rejected "ALTER TABLE google_calendar_config DROP COLUMN access_token;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_config DISABLE TRIGGER identity_archive_reference_guard;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_event DROP CONSTRAINT unique_calendar_event;" "Calendar runtime columns or archived-owner guard are incompatible"

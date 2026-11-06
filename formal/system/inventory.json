@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "14318a730f96b2053f71885091bbc05cffc3294d",
+  "mobileRevision": "b88e923c2b63046269a043366f164a25ac6fb207",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -3271,7 +3271,7 @@
     {
       "id": "SURFACE-ca746d31fe23acf5",
       "path": "e2e/web/radio-navigation.spec.mjs",
-      "sha256": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
+      "sha256": "eef173599c0b32ff83749e92278f51b5aa04e6d1cb04dfbb0fc0e79849c13198",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5731,7 +5731,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "a5e6a9437be4b0c0b4db2e466bd851b288f2003debc5d0aff30ddd5e80ef49dc",
+      "sha256": "7fd2b968022dec19afda03e5c37bb90c31c9e6eb0f600617a2db5068618838c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6241,13 +6241,13 @@
     {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
-      "sha256": "46c88d6264901d60a7b813fa39f950daf6f4179f94ca439e6397523281ac6eb2",
+      "sha256": "6c86e39d630df71d4a9991cd21672e2295f617d8e767115ceb12591c7cea7e71",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6508907c85e1859b",
       "path": "scripts/test-music-release-api-e2e.sh",
-      "sha256": "fb56372d6b979d29e762ab609ceb779012be64efd4d152105060a9ebc559116e",
+      "sha256": "45982aba4378e203056de5283376f006964117afcc4c6af058b2bc6e4faa8cce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8437,7 +8437,7 @@
     {
       "id": "SURFACE-30ea18f2f9ded258",
       "path": "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
-      "sha256": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+      "sha256": "e451f805d3cf81ef7e4509fcbb1fdfd0af384745b51ef2eb4ac7695d40682754",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11197,7 +11197,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "ef9a332fa74bd0cb8a4ba8244cbe415528f8971b8032ca54b4d30afd19d3f0ee",
+      "sha256": "c07d0354745f8156f073a08f75c94e2899941d248808070741375142ebb9943e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
