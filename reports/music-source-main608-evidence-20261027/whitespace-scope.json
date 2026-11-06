@@ -1,0 +1,10 @@
+{
+  "originalCheck": "git diff --check --cached compared old2ba HEAD and reports three inherited main records",
+  "inheritedPaths": [
+    "reports/activation-default-name-privacy-2026-10-26/formal-report-controls.log",
+    "reports/activation-default-name-privacy-2026-10-26/storage-failure-original.log",
+    "reports/activation-follow-response-2026-10-26/full-journeys/rehearsal.mjs"
+  ],
+  "allExactActualMain": true,
+  "resolution": "Preserve original evidence bytes; check only staged candidate delta relative actual protected301 main. No source/tests/protection relaxed."
+}
