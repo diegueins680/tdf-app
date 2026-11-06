@@ -2,11 +2,12 @@ import { del, post } from '../api/client';
 import { getActiveSession } from '../session/SessionContext';
 import { getAuthSessionEpoch } from '../session/authEvents';
 import { UploadFailure } from '../api/uploadFailure';
+import { isDriveConnectionHandle, retireLegacyDriveCredentials } from './storageCredentials';
+export { isDriveConnectionHandle } from './storageCredentials';
 
 const TOKEN_KEY = 'tdf-google-drive-token';
 const CODE_VERIFIER_KEY = 'tdf-google-drive-code-verifier';
 const STATE_KEY = 'tdf-google-drive-state';
-export const isDriveConnectionHandle = (value: unknown): value is string => typeof value === 'string' && /^tdf-vault-v1_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const scopedTokenKey = () => { const owner = getActiveSession()?.partyId; return owner ? `${TOKEN_KEY}:${owner}` : null; };
 
 interface StoredToken {
@@ -120,6 +121,7 @@ const consumeState = (expected?: string | null) => {
 };
 
 export const getStoredToken = (): StoredToken | null => {
+  retireLegacyDriveCredentials();
   const invalidateStoredToken = () => {
     try {
       const key = scopedTokenKey();
@@ -171,7 +173,8 @@ export const storeToken = (token: StoredToken) => {
   if (!ownerPartyId || (token.ownerPartyId !== undefined && token.ownerPartyId !== ownerPartyId) || (token.ownerEpoch !== undefined && token.ownerEpoch !== getAuthSessionEpoch())) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
   const key = scopedTokenKey();
   if (!key) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
-  localStorage.setItem(key, JSON.stringify({ ...token, ownerPartyId }));
+  localStorage.setItem(key, JSON.stringify({ ownerPartyId, ownerEpoch: token.ownerEpoch,
+    accessToken: token.accessToken, refreshToken: token.refreshToken, expiresAt: token.expiresAt }));
 };
 
 export const disconnectDrive = async (): Promise<void> => {

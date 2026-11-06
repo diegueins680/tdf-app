@@ -103,6 +103,7 @@ spec = do
             other <- fromJust <$> db (loadAuthedUser "storage-owner-b")
             admin <- fromJust <$> db (loadAuthedUser "storage-admin")
             setEnv "CONTENT_STORAGE_VAULT_KEY" (replicate 64 'a')
+            run (storeConnection owner "bad\r\ntoken" Nothing 3600) >>= expectCode 502
             connected <- run (storeConnection owner "synthetic-access-secret" (Just "synthetic-refresh-secret") 3600)
             handle <- case connected of
               Right dto -> pure (accessToken dto)

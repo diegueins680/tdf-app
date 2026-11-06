@@ -16149,7 +16149,9 @@
         "tdf-hq/src/TDF/StorageVault.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/sql/2026-11-06_content_storage_security.sql",
-        "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx"
+        "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx",
+        "tdf-hq-ui/src/services/storageCredentials.ts",
+        "docs/catalog-persistence/storage-security-successor-20261106.json"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -16173,7 +16175,9 @@
         "tdf-hq/test/TDF/StorageSecuritySpec.hs",
         "tdf-hq/test/integration/content_storage_security_fixture.sql",
         "scripts/test-content-storage-security-runtime.sh",
-        "tdf-hq-ui/src/api/contentStorage.security.test.ts"
+        "tdf-hq-ui/src/api/contentStorage.security.test.ts",
+        "tdf-hq-ui/src/services/storageCredentials.test.ts",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
@@ -16214,7 +16218,8 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "360004e743c689ff9a547c2d55d304f532325a9bb2ba5cc6ac15ab654b9ebb9e",
+    "docs/catalog-persistence/catalog-list-decisions.json": "aa3c17a6938b00d9fcfb6ebbaf4b923f9549c37136bd92d0495d54140d5c12fd",
+    "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "3be92b75cc3f640c2dda273066b1aefa008454f24ec0daba08f01d7b3d67380e",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -16615,7 +16620,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "b9a9a051d2d3bcbe502ce8f1948b7829e0ff74c0c5b33669f442beceeb8fc3f3",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "342a984feda29c3169917e9a52c478f47d0dc7989c9575d4cf29d61b99194076",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -17303,9 +17308,11 @@
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "c54a0dc6ef927f03e02245cb993c860e1cab71d1c5d89904d1aea4d0885bf8cf",
     "tdf-hq-ui/src/services/googleDrive.recovery.test.ts": "a16ad8b01da983ed33fa6a4c4a48414980b9c74448339c79d87a3def891a010a",
-    "tdf-hq-ui/src/services/googleDrive.ts": "e8198ab4e0cab5344998ad27c83a3c4b2540f64b90ce2e343ddede2da1a55b58",
+    "tdf-hq-ui/src/services/googleDrive.ts": "4e292f0dda118b7471ec56ec23b70653032a60e4d5fdc1e0e2c6d11822d146db",
+    "tdf-hq-ui/src/services/storageCredentials.test.ts": "2cd2e63238b0410d78eee44a3565316d4db3602890ce16d3abc76230dc3039e7",
+    "tdf-hq-ui/src/services/storageCredentials.ts": "bd77adcd24a0d236aaa69ddddb212dff0b8644f4a5d6bde30751747ce0f89baa",
     "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx": "55ee04e76498ddf61a93df24ca0d4b6ecd47003da670706288c9b326e7790c9e",
-    "tdf-hq-ui/src/session/SessionContext.tsx": "51eae9d230aa7381f0e5e7d9e767b6f8fe668d31d253a8ba60ea8579d7626048",
+    "tdf-hq-ui/src/session/SessionContext.tsx": "398c3a2609299520be2348fc3979450f82665c2c334d6aa951116989de01cb47",
     "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
     "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
     "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx": "6fb0daa60ae3fbe7d6603fb252ee661d308ec2e38ff12a96d94adabaea22e7f7",
@@ -17586,7 +17593,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "18085ab24c01e2fdf4320d904a4e7f4d6c8eb32e51d76c95c5b1cd8074ba5fd2",
-    "tdf-hq/src/TDF/ContentStorage.hs": "617f47f18a0b510b81743cb258125b15fdb1b46eddb28197502e3c54fdcf2c9d",
+    "tdf-hq/src/TDF/ContentStorage.hs": "8775ddb25603f528c757e7e26c4335c3cdb5c2e8f11ea0c15e60201b3fb830d4",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
     "tdf-hq/src/TDF/Contracts/Types.hs": "cd59c25f047739b58e8e6b0373b858e212665705dbd9f0ca2c2ced7c56b36a20",
@@ -17634,7 +17641,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "e27db0da5f7bc129eb7fc36bf78262eff8f7ea53c6bfb82a83e71bcabcb0bd84",
+    "tdf-hq/src/TDF/Server.hs": "11771c6f04fa9ac441f60cd8e5e62bd3dd73bdde2b014b8e57e42c886954bfbe",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
@@ -17673,7 +17680,7 @@
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
-    "tdf-hq/src/TDF/StorageVault.hs": "a04c503bb1b03284fe7d657a71164a473e75d5dc5908cf3f426b7c2c9152ac8b",
+    "tdf-hq/src/TDF/StorageVault.hs": "ea59538bd391781375f1d80f0a08663366635d7ba71a97f4b88d899321e83a9d",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
@@ -17752,7 +17759,7 @@
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
-    "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3c77b914eeea92611b780419478dd71201b045270b0b079aa7bcd7a5a57aea9c",
+    "tdf-hq/test/TDF/StorageSecuritySpec.hs": "88c7fb34694b2e7906fa5e08693fbba743377fb3917e6f1cf5343e7965124998",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
@@ -19237,6 +19244,10 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": [
       {
         "requirement": "SYS-TRACE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
         "relationship": "tests"
       }
     ],
@@ -31636,6 +31647,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/services/storageCredentials.ts": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/catalog-persistence/storage-security-successor-20261106.json": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/content-storage-model.test.mjs": [
       {
         "requirement": "MEDIA-STORAGE-001",
@@ -31715,6 +31738,12 @@
       }
     ],
     "tdf-hq-ui/src/api/contentStorage.security.test.ts": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/services/storageCredentials.test.ts": [
       {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "tests"
@@ -33106,11 +33135,15 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "b9a9a051d2d3bcbe502ce8f1948b7829e0ff74c0c5b33669f442beceeb8fc3f3",
+      "sha256": "342a984feda29c3169917e9a52c478f47d0dc7989c9575d4cf29d61b99194076",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-TRACE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-STORAGE-001",
           "relationship": "tests"
         }
       ]
@@ -47456,7 +47489,7 @@
     {
       "id": "SURFACE-06ba6461b3eb1e56",
       "path": "tdf-hq-ui/src/services/googleDrive.ts",
-      "sha256": "e8198ab4e0cab5344998ad27c83a3c4b2540f64b90ce2e343ddede2da1a55b58",
+      "sha256": "4e292f0dda118b7471ec56ec23b70653032a60e4d5fdc1e0e2c6d11822d146db",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47478,6 +47511,30 @@
       "sha256": "e5ecfe59c4fd3b3787cdbbd6aeb7e48ac9bd1c1467db93074966a0577ad13a6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-68cc8430d447a4af",
+      "path": "tdf-hq-ui/src/services/storageCredentials.test.ts",
+      "sha256": "2cd2e63238b0410d78eee44a3565316d4db3602890ce16d3abc76230dc3039e7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5b0333f721efcfc2",
+      "path": "tdf-hq-ui/src/services/storageCredentials.ts",
+      "sha256": "bd77adcd24a0d236aaa69ddddb212dff0b8644f4a5d6bde30751747ce0f89baa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-3070baca8869a5c2",
@@ -47515,7 +47572,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "51eae9d230aa7381f0e5e7d9e767b6f8fe668d31d253a8ba60ea8579d7626048",
+      "sha256": "398c3a2609299520be2348fc3979450f82665c2c334d6aa951116989de01cb47",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54497,7 +54554,7 @@
     {
       "id": "SURFACE-2b23cc9a08067b9e",
       "path": "tdf-hq/src/TDF/ContentStorage.hs",
-      "sha256": "617f47f18a0b510b81743cb258125b15fdb1b46eddb28197502e3c54fdcf2c9d",
+      "sha256": "8775ddb25603f528c757e7e26c4335c3cdb5c2e8f11ea0c15e60201b3fb830d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55495,7 +55552,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "e27db0da5f7bc129eb7fc36bf78262eff8f7ea53c6bfb82a83e71bcabcb0bd84",
+      "sha256": "11771c6f04fa9ac441f60cd8e5e62bd3dd73bdde2b014b8e57e42c886954bfbe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56511,7 +56568,7 @@
     {
       "id": "SURFACE-094697e0ab92272f",
       "path": "tdf-hq/src/TDF/StorageVault.hs",
-      "sha256": "a04c503bb1b03284fe7d657a71164a473e75d5dc5908cf3f426b7c2c9152ac8b",
+      "sha256": "ea59538bd391781375f1d80f0a08663366635d7ba71a97f4b88d899321e83a9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58048,7 +58105,7 @@
     {
       "id": "SURFACE-acc5e4157c112418",
       "path": "tdf-hq/test/TDF/StorageSecuritySpec.hs",
-      "sha256": "3c77b914eeea92611b780419478dd71201b045270b0b079aa7bcd7a5a57aea9c",
+      "sha256": "88c7fb34694b2e7906fa5e08693fbba743377fb3917e6f1cf5343e7965124998",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64967,7 +65024,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a0897141e9882e976f0bf840893e27e9071311bed666ae294cf1213be97cb0c9",
+      "sourceSha256": "399237c185b5aaec58208a7f845025af6b9e631e9ff662f40b84a5f7d5830792",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -64995,7 +65052,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a0897141e9882e976f0bf840893e27e9071311bed666ae294cf1213be97cb0c9",
+      "sourceSha256": "399237c185b5aaec58208a7f845025af6b9e631e9ff662f40b84a5f7d5830792",
       "definition": {
         "states": [
           "absent",
@@ -65025,7 +65082,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a0897141e9882e976f0bf840893e27e9071311bed666ae294cf1213be97cb0c9",
+      "sourceSha256": "399237c185b5aaec58208a7f845025af6b9e631e9ff662f40b84a5f7d5830792",
       "definition": {
         "export": [
           "queued",

@@ -678,19 +678,18 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "be0b1503a04f9fa295ee",
-      "reason": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
-      "previousReplacementId": "050f309300a1688162fa",
+      "replacementId": "4de6c20a3ad9e64dbbc5",
+      "reason": "Preserve the entire 244-entry integrated manifest and review graph unchanged; append only the encrypted credential/private-reference schema introduced by a0f18086cb8ded76cc1d3b1d19dc31e813070a20. No production application, release authority or approval waiver is granted.",
+      "previousReplacementId": "be0b1503a04f9fa295ee",
       "currentResolution": {
-        "id": "be0b1503a04f9fa295ee",
-        "valueCount": 244,
+        "id": "4de6c20a3ad9e64dbbc5",
+        "valueCount": 245,
         "sourceParents": [
-          "8efa5afe186705545103db80c527a09133708ede",
-          "cf16b20e708b0ad28300db7a56f610e628265a33"
+          "be0b1503a04f9fa295ee"
         ],
-        "justification": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority."
+        "justification": "Preserve the entire 244-entry integrated manifest and review graph unchanged; append only the encrypted credential/private-reference schema introduced by a0f18086cb8ded76cc1d3b1d19dc31e813070a20. No production application, release authority or approval waiver is granted."
       },
-      "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
+      "change": "Preserve the entire 244-entry integrated manifest and review graph unchanged; append only the encrypted credential/private-reference schema introduced by a0f18086cb8ded76cc1d3b1d19dc31e813070a20. No production application, release authority or approval waiver is granted.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -831,9 +830,19 @@
         "ef3b8933af3854450a02",
         "050f309300a1688162fa",
         "d7fc1df6cbade4a92d25",
-        "255ec943da9a86e36cc7"
+        "255ec943da9a86e36cc7",
+        "be0b1503a04f9fa295ee"
       ],
-      "previousReason": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+      "previousReason": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
+      "previousCurrentResolution": {
+        "id": "be0b1503a04f9fa295ee",
+        "valueCount": 244,
+        "sourceParents": [
+          "8efa5afe186705545103db80c527a09133708ede",
+          "cf16b20e708b0ad28300db7a56f610e628265a33"
+        ],
+        "justification": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority."
+      }
     }
   ]
 }

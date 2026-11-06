@@ -122,6 +122,9 @@ descriptor identifier seconds = DriveTokenResponse
 
 storeConnection :: AuthedUser -> Text -> Maybe Text -> Int -> AppM DriveTokenResponse
 storeConnection user access refresh seconds = do
+  unless (validProviderToken access && maybe True validProviderToken refresh
+          && seconds > 0 && seconds <= 86400)
+    (throwError (failure err502 "storage_provider_unavailable"))
   key <- vaultKey
   identifier <- UUID.toText <$> liftIO nextRandom
   nonce <- liftIO (getRandomBytes 12)
@@ -190,12 +193,18 @@ revokeConnection user = do
   pure NoContent
 
 data ProviderToken = ProviderToken Text (Maybe Text) Int
+
+validProviderToken :: Text -> Bool
+validProviderToken value = not (T.null value) && T.length value <= 4096
+  && T.all (\char -> char >= '!' && char <= '~') value
+
 instance FromJSON ProviderToken where
   parseJSON = withObject "ProviderToken" $ \o -> do
     access <- o .: "access_token"
     refresh <- o .:? "refresh_token"
     seconds <- o .: "expires_in"
-    when (T.null access || T.length access > 4096 || seconds <= 0 || seconds > (86400 :: Int)) (fail "Invalid credential")
+    when (not (validProviderToken access && maybe True validProviderToken refresh)
+          || seconds <= 0 || seconds > (86400 :: Int)) (fail "Invalid credential")
     pure (ProviderToken access refresh seconds)
 
 refreshProvider :: Manager -> Credential -> IO (Either ServerError (Credential, Int))

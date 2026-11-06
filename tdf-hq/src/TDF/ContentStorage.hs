@@ -216,6 +216,9 @@ contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> read
                   let path = storedFilePath (assetsRootDir cfg) (UUID.toText fileId) sharing mime
                   symbolic <- pathIsSymbolicLink path
                   when symbolic (Safe.throwIO (userError "Invalid stored file"))
+                  actualSize <- getFileSize path
+                  unless (actualSize == fromIntegral expectedSize)
+                    (Safe.throwIO (userError "Stored file size failed"))
                   -- Force the complete read and integrity check while session,
                   -- permission and object locks are still held.
                   bytes <- BS.readFile path

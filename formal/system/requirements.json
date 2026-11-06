@@ -16148,7 +16148,9 @@
         "tdf-hq/src/TDF/StorageVault.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/sql/2026-11-06_content_storage_security.sql",
-        "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx"
+        "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx",
+        "tdf-hq-ui/src/services/storageCredentials.ts",
+        "docs/catalog-persistence/storage-security-successor-20261106.json"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -16172,7 +16174,9 @@
         "tdf-hq/test/TDF/StorageSecuritySpec.hs",
         "tdf-hq/test/integration/content_storage_security_fixture.sql",
         "scripts/test-content-storage-security-runtime.sh",
-        "tdf-hq-ui/src/api/contentStorage.security.test.ts"
+        "tdf-hq-ui/src/api/contentStorage.security.test.ts",
+        "tdf-hq-ui/src/services/storageCredentials.test.ts",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"

@@ -3358,7 +3358,7 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
 
 -- New callers declare their chosen authority. A failed personal connection
 -- must never select TDF's credential or its configured upload folder.
--- Explicit provider destinations default private; absent flags retain legacy callers.
+-- Every destination defaults private; public permission always needs a choice.
 resolveDriveUploadVisibility :: Maybe Text -> Maybe Text -> Maybe Text
 resolveDriveUploadVisibility (Just "google_drive") visibility = Just (fromMaybe "private" visibility)
 resolveDriveUploadVisibility _ visibility = Just (fromMaybe "private" visibility)
@@ -9914,7 +9914,8 @@ assetsServeServer env assetsRoot =
       rootsSafe <- ContentStorage.publicRequestSafe assetsRoot (Wai.pathInfo request)
       committedPublic <- if rootsSafe then ContentStorage.publicObjectAllowed env (Wai.pathInfo request) else pure False
       let respond = if take 1 (Wai.pathInfo request) == ["content"]
-            then sendResponse . Wai.mapResponseHeaders (("Cache-Control","no-store") :)
+            then sendResponse . Wai.mapResponseHeaders (\headers ->
+              ("Cache-Control","no-store") : filter ((/= "Cache-Control") . fst) headers)
             else sendResponse
       if assetsServePathAllowed (Wai.pathInfo request) && committedPublic
         then staticApplication request respond
