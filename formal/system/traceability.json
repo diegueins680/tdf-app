@@ -1683,17 +1683,17 @@
       "critical": true,
       "status": "specified and implemented",
       "contract": "formal/system/identity-lifecycle.md",
-      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "confidence": "Specified shared admission rule with finite unit/property and SQLite controls; exact source-bound qualification is recorded separately. PostgreSQL locked-window and production rollout guarantees are not implied.",
       "ambiguity": [
         "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
         "Production release sequencing after the additive migration is not yet verified."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+        "reason": "Finite predicate/lookup regressions and inherited migration/config controls support the rule; exact candidate compilation and execution receipts are separate, and complete endpoint/clock/refinement and production rollout remain unresolved."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
-      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "verification": "Actual shared-predicate boundary cases, generated full-width valid-window clock partitions, SQLite loadAuthedUser and credential-identification positive/negative controls, existing config validation, idempotent PostgreSQL migration/constraint controls and rollback-floor test. Fresh candidate receipts are separate; no complete endpoint/refinement proof.",
       "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
@@ -1714,7 +1714,7 @@
       ],
       "id": "ID-SESSION-004",
       "title": "Interactive sessions expire on the server",
-      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "statement": "A password or Google login session must carry a well-formed database-clock half-open validity window and be denied before issuance, at or after expiry, or when its window is absent or malformed. Legacy interactive sessions fail closed without backfill; both-null service/custom tokens may stay unbounded.",
       "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
       "actors": [
         "session holder",
@@ -1735,10 +1735,11 @@
       },
       "allowedTransitions": [
         "Login/signup/password change/recovery -> interactive token issued with window",
-        "Active token with now < expires -> authenticated",
-        "Service token without window -> authenticated"
+        "Well-formed bounded token with 0 <= issued <= now < expires -> session-time admission; existing identity, purpose and grant checks still apply",
+        "Service/custom token with both epochs absent -> session-time admission under existing identity, purpose and grant checks"
       ],
       "forbiddenTransitions": [
+        "now < issued or malformed/incomplete stored window -> authenticated",
         "now >= expires -> authenticated",
         "Interactive label without window -> authenticated",
         "Expired bearer -> credential identification for password change",
@@ -1750,7 +1751,7 @@
       "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
       "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
       "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
-      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "failure": "401 for pre-issuance, expired, malformed, absent-window interactive or unknown tokens; startup fails on invalid TTL.",
       "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
       "implementation": [
         "tdf-hq/src/TDF/Models.hs",
@@ -16563,7 +16564,7 @@
     "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "dc70c8d4605ed428372d2282ba12b4aa81532400ebe8d31aac7c790eebe70f01",
+    "formal/system/recovery-expiry-arithmetic.json": "014db1828ff6c71d5f4a936c92bcd81525fba14b7ebae3de6dc1ebf8cacb2bf7",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -17542,7 +17543,7 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
-    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+    "tdf-hq/src/TDF/Auth.hs": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
@@ -17735,7 +17736,7 @@
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
-    "tdf-hq/test/TDF/ServerSpec.hs": "6f312967eb4b137aaf3a844e29d505d45eecce30b9610d6d32afd73dad3b66a0",
+    "tdf-hq/test/TDF/ServerSpec.hs": "1abb8268fddf2fd4188fe5dbf7d87db2461fe70d98e1ec925f2137a94966a940",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
@@ -53790,7 +53791,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "sha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57780,7 +57781,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "6f312967eb4b137aaf3a844e29d505d45eecce30b9610d6d32afd73dad3b66a0",
+      "sha256": "1abb8268fddf2fd4188fe5dbf7d87db2461fe70d98e1ec925f2137a94966a940",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64818,7 +64819,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79877e1ad858342567bd68e150a561add1927239191bb8dae6bf619178d4b32e",
+      "sourceSha256": "e760f523ee85252c98c62f69512bdd7d060da9e9f6d6c51433c6b07dfbba8c66",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -64846,7 +64847,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79877e1ad858342567bd68e150a561add1927239191bb8dae6bf619178d4b32e",
+      "sourceSha256": "e760f523ee85252c98c62f69512bdd7d060da9e9f6d6c51433c6b07dfbba8c66",
       "definition": {
         "states": [
           "absent",
@@ -64876,7 +64877,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79877e1ad858342567bd68e150a561add1927239191bb8dae6bf619178d4b32e",
+      "sourceSha256": "e760f523ee85252c98c62f69512bdd7d060da9e9f6d6c51433c6b07dfbba8c66",
       "definition": {
         "export": [
           "queued",
