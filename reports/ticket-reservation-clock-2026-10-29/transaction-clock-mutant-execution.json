@@ -1,0 +1,27 @@
+{
+  "head": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "startedAt": 1793254979.529047,
+  "inputHashes": {
+    "tdf-hq/src/TDF/Ticketing/Inventory.hs": "023dbd0e95d795858033a5e15824e4665e85f8c2892e010389a5632c01e19e80",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "8080a090e36d8eb6092de3fc6fc9c80339fa9f34f4d3b181518129e1b314390d",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "cda8992999a9f9ac324172aa765d78c37c82362be76b5fde51dfcabbfceeb8f1",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4cab19a0b36115efb835bced07f8543284647ecebbdc25afdd922ba14e31c0a8",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb"
+  },
+  "command": [
+    "/Users/macpro/.ghcup/bin/stack",
+    "--no-install-ghc",
+    "--stack-yaml",
+    "tdf-hq/stack.yaml",
+    "test",
+    "tdf-hq:test:tdf-hq-test",
+    "--test-arguments=--match=ticket-reservation-clock --fail-on=empty --seed=20261029 +RTS -N2 -RTS"
+  ],
+  "schemaMigrations": 227,
+  "providerDatabase": "tdf_provider_retry_test",
+  "gateDatabase": "tdf_provider_retry_test",
+  "scope": "In-process actual handlers/SQL, synthetic fixtures; no HTTP authentication/provider completion or production claim.",
+  "actualExit": 1,
+  "finishedAt": 1793255220.251381,
+  "inputHashesStable": true
+}
