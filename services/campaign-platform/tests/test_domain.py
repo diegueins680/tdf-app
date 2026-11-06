@@ -149,6 +149,68 @@ class CampaignTests(unittest.TestCase):
   with self.store.db() as d:
    self.assertEqual(d.execute('SELECT kind FROM jobs WHERE piece=?',(pid,)).fetchone()[0],'verify_youtube')
    self.assertEqual(d.execute('SELECT status FROM pieces WHERE id=?',(pid,)).fetchone()[0],'processing')
+ def youtube_verification_recovery_fixture(self):
+  with self.store.db(True) as d:d.execute('UPDATE accounts SET platform="youtube" WHERE id=?',(self.account,))
+  pid=self.piece(platform='youtube',format='video',settings={'preserved_setting':'original'})
+  self.approve()
+  verification=uid();publication=uid();payload=json.dumps({'existing_verification':'private-video'})
+  with self.store.db(True) as d:
+   d.execute('UPDATE pieces SET external_id="private-video",status="processing" WHERE id=?',(pid,))
+   d.execute('INSERT INTO jobs(id,campaign,piece,kind,payload,due_at,state,attempts) VALUES(?,?,?,?,?,?,?,?)',(publication,self.cid,pid,'publish','{"existing_upload":"private-video"}',time.time()-1,'completed',1))
+   d.execute('INSERT INTO jobs(id,campaign,piece,kind,payload,due_at,state,attempts) VALUES(?,?,?,?,?,?,?,?)',(verification,self.cid,pid,'verify_youtube',payload,time.time()+3600,'failed',4))
+   d.execute('INSERT INTO provider_sessions VALUES(?,?,?)',(pid,'{"synthetic_resumable_upload":"preserved"}',time.time()))
+  self.store.status(self.a,self.cid,'active')
+  return pid,verification,publication,payload,{'piece':pid,'version':1,'video_id':'private-video','checks_passed':True}
+ def test_youtube_studio_confirmation_requeues_failed_or_blocked_verification_with_fresh_budget(self):
+  pid,jid,publication,payload,data=self.youtube_verification_recovery_fixture()
+  with self.store.db() as d:
+   campaign=dict(d.execute('SELECT * FROM campaigns WHERE id=?',(self.cid,)).fetchone())
+   previous_upload=dict(d.execute('SELECT * FROM jobs WHERE id=?',(publication,)).fetchone())
+   session=dict(d.execute('SELECT * FROM provider_sessions WHERE piece=?',(pid,)).fetchone())
+  for state in ('failed','blocked'):
+   with self.subTest(state=state):
+    with self.store.db(True) as d:d.execute('UPDATE jobs SET state=?,attempts=4,due_at=? WHERE id=?',(state,time.time()+3600,jid))
+    self.store.youtube_checks(self.a,self.cid,data)
+    with self.store.db() as d:
+     job=dict(d.execute('SELECT * FROM jobs WHERE id=?',(jid,)).fetchone())
+     self.assertEqual((job['state'],job['attempts'],job['kind'],job['piece'],job['campaign'],job['payload']),('queued',0,'verify_youtube',pid,self.cid,payload))
+     self.assertLessEqual(job['due_at'],time.time())
+     self.assertEqual(d.execute('SELECT count(*) FROM jobs').fetchone()[0],2)
+     self.assertEqual(dict(d.execute('SELECT * FROM jobs WHERE id=?',(publication,)).fetchone()),previous_upload)
+     self.assertEqual(dict(d.execute('SELECT * FROM campaigns WHERE id=?',(self.cid,)).fetchone()),campaign)
+     self.assertEqual(dict(d.execute('SELECT * FROM provider_sessions WHERE piece=?',(pid,)).fetchone()),session)
+     piece=d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone()
+     self.assertEqual((piece['external_id'],piece['status'],piece['version'],piece['approved_version']),('private-video','processing',1,1))
+     self.assertEqual(json.loads(piece['settings']),{'preserved_setting':'original','youtube_checks_reviewed':True})
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:claims=list(pool.map(lambda _:self.store.claim(),range(4)))
+    claimed=[job for job in claims if job]
+    self.assertEqual(len(claimed),1)
+    self.assertEqual((claimed[0]['id'],claimed[0]['kind'],claimed[0]['attempts']),(jid,'verify_youtube',0))
+    with self.store.db() as d:self.assertEqual(d.execute('SELECT attempts FROM jobs WHERE id=?',(jid,)).fetchone()[0],1)
+ def test_youtube_studio_confirmation_preserves_nonrecoverable_verification_states(self):
+  pid,jid,publication,payload,data=self.youtube_verification_recovery_fixture()
+  for state in ('queued','running','completed','unknown','cancelled'):
+   with self.subTest(state=state):
+    with self.store.db(True) as d:d.execute('UPDATE jobs SET state=?,attempts=4,claimed_at=? WHERE id=?',(state,time.time(),jid))
+    self.store.youtube_checks(self.a,self.cid,data)
+    with self.store.db() as d:
+     job=d.execute('SELECT * FROM jobs WHERE id=?',(jid,)).fetchone()
+     self.assertEqual((job['state'],job['attempts'],job['payload']),(state,4,payload))
+     self.assertEqual(d.execute('SELECT count(*) FROM jobs WHERE piece=?',(pid,)).fetchone()[0],2)
+     self.assertEqual(d.execute('SELECT state FROM jobs WHERE id=?',(publication,)).fetchone()[0],'completed')
+ def test_youtube_verification_recovery_still_requires_current_explicit_authority(self):
+  pid,jid,publication,payload,data=self.youtube_verification_recovery_fixture()
+  other=self.store.create(self.b,{'name':'Otra campaña','objective':'Escuchar','destination':''})
+  cases=[(self.b,self.cid,data),(self.b,other,data),(self.a,self.cid,{**data,'version':2}),(self.a,self.cid,{**data,'video_id':'different'}),(self.a,self.cid,{**data,'checks_passed':False}),(self.a,self.cid,{**data,'checks_passed':1})]
+  for actor,cid,confirmation in cases:
+   with self.subTest(actor=actor['id'],campaign=cid,confirmation=confirmation):
+    with self.assertRaises(Denied):self.store.youtube_checks(actor,cid,confirmation)
+    with self.store.db() as d:
+     self.assertEqual(tuple(d.execute('SELECT state,attempts,payload FROM jobs WHERE id=?',(jid,)).fetchone()),('failed',4,payload))
+     self.assertNotIn('youtube_checks_reviewed',json.loads(d.execute('SELECT settings FROM pieces WHERE id=?',(pid,)).fetchone()[0]))
+  with self.store.db(True) as d:d.execute('UPDATE accounts SET revoked=1 WHERE id=?',(self.account,))
+  with self.assertRaises(Denied):self.store.youtube_checks(self.a,self.cid,data)
+  with self.store.db() as d:self.assertEqual(tuple(d.execute('SELECT state,attempts FROM jobs WHERE id=?',(jid,)).fetchone()),('failed',4))
  def test_external_video_cannot_be_edited_even_when_blocked_or_cancelled(self):
   with self.store.db(True) as db:db.execute('UPDATE accounts SET platform="youtube" WHERE id=?',(self.account,))
   pid=self.piece(platform='youtube',format='video');self.approve()

@@ -128,7 +128,7 @@ class Store:
    if p['status'] not in ('processing','blocked') or data.get('checks_passed') is not True:raise Denied('Confirma las comprobaciones de Studio sobre este video privado.',409)
    settings=json.loads(p['settings']);settings['youtube_checks_reviewed']=True
    d.execute('UPDATE pieces SET settings=?,status="processing" WHERE id=?',(json.dumps(settings),p['id']))
-   d.execute('INSERT INTO jobs(id,campaign,piece,kind,payload,due_at) VALUES(?,?,?,?,?,?) ON CONFLICT(piece,kind) DO UPDATE SET state=CASE WHEN jobs.state="blocked" THEN "queued" ELSE jobs.state END,due_at=excluded.due_at',(uid(),cid,p['id'],'verify_youtube','{}',time.time()))
+   d.execute('INSERT INTO jobs(id,campaign,piece,kind,payload,due_at) VALUES(?,?,?,?,?,?) ON CONFLICT(piece,kind) DO UPDATE SET state=CASE WHEN jobs.state IN ("blocked","failed") THEN "queued" ELSE jobs.state END,attempts=CASE WHEN jobs.state IN ("blocked","failed") THEN 0 ELSE jobs.attempts END,due_at=excluded.due_at',(uid(),cid,p['id'],'verify_youtube','{}',time.time()))
    self.audit(d,actor['id'],'youtube.studio_checks',cid,p['id'],{'video_id':p['external_id'],'version':p['version'],'reviewer_confirmation':True})
  def status(self,actor,cid,status):
   if status not in ('active','paused','cancelled','completed'):raise Denied('Estado inválido.')
