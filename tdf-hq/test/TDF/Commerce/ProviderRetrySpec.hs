@@ -423,6 +423,9 @@ spec = do
         ticketAllocationSpec
         legacyStripeRefundSpec
         ticketTierCapacitySpec
+        ticketPurchaseEligibilitySpec
+        ticketPriceSnapshotSpec
+        ticketFinalAmountSpec
         latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
@@ -3967,6 +3970,381 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
             (Admission.AdmissionById first) (Checkout.vpOccurredAt payment)) pool
       results <- concurrently [reserve,scan]
       length (filter id results) `shouldBe` 1
+
+ticketPriceSnapshotSpec :: SpecWith ConnectionPool
+ticketPriceSnapshotSpec = describe "legacy-ticket-price-snapshot" $ do
+  forM_ [False,True] $ \viaCheckout -> forM_ [Just False,Just True,Nothing] $ \change ->
+    it ("refuses pricing changed before new admission: checkout=" <> show viaCheckout <>
+        ", change=" <> show change) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      env <- ticketInventoryEnv pool
+      let (edit,_,_) = ticketInventoryHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+          (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          unchanged = change == Nothing
+          newPrice = if change == Just False then 1 else 0
+          newCurrency = if change == Just True then "EUR" else "USD"
+          newName = if unchanged then "Synthetic renamed free ticket" else "Synthetic free ticket"
+          newPosition = if unchanged then Just 1 else Nothing
+          tier = TD.TicketTierDTO Nothing Nothing "test" newName Nothing newPrice newCurrency
+            20 0 Nothing Nothing True newPosition
+          purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) request) env)
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      holderFinished <- newEmptyMVar
+      purchaseFinished <- newEmptyMVar
+      let holdEvent = runSqlPool (do
+            _ <- rawSql "SELECT id FROM social_event WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey eventKey)] :: SqlPersistT IO [Single Int64]
+            liftIO $ putMVar locked ()
+            liftIO $ takeMVar release) pool
+          releaseEvent = do
+            _ <- tryPutMVar release ()
+            pure ()
+      bracket (forkFinally holdEvent (putMVar holderFinished)) (\worker ->
+        releaseEvent >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+        Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+        bracket (forkFinally purchase (putMVar purchaseFinished)) (\worker ->
+          releaseEvent >> awaitLegacyRefundWorker worker purchaseFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 1 100) `shouldReturn` Just True
+          changed <- runHandler (runReaderT
+            (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) tier) env) >>= requireRight
+          TD.ticketTierPriceCents changed `shouldBe` newPrice
+          TD.ticketTierCurrency changed `shouldBe` newCurrency
+          TD.ticketTierName changed `shouldBe` newName
+          TD.ticketTierPosition changed `shouldBe` newPosition
+          releaseEvent
+          completed <- Timeout.timeout 5000000 (readMVar purchaseFinished)
+          result <- case completed of
+            Just (Right value) -> pure value
+            Just (Left failure) -> throwIO failure
+            Nothing -> fail "Purchase worker did not complete after releasing the Event barrier"
+          orders <- runSqlPool (rawSql
+            "SELECT amount_cents,status,currency FROM event_ticket_order WHERE event_id=? ORDER BY id"
+            [PersistInt64 (fromSqlKey eventKey)]) pool :: IO [(Single Int64,Single Text,Single Text)]
+          inventory <- runSqlPool (rawSql
+            "SELECT quantity_sold,(SELECT count(*)::bigint FROM event_ticket WHERE event_id=?)\
+            \ FROM event_ticket_tier WHERE id=?"
+            [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey tierKey)]) pool
+          -- Only the normal manager endpoint changes price/currency. The
+          -- barrier locks an unchanged Event, so the old quote is genuinely stale.
+          let expectedSold = if unchanged then 3 else 0 :: Int64
+              expectedOrders = if unchanged then [(Single 0,Single "paid",Single "USD")] else []
+          (either errHTTPCode (const 200) result,orders,inventory)
+            `shouldBe` (if unchanged then 200 else 409,expectedOrders,
+              [(Single expectedSold,Single expectedSold)])
+
+  forM_ [False,True] $ \viaCheckout ->
+    it ("retains a previously admitted snapshot after normal price and currency edits: checkout=" <>
+        show viaCheckout) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      env <- ticketInventoryEnv pool
+      let (edit,_,_) = ticketInventoryHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+          (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          nextTier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 1 "EUR"
+            20 0 Nothing Nothing True Nothing
+          purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) request) env)
+      purchase >>= requireRight
+      edited <- runHandler (runReaderT
+        (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) nextTier) env) >>= requireRight
+      TD.ticketTierPriceCents edited `shouldBe` 1
+      TD.ticketTierCurrency edited `shouldBe` "EUR"
+      assertRetainedFreePricingSnapshot pool eventKey tierKey
+
+  it "reuses a free checkout snapshot after later normal price and currency edits" $ \pool -> do
+    (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+    env <- ticketInventoryEnv pool
+    let (edit,_,_) = ticketInventoryHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+        (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+        request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+        replayKey = "pricing-history-" <> keyText (fromSqlKey eventKey)
+        action = runHandler (runReaderT (checkout
+          (TD.TicketPurchaseWithPromoDTO request Nothing Nothing (Just replayKey) Nothing)) env)
+        nextTier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 1 "EUR"
+          20 0 Nothing Nothing True Nothing
+    first <- action >>= requireRight
+    edited <- runHandler (runReaderT
+      (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) nextTier) env) >>= requireRight
+    TD.ticketTierPriceCents edited `shouldBe` 1
+    TD.ticketTierCurrency edited `shouldBe` "EUR"
+    second <- action >>= requireRight
+    TD.spiOrderId second `shouldBe` TD.spiOrderId first
+    TD.spiAmountCents second `shouldBe` 0
+    TD.spiCurrency second `shouldBe` "USD"
+    assertRetainedFreePricingSnapshot pool eventKey tierKey
+
+  forM_ [False,True] $ \viaCheckout ->
+    it ("requires pricing-lock before reading the current tier: checkout=" <> show viaCheckout) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      env <- ticketInventoryEnv pool
+      let (edit,_,_) = ticketInventoryHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+          (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          nextTier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 1 "USD"
+            20 0 Nothing Nothing True Nothing
+          changePrice = runHandler (runReaderT
+            (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) nextTier) env)
+          purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) request) env)
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      holderFinished <- newEmptyMVar
+      editorFinished <- newEmptyMVar
+      purchaseFinished <- newEmptyMVar
+      let holdTier = runSqlPool (do
+            _ <- rawSql "SELECT id FROM event_ticket_tier WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey tierKey)] :: SqlPersistT IO [Single Int64]
+            liftIO $ putMVar locked ()
+            liftIO $ takeMVar release) pool
+          releaseTier = do
+            _ <- tryPutMVar release ()
+            pure ()
+      bracket (forkFinally holdTier (putMVar holderFinished)) (\worker ->
+        releaseTier >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+        Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+        bracket (forkFinally changePrice (putMVar editorFinished)) (\worker ->
+          releaseTier >> awaitLegacyRefundWorker worker editorFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 1 100) `shouldReturn` Just True
+          bracket (forkFinally purchase (putMVar purchaseFinished)) (\worker ->
+            releaseTier >> awaitLegacyRefundWorker worker purchaseFinished) $ \_ -> do
+            Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 2 100) `shouldReturn` Just True
+            releaseTier
+            edited <- Timeout.timeout 5000000 (readMVar editorFinished)
+            case edited of
+              Just (Right (Right response)) -> TD.ticketTierPriceCents response `shouldBe` 1
+              other -> expectationFailure ("Tier editor did not commit: " <> show other)
+            completed <- Timeout.timeout 5000000 (readMVar purchaseFinished)
+            result <- case completed of
+              Just (Right value) -> pure value
+              Just (Left failure) -> throwIO failure
+              Nothing -> fail "Purchase worker did not complete after releasing the Tier barrier"
+            orders <- runSqlPool (rawSql
+              "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=? ORDER BY id"
+              [PersistInt64 (fromSqlKey eventKey)]) pool :: IO [(Single Int64,Single Text)]
+            stock <- runSqlPool (rawSql
+              "SELECT quantity_sold,(SELECT count(*)::bigint FROM event_ticket WHERE event_id=?)\
+              \ FROM event_ticket_tier WHERE id=?"
+              [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey tierKey)]) pool
+            -- Without the financial-read lock the buyer sees the old price,
+            -- then waits only in Inventory and incorrectly admits a free order.
+            (either errHTTPCode (const 200) result,orders,stock)
+              `shouldBe` (409,[],[(Single (0 :: Int64),Single (0 :: Int64))])
+
+assertRetainedFreePricingSnapshot :: ConnectionPool -> TM.SocialEventId -> TM.EventTicketTierId -> Expectation
+assertRetainedFreePricingSnapshot pool eventKey tierKey = do
+  runSqlPool (rawSql
+    "SELECT amount_cents,status,currency FROM event_ticket_order WHERE event_id=? ORDER BY id"
+    [PersistInt64 (fromSqlKey eventKey)]) pool
+    `shouldReturn` [(Single (0 :: Int64),Single ("paid" :: Text),Single ("USD" :: Text))]
+  runSqlPool (rawSql
+    "SELECT quantity_sold,(SELECT count(*)::bigint FROM event_ticket WHERE event_id=?)\
+    \ FROM event_ticket_tier WHERE id=?"
+    [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey tierKey)]) pool
+    `shouldReturn` [(Single (3 :: Int64),Single (3 :: Int64))]
+
+ticketFinalAmountSpec :: SpecWith ConnectionPool
+ticketFinalAmountSpec = describe "legacy-ticket-final-amount-envelope" $ do
+  forM_ [(1,98039215,Nothing,Just (99999999,98039215)),(1,98039216,Nothing,Nothing),
+          (1,99999999,Nothing,Nothing),(1,98039216,Just 1,Just (99999999,98039215)),
+          (1,98039216,Just 0,Nothing),(2,49019607,Nothing,Just (99999998,98039214)),
+          (2,49019608,Nothing,Nothing)] $ \(quantity,price,discount,acceptedTotal) ->
+    it ("checks fee-inclusive new holds: quantity=" <> show quantity <>
+        ", price=" <> show price <> ", discount=" <> show discount) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      promo <- ticketAmountFixture pool eventKey tierKey price discount
+      env <- ticketInventoryEnv pool
+      let (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) quantity Nothing Nothing Nothing
+      result <- runHandler (runReaderT
+        (checkout (TD.TicketPurchaseWithPromoDTO request promo Nothing Nothing Nothing)) env)
+      orders <- runSqlPool (rawSql
+        "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=? ORDER BY id"
+        [PersistInt64 (fromSqlKey eventKey)]) pool :: IO [(Single Int64,Single Text)]
+      counts <- ticketAmountCounts pool eventKey tierKey
+      let expectedStatus = maybe 400 (const 503) acceptedTotal
+          expectedOrders = maybe [] (\(total,_) -> [(Single total,Single "cancelled")]) acceptedTotal
+      -- Missing Stripe credentials stop before provider HTTP. Exact-boundary
+      -- orders reach the existing config rollback, oversized new holds do not.
+      (either errHTTPCode (const 200) result,orders,counts)
+        `shouldBe` (expectedStatus,expectedOrders,[(Single 0,Single 0,Single 0)])
+      forM_ acceptedTotal $ \(_,face) ->
+        runSqlPool (rawSql
+          "SELECT (metadata::jsonb->>'face_value_cents')::bigint,\
+          \(metadata::jsonb->>'buyer_platform_fee_cents')::bigint,\
+          \(metadata::jsonb->>'organizer_platform_fee_cents')::bigint\
+          \ FROM event_ticket_order WHERE event_id=?"
+          [PersistInt64 (fromSqlKey eventKey)]) pool
+          `shouldReturn` [(Single (face :: Int64),Single (1960784 :: Int64),Single (1960784 :: Int64))]
+
+  it "preserves a fully discounted checkout and its idempotent replay" $ \pool -> do
+    (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+    promo <- ticketAmountFixture pool eventKey tierKey 99999999 (Just 99999999)
+    env <- ticketInventoryEnv pool
+    let (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+        request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 1 Nothing Nothing Nothing
+        action = runHandler (runReaderT (checkout
+          (TD.TicketPurchaseWithPromoDTO request promo Nothing (Just "amount-free-replay") Nothing)) env)
+    first <- action >>= requireRight
+    second <- action >>= requireRight
+    TD.spiAmountCents first `shouldBe` 0
+    TD.spiOrderId second `shouldBe` TD.spiOrderId first
+    ticketAmountCounts pool eventKey tierKey
+      `shouldReturn` [(Single 1,Single 1,Single 1)]
+    runSqlPool (rawSql "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=?"
+      [PersistInt64 (fromSqlKey eventKey)]) pool
+      `shouldReturn` [(Single (0 :: Int64),Single ("paid" :: Text))]
+
+  it "does not apply new-hold validation or rollback to historical pending replay" $ \pool -> do
+    (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+    _ <- ticketAmountFixture pool eventKey tierKey 98039216 Nothing
+    runSqlPool (do
+      rawExecute "UPDATE event_ticket_tier SET quantity_sold=1 WHERE id=?"
+        [PersistInt64 (fromSqlKey tierKey)]
+      rawExecute
+        "INSERT INTO event_ticket_order(event_id,tier_id,buyer_party_id,quantity,amount_cents,currency,status,\
+        \metadata,checkout_idempotency_key,purchased_at,original_amount_cents,created_at,updated_at)\
+        \ VALUES (?,?,'2',1,100000000,'USD','pending',?, 'amount-historical',now(),98039216,now(),now())"
+        [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey tierKey),PersistText
+          "{\"checkout_idempotency_key\":\"amount-historical\",\"face_value_cents\":98039216,\"buyer_platform_fee_cents\":1960784,\"organizer_platform_fee_cents\":1960784}"]) pool
+    env <- ticketInventoryEnv pool
+    let (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+        request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 1 Nothing Nothing Nothing
+    result <- runHandler (runReaderT (checkout
+      (TD.TicketPurchaseWithPromoDTO request Nothing Nothing (Just "amount-historical") Nothing)) env)
+    either errHTTPCode (const 200) result `shouldBe` 503
+    ticketAmountCounts pool eventKey tierKey
+      `shouldReturn` [(Single 1,Single 0,Single 0)]
+    runSqlPool (rawSql "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=?"
+      [PersistInt64 (fromSqlKey eventKey)]) pool
+      `shouldReturn` [(Single (100000000 :: Int64),Single ("pending" :: Text))]
+
+ticketAmountFixture :: ConnectionPool -> TM.SocialEventId -> TM.EventTicketTierId
+  -> Int64 -> Maybe Int64 -> IO (Maybe Text)
+ticketAmountFixture pool eventKey tierKey price discount = runSqlPool (do
+  rawExecute "UPDATE event_ticket_tier SET price_cents=? WHERE id=?"
+    [PersistInt64 price,PersistInt64 (fromSqlKey tierKey)]
+  forM discount $ \value -> do
+    let code = "AMOUNT-" <> keyText (fromSqlKey eventKey)
+    rawExecute
+      "INSERT INTO promo_code(event_id,code,discount_type,discount_value,currency,current_redemptions,is_active)\
+      \ VALUES (?,?,'fixed_amount',?,'USD',0,true)"
+      [PersistInt64 (fromSqlKey eventKey),PersistText code,PersistInt64 value]
+    pure code) pool
+
+ticketAmountCounts :: ConnectionPool -> TM.SocialEventId -> TM.EventTicketTierId
+  -> IO [(Single Int64,Single Int64,Single Int64)]
+ticketAmountCounts pool eventKey tierKey = runSqlPool (rawSql
+  "SELECT quantity_sold,(SELECT count(*)::bigint FROM event_ticket WHERE event_id=?),\
+  \coalesce((SELECT sum(current_redemptions)::bigint FROM promo_code WHERE event_id=?),0)::bigint\
+  \ FROM event_ticket_tier WHERE id=?"
+  [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey tierKey)]) pool
+
+
+ticketPurchaseEligibilitySpec :: SpecWith ConnectionPool
+ticketPurchaseEligibilitySpec = describe "legacy ticket purchase eligibility at admission" $ do
+  forM_ [False,True] $ \viaCheckout -> forM_ ["postponed","cancelled","private"] $ \change ->
+    forM_ [False,True] $ \purchaseFirst ->
+    it ("orders purchase admission against organizer changes: checkout=" <> show viaCheckout <>
+        ", change=" <> T.unpack change <> ", purchaseFirst=" <> show purchaseFirst) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      env <- ticketInventoryEnv pool
+      updateDTO <- ticketEligibilityUpdate pool eventKey change
+      let (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          updateEvent = ticketEligibilityEventUpdate (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) request) env)
+          changeEvent = runHandler (runReaderT
+            (updateEvent (keyText (fromSqlKey eventKey)) updateDTO) env)
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      holderFinished <- newEmptyMVar
+      updateFinished <- newEmptyMVar
+      purchaseFinished <- newEmptyMVar
+      let holdEvent = runSqlPool (do
+            _ <- rawSql "SELECT id FROM social_event WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey eventKey)] :: SqlPersistT IO [Single Int64]
+            liftIO $ putMVar locked ()
+            liftIO $ takeMVar release) pool
+          releaseEvent = do
+            _ <- tryPutMVar release ()
+            pure ()
+      let startFirst = if purchaseFirst then forkFinally purchase (putMVar purchaseFinished)
+            else forkFinally changeEvent (putMVar updateFinished)
+          startSecond = if purchaseFirst then forkFinally changeEvent (putMVar updateFinished)
+            else forkFinally purchase (putMVar purchaseFinished)
+          awaitFirst worker = if purchaseFirst then awaitLegacyRefundWorker worker purchaseFinished
+            else awaitLegacyRefundWorker worker updateFinished
+          awaitSecond worker = if purchaseFirst then awaitLegacyRefundWorker worker updateFinished
+            else awaitLegacyRefundWorker worker purchaseFinished
+      bracket (forkFinally holdEvent (putMVar holderFinished)) (\worker ->
+        releaseEvent >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+        Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+        bracket startFirst (\worker ->
+          releaseEvent >> awaitFirst worker) $ \_ -> do
+          Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 1 100) `shouldReturn` Just True
+          bracket startSecond (\worker ->
+            releaseEvent >> awaitSecond worker) $ \_ -> do
+            Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 2 100) `shouldReturn` Just True
+            releaseEvent
+            updated <- Timeout.timeout 5000000 (readMVar updateFinished)
+            case updated of
+              Just (Right (Right response)) ->
+                if change == "private" then TD.eventIsPublic response `shouldBe` Just False
+                else TD.eventWorkflowStateCode response `shouldBe` Just change
+              other -> expectationFailure ("Organizer update failed: " <> show other)
+            result <- Timeout.timeout 5000000 (readMVar purchaseFinished)
+            -- The Event barrier changes no data. Both business mutations are
+            -- real handlers; their lock order decides whether the sale is admitted.
+            let expectedSold = if purchaseFirst then 3 else 0 :: Int64
+                expectedOrders = if purchaseFirst then 1 else 0 :: Int64
+            runSqlPool (rawSql
+              "SELECT tier.quantity_sold,\
+              \(SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=tier.event_id),\
+              \(SELECT count(*)::bigint FROM event_ticket WHERE event_id=tier.event_id)\
+              \ FROM event_ticket_tier tier WHERE id=?"
+              [PersistInt64 (fromSqlKey tierKey)]) pool
+              `shouldReturn` [(Single expectedSold,Single expectedOrders,Single expectedSold)]
+            case result of
+              Just (Right (Right ())) | purchaseFirst -> pure ()
+              Just (Right (Left failure)) | not purchaseFirst ->
+                errHTTPCode failure `shouldBe` (if change == "private" then 403 else 409)
+              other -> expectationFailure ("Purchase admitted after closure/privacy change: " <> show other)
+
+ticketEligibilityUpdate :: ConnectionPool -> TM.SocialEventId -> Text -> IO TD.EventUpdateDTO
+ticketEligibilityUpdate pool eventKey change = do
+  [(Single starts,Single ends,Single typeId)] <- runSqlPool (rawSql
+    "SELECT start_time,end_time,event_type_id::text FROM social_event WHERE id=?"
+    [PersistInt64 (fromSqlKey eventKey)]) pool
+      :: IO [(Single UTCTime,Single (Maybe UTCTime),Single Text)]
+  [Single stateId] <- runSqlPool (rawSql
+    "SELECT state.id::text FROM workflow_state state JOIN workflow_definition workflow ON workflow.id=state.workflow_id\
+    \ WHERE workflow.code='social-event-lifecycle' AND state.code=?"
+    [PersistText (if change == "private" then "on_sale" else change)]) pool :: IO [Single Text]
+  let fields = ["eventTitle" A..= ("Synthetic purchase eligibility" :: Text),
+        "eventStart" A..= starts,"eventEnd" A..= ends,"eventCapacity" A..= (20 :: Int),
+        "eventTypeId" A..= typeId,"eventArtists" A..= ([] :: [TD.ArtistDTO])]
+      mutation = if change == "private" then ["eventIsPublic" A..= False]
+        else ["eventWorkflowStateId" A..= stateId]
+  case A.fromJSON (A.object (fields <> mutation)) of
+    A.Error message -> fail message
+    A.Success dto -> pure dto
+
+ticketEligibilityEventUpdate :: AuthedUser -> Text -> TD.EventUpdateDTO -> ReaderT Env Handler TD.EventDTO
+ticketEligibilityEventUpdate user = case Social.socialEventsServer user of
+  events :<|> _ -> case events of
+    _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
 
 ticketTierCapacitySpec :: SpecWith ConnectionPool
 ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency" $ do

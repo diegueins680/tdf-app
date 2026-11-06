@@ -4147,7 +4147,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "357f2737da9c4481ee29dc1ddcd1bc2361dfb4441d7b05be31f6cd8f987e1b0e",
+      "sha256": "5d6cf2382d8bb6775cda94d443561ed170dcf5dded72bd55e12ee2c96b9f9caf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16417,7 +16417,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "b7c1b4c93bd301a1a91af4e4807e70149fa57b9628cf2950a14f533afe6c4e2a",
+      "sha256": "604e127814d5f379843bb29d0b4bcdbe6881e7c57322a4f6768c94fd34b4df42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16939,7 +16939,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "8d471fe31c3c7edb9c8e8508c17e7d668ea547e8a6087ce749cb34a226037945",
+      "sha256": "a5a95be5765dc8f62e3a9432aabe18564f9b1f93d21d276e7170c32931f03a6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28892,8 +28892,29 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-ticket-eligibility.md",
+      "sha256": "6e8b8a85a3567cd7a55401ffe39a58f6cbd44c5302b8f65e0409c3724063033c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-final-amount.md",
+      "sha256": "8557565e0d0569ffdacd366aa7e01a5550c9f165c4ff799e2a3ac734a6a5055d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-ticket-inventory.md",
       "sha256": "fb67951de48dcd4fb52e5c5c457b45ac9e110f4c4e629a7aa9edf05efd2c0929",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-pricing-snapshot.md",
+      "sha256": "0628da96785aaecbad74314e0f531baa54ff9191911ea6144727066c1e6e6092",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29278,7 +29299,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e760f523ee85252c98c62f69512bdd7d060da9e9f6d6c51433c6b07dfbba8c66",
+      "sha256": "caadd38c86824e7f32d67518dd15bff8a9a77ad6a3a290be4cd7bf17181a6c48",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
