@@ -1,0 +1,14 @@
+{
+  "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "head": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+  "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mappedChangedSurfaces": [
+    ".github/workflows/ci.yml",
+    "scripts/__tests__/ci-change-scope.test.mjs",
+    "scripts/ci-change-scope.mjs",
+    "scripts/test-music-source-projection.mjs",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

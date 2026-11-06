@@ -22916,7 +22916,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql",
         "line": 15,
@@ -22945,7 +22945,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql",
         "line": 29,
@@ -22967,7 +22967,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql",
         "line": 16,
@@ -22997,7 +22997,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql",
         "line": 10,
@@ -23023,7 +23023,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
         "line": 15,
@@ -23045,7 +23045,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
         "line": 16,
@@ -23069,7 +23069,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
         "line": 30,
@@ -23414,7 +23414,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
       "evidence": {
         "file": "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
         "line": 27,
