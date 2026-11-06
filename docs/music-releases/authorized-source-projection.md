@@ -260,3 +260,47 @@ protected integration and target deployment acceptance remain gates. No producti
 original master, data migration, other branch or pinned Mobile source is changed.
 
 Current 63c metadata checks passed 36 regression cases, 46 CI-selection/pipeline cases, strict 1,341-entry JSON/CSV scans and both generated-client checks at Mobile d832bb3. These are structural/current-source gates; they do not relabel earlier SQL or playback execution. Final freshness and committed admission are recorded separately in the refresh receipt.
+
+## Retained historical #630 qualification
+
+The following records the earlier scoped execution and its original source identities. The private223 follow-up remains separate, and actual protected parent integration is required before publication.
+
+## Full canonical financial-main qualification
+
+The next normal composition retains protected main
+`78fa351b469c1d2031df3232204dd722ac480e3b`: all145 requirement objects,
+including the posted-ledger-header contract, remain exact. The original scoped
+source-projection requirement is unchanged, for146 total. All1339 current-main
+catalog decisions, client/player code, operations, dependencies and pinned Mobile
+source are retained. The four-predicate handler patch is byte identical to744e75.
+
+The existing SQL runner now prepares the complete schema using the canonical
+production fixtures and migration renderer, rather than its older14-migration
+subset. It checks all222 receipts, replay without history changes, the actual
+delivery-policy function before/after fixtures, and final canonical readiness.
+The shared random-database owner and connection guards are unchanged.
+
+At source`7187e17af15a46495aa6ebf388717eed6322f4d7`, a separate main78fa
+handler baseline reproduces ten policy-agreement failures on that complete
+schema. The candidate passes all four SQL projections, four removed-filter
+controls and eight omitted/reordered argument controls. Both random databases
+were removed and the owned loopback cluster stopped. No compiled HTTP, media
+byte, performance or production result is inferred from this SQL qualification.
+
+The first complete-schema attempt failed before policy checks because its
+synthetic other-party row omitted mandatory`is_org`; the fixture now explicitly
+supplies`FALSE` and`NOW()`, with the real constraint retained. Failure evidence
+is preserved. The older744 CI worker-cleanup timeout is recorded separately;
+its unchanged worker test must pass in the new final-head CI, without relaxed
+timeouts, skipped cases or approval inheritance. The evidence packet is
+`reports/music-source-projection-main621-evidence-20261026`.
+
+A separate actual-Git fixture reproduces rejection when the scrubbed environment
+loses CI exact-checkout trust configuration, and success with that configuration.
+Only the read-only Git identity call now receives HOME; SQL and renderer children
+retain the unchanged scrubbed environment. No wildcard or globaloperator trust
+setting is introduced. The complete SQL qualification was repeated after this
+runner correction, with its new source identity retained.
+
+
+Qualification on protected main608 (`301810ae…`, 27 October): the unchanged runner passed a new actual PostgreSQL16 execution with all 227 canonical migrations, apply/replay/readiness, four real projection queries, four policy-removal controls and eight argument controls. Execution source remains `d80eb182052de02ac94cd9de21e85e44bfa4bf5b`; the original 223/222 receipts remain historical, not relabeled. All 154 requirements and the 1,350 catalog authority entries are preserved from main. See `reports/music-source-main608-2026-10-27.json`. This is finite SQL/lexical evidence, not HTTP/media/production or universal correctness assurance.

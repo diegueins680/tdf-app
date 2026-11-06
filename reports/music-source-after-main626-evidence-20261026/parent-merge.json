@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-10-27T01:30:13.402088+00:00",
+  "pr": 626,
+  "mergeCommit": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "approvedHead": "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+  "mergedAt": "2026-10-27T01:28:41Z",
+  "parents": [
+    "63c56aaf919a07e919a61280311be1dc809cd6fe",
+    "7bee8d45a3e54aa350fb810e722609ad3c608cca"
+  ],
+  "wholeTreeExactApprovedHead": "9959c67127fb6e185947179b108f4eea16fd1963",
+  "premergeReceipt": "/private/tmp/tdf-626-7bee-protected-observation-20261026/premerge-final.json",
+  "normalExpectedHeadMerge": true,
+  "all20MandatoryAppChecksPassed": true,
+  "freshIndependentReview": 5661069608,
+  "optionalVercelQuotaNotRequired": true,
+  "frontendSqlAndRegistryExactPriorMain": true,
+  "backendDeployed": false,
+  "productionTransactions": false,
+  "classification": "PARTIAL_SOURCE_INTEGRATED;BACKEND_RELEASE_BLOCKED"
+}
