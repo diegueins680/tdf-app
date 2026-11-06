@@ -113,9 +113,11 @@ const loadPersistedState = (ownerPartyId: number | null | undefined, identityRea
     const currentIndex = Number.isSafeInteger(parsed?.queue?.currentIndex)
       ? Math.min(Math.max(parsed?.queue?.currentIndex ?? -1, -1), tracks.length - 1)
       : -1;
+    const savedRadioVolume = window.localStorage.getItem('radio-volume');
+    const legacyVolume = savedRadioVolume?.trim() ? Number(savedRadioVolume) : Number.NaN;
     const volume = typeof parsed?.volume === 'number' && Number.isFinite(parsed.volume)
       ? Math.min(Math.max(parsed.volume, 0), 1)
-      : 0.8;
+      : Number.isFinite(legacyVolume) ? Math.min(Math.max(legacyVolume, 0), 1) : 0.8;
     const quality = parsed?.quality === 'auto' || isPlayerQuality(parsed?.quality) ? parsed.quality : 'auto';
     const repeat = restoreListening && isRepeatMode(parsed?.queue?.repeat) ? parsed.queue.repeat : 'off';
     const positions = restoreListening && parsed?.positions && typeof parsed.positions === 'object'

@@ -5095,7 +5095,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "286cfeda30a42a9544d553a375d52ad26f6e30c199b45eb9aa784be09c49eb2d",
+      "sha256": "5ceaee1adc0abc2cd897bd95aac53ded663268caac123d5889b0d2c213dc17d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19357,7 +19357,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "0e752dc2fb3e611ccc7ecfe2a380221da8c050180d6d62a02e0fc735a5685fc7",
+      "sha256": "14c821f5504fac0af2234ec5c39898b5c3d3a938f7a95637b4368c475da8ba27",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20452,6 +20452,13 @@
     {
       "path": "QUICK_START_REFERENCE.md",
       "sha256": "94ca346334c6fe8646e7b2d5017c46bbfc4f6870ea9d7fbc12e658407d74362f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "RADIO-VALIDITY-CHECKPOINT.md",
+      "sha256": "c601927b131c5d62a5f72cf6348019b2b18e6e0cca3031cdc53b679ac4eb71ce",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -579,6 +579,39 @@ assert.equal(publicRelease.tracks.length, 1);
 const coverAccess = await request(`/music/assets/${coverDisplayAssetId}/access`, { country: 'EC' });
 assert.match(coverAccess.url, /^https:\/\/127\.0\.0\.1:\d+\/music-e2e-derivative\//);
 const streamAccess = await request(`/music/assets/${streamAssetId}/access`, { country: 'EC' });
+// Exercise actual HTTP authentication and owner/team boundaries, not only SQL.
+await request('/music/media-health', { expected: 401 });
+const healthPath = `/music/media-health/asset/${streamAssetId}/revalidate`;
+await request(healthPath, { method: 'POST', expected: 401 });
+await request(healthPath, { token: outsider.token, method: 'POST', expected: 404 });
+assert.equal((await request(healthPath, { token: artist.token, method: 'POST' })).queued, true);
+assert.equal((await request(healthPath, { token: member.token, method: 'POST' })).queued, true);
+const ownerHealth = await request('/music/media-health', { token: artist.token });
+assert.ok(ownerHealth.some((item) => item.sourceId === streamAssetId));
+assert.ok(!(await request('/music/media-health', { token: outsider.token })).some((item) => item.sourceId === streamAssetId));
+assert.ok((await request('/music/media-health', { token: admin.token })).some((item) => item.sourceId === streamAssetId));
+for (const row of ownerHealth) {
+  assert.deepEqual(Object.keys(row).sort(), ['artistPartyId','checkedAt','nextCheckAt','reason','sourceId','sourceKind','sourceVersion','status'].sort());
+}
+const healthClaim = () => {
+  const token = randomUUID();
+  sql(`UPDATE music_media_health SET next_check_at=NOW()+interval '1 day',lease_token=NULL,lease_until=NULL;
+    UPDATE music_media_health SET next_check_at=NOW()-interval '1 second' WHERE source_kind='asset' AND source_id='${streamAssetId}';
+    SELECT music_media_claim('${token}');`);
+  return token;
+};
+let healthToken = healthClaim();
+sql(`SELECT music_media_observe('${healthToken}','permanent','missing');
+  UPDATE music_media_health SET first_failure_at=NOW()-interval '31 minutes' WHERE source_kind='asset' AND source_id='${streamAssetId}';`);
+healthToken = healthClaim();
+sql(`SELECT music_media_observe('${healthToken}','permanent','missing');`);
+await request(`/music/assets/${streamAssetId}/access`, { country: 'EC', expected: 404 });
+assert.equal((await request(healthPath, { token: artist.token, method: 'POST' })).queued, true);
+await request(`/music/assets/${streamAssetId}/access`, { country: 'EC', expected: 404 });
+healthToken = healthClaim();
+sql(`SELECT music_media_observe('${healthToken}','valid','decodable');`);
+await request(`/music/assets/${streamAssetId}/access`, { country: 'EC' });
+console.log('PASS HTTP media health: session, owner/team/admin isolation, sanitized diagnostics, suppression, queued revalidation and restoration');
 if (realS3) {
   for (const [id, access] of [[coverDisplayAssetId, coverAccess], [streamAssetId, streamAccess]]) {
     await assertStoredAsset(access.url, realAssets.assets.find((asset) => asset.id === id).sha256);
