@@ -320,7 +320,7 @@ export default function RadioWidget() {
     return stored ?? EMPTY_STATION.id;
   });
   const radioOwnsPlayer = player.currentTrack?.id.startsWith('radio:') === true;
-  const isPlaying = radioOwnsPlayer && (player.status === 'playing' || player.status === 'buffering' || player.status === 'loading');
+  const isPlaying = radioOwnsPlayer && player.playbackRequested;
   const isPlayingRef = useRef(false);
   const muted = player.muted;
   const volume = player.volume;

@@ -2,7 +2,8 @@ import { get } from '../api/client';
 
 export interface PlayerAssetAuthorization {
   url: string;
-  expiresAt: string;
+  expiresAt?: string;
+  sourceVersion?: string;
   mediaType: string;
 }
 

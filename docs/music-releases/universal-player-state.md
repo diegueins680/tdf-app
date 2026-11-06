@@ -10,7 +10,7 @@ Playback intent is separate from media readiness. `explicitPauseRef` is the
 user's pause latch; `autoplayRef` is permission for the current attempt to play.
 Selecting another artist does not clear the pause latch. Play and explicit track
 selection clear it; Next/Previous while paused only change the silent selection.
-A reload restores the listener's queue silently. Account changes dispose it.
+The same listener's explicit-pause latch is persisted with the queue; a reload restores it silently. Account changes dispose it.
 
 | Model state | Engine/UI representation | Exit |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ A reload restores the listener's queue silently. Account changes dispose it.
 | exhausted | `unavailable`, no remaining eligible candidate | Explicit retry or another selection; artist UI offers radio |
 | error | `error` or diagnosed unavailable/offline state | Explicit retry or another selection |
 
-A fulfilled `play()` promise alone never establishes playing. Autoplay rejection
+The transport uses a separate playback-request flag so Pause can cancel authorization or buffering before audio starts. A fulfilled `play()` promise alone never establishes playing. Autoplay rejection
 retains the selection, reports paused and requests a Play gesture. Native events
 must match current selection, source URL and generation. The old generation is
 retired synchronously when recovery advances. Actor changes dispose listeners,

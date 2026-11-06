@@ -66,7 +66,7 @@ export default function GlobalPlayer() {
   const closeOptionsRef = useRef<HTMLButtonElement>(null);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const track = player.currentTrack;
-  const activePlayback = player.status === 'playing' || player.status === 'buffering';
+  const activePlayback = player.playbackRequested || player.status === 'playing' || player.status === 'buffering';
   const barRef = useRef<HTMLElement | null>(null);
   // Other docked bars and page CTAs stack above the player instead of under it.
   useDockedBarHeight(GLOBAL_PLAYER_HEIGHT_VAR, barRef, Boolean(track));
