@@ -1,0 +1,286 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "sourceCommit": "ea38b16a59f425e13ba3164ed0199e24a34c53a7",
+  "evidenceCommit": "Containing report-only child; independently verify Git blobs and complete archive aftercommit.",
+  "rootQuality": {
+    "sourceCommit": "ea38b16a59f425e13ba3164ed0199e24a34c53a7",
+    "actualExits": {
+      "root-quality": 0,
+      "new-surface-admission": 0,
+      "catalog-unit": 0
+    },
+    "catalogUnitCases": 8,
+    "aliasesRemoved": true,
+    "sourceCleanAfter": true
+  },
+  "sourceSeal": {
+    "baselineParent": "b99e3543c02294179858282a326fc4912eb80002",
+    "sourceCommit": "ea38b16a59f425e13ba3164ed0199e24a34c53a7",
+    "observedMainAtTask": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+    "observedMainIsAncestorOfParent": false,
+    "qualificationScope": "Stacked follow-up on parent b99; no current-main composition qualification.",
+    "currentMainCompositionQualified": false,
+    "parentApprovalBorrowed": false,
+    "newHeadGitHubApprovalClaimed": false,
+    "remoteMainFetchedBySeal": false,
+    "registeredGitFilesystemMobileHashesVerified": 1429,
+    "registeredRootCount": 1329,
+    "registeredMobileCount": 100,
+    "sourceDigest": "96175e98fbc8f6b0a75bf761d3e2baf4d46b9ef4c1058c6fed1051fe1d257029",
+    "mobileGitlink": "7586be92f447faaf05d1f7d7073af6321ad1496a",
+    "all158UnrelatedParentRequirementsExact": true,
+    "sameRequirementsTotal": 159,
+    "selectedRequirementOnlySixReviewedFieldsRefined": [
+      "ambiguity",
+      "confidence",
+      "evidence",
+      "property",
+      "statement",
+      "verification"
+    ],
+    "allSelectedSafetyAndFailureObligationsExact": true,
+    "runnerOnlyAdditiveNameGuardAndComment": true,
+    "publishedTwelveTestBodyExact": true,
+    "outputWhitespacePrefixCompatibilityAndForeignSafetyPreserved": true,
+    "applicationWorkflowsDependenciesModelsQualityHistoricalReportArchiveExactParent": true,
+    "scriptChangesOnly": [
+      "scripts/test-persistent-uploads-container-diagnostics.py",
+      "scripts/test-persistent-uploads-container.py"
+    ],
+    "rootQuality": {
+      "sourceCommit": "ea38b16a59f425e13ba3164ed0199e24a34c53a7",
+      "actualExits": {
+        "root-quality": 0,
+        "new-surface-admission": 0,
+        "catalog-unit": 0
+      },
+      "catalogUnitCases": 8,
+      "aliasesRemoved": true,
+      "sourceCleanAfter": true
+    },
+    "implementerSimulatedCases": 13,
+    "rootIndependentSimulatedCases": 13,
+    "baselineWrongCaseAssertionFailures": 1,
+    "soleNewGuardControlVariants": 1,
+    "soleNewGuardControlAssertionFailures": 1,
+    "correctSourceRestoredAndThirteenCasesPass": true,
+    "runnerSha256": "3e2657400ab6306b4b6f89568cefb5bbec665db31dc87ff006460d889612de1b",
+    "testSha256": "9d53526e954744bf8bb9b8ae9520d3edc781e19baea9e85dfe4796fbf8a582ce",
+    "contractGitSha256": "181744cbbb5ca91a21ed3b209d883e802906db9a0a4b8149d133127c98be9e0e",
+    "separatelyBoundEvidenceSha256": {
+      "baseline.json": "269c5ad7a58f77df408514d88d4ea78008202ce8b2335675de57f717fccfbb6e",
+      "baseline.log": "ba240eb31b938101b79789f036a9e595c9fb46fb32eabcfe08e6c169199e749c",
+      "controls.json": "364f206df888de7d60616c9cb08ee10174ba7c9bb23bcf84ecc63fa09b998379",
+      "corrected.log": "7ea63d62502853dd30d7679107a5415206fdf216d02e3fd07da00e7c57530719",
+      "omit-exact-name-guard.log": "ba240eb31b938101b79789f036a9e595c9fb46fb32eabcfe08e6c169199e749c",
+      "restored.log": "4151fe1007d00500522eee0f42f34d19f49c55601a895591ade2f5f82702f06b",
+      "independent-root-tests.log": "00384be5a9530647d1057456ae50f7e91c5e9a362a747b3c462f022e9d16cbcb",
+      "primary-name-identity-sources.json": "a72584f7846ef851adbbe75e71a8bbfdffc14fad707907d1514658b870319dae"
+    },
+    "primarySourceScope": "Retained independent Git-blob/excerpt certificate; no network re-fetch by seal.",
+    "freshAssuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "actualLocalDockerExecuted": false,
+    "backendBuildExecuted": false,
+    "hostedWrongCaseResponseObserved": false,
+    "currentHeadHostedQualificationClaimed": false,
+    "sourceCleanAfter": true,
+    "limits": [
+      "TESTED finite simulated main-path misbound-response behavior; not an ordinary observed Docker failure.",
+      "Correct tagged CLI behavior echoes requested ref; the wrong-case response is an injected input-fault model.",
+      "Parent b99 already repairs the distinct lowercase spelling issue; its approval/CI do not qualify this child.",
+      "Observed main0bd is not an ancestor of parent b99; no current-main composition or merge readiness claim.",
+      "No actual local Docker, complete refinement, production durability, deployment or forced-termination guarantee."
+    ]
+  },
+  "formal": {
+    "executionPassed": true,
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 159,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 143,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 159,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "release": "BLOCKED",
+    "newCompleteImplementationProofs": 0,
+    "scope": "Inherited conditional results retain their original assumptions; no passing test is promoted to a complete proof."
+  },
+  "independentReview": {
+    "path": "reports/container-exact-name-2026-10-30/independent-review.txt",
+    "sha256": "31cd86eea6d368cf71f1557330f65dd7524c7dc9dbd2759c59fcd71154e2c7bf",
+    "scope": "Root independently reviewed separate-agent implementation/spec and reran13mockcases; baseline/control/rawlogs/primarysource/Gitbindings inspected. Metadata authoredbyroot; no localDocker/hosted/current-main/completeproof."
+  },
+  "archive": {
+    "path": "reports/container-exact-name-2026-10-30/evidence.tar.gz",
+    "sha256": "de7ce2b1fb465ba46560815db0ac7cc9de69753b2408d9625a31b788e06efeaf",
+    "bytes": 1509756,
+    "innerFiles": 90,
+    "manifest": "reports/container-exact-name-2026-10-30/manifest.json"
+  },
+  "integration": {
+    "draftIntended": true,
+    "autoMerge": false,
+    "merged": false,
+    "deployment": "UNVERIFIED",
+    "productionWrites": false,
+    "realProviderCalls": false,
+    "requirements": "Fresh published-head CI/current review/main composition/protected FIFO; no bypass or borrowed approval."
+  },
+  "createdAtUTC": "2026-10-30T16:23:17.552149+00:00",
+  "baseParent": "b99e3543c02294179858282a326fc4912eb80002",
+  "observedCurrentMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+  "qualificationScope": "Stacked follow-up qualified against approved parent b99; current-main composition and parent integration remain pending. No parent approval is borrowed.",
+  "problem": "The published classifier whole-message casefold also treats a case-different container name as the requested name. Docker name grammar and exact name index distinguish those names. Published wording combined exact nonce identity with whole diagnostic case independence.",
+  "correction": "Add only a byte-exact inspected-name suffix guard while preserving the published prefix capitalization, empty/[] stdout and outer whitespace compatibility. Diagnostics, foreign-label refusal, verified-ID deletion, commands/deadlines and primary exception chaining remain.",
+  "properties": [
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001/EXACT-NAME",
+      "status": "TESTED",
+      "statement": "A supported absence diagnostic naming a case-different object does not qualify the inspected object.",
+      "assumptions": "Structured simulated misbound-response fault model; no actual ordinary/hosted wrong-case response or cleanup leak was observed."
+    },
+    {
+      "id": "SYS-VERIFY-CONTAINER-CLEANUP-001/COMPATIBILITY",
+      "status": "TESTED",
+      "statement": "All12 published cases remain and pass; prefix/output/whitespace compatibility, diagnostic retention and foreign no-delete remain.",
+      "assumptions": "Finite actual-main-path subprocess mocks and exact declared-edit source reversal, not Linux container execution or universal cleanup proof."
+    }
+  ],
+  "baseline": {
+    "source": "b99e3543c02294179858282a326fc4912eb80002",
+    "cases": 1,
+    "intendedAssertionFailures": 1,
+    "description": "Actual runner main accepts structured response naming NAME.upper(), so the expected refusal assertion fails; no Docker call."
+  },
+  "verification": {
+    "implementerSimulatedCases": 13,
+    "rootIndependentSimulatedCases": 13,
+    "sourceControls": {
+      "base": "b99e3543c02294179858282a326fc4912eb80002",
+      "scope": "Simulated actual-main-path response binding; no Docker/daemon/network operation",
+      "runnerSha256": "3e2657400ab6306b4b6f89568cefb5bbec665db31dc87ff006460d889612de1b",
+      "testSha256": "9d53526e954744bf8bb9b8ae9520d3edc781e19baea9e85dfe4796fbf8a582ce",
+      "corrected": {
+        "exit": 0,
+        "tests": 13,
+        "assertionFailures": 0,
+        "logSha256": "7ea63d62502853dd30d7679107a5415206fdf216d02e3fd07da00e7c57530719"
+      },
+      "guardRemoval": {
+        "exit": 1,
+        "tests": 1,
+        "assertionFailures": 1,
+        "logSha256": "ba240eb31b938101b79789f036a9e595c9fb46fb32eabcfe08e6c169199e749c",
+        "mutantSha256": "1b54683aa937f5a945b96b711b51dfd694f5f6c754108083fb3016aea0e84fe0"
+      },
+      "sourceRestored": true,
+      "restored": {
+        "exit": 0,
+        "tests": 13,
+        "assertionFailures": 0,
+        "logSha256": "4151fe1007d00500522eee0f42f34d19f49c55601a895591ade2f5f82702f06b"
+      },
+      "finishedAtUTC": "2026-10-30T16:02:29.066028+00:00"
+    },
+    "guardRemovalVariants": 1,
+    "intendedGuardRemovalAssertionFailures": 1,
+    "sourceRestored": true,
+    "existing12TestBytesPreservedByRemovingOnlyNewMethod": true,
+    "primaryAuthority": "primary-name-identity-sources.json binds short tagged Moby name grammar/lookup/index and Docker CLI ref excerpts by Git blob SHA.",
+    "actualLocalDockerExecuted": false,
+    "normalCIProtection": "Existing repository stdlib test registration unchanged; fresh child-head selected CI and current review remain required."
+  },
+  "historicalEvidence": {
+    "approvedParentPR": 679,
+    "approvedParentHead": "b99e3543c02294179858282a326fc4912eb80002",
+    "parentReadyAndAutoMerge": "Preserved; no parent source/ref/state mutation.",
+    "lowercaseRepair": "Already corrected and hosted-verified on parent b99; not republished as a new defect.",
+    "strict8ebCandidate": "Unpublished independent candidate was superseded; this follow-up does not impose its stricter empty-output policy.",
+    "historicalDiagnosticReport": "Preserved unchanged and source-bound; not relabeled as this source qualification."
+  },
+  "remaining": [
+    "No observed hosted wrong-case response, production incident or real cleanup leak is claimed.",
+    "Original677 missing response remains unknown; parent lowercase-response repair remains separate verified work.",
+    "Current-main composition after parent integration, exact child-head review and all selected hosted checks are still required.",
+    "Finite simulated identity binding does not prove daemon truth, whole implementation/refinement, production durability, serving/deployment or forced-termination cleanup."
+  ],
+  "nextHighestValueTask": "Qualify the separate child head normally, preserve approved parent readiness, and integrate only after dependency/current-main/review/CI gates permit."
+}

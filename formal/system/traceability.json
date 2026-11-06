@@ -4858,7 +4858,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001); formal/system/legacy-refund-request-creation.md (PAY-LEGACY-REFUND-REQUEST-001, AUTH-LEGACY-REFUND-REQUEST-001, PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001); formal/system/legacy-refund-history.md (PAY-LEGACY-REFUND-HISTORY-001); formal/system/legacy-ticket-inventory.md (EVT-TIER-EDIT-BOUNDS-001, EVT-LEGACY-RESERVE-BOUNDS-001)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001); formal/system/legacy-refund-request-creation.md (PAY-LEGACY-REFUND-REQUEST-001, AUTH-LEGACY-REFUND-REQUEST-001, PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001); formal/system/legacy-refund-history.md (PAY-LEGACY-REFUND-HISTORY-001); formal/system/legacy-ticket-inventory.md (EVT-TIER-EDIT-BOUNDS-001, EVT-LEGACY-RESERVE-BOUNDS-001); formal/system/legacy-ticket-eligibility.md (EVT-LEGACY-HOLD-ELIGIBILITY-001); formal/system/legacy-ticket-final-amount.md; formal/system/legacy-ticket-pricing-snapshot.md (EVT-LEGACY-PRICE-SNAPSHOT-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4927,7 +4927,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee. Legacy request creation: actual-handler table-lock races and committed paid-state, buyer, amount and organizer changes; compatibility for default/full/partial amounts, invalid amounts, prior requests and organizer authority; a bounded two-requester model exposes missing locks, stale snapshots and stale eligibility. The transaction explicitly selects READ COMMITTED; source-bound receipts retain exact scope and isolation evidence. Historical legacy approval: actual-handler duplicate identity/status and lock-wait cases require zero provider callbacks with preserved history; canonical successive partial replay bypasses the legacy guard. A finite twenty-input model detects omitted-history and pending-only guards. Direct writers, historical reconciliation and full SQL refinement remain separate obligations. Legacy tier edit/reservation concurrency: actual-handler direct/free-checkout counterexamples in both mutation orders, current-sold conditional edits and shared locked inventory authority; empty/exact/increased tier and event capacity compatibility. A bounded two-writer design model exposes stale sold, cached totals and omitted tier locking; no SQL refinement or global all-writer inventory proof.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee. Legacy request creation: actual-handler table-lock races and committed paid-state, buyer, amount and organizer changes; compatibility for default/full/partial amounts, invalid amounts, prior requests and organizer authority; a bounded two-requester model exposes missing locks, stale snapshots and stale eligibility. The transaction explicitly selects READ COMMITTED; source-bound receipts retain exact scope and isolation evidence. Historical legacy approval: actual-handler duplicate identity/status and lock-wait cases require zero provider callbacks with preserved history; canonical successive partial replay bypasses the legacy guard. A finite twenty-input model detects omitted-history and pending-only guards. Direct writers, historical reconciliation and full SQL refinement remain separate obligations. Legacy tier edit/reservation concurrency: actual-handler direct/free-checkout counterexamples in both mutation orders, current-sold conditional edits and shared locked inventory authority; empty/exact/increased tier and event capacity compatibility. A bounded two-writer design model exposes stale sold, cached totals and omitted tier locking; no SQL refinement or global all-writer inventory proof. Legacy new-hold eligibility: actual normal organizer lifecycle/privacy changes racing both legacy purchase routes, exact refusal with zero effects and reverse-order admitted-sale preservation. Current locked predicate is shared; bounded editor/buyer model exposes cached eligibility, omitted lock and committed refusal-effects controls. Capability-catalog governance and SQL refinement remain separate.; actual-handler final fee-inclusive admission boundary/promo/free/replay regressions and separately scoped arithmetic evidence; Legacy pricing snapshot: normal organizer price/currency edits before new-hold admission, zero-effect409, harmless edits, earlier-sale preservation and free idempotent replay. Bounded buyer/editor pricing model with omitted price/currency/lock/refusal-effect controls; historical snapshots and later provider recovery remain separate. Actual Tier FIFO schedules and controlled removal of only the financial read FOR UPDATE verify that the lock is necessary even while Inventory locking remains.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -15045,12 +15045,12 @@
     {
       "id": "SYS-VERIFY-CONTAINER-CLEANUP-001",
       "title": "Retain cleanup evidence and recognize only exact inspected-container absence",
-      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic.",
+      "statement": "The hosted upload runner must preserve bounded unexpected inspect response context and admit absence only for the exact case-sensitive nonce container, exit1, empty result and the recognized Docker no-such-object diagnostic prefix.",
       "domain": "SYS",
       "authority": "Actual PR677 hostedCI41009219715/job123911806221 lost cleanup response context; autonomous verification correctness mandate.",
       "source": "formal/system/container-cleanup-evidence.md",
       "contract": "formal/system/container-cleanup-evidence.md",
-      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout and exact case-insensitive error: no such object: <inspected nonce name>. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
+      "property": "Inspect success retains nonce-checked removal by ID. Absence requires exit1, empty or [] stdout, a case-insensitive fixed error: no such object: prefix and a byte-exact inspected nonce name suffix after existing outer whitespace stripping. Every other nonzero result fails with bounded diagnostic context; primary exceptions remain displayed.",
       "actors": [
         "Hosted CI upload verifier",
         "Maintainer diagnosing a failed gate"
@@ -15102,15 +15102,16 @@
         "scripts/test-persistent-uploads-container-diagnostics.py"
       ],
       "formalModels": [],
-      "verification": "12 mocked actual-main-path tests including four recognized missing-object variants and seven nearby refusals; old classifier reproduces lowercase-response refusal and daemon-error false acceptance. Original diagnostic fault controls remain historical.",
-      "evidence": "formal/system/container-cleanup-evidence.md; reports/container-cleanup-evidence-2026-10-30.json",
+      "verification": "13 mocked actual-main-path tests retain the published12 cases and add case-different-name refusal. On unchanged b99, the new expected-refusal assertion fails; removing only the additive exact-name check reproduces that assertion and restored13 pass. Earlier lowercase/daemon-error and diagnostic controls remain historical source-bound evidence.",
+      "evidence": "formal/system/container-cleanup-evidence.md; historical reports/container-cleanup-evidence-2026-10-30.json; separate follow-up reports/container-exact-name-2026-10-30.json",
       "critical": false,
       "status": "specified and implemented",
-      "confidence": "Actual hosted response identifies the later failure cause; finite actual-runner simulations pass. No local Docker or current-head hosted qualification claim.",
+      "confidence": "Tagged Docker/Moby source establishes case-sensitive name identity. The current wrong-case response-binding counterexample is simulated; the published lowercase repair remains distinct. No hosted wrong-case response or production incident is claimed.",
       "ambiguity": [
         "The original PR677 Docker response remains unknown; later PR679 response is retained in job123928715883.",
         "Exact classifier covers the recorded Docker spellings, not every version or concurrent daemon state.",
-        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee."
+        "No new subprocess capture-memory bound, real Linux/container durability, forced-termination cleanup or deployment guarantee.",
+        "The b99 wording combined exact inspected identity and whole-message case insensitivity; this refinement limits capitalization independence to the fixed diagnostic prefix. Correct CLI behavior echoes the requested ref; no real misbound response has been observed."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -16766,7 +16767,7 @@
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
     "scripts/__tests__/test-child-completion.test.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
-    "scripts/__tests__/ticket-admission-model.test.mjs": "357f2737da9c4481ee29dc1ddcd1bc2361dfb4441d7b05be31f6cd8f987e1b0e",
+    "scripts/__tests__/ticket-admission-model.test.mjs": "5d6cf2382d8bb6775cda94d443561ed170dcf5dded72bd55e12ee2c96b9f9caf",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
@@ -16945,8 +16946,8 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
-    "scripts/test-persistent-uploads-container-diagnostics.py": "a2e35a6d897b0cfeeaa5f8ccfd60b3f33ea896399e4c8b3172c2cdfb6bcd0da7",
-    "scripts/test-persistent-uploads-container.py": "29f52440066cf054433220032739ba270253a37bb39f5f01c694827eb87cdc30",
+    "scripts/test-persistent-uploads-container-diagnostics.py": "9d53526e954744bf8bb9b8ae9520d3edc781e19baea9e85dfe4796fbf8a582ce",
+    "scripts/test-persistent-uploads-container.py": "3e2657400ab6306b4b6f89568cefb5bbec665db31dc87ff006460d889612de1b",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
@@ -17741,7 +17742,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "e924dc7a2a821fcc5b1a7fa4e743801c9cb4668f842228c41470c65ca2c475af",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "2c29e3ec47211c0393b94670ac1b9b2aa20c34409278986199bd40a74a5d5a9c",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "093cf4283033cc09ef061e8dd726afa89fcc22acd43a5d7e6760c566c96b4080",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -17791,7 +17792,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "8d471fe31c3c7edb9c8e8508c17e7d668ea547e8a6087ce749cb34a226037945",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "a5a95be5765dc8f62e3a9432aabe18564f9b1f93d21d276e7170c32931f03a6e",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -34448,7 +34449,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "357f2737da9c4481ee29dc1ddcd1bc2361dfb4441d7b05be31f6cd8f987e1b0e",
+      "sha256": "5d6cf2382d8bb6775cda94d443561ed170dcf5dded72bd55e12ee2c96b9f9caf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38427,7 +38428,7 @@
     {
       "id": "SURFACE-5c0faab232af0d35",
       "path": "scripts/test-persistent-uploads-container-diagnostics.py",
-      "sha256": "a2e35a6d897b0cfeeaa5f8ccfd60b3f33ea896399e4c8b3172c2cdfb6bcd0da7",
+      "sha256": "9d53526e954744bf8bb9b8ae9520d3edc781e19baea9e85dfe4796fbf8a582ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38439,7 +38440,7 @@
     {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "29f52440066cf054433220032739ba270253a37bb39f5f01c694827eb87cdc30",
+      "sha256": "3e2657400ab6306b4b6f89568cefb5bbec665db31dc87ff006460d889612de1b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56238,7 +56239,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "2c29e3ec47211c0393b94670ac1b9b2aa20c34409278986199bd40a74a5d5a9c",
+      "sha256": "093cf4283033cc09ef061e8dd726afa89fcc22acd43a5d7e6760c566c96b4080",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57421,7 +57422,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "8d471fe31c3c7edb9c8e8508c17e7d668ea547e8a6087ce749cb34a226037945",
+      "sha256": "a5a95be5765dc8f62e3a9432aabe18564f9b1f93d21d276e7170c32931f03a6e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65158,7 +65159,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "06c451e2f1fd650efb6c0aca970404235d1b1733ed6fc552563e4661d3982a3a",
+      "sourceSha256": "a37379e8daebf4ae2c8478de8bbfe9f6de45e1006023511e632b7645d274defe",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65186,7 +65187,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "06c451e2f1fd650efb6c0aca970404235d1b1733ed6fc552563e4661d3982a3a",
+      "sourceSha256": "a37379e8daebf4ae2c8478de8bbfe9f6de45e1006023511e632b7645d274defe",
       "definition": {
         "states": [
           "absent",
@@ -65216,7 +65217,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "06c451e2f1fd650efb6c0aca970404235d1b1733ed6fc552563e4661d3982a3a",
+      "sourceSha256": "a37379e8daebf4ae2c8478de8bbfe9f6de45e1006023511e632b7645d274defe",
       "definition": {
         "export": [
           "queued",
