@@ -30,6 +30,7 @@ before(async () => {
   await sql(await readFile(new URL('../tdf-hq/sql/2026-11-04_content_storage_deletion.sql', import.meta.url), 'utf8'));
   await sql(await readFile(new URL('../tdf-hq/sql/2026-11-04_content_storage_accounting.sql', import.meta.url), 'utf8'));
   await sql(await readFile(new URL('../tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql', import.meta.url), 'utf8'));
+  await sql(await readFile(new URL('../tdf-hq/sql/2026-11-06_content_storage_security.sql', import.meta.url), 'utf8'));
   // These synthetic fixture accounts have no pre-existing objects.
   await sql('INSERT INTO content_storage_account(party_id,legacy_usage_verified) SELECT id,true FROM party ON CONFLICT(party_id) DO UPDATE SET legacy_usage_verified=true');
 });
@@ -91,6 +92,7 @@ test('reapplies the ordered migration batch and refuses rollback while uploads e
   for (const name of ['content_storage', 'content_storage_drive', 'content_storage_deletion', 'content_storage_accounting', 'content_storage_delete_capacity']) {
     await sql(await readFile(new URL(`../tdf-hq/sql/2026-11-04_${name}.sql`, import.meta.url), 'utf8'));
   }
+  await sql(await readFile(new URL('../tdf-hq/sql/2026-11-06_content_storage_security.sql', import.meta.url), 'utf8'));
   await assert.rejects(sql(await readFile(new URL('../tdf-hq/sql/2026-11-04_content_storage_rollback.sql', import.meta.url), 'utf8')));
   assert.equal(await sql('SELECT count(*)>0 FROM content_storage_upload'), 't');
 });

@@ -59,6 +59,7 @@ library
     TDF.API.Drive
     TDF.API.ContentStorage
     TDF.ContentStorage
+    TDF.StorageVault
     TDF.API.Rooms
     TDF.API.Services
     TDF.API.Sessions
@@ -337,6 +338,7 @@ library
     , tagged
     , crypton
     , memory
+    , unix
     , JuicyPixels
 
 
@@ -384,6 +386,7 @@ test-suite tdf-hq-test
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
     TDF.MusicPurchaseSpec
+    TDF.StorageSecuritySpec
     TDF.DriveReplaySpec
     TDF.WhatsAppRedeliverySpec
     TDF.CourseIdentitySpec

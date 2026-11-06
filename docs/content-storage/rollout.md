@@ -1,5 +1,70 @@
 # Storage rollout and recovery
 
+Production activation remains blocked. PR703 and Mobile179 are already merged;
+this security follow-up starts from root main c47c2a8d8851a58a828dec830704f8c352496c20
+and its exact Mobile14318a7 pin. No production upload, deployment, inventory
+application or provider operation is performed by this change.
+
+The candidate adds `CONTENT_STORAGE_UPLOADS_ENABLED` (disabled by default),
+server-only `CONTENT_STORAGE_VAULT_KEY` (32 random bytes encoded as 64 hex digits),
+AEAD-encrypted delegated credentials, account-bound opaque handles, authenticated
+private readers and transactional canonical attachment references. Keep the key
+out of public environment variables, logs and DB backups. Independently protect
+and test recovery of the key with the matching database/files backup. Rotation
+requires a reviewed re-encryption/reconnect procedure; replacing the key alone
+makes old envelopes unavailable and never falls back to plaintext credentials.
+Disconnect erases the active envelope; backups follow their retention policy.
+Users can separately revoke the application's Google consent in Google settings.
+
+All account uploads stay disabled until the historical inventory is reviewed,
+canonical publication body/manifest accounting and routing is reconciled, the
+native selection/consent UI is complete, exact-image HTTP/provider/persistence
+and coordinated restore tests pass, and required independent review/CI are green.
+A root flag or successful build is not that evidence. Keep `RUN_MIGRATIONS=false`.
+The additive November 6 migration follows the five unchanged November 4 steps;
+preserve its introduction commit and the entire ordered migration manifest.
+
+Mobile main has subsequently integrated an independent artist-launch contract
+(PR180), while the root's shipped pin is Mobile14318a7. The security companion is
+rooted at that exact pin and preserves the tested root contract. Before merging
+it into newer Mobile main, reconcile that successor's additional generated
+contracts against their authoritative backend branch; do not remove them as an
+incidental storage change. This cross-branch dependency blocks independent Mobile
+activation and is distinct from the already completed Mobile179 merge.
+
+The current connected GitHub integration again rejected Mobile blob publication
+with HTTP403 (`Resource not accessible by integration`). The reviewed local
+companion is preserved in `mobile-companion.patch`, based on published14318a7;
+root intentionally retains that published gitlink. Apply the patch only to a clean14318a7 checkout using `git apply --unidiff-zero docs/content-storage/mobile-companion.patch` from the appropriate repository path. The patch contains regenerated
+API types plus native authority/session tests. Its publication and successor
+contract reconciliation remain blocked; do not point root at an unpublished SHA.
+
+## Required operational evidence
+
+- Review a byte/hash/ownership inventory of every managed root and historical
+  attachment store, and distinguish personal-provider references from TDF bytes.
+  Unknown ownership or unknown size blocks capacity reconciliation; never record
+  zero as an assumption. Existing higher allowances remain intact.
+- Test owner A, unrelated B, a permitted domain reader, revoked grant and revoked
+  TDF session over the actual authenticated HTTP route. Private files must fail
+  through assets/CDN paths, including guessed names, traversal and root overlap.
+- Verify Google account consent, refresh, disconnect/revocation and explicit
+  public permissions using an isolated provider account. Never reuse shared TDF
+  credentials or folders for a personal destination. A private file's inherited
+  folder permissions are rejected in the personal-private path; complete owner-only ACL verification and real-provider creation tests are required. Do not certify them
+  from a local mock.
+- Rehearse duplicate/concurrent requests, process termination during copy/rename/
+  commit, reconnect during refresh, interrupted deletion, persistent-volume
+  replacement, disk exhaustion and coordinated restore of files/database/key.
+  Compare SHA-256 hashes, manifests, reservations and tombstones after restore.
+- Confirm all public `content/` traffic reaches the manifest-checking API reader.
+  Direct static/CDN mount access bypasses that authorization boundary and blocks
+  activation. Purge pre-existing caches and prove private/staging denial.
+
+The commands and historical receipts below are retained as prior evidence;
+they do not certify the current candidate or production.
+
+
 Status: implementation candidate; production activation blocked by the open
 obligations in `formal/system/content-storage.md`. No production mutation or
 Google provider write is established by this record.

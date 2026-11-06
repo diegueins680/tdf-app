@@ -5858,10 +5858,20 @@ paths:
         '404':
           description: Not found
   /drive/token:
+    delete:
+      tags: [Drive]
+      summary: Disconnect personal Google Drive
+      description: Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
+      operationId: disconnectDrive
+      security:
+        - bearerAuth: []
+      responses:
+        '204': { description: Personal connection erased }
+        '401': { description: Current authenticated session required }
     post:
       tags: [Drive]
       summary: Exchange Google Drive OAuth code
-      description: Exchanges a Google OAuth code (PKCE) for Drive tokens.
+      description: Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
       operationId: exchangeDriveToken
       security:
         - bearerAuth: [ ]
@@ -5884,7 +5894,7 @@ paths:
     post:
       tags: [Drive]
       summary: Refresh Google Drive access token
-      description: Refreshes a Google Drive access token using a refresh token.
+      description: Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
       operationId: refreshDriveToken
       security:
         - bearerAuth: [ ]
@@ -17287,6 +17297,7 @@ components:
         refreshToken:
           type: string
     DriveTokenResponse:
+      description: Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential.
       type: object
       required: [accessToken, expiresIn]
       properties:

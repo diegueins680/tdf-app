@@ -16047,10 +16047,10 @@
     {
       "id": "MEDIA-STORAGE-001",
       "title": "Explicit account storage and safe upload recovery",
-      "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals.",
-      "property": "No personal-to-service fallback; admitted managed occupancy does not exceed entitlement; replay cannot change owner or fingerprint; unconfirmed deletion retains occupied capacity.",
+      "statement": "Account uploads preserve chosen authority, enforce decimal five-GB reservations, keep delegated credentials server-side with authenticated owner-bound encryption, and admit private readers only through current ownership or a live authorized domain reference.",
+      "property": "No personal-to-service fallback or implicit public permission; private bytes require current session and resource authority; public static reads require a completed public registry entry; uncertain deletion retains capacity.",
       "domain": "MEDIA",
-      "authority": "User-approved November 4 storage and shared upload recovery prompt.",
+      "authority": "User-approved November 4 storage prompt and November 6 security completion request.",
       "source": "User-approved November 4 storage prompt; formal/system/content-storage.md",
       "contract": "formal/system/content-storage.md",
       "actors": [
@@ -16144,7 +16144,11 @@
         "tdf-hq-ui/src/session/useSessionOwner.ts",
         "tdf-hq-ui/src/api/uploadQueue.ts",
         "tdf-hq-ui/src/session/recoverableDraft.ts",
-        "tdf-hq-ui/src/session/useOwnedTabDraft.ts"
+        "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
+        "tdf-hq/src/TDF/StorageVault.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/sql/2026-11-06_content_storage_security.sql",
+        "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -16164,7 +16168,11 @@
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx"
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
+        "tdf-hq/test/TDF/StorageSecuritySpec.hs",
+        "tdf-hq/test/integration/content_storage_security_fixture.sql",
+        "scripts/test-content-storage-security-runtime.sh",
+        "tdf-hq-ui/src/api/contentStorage.security.test.ts"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
@@ -16173,7 +16181,7 @@
       "evidence": "docs/content-storage/rollout.md; scripts/test-content-storage-postgres.mjs; exact-candidate hosted CI logs",
       "status": "specified but missing",
       "critical": true,
-      "confidence": "Partial implementation with bounded executable evidence; no production, real-provider, native-device or system-wide conformance claim.",
+      "confidence": "Security follow-up candidate; directed client/SQL evidence only until exact-head compiled handlers, hosted checks, provider and coordinated restore rehearsals pass. Production remains disabled.",
       "ambiguity": [
         "See the scoped contract for unimplemented acceptance criteria and evidence limits."
       ],

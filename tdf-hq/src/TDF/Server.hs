@@ -12,6 +12,7 @@
 module TDF.Server where
 
 import qualified TDF.ContentStorage as ContentStorage
+import qualified TDF.StorageVault as StorageVault
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
@@ -320,7 +321,8 @@ data GoogleToken = GoogleToken
   , refresh_token :: Maybe Text
   , expires_in    :: Maybe Int
   , token_type    :: Maybe Text
-  } deriving (Generic, Show)
+  } deriving (Generic)
+instance Show GoogleToken where show _ = "<google-credential>"
 instance FromJSON GoogleToken where
   parseJSON = withObject "GoogleToken" $ \o -> do
     accessToken <- o .: "access_token" >>= parseGoogleTokenField "access_token"
@@ -789,7 +791,7 @@ server env =
   :<|> listEngineersPublic
   :<|> bookingPublicServer
   :<|> inventoryStaticServer assetsRoot
-  :<|> assetsServeServer assetsRoot
+  :<|> assetsServeServer env assetsRoot
   :<|> stripeWebhookServer
 
 versionServer :: ServerT Api.VersionAPI AppM
@@ -3221,6 +3223,7 @@ driveServer user =
   driveUploadServer user
   :<|> driveTokenExchangeServer user
   :<|> driveTokenRefreshServer user
+  :<|> StorageVault.revokeConnection user
   :<|> ContentStorage.contentStorageServer user
 
 validateDriveAccess :: AuthedUser -> Either ServerError ()
@@ -3249,6 +3252,10 @@ hasCoherentAuthScope user =
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 driveUploadServer user mAccessToken form@DriveUploadForm{..}
   | duDestination == Just "tdf" = do
+      ContentStorage.requireUploadsEnabled
+      cfg <- asks envConfig
+      unless ("/assets/serve" `T.isSuffixOf` resolveConfiguredAssetsBase cfg)
+        (throwError (ContentStorage.storageError err503 "storage_public_reader_required"))
       unless (hasCoherentAuthScope user) (throwError err403)
       unless (duAuthMode == Just "server" && isNothing mAccessToken && isNothing duAccessToken && isNothing duFolderId) $
         throwError (ContentStorage.storageError err400 "storage_destination_conflict")
@@ -3260,6 +3267,7 @@ driveUploadServer user mAccessToken form@DriveUploadForm{..}
 
 legacyDriveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
+  when (isJust duDestination) ContentStorage.requireUploadsEnabled
   unless (duVisibility `elem` [Nothing, Just "private", Just "public"]) $
     throwError (ContentStorage.storageError err400 "storage_visibility_invalid")
   unless (duDestination `elem` [Nothing, Just "google_drive"]) $
@@ -3268,6 +3276,8 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
   providedToken <-
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
   personal <- either throwError pure (resolveDriveUploadAuthority duAuthMode providedToken)
+  when (personal && duDestination /= Just "google_drive") $
+    throwError (ContentStorage.storageError err400 "storage_destination_required")
   if personal && duDestination == Just "google_drive"
     then unless (hasCoherentAuthScope user) (throwError err403)
     else either throwError pure (validateDriveAccess user)
@@ -3277,13 +3287,18 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
     throwError (ContentStorage.storageError err409 "storage_destination_required")
   mFolderEnv <- if personal then pure Nothing else liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
   folder <- either throwError pure (resolveDriveUploadFolderId duFolderId mFolderEnv)
+  when (personal && sharing /= Just "public" && isJust folder) $
+    throwError (ContentStorage.storageError err400 "storage_private_folder_unsupported")
   nameOverride <- either throwError pure (resolveDriveUploadName duName (fdFileName duFile))
   fileSize <- liftIO (getFileSize (fdPayload duFile))
   either throwError pure (validateDriveUploadFileSize fileSize)
   mimeType <- either throwError pure (resolveDriveUploadMimeType (fdFileCType duFile))
   manager <- pure sharedTlsManager
-  accessToken <- resolveDriveAccessToken manager providedToken
-  stableId <- if personal && duDestination == Just "google_drive" then do
+  accessToken <- if personal
+    then maybe (throwError (ContentStorage.storageError err409 "storage_reconnect_required"))
+           (StorageVault.resolveConnection manager user) providedToken
+    else resolveDriveAccessToken manager providedToken
+  (stableId, providerAccount) <- if personal && duDestination == Just "google_drive" then do
     key <- maybe (throwError (ContentStorage.storageError err400 "storage_idempotency_required")) pure duIdempotencyKey
     identifiers <- liftIO (Safe.tryAny (driveUploadIdentifiers manager accessToken))
     (accountId, proposedId) <- case identifiers of
@@ -3293,14 +3308,26 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
       Right values -> pure values
     bytes <- liftIO (BL.readFile (fdPayload duFile))
     let fingerprint = effectiveDriveUploadFingerprint (auPartyId user) nameOverride mimeType folder bytes sharing
-    Just <$> ContentStorage.bindExternalDriveAttempt user key fingerprint accountId proposedId
-  else pure Nothing
+    bound <- ContentStorage.bindExternalDriveAttempt user key fingerprint accountId proposedId
+    pure (Just bound, Just accountId)
+  else pure (Nothing, Nothing)
   dtoOrErr <-
     liftIO
       (Safe.tryAny (uploadToDrive manager (auPartyId user) accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey sharing stableId) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
-    Right dto -> pure dto
+    Right dto -> do
+      when (personal && sharing /= Just "public") $ do
+        accountId <- maybe (throwError err409) pure providerAccount
+        verified <- liftIO $ Safe.tryAny $ do
+          permissions <- driveJsonRequest manager accessToken
+            ("https://www.googleapis.com/drive/v3/files/" <> T.unpack (duFileId dto)
+              <> "/permissions?fields=nextPageToken,permissions(id,type,role,deleted)&pageSize=100&supportsAllDrives=true")
+          pure (privateDrivePermissionsSafe accountId permissions)
+        case verified of
+          Right True -> pure ()
+          _ -> throwError (ContentStorage.storageError err403 "storage_private_permissions_unverified")
+      pure dto
     Left err -> case fromException err of
       Just replayError -> if errHTTPCode replayError == 409 then throwError replayError
                           else throwError (storageProviderError personal (replayError :: ServerError))
@@ -3334,7 +3361,23 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
 -- Explicit provider destinations default private; absent flags retain legacy callers.
 resolveDriveUploadVisibility :: Maybe Text -> Maybe Text -> Maybe Text
 resolveDriveUploadVisibility (Just "google_drive") visibility = Just (fromMaybe "private" visibility)
-resolveDriveUploadVisibility _ visibility = visibility
+resolveDriveUploadVisibility _ visibility = Just (fromMaybe "private" visibility)
+
+-- A private personal result is never returned for an uninspected, paginated,
+-- inherited, domain, group, anyone, or foreign-user ACL. New private files are
+-- created in the personal root, never in a caller-selected shared folder.
+privateDrivePermissionsSafe :: Text -> Value -> Bool
+privateDrivePermissionsSafe owner value = fromMaybe False $ parseMaybe
+  (withObject "Drive ACL" $ \acl -> do
+    next <- acl .:? "nextPageToken" :: Parser (Maybe Text)
+    permissions <- acl .: "permissions" :: Parser [Value]
+    entries <- mapM (withObject "Permission" $ \permission -> do
+      identifier <- permission .: "id"
+      kind <- permission .: "type"
+      role <- permission .: "role"
+      deleted <- permission .:? "deleted" .!= False
+      pure (identifier == owner && kind == ("user" :: Text) && role == ("owner" :: Text) && not deleted)) permissions
+    pure (isNothing next && length entries == 1 && and entries)) value
 
 resolveDriveUploadAuthority :: Maybe Text -> Maybe Text -> Either ServerError Bool
 resolveDriveUploadAuthority authMode token = case (authMode, token) of
@@ -3603,6 +3646,7 @@ validateDriveAccessTokenWith baseError token
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
 driveTokenExchangeServer user payload = do
+  ContentStorage.requireUploadsEnabled
   unless (hasCoherentAuthScope user) (throwError err403)
   Env{envConfig} <- ask
   manager <- pure sharedTlsManager
@@ -3617,21 +3661,14 @@ driveTokenExchangeServer user payload = do
     , ("redirect_uri", TE.encodeUtf8 redirectResolved)
     , ("grant_type", "authorization_code")
     ] `catchError` (throwError . storageProviderError True)
-  pure (driveTokenResponseFrom token Nothing)
+  StorageVault.storeConnection user (access_token token) (refresh_token token)
+    (fromMaybe 3600 (expires_in token))
 
 driveTokenRefreshServer :: AuthedUser -> DriveTokenRefreshRequest -> AppM DriveTokenResponse
 driveTokenRefreshServer user payload = do
   unless (hasCoherentAuthScope user) (throwError err403)
   refreshTokenVal <- either throwError pure (validateDriveTokenRefreshRequest payload)
-  manager <- pure sharedTlsManager
-  (cid, secret) <- loadDriveClientCreds
-  token <- requestGoogleToken manager
-    [ ("client_id", TE.encodeUtf8 cid)
-    , ("client_secret", TE.encodeUtf8 secret)
-    , ("refresh_token", TE.encodeUtf8 refreshTokenVal)
-    , ("grant_type", "refresh_token")
-    ] `catchError` (throwError . storageProviderError True)
-  pure (driveTokenResponseFrom token (Just refreshTokenVal))
+  StorageVault.refreshConnection sharedTlsManager user refreshTokenVal
 
 validateDriveTokenExchangeRequest
   :: AppConfig
@@ -3779,15 +3816,6 @@ isSafeDriveRedirectUri uri
 
 googleDriveOAuthCallbackPath :: Text
 googleDriveOAuthCallbackPath = "/oauth/google-drive/callback"
-
-driveTokenResponseFrom :: GoogleToken -> Maybe Text -> DriveTokenResponse
-driveTokenResponseFrom GoogleToken{..} fallbackRefresh =
-  DriveTokenResponse
-    { accessToken = access_token
-    , refreshToken = refresh_token <|> fallbackRefresh
-    , expiresIn = fromMaybe 3600 expires_in
-    , tokenType = token_type
-    }
 
 requestGoogleToken :: Manager -> [(ByteString, ByteString)] -> AppM GoogleToken
 requestGoogleToken manager form = do
@@ -6460,6 +6488,9 @@ updateCourseRegistrationNotes rawSlug regId CourseRegistrationNotesUpdate{..} = 
     loadCourseRegistrationCounts regKey
   pure (toCourseRegistrationDTOWithCounts receiptCount followUpCount (Entity regKey updated))
 
+storageApiBase :: AppConfig -> Text
+storageApiBase cfg = fromMaybe "https://api.tdfrecords.net" (T.stripSuffix "/assets/serve" (resolveConfiguredAssetsBase cfg))
+
 createCourseRegistrationReceipt
   :: AuthedUser
   -> Text
@@ -6487,18 +6518,18 @@ createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCrea
         , ME.courseRegistrationReceiptCreatedAt = now
         , ME.courseRegistrationReceiptUpdatedAt = now
         }
-  receiptId <- runDB $ insert receipt
-  void $ runDB $ insertCourseRegistrationFollowUp
-    regKey
-    (ME.courseRegistrationPartyId reg)
-    (Just (auPartyId user))
-    "payment_receipt"
-    (Just "Comprobante de pago agregado")
-    (fromMaybe "Se agregó un comprobante de pago." (cleanOptional notes <|> fileNameVal))
-    (Just fileUrlVal)
-    fileNameVal
-    Nothing
-    now
+  cfg <- asks envConfig
+  receiptId <- ContentStorage.runReferenceMutation user $ do
+    identifier <- insert receipt
+    ContentStorage.requireReference user (storageApiBase cfg) "course_receipt" (fromSqlKey identifier) (Just fileUrlVal)
+    followUp <- insertCourseRegistrationFollowUp
+      regKey (ME.courseRegistrationPartyId reg) (Just (auPartyId user))
+      "payment_receipt" (Just "Comprobante de pago agregado")
+      (fromMaybe "Se agregó un comprobante de pago." (cleanOptional notes <|> fileNameVal))
+      (Just fileUrlVal) fileNameVal Nothing now
+    ContentStorage.requireReference user (storageApiBase cfg) "course_follow_up"
+      (fromSqlKey (entityKey followUp)) (Just fileUrlVal)
+    pure identifier
   pure (toCourseRegistrationReceiptDTO (Entity receiptId receipt))
 
 fetchCourseRegistrationReceiptEntity
@@ -6525,7 +6556,7 @@ updateCourseRegistrationReceipt
   -> Int64
   -> CourseRegistrationReceiptUpdate
   -> AppM DTO.CourseRegistrationReceiptDTO
-updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationReceiptUpdate{..} = do
+updateCourseRegistrationReceipt user rawSlug regId receiptId CourseRegistrationReceiptUpdate{..} = do
   (ent, Entity receiptKey receipt) <- fetchCourseRegistrationReceiptEntity rawSlug regId receiptId
   now <- liftIO getCurrentTime
   fileUrlVal <- case fileUrl of
@@ -6550,14 +6581,17 @@ updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationRece
               maybe (ME.courseRegistrationReceiptNotes receipt) (cleanOptional . Just) notes
           , ME.courseRegistrationReceiptUpdatedAt = now
           }
-  runDB $ update receiptKey
-    [ ME.CourseRegistrationReceiptPartyId =. ME.courseRegistrationReceiptPartyId updated
-    , ME.CourseRegistrationReceiptFileUrl =. ME.courseRegistrationReceiptFileUrl updated
-    , ME.CourseRegistrationReceiptFileName =. ME.courseRegistrationReceiptFileName updated
-    , ME.CourseRegistrationReceiptMimeType =. ME.courseRegistrationReceiptMimeType updated
-    , ME.CourseRegistrationReceiptNotes =. ME.courseRegistrationReceiptNotes updated
-    , ME.CourseRegistrationReceiptUpdatedAt =. now
-    ]
+  cfg <- asks envConfig
+  ContentStorage.runReferenceMutation user $ do
+    ContentStorage.requireReference user (storageApiBase cfg) "course_receipt" (fromSqlKey receiptKey) (Just fileUrlVal)
+    update receiptKey
+      [ ME.CourseRegistrationReceiptPartyId =. ME.courseRegistrationReceiptPartyId updated
+      , ME.CourseRegistrationReceiptFileUrl =. ME.courseRegistrationReceiptFileUrl updated
+      , ME.CourseRegistrationReceiptFileName =. ME.courseRegistrationReceiptFileName updated
+      , ME.CourseRegistrationReceiptMimeType =. ME.courseRegistrationReceiptMimeType updated
+      , ME.CourseRegistrationReceiptNotes =. ME.courseRegistrationReceiptNotes updated
+      , ME.CourseRegistrationReceiptUpdatedAt =. now
+      ]
   pure (toCourseRegistrationReceiptDTO (Entity receiptKey updated))
 
 deleteCourseRegistrationReceipt
@@ -6609,17 +6643,14 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
       (resolveCourseRegistrationAttachmentName attachmentUrlVal Nothing attachmentName)
   mNextFollowUpAt <- parseOptionalUtcText "nextFollowUpAt" nextFollowUpAt
   now <- liftIO getCurrentTime
-  followUp <- runDB $ insertCourseRegistrationFollowUp
-    (entityKey ent)
-    (ME.courseRegistrationPartyId (entityVal ent))
-    (Just (auPartyId user))
-    entryTypeVal
-    subject
-    notesVal
-    attachmentUrlVal
-    attachmentNameVal
-    mNextFollowUpAt
-    now
+  cfg <- asks envConfig
+  followUp <- ContentStorage.runReferenceMutation user $ do
+    inserted <- insertCourseRegistrationFollowUp
+      (entityKey ent) (ME.courseRegistrationPartyId (entityVal ent))
+      (Just (auPartyId user)) entryTypeVal subject notesVal attachmentUrlVal
+      attachmentNameVal mNextFollowUpAt now
+    ContentStorage.requireReference user (storageApiBase cfg) "course_follow_up" (fromSqlKey (entityKey inserted)) attachmentUrlVal
+    pure inserted
   pure (toCourseRegistrationFollowUpDTO followUp)
 
 updateCourseRegistrationFollowUp
@@ -6629,7 +6660,7 @@ updateCourseRegistrationFollowUp
   -> Int64
   -> CourseRegistrationFollowUpUpdate
   -> AppM DTO.CourseRegistrationFollowUpDTO
-updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFollowUpUpdate{..} = do
+updateCourseRegistrationFollowUp user rawSlug regId followUpId CourseRegistrationFollowUpUpdate{..} = do
   (ent, Entity followUpKey followUp) <- fetchCourseRegistrationFollowUpEntity rawSlug regId followUpId
   notesVal <- case notes of
     Nothing -> pure (ME.courseRegistrationFollowUpNotes followUp)
@@ -6666,16 +6697,19 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
           , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
           , ME.courseRegistrationFollowUpUpdatedAt = now
           }
-  runDB $ update followUpKey
-    [ ME.CourseRegistrationFollowUpPartyId =. ME.courseRegistrationFollowUpPartyId updated
-    , ME.CourseRegistrationFollowUpEntryType =. ME.courseRegistrationFollowUpEntryType updated
-    , ME.CourseRegistrationFollowUpSubject =. ME.courseRegistrationFollowUpSubject updated
-    , ME.CourseRegistrationFollowUpNotes =. ME.courseRegistrationFollowUpNotes updated
-    , ME.CourseRegistrationFollowUpAttachmentUrl =. ME.courseRegistrationFollowUpAttachmentUrl updated
-    , ME.CourseRegistrationFollowUpAttachmentName =. ME.courseRegistrationFollowUpAttachmentName updated
-    , ME.CourseRegistrationFollowUpNextFollowUpAt =. ME.courseRegistrationFollowUpNextFollowUpAt updated
-    , ME.CourseRegistrationFollowUpUpdatedAt =. now
-    ]
+  cfg <- asks envConfig
+  ContentStorage.runReferenceMutation user $ do
+    ContentStorage.requireReference user (storageApiBase cfg) "course_follow_up" (fromSqlKey followUpKey) attachmentUrlVal
+    update followUpKey
+      [ ME.CourseRegistrationFollowUpPartyId =. ME.courseRegistrationFollowUpPartyId updated
+      , ME.CourseRegistrationFollowUpEntryType =. ME.courseRegistrationFollowUpEntryType updated
+      , ME.CourseRegistrationFollowUpSubject =. ME.courseRegistrationFollowUpSubject updated
+      , ME.CourseRegistrationFollowUpNotes =. ME.courseRegistrationFollowUpNotes updated
+      , ME.CourseRegistrationFollowUpAttachmentUrl =. ME.courseRegistrationFollowUpAttachmentUrl updated
+      , ME.CourseRegistrationFollowUpAttachmentName =. ME.courseRegistrationFollowUpAttachmentName updated
+      , ME.CourseRegistrationFollowUpNextFollowUpAt =. ME.courseRegistrationFollowUpNextFollowUpAt updated
+      , ME.CourseRegistrationFollowUpUpdatedAt =. now
+      ]
   pure (toCourseRegistrationFollowUpDTO (Entity followUpKey updated))
 
 deleteCourseRegistrationFollowUp
@@ -9868,18 +9902,23 @@ inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
 inventoryStaticServer assetsRoot =
   serveDirectoryFileServer (assetsRoot </> "inventory")
 
-assetsServeServer :: FilePath -> ServerT Api.AssetsServeAPI AppM
-assetsServeServer assetsRoot =
+assetsServeServer :: Env -> FilePath -> ServerT Api.AssetsServeAPI AppM
+assetsServeServer env assetsRoot =
   case serveDirectoryFileServer assetsRoot of
-    Tagged staticApplication -> Tagged $ \request sendResponse ->
-      if assetsServePathAllowed (Wai.pathInfo request)
-        then staticApplication request sendResponse
+    Tagged staticApplication -> Tagged $ \request sendResponse -> do
+      rootsSafe <- ContentStorage.publicRequestSafe assetsRoot (Wai.pathInfo request)
+      committedPublic <- if rootsSafe then ContentStorage.publicObjectAllowed env (Wai.pathInfo request) else pure False
+      let respond = if take 1 (Wai.pathInfo request) == ["content"]
+            then sendResponse . Wai.mapResponseHeaders (("Cache-Control","no-store") :)
+            else sendResponse
+      if assetsServePathAllowed (Wai.pathInfo request) && committedPublic
+        then staticApplication request respond
         else sendResponse (Wai.responseLBS status404 [] "Not found")
 
 assetsServePathAllowed :: [Text] -> Bool
-assetsServePathAllowed (firstSegment : _) =
-  firstSegment `notElem` [".internal-feedback", ".content-storage-staging"]
-assetsServePathAllowed [] = True
+assetsServePathAllowed = all $ \segment ->
+  segment `notElem` [".", "..", ".internal-feedback", ".content-storage-staging"]
+    && not (T.any (`elem` ['/', '\\', '\NUL']) segment)
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
@@ -21433,7 +21472,7 @@ uploadToDrive manager actor accessToken file mimeTypeTxt mName mFolder mIdempote
     unless (darSha256 driveResp == Just contentHash && darSize driveResp == Just (T.pack (show (BL.length fileBytes)))) $
       throwIO (ContentStorage.storageError err409 "storage_integrity_pending")
   -- A new upload never grants public access without an explicit sharing choice.
-  let shouldShare = mVisibility `elem` [Nothing, Just "public"]
+  let shouldShare = mVisibility == Just "public"
   let permBody = encode (object ["role" .= ("reader" :: Text), "type" .= ("anyone" :: Text)])
   permReq0 <- parseRequest $
     "https://www.googleapis.com/drive/v3/files/" <>

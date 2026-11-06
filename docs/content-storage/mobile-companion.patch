@@ -1,172 +1,29 @@
-diff --git a/__tests__/uploadRecovery.test.ts b/__tests__/uploadRecovery.test.ts
-new file mode 100644
-index 0000000..1a338e6
---- /dev/null
-+++ b/__tests__/uploadRecovery.test.ts
-@@ -0,0 +1,46 @@
-+import { uploadMedia } from '../src/api/upload';
-+
-+jest.mock('expo-crypto', () => ({ CryptoDigestAlgorithm: { SHA256: 'SHA-256' }, randomUUID: () => 'synthetic-upload-id', digestStringAsync: async () => 'a'.repeat(64) }));
-+jest.mock('../src/lib/api', () => ({ API_BASE: 'https://api.tdf.test', UPLOAD_BASE: 'https://api.tdf.test/drive/upload' }));
-+jest.mock('../src/api/client', () => ({
-+  getAuthToken: () => 'Bearer synthetic-user',
-+  captureAuthSession: () => ({ authorization: 'Bearer synthetic-user', signal: new AbortController().signal, version: 1 }),
-+  assertAuthSession: jest.fn(),
-+}));
-+
-+const fetchMock = jest.fn();
-+beforeEach(() => { global.fetch = fetchMock; fetchMock.mockReset(); });
-+const image = { uri: 'file:///synthetic-cover.png', mimeType: 'image/png', fileName: 'cover.png' };
-+
-+it('uses the actual DriveUploadDTO response and resolves private managed URLs against the API', async () => {
-+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ duFileId: 'synthetic', duPublicUrl: null, duWebContentLink: '/storage/files/synthetic' }) });
-+  await expect(uploadMedia({ ...image, destination: 'tdf' })).resolves.toBe('https://api.tdf.test/storage/files/synthetic');
-+  expect(fetchMock).toHaveBeenCalledTimes(1);
-+  const options = fetchMock.mock.calls[0][1];
-+  expect(options.headers.Authorization).toBe('Bearer synthetic-user');
-+  expect(options.body.get('destination')).toBe('tdf');
-+  expect(options.body.get('authMode')).toBe('server');
-+  expect(options.body.get('idempotencyKey')).toBe('a'.repeat(64));
-+});
-+it('never replaces missing personal authorization with a shared-account upload', async () => {
-+  await expect(uploadMedia({ ...image, destination: 'google_drive' })).rejects.toMatchObject({ code: 'storage_reconnect_required' });
-+  expect(fetchMock).not.toHaveBeenCalled();
-+});
-+it('retains the retry identity and keeps provider internals out of the error', async () => {
-+  fetchMock.mockResolvedValue({ ok: false, json: async () => ({ code: 'storage_service_unavailable', message: 'synthetic-secret' }) });
-+  const request = uploadMedia({ ...image, destination: 'tdf', idempotencyKey: 'b'.repeat(64) });
-+  await expect(request).rejects.toMatchObject({ idempotencyKey: 'b'.repeat(64), code: 'storage_service_unavailable' });
-+  await expect(request).rejects.not.toThrow('synthetic-secret');
-+});
-+it('requires an explicit or previously saved destination before sending bytes', async () => {
-+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ defaultDestination: null }) });
-+  await expect(uploadMedia(image)).rejects.toMatchObject({ code: 'storage_destination_required' });
-+  expect(fetchMock).toHaveBeenCalledTimes(1);
-+  expect(fetchMock.mock.calls[0][0]).toBe('https://api.tdf.test/storage/me');
-+});
-+
-+it('preserves the retry identity when the transport outcome is unknown', async () => {
-+  fetchMock.mockRejectedValue(new TypeError('synthetic-network-details'));
-+  await expect(uploadMedia({ ...image, destination: 'tdf', idempotencyKey: 'c'.repeat(64) }))
-+    .rejects.toMatchObject({ code: 'storage_outcome_unknown', idempotencyKey: 'c'.repeat(64) });
-+});
 diff --git a/src/api/generated/types.ts b/src/api/generated/types.ts
-index 694f9b1..c6612a3 100644
+index c6612a3..31d0dfe 100644
 --- a/src/api/generated/types.ts
 +++ b/src/api/generated/types.ts
-@@ -371,6 +371,75 @@ export interface paths {
-         patch: operations["operationsDecideApproval"];
-         trace?: never;
-     };
-+    "/storage/me": {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path?: never;
-+            cookie?: never;
+@@ -4037 +4037 @@ export interface paths {
+-         * @description Exchanges a Google OAuth code (PKCE) for Drive tokens.
++         * @description Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
+@@ -4040 +4040,5 @@ export interface paths {
+-        delete?: never;
++        /**
++         * Disconnect personal Google Drive
++         * @description Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
++         */
++        delete: operations["disconnectDrive"];
+@@ -4057 +4061 @@ export interface paths {
+-         * @description Refreshes a Google Drive access token using a refresh token.
++         * @description Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
+@@ -14487,0 +14492 @@ export interface components {
++        /** @description Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential. */
+@@ -27251,0 +27257,25 @@ export interface operations {
++                };
++                content?: never;
++            };
 +        };
-+        /** Read the current account's storage allowance and selected default */
-+        get: operations["getContentStorageAccount"];
-+        put?: never;
-+        post?: never;
-+        delete?: never;
-+        options?: never;
-+        head?: never;
-+        patch?: never;
-+        trace?: never;
 +    };
-+    "/storage/me/destination": {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path?: never;
-+            cookie?: never;
-+        };
-+        get?: never;
-+        /** Change the default for future uploads without moving existing files */
-+        put: operations["setContentStorageDestination"];
-+        post?: never;
-+        delete?: never;
-+        options?: never;
-+        head?: never;
-+        patch?: never;
-+        trace?: never;
-+    };
-+    "/storage/files": {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path?: never;
-+            cookie?: never;
-+        };
-+        /** List owned TDF uploads and pending cleanup intents */
-+        get: operations["listContentStorageFiles"];
-+        put?: never;
-+        post?: never;
-+        delete?: never;
-+        options?: never;
-+        head?: never;
-+        patch?: never;
-+        trace?: never;
-+    };
-+    "/storage/files/{fileId}": {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path?: never;
-+            cookie?: never;
-+        };
-+        /** Download an owned private managed file; public files use the assets mount */
-+        get: operations["downloadPrivateContentStorageFile"];
-+        put?: never;
-+        post?: never;
-+        /** Persist an owner-authorized deletion intent and remove its managed bytes */
-+        delete: operations["deleteContentStorageFile"];
-+        options?: never;
-+        head?: never;
-+        patch?: never;
-+        trace?: never;
-+    };
-     "/drive/upload": {
-         parameters: {
-             query?: never;
-@@ -9071,6 +9140,31 @@ export interface paths {
- export type webhooks = Record<string, never>;
- export interface components {
-     schemas: {
-+        StorageFileDTO: {
-+            /** Format: uuid */
-+            fileId: string;
-+            fileName: string;
-+            /** Format: int64 */
-+            byteSize: number;
-+            /** @enum {string} */
-+            status: "uploading" | "completed" | "cancelled";
-+            /** @enum {string} */
-+            visibility: "private" | "public";
-+        };
-+        StorageAccountDTO: {
-+            /** @description Existing unmetered files require operator reconciliation before new TDF storage grows */
-+            legacyUsageVerified: boolean;
-+            /** Format: int64 */
-+            allowanceBytes: number;
-+            /** Format: int64 */
-+            usedBytes: number;
-+            /** Format: int64 */
-+            reservedBytes: number;
-+            /** @enum {string|null} */
-+            defaultDestination: "tdf" | "google_drive" | null;
-+            /** Format: int64 */
-+            revision: number;
-+        };
-         InvoiceLineDTO: {
-             /** Format: int64 */
-             lineId: number;
-@@ -18348,6 +18442,200 @@ export interface operations {
-             };
-         };
-     };
-+    getContentStorageAccount: {
++    disconnectDrive: {
 +        parameters: {
 +            query?: never;
 +            header?: never;
@@ -175,303 +32,131 @@ index 694f9b1..c6612a3 100644
 +        };
 +        requestBody?: never;
 +        responses: {
-+            /** @description Decimal bytes, including capacity reserved by uncertain uploads */
-+            200: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content: {
-+                    "application/json": components["schemas"]["StorageAccountDTO"];
-+                };
-+            };
-+            /** @description Missing or invalid TDF session */
-+            401: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+        };
-+    };
-+    setContentStorageDestination: {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path?: never;
-+            cookie?: never;
-+        };
-+        requestBody: {
-+            content: {
-+                "application/json": {
-+                    /** @enum {string} */
-+                    destination: "tdf" | "google_drive";
-+                    /** Format: int64 */
-+                    expectedRevision: number;
-+                };
-+            };
-+        };
-+        responses: {
-+            /** @description Updated account preference */
-+            200: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content: {
-+                    "application/json": components["schemas"]["StorageAccountDTO"];
-+                };
-+            };
-+            /** @description Missing or invalid TDF session */
-+            401: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+            /** @description Preference was edited concurrently; reread before retrying */
-+            409: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+        };
-+    };
-+    listContentStorageFiles: {
-+        parameters: {
-+            query?: {
-+                after?: string;
-+                limit?: number;
-+            };
-+            header?: never;
-+            path?: never;
-+            cookie?: never;
-+        };
-+        requestBody?: never;
-+        responses: {
-+            /** @description Account-scoped files, ordered by immutable ID */
-+            200: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content: {
-+                    "application/json": components["schemas"]["StorageFileDTO"][];
-+                };
-+            };
-+            /** @description Missing or invalid TDF session */
-+            401: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+        };
-+    };
-+    downloadPrivateContentStorageFile: {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path: {
-+                fileId: string;
-+            };
-+            cookie?: never;
-+        };
-+        requestBody?: never;
-+        responses: {
-+            /** @description Owner-authenticated attachment */
-+            200: {
-+                headers: {
-+                    "Content-Disposition"?: string;
-+                    "Cache-Control"?: string;
-+                    "X-Content-Type-Options"?: string;
-+                    [name: string]: unknown;
-+                };
-+                content: {
-+                    "application/octet-stream": string;
-+                };
-+            };
-+            /** @description Missing or invalid TDF session */
-+            401: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+            /** @description File missing or not owned by the current account */
-+            404: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+            /** @description Stored bytes unavailable */
-+            503: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+        };
-+    };
-+    deleteContentStorageFile: {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path: {
-+                fileId: string;
-+            };
-+            cookie?: never;
-+        };
-+        requestBody?: never;
-+        responses: {
-+            /** @description File deletion confirmed; metadata and tombstone retained */
++            /** @description Personal connection erased */
 +            204: {
 +                headers: {
 +                    [name: string]: unknown;
 +                };
 +                content?: never;
 +            };
-+            /** @description Missing or invalid TDF session */
++            /** @description Current authenticated session required */
 +            401: {
 +                headers: {
 +                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+            /** @description No owned file */
-+            404: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+            /** @description Upload is still running; wait before retrying deletion */
-+            409: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+            /** @description Deletion intent retained for retry; cleanup unconfirmed */
-+            503: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+        };
-+    };
-     uploadDriveFile: {
-         parameters: {
-             query?: never;
-@@ -18365,6 +18653,18 @@ export interface operations {
-                     folderId?: string;
-                     name?: string;
-                     accessToken?: string;
-+                    /**
-+                     * @description Explicit authority; user mode never falls back to TDF credentials
-+                     * @enum {string}
-+                     */
-+                    authMode?: "user" | "server";
-+                    /** @enum {string} */
-+                    destination?: "tdf" | "google_drive";
-+                    /**
-+                     * @description New managed uploads default to private; public is restricted to passive image
-+                     * @enum {string}
-+                     */
-+                    visibility?: "private" | "public";
-                     idempotencyKey?: string;
-                 };
-             };
+diff --git a/src/api/upload.test.ts b/src/api/upload.test.ts
+new file mode 100644
+index 0000000..417bebb
+--- /dev/null
++++ b/src/api/upload.test.ts
+@@ -0,0 +1,37 @@
++jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
++jest.mock('../lib/api', () => ({ API_BASE: 'https://api.tdf.test' }));
++const mockBinding = { authorization: 'Bearer owner-a', signal: new AbortController().signal, version: 1 };
++jest.mock('./client', () => ({
++  getAuthToken: () => 'Bearer owner-a',
++  captureAuthSession: () => mockBinding,
++  assertAuthSession: jest.fn(),
++}));
++import { assertAuthSession } from './client';
++import { uploadMedia, readPrivateStorageFile } from './upload';
++
++const fetchMock = jest.fn();
++const input = { uri: 'file:///private.bin', destination: 'tdf' as const, idempotencyKey: 'a'.repeat(64) };
++beforeEach(() => { jest.clearAllMocks(); global.fetch = fetchMock; });
++
++it('requires explicit destination, stable identity and owner-bound personal consent', async () => {
++  await expect(uploadMedia({ uri: 'file:///private.bin' })).rejects.toThrow('Selecciona');
++  await expect(uploadMedia({ ...input, idempotencyKey: undefined })).rejects.toThrow('identidad estable');
++  await expect(uploadMedia({ ...input, destination: 'google_drive', connectionHandle: 'raw-google-token' })).rejects.toThrow('Conecta');
++  await expect(uploadMedia({ ...input, connectionHandle: 'another-destination' })).rejects.toThrow('personal');
++  expect(fetchMock).not.toHaveBeenCalled();
++});
++
++it('preserves private links and request identity instead of advertising public access', async () => {
++  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ duFileId: 'file', duWebContentLink: '/storage/files/00000000-0000-4000-8000-000000000001', duPublicUrl: null }) });
++  await expect(uploadMedia(input)).resolves.toContain('/storage/files/');
++  expect(fetchMock).toHaveBeenCalledWith('https://api.tdf.test/drive/upload', expect.objectContaining({ signal: mockBinding.signal, headers: { Authorization: mockBinding.authorization } }));
++  expect(assertAuthSession).toHaveBeenCalledTimes(2);
++});
++
++it('does not read private bytes after a session changes', async () => {
++  (assertAuthSession as jest.Mock).mockImplementationOnce(() => { throw new Error('session changed'); });
++  const arrayBuffer = jest.fn();
++  fetchMock.mockResolvedValue({ ok: true, arrayBuffer });
++  await expect(readPrivateStorageFile('00000000-0000-4000-8000-000000000001')).rejects.toThrow('session changed');
++  expect(arrayBuffer).not.toHaveBeenCalled();
++});
 diff --git a/src/api/upload.ts b/src/api/upload.ts
-index cc67d4f..cfa8420 100644
+index cc67d4f..75156ce 100644
 --- a/src/api/upload.ts
 +++ b/src/api/upload.ts
-@@ -1,66 +1,95 @@
- import { Platform } from 'react-native';
+@@ -2,2 +2,2 @@ import { Platform } from 'react-native';
 -import { getAuthToken } from './client';
 -import { UPLOAD_BASE } from '../lib/api';
--
--const UPLOAD_URL = UPLOAD_BASE;
-+import { CryptoDigestAlgorithm, digestStringAsync, randomUUID } from 'expo-crypto';
 +import { assertAuthSession, captureAuthSession, getAuthToken } from './client';
-+import { API_BASE, UPLOAD_BASE } from '../lib/api';
- 
-+export type UploadDestination = 'tdf' | 'google_drive';
- export type UploadResponse = {
++import { API_BASE } from '../lib/api';
+@@ -5 +5,3 @@ import { UPLOAD_BASE } from '../lib/api';
+-const UPLOAD_URL = UPLOAD_BASE;
++export type StorageDestination = 'tdf' | 'google_drive';
++export const isDriveConnectionHandle = (value: unknown): value is string =>
++  typeof value === 'string' && /^tdf-vault-v1_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+@@ -7,13 +9 @@ const UPLOAD_URL = UPLOAD_BASE;
+-export type UploadResponse = {
 -  publicUrl?: string;
 -  webViewLink?: string;
 -  webContentLink?: string;
 -  fileId?: string;
-+  duPublicUrl?: string | null;
-+  duWebViewLink?: string | null;
-+  duWebContentLink?: string | null;
-+  duFileId?: string;
- };
- 
+-};
+-
 -export async function uploadMedia({
 -  uri,
 -  mimeType,
 -  fileName,
 -  uploadLabel = 'archivo',
 -}: {
-+export class StorageUploadError extends Error {
-+  constructor(message: string, readonly code: string, readonly idempotencyKey: string) {
-+    super(message);
-+    this.name = 'StorageUploadError';
-+  }
-+}
-+
-+type UploadInput = {
-   uri: string;
-   mimeType?: string;
-   fileName?: string;
-   uploadLabel?: string;
++export type UploadInput = {
+@@ -24,3 +14,15 @@ export async function uploadMedia({
 -}): Promise<string> {
 -  if (!UPLOAD_URL) {
 -    throw new Error(`No se ha configurado EXPO_PUBLIC_UPLOAD_URL para subir ${uploadLabel}s.`);
-+  destination?: UploadDestination;
++  destination?: StorageDestination;
 +  visibility?: 'private' | 'public';
-+  providerAccessToken?: string;
-+  /** Retain this key when retrying the same selected file and destination. */
 +  idempotencyKey?: string;
++  connectionHandle?: string;
 +};
 +
++// Callers must retain idempotencyKey for retry and ask for an explicit destination.
++// Until native selection/consent UI ships, old callers fail before any network I/O.
 +export async function uploadMedia(input: UploadInput): Promise<string> {
-+  const binding = captureAuthSession(getAuthToken());
-+  const key = input.idempotencyKey ?? await digestStringAsync(CryptoDigestAlgorithm.SHA256, randomUUID());
-+  if (!/^[a-f0-9]{64}$/.test(key)) throw new StorageUploadError('Identidad de carga inválida.', 'storage_idempotency_invalid', key);
-+  const controller = new AbortController();
-+  const abort = () => controller.abort();
-+  binding.signal.addEventListener('abort', abort, { once: true });
-+  if (binding.signal.aborted) controller.abort();
-+  const timer = setTimeout(abort, 120_000);
-+  try {
-+  let destination = input.destination;
-+  if (!destination) {
-+    const response = await fetch(`${API_BASE}/storage/me`, { headers: { Authorization: binding.authorization }, signal: controller.signal });
-+    assertAuthSession(binding);
-+    const account = await response.json() as { defaultDestination?: unknown };
-+    if (!response.ok || !['tdf', 'google_drive'].includes(String(account.defaultDestination))) {
-+      throw new StorageUploadError('Elige dónde guardar el archivo antes de subirlo.', 'storage_destination_required', key);
-+    }
-+    destination = account.defaultDestination as UploadDestination;
++  const { uri, destination, visibility = 'private', idempotencyKey, connectionHandle } = input;
++  if (!destination || !['tdf', 'google_drive'].includes(destination)) {
++    throw new Error('Selecciona dónde guardar el archivo antes de subirlo.');
 +  }
-+  if (destination === 'google_drive' && !input.providerAccessToken) {
-+    throw new StorageUploadError('Conecta tu Google Drive antes de reintentar. El destino no ha cambiado.', 'storage_reconnect_required', key);
-   }
++  if (!idempotencyKey || !/^[a-f0-9]{64}$/.test(idempotencyKey)) {
++    throw new Error('La carga necesita una identidad estable para poder recuperarse.');
+@@ -28 +30,7 @@ export async function uploadMedia({
 -  const token = getAuthToken();
-+  assertAuthSession(binding);
-   const data = new FormData();
++  if (destination === 'google_drive' && !isDriveConnectionHandle(connectionHandle)) {
++    throw new Error('Conecta tu Google Drive personal antes de subir el archivo.');
++  }
++  if (destination === 'tdf' && connectionHandle !== undefined) {
++    throw new Error('La conexión personal no puede usarse para almacenamiento de TDF.');
++  }
++  const binding = captureAuthSession(getAuthToken());
+@@ -30,5 +37,0 @@ export async function uploadMedia({
 -
 -  const name = fileName ?? uri.split('/').pop() ?? 'upload.bin';
 -  const type = mimeType || 'application/octet-stream';
 -  const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
 -
--  data.append('file', {
+@@ -36,3 +39,3 @@ export async function uploadMedia({
 -    uri: uploadUri,
 -    name,
 -    type
--  } as unknown as Blob);
++    uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
++    name: input.fileName ?? uri.split('/').pop() ?? 'upload.bin',
++    type: input.mimeType || 'application/octet-stream',
+@@ -40,7 +43,8 @@ export async function uploadMedia({
 -
 -  const res = await fetch(UPLOAD_URL, {
 -    method: 'POST',
@@ -479,57 +164,52 @@ index cc67d4f..cfa8420 100644
 -      ...(token ? { Authorization: token } : {})
 -    },
 -    body: data
-+  const name = input.fileName ?? input.uri.split('/').pop() ?? 'upload.bin';
-+  const uri = Platform.OS === 'ios' ? input.uri.replace('file://', '') : input.uri;
-+  data.append('file', { uri, name, type: input.mimeType || 'application/octet-stream' } as unknown as Blob);
 +  data.append('destination', destination);
-+  data.append('authMode', destination === 'tdf' ? 'server' : 'user');
-+  data.append('visibility', input.visibility ?? 'private');
-+  data.append('idempotencyKey', key);
-+  if (destination === 'google_drive' && input.providerAccessToken) data.append('accessToken', input.providerAccessToken);
-+  const response = await fetch(UPLOAD_BASE, {
-+    method: 'POST', headers: { Authorization: binding.authorization }, body: data, signal: controller.signal,
-   });
++  data.append('authMode', destination === 'google_drive' ? 'user' : 'server');
++  data.append('visibility', visibility);
++  data.append('idempotencyKey', idempotencyKey);
++  if (connectionHandle) data.append('accessToken', connectionHandle);
++  const res = await fetch(`${API_BASE}/drive/upload`, {
++    method: 'POST', headers: { Authorization: binding.authorization },
++    body: data, signal: binding.signal,
+@@ -48,9 +52,10 @@ export async function uploadMedia({
 -
 -  if (!res.ok) {
 -    const text = await res.text().catch(() => res.statusText);
 -    throw new Error(text || `No se pudo subir el ${uploadLabel}`);
-+  assertAuthSession(binding);
-+  const result = await response.json().catch(() => ({})) as UploadResponse & { code?: string };
-+  if (!response.ok) {
-+    const code = result.code ?? 'storage_service_unavailable';
-+    const message = code === 'storage_reconnect_required' ? 'Conecta de nuevo tu Google Drive y reintenta el mismo archivo.'
-+      : code === 'storage_quota_exceeded' ? 'Tu espacio TDF está lleno. Libera espacio o elige tu propio almacenamiento.'
-+      : 'No pudimos confirmar la carga. Conserva el archivo y reintenta con la misma identidad.';
-+    throw new StorageUploadError(message, code, key);
-+  }
-+  const link = result.duPublicUrl || result.duWebContentLink || result.duWebViewLink;
-+  if (!link) throw new StorageUploadError('No pudimos confirmar el archivo recibido.', 'storage_response_invalid', key);
-+  const url = new URL(link, `${API_BASE}/`);
-+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || (url.protocol === 'http:' && !['localhost', '127.0.0.1', '10.0.2.2'].includes(url.hostname))) {
-+    throw new StorageUploadError('El destino devolvió un enlace inválido.', 'storage_response_invalid', key);
-+  }
-+  return url.toString();
-+  } catch (error) {
-+    if (error instanceof StorageUploadError) throw error;
-+    throw new StorageUploadError('No pudimos confirmar la carga. Reintenta el mismo archivo con la misma identidad.', 'storage_outcome_unknown', key);
-+  } finally {
-+    clearTimeout(timer);
-+    binding.signal.removeEventListener('abort', abort);
-   }
+-  }
 -
 -  const json = (await res.json().catch(() => ({}))) as UploadResponse;
 -  const url = json.publicUrl || json.webViewLink || json.webContentLink;
 -  if (!url) throw new Error('Subida exitosa pero no se devolvió URL pública');
--  return url;
- }
- 
++  assertAuthSession(binding);
++  if (!res.ok) throw new Error(res.status === 503
++    ? 'Las cargas de archivos todavía no están habilitadas o el servicio no está disponible.'
++    : 'No se pudo confirmar la carga. Conserva el archivo y reintenta con la misma identidad.');
++  const json = await res.json() as Record<string, unknown>;
++  assertAuthSession(binding);
++  const url = visibility === 'public' ? json.duPublicUrl : json.duWebContentLink ?? json.duWebViewLink;
++  if (typeof url !== 'string' || !url) throw new Error('La carga no devolvió un enlace autorizado.');
++  if (url.startsWith('/storage/files/')) return `${API_BASE}${url}`;
++  if (!url.startsWith('https://')) throw new Error('Enlace de almacenamiento inválido.');
+@@ -60,5 +65 @@ export async function uploadMedia({
 -export async function uploadImage(input: {
 -  uri: string;
 -  mimeType?: string;
 -  fileName?: string;
 -}): Promise<string> {
--  return uploadMedia({ ...input, uploadLabel: 'imagen' });
--}
-+export const uploadImage = (input: Omit<UploadInput, 'uploadLabel'>): Promise<string> =>
-+  uploadMedia({ ...input, uploadLabel: 'imagen' });
++export async function uploadImage(input: UploadInput): Promise<string> {
+@@ -66,0 +68,13 @@ export async function uploadImage(input: {
++
++export async function readPrivateStorageFile(fileId: string): Promise<ArrayBuffer> {
++  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(fileId)) throw new Error('Archivo inválido');
++  const binding = captureAuthSession(getAuthToken());
++  const response = await fetch(`${API_BASE}/storage/files/${fileId}`, {
++    headers: { Authorization: binding.authorization }, signal: binding.signal, cache: 'no-store',
++  });
++  assertAuthSession(binding);
++  if (!response.ok) throw new Error('Adjunto no disponible para esta cuenta.');
++  const bytes = await response.arrayBuffer();
++  assertAuthSession(binding);
++  return bytes;
++}

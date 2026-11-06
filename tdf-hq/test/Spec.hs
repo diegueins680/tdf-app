@@ -47,6 +47,7 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.StorageSecuritySpec as StorageSecuritySpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
@@ -18025,6 +18026,7 @@ main = hspec $ do
       describe "music-unit-content" MusicContentSpec.spec
       describe "music-unit-ddex" MusicErn432Spec.spec
       describe "music-unit-storage" MusicS3Spec.spec
+    StorageSecuritySpec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec

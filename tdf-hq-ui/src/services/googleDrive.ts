@@ -1,4 +1,4 @@
-import { post } from '../api/client';
+import { del, post } from '../api/client';
 import { getActiveSession } from '../session/SessionContext';
 import { getAuthSessionEpoch } from '../session/authEvents';
 import { UploadFailure } from '../api/uploadFailure';
@@ -6,6 +6,7 @@ import { UploadFailure } from '../api/uploadFailure';
 const TOKEN_KEY = 'tdf-google-drive-token';
 const CODE_VERIFIER_KEY = 'tdf-google-drive-code-verifier';
 const STATE_KEY = 'tdf-google-drive-state';
+export const isDriveConnectionHandle = (value: unknown): value is string => typeof value === 'string' && /^tdf-vault-v1_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const scopedTokenKey = () => { const owner = getActiveSession()?.partyId; return owner ? `${TOKEN_KEY}:${owner}` : null; };
 
 interface StoredToken {
@@ -39,12 +40,9 @@ export interface DriveFileInfo {
 }
 
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
-const GOOGLE_FILES_ENDPOINT = 'https://www.googleapis.com/drive/v3/files';
-const GOOGLE_UPLOAD_ENDPOINT = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
 const getClientId = () => import.meta.env?.VITE_GOOGLE_DRIVE_CLIENT_ID;
 const getRedirectUri = () => import.meta.env?.VITE_GOOGLE_DRIVE_REDIRECT_URI;
-const getFolderId = () => import.meta.env?.VITE_GOOGLE_DRIVE_FOLDER_ID;
 const createNonce = () => crypto.randomUUID().replace(/-/g, '');
 
 const sanitizeReturnTo = (value?: string | null) => {
@@ -146,7 +144,7 @@ export const getStoredToken = (): StoredToken | null => {
     const accessTokenRaw = value['accessToken'];
     const refreshTokenRaw = value['refreshToken'];
     const expiresAtRaw = value['expiresAt'];
-    if (typeof accessTokenRaw !== 'string' || accessTokenRaw.trim() === '') {
+    if (!isDriveConnectionHandle(accessTokenRaw) || (refreshTokenRaw !== undefined && refreshTokenRaw !== accessTokenRaw)) {
       invalidateStoredToken();
       return null;
     }
@@ -168,11 +166,19 @@ export const getStoredToken = (): StoredToken | null => {
 };
 
 export const storeToken = (token: StoredToken) => {
+  if (!isDriveConnectionHandle(token.accessToken) || (token.refreshToken !== undefined && token.refreshToken !== token.accessToken)) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
   const ownerPartyId = getActiveSession()?.partyId;
   if (!ownerPartyId || (token.ownerPartyId !== undefined && token.ownerPartyId !== ownerPartyId) || (token.ownerEpoch !== undefined && token.ownerEpoch !== getAuthSessionEpoch())) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
   const key = scopedTokenKey();
   if (!key) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
   localStorage.setItem(key, JSON.stringify({ ...token, ownerPartyId }));
+};
+
+export const disconnectDrive = async (): Promise<void> => {
+  const owner = getActiveSession()?.partyId;
+  const epoch = getAuthSessionEpoch();
+  await del<void>('/drive/token');
+  if (getActiveSession()?.partyId === owner && getAuthSessionEpoch() === epoch) clearToken();
 };
 
 export const clearToken = () => { const key = scopedTokenKey(); if (key) localStorage.removeItem(key); };
@@ -260,18 +266,6 @@ export const ensureAccessToken = async (): Promise<StoredToken> => {
   throw new Error('Necesitas iniciar sesión con Google Drive');
 };
 
-export const makeFilePublic = async (fileId: string): Promise<void> => {
-  const token = await ensureAccessToken();
-  await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token.accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ role: 'reader', type: 'anyone' }),
-  }).catch(() => undefined);
-};
-
 export type DriveExportMode = 'download' | 'view';
 
 export const buildPublicContentUrl = (
@@ -284,90 +278,6 @@ export const buildPublicContentUrl = (
     params.set('resourcekey', resourceKey);
   }
   return `https://drive.google.com/uc?${params.toString()}`;
-};
-
-export const uploadToDrive = async (
-  file: File,
-  onProgress?: (pct: number) => void,
-): Promise<DriveFileInfo> => {
-  const token = await ensureAccessToken();
-  const boundary = `-------tdf-${createNonce()}`;
-  const metadata = {
-    name: file.name,
-    mimeType: file.type,
-    ...(getFolderId() ? { parents: [getFolderId()] } : {}),
-  };
-
-  const bodyParts = [
-    `--${boundary}`,
-    'Content-Type: application/json; charset=UTF-8',
-    '',
-    JSON.stringify(metadata),
-    `--${boundary}`,
-    `Content-Type: ${file.type || 'application/octet-stream'}`,
-    '',
-  ];
-  const ending = `\r\n--${boundary}--`;
-
-  const reader = new FileReader();
-  const fileContent = await new Promise<ArrayBuffer>((resolve, reject) => {
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
-    reader.onload = () => resolve(reader.result as ArrayBuffer);
-    reader.readAsArrayBuffer(file);
-  });
-
-  const uint8Body = new Uint8Array([
-    ...new TextEncoder().encode(bodyParts.join('\r\n') + '\r\n'),
-    ...new Uint8Array(fileContent),
-    ...new TextEncoder().encode(ending),
-  ]);
-
-  const xhr = new XMLHttpRequest();
-  const promise = new Promise<DriveFileInfo>((resolve, reject) => {
-    xhr.open('POST', GOOGLE_UPLOAD_ENDPOINT);
-    xhr.setRequestHeader('Authorization', `Bearer ${token.accessToken}`);
-    xhr.setRequestHeader('Content-Type', `multipart/related; boundary=${boundary}`);
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === XMLHttpRequest.DONE) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const resp = JSON.parse(xhr.responseText);
-            resolve(resp as DriveFileInfo);
-          } catch (err) {
-            reject(err instanceof Error ? err : new Error('No se pudo parsear la respuesta de Drive'));
-          }
-        } else {
-          reject(new Error(`Upload failed (${xhr.status})`));
-        }
-      }
-    };
-    xhr.upload.onprogress = (evt) => {
-      if (!evt.lengthComputable) return;
-      const pct = Math.round((evt.loaded / evt.total) * 100);
-      onProgress?.(pct);
-    };
-    xhr.send(uint8Body);
-  });
-
-  const fileInfo = await promise;
-
-  // Make file link-readable
-  try {
-    await fetch(`${GOOGLE_FILES_ENDPOINT}/${fileInfo.id}/permissions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        role: 'reader',
-        type: 'anyone',
-      }),
-    });
-  } catch {
-    // ignore permission failures; file remains private
-  }
-  return fileInfo;
 };
 
 export const consumeDriveState = consumeState;

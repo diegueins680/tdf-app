@@ -15,6 +15,7 @@ export function parseUploadFailure(status: number, body: string, mode: UploadAut
   if (code === 'storage_reconnect_required' || (mode === 'user' && (status === 401 || /invalid_grant|refresh token|reauthoriz|reautoriza/i.test(body)))) {
     return new UploadFailure('storage_reconnect_required', status, 'reconnect');
   }
+  if (code === 'storage_activation_pending') return new UploadFailure(code, status, 'none');
   if (code === 'storage_public_media_invalid') return new UploadFailure(code, status, 'none');
   if (code === 'storage_inventory_required') return new UploadFailure(code, status, 'none');
   if (code === 'storage_quota_exceeded') return new UploadFailure(code, status, 'none');
@@ -33,6 +34,7 @@ export function normalizeUploadFailure(error: unknown, mode: UploadAuthMode): Up
 
 export function uploadFailureMessage(error: UploadFailure, english = false): string {
   switch (error.code) {
+    case 'storage_activation_pending': return english ? 'File uploads are being prepared. Your changes are saved; please try again after activation.' : 'Estamos preparando las cargas de archivos. Tus cambios se conservan; podrás subirlos cuando se habilite el servicio.';
     case 'storage_reconnect_required': return english
       ? 'Reconnect your Google Drive, then retry this file. Your changes are still here.'
       : 'Conecta de nuevo tu Google Drive y reintenta este archivo. Tus cambios se conservan.';

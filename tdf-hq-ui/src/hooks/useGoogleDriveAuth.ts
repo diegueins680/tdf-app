@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSession } from '../session/SessionContext';
 import {
   buildAuthUrl,
-  clearToken,
+  disconnectDrive,
   driveConfigError,
   consumeDriveState,
   ensureAccessToken,
@@ -101,9 +101,9 @@ export function useGoogleDriveAuth(options: DriveAuthOptions = {}) {
     }
   }, [enabled]);
 
-  const resetAuth = useCallback(() => {
+  const resetAuth = useCallback(async () => {
     if (!enabled) return;
-    clearToken();
+    await disconnectDrive();
     setStatus('idle');
     setError(null);
   }, [enabled]);
