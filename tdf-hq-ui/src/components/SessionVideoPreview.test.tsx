@@ -25,3 +25,18 @@ it('does not count private editor previews or provider frame loads as playback',
   fireEvent.load(screen.getByTitle('Provider'));
   expect(capture).not.toHaveBeenCalled();
 });
+
+it.each([
+  ['?resourcekey=0-example_key&usp=sharing', '?resourcekey=0-example_key'],
+  ['?resourcekey=key%2Bvalue%26other%3Dvalue&usp=sharing', '?resourcekey=key%2Bvalue%26other%3Dvalue'],
+  ['?usp=sharing', ''],
+  ['?resourcekey=', ''],
+])('preserves only a supplied Drive resource key in the preview (%s)', (sourceQuery, previewQuery) => {
+  const source = `https://drive.google.com/file/d/synthetic-file/view${sourceQuery}`;
+  render(<SessionVideoPreview url={source} title="Drive session" trackPublicPlayback />);
+  expect(screen.getByTitle('Drive session')).toHaveAttribute('src',
+    `https://drive.google.com/file/d/synthetic-file/preview${previewQuery}`);
+  expect(screen.getByRole('link')).toHaveAttribute('href', source);
+  fireEvent.load(screen.getByTitle('Drive session'));
+  expect(capture).not.toHaveBeenCalled();
+});

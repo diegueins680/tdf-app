@@ -15,7 +15,12 @@ export function sessionVideoTarget(value: string): { kind: 'iframe' | 'video' | 
   }
   if (host === 'drive.google.com') {
     const id = /^\/file\/d\/([\w-]+)(?:\/|$)/.exec(url.pathname)?.[1];
-    if (id) return { kind: 'iframe', url: `https://drive.google.com/file/d/${id}/preview` };
+    if (id) {
+      const preview = new URL(`https://drive.google.com/file/d/${id}/preview`);
+      const resourceKey = url.searchParams.get('resourcekey');
+      if (resourceKey) preview.searchParams.set('resourcekey', resourceKey);
+      return { kind: 'iframe', url: preview.toString() };
+    }
   }
   if (/\.(mp4|webm)$/i.test(url.pathname)) return { kind: 'video', url: value };
   return { kind: 'link', url: value };

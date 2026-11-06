@@ -54,3 +54,5 @@ Este documento conserva la preparación anterior al merge: consultar el PR para 
 ## Calificación local final
 
 La repetición con fuente congelada termina con 4.226 casos de backend, cero fallos y 23 pendientes. Las correcciones de importación y perfiles no públicos terminan con 52 pruebas web enfocadas, build/lint y 20 recorridos de navegador aprobados. La importación permite revisar una actualización contra la revisión guardada o crear una copia con ID y enlaces nuevos, sin sobrescribir automáticamente. La autorización del servidor permite preparar un borrador no público; no se amplía la visibilidad. El control estricto admite 1.403 candidatos: los 1.402 anteriores y un registro técnico nuevo de claves DTO revisado expresamente. Los checks hospedados finales y la revisión protegida deben consultarse en el PR.
+
+La última revisión corrige la pérdida de `resourcekey` en la vista previa de Drive: se conserva la clave proporcionada y se descartan parámetros ajenos. Seis pruebas del componente, TypeScript y lint aprobados. No cambia permisos de archivos ni interpreta la carga de un iframe como una reproducción. El archivo real del artista sigue pendiente de acceso.

@@ -221,5 +221,29 @@
     },
     "deployment": false,
     "activation": false
+  },
+  "driveResourceKeyFollowup": {
+    "parentRevision": "c5f185808494ef6006596201fda8e8783d5ea826",
+    "source": "https://developers.google.com/workspace/drive/api/guides/resource-keys",
+    "behavior": "Preserves a supplied resourcekey in Drive preview URLs, without copying unrelated query parameters, changing permissions or counting iframe loads as playback.",
+    "checks": [
+      {
+        "log": "drive-resource-key-test.log",
+        "sha256": "7e897c55609af62f1671657aa10a00b1edf7514397a96726882374d7e6df4c86",
+        "result": "6 tests PASS, including encoded key and absent/empty key cases"
+      },
+      {
+        "log": "drive-resource-key-typecheck.log",
+        "sha256": "374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3",
+        "result": "TypeScript PASS"
+      }
+    ],
+    "sourceSha256": {
+      "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "5e63153bfd164619f979545bdbcb04f541de0f8f4ab6401f82f27f261afb5811",
+      "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": "a30d0eba8531c9ae9309cbb614bb6f6ffbd92c2e12373ec02fbe77d9c9b3d42b"
+    },
+    "scope": "Focused component checks and lint. Actual Drive playback depends on the supplied file access; no real artist original was available. Hosted checks and fresh review required on the new head.",
+    "deployment": false,
+    "activation": false
   }
 }
