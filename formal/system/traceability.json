@@ -16267,7 +16267,8 @@
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
         "scripts/verify-video-campaign-access.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        ".github/workflows/catalog-list-audit.yml"
       ],
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
@@ -16309,6 +16310,7 @@
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
+    ".github/workflows/catalog-list-audit.yml": "8f40aa2c4caffde1bc8ab4e39c63d113d47483cd1683c92d489936af3768f17f",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
@@ -16679,7 +16681,7 @@
     "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "dc70c8d4605ed428372d2282ba12b4aa81532400ebe8d31aac7c790eebe70f01",
+    "formal/system/recovery-expiry-arithmetic.json": "b268a7cb1fd6d96afff8b44bdb3b401b9907add83da4e58e468a0ed69a96b43b",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -31905,6 +31907,12 @@
         "relationship": "formalModels"
       }
     ],
+    ".github/workflows/catalog-list-audit.yml": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": [
       {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
@@ -31982,9 +31990,14 @@
     {
       "id": "SURFACE-e322a9d58d6bbd4b",
       "path": ".github/workflows/catalog-list-audit.yml",
-      "sha256": "041b23f7325b9960d0f8158e15a154cd205b02ae742c64dc37f65cd7b52e20f5",
+      "sha256": "8f40aa2c4caffde1bc8ab4e39c63d113d47483cd1683c92d489936af3768f17f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-562c5d7f20f572bc",
@@ -62642,7 +62655,6 @@
     }
   ],
   "unmappedSurfaces": [
-    "SURFACE-e322a9d58d6bbd4b",
     "SURFACE-f9eb7b8efd30e406",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
@@ -65360,7 +65372,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "18aa5590a625edca891c0ecf9d2d102bff53e5198ae01deab048fa50ee0546c0",
+      "sourceSha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65388,7 +65400,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "18aa5590a625edca891c0ecf9d2d102bff53e5198ae01deab048fa50ee0546c0",
+      "sourceSha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
       "definition": {
         "states": [
           "absent",
@@ -65418,7 +65430,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "18aa5590a625edca891c0ecf9d2d102bff53e5198ae01deab048fa50ee0546c0",
+      "sourceSha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
       "definition": {
         "export": [
           "queued",

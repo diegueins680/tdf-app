@@ -2944,7 +2944,7 @@
     {
       "id": "SURFACE-e322a9d58d6bbd4b",
       "path": ".github/workflows/catalog-list-audit.yml",
-      "sha256": "041b23f7325b9960d0f8158e15a154cd205b02ae742c64dc37f65cd7b52e20f5",
+      "sha256": "8f40aa2c4caffde1bc8ab4e39c63d113d47483cd1683c92d489936af3768f17f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22677,7 +22677,7 @@
     },
     {
       "path": "docs/music-releases/track-search-delivery-2026-10-26.md",
-      "sha256": "6487399e88d7a5001fca907e10cb36578eafd555544dbe5eb057ea6cd381a0c1",
+      "sha256": "111dc05e5e7a75ee95ab9535e544f5fb6c996a5af44b9d8b2945c951cfde775a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29411,7 +29411,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "18aa5590a625edca891c0ecf9d2d102bff53e5198ae01deab048fa50ee0546c0",
+      "sha256": "72a63700e9c686d390338aa6ecd14bb042255758d28265f7e84217bbc4578da2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

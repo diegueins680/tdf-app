@@ -16266,7 +16266,8 @@
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
         "scripts/verify-video-campaign-access.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        ".github/workflows/catalog-list-audit.yml"
       ],
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
