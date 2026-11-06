@@ -16198,7 +16198,7 @@
       "statement": "Any registered user may prepare and execute musical campaigns on their own connected accounts; TDF posts require current admin approval, and execution survives browser disconnection without automatically replaying uncertain provider effects.",
       "authority": "approved",
       "source": "Diego explicit campaign-platform implementation instruction, 2026-10-29; docs/campaign-platform/operations.md",
-      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits",
+      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits; persisted provider sessions also prohibit replacing a resumable piece version before a final external ID exists; successful pending verification polls do not exhaust consecutive-error retries",
       "contract": "formal/system/campaign-server.md",
       "implementation": [
         ".github/workflows/campaign-platform.yml",
@@ -16249,7 +16249,7 @@
         "tdf-hq/assets/feature-registry.json",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
-      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook protocols retain controlled mocks; two explicitly selected TDF Pages now have live server-side identity/permission checks and two real approved text/link posts, one attempt each, verified by provider readback and native Page views with the exact YouTube route. Other Facebook formats and external-user review remain unqualified. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no production/public TikTok posting or app-audit qualification. Isolated private-only sandbox policy has separate HTTP/admin, provider-username, environment/client binding and real UI tests; production audit remains required. A separate authorized personal-account sandbox send completed once as SELF_ONLY with read-only status confirmation and authenticated owner HD playback; this does not establish production audit, public or anonymous playback, photo sending or auditory synchronization. November 6 review regressions use a stalled HTTP upload body while another user and the worker write, competing upload/deletion refusal, mid-upload editor revocation, a real SQLite commit-abort/retry, TikTok photo references across publication states and blocked-video Studio recovery. The original implementation is retained as a three-case negative control.",
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook protocols retain controlled mocks; two explicitly selected TDF Pages now have live server-side identity/permission checks and two real approved text/link posts, one attempt each, verified by provider readback and native Page views with the exact YouTube route. Other Facebook formats and external-user review remain unqualified. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no production/public TikTok posting or app-audit qualification. Isolated private-only sandbox policy has separate HTTP/admin, provider-username, environment/client binding and real UI tests; production audit remains required. A separate authorized personal-account sandbox send completed once as SELF_ONLY with read-only status confirmation and authenticated owner HD playback; this does not establish production audit, public or anonymous playback, photo sending or auditory synchronization. November 6 review regressions use a stalled HTTP upload body while another user and the worker write, competing upload/deletion refusal, mid-upload editor revocation, a real SQLite commit-abort/retry, TikTok photo references across publication states and blocked-video Studio recovery. The original implementation is retained as a three-case negative control. A mocked resumable YouTube protocol pauses after the first 8 MiB checkpoint, refuses an in-place edit, and resumes the unchanged suffix with one initialization. TikTok worker regressions cover healthy pending polls, a transient error, recovery/completion, and the unchanged three-retry failure bound.",
       "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run; reports/campaign-platform-tiktok-2026-10-29.json; reports/campaign-platform-current-main-2026-10-30.json; reports/campaign-platform-facebook-current-main-2026-10-30.json",
       "status": "specified and implemented",
       "critical": true,
@@ -17188,7 +17188,7 @@
     "services/campaign-platform/backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
     "services/campaign-platform/deploy.py": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
     "services/campaign-platform/deploy_sandbox.py": "5df04f820eb7c868703359feec18848063ddb9183f4c4a57fb50f5f091d299f2",
-    "services/campaign-platform/domain.py": "be75956d0e24cd973252d122c992971a64765cc8a990f7e1aad4b24ca725019c",
+    "services/campaign-platform/domain.py": "cf06b314bbca20e151cbefbb14eafe65c453f8f175d3d0dca25a73f175a84e5f",
     "services/campaign-platform/drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
     "services/campaign-platform/facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
     "services/campaign-platform/graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
@@ -17213,10 +17213,10 @@
     "services/campaign-platform/tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
     "services/campaign-platform/tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
     "services/campaign-platform/tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
-    "services/campaign-platform/tests/test_domain.py": "fab9ac7939636eb8f0240d8577ee2e77df7fce2302609f2533bb621124d85740",
+    "services/campaign-platform/tests/test_domain.py": "fc580a511d0ebe47c38c0319cd3f64d9e4ee6f842bdc8096ad6060e934af1c19",
     "services/campaign-platform/tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
     "services/campaign-platform/tests/test_http.py": "17449bc6a0b7965bef8b404c9e21ceb6da34f7abc85eef02d89fc2d2d5f19b1d",
-    "services/campaign-platform/tests/test_tiktok.py": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
+    "services/campaign-platform/tests/test_tiktok.py": "6db5a180bbf3e7e9ace7b70fefe0fe4a9156f0fadf792936cabe6f0f3f56381c",
     "services/campaign-platform/tests/test_tiktok_sandbox.py": "ade2a1116695b18b0b5baa687977ba2ec8114561498f64a6e9aa8f19f8be9cf6",
     "services/campaign-platform/tests/test_videos.py": "80986e29d86f8be7bb02ff4e70aff6872162926ee441d1c7e15af8a307d00b92",
     "services/campaign-platform/tiktok.py": "b66fa94ec5e2c2fb7d6887cc0a1971bad6b9f51ea399fe6e80e2151c4cd39ead",
@@ -17231,7 +17231,7 @@
     "services/campaign-platform/ui/videos.js": "9864db3a462cfbf66f8ee0e1bf7e9545f394ccce6056145242a4e0c92ebafadc",
     "services/campaign-platform/verify_drive_backup.py": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
     "services/campaign-platform/videos.py": "61f02272783a7e52953f01f3dc2f29cbe5e5044ea28c09390e43e417d0482287",
-    "services/campaign-platform/worker.py": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
+    "services/campaign-platform/worker.py": "0941e599fbe6a9a2d63fcf1e261fb937b5fb71e33ad74b67ea2ac24de06fa83d",
     "services/campaign-platform/youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
@@ -40256,7 +40256,7 @@
     {
       "id": "SURFACE-4d817f76014e9965",
       "path": "services/campaign-platform/domain.py",
-      "sha256": "be75956d0e24cd973252d122c992971a64765cc8a990f7e1aad4b24ca725019c",
+      "sha256": "cf06b314bbca20e151cbefbb14eafe65c453f8f175d3d0dca25a73f175a84e5f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40568,7 +40568,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "fab9ac7939636eb8f0240d8577ee2e77df7fce2302609f2533bb621124d85740",
+      "sha256": "fc580a511d0ebe47c38c0319cd3f64d9e4ee6f842bdc8096ad6060e934af1c19",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40608,7 +40608,7 @@
     {
       "id": "SURFACE-bfa885cfbaf8b851",
       "path": "services/campaign-platform/tests/test_tiktok.py",
-      "sha256": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
+      "sha256": "6db5a180bbf3e7e9ace7b70fefe0fe4a9156f0fadf792936cabe6f0f3f56381c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40796,7 +40796,7 @@
     {
       "id": "SURFACE-eabde3f755919b20",
       "path": "services/campaign-platform/worker.py",
-      "sha256": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
+      "sha256": "0941e599fbe6a9a2d63fcf1e261fb937b5fb71e33ad74b67ea2ac24de06fa83d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66509,7 +66509,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a94cf2f7f65a6f37d0736c5e84cf775d66c586b13395a8a164ea49481fddb961",
+      "sourceSha256": "4d6ebfadfdd2ae9a405f1d2aa0c19b392cdf8f5e4e1c2eed6a0bd91cbb48cfc1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -66537,7 +66537,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a94cf2f7f65a6f37d0736c5e84cf775d66c586b13395a8a164ea49481fddb961",
+      "sourceSha256": "4d6ebfadfdd2ae9a405f1d2aa0c19b392cdf8f5e4e1c2eed6a0bd91cbb48cfc1",
       "definition": {
         "states": [
           "absent",
@@ -66567,7 +66567,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a94cf2f7f65a6f37d0736c5e84cf775d66c586b13395a8a164ea49481fddb961",
+      "sourceSha256": "4d6ebfadfdd2ae9a405f1d2aa0c19b392cdf8f5e4e1c2eed6a0bd91cbb48cfc1",
       "definition": {
         "export": [
           "queued",

@@ -96,7 +96,7 @@ class Store:
    if pid:
     old=d.execute('SELECT * FROM pieces WHERE id=? AND campaign=?',(pid,cid)).fetchone()
     if not old:raise Denied('Pieza no encontrada.',404)
-    if old['external_id'] is not None or old['status'] in ('publishing','processing','published','published_restricted','unknown'):raise Denied('La pieza ya tiene un efecto externo; requiere una acción de edición independiente.',409)
+    if old['external_id'] is not None or old['status'] in ('publishing','processing','published','published_restricted','unknown') or d.execute('SELECT 1 FROM provider_sessions WHERE piece=?',(pid,)).fetchone():raise Denied('La pieza ya tiene un efecto externo; requiere una acción de edición independiente.',409)
     d.execute('UPDATE pieces SET name=?,platform=?,format=?,account=?,copy=?,asset=?,destination=?,due_at=?,late_seconds=?,recipient=?,settings=?,version=version+1,approved_version=NULL,tdf_approval_version=NULL,dm_approval_version=NULL,status="draft" WHERE id=?',values+(pid,));d.execute('UPDATE jobs SET state="cancelled" WHERE piece=? AND state="queued"',(pid,))
    else:
     pid=uid();d.execute('INSERT INTO pieces(name,platform,format,account,copy,asset,destination,due_at,late_seconds,recipient,settings,id,campaign,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values+(pid,cid,time.time()))

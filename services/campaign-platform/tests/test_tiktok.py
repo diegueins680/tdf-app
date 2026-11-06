@@ -149,6 +149,40 @@ class TikTokTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT state FROM jobs WHERE kind="verify_tiktok"').fetchone()[0],'queued')
             self.assertEqual(db.execute('SELECT state FROM jobs WHERE kind="publish"').fetchone()[0],'completed')
 
+    def test_healthy_pending_polls_reset_retry_budget_and_eventually_complete(self):
+        piece,_=self.upload()
+        with self.store.db(True) as db:db.execute('UPDATE jobs SET state="completed" WHERE kind="publish"')
+        def tick(response):
+            with self.store.db(True) as db:db.execute('UPDATE jobs SET due_at=0 WHERE kind="verify_tiktok"')
+            arguments={'side_effect':response} if isinstance(response,Exception) else {'return_value':response}
+            with patch('tiktok.call',**arguments) as network:
+                self.assertTrue(run_one(self.store,self.provider,lambda _: 'unused'))
+                self.assertEqual(network.call_args.args[0],'/post/publish/status/fetch/')
+            with self.store.db() as db:return dict(db.execute('SELECT * FROM jobs WHERE kind="verify_tiktok"').fetchone())
+        for _ in range(4):
+            job=tick({'status':'PROCESSING_DOWNLOAD'});self.assertEqual(job['attempts'],0)
+        job=tick(ProviderError('temporary_status_failure',True))
+        self.assertEqual(job['state'],'queued');self.assertEqual(job['attempts'],1)
+        job=tick({'status':'PROCESSING_DOWNLOAD'})
+        self.assertEqual(job['attempts'],0);self.assertIsNone(job['error'])
+        job=tick({'status':'PUBLISH_COMPLETE','publicaly_available_post_id':['123']})
+        self.assertEqual(job['state'],'completed')
+        with self.store.db() as db:
+            self.assertEqual(db.execute('SELECT status FROM pieces WHERE id=?',(piece['id'],)).fetchone()[0],'published')
+            self.assertEqual(db.execute('SELECT count(*) FROM jobs WHERE kind="publish"').fetchone()[0],1)
+
+    def test_consecutive_status_failures_still_exhaust_the_bounded_retry_budget(self):
+        self.upload()
+        with self.store.db(True) as db:db.execute('UPDATE jobs SET state="completed" WHERE kind="publish"')
+        for attempt in range(1,5):
+            with self.store.db(True) as db:db.execute('UPDATE jobs SET due_at=0 WHERE kind="verify_tiktok"')
+            with patch('tiktok.call',side_effect=ProviderError('temporary_status_failure',True)) as network:
+                self.assertTrue(run_one(self.store,self.provider,lambda _: 'unused'))
+                self.assertEqual(network.call_args.args[0],'/post/publish/status/fetch/')
+            with self.store.db() as db:
+                row=db.execute('SELECT state,attempts FROM jobs WHERE kind="verify_tiktok"').fetchone()
+                self.assertEqual(tuple(row),('queued' if attempt<4 else 'failed',attempt))
+
     def test_changed_text_asset_or_privacy_invalidates_consent(self):
         piece=self.prepare()
         for change in [{'copy':'Otro texto'},{'asset':self.asset()}]:

@@ -35,7 +35,8 @@ def run_one(store,providers,media_url):
      a=dict(a)
    result=verify(providers,p,a)
    if result['state'] in ('waiting_for_hd','waiting_for_facebook','waiting_for_tiktok'):
-    with store.db(True) as d:d.execute('UPDATE jobs SET state="queued",due_at=? WHERE id=?',(time.time()+60,j['id']))
+    # Healthy pending responses do not consume the consecutive-error budget.
+    with store.db(True) as d:d.execute('UPDATE jobs SET state="queued",due_at=?,attempts=0,error=NULL WHERE id=?',(time.time()+60,j['id']))
     ACTIVE_JOB=None
     return True
    with store.db(True) as d:d.execute('UPDATE pieces SET status=?,public_url=? WHERE id=?',(result['state'],result['url'],p['id']))

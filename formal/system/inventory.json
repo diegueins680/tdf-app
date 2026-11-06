@@ -6931,7 +6931,7 @@
     {
       "id": "SURFACE-4d817f76014e9965",
       "path": "services/campaign-platform/domain.py",
-      "sha256": "be75956d0e24cd973252d122c992971a64765cc8a990f7e1aad4b24ca725019c",
+      "sha256": "cf06b314bbca20e151cbefbb14eafe65c453f8f175d3d0dca25a73f175a84e5f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7081,7 +7081,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "fab9ac7939636eb8f0240d8577ee2e77df7fce2302609f2533bb621124d85740",
+      "sha256": "fc580a511d0ebe47c38c0319cd3f64d9e4ee6f842bdc8096ad6060e934af1c19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7099,7 +7099,7 @@
     {
       "id": "SURFACE-bfa885cfbaf8b851",
       "path": "services/campaign-platform/tests/test_tiktok.py",
-      "sha256": "735420bca3f985c08a094d4931598d495d6a4997900d564cd073c6381ac11e38",
+      "sha256": "6db5a180bbf3e7e9ace7b70fefe0fe4a9156f0fadf792936cabe6f0f3f56381c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7189,7 +7189,7 @@
     {
       "id": "SURFACE-eabde3f755919b20",
       "path": "services/campaign-platform/worker.py",
-      "sha256": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
+      "sha256": "0941e599fbe6a9a2d63fcf1e261fb937b5fb71e33ad74b67ea2ac24de06fa83d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29042,7 +29042,7 @@
     },
     {
       "path": "formal/system/campaign-server.md",
-      "sha256": "a967545e3ddc59326f0b8179bab9e93cf78e8e6877961e2bc45712e0d1241869",
+      "sha256": "d2c15f4d5a90285abbc9971c1d9b27f608b71ab431be8f0b514a31fed3033292",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29770,7 +29770,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a94cf2f7f65a6f37d0736c5e84cf775d66c586b13395a8a164ea49481fddb961",
+      "sha256": "4d6ebfadfdd2ae9a405f1d2aa0c19b392cdf8f5e4e1c2eed6a0bd91cbb48cfc1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

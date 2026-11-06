@@ -164,6 +164,38 @@ class CampaignTests(unittest.TestCase):
   self.store.youtube_checks(self.a,self.cid,{'piece':pid,'version':1,'video_id':'existing-private-video','checks_passed':True})
   piece=self.store.detail(self.a,self.cid)['pieces'][0]
   self.assertEqual(piece['external_id'],'existing-private-video');self.assertEqual(piece['status'],'processing')
+ def test_paused_youtube_upload_keeps_its_piece_version_and_resumes_original_bytes(self):
+  import hashlib,io,urllib.error
+  from unittest.mock import patch,Mock
+  with self.store.db(True) as db:db.execute('UPDATE accounts SET platform="youtube" WHERE id=?',(self.account,))
+  content=b'a'*(8*1024*1024)+b'end';aid=self.store.reserve_asset(self.a,self.cid,'master.mp4',len(content))
+  target=Path(self.tmp.name)/'assets'/aid;target.parent.mkdir();target.write_bytes(content)
+  with self.store.db(True) as db:db.execute('UPDATE assets SET uploaded=?,size=?,sha256=?,status="ready" WHERE id=?',(len(content),len(content),hashlib.sha256(content).hexdigest(),aid))
+  pid=self.piece(platform='youtube',format='video',asset=aid);self.approve();self.store.status(self.a,self.cid,'active')
+  adapter=Providers(self.store,Vault(Fernet.generate_key()),{'STATE_DIR':self.tmp.name})
+  opener=Mock()
+  def acknowledge_first_chunk(request,timeout):
+   self.assertEqual(request.data,content[:8*1024*1024]);self.store.status(self.a,self.cid,'paused')
+   raise urllib.error.HTTPError(request.full_url,308,'Resume',{'Range':'bytes=0-8388607'},io.BytesIO())
+  opener.open.side_effect=acknowledge_first_chunk
+  with patch.object(adapter,'token',return_value='test-token'),patch('youtube_upload.request',return_value=({}, {'Location':'https://www.googleapis.com/upload/session-original'})) as initialize,patch('youtube_upload.urllib.request.build_opener',return_value=opener):
+   self.assertTrue(run_one(self.store,adapter,lambda _: 'unused'))
+   before=self.store.detail(self.a,self.cid);piece=before['pieces'][0]
+   self.assertEqual(piece['status'],'blocked');self.assertIsNone(piece['external_id'])
+   with self.store.db() as db:session=dict(db.execute('SELECT * FROM provider_sessions WHERE piece=?',(pid,)).fetchone())
+   self.assertEqual(adapter.vault.open(session['payload'])['offset'],8*1024*1024)
+   with self.assertRaises(Denied):self.store.piece(self.a,self.cid,{'platform':'youtube','format':'video','account':self.account,'copy':'Changed text','due_at':time.time()},pid)
+   self.assertEqual(self.store.detail(self.a,self.cid),before)
+   with self.store.db() as db:self.assertEqual(dict(db.execute('SELECT * FROM provider_sessions WHERE piece=?',(pid,)).fetchone()),session)
+   # Reapproving the unchanged original resumes the same provider session.
+   self.approve();self.store.status(self.a,self.cid,'active')
+   response=Mock();response.__enter__=Mock(return_value=response);response.__exit__=Mock(return_value=False);response.read.return_value=b'{"id":"original-video"}'
+   def finish_chunk(request,timeout):
+    self.assertEqual(request.full_url,'https://www.googleapis.com/upload/session-original');self.assertEqual(request.data,b'end');return response
+   opener.open.side_effect=finish_chunk
+   self.assertTrue(run_one(self.store,adapter,lambda _: 'unused'));self.assertEqual(initialize.call_count,1)
+  piece=self.store.detail(self.a,self.cid)['pieces'][0]
+  self.assertEqual(piece['version'],1);self.assertEqual(piece['asset'],aid);self.assertEqual(piece['external_id'],'original-video')
  def test_analytics_preserves_pending_and_maps_actual_watch_time(self):
   from unittest.mock import patch
   adapter=Providers(self.store,Vault(Fernet.generate_key()),{})
