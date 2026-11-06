@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T06:08:48.837Z",
+  "generatedAt": "2026-11-06T06:29:49.693Z",
   "repositoryRoot": ".",
   "filesScanned": 2602,
   "candidateCount": 1395,
@@ -149428,7 +149428,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [
         "6237f283465fb123ee9d",
         "a9c4286c1f55cfeeba40",
@@ -149491,7 +149491,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -149711,7 +149711,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [
         "b5cf352ce0b028fa7f58"
       ],
@@ -149940,7 +149940,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [],
       "similarCandidateIds": [
         "b5cf352ce0b028fa7f58",
@@ -150046,7 +150046,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -150149,7 +150149,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [],
       "similarCandidateIds": [
         "6909aac76b066d329577"
@@ -150228,7 +150228,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -152649,7 +152649,7 @@
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Introduced by the formal audit (PAY-DOMO-CANCEL-001, AUTH-SOCIAL-OAUTH-001, ID-CLAIM-REVIEW-001): the values are lifecycle protocol constants also fixed by the canonical requirement and enforced by database CHECKs; a persisted catalog remains the target model for selectable business values.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
