@@ -16468,7 +16468,9 @@
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "scripts/__tests__/video-campaign-access.test.mjs",
         "scripts/test-identity-reconciliation.sh",
-        "tdf-hq/test/sql/identity_reconciliation.sql"
+        "tdf-hq/test/sql/identity_reconciliation.sql",
+        "scripts/test-video-campaign-postgres.sh",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs"
       ],
       "formalModels": [
         "scripts/verify-video-campaign-access.mjs"
