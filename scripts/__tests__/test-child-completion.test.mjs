@@ -146,7 +146,7 @@ test('missing descendant readiness rejects within the bound and cleans the fixtu
 });
 
 test('timeout metadata contains a live owned parent and descendant but no unrelated child or argv',
-  { timeout: 8000, skip: process.platform === 'win32' }, async t => {
+  { timeout: 8000, skip: process.platform === 'win32' }, async () => {
     const observed = parentWithDescendant(false);
     const unrelated = observeNode("process.send('unrelated-ready'); setInterval(()=>{},1000);");
     const unrelatedReady = nextEvent(unrelated.child, 'message');
@@ -156,13 +156,25 @@ test('timeout metadata contains a live owned parent and descendant but no unrela
       const [message] = await nextEvent(observed.child, 'message');
       descendantPid = message.pid;
       await unrelatedReady;
-      await assert.rejects(completedTestChild(observed, { timeoutMs: 40 }), error => {
+      // The positive graph assertion is deterministic. The bounded real-OS
+      // collector is exercised separately and may legitimately be unavailable.
+      const collectProcessMetadata = pid => testChildProcessMetadata(pid, {
+        platform: 'linux', run: (program, args, options) => {
+          assert.equal(program, 'ps');
+          assert.deepEqual(args, ['-A', '-o', 'pid=,ppid=,pgid=,sid=,stat=,wchan=,comm=']);
+          assert.equal(options.timeout, 200);
+          assert.equal(options.maxBuffer, 512 * 1024);
+          const comm = basename(process.execPath);
+          const stdout = `${process.pid} 1 ${process.pid} ${process.pid} S poll ${comm}\n`
+            + `${observed.child.pid} ${process.pid} ${observed.child.pid} ${process.pid} S do_wait ${comm}\n`
+            + `${descendantPid} ${observed.child.pid} ${observed.child.pid} ${process.pid} S poll ${comm}\n`
+            + `${unrelated.child.pid} ${process.pid} ${unrelated.child.pid} ${process.pid} S poll ${comm}\n`;
+          return { status: 0, stdout };
+        },
+      });
+      await assert.rejects(completedTestChild(observed, { timeoutMs: 40, collectProcessMetadata }), error => {
         assert.equal(error.workerSnapshot.processState, 'awaiting-exit');
         const metadata = error.workerProcessMetadata;
-        if (metadata.reason === 'ps-unavailable') {
-          t.skip('POSIX ps absent; synthetic parser and missing-ps controls still run');
-          return true;
-        }
         assert.equal(metadata.status, 'observed');
         assert.equal(metadata.rootPid, observed.child.pid);
         assert.ok(metadata.processes.some(row => row.pid === observed.child.pid && row.ppid === process.pid));
@@ -172,6 +184,36 @@ test('timeout metadata contains a live owned parent and descendant but no unrela
         assert.doesNotMatch(JSON.stringify(metadata), /descendant-output|descendant-error|setInterval|unrelated-ready/);
         return true;
       });
+    } finally {
+      await stopFixture(observed, descendantPid);
+      await stopFixture(unrelated);
+    }
+  });
+
+test('real OS diagnostics either retain owned relationships or report bounded unavailability',
+  { timeout: 8000 }, async () => {
+    const observed = parentWithDescendant(false);
+    const unrelated = observeNode("process.send('unrelated-ready'); setInterval(()=>{},1000);");
+    const unrelatedReady = nextEvent(unrelated.child, 'message');
+    void unrelatedReady.catch(() => {});
+    let descendantPid;
+    try {
+      const [message] = await nextEvent(observed.child, 'message');
+      descendantPid = message.pid;
+      await unrelatedReady;
+      const metadata = testChildProcessMetadata(observed.child.pid);
+      if (metadata.status === 'observed') {
+        assert.equal(metadata.rootPid, observed.child.pid);
+        assert.ok(metadata.processes.some(row => row.pid === observed.child.pid && row.ppid === process.pid));
+        assert.ok(metadata.processes.some(row => row.pid === descendantPid && row.ppid === observed.child.pid));
+        assert.equal(metadata.processes.some(row => row.pid === unrelated.child.pid || row.pid === process.pid), false);
+        assert.ok(metadata.processes.every(row => row.comm === basename(process.execPath)));
+      } else {
+        assert.equal(metadata.status, 'unavailable');
+        assert.match(metadata.reason, /^(ps-failed|ps-unavailable|owned-child-not-present|ambiguous-process-table|unsupported-platform)$/);
+        assert.deepEqual(Object.keys(metadata).sort(), ['reason', 'status'], 'unavailability must not invent process data');
+      }
+      assert.doesNotMatch(JSON.stringify(metadata), /descendant-output|descendant-error|setInterval|unrelated-ready/);
     } finally {
       await stopFixture(observed, descendantPid);
       await stopFixture(unrelated);
@@ -215,9 +257,11 @@ test('missing or failed ps is graceful and never exposes diagnostic stderr', () 
   assert.deepEqual(missing, { status: 'unavailable', reason: 'ps-unavailable' });
   const failed = testChildProcessMetadata(pid, { run: () => { throw new Error('PRIVATE_ERROR'); } });
   assert.deepEqual(failed, { status: 'unavailable', reason: 'ps-failed' });
+  const timedOut = testChildProcessMetadata(pid, { run: () => ({ error: { code: 'ETIMEDOUT' }, status: null, signal: 'SIGKILL', stdout: '', stderr: 'PRIVATE_ERROR' }) });
+  assert.deepEqual(timedOut, { status: 'unavailable', reason: 'ps-failed' });
   assert.deepEqual(testChildProcessMetadata(pid, { run: () => ({ status: 0, stdout: '' }) }),
     { status: 'unavailable', reason: 'owned-child-not-present' });
-  assert.doesNotMatch(JSON.stringify([missing, failed]), /PRIVATE_ERROR/);
+  assert.doesNotMatch(JSON.stringify([missing, failed, timedOut]), /PRIVATE_ERROR/);
 });
 
 test('a late completion during diagnostics cannot replace the original timeout failure', async () => {

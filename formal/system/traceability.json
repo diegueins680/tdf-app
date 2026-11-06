@@ -16858,7 +16858,7 @@
     "scripts/__tests__/provider-rollback.test.mjs": "f1dc29ea2b20a71b88a3ae50552c130a0802c6d8ae00e90075af2bd4d2291910",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
-    "scripts/__tests__/test-child-completion.test.mjs": "e86b5c0736bc08a4daedeaace4c99b814ff789c1808fe7aff49470968fbebd0e",
+    "scripts/__tests__/test-child-completion.test.mjs": "5b6b04119090e05d9931a04993e0b8b4d2779b30513145da54485fd35f6c9a4e",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
     "scripts/__tests__/ticket-admission-model.test.mjs": "65be9ba3fa99bbe0307c4a26cd3358c043b35f8af7d0141e7ebcc629013f6f8d",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
@@ -34528,7 +34528,7 @@
     {
       "id": "SURFACE-a1dd9455f7a2ce96",
       "path": "scripts/__tests__/test-child-completion.test.mjs",
-      "sha256": "e86b5c0736bc08a4daedeaace4c99b814ff789c1808fe7aff49470968fbebd0e",
+      "sha256": "5b6b04119090e05d9931a04993e0b8b4d2779b30513145da54485fd35f6c9a4e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

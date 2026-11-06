@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T18:36:50.713Z",
+  "generatedAt": "2026-11-06T18:55:14.356Z",
   "repositoryRoot": ".",
   "filesScanned": 2605,
   "candidateCount": 1394,
@@ -14650,7 +14650,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 292,
+      "consumerCount": 293,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -14769,6 +14769,7 @@
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
+        "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -14810,8 +14811,7 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-music-purchase-asset-query.py",
         "scripts/test-music-release-api-e2e.sh",
-        "scripts/test-physical-postgres-docker.py",
-        "scripts/test-proof-certificates.py"
+        "scripts/test-physical-postgres-docker.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/whatsapp_consent_conformance.py",
@@ -21810,7 +21810,7 @@
       "lines": [
         142
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -21875,6 +21875,7 @@
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
         "scripts/identity-reconciliation.mjs",
         "scripts/interactions/test-api.py",
@@ -31732,7 +31733,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 310,
+      "consumerCount": 311,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -31855,6 +31856,7 @@
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
+        "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -31892,8 +31894,7 @@
         "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-source-permissions.py",
         "scripts/test-hetzner-backup.py",
-        "scripts/test-hetzner-inspection.py",
-        "scripts/test-hetzner-restore.py"
+        "scripts/test-hetzner-inspection.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -51895,7 +51896,7 @@
       "lines": [
         60
       ],
-      "consumerCount": 346,
+      "consumerCount": 347,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -52020,6 +52021,7 @@
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
+        "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -52058,8 +52060,7 @@
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-source-permissions.py",
-        "scripts/test-hetzner-backup.py",
-        "scripts/test-hetzner-inspection.py"
+        "scripts/test-hetzner-backup.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/whatsapp_consent_conformance.py",
@@ -53539,7 +53540,7 @@
       "lines": [
         4446
       ],
-      "consumerCount": 346,
+      "consumerCount": 347,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -53664,6 +53665,7 @@
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
+        "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -53702,8 +53704,7 @@
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-source-permissions.py",
-        "scripts/test-hetzner-backup.py",
-        "scripts/test-hetzner-inspection.py"
+        "scripts/test-hetzner-backup.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/whatsapp_consent_conformance.py",
