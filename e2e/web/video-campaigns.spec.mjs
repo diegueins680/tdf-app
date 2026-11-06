@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 // Browser/API fixtures only: no real accounts, storage, provider connections or publication.
-async function fixture(page, baseURL, manager = false, permitted = true) {
+async function fixture(page, baseURL, manager = false, permitted = true, publicAvailable = true) {
   const rows = new Map(); const saves = []; let reject = true;
   const artist = { apArtistId: 42, apDisplayName: 'Artista de prueba', apSlug: 'artista-de-prueba', apFollowerCount: 0, apHasUserAccount: false, apGenreIds: [] };
   await page.route('**/*', async (route) => {
@@ -12,7 +12,10 @@ async function fixture(page, baseURL, manager = false, permitted = true) {
         username: 'synthetic-viewer', partyId: manager ? 99 : 42, displayName: 'Cuenta de prueba', roles: manager ? ['Customer'] : ['Artist'], modules: [],
         preferences: { locale: 'es', currency: 'USD', timeZone: 'America/Guayaquil' },
       } });
-      if (['/fans/me/artist-profile', '/artists/42/public', '/artists/artista-de-prueba/public'].includes(path)) return route.fulfill({ json: artist });
+      if (['/fans/me/artist-profile', '/artists/42/public', '/artists/artista-de-prueba/public'].includes(path)) {
+        if (!publicAvailable && path.startsWith('/artists/')) return route.fulfill({ status: 404, json: { error: 'Not public' } });
+        return route.fulfill({ json: artist });
+      }
       if (path.startsWith('/artists/video-campaigns')) {
         if (!permitted) return route.fulfill({ status: 403, json: { error: 'No artist grant' } });
         if (request.method() === 'GET' && path.endsWith('/metrics')) return route.fulfill({ json: { registrations: 0, follows: 0, byPiece: [] } });
@@ -52,14 +55,29 @@ for (const manager of [false, true]) test(`${manager ? 'authorized band manager'
   expect(saves[0].path).toBe(saves[1].path);
   expect(rows.size).toBe(1);
   await page.reload();
-  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
-  await expect(page.getByLabel('Título de la sesión')).toHaveValue('Sesión de prueba');
+  const saved = [...rows.values()][0];
+  await page.getByLabel('Archivo del plan', { exact: true }).setInputFiles({ name: 'campaign.json', mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({ artistId: saved.artistId, campaignId: saved.id, ...saved.content, title: 'Sesión de prueba importada' })) });
+  await page.getByRole('button', { name: 'Revisar cambios sobre esta campaña' }).click();
+  await expect(page.getByLabel('Título de la sesión')).toHaveValue('Sesión de prueba importada');
+  await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click();
+  await expect(page.getByText(/Borrador guardado/)).toBeVisible();
+  expect(saves.at(-1).payload.expectedRevision).toBe(saved.revision);
+  expect(rows.size).toBe(1);
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   await expect(page.getByText(/Publicación manual disponible/)).toBeVisible();
   await page.getByLabel('Fecha propuesta (opcional)').fill('2026-12-01');
   await page.getByRole('button', { name: 'Preparar textos y calendario' }).click();
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   await expect(page.getByLabel('Texto de la publicación').first()).toBeVisible();
+  await page.getByText('Opciones avanzadas: cortes y registro manual', { exact: true }).first().click();
+  await page.getByRole('combobox', { name: 'Estado de la pieza' }).first().click();
+  await page.getByRole('option', { name: 'Publicada manualmente', exact: true }).click();
+  const manualUrl = 'https://www.instagram.com/reel/tdf-synthetic-test/';
+  await page.getByLabel('URL de la publicación manual', { exact: true }).fill(manualUrl);
+  await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click();
+  await expect(page.getByText(/Borrador guardado/)).toBeVisible();
+  expect([...rows.values()][0].content.pieces[0]).toMatchObject({ status: 'published_manual', publishedUrl: manualUrl });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Guardar para revisión' })).toBeVisible();
@@ -75,4 +93,18 @@ test('unassigned manager cannot open or write an artist campaign @mobile-flow', 
   await expect(page.getByRole('alert').filter({ hasText: 'No pudimos cargar tus campañas.' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Crear campaña', exact: true })).toHaveCount(0);
   expect(state.saves).toEqual([]);
+});
+
+test('authorized manager prepares a nonpublic artist launch without changing visibility @mobile-flow', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL, true, true, false);
+  await page.goto('/mi-artista/campanas?artistId=42');
+  await page.getByRole('button', { name: 'Crear campaña', exact: true }).click();
+  await expect(page.getByText(/Sus datos públicos no están disponibles/)).toBeVisible();
+  await page.getByLabel('Título de la sesión').fill('Borrador de artista no público');
+  await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: /Reintenta/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click();
+  await expect(page.getByText(/Borrador guardado/)).toBeVisible();
+  expect(state.rows.size).toBe(1);
+  expect(state.saves.every((request) => request.method === 'PUT' && request.payload.document.status === 'draft')).toBe(true);
 });

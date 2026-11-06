@@ -165,5 +165,61 @@
       "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
       "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046"
     }
+  },
+  "finalLocalQualification": {
+    "checks": [
+      {
+        "name": "backend",
+        "log": "objective-final-stack.log",
+        "sha256": "9af240db0d9f13458db95c7e067c3f1495ff851fe77f61fb4a505f8baf27db68",
+        "result": "4226 examples,0 failures,23 pending"
+      },
+      {
+        "name": "focused-web",
+        "log": "import-private-final-web.log",
+        "sha256": "2fe01ce6fc3194f581b3363a42bf9fc1f46dfad92623e2cf3c47756e96ebc521",
+        "result": "52 tests passed"
+      },
+      {
+        "name": "build",
+        "log": "import-private-final-build.log",
+        "sha256": "0aacbb0087dd9d4616c65ffc9a727f268547e8993def3a376f7d6a854cb0d96d",
+        "result": "PASS"
+      },
+      {
+        "name": "lint",
+        "log": "import-private-final-lint.log",
+        "sha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+        "result": "PASS"
+      },
+      {
+        "name": "browser",
+        "log": "import-private-final-browser.log",
+        "sha256": "b1a68309ece19857668d4b07be9435af7c2306129715d42fa8fe2d5819aa8b19",
+        "result": "20 cases, including synthetic manual-publication records; PASS"
+      },
+      {
+        "name": "catalog",
+        "log": "frozen-final-catalog.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "result": "1403 reviewed,0 stale; PASS"
+      },
+      {
+        "name": "catalog-controls",
+        "log": "import-private-catalog-controls.log",
+        "sha256": "e1314af9789a47be20ca1170061a08c0193d936e28778ee472304101624afebe",
+        "result": "10 controls; PASS"
+      }
+    ],
+    "scope": "Backend code unchanged by the final web-only import/visibility fixes. Browser uses synthetic APIs and Android emulation. Hosted checks/review still required on the final commit.",
+    "sourceSha256": {
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "27cb3cad937544a930f8843a8b99c722b9bb381b5f34a6061ee13de0023567d3",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "729adf5aba98a03fbf76a95a7c6dcdfeb9d85b7ac6116c8a2ebfc7bcb1c54a26",
+      "e2e/web/video-campaigns.spec.mjs": "4028aeb82bc7d91c568672124ce308acf27ed2626bf36167546bcca46e12a2cf",
+      "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
+      "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046"
+    },
+    "deployment": false,
+    "activation": false
   }
 }

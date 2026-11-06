@@ -11,11 +11,13 @@ let persisted: VideoCampaign[] = [];
 const save = jest.fn<(artist: number, id: string, revision: number, content: VideoCampaignDocument) => Promise<VideoCampaign>>();
 const list = jest.fn<() => Promise<VideoCampaign[]>>();
 const feature = jest.fn<(artist: number, id: string, revision: number) => Promise<void>>();
+const getPublicArtist = jest.fn<(id: string) => Promise<{ apArtistId: number; apDisplayName: string }>>();
+const listArtists = jest.fn<() => Promise<{ apArtistId: number; apDisplayName: string }[]>>();
 jest.unstable_mockModule('../api/videoCampaigns', () => ({ VideoCampaigns: { list, save, feature, metrics: async () => ({ registrations: 0, follows: 0 }) } }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session, loading: false }), getActiveSession: () => session }));
 jest.unstable_mockModule('../api/fans', () => ({ Fans: {
   getMyArtistProfile: async () => ({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' }),
-  getPublicArtist: async () => ({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' }),
+  getPublicArtist, listArtists,
 } }));
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({ default: () => null }));
 jest.unstable_mockModule('../api/client', () => ({ get: async () => ({}), put: async () => ({}) }));
@@ -28,11 +30,13 @@ beforeEach(() => {
   persisted = [];
   session = { partyId: 51, username: 'artist', displayName: 'Artist', roles: ['Artist'] };
   list.mockImplementation(async () => persisted);
+  getPublicArtist.mockReset().mockResolvedValue({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' });
+  listArtists.mockReset().mockResolvedValue([]);
   feature.mockReset().mockResolvedValue(undefined);
   save.mockReset().mockImplementation(async (artistId, id, revision, content) => {
     const row = { id, artistId, revision: revision + 1, content,
       createdAt: '2026-10-20T00:00:00Z', updatedAt: '2026-10-20T00:00:00Z' };
-    persisted = [row]; return row;
+    persisted = [row, ...persisted.filter((previous) => previous.id !== id)]; return row;
   });
 });
 afterEach(() => { cleanup(); jest.restoreAllMocks(); });
@@ -126,7 +130,7 @@ it('keeps a review save private until the artist explicitly publishes its saved 
   expect(feature).not.toHaveBeenCalled();
   expect(save.mock.calls[0]?.[3].status).toBe('ready');
   fireEvent.click(screen.getByRole('button', { name: 'Publicar video en el perfil de TDF' }));
-  expect(await screen.findByText(/Video publicado en el perfil de TDF/)).toBeInTheDocument();
+  expect(await screen.findByText(/Video destacado actualizado en TDF/)).toBeInTheDocument();
   expect(feature).toHaveBeenCalledWith(51, persisted[0]!.id, 4);
 });
 
@@ -136,7 +140,7 @@ it('reports a rejected public update without claiming publication or changing th
   await openReview();
   fireEvent.click(screen.getByRole('button', { name: 'Publicar video en el perfil de TDF' }));
   expect(await screen.findByText(/La campaña cambió/)).toBeInTheDocument();
-  expect(screen.queryByText(/Video publicado en el perfil de TDF/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Video destacado actualizado en TDF/)).not.toBeInTheDocument();
   expect(save).not.toHaveBeenCalled();
   expect(feature).toHaveBeenCalledWith(51, row.id, 3);
 });
@@ -178,5 +182,75 @@ it('keeps the editor unavailable when the backend denies an artist target', asyn
   show('/mi-artista/campanas?artistId=51');
   expect(await screen.findByText(/No pudimos cargar tus campañas/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Crear campaña' })).not.toBeInTheDocument();
+  expect(save).not.toHaveBeenCalled();
+});
+
+function importedFile(row: VideoCampaign, title = row.content.title): File {
+  const json = JSON.stringify({ artistId: row.artistId, campaignId: row.id, ...row.content, title });
+  const file = new File([json], 'campaign.json', { type: 'application/json' });
+  Object.defineProperty(file, 'text', { value: async () => json, configurable: true });
+  return file;
+}
+
+it('reconciles an edited export against the current saved revision only after an explicit choice', async () => {
+  const row = completeCampaign(); persisted = [row]; show();
+  const input = await screen.findByLabelText('Archivo del plan');
+  fireEvent.change(input, { target: { files: [importedFile(row, 'Edición importada')] } });
+  fireEvent.click(await screen.findByRole('button', { name: 'Revisar cambios sobre esta campaña' }));
+  expect(save).not.toHaveBeenCalled();
+  expect(screen.getByLabelText('Título de la sesión')).toHaveValue('Edición importada');
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
+  expect(save.mock.calls[0]?.[2]).toBe(3);
+  expect(save.mock.calls[0]?.[3].rightsConfirmed).toBe(false);
+  expect(feature).not.toHaveBeenCalled();
+});
+
+it('imports a new copy with fresh links and leaves the saved campaign untouched', async () => {
+  const row = completeCampaign(); persisted = [row]; show();
+  fireEvent.change(await screen.findByLabelText('Archivo del plan para copia nueva'), { target: { files: [importedFile(row)] } });
+  await screen.findByLabelText('Título de la sesión');
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
+  expect(save.mock.calls[0]?.[1]).not.toBe(row.id);
+  expect(save.mock.calls[0]?.[2]).toBe(0);
+  expect(save.mock.calls[0]?.[3].technicalReviewed).toBe(false);
+  expect(persisted.find((entry) => entry.id === row.id)).toEqual(row);
+  expect(persisted).toHaveLength(2);
+});
+
+it('lets an authorized manager prepare drafts without public artist metadata', async () => {
+  session = { partyId: 99, username: 'manager', displayName: 'Manager', roles: ['Customer'] };
+  getPublicArtist.mockRejectedValue(new Error('Artist is not public'));
+  show('/mi-artista/campanas?artistId=51');
+  fireEvent.click(await screen.findByRole('button', { name: 'Crear campaña' }));
+  expect(await screen.findByText(/Sus datos públicos no están disponibles/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
+  expect(save.mock.calls[0]?.[0]).toBe(51);
+});
+
+it('allows an administrator to select an unlisted canonical artist ID', async () => {
+  session = { partyId: 99, username: 'admin', displayName: 'Admin', roles: ['Admin'], modules: ['admin'] };
+  show('/mi-artista/campanas?artistId=52');
+  expect(await screen.findByLabelText('ID del artista')).toHaveValue(52);
+  fireEvent.click(await screen.findByRole('button', { name: 'Crear campaña' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
+  expect(save.mock.calls[0]?.[0]).toBe(52);
+  expect(listArtists).toHaveBeenCalled();
+});
+
+it('abandons an in-flight import after the selected artist changes', async () => {
+  session = { partyId: 99, username: 'admin', displayName: 'Admin', roles: ['Admin'], modules: ['admin'] };
+  show('/mi-artista/campanas?artistId=51');
+  const row = completeCampaign(); const file = importedFile(row);
+  let finish!: (value: string) => void;
+  Object.defineProperty(file, 'text', { value: () => new Promise<string>((resolve) => { finish = resolve; }), configurable: true });
+  fireEvent.change(await screen.findByLabelText('Archivo del plan'), { target: { files: [file] } });
+  fireEvent.change(screen.getByLabelText('ID del artista'), { target: { value: '52' } });
+  finish(JSON.stringify({ artistId: row.artistId, campaignId: row.id, ...row.content }));
+  await waitFor(() => expect(screen.queryByRole('progressbar', { name: 'Leyendo plan' })).not.toBeInTheDocument());
+  expect(screen.queryByLabelText('Título de la sesión')).not.toBeInTheDocument();
   expect(save).not.toHaveBeenCalled();
 });

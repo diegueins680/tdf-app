@@ -3304,7 +3304,7 @@
     {
       "id": "SURFACE-9561c312584f3d24",
       "path": "e2e/web/video-campaigns.spec.mjs",
-      "sha256": "c2e1f4200654983032ca17774e5a2a8a5598d3f57014393a52db9ab2534ab75b",
+      "sha256": "4028aeb82bc7d91c568672124ce308acf27ed2626bf36167546bcca46e12a2cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11044,13 +11044,13 @@
     {
       "id": "SURFACE-d3678204a317aed3",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-      "sha256": "efaadd4b20ebbc709b285fb18e8fc03ba7d4c90d1f45df30511e578a209b8931",
+      "sha256": "729adf5aba98a03fbf76a95a7c6dcdfeb9d85b7ac6116c8a2ebfc7bcb1c54a26",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1e42b51a3ed57a58",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-      "sha256": "3350964c767a59e56c5b00c7e90875c48246ce5f9daf7f2cd6ce42e324ec7310",
+      "sha256": "27cb3cad937544a930f8843a8b99c722b9bb381b5f34a6061ee13de0023567d3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20990,7 +20990,7 @@
     },
     {
       "path": "docs/artists/video-campaigns.md",
-      "sha256": "55c4e2ae3e287bfd9b57db524e85365a81b3441055a0113e30e2bce4c27cfa4d",
+      "sha256": "d7ef24b015fb7527b7136abc25d8516e4b15ff41b640d2702f2ecbb5b03aaa4f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -28204,6 +28204,22 @@
           ]
         }
       ]
+    },
+    {
+      "id": "3ed309404add147a0fc2",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing these DTO serialization keys independently breaks campaign import, revision reconciliation and wire compatibility.",
+      "justification": "This is one typed VideoCampaign DTO instance assembled from a validated imported document, not a registry of editable campaign choices. Its six keys (id, artistId, revision, content, createdAt, updatedAt) are the existing wire shape. Campaign contents remain user data persisted by the scoped backend; no provider, publication action, grant or commercial catalog value is introduced.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+        "line": 65
+      },
+      "reviewBatch": "video-campaign-import-2026-11-06",
+      "reviewMethod": "manual-boundary-review"
     }
   ]
 }

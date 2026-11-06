@@ -35,25 +35,48 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
   const [active, setActive] = useState<VideoCampaign | null>(null);
   const [creating, setCreating] = useState(false);
   const [importError, setImportError] = useState('');
-  const importPlan = async (file: File | undefined) => {
+  const [importConflict, setImportConflict] = useState<{ plan: VideoCampaign; saved: VideoCampaign } | null>(null);
+  const [importing, setImporting] = useState(false);
+  const importEpoch = useRef(0);
+  const selectionEpoch = useRef(0);
+  const selectArtist = (value: number) => {
+    selectionEpoch.current += 1;
+    setArtistId(value); setActive(null); setCreating(false); setImportConflict(null); setImportError(''); setImporting(false);
+  };
+  const freshCopy = (campaign: VideoCampaign): VideoCampaign => ({ ...campaign, id: crypto.randomUUID(), revision: 0,
+    content: { ...campaign.content, status: 'draft', rightsConfirmed: false, technicalReviewed: false,
+      proposedLaunchDate: '', title: `${campaign.content.title.slice(0, 190)} (copia)`,
+      pieces: campaign.content.pieces.map((p) => ({ ...p, status: 'draft', publishedUrl: '' })) } });
+  const importPlan = async (file: File | undefined, copy = false) => {
     if (!file || getActiveSession() !== session) return;
+    const epoch = selectionEpoch.current;
+    const ticket = ++importEpoch.current;
+    const current = () => getActiveSession() === session && selectionEpoch.current === epoch && importEpoch.current === ticket;
+    setImporting(true);
     try {
       if (file.size > 131072) throw new Error('El plan supera el tamaño permitido.');
       const parsed = importedCampaignSchema.parse(JSON.parse(await file.text()));
-      if (getActiveSession() !== session) return;
+      if (!current()) return;
       if (parsed.artistId !== artistId) throw new Error('Selecciona el artista al que pertenece este plan.');
       const { artistId: owner, campaignId, ...content } = parsed;
       const invalid = validateVideoCampaign(content); if (invalid) throw new Error(invalid);
-      setActive({ id: campaignId, artistId: owner, revision: 0, content,
-        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      const saved = copy ? undefined : (await VideoCampaigns.list(artistId)).find((row) => row.id === campaignId);
+      if (!current()) return;
+      const plan: VideoCampaign = { id: campaignId, artistId: owner, revision: 0,
+        content: { ...content, status: 'draft', rightsConfirmed: false, technicalReviewed: false },
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      if (copy) { setImportConflict(null); setActive(freshCopy(plan)); }
+      else if (saved) setImportConflict({ plan, saved });
+      else { setImportConflict(null); setActive(plan); }
       setImportError('');
-    } catch (e) { setImportError(e instanceof Error ? e.message : 'El plan no es válido.'); }
+    } catch (e) { if (current()) setImportError(e instanceof Error ? e.message : 'El plan no es válido.'); }
+    finally { if (current()) setImporting(false); }
   };
   const artists = useQuery({ queryKey: ['video-campaign-artists', session.partyId, artistId],
     queryFn: () => admin ? Fans.listArtists() : artistId !== session.partyId
-      ? Fans.getPublicArtist(String(artistId)).then((p) => [p]) : Fans.getMyArtistProfile().then((p) => [p]) });
+      ? Fans.getPublicArtist(String(artistId)).then((p) => [p]) : Fans.getMyArtistProfile().then((p) => [p]), retry: false });
   const campaigns = useQuery({ queryKey: ['video-campaigns', session.partyId, artistId],
-    queryFn: () => VideoCampaigns.list(artistId), enabled: artistId > 0 });
+    queryFn: () => VideoCampaigns.list(artistId), enabled: Number.isSafeInteger(artistId) && artistId > 0 });
   const metrics = useQuery({ queryKey: ['video-campaign-metrics', session.partyId, artistId, active?.id],
     queryFn: () => VideoCampaigns.metrics(artistId, active!.id), enabled: Boolean(active?.revision), retry: false });
   const artist = artists.data?.find((a) => a.apArtistId === artistId);
@@ -62,24 +85,46 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
     <Typography>Prepara tu sesión y una campaña de 14 días para conseguir registros y seguidores en TDF.</Typography>
     <Alert severity="info">Difusión orgánica · USD 0 de pauta. Guardar y exportar no publican contenido.</Alert>
     {importError && <Alert severity="error">{importError}</Alert>}
-    {admin && <TextField select label="Artista" value={artistId} onChange={(e) => {
-      setArtistId(Number(e.target.value)); setActive(null); setCreating(false);
-    }}>{artists.data?.map((a) => <MenuItem key={a.apArtistId} value={a.apArtistId}>{a.apDisplayName}</MenuItem>)}</TextField>}
-    {(artists.isError || campaigns.isError) && <Alert severity="error">No pudimos cargar tus campañas.
+    {admin && <>
+      <TextField select label="Artista" value={artistId} onChange={(e) => selectArtist(Number(e.target.value))}>
+        {!artists.data?.some((a) => a.apArtistId === artistId) && <MenuItem value={artistId}>Artista #{artistId}</MenuItem>}
+        {artists.data?.map((a) => <MenuItem key={a.apArtistId} value={a.apArtistId}>{a.apDisplayName}</MenuItem>)}
+      </TextField>
+      <TextField label="ID del artista" type="number" value={artistId} onChange={(e) => selectArtist(Number(e.target.value))}
+        helperText="También permite seleccionar un artista que todavía no tiene perfil público. El servidor verifica tu acceso." />
+    </>}
+    {campaigns.isError && <Alert severity="error">No pudimos cargar tus campañas.
       <Button onClick={() => { void artists.refetch(); void campaigns.refetch(); }}>Reintentar</Button></Alert>}
-    {(artists.isPending || campaigns.isPending) && <CircularProgress aria-label="Cargando campañas" />}
-    {campaigns.isSuccess && artist && <>
-      {!creating && !active && <><Button variant="contained" onClick={() => setCreating(true)}>Crear campaña</Button>
-        <Button component="label">Importar plan<input hidden type="file" accept="application/json,.json" onChange={(e) => {
+    {(!Number.isSafeInteger(artistId) || artistId <= 0) && <Alert severity="error">Escribe un ID de artista válido.</Alert>}
+    {Number.isSafeInteger(artistId) && artistId > 0 && campaigns.isPending && <CircularProgress aria-label="Cargando campañas" />}
+    {importing && <CircularProgress aria-label="Leyendo plan" />}
+    {campaigns.isSuccess && <>
+      {!artist && <Alert severity="info">Tienes acceso al artista #{artistId}. Sus datos públicos no están disponibles.
+        Puedes preparar sus campañas; guardar un borrador no modifica la visibilidad del perfil.</Alert>}
+      {importConflict && <Alert severity="warning">
+        Ya existe esta campaña: {importConflict.saved.content.title} · revisión {importConflict.saved.revision}.
+        Puedes revisar el archivo como un borrador que reemplazará ese contenido al guardar, o crear una copia con enlaces nuevos.
+        Ninguna opción guarda ni publica automáticamente.
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <Button onClick={() => {
+            setActive({ ...importConflict.saved, content: importConflict.plan.content }); setImportConflict(null);
+          }}>Revisar cambios sobre esta campaña</Button>
+          <Button onClick={() => { setActive(freshCopy(importConflict.plan)); setImportConflict(null); }}>Importar como copia nueva</Button>
+          <Button onClick={() => setImportConflict(null)}>Cancelar importación</Button>
+        </Stack>
+      </Alert>}
+      {!creating && !active && !importConflict && <><Button variant="contained" disabled={importing} onClick={() => setCreating(true)}>Crear campaña</Button>
+        <Button component="label" disabled={importing}>Importar plan<input aria-label="Archivo del plan" hidden disabled={importing} type="file" accept="application/json,.json" onChange={(e) => {
           const file = e.target.files?.[0]; e.target.value = ''; void importPlan(file);
+        }} /></Button>
+        <Button component="label" disabled={importing}>Importar plan como copia nueva<input aria-label="Archivo del plan para copia nueva" hidden disabled={importing} type="file" accept="application/json,.json" onChange={(e) => {
+          const file = e.target.files?.[0]; e.target.value = ''; void importPlan(file, true);
         }} /></Button>
         {campaigns.data.length === 0 && <Typography>Aún no tienes campañas guardadas.</Typography>}
         {campaigns.data.map((c) => <Card key={c.id}><CardContent><Stack spacing={1}>
           <Typography variant="h6">{c.content.title}</Typography><Typography>{c.content.status === 'ready' ? 'Lista para revisar' : 'Borrador'}</Typography>
-          <Button onClick={() => setActive(c)}>Continuar</Button>
-          <Button onClick={() => { setActive({ ...c, id: crypto.randomUUID(), revision: 0,
-            content: { ...c.content, status: 'draft', rightsConfirmed: false, technicalReviewed: false, proposedLaunchDate: '', title: `${c.content.title.slice(0, 190)} (copia)`,
-              pieces: c.content.pieces.map((p) => ({ ...p, status: 'draft', publishedUrl: '' })) } }); }}>Duplicar</Button>
+          <Button disabled={importing} onClick={() => setActive(c)}>Continuar</Button>
+          <Button disabled={importing} onClick={() => setActive(freshCopy(c))}>Duplicar</Button>
         </Stack></CardContent></Card>)}</>}
       {active && active.revision > 0 && <Alert severity={metrics.isError ? 'warning' : 'info'}>{metrics.data
         ? `Registros atribuidos: ${metrics.data.registrations} · Nuevos seguidores atribuidos: ${metrics.data.follows}`
@@ -88,7 +133,7 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
         {p.source} · {p.piece}: {p.registrations} registros · {p.follows} seguidores nuevos en TDF
       </Typography>)}
       {(creating || active) && <CampaignEditor key={`${artistId}:${active?.id ?? 'new'}`} session={session}
-        artistId={artistId} artistName={artist.apDisplayName} initial={active}
+        artistId={artistId} artistName={artist?.apDisplayName ?? `Artista #${artistId}`} initial={active}
         onSaved={() => { void campaigns.refetch(); }} onClose={() => { setActive(null); setCreating(false); }} />}
     </>}
   </Stack></Box>;
@@ -139,7 +184,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     flight.current = true; setBusy(true); setError(''); setNotice('');
     try {
       await VideoCampaigns.feature(artistId, id, revision);
-      if (current()) setNotice('Video publicado en el perfil de TDF. No se ha publicado en Instagram ni TikTok.');
+      if (current()) setNotice('Video destacado actualizado en TDF. La visibilidad del perfil no cambia. No se ha publicado en Instagram ni TikTok.');
     } catch (e) { if (current()) setError(e instanceof Error ? e.message : 'No pudimos actualizar el video del perfil.'); }
     finally { flight.current = false; if (current()) setBusy(false); }
   };
@@ -228,7 +273,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
       <Button onClick={exportPlan}>Descargar plan y textos</Button>
       <Button variant="contained" onClick={() => void save(true)}>Guardar para revisión</Button>
       {doc.status === 'ready' && doc.rightsConfirmed && doc.technicalReviewed && revision > 0 && <>
-        <Typography>La siguiente acción hace visible el video en el perfil público del artista en TDF.</Typography>
+        <Typography>La siguiente acción actualiza el video destacado del perfil de TDF. Si el perfil es público, se verá allí; un perfil privado conserva su visibilidad.</Typography>
         <Button color="secondary" variant="outlined" onClick={() => void featureVideo()}>Publicar video en el perfil de TDF</Button>
       </>}
     </>}
