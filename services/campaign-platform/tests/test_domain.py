@@ -47,6 +47,79 @@ class CampaignTests(unittest.TestCase):
   with self.assertRaises(Denied):self.store.tdf_review(self.admin,pid,999)
   self.store.tdf_review(self.admin,pid,1);self.store.status(self.a,self.cid,'active')
   with self.store.db() as d:self.assertEqual(self.store.execution_guard(d,d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone())['scope'],'tdf')
+ def test_worker_block_keeps_owner_approved_shared_piece_in_tdf_review(self):
+  with self.store.db(True) as d:d.execute('UPDATE accounts SET owner=3,scope="tdf" WHERE id=?',(self.account,))
+  pid=self.piece();self.approve();self.store.status(self.a,self.cid,'active')
+  class NoProvider:
+   def publish(*args):raise AssertionError('TDF review must precede provider publication')
+  self.assertEqual([p['id'] for p in self.store.tdf_review(self.admin)],[pid])
+  self.assertTrue(run_one(self.store,NoProvider(),lambda a:''))
+  with self.store.db() as d:
+   before=dict(d.execute('SELECT * FROM jobs WHERE piece=?',(pid,)).fetchone())
+   piece=dict(d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone())
+  self.assertEqual((piece['status'],piece['external_id'],piece['approved_version'],piece['tdf_approval_version']),('blocked',None,1,None))
+  self.assertEqual(before['state'],'blocked')
+  self.assertEqual([p['id'] for p in self.store.tdf_review(self.admin)],[pid])
+  self.assertEqual(self.store.tdf_review(self.admin,pid,1),{'approved':True})
+  with self.store.db() as d:
+   after=dict(d.execute('SELECT * FROM jobs WHERE piece=?',(pid,)).fetchone())
+   piece=dict(d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone())
+  self.assertEqual(after,before)
+  self.assertEqual((piece['status'],piece['external_id'],piece['version'],piece['approved_version'],piece['tdf_approval_version']),('blocked',None,1,1,1))
+  self.assertEqual(self.store.tdf_review(self.admin),[]);self.assertIsNone(self.store.claim())
+  # Administrative review alone cannot replay a provider operation. The owner
+  # explicitly reapproves/reactivates through the existing durable recovery path.
+  self.approve();self.store.status(self.a,self.cid,'active')
+  with self.store.db() as d:
+   job=d.execute('SELECT * FROM jobs WHERE piece=?',(pid,)).fetchone()
+   self.assertEqual((job['id'],job['state']),(before['id'],'queued'))
+   self.assertEqual(self.store.execution_guard(d,d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone())['scope'],'tdf')
+ def test_tdf_review_includes_only_safe_blocked_or_original_approved_submissions(self):
+  with self.store.db(True) as d:d.execute('UPDATE accounts SET owner=3,scope="tdf" WHERE id=?',(self.account,))
+  pid=self.piece();self.approve()
+  for state in ('draft','approved','blocked','publishing','processing','unknown','published','cancelled'):
+   for external in (None,'existing-provider-effect'):
+    with self.subTest(state=state,external=external):
+     with self.store.db(True) as d:d.execute('UPDATE pieces SET status=?,external_id=? WHERE id=?',(state,external,pid))
+     pending=self.store.tdf_review(self.admin)
+     self.assertEqual([p['id'] for p in pending],[pid] if state=='approved' or (state=='blocked' and external is None) else [])
+ def test_blocked_shared_review_keeps_admin_and_exact_version_authority(self):
+  with self.store.db(True) as d:d.execute('UPDATE accounts SET owner=3,scope="tdf" WHERE id=?',(self.account,))
+  pid=self.piece();self.approve();self.store.status(self.a,self.cid,'active')
+  class NoProvider:
+   def publish(*args):raise AssertionError('No publication before administrator approval')
+  run_one(self.store,NoProvider(),lambda a:'')
+  for actor in (self.a,self.b):
+   with self.assertRaises(Denied) as denied:self.store.tdf_review(actor,pid,1)
+   self.assertEqual(denied.exception.status,403)
+  with self.assertRaises(Denied) as denied:self.store.tdf_review(self.admin,pid,999)
+  self.assertEqual(denied.exception.status,409)
+  self.store.piece(self.a,self.cid,{'name':'Changed submission','platform':'instagram','format':'reel','account':self.account,'copy':'Changed','due_at':time.time()-1,'late_seconds':60},pid)
+  self.assertEqual(self.store.tdf_review(self.admin),[])
+  with self.assertRaises(Denied):self.store.tdf_review(self.admin,pid,1)
+  with self.store.db() as d:
+   piece=d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone()
+   self.assertEqual((piece['version'],piece['approved_version'],piece['tdf_approval_version']),(2,None,None))
+ def test_review_of_blocked_shared_piece_does_not_bypass_other_execution_guards(self):
+  with self.store.db(True) as d:d.execute('UPDATE accounts SET owner=3,scope="tdf" WHERE id=?',(self.account,))
+  pid=self.piece();self.approve();self.store.status(self.a,self.cid,'active')
+  class NoProvider:
+   def publish(*args):raise AssertionError('No provider call in guarded fixture')
+  run_one(self.store,NoProvider(),lambda a:'');self.store.tdf_review(self.admin,pid,1)
+  with self.store.db(True) as d:d.execute('UPDATE pieces SET due_at=? WHERE id=?',(time.time()-3600,pid))
+  with self.store.db() as d:
+   with self.assertRaises(Denied):self.store.execution_guard(d,d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone())
+  with self.store.db(True) as d:
+   d.execute('UPDATE pieces SET due_at=? WHERE id=?',(time.time()-1,pid));d.execute('UPDATE accounts SET revoked=1 WHERE id=?',(self.account,))
+  with self.store.db() as d:
+   with self.assertRaises(Denied):self.store.execution_guard(d,d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone())
+  with self.store.db(True) as d:
+   d.execute('UPDATE accounts SET revoked=0 WHERE id=?',(self.account,));d.execute('UPDATE campaigns SET approved_version=NULL WHERE id=?',(self.cid,))
+  with self.store.db() as d:
+   piece=d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone()
+   with self.assertRaises(Denied):self.store.execution_guard(d,piece)
+   self.assertEqual(piece['tdf_approval_version'],1)
+   self.assertEqual(d.execute('SELECT state FROM jobs WHERE piece=?',(pid,)).fetchone()[0],'blocked')
  def test_other_person_account_cannot_be_selected(self):
   with self.store.db(True) as d:d.execute('UPDATE accounts SET owner=2 WHERE id=?',(self.account,))
   with self.assertRaises(Denied):self.piece()
