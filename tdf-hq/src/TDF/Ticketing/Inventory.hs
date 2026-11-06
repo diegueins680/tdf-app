@@ -1,15 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module TDF.Ticketing.Inventory (reserveTicketInventory) where
+module TDF.Ticketing.Inventory (reserveTicketInventory, ticketReservationTime) where
 
+import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
 import Data.Time (UTCTime)
 import Database.Persist
 import Database.Persist.Sql
 import qualified TDF.Models.SocialEventsModels as M
 
+-- | Sample in a separate statement after the new reservation's final row-lock
+-- wait. Request time, transaction time and a clock read inside a locking SELECT
+-- can all predate that wait. Callers retain their request time for audit.
+ticketReservationTime :: SqlPersistT IO UTCTime
+ticketReservationTime = do
+  rows <- rawSql "SELECT clock_timestamp()" [] :: SqlPersistT IO [Single UTCTime]
+  case rows of
+    [Single admissionTime] -> pure admissionTime
+    _ -> liftIO (fail "Expected one ticket reservation clock sample")
+
 -- | Call in the transaction that creates the hold/order. Locks serialize tiers
 -- sharing an event capacity. A failed order must roll back this reservation.
+-- Pass a fresh ticketReservationTime after all Event/Tier/Promo/policy locks.
 -- This is inventory authority, not payment or event-publication authorization.
 reserveTicketInventory :: M.SocialEventId -> M.EventTicketTierId -> Int -> UTCTime
   -> SqlPersistT IO Bool
