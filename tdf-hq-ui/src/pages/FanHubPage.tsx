@@ -92,6 +92,17 @@ const EMPTY_ARTIST_DRAFT: ArtistProfileUpsert = {
   apuYoutubeChannelId: '', apuYoutubeUrl: '', apuWebsiteUrl: '',
   apuFeaturedVideoUrl: '', apuGenreIds: [], apuHighlights: '',
 };
+
+function parseRecoverableArtistDraft(value: unknown, ownerId: number | null): ArtistProfileUpsert | undefined {
+  if (!value || typeof value !== 'object' || ownerId === null) return undefined;
+  const fields = value as Record<string, unknown>;
+  if (fields['apuArtistId'] !== ownerId || Object.keys(fields).some((key) => !(key in EMPTY_ARTIST_DRAFT))) return undefined;
+  if (!Array.isArray(fields['apuGenreIds']) || fields['apuGenreIds'].some((id: unknown) => typeof id !== 'string')) return undefined;
+  for (const [key, initial] of Object.entries(EMPTY_ARTIST_DRAFT)) {
+    if (typeof initial === 'string' && fields[key] != null && typeof fields[key] !== 'string') return undefined;
+  }
+  return fields as unknown as ArtistProfileUpsert;
+}
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
@@ -127,7 +138,7 @@ interface CatalogRecoveryCard {
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session, loading: sessionLoading } = useSession();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
@@ -360,9 +371,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const {
     draft: artistDraft, setDraft: setArtistDraft, ready: artistProfileReady,
     acknowledgeSave: acknowledgeArtistSave, isCurrentOwner: isCurrentArtistOwner,
+    restored: artistDraftRestored, persistenceAvailable: artistDraftRecoveryAvailable,
   } = useOwnedProfileDraft<ArtistProfileUpsert>({
     ownerId: !sessionLoading && canEditArtist ? viewerId : null,
     baseline: artistBaseline, empty: EMPTY_ARTIST_DRAFT,
+    persistence: { scope: 'artist-profile', parse: (value) => parseRecoverableArtistDraft(value, viewerId) },
   });
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
   const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
@@ -1633,6 +1646,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   )}
                   <Box component="fieldset" disabled={!artistProfileReady} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
                     <Stack spacing={2}>
+                      {artistDraftRestored && <Alert severity="info">{i18n.language.startsWith('en')
+                        ? 'We restored your unsaved changes from this tab. If your selected file is no longer available, select only that file again.'
+                        : 'Recuperamos los cambios sin guardar de esta pestaña. Si el archivo seleccionado ya no está disponible, vuelve a seleccionar solo ese archivo.'}</Alert>}
                       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                         <TextField
                           label="Nombre artístico"
@@ -1685,7 +1701,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           Portada principal (hosteada)
                         </Typography>
                         <GoogleDriveUploadWidget
-                          label="Subir portada a Drive"
+                          recoveryScope={`artist-cover:${viewerId ?? 'new'}`}
+                          formRecoveryAvailable={artistDraftRecoveryAvailable}
+                          multiple={false}
+                          label="Subir portada"
+                          visibility="public"
                           helperText="Sube la portada; guardaremos el enlace servido para evitar imágenes pesadas embebidas."
                           onComplete={(files) => {
                             if (!isCurrentArtistOwner()) return;

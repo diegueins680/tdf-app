@@ -8,6 +8,11 @@ const { uploadAssetPhoto, uploadAssetPhotoByQrToken } = await import('./inventor
 
 class UploadRequest {
   static DONE = 4;
+  static defer = false;
+  timeout = 0;
+  onabort?: () => void;
+  ontimeout?: () => void;
+  abort() { this.onabort?.(); }
   static current: UploadRequest;
   withCredentials = false;
   readyState = 0;
@@ -23,6 +28,7 @@ class UploadRequest {
   setRequestHeader(name: string, value: string) { this.headers.set(name, value); }
   send(body: FormData) {
     this.body = body;
+    if (UploadRequest.defer) return;
     this.status = this.withCredentials || this.headers.has('Authorization') ? 200 : 401;
     this.responseText = this.status === 200
       ? JSON.stringify({ auPath: '/uploads/smoke.png', auFileName: 'smoke.png', auPublicUrl: 'https://assets.test/smoke.png' })
@@ -35,6 +41,7 @@ class UploadRequest {
 const original = globalThis.XMLHttpRequest;
 beforeEach(() => {
   authorization.mockReset();
+  UploadRequest.defer = false;
   globalThis.XMLHttpRequest = UploadRequest as unknown as typeof XMLHttpRequest;
 });
 afterEach(() => { globalThis.XMLHttpRequest = original; });
@@ -56,4 +63,23 @@ it('retains bearer authentication for existing token sessions', async () => {
 it('preserves encoded QR-token upload routing', async () => {
   await uploadAssetPhotoByQrToken('opaque/token', new File(['smoke'], 'smoke.png'));
   expect(UploadRequest.current.url).toContain('/public/assets/qr/opaque%2Ftoken/upload');
+});
+
+it('cancels an in-flight inventory upload without accepting a later success', async () => {
+  UploadRequest.defer = true;
+  const controller = new AbortController();
+  const result = uploadAssetPhoto(new File(['smoke'], 'smoke.png'), { signal: controller.signal });
+  controller.abort();
+  await expect(result).rejects.toMatchObject({ name: 'AbortError' });
+  const request = UploadRequest.current;
+  request.status = 200; request.responseText = '{}'; request.readyState = UploadRequest.DONE;
+  request.onreadystatechange?.();
+  await expect(result).rejects.toMatchObject({ name: 'AbortError' });
+});
+it('sets a bounded transport deadline and reports an unknown outcome safely', async () => {
+  UploadRequest.defer = true;
+  const result = uploadAssetPhoto(new File(['smoke'], 'smoke.png'));
+  expect(UploadRequest.current.timeout).toBe(120_000);
+  UploadRequest.current.ontimeout?.();
+  await expect(result).rejects.toThrow('No pudimos confirmar la carga dentro del tiempo disponible.');
 });

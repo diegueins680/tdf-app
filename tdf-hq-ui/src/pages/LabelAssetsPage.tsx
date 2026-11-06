@@ -1128,6 +1128,7 @@ export default function LabelAssetsPage() {
               )}
             />
             <GoogleDriveUploadWidget
+              recoveryScope={`inventory-asset:${editingAsset?.assetId ?? 'new'}`}
               label="Subir foto"
               helperText="Adjunta una foto y la guardaremos en el host de assets."
               onComplete={(files) => {
