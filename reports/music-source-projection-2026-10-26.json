@@ -732,5 +732,254 @@
       }
     },
     "release": "Pinned63c normal merge only; exact candidate CI/current review/protected integration remain gates. No push/Git/services/production by metadata owner."
+  },
+  "fullSchemaQualification": {
+    "source": "7187e17af15a46495aa6ebf388717eed6322f4d7",
+    "mainBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "report": {
+      "startedAt": "2026-10-26T17:03:55.018698+00:00",
+      "source": "7187e17af15a46495aa6ebf388717eed6322f4d7",
+      "mainBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "status": "PASS_SCOPED_FULL222_SQL_AND_BINDING_CONTROLS",
+      "newCompilation": false,
+      "productionWrites": false,
+      "steps": [
+        {
+          "name": "init",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        },
+        {
+          "name": "start",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        },
+        {
+          "name": "baseline",
+          "exitCode": 1,
+          "expectedExitCode": 1
+        },
+        {
+          "name": "candidate",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        },
+        {
+          "name": "stop",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        }
+      ],
+      "cleanup": {
+        "ownedDatabasesRemoved": true,
+        "clusterStopped": true,
+        "postgresListenerClosed": true
+      },
+      "inputSha256": {
+        "scripts/test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
+        "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+        "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+        "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+        "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+        "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3"
+      },
+      "handlerHashes": {
+        "baseline": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
+        "candidate": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea"
+      },
+      "protocolSha256": "484f0674688412149828b6175e876bb708aff9545fd4c8348aecc67431c535b6",
+      "scope": "Real disposable PostgreSQL16 full222 canonical schema and same source runner on main and candidate. FiniteSQL/lexical tests, not nativeHTTP/media/production proof. Baseline adds only untracked qualification runner; candidate application code stays frozen.",
+      "postgresVersion": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+      "baselineAgreementFailures": [
+        "FAIL: getPublicRelease: preview-only listener must receive no denied full rendition",
+        "FAIL: getPublicRelease: EC must receive no US-only sources",
+        "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+        "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+        "FAIL: listFavorites: preview-only listener must receive no denied full rendition",
+        "FAIL: listFavorites: every emitted source agrees with delivery policy",
+        "FAIL: listPlaylists: preview-only listener must receive no denied full rendition",
+        "FAIL: listPlaylists: every emitted source agrees with delivery policy",
+        "FAIL: listPlaybackHistory: preview-only listener must receive no denied full rendition",
+        "FAIL: listPlaybackHistory: every emitted source agrees with delivery policy"
+      ],
+      "candidate": {
+        "kind": "music-source-projection-qualification",
+        "sourceRevision": "7187e17af15a46495aa6ebf388717eed6322f4d7",
+        "migrations": 222,
+        "surfaces": 4,
+        "policyRemovalControls": 4,
+        "bindingArgumentControls": 8,
+        "policySha256": "3cdef784382b64064b3c343313361406217f849fb6c1502008f92be31df916f9",
+        "handlerSha256": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+        "scope": "Complete canonical schema and finite real SQL/lexical controls; not compiled HTTP, bytes, performance or production acceptance"
+      },
+      "finishedAt": "2026-10-26T17:04:32.396245+00:00"
+    },
+    "baselineAgreementFailures": 10,
+    "candidateSqlSurfaces": 4,
+    "policyRemovalControls": 4,
+    "argumentMutationControls": 8,
+    "sourceCodePatchUnchangedFrom744": true,
+    "materialTestChange": "Replace partial14migration setup with complete canonical production fixtures/renderer, verify full registry replay and unchanged real policy, then final readiness. Supply mandatory party data in fixture. Preserve exact-checkout Git trust only for read-only source identification; no HOME/credentials passed to database or renderer children.",
+    "ciOriginal744": {
+      "workflow": 40284360424,
+      "job": 121444643699,
+      "failure": "Timed out: test worker cleanup in test-music-release-worker-runtime.mjs:759",
+      "sameWorkerAndHelperSourcesAsMain78fa": true,
+      "classification": "Independent observed CI failure; cause not proved, mandatory newcandidate lane still required",
+      "guardOrTimeoutRelaxed": false
+    },
+    "firstFullSchemaAttempt": {
+      "source": "5a33e3f6c56c0e1fb0b7737cb7dfafb8f113c637",
+      "outcome": "FIXTURE_SETUP_FAILURE",
+      "reason": "Mandatory party.is_org omitted",
+      "notPolicyCounterexample": true,
+      "evidence": "reports/music-source-projection-main621-evidence-20261026/first-attempt-failure-audit.json"
+    },
+    "packet": "reports/music-source-projection-main621-evidence-20261026",
+    "compiledHttp": "NOT_ESTABLISHED_BY_THIS_SQL_RUN",
+    "nativeMediaBytes": "NOT_ESTABLISHED",
+    "productionWrites": 0,
+    "newInfrastructure": false,
+    "initialSuccessfulSource": "349c67ee7ffeda6a550978f4bd527b5f33aeab5b",
+    "initialSuccessfulReport": {
+      "startedAt": "2026-10-26T16:52:08.405627+00:00",
+      "source": "349c67ee7ffeda6a550978f4bd527b5f33aeab5b",
+      "mainBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "status": "PASS_SCOPED_FULL222_SQL_AND_BINDING_CONTROLS",
+      "newCompilation": false,
+      "productionWrites": false,
+      "steps": [
+        {
+          "name": "init",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        },
+        {
+          "name": "start",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        },
+        {
+          "name": "baseline",
+          "exitCode": 1,
+          "expectedExitCode": 1
+        },
+        {
+          "name": "candidate",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        },
+        {
+          "name": "stop",
+          "exitCode": 0,
+          "expectedExitCode": 0
+        }
+      ],
+      "cleanup": {
+        "ownedDatabasesRemoved": true,
+        "clusterStopped": true,
+        "postgresListenerClosed": true
+      },
+      "inputSha256": {
+        "scripts/test-music-source-projection.mjs": "1ed0f168e1ff66632b2628ecab7d0959ec0e150c2ffbc4f969ddcd37902d2571",
+        "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+        "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+        "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+        "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+        "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3"
+      },
+      "handlerHashes": {
+        "baseline": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
+        "candidate": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea"
+      },
+      "protocolSha256": "0bc523bd3da1b86331fa7369fec844e5785f31f8a2331206ae99448b3f2a5aa6",
+      "scope": "Real disposable PostgreSQL16 full222 canonical schema and same source runner on main and candidate. FiniteSQL/lexical tests, not nativeHTTP/media/production proof. Baseline adds only untracked qualification runner; candidate application code stays frozen.",
+      "postgresVersion": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+      "baselineAgreementFailures": [
+        "FAIL: getPublicRelease: preview-only listener must receive no denied full rendition",
+        "FAIL: getPublicRelease: EC must receive no US-only sources",
+        "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+        "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+        "FAIL: listFavorites: preview-only listener must receive no denied full rendition",
+        "FAIL: listFavorites: every emitted source agrees with delivery policy",
+        "FAIL: listPlaylists: preview-only listener must receive no denied full rendition",
+        "FAIL: listPlaylists: every emitted source agrees with delivery policy",
+        "FAIL: listPlaybackHistory: preview-only listener must receive no denied full rendition",
+        "FAIL: listPlaybackHistory: every emitted source agrees with delivery policy"
+      ],
+      "candidate": {
+        "kind": "music-source-projection-qualification",
+        "sourceRevision": "349c67ee7ffeda6a550978f4bd527b5f33aeab5b",
+        "migrations": 222,
+        "surfaces": 4,
+        "policyRemovalControls": 4,
+        "bindingArgumentControls": 8,
+        "policySha256": "3cdef784382b64064b3c343313361406217f849fb6c1502008f92be31df916f9",
+        "handlerSha256": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+        "scope": "Complete canonical schema and finite real SQL/lexical controls; not compiled HTTP, bytes, performance or production acceptance"
+      },
+      "finishedAt": "2026-10-26T16:52:44.201110+00:00"
+    },
+    "readOnlyGitContextControl": {
+      "observedAt": "2026-10-26T17:03:52.734850+00:00",
+      "fixture": "/private/tmp/tdf-music-source-git-context-20261026-lkimi0a1/fixture",
+      "negativeWithoutHome": "REJECTED dubious ownership",
+      "positiveWithExactTrustedCheckoutConfig": "PASS actualGit",
+      "trustScope": "Exactfixturepath only; no wildcard or globaloperator config changed",
+      "simulation": "Git test-only different-owner control; no uid/permission changes",
+      "databaseChildrenInheritHome": false,
+      "reason": "BackendCI explicitly configures exact checkout trust under HOME; sanitizedDBenvironment must not erase that context for a read-only Git metadata call."
+    },
+    "latestRealSqlOutcome": "PASS after realGit trust-context correction"
+  },
+  "canonicalSchemaVerificationFollowup": {
+    "parentPr": 626,
+    "parentHead": "ac396190351fc8b26279cc1f2611c1eff34ce271",
+    "applicationSourceStatus": "UNCHANGED_FROM_APPROVED_PARENT",
+    "qualificationParent": "8337676e463c0db9346131ec0407fe49cac134ac",
+    "sourceExecution": "7187e17af15a46495aa6ebf388717eed6322f4d7",
+    "scope": "Test-only stacked followup. Keep original parent review and source intact. Retarget only after parent626 integrated; exactmainreview/CI required before protectedmerge.",
+    "localRepositoryQualityReceipt": {
+      "observedAt": "2026-10-26T17:15:12.730932+00:00",
+      "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "mainRequirementObjectsExact": 145,
+      "unchangedAddedRequirement": "MEDIA-MUSIC-SOURCES-001",
+      "totalRequirements": 146,
+      "wholeMainCatalogDecisionFileExact": true,
+      "strictCatalogCandidates": 1339,
+      "unreviewed": 0,
+      "stale": 0,
+      "jsonCsvExitCode": 0,
+      "focused": {
+        "ciSelectionTests": 17,
+        "catalogHistoryTests": 8,
+        "exitCode": 0
+      },
+      "repositoryQuality": "PASS finalunmodifiedwholecanonicalcommand afterGitcontextfix",
+      "inventory": "GENERATED_AND_CHECKED",
+      "traceability": "GENERATED_AND_CHECKED",
+      "sourceAdmission": "PENDING final immutable evidencecommit",
+      "logsSha256": {
+        "catalog": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "repository": "f0df7e7b8d7e8e90582a79752c6d28c8eecdda51173b8898534139e31de97265",
+        "focused": "12bb4eb7f0b27e8234333633a306c702cfccd6b1809ffb003cc39c0671907611"
+      }
+    },
+    "releaseImageDependency": {
+      "workflow": 40357175721,
+      "source": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "conclusion": "FAILURE",
+      "dockerJob": "SKIPPED",
+      "backendFailure": "same test worker cleanup timeout at759",
+      "personaFailure": "webkit-critical campaign controls calendar accessibility case",
+      "rootCause": "NOT_ESTABLISHED; no automaticrerun/guardrelaxation",
+      "separateFromProjectionFix": true,
+      "productionDeployment": false
+    }
   }
 }
