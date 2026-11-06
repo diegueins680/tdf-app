@@ -1,0 +1,26 @@
+Independent read-only boundary and contract review: ticket reservation clock
+
+Baseline: b827b7303e99196043f554dd16c4dedbfe725d36. Authority is the owner's explicit 29 October policy, "Require validity when inventory is reserved." Reviewed current two additional boundary regressions, new clock contract, revised inventory/promo snapshot scopes and EVT parent metadata. No independent test/build, solver, server, database or provider execution was performed. This is not a formal proof, required GitHub approval or runtime qualification.
+
+Blocking findings: 0 within this scope.
+
+The pure promo case asserts acceptance at start and end independently, preserving the existing inclusive interval. The tier primitive case owns Event and Tier locks before sampling actual database time, writes each test interval around that exact sample, and passes the same value to Inventory. It exercises the start-equality and end-equality predicates without a timing-sensitive attempt to hit an exact wall-clock instant through HTTP. This verifies the primitive's comparison boundary; it does not by itself prove that every caller obtains a fresh post-wait timestamp. The separate actual-handler wait schedules address that obligation.
+
+The tier reservation and synthetic date edits occur after SAVEPOINT. ROLLBACK TO SAVEPOINT and RELEASE remove both edits and the temporary sold increment before the assertion is evaluated outside runSqlPool. SQL exceptions also cause the transaction wrapper to roll back. The independently created fixture remains valid, and final sold/ticket/redemption counts are required to be zero. No orphan reservation is intentionally committed. Both loop variants reuse a zero-stock fixture because their individual changes roll back.
+
+The new contract accurately defines one logical admission sample after final row-lock waits, shared by the current tier and selected promo, with inclusive endpoints, no new-buyer effects on refusal, and no requirement that commit/provider completion precede expiry. Audit/order timestamps and hold duration remain distinct. Canonical cleanup ordering, existing reuse exits and limitations of outer canonical replay validation are described explicitly. The inherited contracts now distinguish their historical handler-start/quote-identity evidence from the new successor rule; old stock and 324-state snapshot results are not promoted to elapsed-time proof. The reviewed contract makes no new mathematical or whole-platform guarantee.
+
+Parsed parent metadata comparison against b827 confirms 154 objects with unchanged IDs; only EVT-TICKET-001 changes, and only its statement and source fields. All 153 other requirement objects are unchanged. The owner decision supplies authority for the added rule. Final reviewed documents include the spacing/UTF8 finalization announced by root; no earlier preliminary document hash is treated as current evidence. Exact final hashes are below.
+
+Execution scope remains separate: the supplied corrected-targeted execution receipt binds the earlier 15-case test source, reports actual Stack exit 0 with stable five-file hashes and 227 migrations, and is not an execution of the later two boundary cases. Root reported 15 examples / 0 failures. Final 17-case, full-suite and clock-mutation execution remain pending at this review boundary. Neither the boundary source review nor the historical actual red 7/7 receipt qualifies those pending results. Source application hashes still match the previously reviewed implementation. Full caller/refinement status remains incomplete; no provider, production or rollout claim follows.
+
+Reviewed current SHA256 values:
+formal/system/ticket-reservation-clock.md: 8e25fe8724f48710dfa8e31237bc10023123717bb9601859dfcc4e537266be80
+formal/system/legacy-ticket-inventory.md: ef131d8320337d5ccae19d238ae08b83ef4334bcda3f63cef588b43a230b02e4
+formal/system/legacy-ticket-promo-snapshot.md: 678b95ce33ec5e279320fc6ccec500f35f16bff877f336527be64aac87eee9f3
+formal/system/requirements.json: 65e6740de961759d20c96f593087e682fe4bb1110e3b1c4df9ffa20e50c64914
+tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs: 4cab19a0b36115efb835bced07f8543284647ecebbdc25afdd922ba14e31c0a8
+tdf-hq/test/TDF/TicketPaymentGateSpec.hs: 79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb
+tdf-hq/src/TDF/Ticketing/Inventory.hs: 12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c
+tdf-hq/src/TDF/Server/SocialEventsHandlers.hs: 8080a090e36d8eb6092de3fc6fc9c80339fa9f34f4d3b181518129e1b314390d
+tdf-hq/src/TDF/Server/EventTicketCheckout.hs: cda8992999a9f9ac324172aa765d78c37c82362be76b5fde51dfcabbfceeb8f1
