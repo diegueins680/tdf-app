@@ -13,58 +13,67 @@
     },
     {
       "historicalReplacementId": "74f76e178df15df54768",
-      "currentId": "afc970c544841f583bdc",
+      "currentId": "2511cbba2fc7279bc28a",
       "file": "tdf-hq-ui/src/api/socialEvents.ts",
       "kind": "object-registry",
       "name": "SocialEventsAPI",
-      "valueCount": 77,
-      "change": "Combine protected receipt read with memory edit/delete and scoped media upload; transport methods retain server authorization. Both parent reviews are preserved in the active classification decision.",
+      "valueCount": 78,
+      "change": "SocialEventsAPI adds getVenue so the events page can name venues referenced by loaded events outside the bounded venue list page; the 77 reviewed transport methods remain and server authorization is unchanged.",
       "previousResolution": {
         "historicalReplacementId": "74f76e178df15df54768",
-        "currentId": "48cbf22770303d844cdc",
+        "currentId": "afc970c544841f583bdc",
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
         "kind": "object-registry",
         "name": "SocialEventsAPI",
-        "valueCount": 72,
-        "change": "SocialEventsAPI adds getManualPaymentReceipt. The 71 existing typed methods remain; this review covers technical dispatch names and does not authorize receipt access or payment approval.",
+        "valueCount": 77,
+        "change": "Combine protected receipt read with memory edit/delete and scoped media upload; transport methods retain server authorization. Both parent reviews are preserved in the active classification decision.",
         "previousResolution": {
           "historicalReplacementId": "74f76e178df15df54768",
-          "currentId": "620eb81ffe787eca6636",
+          "currentId": "48cbf22770303d844cdc",
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
           "kind": "object-registry",
           "name": "SocialEventsAPI",
-          "valueCount": 71,
-          "change": "SocialEventsAPI adds the bank-transfer refund completion call; reviewed client methods are unchanged implementation mechanics.",
+          "valueCount": 72,
+          "change": "SocialEventsAPI adds getManualPaymentReceipt. The 71 existing typed methods remain; this review covers technical dispatch names and does not authorize receipt access or payment approval.",
           "previousResolution": {
             "historicalReplacementId": "74f76e178df15df54768",
-            "currentId": "c69afb90768a2e78770a",
+            "currentId": "620eb81ffe787eca6636",
             "file": "tdf-hq-ui/src/api/socialEvents.ts",
             "kind": "object-registry",
             "name": "SocialEventsAPI",
-            "valueCount": 70,
-            "change": "SocialEventsAPI adds staff invoice list and resend calls; the reviewed client methods are unchanged and remain implementation mechanics.",
+            "valueCount": 71,
+            "change": "SocialEventsAPI adds the bank-transfer refund completion call; reviewed client methods are unchanged implementation mechanics.",
             "previousResolution": {
               "historicalReplacementId": "74f76e178df15df54768",
-              "currentId": "e858a9fa43eea647e38e",
+              "currentId": "c69afb90768a2e78770a",
               "file": "tdf-hq-ui/src/api/socialEvents.ts",
               "kind": "object-registry",
               "name": "SocialEventsAPI",
-              "valueCount": 68,
-              "change": "SocialEventsAPI adds the staff manual bank transfer list and review calls; the reviewed 66 existing client methods are unchanged and remain implementation mechanics.",
+              "valueCount": 70,
+              "change": "SocialEventsAPI adds staff invoice list and resend calls; the reviewed client methods are unchanged and remain implementation mechanics.",
               "previousResolution": {
                 "historicalReplacementId": "74f76e178df15df54768",
-                "currentId": "74f76e178df15df54768",
+                "currentId": "e858a9fa43eea647e38e",
                 "file": "tdf-hq-ui/src/api/socialEvents.ts",
                 "kind": "object-registry",
                 "name": "SocialEventsAPI",
-                "valueCount": 66
+                "valueCount": 68,
+                "change": "SocialEventsAPI adds the staff manual bank transfer list and review calls; the reviewed 66 existing client methods are unchanged and remain implementation mechanics.",
+                "previousResolution": {
+                  "historicalReplacementId": "74f76e178df15df54768",
+                  "currentId": "74f76e178df15df54768",
+                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                  "kind": "object-registry",
+                  "name": "SocialEventsAPI",
+                  "valueCount": 66
+                }
               }
             }
           }
-        }
-      },
-      "previousCurrentId": "34210b76e81fd04cffae",
-      "reason": "The 77 transport method keys retain the complete prior 75-method decision as previousDecision and add reads of existing authenticated social artist list/detail endpoints. Artist data remains persisted; dispatch keys remain technical constants."
+        },
+        "previousCurrentId": "34210b76e81fd04cffae",
+        "reason": "The 77 transport method keys retain the complete prior 75-method decision as previousDecision and add reads of existing authenticated social artist list/detail endpoints. Artist data remains persisted; dispatch keys remain technical constants."
+      }
     },
     {
       "historicalReplacementId": "c7c31a11cdb3859ae4bb",
