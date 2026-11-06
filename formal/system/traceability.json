@@ -1247,7 +1247,9 @@
         "scripts/test-auth-predicates.py",
         "scripts/check-admin-guards.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "scripts/verify-auth-predicates.py"
+      ],
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for inspected predicates and targeted registry tests; per-handler HTTP denial execution remains open.",
@@ -13998,7 +14000,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas proved unbounded; the composition into calculateDomoQuote is checked by properties, not mechanically refined.",
       "ambiguity": [
         "The Domo quote lifecycle (DomoQuoteState) and its refund policy after deposit_paid -> cancelled are not specified here.",
@@ -14223,7 +14227,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas unbounded, composition property-tested.",
       "ambiguity": [
         "A deposit course whose total is at most 50.00 can have a zero balance, so the deposit equals the full price; whether such courses should use the deposit mode is a business decision (F-20)."
@@ -14394,7 +14400,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_cancellation_refund.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable. A requested Domo cancellation refund is approved and executed by a different strict administrator with the Admin module through the shared PayPal refund approval (POST /admin/services/storefront/refunds/{refundId}/approve), bound to the deposit checkout's verified PayPal capture; Datafast refunds remain unsupported (503).",
@@ -19603,6 +19611,10 @@
       {
         "requirement": "AUTH-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq-ui/src/features/featureRegistry.test.ts": [
@@ -30353,8 +30365,16 @@
         "relationship": "tests"
       },
       {
+        "requirement": "PAY-DOMO-QUOTE-001",
+        "relationship": "formalModels"
+      },
+      {
         "requirement": "PAY-COURSE-PRICE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-COURSE-PRICE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": [
@@ -30585,6 +30605,10 @@
       {
         "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DOMO-CANCEL-001",
+        "relationship": "formalModels"
       }
     ],
     "scripts/test-domo-quote-checkout-runtime-migration.sh": [
@@ -39097,6 +39121,10 @@
         {
           "requirement": "AUTH-REGISTRY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-REGISTRY-001",
+          "relationship": "formalModels"
         }
       ]
     },
@@ -63798,7 +63826,6 @@
     "SYS-TRACE-001",
     "SYS-STATE-001",
     "AUTH-CORS-001",
-    "AUTH-REGISTRY-001",
     "ID-SESSION-004",
     "DEPLOY-BUILD-001",
     "PAY-CHECKOUT-001",
@@ -63841,12 +63868,9 @@
     "SYS-CI-SELECTED-001",
     "ART-ENRICH-REVIEW-001",
     "ART-PUBLIC-VISIBILITY-001",
-    "PAY-DOMO-QUOTE-001",
     "PAY-ADAPTER-BINDING-001",
-    "PAY-COURSE-PRICE-001",
     "AUTH-ADMIN-GUARD-001",
     "AUTH-SOCIAL-OAUTH-001",
-    "PAY-DOMO-CANCEL-001",
     "PAY-DEPOSIT-POLICY-001",
     "EVT-REPORT-LINK-001",
     "WEB-CONTENT-001",
@@ -64972,7 +64996,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "74294648f8acecf36712ceeb4dc09b4f6078a2f6fd957d6bf2c300993bca963e",
+      "sourceSha256": "42a9ec02a15808f8140ad27fa5a64623daa432501b36288668df1f387880ea19",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65000,7 +65024,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "74294648f8acecf36712ceeb4dc09b4f6078a2f6fd957d6bf2c300993bca963e",
+      "sourceSha256": "42a9ec02a15808f8140ad27fa5a64623daa432501b36288668df1f387880ea19",
       "definition": {
         "states": [
           "absent",
@@ -65030,7 +65054,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "74294648f8acecf36712ceeb4dc09b4f6078a2f6fd957d6bf2c300993bca963e",
+      "sourceSha256": "42a9ec02a15808f8140ad27fa5a64623daa432501b36288668df1f387880ea19",
       "definition": {
         "export": [
           "queued",

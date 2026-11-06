@@ -1246,7 +1246,9 @@
         "scripts/test-auth-predicates.py",
         "scripts/check-admin-guards.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "scripts/verify-auth-predicates.py"
+      ],
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for inspected predicates and targeted registry tests; per-handler HTTP denial execution remains open.",
@@ -13997,7 +13999,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas proved unbounded; the composition into calculateDomoQuote is checked by properties, not mechanically refined.",
       "ambiguity": [
         "The Domo quote lifecycle (DomoQuoteState) and its refund policy after deposit_paid -> cancelled are not specified here.",
@@ -14222,7 +14226,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas unbounded, composition property-tested.",
       "ambiguity": [
         "A deposit course whose total is at most 50.00 can have a zero balance, so the deposit equals the full price; whether such courses should use the deposit mode is a business decision (F-20)."
@@ -14393,7 +14399,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_cancellation_refund.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable. A requested Domo cancellation refund is approved and executed by a different strict administrator with the Admin module through the shared PayPal refund approval (POST /admin/services/storefront/refunds/{refundId}/approve), bound to the deposit checkout's verified PayPal capture; Datafast refunds remain unsupported (503).",
