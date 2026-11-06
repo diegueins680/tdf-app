@@ -16319,7 +16319,7 @@
     "e2e/web/directory-entry.spec.mjs": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
     "e2e/web/directory-favorite-recovery.spec.mjs": "08dd8f020ec9c1f0ab75f00a2af230764e57acf65a224826c54b2201b5670fe3",
     "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
-    "e2e/web/event-discovery-filters.spec.mjs": "c24d80fbad892a8a5263f053c6c44cfb488f58f0a5edd1238f07c01bf2cd3e08",
+    "e2e/web/event-discovery-filters.spec.mjs": "46875ca35d20514006037d61e14de5c785dbac8b45db65ba920e908c9604a2bd",
     "e2e/web/event-memories.spec.mjs": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
@@ -32369,7 +32369,7 @@
     {
       "id": "SURFACE-a759d468f3ebc8d5",
       "path": "e2e/web/event-discovery-filters.spec.mjs",
-      "sha256": "c24d80fbad892a8a5263f053c6c44cfb488f58f0a5edd1238f07c01bf2cd3e08",
+      "sha256": "46875ca35d20514006037d61e14de5c785dbac8b45db65ba920e908c9604a2bd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

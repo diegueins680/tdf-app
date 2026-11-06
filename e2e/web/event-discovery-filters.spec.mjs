@@ -80,6 +80,7 @@ test('event city, artist union and past filters work at narrow widths @mobile-fl
 test('event cards and calendar resolve venues after row 200 across pages and cities @mobile-flow @critical', async ({ page, baseURL }) => {
   const origin = new URL(baseURL).origin;
   const venueReads = [];
+  const eventReads = [];
   let globalReads = 0;
   const venues = Array.from({ length: 250 }, (_, index) => ({
     venueId: String(index + 1), venueName: `Sala ${String(index + 1).padStart(3, '0')}`,
@@ -103,6 +104,7 @@ test('event cards and calendar resolve venues after row 200 across pages and cit
     if (url.pathname === '/session/preferences') return route.fulfill({ json: { locale: 'es', currency: 'USD', timezone: 'America/Guayaquil' } });
     if (url.pathname === '/social-events/events') {
       const offset = Number(url.searchParams.get('offset') ?? 0);
+      eventReads.push({ city: url.searchParams.get('city'), offset });
       const limit = Number(url.searchParams.get('limit') ?? 21);
       const matching = url.searchParams.get('city') === 'New York' ? events.slice(20) : events;
       return route.fulfill({ json: matching.slice(offset, offset + limit) });
@@ -131,6 +133,7 @@ test('event cards and calendar resolve venues after row 200 across pages and cit
   await expect(page.getByText('Sala 225', { exact: true })).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Ciudad', exact: true }).fill('New York');
   await expect(page).not.toHaveURL(/page=2/);
+  await expect.poll(() => eventReads.at(-1)).toEqual({ city: 'New York', offset: 0 });
   await expect(page.getByText('Sala 250', { exact: true })).toHaveCount(6);
   expect(venueReads).toEqual(['225', '250']);
   expect(globalReads).toBe(0);
