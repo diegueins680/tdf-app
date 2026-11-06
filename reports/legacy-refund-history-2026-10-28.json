@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-legacy-refund-history",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "4d48e13556f3fb1a2756b30099f09a5992682ad3",
+  "sourceCommit": "7e86448dd9e81cb941fa6d9bef31617383ca13ad",
+  "mainObserved": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-05",
+    "priority": "P0",
+    "category": "financial integrity / reliability",
+    "consequence": "Distinct historical legacy request IDs each execute a refund POST for one order; response uncertainty preserves both processing identities after both calls have happened. Sibling history of every status is ignored.",
+    "status": "corrected-tested-awaiting-protected-integration"
+  },
+  "invariants": [
+    {
+      "id": "PAY-LEGACY-REFUND-HISTORY-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "An unbound legacy claim requires exactly its own identity in the complete order history; ambiguous history refuses before mutation/provider IO.",
+      "assurance": "TESTED",
+      "evidence": "reports/legacy-refund-history-2026-10-28/handler-cases.txt"
+    }
+  ],
+  "contract": "formal/system/legacy-refund-history.md",
+  "implementation": [
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "regressionTests": [
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+  ],
+  "formalModels": [
+    "scripts/__tests__/ticket-admission-model.test.mjs"
+  ],
+  "authority": [
+    "Existing legacy creation refuses any prior request, including rejected history.",
+    "Canonical allocated refunds intentionally support successive partial requests.",
+    "Existing per-request durable execution fence and PostgreSQL READ COMMITTED/event-order lock semantics."
+  ],
+  "correction": [
+    "Explicit READ COMMITTED event→order transaction before claim.",
+    "Require all-history keys equal exactly target; recheck absent canonical binding and event association.",
+    "Keep pending-only conditional claim; commit before provider IO.",
+    "Return409 for ambiguous history without changing any stored financial identity.",
+    "Canonical-bound branch bypasses legacy history guard."
+  ],
+  "verification": {
+    "baseline": {
+      "examples": 88,
+      "failures": 6,
+      "sequentialDuplicateProviderCalls": 2,
+      "concurrentDuplicateProviderCalls": 2,
+      "historicalStatuses": [
+        "pending",
+        "rejected",
+        "processing",
+        "approved"
+      ]
+    },
+    "qualifiedScoped": {
+      "examples": 90,
+      "failures": 0,
+      "additionalGreenControls": [
+        "Duplicate commits during lock wait",
+        "Actual canonical successive partial replay with two identities"
+      ]
+    },
+    "repeatableReadSessionDefault": {
+      "examples": 1,
+      "failures": 0,
+      "property": "History committed while waiting is observed after explicit RC lock acquisition."
+    },
+    "qualifiedFullStack": {
+      "examples": 4452,
+      "failures": 0,
+      "pending": 21,
+      "schemaMigrations": 227,
+      "appliedAndReplayed": true,
+      "freshUTF8Template0Database": true,
+      "seed": 20261028,
+      "externalPendingIsNotPassed": true
+    },
+    "modelSuite": {
+      "tests": 19,
+      "failures": 0
+    },
+    "historyModel": {
+      "assurance": "BOUNDED_VERIFIED",
+      "inputs": 20,
+      "states": 89,
+      "transitions": 92,
+      "violations": [],
+      "properties": [
+        "AmbiguousHistoryNeverPosts",
+        "AtMostOnePost"
+      ],
+      "scope": "Single and double immutable histories, four statuses, two approvers, atomic claims, uncertain response and refused retries; no SQL/Haskell refinement.",
+      "negativeControls": [
+        {
+          "fault": "omit history",
+          "states": 125,
+          "transitions": 148,
+          "counterexample": "Both pending historical IDs claim and POST."
+        },
+        {
+          "fault": "pending-only history",
+          "states": 113,
+          "transitions": 128,
+          "counterexample": "Pending target posts despite a rejected sibling identity."
+        }
+      ]
+    },
+    "repositoryQuality": {
+      "passed": true,
+      "platformSkips": 11,
+      "assertionsWeakened": false
+    },
+    "strictCatalog": {
+      "passed": true,
+      "parentNormativeDecisionsAndOrderPreserved": 1352,
+      "newManuallyReviewedTestFixture": 1,
+      "resultingDecisions": 1353
+    },
+    "specification": {
+      "sequentialInventoryThenConformance": true,
+      "checksPassed": true,
+      "otherRequirementsPreserved": 153,
+      "immutableChangedSurfaces": 3
+    },
+    "compiledAPI": {
+      "snapshotMatches": true,
+      "typedOperations": 913,
+      "rawMounts": 2,
+      "undocumented": 396,
+      "documentedWithoutTypedRoute": 25,
+      "statusDifferences": 8,
+      "gapsRemainOpen": true
+    },
+    "independentReview": {
+      "blockingFindings": 0,
+      "scope": "Read-only exact-source review; not required GitHub approval"
+    },
+    "sourceCorrespondence": {
+      "registeredInputs": 1408,
+      "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "digest": "887b42de82ab85181fc2454c70ad3b723d1a09fc0e56a4fff9ffd158d58b7610",
+      "committedGitBlobHashesVerified": true,
+      "newContractIndependentlyHashBound": true,
+      "cleanCommittedReporterPass": true,
+      "reproducibleBinaryBuildClaimed": false
+    },
+    "developmentLimitations": [
+      "Initial test-helper compile required a concrete key signature.",
+      "First green compilation caught Int/Int64 mismatch in additional canonical fixture; corrected before the qualified90/0 and fresh4452/0 runs.",
+      "These diagnostics are preserved separately and not counted as product counterexamples."
+    ],
+    "assurance": {
+      "existingConditionalSMTClaimsProven": 11,
+      "fullSystemRequirementsUnproven": 154,
+      "implementationAndRefinementObligationsUnproven": 308,
+      "release": "BLOCKED",
+      "newWholeHandlerProof": false
+    }
+  },
+  "regressionProtection": {
+    "actualHandlers": "Existing backend provider-retry CI runner executes ProviderRetrySpec against full schema.",
+    "model": "Existing backend CI lane explicitly runs ticket-admission-model.test.mjs; root quality does not substitute for this model run.",
+    "admission": "Source discovery, traceability and changed-surface admission retained."
+  },
+  "integration": {
+    "pullRequest": 658,
+    "url": "https://github.com/diegueins680/tdf-app/pull/658",
+    "draft": true,
+    "parentPullRequest": 657,
+    "parentBaseline": "4d48e13556f3fb1a2756b30099f09a5992682ad3",
+    "merged": false,
+    "deployed": false,
+    "autoMergeEnabled": false,
+    "requiredGitHubApproval": "pending",
+    "hostedQualification": "pending",
+    "currentMainComposition": "pending",
+    "protectedQueue": "Root parent651 waiting for636 at main e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7; parent651 independently approved but DIRTY against that main. No queue/head mutation.",
+    "protections": "Strict base, one independent approval with stale review dismissal, admin enforcement, conversation resolution and20 required contexts remain enabled.",
+    "existingParentHostedFailure": "Parent652 WebKit gallery title contrast failure retained; existing draft648 covers paint readiness. Original failure root cause remains unproven; no waiver/assertion weakening."
+  },
+  "scorecard": {
+    "scope": "This correction; no arbitrary platform score.",
+    "confirmedDefectsCorrected": 1,
+    "defectsIntegrated": 0,
+    "criticalInvariantsTested": 1,
+    "newWholeHandlerProofs": 0,
+    "boundedDesignInputs": 20,
+    "originalRegressionFailuresCovered": 6,
+    "extraCompatibilityAndLockWaitCases": 2,
+    "currentSourceEvidence": "7e86448dd9e81cb941fa6d9bef31617383ca13ad",
+    "priorEvidence": "Valid only for each recorded parent SHA; current-main composition not established."
+  },
+  "remainingRisks": [
+    "No production history is reconciled, deleted, reset or deduplicated.",
+    "Fail-closed refusal may require manual reconciliation of legitimate historical legacy activity.",
+    "Mixed old binaries and direct deletion/reparenting or out-of-protocol writers can bypass assumptions.",
+    "Initial organizer/PI/currency snapshots are not newly reauthorized by this history fence.",
+    "Legacy partial-money ticket allocation and admission during uncertainty remain unresolved; no preselected product rule is treated as user confirmation.",
+    "Provider authenticity, original payment verification, exact-once provider semantics and recovery remain separate."
+  ],
+  "prioritizedBacklog": [
+    {
+      "id": "PAY-LEGACY-TIER-UPDATE-RACE",
+      "priority": "P1",
+      "status": "HYPOTHESIS",
+      "evidence": "Independent source review identifies precheck/write race reducing tier total after a concurrent free-ticket reservation; actual normal-handler counterexample is next."
+    },
+    {
+      "id": "PAY-LEGACY-CAPACITY-SNAPSHOT",
+      "priority": "P1",
+      "status": "HYPOTHESIS",
+      "evidence": "Independent source review finds cached event capacity used after lock wait in legacy free/Stripe holds; actual repro pending."
+    },
+    {
+      "id": "AUTH-LEGACY-CLAIM-SNAPSHOT",
+      "priority": "P1",
+      "status": "PARTIAL",
+      "evidence": "Stored organizer recheck absent at claim; concurrent reviewed database reassignment can invalidate outer authority. No normal API transfer of existing organizer found; not a proven remote transfer exploit."
+    },
+    {
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "blocker": "Product allocation semantics pending; continue is not selection of a proposed rule."
+    },
+    {
+      "id": "PROTECTED-INTEGRATION",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "blocker": "FIFO636; approved parent651 conflicts with current main; compose/qualify and obtain required reviews without bypass."
+    }
+  ],
+  "nextHighestValueTask": "Reproduce normal ticket-tier total update racing a valid free-ticket purchase; establish current sold<=total invariant and repair only after observed counterexample.",
+  "evidenceDirectory": "reports/legacy-refund-history-2026-10-28"
+}

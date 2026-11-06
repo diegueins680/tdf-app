@@ -204,3 +204,13 @@ export function buildLoginRedirectPath(targetPath: string | null | undefined): s
   const params = new URLSearchParams({ redirect: safeTarget });
   return `${LOGIN_ROUTE}?${params.toString()}`;
 }
+
+/**
+ * Account creation that returns to a public event page, used by RSVP intents
+ * and by shareable invitation links (`/eventos/:id?signup=1`).
+ */
+export function buildEventSignupPath(eventId: string | number): string {
+  const safeTarget = sanitizeRedirectPath(`/eventos/${eventId}`) ?? COMMUNITY_LANDING_PATH;
+  const params = new URLSearchParams({ signup: '1', intent: 'events', redirect: safeTarget });
+  return `${LOGIN_ROUTE}?${params.toString()}`;
+}

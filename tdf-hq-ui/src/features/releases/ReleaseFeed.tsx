@@ -1,3 +1,4 @@
+import MarkdownText from '../../components/MarkdownText';
 import { InteractionPanel } from '../interactions/InteractionPanel';
 import { useId, useRef, useState, type RefObject } from 'react';
 import {
@@ -63,8 +64,8 @@ const COPY = {
     listen: 'Escuchar',
     attachAudio: 'Adjuntar audio',
     youtube: 'Ver en YouTube',
-    driveLabel: 'Avanzado: Subir audio desde Drive',
-    driveHelp: 'Opcional: usa Drive si ya tienes el máster listo allí.',
+    driveLabel: 'Avanzado: Subir un archivo de audio',
+    driveHelp: 'Elige dónde guardar el archivo. Subirlo no lo publica ni habilita su distribución.',
   },
   upload: {
     title: 'Adjuntar audio rápidamente',
@@ -451,9 +452,9 @@ function ReleaseSummary(props: ReleaseSummaryProps) {
         <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />
       </Stack>
       {release.arDescription && (
-        <Typography variant="body2" color="text.secondary">
+        <MarkdownText inline variant="body2" color="text.secondary">
           {shortDescription(release.arDescription)}
-        </Typography>
+        </MarkdownText>
       )}
     </Stack>
   );
@@ -523,9 +524,11 @@ function ReleaseActions(props: ReleaseActionsProps) {
       )}
       {canManageReleases && (
         <GoogleDriveUploadWidget
+          recoveryScope={`artist-release:${release.arReleaseId}`}
           label={COPY.release.driveLabel}
           helperText={COPY.release.driveHelp}
           accept="audio/*"
+          visibility="public"
           multiple={false}
           dense
           onComplete={(files) => onDriveUploadComplete(release, files)}

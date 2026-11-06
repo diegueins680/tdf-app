@@ -2,7 +2,7 @@ import { shouldHideRadioForRoute, shouldRenderRadioWidget } from './radioRouteVi
 
 describe('shouldHideRadioForRoute', () => {
   it.each(['/musica', '/musica/single-propio', '/musica/biblioteca'])(
-    'keeps the legacy radio unmounted on canonical audio route %s, even with #radio', (path) => {
+    'does not initially open the radio on canonical audio route %s, even with #radio', (path) => {
       expect(shouldRenderRadioWidget(path, '', true, false)).toBe(false);
       expect(shouldRenderRadioWidget(path, '#radio', true, false)).toBe(false);
     },

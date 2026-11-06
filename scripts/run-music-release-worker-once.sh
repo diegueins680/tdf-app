@@ -57,6 +57,7 @@ done
     echo "Lease must be 3..86400 seconds and at least three heartbeat intervals" >&2; exit 2;
   }
 lease_active=false
+heartbeat_supervised=false
 
 # The check and the caller's writes share one transaction/row lock. A worker
 # cannot renew an expired lease, even if nobody has reclaimed it yet. Use the
@@ -101,7 +102,13 @@ psql_db() {
   fi
   local started=$SECONDS result=0
   timing sql start 0 0
-  printf '%s\n' "$sql" | psql "${options[@]}" --single-transaction -f - || result=$?
+  if [ "$heartbeat_supervised" = true ]; then
+    # Keep the heartbeat's native psql process owned until it is reaped. The
+    # common options and lease guard above remain authoritative for both paths.
+    run_heartbeat_child psql "${options[@]}" --single-transaction -f - <<< "$sql" || result=$?
+  else
+    printf '%s\n' "$sql" | psql "${options[@]}" --single-transaction -f - || result=$?
+  fi
   timing sql finish "$((SECONDS-started))" "$result"
   return "$result"
 }
@@ -401,15 +408,50 @@ stop_heartbeat() {
     heartbeat_pid=''
   fi
 }
+request_heartbeat_stop() {
+  heartbeat_stopping=true
+  if [ -n "$heartbeat_child" ]; then
+    kill -TERM "$heartbeat_child" 2>/dev/null || true
+  fi
+}
+run_heartbeat_child() {
+  [ "$heartbeat_stopping" = false ] || return 143
+  # With job control disabled, an asynchronous command otherwise receives
+  # /dev/null as stdin. Preserve psql's here-string explicitly.
+  "$@" <&0 &
+  heartbeat_child=$!
+  local heartbeat_child_status=0
+  # TERM can arrive between starting the child and recording its PID.
+  if [ "$heartbeat_stopping" = true ]; then
+    kill -TERM "$heartbeat_child" 2>/dev/null || true
+  fi
+  wait "$heartbeat_child" || heartbeat_child_status=$?
+  if [ "$heartbeat_stopping" = true ]; then
+    # A trapped signal can interrupt wait before the native process exits.
+    # Reap outside the signal handler, including on macOS Bash 3.2.
+    wait "$heartbeat_child" 2>/dev/null || true
+    heartbeat_child=''
+    return 143
+  fi
+  heartbeat_child=''
+  return "$heartbeat_child_status"
+}
 heartbeat() {
-  # Descendants share this heartbeat's group, so shutdown also stops sleep/psql.
-  # No nested signal trap/wait (which is unsafe on macOS Bash 3.2).
+  # The group signal may race with a fork. Keep the heartbeat alive to stop and
+  # reap its own native child, even when that child misses the first delivery.
   set +m
-  trap - EXIT TERM INT USR1
+  local heartbeat_stopping=false heartbeat_child='' heartbeat_supervised=true
+  trap - EXIT USR1
+  trap request_heartbeat_stop TERM INT
   while kill -0 "$$" 2>/dev/null; do
-    sleep "$heartbeat_seconds"
+    run_heartbeat_child sleep "$heartbeat_seconds" || {
+      [ "$heartbeat_stopping" = true ] && return 0
+      return 1
+    }
+    [ "$heartbeat_stopping" = false ] || return 0
     kill -0 "$$" 2>/dev/null || return
     if ! psql_db -c 'SELECT 1;' >/dev/null; then
+      [ "$heartbeat_stopping" = false ] || return 0
       touch "$working_dir/lease-lost"
       kill -USR1 "$$" 2>/dev/null || true
       return 1

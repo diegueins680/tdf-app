@@ -195,3 +195,19 @@ and recovery SQL are unchanged. Earlier context reviews above retain their
 original baselines; the JSON records the current manifest hashes and review.
 Fresh scoped solver/replay/mutation and independent certificate checks are
 required. This review does not promote full refinement or release readiness.
+
+## Interactive session expiry context review — 2026-10-31
+
+Against protected main `234ff6f7faf1aecf347c8e92a374228f4ec07aaa`, candidate
+`feat/session-token-expiry-20261031` (ID-SESSION-004) changes three pinned
+authorization inputs. `Auth.hs` keeps all six translated predicates and their
+signatures byte-identical and adds `isInteractiveSessionLabel`,
+`apiTokenWithinValidity` and `sessionClockEpoch`, used only as additional
+denying guards in `loadAuthedUser`, the locked session witness and
+`lookupUsernameFromToken`; the only new import is `Data.Int (Int64)`.
+`Models.hs` keeps `RoleEnum` byte-identical and appends two nullable `Int64`
+fields to `ApiToken`. The Cabal manifest moves `src` into a `library` without
+changing module registrations, dependency bounds, GHC options, Stack resolver or
+lock. `RecordsIngestion.hs` is byte-identical. The three hashes are refreshed
+after reviewing those complete diffs; claims, assumptions, translation and
+negative controls are unchanged and every obligation requires fresh execution.
