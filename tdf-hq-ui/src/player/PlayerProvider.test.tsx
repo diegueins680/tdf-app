@@ -631,3 +631,12 @@ it('releases the ordinary audio source when a native video takes over', async ()
   expect(audio.hasAttribute('src')).toBe(false);
   expect(view.container.querySelector('video')?.getAttribute('src')).toBe('https://media.invalid/session.mp4');
 });
+it('keeps the global controls usable for older saved audio sources without MIME metadata', async () => {
+  const { default: GlobalPlayer } = await import('./GlobalPlayer');
+  const view = render(<PlayerProvider><Probe /><GlobalPlayer /></PlayerProvider>);
+  await act(async () => { player.playTrack({ ...track('Legacy cached audio'), sources: [
+    { url: 'https://media.invalid/legacy.mp3', quality: 'high' },
+  ] } as PlayerTrack); });
+  expect(view.getByRole('region', { name: 'Reproductor global' })).toBeTruthy();
+  expect(view.getByText('Legacy cached audio')).toBeTruthy();
+});

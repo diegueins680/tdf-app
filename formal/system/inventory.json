@@ -4152,7 +4152,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "357f2737da9c4481ee29dc1ddcd1bc2361dfb4441d7b05be31f6cd8f987e1b0e",
+      "sha256": "5d6cf2382d8bb6775cda94d443561ed170dcf5dded72bd55e12ee2c96b9f9caf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11136,7 +11136,7 @@
     {
       "id": "SURFACE-818df6bbb0d7fdd5",
       "path": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-      "sha256": "b1b6d9e7ce53c9c63c5d6968581cd0baf1b89569f468af595861f65b7cff85d1",
+      "sha256": "a3c9457223cbcec4ba7e3823b800925806faf322c772a0365c45d07301b5b065",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11148,7 +11148,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "0f891a465b1bfaf08775a24b5fc7c7bf4c51e4e7266be88d2ea0857d96b955c0",
+      "sha256": "45e85da4d917b584db055682524c7e2a1bd36061756106f6663fdc57da5ef6f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16452,7 +16452,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "b7c1b4c93bd301a1a91af4e4807e70149fa57b9628cf2950a14f533afe6c4e2a",
+      "sha256": "604e127814d5f379843bb29d0b4bcdbe6881e7c57322a4f6768c94fd34b4df42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16974,7 +16974,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "8d471fe31c3c7edb9c8e8508c17e7d668ea547e8a6087ce749cb34a226037945",
+      "sha256": "a5a95be5765dc8f62e3a9432aabe18564f9b1f93d21d276e7170c32931f03a6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22600,7 +22600,7 @@
     },
     {
       "path": "docs/music-releases/track-search-delivery-2026-10-26.md",
-      "sha256": "6487399e88d7a5001fca907e10cb36578eafd555544dbe5eb057ea6cd381a0c1",
+      "sha256": "111dc05e5e7a75ee95ab9535e544f5fb6c996a5af44b9d8b2945c951cfde775a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28934,8 +28934,29 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-ticket-eligibility.md",
+      "sha256": "6e8b8a85a3567cd7a55401ffe39a58f6cbd44c5302b8f65e0409c3724063033c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-final-amount.md",
+      "sha256": "8557565e0d0569ffdacd366aa7e01a5550c9f165c4ff799e2a3ac734a6a5055d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-ticket-inventory.md",
       "sha256": "fb67951de48dcd4fb52e5c5c457b45ac9e110f4c4e629a7aa9edf05efd2c0929",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-pricing-snapshot.md",
+      "sha256": "0628da96785aaecbad74314e0f531baa54ff9191911ea6144727066c1e6e6092",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29320,7 +29341,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "52578ef8e08c691dc153679683c13085d791308c4771725e0b44cf22094a11fe",
+      "sha256": "eeff8f7f0d1f6d06858c03754d97c3b53229986ace0938af2726d6ae2e3508c4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

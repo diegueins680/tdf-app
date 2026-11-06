@@ -73,7 +73,7 @@ export default function GlobalPlayer() {
   useDockedBarHeight(GLOBAL_PLAYER_HEIGHT_VAR, barRef, Boolean(track));
   if (!track) return null;
 
-  const hasVideo = track.sources.some(source => source.mediaType.startsWith('video/'));
+  const hasVideo = track.sources.some(source => source.mediaType?.startsWith('video/'));
   const statusMessage = videoActionError ?? player.error
     ?? (player.status === 'buffering' ? 'Almacenando en búfer…'
       : player.status === 'loading' ? 'Cargando…'
