@@ -994,3 +994,109 @@ test('promo controls reject cached limits and committed effects on a refused cla
     t.diagnostic(JSON.stringify({ control, ...result }));
   }
 });
+
+// One promo editor and one new claimant; fixed valid cap/current count and
+// previously validated clock. Nine independent term dimensions use two values
+// each, one edited dimension per input. Atomic claim effects are abstract; this
+// does not refine Haskell/SQL or prove time/counter/provider behavior.
+function explorePromoTerms({ omittedField = null, omitPromoLock = false,
+  effectsBeforeCheck = false } = {}) {
+  const fields = ['event', 'discountType', 'discountValue', 'currency', 'validFrom',
+    'validUntil', 'tierIds', 'minimumPurchase', 'active'];
+  const inputsToCheck = fields.flatMap(field => [0, 1].map(value => ({
+    field, initial: { [field]: value }, target: { [field]: 1 - value },
+  })));
+  const same = (a, b) => fields.every(field => a[field] === b[field]);
+  const coverage = new Set(), witnesses = {};
+  let inputs = 0, states = 0, transitions = 0, retainedHistoricalStates = 0;
+  for (const { field, initial, target } of inputsToCheck) {
+    inputs++;
+    const queue = [{ promo: initial, quote: null, observed: null, lock: null,
+      phase: [0, 0], result: null, effects: 0, mismatchAtAdmission: false, trace: [] }];
+    const seen = new Set();
+    while (queue.length) {
+      const current = queue.shift(), { trace, ...identity } = current;
+      const key = JSON.stringify(identity);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (current.mismatchAtAdmission) witnesses.PromoTermsMatchAtClaim ??= { field, initial, target, trace };
+      if (current.result === 'refused' && current.effects) {
+        witnesses.RefusalHasNoEffects ??= { field, initial, target, trace };
+      }
+      if (current.phase[0] === 2 && current.result === 'accepted'
+        && !current.mismatchAtAdmission && !same(current.quote, current.promo)) retainedHistoricalStates++;
+      const push = (next, label) => {
+        transitions++;
+        coverage.add(label);
+        next.trace = [...trace, label];
+        queue.push(next);
+      };
+      if (current.phase[0] === 0 && current.lock === null) {
+        const next = structuredClone(current);
+        next.lock = 'editor'; next.phase[0] = 1;
+        push(next, 'editor:lock');
+      } else if (current.phase[0] === 1) {
+        const next = structuredClone(current);
+        next.promo = target; next.lock = null; next.phase[0] = 2;
+        push(next, 'editor:commit');
+      }
+      if (current.phase[1] === 0) {
+        const next = structuredClone(current);
+        next.quote = current.promo; next.phase[1] = 1;
+        push(next, 'purchase:quote');
+      } else if (current.phase[1] === 1 && (omitPromoLock || current.lock === null)) {
+        const next = structuredClone(current);
+        if (!omitPromoLock) next.lock = 'buyer';
+        next.phase[1] = 2;
+        push(next, 'purchase:lock');
+      } else if (current.phase[1] === 2) {
+        const next = structuredClone(current);
+        next.observed = current.promo; next.phase[1] = 3;
+        push(next, 'purchase:check');
+      } else if (current.phase[1] === 3) {
+        const next = structuredClone(current);
+        const accepted = fields.every(name => name === omittedField
+          || current.quote[name] === current.observed[name]);
+        next.effects = accepted || effectsBeforeCheck ? 1 : 0;
+        next.mismatchAtAdmission = accepted && !same(current.quote, current.promo);
+        next.result = accepted ? 'accepted' : 'refused'; next.phase[1] = 4;
+        if (current.lock === 'buyer') next.lock = null;
+        push(next, accepted ? 'purchase:accept' : 'purchase:refuse');
+      }
+    }
+    states += seen.size;
+  }
+  return { inputs, states, transitions, retainedHistoricalStates,
+    coverage: [...coverage].sort(), violations: Object.keys(witnesses).sort(), witnesses };
+}
+
+
+test('bounded promo claims bind every quoted term while preserving later historical edits', t => {
+  const result = explorePromoTerms();
+  assert.equal(result.inputs, 18);
+  assert.equal(result.states, 324);
+  assert.equal(result.transitions, 324);
+  assert.equal(result.retainedHistoricalStates, 18);
+  assert.deepEqual(result.violations, []);
+  for (const label of ['editor:commit', 'purchase:accept', 'purchase:refuse']) {
+    assert.ok(result.coverage.includes(label));
+  }
+  t.diagnostic(JSON.stringify({ model: 'new-claim-promo-terms', ...result }));
+});
+
+test('promo term controls detect every omitted dimension, missing lock and effects on refusal', t => {
+  for (const field of ['event', 'discountType', 'discountValue', 'currency', 'validFrom',
+    'validUntil', 'tierIds', 'minimumPurchase', 'active']) {
+    const result = explorePromoTerms({ omittedField: field });
+    assert.deepEqual(result.violations, ['PromoTermsMatchAtClaim']);
+    assert.equal(result.witnesses.PromoTermsMatchAtClaim.field, field);
+    t.diagnostic(JSON.stringify({ omittedField: field, ...result }));
+  }
+  for (const [control, property] of [
+    ['omitPromoLock', 'PromoTermsMatchAtClaim'], ['effectsBeforeCheck', 'RefusalHasNoEffects'],
+  ]) {
+    const result = explorePromoTerms({ [control]: true });
+    assert.deepEqual(result.violations, [property]);
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});

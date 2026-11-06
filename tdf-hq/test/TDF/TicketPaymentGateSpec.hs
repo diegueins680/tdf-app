@@ -16,7 +16,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (getCurrentTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Database.Persist (PersistValue(..))
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, toSqlKey, rawExecute, rawSql, runSqlPool)
@@ -58,6 +58,71 @@ spec = describe "ticket-payment-gate-postgresql" $ do
     Just connection | not (isDisposablePostgresUrl ci connection) ->
       it "refuses a non-disposable database" $ expectationFailure "Use the isolated runner"
     Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)) $ do
+      forM_ [False,True] $ \promotion -> forM_ [False,True] $ \elapsed ->
+        it ("ticket-reservation-clock enforces canonical deadline: promo=" <>
+            show promotion <> ", elapsed=" <> show elapsed) $ \pool -> do
+          let label = if promotion then "clock-promo" else "clock-tier"
+          (eventId,tierId) <- newOrderFixture pool label
+          [Single deadline] <- runSqlPool (rawSql
+            "SELECT clock_timestamp()+(?::integer*interval '1 second')"
+              [PersistInt64 (if elapsed then 5 else 600)]) pool :: IO [Single UTCTime]
+          let code = "CLOCK-" <> T.pack (show eventId)
+              request = Routes.PublicEventTicketCheckoutRequest tierId 1 "Synthetic Buyer"
+                ("clock-" <> T.pack (show eventId) <> "@example.test") Nothing
+                (if promotion then Just code else Nothing) True Nothing Nothing Nothing
+              releaseBarrier release = void (tryPutMVar release ())
+          runSqlPool (if promotion then rawExecute
+            "INSERT INTO promo_code(event_id,code,discount_type,discount_value,currency,valid_until,\
+            \ max_redemptions,current_redemptions,is_active) VALUES (?,?,'fixed_amount',100,'USD',?,10,0,true)"
+            [PersistInt64 eventId,PersistText code,PersistUTCTime deadline]
+            else rawExecute "UPDATE event_ticket_tier SET sales_end=? WHERE id=?"
+              [PersistUTCTime deadline,PersistInt64 tierId]) pool
+          locked <- newEmptyMVar
+          release <- newEmptyMVar
+          let holdBarrier = runSqlPool (do
+                _ <- if promotion then rawSql
+                  "SELECT id FROM promo_code WHERE event_id=? FOR UPDATE" [PersistInt64 eventId]
+                  else rawSql "SELECT id FROM event_ticket_tier WHERE id=? FOR UPDATE" [PersistInt64 tierId]
+                  :: SqlPersistT IO [Single Int64]
+                liftIO $ putMVar locked ()
+                liftIO $ takeMVar release) pool
+              buy = run pool (createOrder eventId
+                (Just ("ticket-reservation-clock-" <> T.pack (show eventId))) request)
+          withAsync holdBarrier $ \holding ->
+            (do
+              timeout 5000000 (takeMVar locked) `shouldReturn` Just ()
+              withAsync buy $ \buying ->
+                (do
+                  let table = if promotion then "promo_code" else "event_ticket_tier"
+                  timeout 5000000 (waitForReservationClockLock pool table 200) `shouldReturn` Just True
+                  observed <- if elapsed
+                    then timeout 15000000 (waitForReservationDeadline pool deadline 600)
+                    else do
+                      [Single current] <- runSqlPool (rawSql "SELECT clock_timestamp()" []) pool
+                      pure (Just current)
+                  observed `shouldSatisfy` maybe False (\current ->
+                    if elapsed then current > deadline else current <= deadline)
+                  putStrLn ("CANONICAL_CLOCK_WAIT event=" <> show eventId <> " end=" <>
+                    show deadline <> " releasedAfter=" <> show observed)
+                  releaseBarrier release
+                  timeout 5000000 (wait holding) `shouldReturn` Just ()
+                  result <- timeout 5000000 (wait buying)
+                  status <- case result of
+                    Just value -> pure (either errHTTPCode (const 200) value)
+                    Nothing -> fail "Canonical checkout did not finish after deadline barrier"
+                  effects <- runSqlPool (rawSql
+                    "SELECT quantity_sold,(SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=?),\
+                    \ coalesce((SELECT sum(current_redemptions)::bigint FROM promo_code WHERE event_id=?),0)::bigint\
+                    \ FROM event_ticket_tier WHERE id=?"
+                    [PersistInt64 eventId,PersistInt64 eventId,PersistInt64 tierId]) pool
+                    :: IO [(Single Int64,Single Int64,Single Int64)]
+                  let n = if elapsed then 0 else 1 :: Int64
+                      r = if not elapsed && promotion then 1 else 0 :: Int64
+                  (status,effects) `shouldBe` (if elapsed then 409 else 200,
+                    [(Single n,Single n,Single r)])
+                ) `finally` releaseBarrier release
+            ) `finally` releaseBarrier release
+
       it "lets a held order start payment while the event sells tickets" $ \pool -> do
         order <- newOrder pool "open"
         view <- run pool (getOrder (oEvent order) (oOrder order) (Just (oToken order)))
@@ -439,6 +504,19 @@ scalar pool sql params = do
 -- for it created through the public checkout handler.
 newOrder :: ConnectionPool -> Text -> IO Order
 newOrder pool label = do
+  (eventId,tierId) <- newOrderFixture pool label
+  created <- run pool (createOrder eventId (Just ("ticket-payment-gate-" <> label <> "-0001"))
+    (Routes.PublicEventTicketCheckoutRequest tierId 1 "Synthetic Buyer"
+      ("gate-" <> label <> "@example.test") Nothing Nothing True Nothing Nothing Nothing))
+  case created of
+    Left err -> fail ("Ticket order was not created: " <> show (errHTTPCode err) <> " " <> BL.unpack (errBody err))
+    Right response -> case Routes.lookupToken response of
+      Nothing -> fail "Created ticket order returned no lookup token"
+      Just token -> pure (Order eventId (Routes.orderId response) token (Routes.checkoutId response))
+
+-- A fresh valid checkout fixture, before a new request reserves any stock.
+newOrderFixture :: ConnectionPool -> Text -> IO (Int64,Int64)
+newOrderFixture pool label = do
   events <- runSqlPool (rawSql
     "INSERT INTO social_event(title,start_time,end_time,workflow_state_id,event_type_id,created_at,updated_at)\
     \ SELECT ?, now()+interval '30 days', now()+interval '30 days 3 hours', s.id,\
@@ -464,11 +542,21 @@ newOrder pool label = do
     \ VALUES (?, 'gate-v1', 'USD', 'gate-terms-v1', 'Synthetic terms', 'Synthetic refund policy',\
     \ 'approved', TRUE, now(), 'synthetic-test', now(), now(), 120, now()+interval '20 days')"
     [PersistInt64 eventId]) pool
-  created <- run pool (createOrder eventId (Just ("ticket-payment-gate-" <> label <> "-0001"))
-    (Routes.PublicEventTicketCheckoutRequest tierId 1 "Synthetic Buyer"
-      ("gate-" <> label <> "@example.test") Nothing Nothing True Nothing Nothing Nothing))
-  case created of
-    Left err -> fail ("Ticket order was not created: " <> show (errHTTPCode err) <> " " <> BL.unpack (errBody err))
-    Right response -> case Routes.lookupToken response of
-      Nothing -> fail "Created ticket order returned no lookup token"
-      Just token -> pure (Order eventId (Routes.orderId response) token (Routes.checkoutId response))
+  pure (eventId,tierId)
+
+waitForReservationClockLock :: ConnectionPool -> Text -> Int -> IO Bool
+waitForReservationClockLock _ _ 0 = pure False
+waitForReservationClockLock pool table remaining = do
+  rows <- runSqlPool (rawSql
+    "SELECT count(*)::bigint FROM pg_stat_activity WHERE datname=current_database()\
+    \ AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND lower(query) LIKE ?"
+    [PersistText ("%" <> table <> "%")]) pool :: IO [Single Int64]
+  if rows == [Single 1] then pure True else threadDelay 25000
+    >> waitForReservationClockLock pool table (remaining-1)
+
+waitForReservationDeadline :: ConnectionPool -> UTCTime -> Int -> IO UTCTime
+waitForReservationDeadline _ _ 0 = fail "Database clock never passed the ticket deadline"
+waitForReservationDeadline pool deadline remaining = do
+  [Single observed] <- runSqlPool (rawSql "SELECT clock_timestamp()" []) pool
+  if observed > deadline then pure observed else threadDelay 25000
+    >> waitForReservationDeadline pool deadline (remaining-1)

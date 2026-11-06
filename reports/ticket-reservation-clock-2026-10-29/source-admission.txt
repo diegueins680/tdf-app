@@ -1,0 +1,14 @@
+{
+  "base": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "head": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+    "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}
