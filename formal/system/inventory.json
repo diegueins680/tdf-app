@@ -3254,7 +3254,7 @@
     {
       "id": "SURFACE-d6596022002894a3",
       "path": "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
-      "sha256": "3a7a6255e3755c6ed77b68ccaf9ee55d5e90f3dcfcc592c5d1dd385fcceca73a",
+      "sha256": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3344,7 +3344,7 @@
     {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
-      "sha256": "083a14966fa40a26bbfc42bccadf07a76a574e349739c0a2be1f01fa7e7fd01b",
+      "sha256": "53bff5d1d66f9ee34b8d177f04c1aa0d53e42129bb230d4774a0fe15970b2821",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4256,7 +4256,7 @@
     {
       "id": "SURFACE-7bc4681a8149dda7",
       "path": "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
-      "sha256": "4de7e379b64c7f7b7021ac351f8095569892fb9608f669b4e70d23965bf2f67a",
+      "sha256": "dac0014a94862b79c1ecf385194e60747ec31ce2300c00d6d0cf6a0df88c25cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
