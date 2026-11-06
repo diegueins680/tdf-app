@@ -27,7 +27,10 @@ import TDF.Config (loadConfig, assetsRootDir)
 import TDF.ContentStorage
 import TDF.DB (Env(..), makePool, sharedTlsManager)
 import TDF.StorageVault
-import TDF.Server (privateDrivePermissionsSafe)
+import TDF.Server (mkApp, privateDrivePermissionsSafe)
+import qualified Network.HTTP.Client as HTTP
+import Network.HTTP.Types.Status (statusCode)
+import Network.Wai.Handler.Warp (testWithApplication)
 import Data.Aeson (object, (.=))
 
 spec :: Spec
@@ -102,6 +105,17 @@ spec = do
             let env = Env pool (cfg { assetsRootDir = root </> "public" })
                 run action = runHandler (runReaderT action env)
                 db action = runSqlPool action pool
+                httpRead token path = testWithApplication (pure (mkApp env)) $ \port -> do
+                  manager <- HTTP.newManager HTTP.defaultManagerSettings
+                  request <- HTTP.parseRequest ("http://127.0.0.1:" <> show port <> T.unpack path)
+                  HTTP.httpLbs request
+                    { HTTP.requestHeaders = [("Authorization","Bearer " <> value) | value <- maybe [] pure token]
+                    } manager
+                expectHttpDenial token path code = do
+                  response <- httpRead token path
+                  statusCode (HTTP.responseStatus response) `shouldBe` code
+                  (binaryMarker `BS.isInfixOf` BL.toStrict (HTTP.responseBody response)) `shouldBe` False
+                binaryMarker = "private attachment bytes"
                 expectCode code result = case result of
                   Left err -> errHTTPCode err `shouldBe` code
                   Right _ -> expectationFailure "Expected denial"
@@ -143,6 +157,24 @@ spec = do
             run (readOwner identifier) >>= \result -> case result of
               Right headers -> getResponse headers `shouldBe` BL.fromStrict binary
               Left _ -> expectationFailure "Owner read denied"
+            ownerResponse <- httpRead (Just "storage-owner-a") relative
+            statusCode (HTTP.responseStatus ownerResponse) `shouldBe` 200
+            HTTP.responseBody ownerResponse `shouldBe` BL.fromStrict binary
+            lookup "Cache-Control" (HTTP.responseHeaders ownerResponse) `shouldBe` Just "private, no-store"
+            lookup "X-Content-Type-Options" (HTTP.responseHeaders ownerResponse) `shouldBe` Just "nosniff"
+            expectHttpDenial Nothing relative 401
+            expectHttpDenial (Just "storage-owner-b") relative 404
+            expectHttpDenial (Just "storage-admin") relative 404
+            -- A copied/uncommitted filename still cannot pass public admission.
+            let publicName = UUID.toText identifier <> ".png"
+            createDirectoryIfMissing True (root </> "public/content")
+            BS.writeFile (root </> "public/content" </> T.unpack publicName) binary
+            createDirectoryIfMissing True (root </> "public/inventory")
+            createFileLink (root </> "uploads/content-storage" </> T.unpack (UUID.toText identifier))
+              (root </> "public/inventory/private-link")
+            forM_ ["/assets/serve/content/" <> publicName,"/inventory/private-link",
+                   "/assets/serve/inventory/private-link","/assets/serve/.content-storage-staging/secret"] $ \path ->
+              expectHttpDenial Nothing path 404
             run (readOther identifier) >>= expectCode 404
             run (readAdmin identifier) >>= expectCode 404
             publicObjectAllowed env ["content",UUID.toText identifier <> ".png"] `shouldReturn` False
@@ -154,16 +186,21 @@ spec = do
             run (readAdmin identifier) >>= \result -> case result of
               Right headers -> getResponse headers `shouldBe` BL.fromStrict binary
               Left _ -> expectationFailure "Authorized resource reader denied"
+            authorizedResponse <- httpRead (Just "storage-admin") relative
+            statusCode (HTTP.responseStatus authorizedResponse) `shouldBe` 200
+            HTTP.responseBody authorizedResponse `shouldBe` BL.fromStrict binary
             run (deleteOwner identifier) >>= expectCode 409
             -- Role revocation after the AuthedUser was captured must still deny.
             db (rawExecute "UPDATE role_permission SET active=false" [])
             run (readAdmin identifier) >>= expectCode 404
+            expectHttpDenial (Just "storage-admin") relative 404
             db (rawExecute "DELETE FROM course_registration_receipt WHERE id=1" [])
             run (readAdmin identifier) >>= expectCode 404
             BS.writeFile (root </> "uploads/content-storage" </> T.unpack (UUID.toText identifier)) "corrupt"
             run (readOwner identifier) >>= expectCode 503
             db (rawExecute "UPDATE api_token SET active=false WHERE token='storage-owner-a'" [])
             run (readOwner identifier) >>= expectCode 401
+            expectHttpDenial (Just "storage-owner-a") relative 401
             unsetEnv "CONTENT_STORAGE_UPLOADS_ENABLED"
 
 withStorageEnvironment :: IO a -> IO a
