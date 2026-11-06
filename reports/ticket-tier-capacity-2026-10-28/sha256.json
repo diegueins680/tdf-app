@@ -1,0 +1,9 @@
+{
+  "execution-receipts.tar.gz": "201276713ffb04251d16ce805e405eb3e113a8c39cde3e331ae2070eef283320",
+  "handler-cases.txt": "cef264a4883b2850f6df13705de3204359925ab870c233833f161b3e07541f4d",
+  "execution-sources.json": "12ebbf58c2153eb9c0636df4a4c0f28277a2e7049efeb814138fdb136a2fb7ae",
+  "source-seal.json": "c7c522f77e58c0a7624f6ddf0464bb037bd1d215ebaac4b05cc35740b4ec25a9",
+  "independent-review.txt": "9f46418a73ee6c089556a1c0890dc442b117ec8fce9b1e63ec68c272e9545643",
+  "development-diagnostics.tar.gz": "1e8dbe22e18e69ee39a92e15e2eec3bd89e15529d38dd22d8b9cb3c2f6013662",
+  "assurance-receipts.tar.gz": "19b4ee236f2f62260fdb8034fd2a4c19b525b2ed6b6eb2c12b3bf2be99b585db"
+}

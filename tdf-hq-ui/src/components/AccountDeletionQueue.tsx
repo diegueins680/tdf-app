@@ -1,3 +1,4 @@
+import MarkdownText from './MarkdownText';
 import { useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,7 +26,7 @@ function Resolution({ item, refresh, onResolved }: { item: LegacyFeedbackDTO; re
   return <Stack spacing={1} sx={{ mt: 1 }}>
     <Typography fontWeight={700}>{t(history[0]?.adaOutcome === 'completed' ? 'accountDeletion.completed' : history[0]?.adaOutcome === 'rejected' ? 'accountDeletion.rejected' : 'accountDeletion.pending')}</Typography>
     {history.map((action, index) => <Box key={`${action.adaCreatedAt}-${index}`}>
-      <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{action.adaNote}</Typography>
+      <MarkdownText sx={{ overflowWrap: 'anywhere' }}>{action.adaNote}</MarkdownText>
       <Typography variant="caption">{t('accountDeletion.auditActor', { actor: action.adaActor ?? '—', date: new Date(action.adaCreatedAt).toLocaleString() })}</Typography>
     </Box>)}
     {history.length === 0 && <>
@@ -57,7 +58,7 @@ export default function AccountDeletionQueue() {
     {requests.isSuccess && requests.data.length === 0 && <Typography>{t('accountDeletion.queueEmpty')}</Typography>}
     {requests.data?.map(item => <Box key={item.lfdId}>
       <Typography fontWeight={700}>{item.lfdTitle}</Typography>
-      <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.lfdDescription}</Typography>
+      <MarkdownText sx={{ overflowWrap: 'anywhere' }}>{item.lfdDescription}</MarkdownText>
       <Alert severity={item.lfdCreatedBy ? 'info' : 'error'}>{t('accountDeletion.operatorRecord', { requestId: item.lfdId, partyId: item.lfdCreatedBy ?? '—' })}</Alert>
       <Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()}</Typography>
       <Resolution item={item} refresh={() => requests.refetch()} onResolved={action => {
