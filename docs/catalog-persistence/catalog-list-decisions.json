@@ -26238,6 +26238,230 @@
       "risk": "An incorrect publication kind or coerced string key can attach a conversation to the wrong publication.",
       "justification": "This typed adapter binds the existing RecordsFeedDTO sessions, recordings and releases fields to their already established InteractionIdentity kinds: recording_session, recording and record_release. These are the exact canonical kinds used by the original grids; it introduces no new registry value, option authority or editable catalog. NativePublicationKind is constrained by the generated InteractionKind schema. Exact-kind/string-ID, equal-ID cross-kind, malformed-metadata and selected-publication regressions qualify the consumer mapping.",
       "reviewed": true
+    },
+    {
+      "id": "113d30680a015e946cfd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This synthetic ready NativeSession object supplies title/artist/offset/media fields solely to the NativeSessionCard parameterized regression. The test asserts original recording/recording_session/record_release interaction identity with exact string IDs. It is not a selectable session catalog or persisted production fixture.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+        "line": 18,
+        "kind": "object-registry",
+        "name": "session",
+        "valueCount": 9,
+        "values": [
+          "id",
+          "title",
+          "artist",
+          "artistPartyIds",
+          "durationMs",
+          "state",
+          "sources",
+          "chapters",
+          "credits"
+        ]
+      }
+    },
+    {
+      "id": "591730a43b318244f921",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This synthetic processing NativeSession object exercises selected card focus and expansion with an exact publication string ID. Its field names and state are test setup; no backend session, release, privilege or catalog is created.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+        "line": 30,
+        "kind": "object-registry",
+        "name": "session",
+        "valueCount": 10,
+        "values": [
+          "id",
+          "title",
+          "artist",
+          "artistPartyIds",
+          "publication",
+          "durationMs",
+          "state",
+          "sources",
+          "chapters",
+          "credits"
+        ]
+      }
+    },
+    {
+      "id": "3da2ce1c629b3a01038d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 22,
+        "kind": "array",
+        "name": "collections",
+        "valueCount": 2,
+        "values": [
+          "recordings",
+          "recording"
+        ]
+      }
+    },
+    {
+      "id": "d60bc4e0e30a78088f7c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 23,
+        "kind": "array",
+        "name": "collections",
+        "valueCount": 3,
+        "values": [
+          "sessions",
+          "recording_session",
+          "session"
+        ]
+      }
+    },
+    {
+      "id": "b7b102839e55773b7334",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 24,
+        "kind": "array",
+        "name": "collections",
+        "valueCount": 3,
+        "values": [
+          "releases",
+          "record_release",
+          "release"
+        ]
+      }
+    },
+    {
+      "id": "669d6672eec3a484b83c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This synthetic two-resource test fixture combines an existing YouTube preview with TDF native metadata to exercise native parsing and preservation of legacy cards/actions. Mocked API/thumbnail/panel boundaries and synthetic URLs keep it out of production catalogs, media delivery or rights decisions. Its membership is regression input, not a governed provider list.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 29,
+        "kind": "array",
+        "name": "resources",
+        "valueCount": 2,
+        "values": [
+          "{id, providerCode=youtube, externalCode=Synthetic001, kind=video, url=https://www.youtube.com/watch?v=Synthetic001, primary=true, sortOrder=0}",
+          "{id, providerCode=tdf, externalCode, kind=video, url=https://media.invalid/source.mp4, primary=false, sortOrder=1, providerMetadata}"
+        ]
+      }
+    },
+    {
+      "id": "15c7440b1e26543c6492",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 71,
+        "kind": "array",
+        "name": "providers",
+        "valueCount": 2,
+        "values": [
+          "YouTube",
+          "https://www.youtube.com/watch?v=Synthetic001"
+        ]
+      }
+    },
+    {
+      "id": "23e77610381e5099e7bd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 72,
+        "kind": "array",
+        "name": "providers",
+        "valueCount": 2,
+        "values": [
+          "tdf",
+          "https://media.invalid/source.mp4"
+        ]
+      }
+    },
+    {
+      "id": "29f56e522a5711afd348",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 72,
+        "kind": "array",
+        "name": "providers",
+        "valueCount": 2,
+        "values": [
+          "Spotify",
+          "https://open.spotify.com/album/synthetic-release"
+        ]
+      }
     }
   ]
 }
