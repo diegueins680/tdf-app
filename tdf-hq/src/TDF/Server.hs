@@ -9900,7 +9900,12 @@ bookingPublicServer =
 
 inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
 inventoryStaticServer assetsRoot =
-  serveDirectoryFileServer (assetsRoot </> "inventory")
+  case serveDirectoryFileServer (assetsRoot </> "inventory") of
+    Tagged staticApplication -> Tagged $ \request sendResponse -> do
+      safe <- ContentStorage.publicRequestSafe assetsRoot ("inventory" : Wai.pathInfo request)
+      if safe && assetsServePathAllowed (Wai.pathInfo request)
+        then staticApplication request sendResponse
+        else sendResponse (Wai.responseLBS status404 [] "Not found")
 
 assetsServeServer :: Env -> FilePath -> ServerT Api.AssetsServeAPI AppM
 assetsServeServer env assetsRoot =

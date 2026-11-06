@@ -16979,8 +16979,8 @@
     "tdf-hq-ui/src/api/directory.ts": "6d1b860759bb5841d85ff693ddfe7580cb56561eb9614f8eaef01f07c424fdc3",
     "tdf-hq-ui/src/api/domoQuotes.test.ts": "667cea36c2f98a12b4bc7355019a31ba5028cdfc29d8a7b0481da566ff6d40af",
     "tdf-hq-ui/src/api/domoQuotes.ts": "d1353a1cd98093582b6d90df3fd061ea759d003bc1b7d4112809f9789af32373",
-    "tdf-hq-ui/src/api/drive.ts": "6bff25b244765346986e765a7ae1685a732656d296f0c0e3be75f1619844b934",
-    "tdf-hq-ui/src/api/drive.upload.test.ts": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
+    "tdf-hq-ui/src/api/drive.ts": "4705baf73dc46c83521894c0f1c5ba4322714b997d748cf9e7dd4704f33c9f28",
+    "tdf-hq-ui/src/api/drive.upload.test.ts": "6b3ab1a7d9c2eeb8d8674b7a5fcd2915c9adbd4d5ef42665b4c6ebb3a2765642",
     "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts": "9d38441f08bdac34840484807caaea351a6be48c1d701ae5e346587db99ff86f",
     "tdf-hq-ui/src/api/eventMemoryInvitations.ts": "2ed34e56f52432bff7d53ee495a79c902a9d2fb4c6d79ea630bc92cd61e7e6f9",
     "tdf-hq-ui/src/api/eventMemoryModeration.test.ts": "4bb13866a0291da53b45c7b547ee4716ab6736701b9a938793d32a0f8fa62915",
@@ -17634,7 +17634,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "aecc4423cfb557380b2f6f171354112e49f3fadcb78b5f1bf1282ced046fde6d",
+    "tdf-hq/src/TDF/Server.hs": "e27db0da5f7bc129eb7fc36bf78262eff8f7ea53c6bfb82a83e71bcabcb0bd84",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
@@ -17752,7 +17752,7 @@
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
-    "tdf-hq/test/TDF/StorageSecuritySpec.hs": "54d4ae718de131b508409469e4f06df59c64a4933cffbc2a9a710b36923f12a3",
+    "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3c77b914eeea92611b780419478dd71201b045270b0b079aa7bcd7a5a57aea9c",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
@@ -40380,7 +40380,7 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "6bff25b244765346986e765a7ae1685a732656d296f0c0e3be75f1619844b934",
+      "sha256": "4705baf73dc46c83521894c0f1c5ba4322714b997d748cf9e7dd4704f33c9f28",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40400,7 +40400,7 @@
     {
       "id": "SURFACE-12933aa6755d74a9",
       "path": "tdf-hq-ui/src/api/drive.upload.test.ts",
-      "sha256": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
+      "sha256": "6b3ab1a7d9c2eeb8d8674b7a5fcd2915c9adbd4d5ef42665b4c6ebb3a2765642",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55495,7 +55495,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "aecc4423cfb557380b2f6f171354112e49f3fadcb78b5f1bf1282ced046fde6d",
+      "sha256": "e27db0da5f7bc129eb7fc36bf78262eff8f7ea53c6bfb82a83e71bcabcb0bd84",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58048,7 +58048,7 @@
     {
       "id": "SURFACE-acc5e4157c112418",
       "path": "tdf-hq/test/TDF/StorageSecuritySpec.hs",
-      "sha256": "54d4ae718de131b508409469e4f06df59c64a4933cffbc2a9a710b36923f12a3",
+      "sha256": "3c77b914eeea92611b780419478dd71201b045270b0b079aa7bcd7a5a57aea9c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

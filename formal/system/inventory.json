@@ -7388,13 +7388,13 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "6bff25b244765346986e765a7ae1685a732656d296f0c0e3be75f1619844b934",
+      "sha256": "4705baf73dc46c83521894c0f1c5ba4322714b997d748cf9e7dd4704f33c9f28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-12933aa6755d74a9",
       "path": "tdf-hq-ui/src/api/drive.upload.test.ts",
-      "sha256": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
+      "sha256": "6b3ab1a7d9c2eeb8d8674b7a5fcd2915c9adbd4d5ef42665b4c6ebb3a2765642",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16298,7 +16298,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "aecc4423cfb557380b2f6f171354112e49f3fadcb78b5f1bf1282ced046fde6d",
+      "sha256": "e27db0da5f7bc129eb7fc36bf78262eff8f7ea53c6bfb82a83e71bcabcb0bd84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17360,7 +17360,7 @@
     {
       "id": "SURFACE-acc5e4157c112418",
       "path": "tdf-hq/test/TDF/StorageSecuritySpec.hs",
-      "sha256": "54d4ae718de131b508409469e4f06df59c64a4933cffbc2a9a710b36923f12a3",
+      "sha256": "3c77b914eeea92611b780419478dd71201b045270b0b079aa7bcd7a5a57aea9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21046,7 +21046,7 @@
     },
     {
       "path": "docs/content-storage/rollout.md",
-      "sha256": "738c7549223f4fc6469c404fcb338e36d7c824fd5e7d9013c3327b0e1e1b8a66",
+      "sha256": "4b1ddfbeaac79b5074519fc005a987f23f0058fa4cdf597e5ec7d9db4e2da010",
       "authority": "inferred",
       "authorityBasis": "Status: implementation candidate; production activation blocked by the open",
       "kind": "requirement-candidate"

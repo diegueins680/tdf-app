@@ -61,6 +61,15 @@ contract reconciliation remain blocked; do not point root at an unpublished SHA.
   Direct static/CDN mount access bypasses that authorization boundary and blocks
   activation. Purge pre-existing caches and prove private/staging denial.
 
+Current local follow-up validation: the web production build and focused lint/
+TypeScript passed; directed web recovery/security tests, including authenticated
+blob transport and private/public result separation, passed. Thirteen real
+PostgreSQL16 reservation/concurrency/replay/deletion cases and nine finite policy/
+reconciliation checks passed. Three new Mobile helper cases, Mobile TypeScript
+and focused lint passed on the unpublished companion. New AEAD/private-reader
+Hspec cases are authored but not yet a compiled pass. Hosted CI is queued; the
+new compiler-derived API declaration and Mobile publication remain pending.
+
 The commands and historical receipts below are retained as prior evidence;
 they do not certify the current candidate or production.
 

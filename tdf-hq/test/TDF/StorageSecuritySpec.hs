@@ -16,7 +16,7 @@ import Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql, runSql
 import Servant ((:<|>)(..), getResponse, ServerError(..))
 import Servant.Multipart (FileData(..))
 import Servant.Server (runHandler)
-import System.Directory (createDirectoryIfMissing, getCurrentDirectory, setCurrentDirectory)
+import System.Directory (createDirectoryIfMissing, createFileLink, getCurrentDirectory, setCurrentDirectory)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import System.FilePath ((</>))
 import System.IO.Temp (withSystemTempDirectory)
@@ -62,6 +62,17 @@ spec = do
       storageFileIdFromUrl api (api <> "/storage/files/" <> identifier) `shouldBe` Right (UUID.fromText identifier)
       forM_ ["https://evil.test/storage/files/" <> identifier, api <> "/storage/files/" <> identifier <> "?public=true", "/storage/files/../secret"] $ \url ->
         storageFileIdFromUrl api url `shouldSatisfy` isLeft
+    it "rejects overlapping static roots and symbolic links escaping the public mount" $
+      withSystemTempDirectory "tdf-static-boundary" $ \root -> do
+        original <- getCurrentDirectory
+        bracket (setCurrentDirectory root) (const (setCurrentDirectory original)) $ \_ -> do
+          createDirectoryIfMissing True "uploads/content-storage"
+          createDirectoryIfMissing True "public"
+          BS.writeFile "uploads/content-storage/secret" "private"
+          createFileLink "../uploads/content-storage/secret" "public/link"
+          publicRootSafe "uploads" `shouldReturn` False
+          publicRootSafe "uploads/content-storage" `shouldReturn` False
+          publicRequestSafe "public" ["link"] `shouldReturn` False
     it "denies unknown, broad, foreign-user and incomplete personal provider ACLs" $ do
       let permission identifier kind role = object ["id" .= (identifier :: T.Text),"type" .= (kind :: T.Text),"role" .= (role :: T.Text)]
           own = permission "owner" "user" "owner"
