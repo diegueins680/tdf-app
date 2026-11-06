@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "archive": "cart-test-correction.tar.gz",
+  "archiveSha256": "fe7d40f3fadedec2c5587b633cba139896485ec5cb0309127df73228ac16db32",
+  "members": {
+    "v3/qualified-receipt.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-receipt-20261026.json",
+      "bytes": 24530,
+      "sha256": "9377737ebcd41797b737aa5a9d6847ad69cb71d76729fd307183e4ea79efdb39"
+    },
+    "v3/qualified-manifest.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-manifest-20261026.json",
+      "bytes": 3495,
+      "sha256": "f308d4a50d2c41c3e2d18aacc6bdfb6105344ba195100e76b669c67984d3e192"
+    },
+    "v3/stronger-cart-spec.mjs": {
+      "originalPath": "/private/tmp/tdf-music-credential-cache-20261026/e2e/web/marketplace-cart.spec.mjs",
+      "bytes": 11320,
+      "sha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa"
+    },
+    "v2-before-first-reload-strengthening/qualified-receipt.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-receipt-20261026.json",
+      "bytes": 14842,
+      "sha256": "09b7fc81c6fe5257fdaf540f9326e5cc0bce9e8c6cbbca60fb42623af015ae53"
+    },
+    "v2-before-first-reload-strengthening/qualified-manifest.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v2-manifest-20261026.json",
+      "bytes": 3255,
+      "sha256": "43b98e6d0bd5787559060ac6d27a055ca42abd7a79a0638b32f178621dc6b931"
+    },
+    "v2-before-first-reload-strengthening/results.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v2-20261026/results.json",
+      "bytes": 14058,
+      "sha256": "2502f67e6833204ad7879a576e527675b1173db8080dba6d960887341e0d6dc2"
+    },
+    "v2-before-first-reload-strengthening/run.log": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v2-20261026/run.log",
+      "bytes": 5036,
+      "sha256": "464e0465df233d9134dcdd09c959014bc36262f63cc925653d147756b4e908c9"
+    },
+    "v2-before-first-reload-strengthening/playwright.config.mjs": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v2-20261026/playwright.config.mjs",
+      "bytes": 1073,
+      "sha256": "adc3f0b7f14542ec7d8e24299e2e26625bc480dbbac5bc1c72348e9190d880fe"
+    },
+    "initial-setup-zero-cases/results.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-20261026/results.json",
+      "bytes": 3555,
+      "sha256": "a2d1690dbd48de15f1676c1a5d937d565b1fbc045f39894506e9d4de4bdf7afd"
+    },
+    "initial-setup-zero-cases/run.log": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-20261026/run.log",
+      "bytes": 779,
+      "sha256": "399e5347cf1cb0a4fb0e8306bb1396eae1804aeaaa22fdae6f6b0939549c0eaf"
+    },
+    "initial-setup-zero-cases/playwright.config.mjs": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-20261026/playwright.config.mjs",
+      "bytes": 1013,
+      "sha256": "1c12aa02b57b448f7aa2a9994904829393233b0d4c95641b9d7d4d372ff65dc3"
+    },
+    "local-webkit-unsupported.log": {
+      "originalPath": "/private/tmp/tdf-playwright-webkit-search-install-20261026.log",
+      "bytes": 85,
+      "sha256": "96c865a312add0cb2872dc43dc91c2d73e3c2dcabceafaf4bce59f2f4ef401a0"
+    },
+    "cache-source-preservation-before.json": {
+      "originalPath": "/private/tmp/tdf-633-cart-ci-refresh-20261026/before.json",
+      "bytes": 254984,
+      "sha256": "c8d0883fbeab6384fd87989ac166a9dc6c2173e3c4da1d6440e7c0db1a79a278"
+    },
+    "v3/source-before.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/source-before.json",
+      "bytes": 305,
+      "sha256": "33632815bf4dbb4e64a009beb62b005051b09123338ca926d9597e0cc2334276"
+    },
+    "v3/source-in-run.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/source-in-run.json",
+      "bytes": 936,
+      "sha256": "5b8927c355e81eb9bd527b4a0f988ca6c8a75bef9c250b2b6190f332a4cacb84"
+    },
+    "v3/source-after.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/source-after.json",
+      "bytes": 936,
+      "sha256": "8b77a696997f75eba85144503d6dd52fa2e818289cc714d3446adb73f6239f75"
+    },
+    "v3/run.log": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/run.log",
+      "bytes": 5035,
+      "sha256": "97ecfe4f4190abd280c0976403198869b3ef9186731c02721d7f8504c371dd04"
+    },
+    "v3/results.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/results.json",
+      "bytes": 14057,
+      "sha256": "bab074fbc488f460574c93e49ff1849ce1a4202d3717dc894a20d66331ea2086"
+    },
+    "v3/assertion-traceability-v3.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/assertion-traceability-v3.json",
+      "bytes": 7930,
+      "sha256": "ad413c6ac93e51b11148b6c55a9e23743234198c99d20ee6893abc0a592ed7f1"
+    },
+    "v3/playwright.config.mjs": {
+      "originalPath": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/playwright.config.mjs",
+      "bytes": 1073,
+      "sha256": "1b85e5c0569227d7a6d1748445ea098649491dc87c788f4d4293ca2c82ad910d"
+    }
+  },
+  "screenshots": "Original screenshots remain in QA artifact manifest with hashes; not copied twice into this archive.",
+  "history": "v2 and the original proposal predate stronger-v3 first drawer-close-to-reload assertions and are not relabeled."
+}

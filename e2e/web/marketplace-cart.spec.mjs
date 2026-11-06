@@ -157,6 +157,35 @@ test('Marketplace cart stays reachable after adding on a small phone @mobile-flo
   await drawer.getByRole('button', { name: 'Cerrar carrito' }).click();
   await expect(drawer).toBeHidden();
 
+  // Keep persistence after an actual drawer cycle in this journey as well.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
+  await expect(header.locator('.MuiBadge-badge')).toHaveText('1');
+  await expectHealthyLayout(page);
+});
+
+test('Marketplace restores and removes a genuinely added cart after reload on a small phone @mobile-flow', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL);
+  await page.goto('/marketplace', { waitUntil: 'domcontentloaded' });
+  const header = page.locator('header');
+  const cartButton = header.getByTestId('marketplace-cart-button');
+  const drawer = page.getByRole('dialog', { name: 'Carrito' });
+  await expect(page.getByText('Micrófono Vintage SM58').first()).toBeVisible();
+
+  // This case creates its own saved cart through the real rendered controls.
+  // Await the successful synthetic server response before testing restoration;
+  // no localStorage or cart contents are seeded to simulate an add.
+  const addedResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === `/marketplace/cart/${CART_ID}/items`
+    && response.request().method() === 'POST' && response.status() === 200);
+  await page.getByRole('button', { name: 'Agregar: Micrófono Vintage SM58' }).click();
+  const addedCart = await (await addedResponse).json();
+  expect(addedCart.mcCartId).toBe(CART_ID);
+  expect(addedCart.mcItems).toEqual([expect.objectContaining({ mciListingId: 'listing-mic', mciQuantity: 1 })]);
+  await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
+  expect(state.upserts).toEqual([{ mciuListingId: 'listing-mic', mciuQuantity: 1 }]);
+  expect(state.creates).toBe(1);
+
   // Refresh keeps the count (restored from localStorage, then confirmed by the server cart).
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');

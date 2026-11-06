@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-10-27T00:24:09.801469+00:00",
+  "protectedMain": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "observed626Parent": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+  "qualifiedSqlExecutionSource": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+  "requirements": 149,
+  "all148ProtectedMainNormativeObjectsExact": true,
+  "allParentNormativeObjectsExactExceptAuthImplementationAndTestsExtendedByMain": true,
+  "catalogDecisions": 1341,
+  "entireCatalogObjectsAndReconciliationExactProtectedMain": true,
+  "entireBackendExact626Parent": true,
+  "frontendExactProtectedMain": true,
+  "allSqlExecutionInputsAndHandlerExactQualified35a": true,
+  "migrations": 223,
+  "allCurrent626ReportFieldsPreserved": true,
+  "historical630FieldsKeepOriginalIdentities": true,
+  "noSqlReexecutionClaimed": true,
+  "public630Still533DraftFeatureBase": true,
+  "limit": "Private preparation; actual protected626integration/finalinputcorrespondence required before public update."
+}
