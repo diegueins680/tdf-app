@@ -6936,7 +6936,7 @@
     {
       "id": "SURFACE-4d817f76014e9965",
       "path": "services/campaign-platform/domain.py",
-      "sha256": "cf06b314bbca20e151cbefbb14eafe65c453f8f175d3d0dca25a73f175a84e5f",
+      "sha256": "27a6f9f17c2c46390739e48a2d6fbf8c67b730c2b7eef0e657ce0152ea408da1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7086,7 +7086,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "fc580a511d0ebe47c38c0319cd3f64d9e4ee6f842bdc8096ad6060e934af1c19",
+      "sha256": "09eca7ff737436de14ded95ed9bcf8d4650cd47cfaed41666d14fd532168a975",
       "semanticConformance": "not-established-by-discovery"
     },
     {
