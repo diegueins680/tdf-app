@@ -615,6 +615,7 @@
       "scripts/test-service-booking-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-phase0-migration.sh",
+      "scripts/test-session-invoice-issue.sh",
       "scripts/test-social-designation-postgres.sh",
       "scripts/test-social-event-optional-end-migration.sh",
       "scripts/test-specification-conformance.py",
@@ -2953,7 +2954,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7aa111cf72439700f6e70c01d80c4ebc4ba61314d8afa7a3f4e60c2973ae8935",
+      "sha256": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6482,6 +6483,12 @@
       "id": "SURFACE-829614625675f708",
       "path": "scripts/test-service-storefront-phase0-migration.sh",
       "sha256": "0c2d454fa580dc1b3476526cd0f7cf89baa572e3d102de0edc372961718e53bc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7b01e95a2191ef5a",
+      "path": "scripts/test-session-invoice-issue.sh",
+      "sha256": "636fc8c32e54ec4c895368f9c3bf7bac8cfd5bacb9b28ee27a677e8961ebae09",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29278,7 +29285,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "104afe351f0e2f192f8d59197e45f76a5945e6a108a01cdb557dd30a55bdc884",
+      "sha256": "410669a0ea357d4ac23a9da56b1720b899b274a46880672c23fbd37b84616079",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

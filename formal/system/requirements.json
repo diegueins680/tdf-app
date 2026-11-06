@@ -15567,10 +15567,11 @@
       "tests": [
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs"
+        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
+        "scripts/test-session-invoice-issue.sh"
       ],
       "formalModels": [],
-      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse.",
+      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. On PostgreSQL in CI (scripts/test-session-invoice-issue.sh, a pending example fails the run): the advisory lock runs through the query API, and of two concurrent new keys for the same request exactly one reserves while the other is refused as an unsettled sibling.",
       "evidence": "formal/system/audit-2026-10-31-phase1.md section 40",
       "critical": true,
       "status": "specified and implemented",
@@ -15582,7 +15583,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Server-side reservation tested on SQLite and the migration on PostgreSQL; no portal or concurrent HTTP run."
+        "reason": "Server-side reservation tested on SQLite, the advisory lock and the two-key race on PostgreSQL in CI, and the migration on PostgreSQL; no portal or concurrent HTTP run."
       }
     },
     {

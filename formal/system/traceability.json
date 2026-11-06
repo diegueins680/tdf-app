@@ -15568,10 +15568,11 @@
       "tests": [
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs"
+        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
+        "scripts/test-session-invoice-issue.sh"
       ],
       "formalModels": [],
-      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse.",
+      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. On PostgreSQL in CI (scripts/test-session-invoice-issue.sh, a pending example fails the run): the advisory lock runs through the query API, and of two concurrent new keys for the same request exactly one reserves while the other is refused as an unsettled sibling.",
       "evidence": "formal/system/audit-2026-10-31-phase1.md section 40",
       "critical": true,
       "status": "specified and implemented",
@@ -15583,7 +15584,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Server-side reservation tested on SQLite and the migration on PostgreSQL; no portal or concurrent HTTP run."
+        "reason": "Server-side reservation tested on SQLite, the advisory lock and the two-key race on PostgreSQL in CI, and the migration on PostgreSQL; no portal or concurrent HTTP run."
       }
     },
     {
@@ -16196,7 +16197,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
-    ".github/workflows/ci.yml": "7aa111cf72439700f6e70c01d80c4ebc4ba61314d8afa7a3f4e60c2973ae8935",
+    ".github/workflows/ci.yml": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -16874,6 +16875,7 @@
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
+    "scripts/test-session-invoice-issue.sh": "636fc8c32e54ec4c895368f9c3bf7bac8cfd5bacb9b28ee27a677e8961ebae09",
     "scripts/test-social-designation-postgres.sh": "e83d08fc7e50b5fd5b8d1adb4058fec1348a7f4a73492ad33e30cf2839f78e86",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -31204,6 +31206,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-session-invoice-issue.sh": [
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Contracts/Server.hs": [
       {
         "requirement": "CONTRACT-STORE-001",
@@ -31730,7 +31738,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7aa111cf72439700f6e70c01d80c4ebc4ba61314d8afa7a3f4e60c2973ae8935",
+      "sha256": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38572,6 +38580,18 @@
       "sha256": "0c2d454fa580dc1b3476526cd0f7cf89baa572e3d102de0edc372961718e53bc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-7b01e95a2191ef5a",
+      "path": "scripts/test-session-invoice-issue.sh",
+      "sha256": "636fc8c32e54ec4c895368f9c3bf7bac8cfd5bacb9b28ee27a677e8961ebae09",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-49f1af3a82cc44b3",
@@ -64817,7 +64837,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "104afe351f0e2f192f8d59197e45f76a5945e6a108a01cdb557dd30a55bdc884",
+      "sourceSha256": "410669a0ea357d4ac23a9da56b1720b899b274a46880672c23fbd37b84616079",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -64845,7 +64865,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "104afe351f0e2f192f8d59197e45f76a5945e6a108a01cdb557dd30a55bdc884",
+      "sourceSha256": "410669a0ea357d4ac23a9da56b1720b899b274a46880672c23fbd37b84616079",
       "definition": {
         "states": [
           "absent",
@@ -64875,7 +64895,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "104afe351f0e2f192f8d59197e45f76a5945e6a108a01cdb557dd30a55bdc884",
+      "sourceSha256": "410669a0ea357d4ac23a9da56b1720b899b274a46880672c23fbd37b84616079",
       "definition": {
         "export": [
           "queued",

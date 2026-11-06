@@ -501,6 +501,13 @@ jobs:
           PGPASSWORD: postgres
         run: sh scripts/test-ticket-payment-gate.sh
 
+      - name: Verify session invoice issuance serializes on PostgreSQL
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-session-invoice-issue.sh
+
       - name: Verify trial enquiries and actor-scoped student creation
         env:
           PGHOST: postgres
