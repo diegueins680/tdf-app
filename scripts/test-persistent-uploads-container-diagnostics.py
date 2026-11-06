@@ -151,6 +151,14 @@ class CleanupDiagnosticsTest(unittest.TestCase):
                 self.assertEqual(error.diagnostic['returncode'], response[0])
                 self.assertFalse(any(args[0] == 'rm' for args in docker.calls))
 
+    def test_case_different_nonce_name_is_not_absence(self):
+        response = (1, '[]\n', f'error: no such object: {NAME.upper()}\n')
+        docker = SimulatedDocker(inspect_response=response)
+        error = self.cleanup_error(docker)
+        self.assertEqual(error.diagnostic['containerName'], NAME)
+        self.assertEqual(error.diagnostic['stderr']['text'], response[2])
+        self.assertFalse(any(args[0] == 'rm' for args in docker.calls))
+
     def test_unexpected_inspect_retains_command_result_and_completed_cases(self):
         error = self.cleanup_error(SimulatedDocker('unexpected'))
         data = error.diagnostic

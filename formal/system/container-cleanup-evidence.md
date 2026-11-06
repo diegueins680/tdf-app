@@ -31,8 +31,9 @@ completed cases and the exact inspect response: exit1, stdout `[]`, and stderr
 `No such` substring check rejected this ordinary absence response. Conversely,
 that old check could accept a daemon connection error containing `No such file`.
 
-The absence classifier now requires exit1, empty/`[]` stdout and an exact
-case-insensitive `error: no such object: <the inspected nonce name>` diagnostic.
+The absence classifier requires exit1, empty/`[]` stdout and the
+case-insensitive fixed prefix `error: no such object: ` followed by the exact,
+case-sensitive inspected nonce name. Existing outer whitespace stripping remains.
 It admits the captured new spelling and the prior Docker spelling, but refuses
 wrong names, extra messages, another exit code, a nonempty object result and
 daemon/transport errors. Successful inspect still checks the nonce label before
@@ -48,9 +49,43 @@ durability or deployment qualification. The stdlib suite runs from the normal
 repository-quality lane. Source fault controls must detect discarded diagnostic
 context, omitted ownership refusal, acceptance of unknown inspect failures, and
 suppression of the primary exception chain. Actual hosted container execution
-remains a separate obligation. The twelve-test suite includes four recognized
+remains a separate obligation. The original twelve-test suite includes four recognized
 absence variants and seven nearby refusals in addition to the existing cases.
 The old classifier fails the captured lowercase-response controls and accepts
 the injected daemon-error control. The revised classifier passes the suite.
 The original PR677 response remains unknown; the later captured failure has a
 demonstrated classification cause. Fresh hosted execution is still required.
+
+## Exact name binding follow-up
+
+Published head `b99e3543c02294179858282a326fc4912eb80002` described both an exact
+inspected nonce name and a case-insensitive whole diagnostic. Its whole-message
+casefold also accepted a case-different name. That wording did not distinguish
+diagnostic-prefix capitalization from object identity. This refinement makes
+that distinction explicit, preserving b99's recognized Docker spellings,
+empty-output compatibility, whitespace behavior, isolation and cleanup guards.
+
+Docker names admit uppercase characters under the tagged
+[name grammar](https://github.com/moby/moby/blob/v28.5.1/daemon/names/names.go#L6).
+The tagged [lookup](https://github.com/moby/moby/blob/v28.5.1/daemon/container.go#L180-L188)
+passes the name unchanged, and the
+[name index](https://github.com/moby/moby/blob/v28.5.1/container/view.go#L471-L492)
+uses exact name bytes. The Docker CLI
+[missing-object format](https://github.com/docker/cli/blob/v29.0.0/cli/command/system/inspect.go#L281)
+echoes the requested reference unchanged. A diagnostic about an uppercase name
+therefore is not evidence about the requested lowercase name.
+
+The added thirteenth test executes the actual main path with a structured mocked
+response naming `NAME.upper()`. The b99 baseline accepts it, so the expected
+refusal assertion fails. An additive exact suffix check refuses it; removing
+only that check restores the assertion failure. The unchanged twelve cases still
+pass, including empty/`[]` output, old/new prefixes, unknown-response refusal,
+bounded diagnostics, primary exception context and foreign-container refusal.
+
+This is a finite simulated response-binding counterexample. No actual hosted
+wrong-case response, cleanup leak or production incident has been observed.
+Correct tagged CLI behavior echoes the requested name; the regression checks
+the verifier's handling of misbound evidence. The already corrected lowercase
+classification failure is a separate historical issue. No stricter stdout,
+whitespace or general Docker-version policy is introduced. Current-head hosted
+qualification, complete refinement and production durability remain separate.
