@@ -143,17 +143,24 @@ does a reservation with no answer. Requests may stop at any step.
 `NoBlindDuplicate` (two unresolved attempts under different keys are never open
 together unless one was made after verifying the portal).
 
-| Obligation | Tool | Result |
+| Obligation | Tool | Owner-reported result; current execution unverified |
 |---|---|---|
 | Bounded exploration, 3 requests, 3 keys, current code | TLC 1.7.2 | no violation (12,139 states) |
 | Separate check and reservation, 2 requests, 2 keys | TLC | `Safe` violated, as expected: both requests pass the check before either reserves |
 | `Init ⇒ IndInv`, `IndInv ∧ Next ⇒ IndInv′`, `IndInv ⇒ Safe`, current code | Apalache 0.62.4 | **proved** for any nonempty sets of up to four requests and four keys |
 | Separate check and reservation: reachable violation | Apalache | counterexample found, as expected |
 
-The proof covers executions of any length. Equating one transaction under the
+These are owner-reported abstract-model results, not independently replayed in
+the 2026-11-06 consolidation: pinned TLC/Apalache were unavailable. Fresh
+hosted execution of both models and their negative controls remains required.
+The claimed inductive scope covers executions of any length. Equating one transaction under the
 advisory lock with one atomic step, and the code with the model, is established
-by review and by the PostgreSQL test of the lock and the two-key race
-(`scripts/test-session-invoice-issue.sh`), not by mechanical refinement. A
+by review; the PostgreSQL lock/two-key race test
+(`scripts/test-session-invoice-issue.sh`) is newly wired into CI and was not
+executed during this consolidation. Its positive-example/pending guards were
+tested with isolated command stubs, which provide no PostgreSQL execution
+evidence. Fresh hosted execution of its two real cases remains required.
+There is no mechanical refinement. A
 second document issued deliberately after a settled attempt, or by staff after
 verifying the portal, is allowed by design.
 
@@ -169,7 +176,7 @@ runner covers this directory; it is not a payment.
 the row says accepted), `NoUnrecordedMail` (every accepted message has a row),
 `AcceptedMeansMailed` and `UnavailableIsInert` (503 records and sends nothing).
 
-| Obligation | Tool | Result |
+| Obligation | Tool | Owner-reported result; current execution unverified |
 |---|---|---|
 | Bounded exploration, 3 requests, configured and unconfigured | TLC 1.7.2 | no violation |
 | Row written after SMTP, 1 request | TLC | `Safe` violated, as expected: a stop after SMTP accepted leaves no row |
@@ -257,3 +264,17 @@ migration redefines the predicate, so the hand encoding cannot silently drift.
 The manual-evidence branch (bank transfer, cash, POS with two different reviewers)
 and the Domo date-hold guard are not encoded here; they are covered by the
 PostgreSQL matrix in `scripts/test-provider-domain-binding.py`.
+
+## Execution evidence for the 2026-11-06 consolidation
+
+The four new Z3 4.13.3 programs (`checkout_money_arithmetic.py`,
+`merch_money_arithmetic.py`, `deposit_policy_arithmetic.py`, and
+`provider_binding_admission.py`) actually exited successfully on clean source
+`743c5c995538420f6702c6df1ae002792f7e1eaa`; their source files and financial
+implementation inputs are unchanged by the subsequent evidence-wording update.
+This is local solver execution, not hosted CI or mechanical implementation
+refinement. The two new TLA models and the two real PostgreSQL invoice cases
+were not executed in this consolidation. No prior immutable PostgreSQL job/log
+receipt was found for the new two-case claim; owner prose is retained as a
+reported result, not substituted for execution evidence. Existing inherited
+SQLite/migration evidence remains separately scoped to the earlier audit.
