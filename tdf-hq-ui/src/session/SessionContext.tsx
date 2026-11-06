@@ -455,6 +455,10 @@ export function SessionProvider({ children }: SessionProviderProps) {
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
+export function useOptionalSession(): SessionContextValue | undefined {
+  return useContext(SessionContext);
+}
+
 export function useSession(): SessionContextValue {
   const context = useContext(SessionContext);
   if (!context) {

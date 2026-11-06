@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "parents": [
+    "8efa5afe186705545103db80c527a09133708ede",
+    "cf16b20e708b0ad28300db7a56f610e628265a33"
+  ],
+  "currentDecisionId": "be0b1503a04f9fa295ee",
+  "currentManifestCount": 244,
+  "protectedMainManifestCount": 239,
+  "protectedMainPrefixCanonicalSha256": "36720175562d4dc8c2b806ce4c391809007ae923d8fc38f4a417347b909fcd97",
+  "storageViewCanonicalSha256": "d591a2f77350b2cefafd1de5ae2e7247664701f3005f503b3a31b597ea3a92d7",
+  "storageMigrationIds": [
+    "2026-11-04_content_storage",
+    "2026-11-04_content_storage_drive",
+    "2026-11-04_content_storage_deletion",
+    "2026-11-04_content_storage_accounting",
+    "2026-11-04_content_storage_delete_capacity"
+  ],
+  "mainOnlyMigrationIds": [
+    "2026-11-04_directory_review_status_without_pending",
+    "2026-11-04_session_invoice_issue",
+    "2026-11-04_contract_store"
+  ],
+  "parentReviews": [
+    {
+      "revision": "8efa5afe186705545103db80c527a09133708ede",
+      "id": "d7fc1df6cbade4a92d25",
+      "canonicalSha256": "2f296e8d9b65c2373cb22aa9684c06fed0a37329cc5b137e34eb3e3e8e9d778f"
+    },
+    {
+      "revision": "cf16b20e708b0ad28300db7a56f610e628265a33",
+      "id": "255ec943da9a86e36cc7",
+      "canonicalSha256": "2530e2e5813e50276d2882a93a6f0daad7362a42de39338a9012de36105ae13e"
+    }
+  ],
+  "executionAllowed": false
+}

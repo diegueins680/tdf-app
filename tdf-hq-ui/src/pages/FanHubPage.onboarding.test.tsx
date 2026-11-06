@@ -41,7 +41,10 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key }),
+  useTranslation: () => ({
+    t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key,
+    i18n: { language: 'es' },
+  }),
 }));
 
 jest.unstable_mockModule('../api/session', () => ({
