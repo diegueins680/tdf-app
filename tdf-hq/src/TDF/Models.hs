@@ -846,7 +846,21 @@ SocialSyncAccount
     lastSyncedAt     UTCTime Maybe
     createdAt        UTCTime
     updatedAt        UTCTime Maybe
+    -- AUTHORITY-094: platform delivery only through designated accounts;
+    -- OAuth-connected accounts belong to the party that connected them.
+    deliveryDesignated   Bool default=FALSE
+    connectedByPartyId   PartyId Maybe
+    designatedByPartyId  PartyId Maybe
+    designatedAt         UTCTime Maybe
     UniqueSocialSyncAccount platform externalUserId
+    deriving Show Generic
+SocialSyncAccountEvent
+    accountId        SocialSyncAccountId
+    actorPartyId     PartyId Maybe
+    eventType        Text
+    fromPartyId      PartyId Maybe
+    toPartyId        PartyId Maybe
+    createdAt        UTCTime default=now()
     deriving Show Generic
 SocialSyncPost
     accountId        SocialSyncAccountId Maybe

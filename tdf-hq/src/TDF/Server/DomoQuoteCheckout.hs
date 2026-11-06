@@ -2,6 +2,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module TDF.Server.DomoQuoteCheckout
   ( publicDomoQuotesServer
@@ -43,7 +44,11 @@ import           System.Environment (lookupEnv)
 
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.DomoCancellation as Cancellation
+import qualified TDF.Commerce.DomoCancellationStore as CancellationStore
 import qualified TDF.Commerce.DomoQuotes as Domo
+import           TDF.Commerce.DepositPolicy
+  ( DepositPolicy (..), defaultDepositPolicy, validateDepositPolicy )
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..))
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
@@ -89,15 +94,23 @@ data DomoPolicySnapshot = DomoPolicySnapshot
   , dpsTimezone           :: Text
   , dpsMinimumLeadHours   :: Int
   , dpsMaximumAdvanceDays :: Int
+  , dpsDepositPolicy      :: DepositPolicy
+    -- ^ PAY-DEPOSIT-POLICY-001: minimum deposit and full-payment switch of
+    -- this approved rate card (AUTHORITY-095 defaults when absent)
   } deriving (Eq, Show)
 
 instance FromJSON DomoPolicySnapshot where
-  parseJSON = withObject "DomoPolicySnapshot" $ \value -> DomoPolicySnapshot
-    <$> value .: "terms_version"
-    <*> value .: "quote_expiry_minutes"
-    <*> value .: "timezone"
-    <*> value .:? "minimum_lead_hours" .!= 24
-    <*> value .:? "maximum_advance_days" .!= 730
+  parseJSON = withObject "DomoPolicySnapshot" $ \value -> do
+    snapshot <- DomoPolicySnapshot
+      <$> value .: "terms_version"
+      <*> value .: "quote_expiry_minutes"
+      <*> value .: "timezone"
+      <*> value .:? "minimum_lead_hours" .!= 24
+      <*> value .:? "maximum_advance_days" .!= 730
+      <*> (DepositPolicy
+            <$> value .:? "minimum_deposit_minor" .!= dpMinimumDepositMinor defaultDepositPolicy
+            <*> value .:? "full_payment_above_bps" .!= dpFullPaymentAboveBps defaultDepositPolicy)
+    either (fail . T.unpack) (const (pure snapshot)) (validateDepositPolicy (dpsDepositPolicy snapshot))
 
 data ApprovedDomoRateCard = ApprovedDomoRateCard
   { adrcId                 :: Text
@@ -162,6 +175,7 @@ publicDomoQuotesServer =
   :<|> confirmPublicDomoDatafastStatus
   :<|> createPublicDomoPaypalOrder
   :<|> capturePublicDomoPaypalOrder
+  :<|> cancelPublicDomoQuote
 
 runDB :: SqlPersistT IO a -> AppM a
 runDB action = do
@@ -379,7 +393,7 @@ createPublicDomoQuote mIdempotency request = do
         , Domo.dqiTransport = Routes.transport request
         }
   breakdown <- either (throwError . badRequest) pure $
-    Domo.calculateDomoQuote (toRateCard rateCard) quoteInput
+    Domo.calculateDomoQuoteWith (dpsDepositPolicy (adrcPolicy rateCard)) (toRateCard rateCard) quoteInput
   lookupSecret <- loadLookupSecret
   lookupToken <- either (throwError . internal) pure $
     deriveDomoLookupToken lookupSecret idempotencyKey
@@ -999,7 +1013,11 @@ beginDomoPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginDomoPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  -- PAY-DOMO-CANCEL-001 fence: no attempt for a quote cancelled after this
+  -- request read its context (see CancellationStore.domoAttemptAdmission).
+  result <- runDB $ PaymentRuntime.beginPaymentAttemptGuarded
+    (CancellationStore.domoAttemptAdmission (Checkout.checkoutReferenceId (dpcCheckout context)))
+    Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = dpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = dpcEnvironment context
@@ -1204,7 +1222,7 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
               [PersistUTCTime now, PersistText (dpcQuoteId context)] :: SqlPersistT IO [Single Int])
           throwError (conflict
             "Datafast reports payment after this Domo hold expired; reconciliation is required and the date was not reserved")
-        verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+        verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
           { Checkout.vpAttempt = attempt
           , Checkout.vpCheckout = dpcCheckout context
           , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -1335,7 +1353,7 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
                 [PersistUTCTime now, PersistText (dpcQuoteId context)] :: SqlPersistT IO [Single Int])
             throwError (conflict
               "PayPal captured after this Domo hold expired; reconciliation is required and the date was not reserved")
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = dpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal
@@ -1405,3 +1423,56 @@ finalizeVerifiedDomoDeposit context = do
             "Domo date reservation requires a verified paid checkout"))
       _ -> pure (Left (conflict "Domo deposit cannot be finalized in its current state"))) envPool
   either throwError pure result
+
+-- | PAY-DOMO-CANCEL-001 (AUTHORITY-093): the quote holder cancels. The quote
+-- and its date hold are released; collected money is priced by the approved
+-- policy and recorded as a refund obligation that an operator turns into a
+-- refund request (the customer is not an authenticated party).
+cancelPublicDomoQuote
+  :: Text
+  -> Maybe Text
+  -> Routes.PublicDomoQuoteCancelRequest
+  -> AppM Routes.PublicDomoCancellationDTO
+cancelPublicDomoQuote rawQuoteId mLookupToken request = do
+  unless (Routes.confirmCancellation request) $
+    throwError (badRequest "confirmCancellation must be true to cancel the quote")
+  note <- either throwError pure (normalizeNotes (Routes.cancellationNote request))
+  (quoteId, runtime) <- authorizeDomoQuote rawQuoteId mLookupToken
+  expireDomoQuoteIfNeeded quoteId runtime
+  now <- liftIO getCurrentTime
+  Env{ envPool } <- ask
+  attempt <- liftIO $ try $ runSqlPool (CancellationStore.cancelDomoQuote
+    CancellationStore.CancellationRequest
+      { CancellationStore.crQuoteId = quoteId
+      , CancellationStore.crActor = CancellationStore.CustomerActor
+      , CancellationStore.crCanceller = Cancellation.CancelledByCustomer
+      , CancellationStore.crNote = note
+      , CancellationStore.crNow = now
+      }) envPool
+  case attempt of
+    Left (_ :: SqlError) -> throwError (conflict "Domo quote cancellation could not be committed; retry")
+    Right (Left CancellationStore.CancellationNotFound) -> throwError notFound
+    Right (Left (CancellationStore.CancellationNotAllowed message)) -> throwError (conflict message)
+    Right (Left (CancellationStore.CancellationPolicyUnavailable _)) ->
+      throwError err503 { errBody = "Domo cancellation policy is not configured; the quote was not cancelled" }
+    Right (Left (CancellationStore.CancellationRefundRejected message)) -> throwError (conflict message)
+    Right (Right record) -> pure (cancellationDTO record)
+
+cancellationDTO :: CancellationStore.DomoCancellationRecord -> Routes.PublicDomoCancellationDTO
+cancellationDTO record = Routes.PublicDomoCancellationDTO
+  { Routes.quoteId = CancellationStore.dcrQuoteId record
+  , Routes.quoteStatus = CancellationStore.dcrQuoteStatus record
+  , Routes.canceller = CancellationStore.dcrCanceller record
+  , Routes.policyVersion = CancellationStore.dcrPolicyVersion record
+  , Routes.cancelledAt = CancellationStore.dcrCancelledAt record
+  , Routes.leadDays = CancellationStore.dcrLeadDays record
+  , Routes.inProgress = CancellationStore.dcrInProgress record
+  , Routes.retainedBasisPoints = CancellationStore.dcrRetainedBasisPoints record
+  , Routes.depositCollectedMinor = CancellationStore.dcrDepositCollectedMinor record
+  , Routes.balanceCollectedMinor = CancellationStore.dcrBalanceCollectedMinor record
+  , Routes.retainedMinor = CancellationStore.dcrRetainedMinor record
+  , Routes.refundDueMinor = CancellationStore.dcrRefundDueMinor record
+  , Routes.currency = CancellationStore.dcrCurrency record
+  , Routes.refundStatus = CancellationStore.dcrRefundStatus record
+  , Routes.alreadyCancelled = CancellationStore.dcrReplayed record
+  }

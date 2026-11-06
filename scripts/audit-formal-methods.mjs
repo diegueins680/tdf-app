@@ -6,7 +6,10 @@ import { parseArgs } from 'node:util';
 import {
   collectFailingFormalFindings,
   collectFormalFindings,
+  countFormalFindingsByRule,
+  FORMAL_SCOPES,
   formatFormalFinding,
+  selectFormalFindingsInScope,
   summarizeFormalFindings,
 } from './lib/formal-methods-audit.mjs';
 
@@ -30,8 +33,16 @@ async function main() {
       json: { type: 'boolean' },
       'fail-on': { type: 'string', default: 'error' },
       'max-findings': { type: 'string', default: '25' },
+      // semantic (default): contract, state and resource rules; style:
+      // readability debt such as magic numbers; all: both.
+      scope: { type: 'string', default: 'semantic' },
     },
   });
+
+  const scope = values.scope;
+  if (!FORMAL_SCOPES.includes(scope)) {
+    throw new Error(`Unsupported --scope value "${scope}". Use one of: ${FORMAL_SCOPES.join(', ')}.`);
+  }
 
   const failOn = values['fail-on'];
   if (!VALID_FAIL_THRESHOLDS.has(failOn)) {
@@ -40,7 +51,8 @@ async function main() {
 
   const repoRoot = process.cwd();
   const maxFindings = parsePositiveInteger(values['max-findings'], 25);
-  const findings = await collectFormalFindings(repoRoot);
+  const allFindings = await collectFormalFindings(repoRoot);
+  const findings = selectFormalFindingsInScope(allFindings, scope);
   const failingFindings = collectFailingFormalFindings(findings, failOn);
   const summary = summarizeFormalFindings(findings);
   const report = {
@@ -48,7 +60,10 @@ async function main() {
     tool: 'builtin-formal-methods-audit',
     generatedAt: new Date().toISOString(),
     failOn,
+    scope,
     summary,
+    outOfScope: allFindings.length - findings.length,
+    byRule: countFormalFindingsByRule(allFindings),
     findings: findings.slice(0, maxFindings).map((finding) => relativeFinding(repoRoot, finding)),
     failingFindings: failingFindings.map((finding) => relativeFinding(repoRoot, finding)),
   };
@@ -60,7 +75,9 @@ async function main() {
       [
         `Formal methods audit ${report.ok ? 'passed' : 'failed'}.`,
         `Findings: ${summary.total} total, ${summary.critical} critical, ${summary.errors} errors, ${summary.warnings} warnings, ${summary.info} info.`,
+        `Scope: ${scope} (${report.outOfScope} findings outside the scope; use --scope all to list them).`,
         `Fail threshold: ${failOn}.`,
+        `By rule (all scopes): ${Object.entries(report.byRule).map(([rule, count]) => `${rule} ${count}`).join(', ') || 'none'}.`,
       ].join('\n'),
     );
 
