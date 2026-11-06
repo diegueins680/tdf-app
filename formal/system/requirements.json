@@ -8806,7 +8806,9 @@
         "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
         "scripts/test-prepare-native-session.py",
-        "tdf-hq-ui/src/api/records.test.ts"
+        "tdf-hq-ui/src/api/records.test.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx"
       ],
       "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",

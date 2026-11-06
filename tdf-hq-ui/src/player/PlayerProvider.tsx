@@ -272,7 +272,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const [resolvedQuality, setResolvedQuality] = useState<PlayerQuality | null>(null);
   const sourceGenerationRef = useRef(0);
   const playAttemptRef = useRef(0);
-  const loadedSourceRef = useRef<{ trackId: string; url: string; preview?: boolean; quality: PlayerQuality } | null>(null);
+  const loadedSourceRef = useRef<{ generation: number; trackId: string; url: string; preview?: boolean; quality: PlayerQuality } | null>(null);
   const pendingPositionRef = useRef<{ generation: number; trackId: string; url: string; position: number } | null>(null);
   const lastContinuousPositionRef = useRef(0);
   const listenedSinceProgressRef = useRef(0);
@@ -358,6 +358,22 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       return;
     }
     const generation = sourceGenerationRef.current;
+    const loadedSource = loadedSourceRef.current;
+    if (currentTrack.endMs != null && audio.currentTime * 1000 >= currentTrack.endMs) {
+      if (loadedSource?.generation !== generation || loadedSource.trackId !== currentTrack.id
+        || loadedSource.url !== audio.currentSrc) {
+        setStatus('loading');
+        return;
+      }
+      // The last bounded item keeps its loaded element after completion.
+      // Rewind that owned source before play can emit adjacent chapter audio.
+      const start = (currentTrack.startMs ?? 0) / 1000;
+      audio.currentTime = start;
+      if (generation !== sourceGenerationRef.current || loadedSourceRef.current !== loadedSource || audioRef.current !== audio) return;
+      positionsRef.current[currentTrack.id] = start;
+      lastContinuousPositionRef.current = start;
+      setCurrentTime(0);
+    }
     const attempt = playAttemptRef.current + 1;
     playAttemptRef.current = attempt;
     window.dispatchEvent(new CustomEvent(PLAYER_TAKEOVER_EVENT));
@@ -654,7 +670,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         }
         if (!resolved?.url) throw Object.assign(new Error('No authorized source'), { status: 403 });
         audio.src = resolved.url;
-        loadedSourceRef.current = { trackId: currentTrack.id, url: audio.src,
+        loadedSourceRef.current = { generation, trackId: currentTrack.id, url: audio.src,
           preview: resolved.source.preview, quality: resolved.source.quality };
         setResolvedQuality(resolved.source.quality);
         const start = (currentTrack.startMs ?? 0) / 1000;

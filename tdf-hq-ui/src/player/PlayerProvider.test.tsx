@@ -622,6 +622,61 @@ it('stops a bounded song at its endpoint instead of playing the following song',
   expect(player.status).toBe('paused');
   expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
 });
+it.each([
+  ['video', 20], ['video', 20.1], ['audio', 20], ['audio', 20.1],
+] as const)('rewinds a completed bounded %s track at %s before global Play resumes it', async (mode, endpoint) => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.setMediaMode(mode); player.playTrack(nativeTrack()); });
+  const media = view.container.querySelector('video')!;
+  let paused = true;
+  const playedPositions: number[] = [];
+  Object.defineProperty(media, 'readyState', { configurable: true, value: 1 });
+  Object.defineProperty(media, 'paused', { configurable: true, get: () => paused });
+  jest.mocked(media.pause).mockImplementation(() => { paused = true; });
+  jest.mocked(media.play).mockImplementation(async () => { playedPositions.push(media.currentTime); paused = false; });
+  await act(async () => { media.dispatchEvent(new Event('loadedmetadata')); });
+  await waitFor(() => expect(player.status).toBe('playing'));
+  media.currentTime = endpoint;
+  await act(async () => { media.dispatchEvent(new Event('timeupdate')); });
+  expect(player.status).toBe('paused');
+  await act(async () => { await player.play(); });
+  expect(playedPositions.at(-1)).toBe(10);
+  expect(media.currentTime).toBe(10);
+  expect(player.currentTime).toBe(0);
+  media.currentTime = 10.25;
+  await act(async () => { media.dispatchEvent(new Event('timeupdate')); });
+  expect(player.status).toBe('playing');
+});
+it.each([
+  ['midchapter', nativeTrack(), 15], ['unbounded', track('ordinary-resume'), 24],
+] as const)('preserves a paused %s position on global Play', async (_name, selected, position) => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(selected); });
+  const media = view.container.querySelector(selected.startMs != null ? 'video' : 'audio')!;
+  Object.defineProperty(media, 'readyState', { configurable: true, value: 1 });
+  await act(async () => { media.dispatchEvent(new Event('loadedmetadata')); });
+  media.currentTime = position;
+  act(() => { player.pause(); });
+  const playedPositions: number[] = [];
+  jest.mocked(media.play).mockImplementation(async () => { playedPositions.push(media.currentTime); });
+  await act(async () => { await player.play(); });
+  expect(playedPositions.at(-1)).toBe(position);
+  expect(media.currentTime).toBe(position);
+});
+it('refuses to rewind or play an unowned source when replaying a completed chapter', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(nativeTrack()); });
+  const media = view.container.querySelector('video')!;
+  Object.defineProperty(media, 'readyState', { configurable: true, value: 1 });
+  await act(async () => { media.dispatchEvent(new Event('loadedmetadata')); });
+  media.currentTime = 20.1;
+  jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockReturnValue('https://media.invalid/obsolete-source.mp4');
+  const calls = jest.mocked(media.play).mock.calls.length;
+  await act(async () => { await player.play(); });
+  expect(media.currentTime).toBe(20.1);
+  expect(jest.mocked(media.play).mock.calls.length).toBe(calls);
+  expect(player.status).toBe('loading');
+});
 it('releases the ordinary audio source when a native video takes over', async () => {
   const view = render(<PlayerProvider><Probe /></PlayerProvider>);
   await act(async () => { player.playTrack(track('ordinary')); });

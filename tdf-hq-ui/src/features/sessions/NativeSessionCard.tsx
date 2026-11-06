@@ -1,8 +1,12 @@
 import { Alert, Box, Button, Card, CardContent, Chip, List, ListItem, Stack, Typography } from '@mui/material';
 import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from '../../player/types';
 import { sessionPlayerTrack, type NativeSession, type SessionChapter } from './nativeSessions';
+import { InteractionPanel } from '../interactions/InteractionPanel';
+import { PublicationAnchor } from '../interactions/PublicationSelection';
 
-export function NativeSessionCard({ session }: { session: NativeSession }) {
+export function NativeSessionCard({ session, selected = false, showInteractions = true }: {
+  session: NativeSession; selected?: boolean; showInteractions?: boolean;
+}) {
   const play = (mode: 'audio' | 'video', chapter?: SessionChapter) => {
     const track = sessionPlayerTrack(session, chapter);
     const detail: LoadPlayerTrackDetail = { track, queue: chapter ? session.chapters.map(c => sessionPlayerTrack(session, c)) : [track],
@@ -10,7 +14,7 @@ export function NativeSessionCard({ session }: { session: NativeSession }) {
     window.dispatchEvent(new CustomEvent(PLAYER_LOAD_TRACK_EVENT, { detail }));
   };
   const ready = session.state === 'ready';
-  return <Card component="article" aria-label={session.title} sx={{ my: 2 }}>
+  return <Card component={PublicationAnchor} role="article" selected={showInteractions && selected} aria-label={session.title} sx={{ my: 2 }}>
     {session.posterUrl && <Box component="img" src={session.posterUrl} alt="" loading="lazy" sx={{ width: '100%', maxHeight: 300, objectFit: 'cover' }} />}
     <CardContent>
       <Chip label="Sesión TDF · Video y audio" size="small" />
@@ -38,6 +42,7 @@ export function NativeSessionCard({ session }: { session: NativeSession }) {
         {session.publishedAt && <Typography>Publicación: {session.publishedAt.slice(0, 10)}</Typography>}
         {session.credits.map((c, i) => <Typography key={`${c.role}:${i}`} variant="body2">{c.role}: {c.name}</Typography>)}
       </Box>
+      {showInteractions && <InteractionPanel kind={session.publication.kind} entityKey={session.publication.entityKey} initiallyExpanded={selected} />}
     </CardContent>
   </Card>;
 }

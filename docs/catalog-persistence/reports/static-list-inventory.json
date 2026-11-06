@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T07:14:45.892Z",
+  "generatedAt": "2026-11-06T08:35:41.682Z",
   "repositoryRoot": ".",
   "filesScanned": 2607,
-  "candidateCount": 1394,
+  "candidateCount": 1395,
   "byClassification": {
-    "dynamic-business-catalog": 911,
+    "dynamic-business-catalog": 912,
     "genuine-technical-constant": 72,
     "governed-reference-data": 143,
     "security-system-registry": 268
@@ -11542,7 +11542,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 363,
+      "consumerCount": 366,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11644,8 +11644,8 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-        "tdf-hq-ui/src/i18n/locales/de.ts"
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -22040,7 +22040,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 81,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/docs/openapi/interactions.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
@@ -22096,9 +22096,11 @@
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
         "tdf-hq-ui/src/hooks/useMetaTags.ts",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/InteractionPage.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
       ],
       "mobileConsumers": [
@@ -32578,7 +32580,7 @@
       "lines": [
         142
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -32862,7 +32864,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33134,7 +33136,7 @@
       "lines": [
         190
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33407,7 +33409,7 @@
       "lines": [
         202
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33693,7 +33695,7 @@
       "lines": [
         215
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33963,7 +33965,7 @@
       "lines": [
         241
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34235,7 +34237,7 @@
       "lines": [
         251
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -42095,7 +42097,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 69,
+      "consumerCount": 71,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -42148,6 +42150,8 @@
         "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
         "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
         "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx",
@@ -43200,6 +43204,73 @@
       "priority": "P3-consumer",
       "risk": "Fixture drift could hide artwork matching errors or associate a cover with the wrong release.",
       "justification": "Regression-test payload only, mirroring the existing artist release and public Records API contracts. Production artwork and credits remain API-owned; this fixture defines no selectable catalog values or persistent relationship.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
+    },
+    {
+      "id": "5400ecebb818745bb318",
+      "file": "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
+      "sourceKind": "production",
+      "surface": "web",
+      "domain": "studio-services-booking",
+      "kind": "array",
+      "name": "collections",
+      "line": 69,
+      "values": [
+        "{kind=recording_session, items}",
+        "{kind=recording, items}",
+        "{kind=record_release, items}"
+      ],
+      "valueCount": 3,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        69
+      ],
+      "consumerCount": 23,
+      "backendConsumers": [
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/test/TDF/Catalog/RecordsSpec.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/records.test.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/session/recoverableDraft.ts"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-mobile/src/lib/recordsSnapshot.ts"
+      ],
+      "automationConsumers": [
+        "scripts/__tests__/public-catalog-http-runtime.mjs",
+        "scripts/mail-deliverability-monitor.py",
+        "scripts/test-music-directory-migration.sh",
+        "scripts/verification-report.py",
+        "scripts/verify-proof-certificates.py"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/records.test.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "Canonical InteractionKind / InteractionIdentity from the interactions API and generated OpenAPI schema",
+      "priority": "P1-consumer",
+      "risk": "An incorrect publication kind or coerced string key can attach a conversation to the wrong publication.",
+      "justification": "This typed adapter binds the existing RecordsFeedDTO sessions, recordings and releases fields to their already established InteractionIdentity kinds: recording_session, recording and record_release. These are the exact canonical kinds used by the original grids; it introduces no new registry value, option authority or editable catalog. NativePublicationKind is constrained by the generated InteractionKind schema. Exact-kind/string-ID, equal-ID cross-kind, malformed-metadata and selected-publication regressions qualify the consumer mapping.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -54007,7 +54078,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 324,
+      "consumerCount": 327,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -54255,7 +54326,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 324,
+      "consumerCount": 327,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -54355,10 +54426,10 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "tdf-hq-ui/src/i18n/locales/de.ts",
-        "tdf-hq-ui/src/i18n/locales/en.ts",
-        "tdf-hq-ui/src/i18n/locales/es.ts",
-        "tdf-hq-ui/src/i18n/locales/fr.ts"
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
+        "tdf-hq-ui/src/i18n/locales/de.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -54502,7 +54573,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 390,
+      "consumerCount": 393,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -54759,7 +54830,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 307,
+      "consumerCount": 310,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -54860,9 +54931,9 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts"
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -55011,7 +55082,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 293,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -55110,11 +55181,11 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
         "tdf-hq-ui/src/i18n/locales/de.ts",
-        "tdf-hq-ui/src/i18n/locales/en.ts",
-        "tdf-hq-ui/src/i18n/locales/es.ts",
-        "tdf-hq-ui/src/i18n/locales/fr.ts",
-        "tdf-hq-ui/src/i18n/locales/pt.ts"
+        "tdf-hq-ui/src/i18n/locales/en.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -55257,7 +55328,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 309,
+      "consumerCount": 312,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -55360,7 +55431,7 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "tdf-hq-ui/src/i18n/locales/de.ts"
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -55503,7 +55574,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 301,
+      "consumerCount": 304,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -55602,11 +55673,11 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
         "tdf-hq-ui/src/i18n/locales/de.ts",
-        "tdf-hq-ui/src/i18n/locales/en.ts",
-        "tdf-hq-ui/src/i18n/locales/es.ts",
-        "tdf-hq-ui/src/i18n/locales/fr.ts",
-        "tdf-hq-ui/src/i18n/locales/pt.ts"
+        "tdf-hq-ui/src/i18n/locales/en.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -55749,7 +55820,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 295,
+      "consumerCount": 298,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -55848,11 +55919,11 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
         "tdf-hq-ui/src/i18n/locales/de.ts",
-        "tdf-hq-ui/src/i18n/locales/en.ts",
-        "tdf-hq-ui/src/i18n/locales/es.ts",
-        "tdf-hq-ui/src/i18n/locales/fr.ts",
-        "tdf-hq-ui/src/i18n/locales/pt.ts"
+        "tdf-hq-ui/src/i18n/locales/en.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -66083,7 +66154,7 @@
         102,
         111
       ],
-      "consumerCount": 534,
+      "consumerCount": 535,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -75192,7 +75263,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -75211,6 +75282,7 @@
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.tsx",
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/MerchReputationModerationPage.tsx",
@@ -75367,7 +75439,7 @@
       "lines": [
         30
       ],
-      "consumerCount": 56,
+      "consumerCount": 57,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-25_content_engagement.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -75396,6 +75468,7 @@
         "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx",
@@ -85846,7 +85919,7 @@
       "lines": [
         11092
       ],
-      "consumerCount": 1006,
+      "consumerCount": 1007,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -90691,7 +90764,7 @@
       "lines": [
         15708
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -91462,7 +91535,7 @@
       "lines": [
         15769
       ],
-      "consumerCount": 567,
+      "consumerCount": 568,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -94194,7 +94267,7 @@
       "lines": [
         18761
       ],
-      "consumerCount": 1001,
+      "consumerCount": 1002,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -96560,7 +96633,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 61,
+      "consumerCount": 62,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
@@ -96594,6 +96667,7 @@
         "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx",
@@ -163969,7 +164043,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 81,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/docs/openapi/interactions.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
@@ -164026,9 +164100,11 @@
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
         "tdf-hq-ui/src/hooks/useMetaTags.ts",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/InteractionPage.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
       ],
       "mobileConsumers": [

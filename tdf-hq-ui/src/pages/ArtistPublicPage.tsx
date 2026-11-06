@@ -1,5 +1,6 @@
 import { nativeArtworkForUrl } from '../features/sessions/nativeSessions';
 import { NativeSessionCard } from '../features/sessions/NativeSessionCard';
+import { nativePublicationKey } from '../features/sessions/nativeSessions';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
@@ -691,7 +692,7 @@ export default function ArtistPublicPage() {
               </Stack>
 
               {releaseSelection.notice}
-              {nativeSessions.map(nativeSession => <NativeSessionCard key={nativeSession.id} session={nativeSession} />)}
+              {nativeSessions.map(nativeSession => <NativeSessionCard key={nativePublicationKey(nativeSession.publication)} session={nativeSession} />)}
               {catalogIncomplete && <Alert severity="warning" action={<Button aria-label="Reintentar catálogo del artista" onClick={() => { void catalogQuery.refetch(); }}>Reintentar</Button>}>
                 No pudimos cargar una parte del catálogo del artista. Puedes reproducir el contenido disponible y reintentar la carga.
               </Alert>}

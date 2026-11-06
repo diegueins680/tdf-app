@@ -26228,6 +26228,16 @@
           }
         }
       ]
+    },
+    {
+      "id": "5400ecebb818745bb318",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "Canonical InteractionKind / InteractionIdentity from the interactions API and generated OpenAPI schema",
+      "priority": "P1-consumer",
+      "risk": "An incorrect publication kind or coerced string key can attach a conversation to the wrong publication.",
+      "justification": "This typed adapter binds the existing RecordsFeedDTO sessions, recordings and releases fields to their already established InteractionIdentity kinds: recording_session, recording and record_release. These are the exact canonical kinds used by the original grids; it introduces no new registry value, option authority or editable catalog. NativePublicationKind is constrained by the generated InteractionKind schema. Exact-kind/string-ID, equal-ID cross-kind, malformed-metadata and selected-publication regressions qualify the consumer mapping.",
+      "reviewed": true
     }
   ]
 }

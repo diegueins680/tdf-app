@@ -1,5 +1,5 @@
 import { NativeSessionCard } from '../features/sessions/NativeSessionCard';
-import { nativeSessionsFromFeed } from '../features/sessions/nativeSessions';
+import { nativePublicationKey, nativeSessionsFromFeed } from '../features/sessions/nativeSessions';
 import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
@@ -1010,7 +1010,8 @@ export default function RecordsPublicPage() {
     queryFn: () => Records.getFeed('es'),
     staleTime: 5 * 60 * 1000,
   });
-  const nativeSessions = recordsFeedQuery.data ? nativeSessionsFromFeed(recordsFeedQuery.data) : [];
+  const nativeSessions = useMemo(() => recordsFeedQuery.data ? nativeSessionsFromFeed(recordsFeedQuery.data) : [], [recordsFeedQuery.data]);
+  const nativePublications = useMemo(() => new Set(nativeSessions.map(item => nativePublicationKey(item.publication))), [nativeSessions]);
   const { session } = useSession();
   const canManageReleases = useMemo(
     () => canAccessPath('/label/releases', session?.roles, session?.modules),
@@ -1018,20 +1019,24 @@ export default function RecordsPublicPage() {
   );
 
   const sessions = useMemo(
-    () => sortSessions((recordsFeedQuery.data?.sessions ?? []).filter(item => !item.resources.some(resource => resource.providerCode === 'tdf' && resource.providerMetadata?.['tdfNative'])).map(mapRecordsSession).filter((item): item is SessionItem => item != null)),
-    [recordsFeedQuery.data?.sessions],
+    () => sortSessions((recordsFeedQuery.data?.sessions ?? []).filter(item => !nativePublications.has(nativePublicationKey({ kind: 'recording_session', entityKey: item.id }))).map(mapRecordsSession).filter((item): item is SessionItem => item != null)),
+    [nativePublications, recordsFeedQuery.data?.sessions],
   );
   const releases = useMemo(
     () => sortReleases((recordsFeedQuery.data?.releases ?? []).map(mapRecordsRelease)),
     [recordsFeedQuery.data?.releases],
   );
   const recordings = useMemo(
-    () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).filter(item => !item.resources.some(resource => resource.providerCode === 'tdf' && resource.providerMetadata?.['tdfNative'])).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
-    [recordsFeedQuery.data?.recordings],
+    () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).filter(item => !nativePublications.has(nativePublicationKey({ kind: 'recording', entityKey: item.id }))).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
+    [nativePublications, recordsFeedQuery.data?.recordings],
   );
   const recordingSelection = usePublicationSelection('recording', recordings.map((item) => item.id), recordsFeedQuery.isLoading);
   const releaseSelection = usePublicationSelection('release', releases.map((item) => item.id), recordsFeedQuery.isLoading);
   const sessionSelection = usePublicationSelection('session', sessions.map((item) => item.id), recordsFeedQuery.isLoading);
+  // Native cards are already renderable publications. Include their exact
+  // identities for deep-link lookup without changing legacy pagination indices.
+  const recordingPublication = usePublicationSelection('recording', [...recordings.map(item => item.id), ...nativeSessions.filter(item => item.publication.kind === 'recording').map(item => item.publication.entityKey)], recordsFeedQuery.isLoading);
+  const sessionPublication = usePublicationSelection('session', [...sessions.map(item => item.id), ...nativeSessions.filter(item => item.publication.kind === 'recording_session').map(item => item.publication.entityKey)], recordsFeedQuery.isLoading);
   const sessionsLoading = recordsFeedQuery.isLoading;
   const releasesLoading = recordsFeedQuery.isLoading;
   const recordingsLoading = recordsFeedQuery.isLoading;
@@ -1074,7 +1079,13 @@ export default function RecordsPublicPage() {
         }}
       >
         <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
-        {nativeSessions.map(nativeSession => <NativeSessionCard key={nativeSession.id} session={nativeSession} />)}
+        {nativeSessions.map(nativeSession => {
+          const selection = nativeSession.publication.kind === 'recording' ? recordingPublication
+            : nativeSession.publication.kind === 'record_release' ? releaseSelection : sessionPublication;
+          return <NativeSessionCard key={nativePublicationKey(nativeSession.publication)} session={nativeSession}
+            showInteractions={nativeSession.publication.kind !== 'record_release'}
+            selected={selection.requested === nativeSession.publication.entityKey} />;
+        })}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
             <PublicBrandBar tagline="TDF Records · Estudio · Lanzamientos · Sesiones" />
           </Box>
@@ -1267,7 +1278,7 @@ export default function RecordsPublicPage() {
               {recordingsIntro}
             </Typography>
           </Stack>
-          <SelectedRecordPublication kind="recording" selection={recordingSelection} loading={recordingsLoading} />
+          <SelectedRecordPublication kind="recording" selection={recordingPublication} loading={recordingsLoading} />
           {recordingsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedRecordings')} />
@@ -1350,7 +1361,7 @@ export default function RecordsPublicPage() {
               {sessionsIntro}
             </Typography>
           </Stack>
-          <SelectedRecordPublication kind="recording_session" selection={sessionSelection} loading={sessionsLoading} />
+          <SelectedRecordPublication kind="recording_session" selection={sessionPublication} loading={sessionsLoading} />
           {sessionsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedSessions')} />
