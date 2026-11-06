@@ -1,0 +1,7 @@
+{
+  "database": "tdf_ticket_clock_gate_full_test",
+  "freshUTF8Template0": true,
+  "all227MigrationsAppliedAndReplayed": true,
+  "fixtureScope": "Same production/catalog base as dedicated ticket-payment-gate runner; isolated from provider-retry fixture changes.",
+  "productionWrites": false
+}
