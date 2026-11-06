@@ -1,0 +1,17 @@
+{
+  "baseline": "0d66f3d7a1a81d4ecc02d84ae5c95f184df75e9d",
+  "previousHead": "84d684745ff558debc2051faccbce53ba8a20bca",
+  "immutableReviewId": "c7c992c00a1accaa7929",
+  "expectedCanonicalHash": "b40e606883c7d13e8a4a52fbf491a82b9b26bee959cba45f353f8a307b8fa44b",
+  "incorrectUpdatedCanonicalHash": "bb4f18cc31622aeb8cfb200ecfc4f2875fc7e3eef8d7fe6daf970babd1e25ccc",
+  "cause": "A current consumer-count refresh incorrectly changed a historical review whose whole object is hash-anchored. Original count12 is historical evidence, not current derived inventory.",
+  "correction": "Restore exact parent decision file; retain current13 in generated inventory. No ledger/hash/assertion/test change.",
+  "entireDecisionFileByteIdenticalToBaseline": true,
+  "preservedDecisions": 1353,
+  "hostedFailureJob": 123205145652,
+  "hostedFailureRun": 40799875006,
+  "hostedUnitResult": {
+    "passed": 7,
+    "failed": 1
+  }
+}

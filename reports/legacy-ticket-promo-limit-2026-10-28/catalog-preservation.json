@@ -1,0 +1,19 @@
+{
+  "normativeParentDecisionObjectsPreserved": 1353,
+  "parentOrderPreserved": true,
+  "newIds": 0,
+  "changedGeneratedCandidateIds": [
+    "c7c992c00a1accaa7929",
+    "d676ae76c2b39d1d5e0b",
+    "fb1005d3b1d035e17581"
+  ],
+  "evidenceOnlyConsumerCountChanges": [
+    {
+      "id": "c7c992c00a1accaa7929",
+      "before": 12,
+      "after": 13
+    }
+  ],
+  "otherFieldsUnchanged": true,
+  "historicalUnrelatedEvidenceCountersNotRewritten": true
+}
