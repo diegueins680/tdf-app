@@ -3130,7 +3130,7 @@
     {
       "id": "SURFACE-a759d468f3ebc8d5",
       "path": "e2e/web/event-discovery-filters.spec.mjs",
-      "sha256": "13ed55c916d97c71663440ca9a2785272488cd3bb89c6fae08d30760835b232d",
+      "sha256": "c24d80fbad892a8a5263f053c6c44cfb488f58f0a5edd1238f07c01bf2cd3e08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7930,13 +7930,13 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "123a111c061f4eb77f37e7c27c57d1263290d9c008ff74daeff91db90cbd2e02",
+      "sha256": "b1c0eeb651f2935cbd49274db9eca8ccc368a20eef87af653a6583afa33e84e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "b1635065c34d4d147e589f545a85e21a2e5c55bbaac67e50037c435c5e2c0ab5",
+      "sha256": "b48640eddc33d51a01abb1c18b7289c0a68d5b78504dc2471bd7884e55f53a3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8722,13 +8722,13 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "1bc3ec362082c00106dcac5bcc8131cf15da631d8844e7e9b8823a3836089171",
+      "sha256": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "2eca95aa1fa92a54659053cfd91e0a0f686ee6a3dd34e1fbaf64dbbe85c24d90",
+      "sha256": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10876,7 +10876,7 @@
     {
       "id": "SURFACE-c4651b845e2e6ad1",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
-      "sha256": "6c9d06061c1d840e35625bc8958680474c995779e262c6343d7e9304130f9bce",
+      "sha256": "d957de5b4e438dd3ed6c834e1cf0d3e50e37108ab712bc5f4e9bfd9038967700",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10888,7 +10888,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "6a07d434a6b048d28c8dfede9278942379bbced47cc6fae4cf7866f47f094238",
+      "sha256": "742fc8904ea10e84035b33d39b433f06db16605af53dbb666c426ca8f52df10a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -28753,7 +28753,7 @@
     },
     {
       "path": "formal/system/event-discovery-filtering.md",
-      "sha256": "8897a9d0678300084809419af7c66e50811ec4ff27ae4998c4df895f08bdb092",
+      "sha256": "3358d0b88dcfe479ee450f43107c49ad68ff00ceb9998849113010837e3f7a63",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29369,7 +29369,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a37379e8daebf4ae2c8478de8bbfe9f6de45e1006023511e632b7645d274defe",
+      "sha256": "ecfd00d8d6b8c0bf2134da2bc3df2291623e6104d42eed0336a6c84b274fcf70",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -35743,7 +35743,7 @@
       "statement": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results.",
       "source": "formal/system/event-discovery-filtering.md",
       "line": 9,
-      "sourceSha256": "8897a9d0678300084809419af7c66e50811ec4ff27ae4998c4df895f08bdb092",
+      "sourceSha256": "3358d0b88dcfe479ee450f43107c49ad68ff00ceb9998849113010837e3f7a63",
       "status": "inferred",
       "declarationColumns": {
         "ID": "EVT-DISCOVERY-FILTER-001",

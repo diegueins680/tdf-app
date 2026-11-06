@@ -16228,7 +16228,8 @@
       "effects": [
         "Parameterized discovery predicates before LIMIT/OFFSET",
         "URL-preserved filters, page counts and matching calendar dates",
-        "Canonical lineup maintenance for old and new events"
+        "Canonical lineup maintenance for old and new events",
+        "Resolve distinct displayed-event venue IDs directly with account-scoped caching and cancellation; never depend on a bounded venue list."
       ],
       "authorization": "Existing server event-read and organizer-write checks remain authoritative; no new anonymous management surface.",
       "privacy": "No visibility expansion; city and performer matching only narrow the already authorized result set.",
@@ -16250,7 +16251,8 @@
         "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
         "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
         "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
@@ -16260,7 +16262,8 @@
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
         "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
         "e2e/web/event-discovery-filters.spec.mjs",
-        "scripts/test-event-discovery-postgres.mjs"
+        "scripts/test-event-discovery-postgres.mjs",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

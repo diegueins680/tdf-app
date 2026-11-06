@@ -661,8 +661,8 @@ export const SocialEventsAPI = {
     const qs = buildQuery({ city: opts?.city });
     return await getUnknown(`/social-events/venues${qs}`) as SocialVenueDTO[];
   },
-  getVenue: async (venueId: string) =>
-    await getUnknown(`/social-events/venues/${encodeURIComponent(venueId)}`) as SocialVenueDTO,
+  getVenue: async (venueId: string, signal?: AbortSignal) =>
+    await getUnknown(`/social-events/venues/${encodeURIComponent(venueId)}`, { signal }) as SocialVenueDTO,
   listInvitations: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/invitations`) as SocialInvitationDTO[],
   sendInvitation: async (eventId: string, payload: SocialInvitationCreatePayload) =>

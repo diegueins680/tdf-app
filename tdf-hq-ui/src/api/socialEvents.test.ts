@@ -306,3 +306,11 @@ describe('event finance read precision', () => {
     await expect(SocialEventsAPI.getFinanceSummary('7')).resolves.toBe(report);
   });
 });
+
+it('gets one venue by encoded identity and forwards read cancellation', async () => {
+  const signal = new AbortController().signal;
+  const venue = { venueId: 'venue/a', venueName: 'Sala' };
+  getMock.mockResolvedValue(venue);
+  await expect(SocialEventsAPI.getVenue('venue/a', signal)).resolves.toEqual(venue);
+  expect(getMock).toHaveBeenLastCalledWith('/social-events/venues/venue%2Fa', { signal });
+});

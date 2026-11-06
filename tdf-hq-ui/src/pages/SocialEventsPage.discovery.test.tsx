@@ -2,16 +2,16 @@ import { jest } from '@jest/globals';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import type { SocialEventDTO, SocialArtistDTO } from '../api/socialEvents';
+import type { SocialEventDTO, SocialArtistDTO, SocialVenueDTO } from '../api/socialEvents';
 
 interface Filters { city?: string; artistIds?: string[]; startAfter?: string; limit?: number; offset?: number; signal?: AbortSignal }
 const listEvents = jest.fn<(filters: Filters) => Promise<SocialEventDTO[]>>();
 const artists: SocialArtistDTO[] = [{ artistId: '7', artistName: 'Alpha' }, { artistId: '8', artistName: 'Beta' }];
 const empty = jest.fn<() => Promise<never[]>>().mockResolvedValue([]);
-const listedVenues = [{ venueId: 'v1', venueName: 'Sala Listada' }];
-const getVenue = jest.fn<(venueId: string) => Promise<{ venueId: string; venueName: string }>>();
+const listVenues = jest.fn<() => Promise<SocialVenueDTO[]>>();
+const getVenue = jest.fn<(venueId: string, signal?: AbortSignal) => Promise<SocialVenueDTO>>();
 jest.unstable_mockModule('../api/socialEvents', () => ({ SocialEventsAPI: {
-  listEvents, listVenues: async () => listedVenues, getVenue, listInvitations: empty, listTicketTiers: empty, listTicketOrders: empty,
+  listEvents, listVenues, getVenue, listInvitations: empty, listTicketTiers: empty, listTicketOrders: empty,
   listArtists: async () => artists,
   getArtist: async (id: string) => artists.find(artist => artist.artistId === id),
 } }));
@@ -41,11 +41,12 @@ const future = (id: number, artist = artists[0]): SocialEventDTO => ({ eventId: 
 let client: QueryClient;
 function Location() { return <output data-testid="location">{useLocation().search}</output>; }
 function mount(path = '/social/eventos') {
-  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 5 * 60 * 1000 } } });
   return render(<MemoryRouter initialEntries={[path]}><QueryClientProvider client={client}><SocialEventsPage /><Location /></QueryClientProvider></MemoryRouter>);
 }
 beforeEach(() => {
   listEvents.mockReset().mockResolvedValue([]);
+  listVenues.mockReset().mockRejectedValue(new Error('No global venue query expected'));
   getVenue.mockReset().mockImplementation(async venueId => ({ venueId, venueName: `Sala ${venueId}` }));
 });
 afterEach(() => { cleanup(); client?.clear(); });
@@ -126,11 +127,71 @@ it('keeps an explicitly selected date without events instead of snapping back to
   await waitFor(() => expect(screen.queryByText(/Sin eventos programados para esta fecha/)).toBeNull());
 });
 
-it('resolves event venues missing from the bounded venue list by id', async () => {
-  listEvents.mockResolvedValue([{ ...future(3), eventVenueId: 'v1' }, { ...future(4), eventVenueId: 'v900' }]);
-  mount('/social/eventos?city=Quito');
-  expect((await screen.findAllByText('Sala v900')).length).toBeGreaterThan(0);
-  expect(screen.getAllByText('Sala Listada').length).toBeGreaterThan(0);
+it('resolves only referenced venues across a 250-venue catalog, cities and event pages', async () => {
+  const venues = Array.from({ length: 250 }, (_, index) => ({
+    venueId: String(index + 1), venueName: `Sala ${String(index + 1).padStart(3, '0')}`,
+    venueCity: index < 225 ? 'Quito' : 'New York',
+  }));
+  // The old global query sees only the first 200 alphabetical venues.
+  listVenues.mockResolvedValue(venues.slice(0, 200));
+  getVenue.mockImplementation(async id => venues.find(venue => venue.venueId === id)!);
+  const rows = Array.from({ length: 23 }, (_, index) => ({
+    ...future(index + 1), eventVenueId: index < 20 ? '225' : '250',
+  }));
+  listEvents.mockImplementation(async filters => {
+    const matching = filters.city === 'New York' ? rows.slice(20) : rows;
+    return matching.slice(filters.offset, (filters.offset ?? 0) + (filters.limit ?? 21));
+  });
+  mount('/social/eventos?city=Quito&artists=7,8&past=1');
+  // Both calendar and cards use the same resolved name. Shared venues are fetched once;
+  // the lookahead row's venue is not fetched until that page is displayed.
+  await waitFor(() => expect(screen.getAllByText('Sala 225')).toHaveLength(40));
+  expect(getVenue.mock.calls.map(([id]) => id)).toEqual(['225']);
+  expect(getVenue.mock.calls[0]?.[1]).toBeInstanceOf(AbortSignal);
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  await waitFor(() => expect(screen.getAllByText('Sala 250')).toHaveLength(6));
+  expect(screen.queryByText('Sala 225')).toBeNull();
+  expect(listEvents).toHaveBeenLastCalledWith(expect.objectContaining({ city: 'Quito', artistIds: ['7', '8'], startAfter: undefined, offset: 20 }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Ciudad' }), { target: { value: 'New York' } });
+  await waitFor(() => expect(listEvents).toHaveBeenLastCalledWith(expect.objectContaining({ city: 'New York', artistIds: ['7', '8'], startAfter: undefined, offset: 0 })));
+  await waitFor(() => expect(screen.getAllByText('Sala 250')).toHaveLength(6));
+  expect(getVenue.mock.calls.map(([id]) => id)).toEqual(['225', '250']);
+  expect(listVenues).not.toHaveBeenCalled();
   expect(screen.queryByText('Venue por definir')).toBeNull();
-  expect(getVenue.mock.calls.map(([venueId]) => venueId)).toEqual(['v900']);
+}, 15_000);
+
+it('shows venue read failures separately and refreshes them without losing other venue names', async () => {
+  listEvents.mockResolvedValue([{ ...future(1), eventVenueId: '225' }, { ...future(2), eventVenueId: '250' }]);
+  getVenue.mockImplementation(async id => {
+    if (id === '250') throw new Error('offline');
+    return { venueId: id, venueName: 'Sala Quito' };
+  });
+  mount();
+  await screen.findAllByText('Sala Quito');
+  expect((await screen.findAllByText('No se pudo cargar la sede')).length).toBe(2);
+  expect(screen.queryByText('Venue por definir')).toBeNull();
+  getVenue.mockImplementation(async id => ({ venueId: id, venueName: id === '225' ? 'Sala Quito' : 'Sala New York' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Refrescar' }));
+  await screen.findAllByText('Sala New York');
+  expect(screen.getAllByText('Sala Quito')).toHaveLength(2);
+  await waitFor(() => expect(screen.queryByText('No se pudo cargar la sede')).toBeNull());
+  expect(listVenues).not.toHaveBeenCalled();
+});
+
+it('cancels a previous city venue read and never applies its late result to the current page', async () => {
+  let finishOld!: (venue: SocialVenueDTO) => void;
+  getVenue.mockImplementation((id) => id === '225'
+    ? new Promise(resolve => { finishOld = resolve; })
+    : Promise.resolve({ venueId: id, venueName: 'Sala New York' }));
+  listEvents.mockImplementation(async filters => [{ ...future(1), eventVenueId: filters.city === 'Quito' ? '225' : '250' }]);
+  mount('/social/eventos?city=Quito');
+  await screen.findAllByText('Cargando sede…');
+  await waitFor(() => expect(finishOld).toBeDefined());
+  const oldSignal = getVenue.mock.calls[0]?.[1];
+  fireEvent.change(screen.getByRole('textbox', { name: 'Ciudad' }), { target: { value: 'New York' } });
+  await screen.findAllByText('Sala New York');
+  expect(oldSignal?.aborted).toBe(true);
+  await act(async () => finishOld({ venueId: '225', venueName: 'Sala Quito tardía' }));
+  expect(screen.queryByText('Sala Quito tardía')).toBeNull();
+  expect(screen.getAllByText('Sala New York')).toHaveLength(2);
 });

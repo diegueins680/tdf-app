@@ -58,6 +58,17 @@ previous start-only interpretation to include ongoing events. The workspace
 supplies the current instant per request unless “Incluir eventos pasados” is on.
 Explicit instants retain the existing UTC codec. No stale clock is saved in URLs.
 
+The carousel uses the same effective end/start rule for general and artist dates,
+so a page of eight ongoing events remains visible instead of being discarded
+before future events can be reached.
+
+Venue names are loaded directly by the distinct venue IDs of the displayed event
+page (at most 20), with account-scoped caching and cancellation. No global venue
+list, city-scoped venue prefix or lookahead-only venue is required. Calendar and
+cards share the same lookup. Pending and failed reads are shown explicitly;
+refresh retries the current venue reads. Changing city or page cannot apply a late
+venue name to another event.
+
 The signed-in workspace stores city, artist IDs, type, state, past inclusion and
 page in its URL. Text input is debounced and requests consume cancellation signals.
 Query identities include the viewer and all effective filters. Results are pages

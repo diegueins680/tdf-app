@@ -329,11 +329,6 @@ export default function SocialEventsPage() {
     retry: false,
   });
 
-  const venuesQuery = useQuery({
-    queryKey: ['social-venues'],
-    queryFn: () => SocialEventsAPI.listVenues(),
-    retry: false,
-  });
   const eventTypesQuery = useQuery({
     queryKey: ['catalog', 'event-types', 'social-events', locale],
     queryFn: () => Catalogs.listItems('event-types', {
@@ -362,40 +357,26 @@ export default function SocialEventsPage() {
 
   const events = useMemo(() => (eventsQuery.data ?? []).slice(0, EVENT_PAGE_SIZE), [eventsQuery.data]);
 
-  // The venue list is one bounded page of the whole catalog, so a loaded
-  // event can reference a venue outside it. Resolve those venues by id
-  // instead of showing an assigned venue as undefined.
-  const listedVenueIds = useMemo(
-    () => new Set((venuesQuery.data ?? []).flatMap((v) => (v.venueId ? [v.venueId] : []))),
-    [venuesQuery.data],
+  // Resolve only the displayed page, deduplicating shared venues. Catalog
+  // ordering, city and list pagination must never affect event venue names.
+  const venueIds = useMemo(
+    () => Array.from(new Set(events.flatMap((event) => event.eventVenueId ? [event.eventVenueId] : []))),
+    [events],
   );
-  const unlistedVenueIds = useMemo(
-    () => (venuesQuery.isSuccess
-      ? Array.from(new Set(events.flatMap((ev) => (ev.eventVenueId ? [ev.eventVenueId] : []))))
-        .filter((venueId) => !listedVenueIds.has(venueId))
-      : []),
-    [events, listedVenueIds, venuesQuery.isSuccess],
-  );
-  const unlistedVenueQueries = useQueries({
-    queries: unlistedVenueIds.map((venueId) => ({
-      queryKey: ['social-venue', venueId],
-      queryFn: () => SocialEventsAPI.getVenue(venueId),
+  const venueQueries = useQueries({
+    queries: venueIds.map((venueId) => ({
+      queryKey: ['social-venue', sessionPartyId, venueId],
+      queryFn: ({ signal }: { signal: AbortSignal }) => SocialEventsAPI.getVenue(venueId, signal),
       retry: false,
       staleTime: 5 * 60 * 1000,
     })),
   });
-
-  const venueById = useMemo(() => {
-    const map = new Map<string, string>();
-    (venuesQuery.data ?? []).forEach((v) => {
-      if (v.venueId) map.set(v.venueId, v.venueName);
-    });
-    unlistedVenueQueries.forEach((query) => {
-      const venue = query.data;
-      if (venue?.venueId) map.set(venue.venueId, venue.venueName);
-    });
-    return map;
-  }, [venuesQuery.data, unlistedVenueQueries]);
+  const venueLabelById = new Map(venueIds.map((venueId, index) => [
+    venueId,
+    venueQueries[index]?.data?.venueName
+      ?? (venueQueries[index]?.isError ? 'No se pudo cargar la sede' : 'Cargando sede…'),
+  ]));
+  const hasVenueError = venueQueries.some((query) => query.isError);
 
   const hasNextPage = (eventsQuery.data?.length ?? 0) > EVENT_PAGE_SIZE;
   const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || page > 1;
@@ -410,7 +391,7 @@ export default function SocialEventsPage() {
     filtersActive: eventFiltersActive,
     listLoadSucceeded: eventsQuery.isSuccess,
   });
-  const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || venuesQuery.isError;
+  const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || hasVenueError;
 
   const deleteEventMutation = useMutation({
     mutationFn: ({ eventId }: PendingEventDeletion) => SocialEventsAPI.deleteEvent(eventId),
@@ -1051,7 +1032,7 @@ export default function SocialEventsPage() {
               startIcon={<RefreshIcon />}
               onClick={() => {
                 void eventsQuery.refetch();
-                void venuesQuery.refetch();
+                venueQueries.forEach((query) => { void query.refetch(); });
               }}
               disabled={eventsQuery.isFetching}
             >
@@ -1170,7 +1151,7 @@ export default function SocialEventsPage() {
                             </Typography>
                             {event.eventVenueId && (
                               <Typography variant="caption" color="text.secondary" display="block">
-                                {venueById.get(event.eventVenueId) ?? 'Venue por definir'}
+                                {venueLabelById.get(event.eventVenueId)}
                               </Typography>
                             )}
                           </Box>
@@ -1346,7 +1327,7 @@ export default function SocialEventsPage() {
                     )}
                     {ev.eventVenueId && (
                       <Typography variant="body2" color="text.secondary">
-                        {venueById.get(ev.eventVenueId) ?? 'Venue por definir'}
+                        {venueLabelById.get(ev.eventVenueId)}
                       </Typography>
                     )}
                     {ev.eventArtists?.length ? (
