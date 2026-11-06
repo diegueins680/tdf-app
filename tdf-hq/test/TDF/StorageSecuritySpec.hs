@@ -56,6 +56,12 @@ spec = do
     it "rejects provider credentials and malformed handles" $ do
       isVaultHandle "raw-google-token" `shouldBe` False
       isVaultHandle "tdf-vault-v1_00000000-0000-4000-8000-000000000001" `shouldBe` True
+    it "distinguishes revoked personal consent from operator client and provider failures" $ do
+      errHTTPCode (classifyRefreshFailure 400 (Just "invalid_grant")) `shouldBe` 409
+      errHTTPCode (classifyRefreshFailure 400 (Just "invalid_client")) `shouldBe` 503
+      errHTTPCode (classifyRefreshFailure 401 (Just "invalid_client")) `shouldBe` 503
+      errHTTPCode (classifyRefreshFailure 500 (Just "invalid_grant")) `shouldBe` 503
+      errHTTPCode (classifyRefreshFailure 400 Nothing) `shouldBe` 503
     it "only recognizes exact local or canonical private object references" $ do
       let identifier = "00000000-0000-4000-8000-000000000001"
           api = "https://api.tdfrecords.net"

@@ -5,6 +5,7 @@
 module TDF.StorageVault
   ( sealCredential, openCredential, credentialBinding, isVaultHandle
   , storeConnection, resolveConnection, refreshConnection, revokeConnection
+  , classifyRefreshFailure
   ) where
 
 import Control.Monad (unless, when)
@@ -18,7 +19,8 @@ import Crypto.Cipher.Types
   , aeadSimpleEncrypt, cipherInit )
 import Crypto.Error (CryptoFailable(..))
 import Crypto.Random (getRandomBytes)
-import Data.Aeson (FromJSON(..), ToJSON(..), decodeStrict', encode, object, withObject, (.:), (.:?), (.=))
+import Data.Aeson (FromJSON(..), ToJSON(..), Value, decodeStrict', encode, object, withObject, (.:), (.:?), (.=))
+import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteArray as BA
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
@@ -195,6 +197,14 @@ revokeConnection user = do
 
 data ProviderToken = ProviderToken Text (Maybe Text) Int
 
+-- A revoked personal grant needs fresh consent. A broken application client
+-- belongs to TDF operations and must never masquerade as a user-session error.
+classifyRefreshFailure :: Int -> Maybe Text -> ServerError
+classifyRefreshFailure status code
+  | status == 400 && code == Just "invalid_grant" = failure err409 "storage_reconnect_required"
+  | code == Just "invalid_client" = failure err503 "storage_service_unavailable"
+  | otherwise = failure err503 "storage_provider_unavailable"
+
 validProviderToken :: Text -> Bool
 validProviderToken value = not (T.null value) && T.length value <= 4096
   && T.all (\char -> char >= '!' && char <= '~') value
@@ -230,12 +240,13 @@ refreshProvider manager (Credential _ (Just refresh)) = do
               [("client_id",TE.encodeUtf8 (T.pack cid)),("client_secret",TE.encodeUtf8 (T.pack cs))
               ,("refresh_token",TE.encodeUtf8 refresh),("grant_type","refresh_token")])
           } manager
-        if statusCode (responseStatus response) == 400 || statusCode (responseStatus response) == 401
-          then pure (Left (failure err409 "storage_reconnect_required"))
-          else if statusCode (responseStatus response) /= 200
-            then pure (Left (failure err503 "storage_provider_unavailable"))
-            else case decodeStrict' (BL.toStrict (responseBody response)) of
-              Just (ProviderToken access next seconds) -> pure (Right (Credential access next,seconds))
-              Nothing -> pure (Left (failure err502 "storage_provider_unavailable"))
+        if statusCode (responseStatus response) /= 200
+          then do
+            let payload = decodeStrict' (BL.toStrict (responseBody response)) :: Maybe Value
+                code = payload >>= parseMaybe (withObject "OAuth error" (.: "error"))
+            pure (Left (classifyRefreshFailure (statusCode (responseStatus response)) code))
+          else case decodeStrict' (BL.toStrict (responseBody response)) of
+            Just (ProviderToken access next seconds) -> pure (Right (Credential access next,seconds))
+            Nothing -> pure (Left (failure err502 "storage_provider_unavailable"))
       _ -> pure (Left (failure err503 "storage_vault_unavailable"))
   pure (either (const (Left (failure err503 "storage_provider_unavailable"))) id result)

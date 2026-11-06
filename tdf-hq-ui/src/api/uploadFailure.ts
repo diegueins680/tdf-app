@@ -16,6 +16,7 @@ export function parseUploadFailure(status: number, body: string, mode: UploadAut
     return new UploadFailure('storage_reconnect_required', status, 'reconnect');
   }
   if (code === 'storage_activation_pending') return new UploadFailure(code, status, 'none');
+  if (code === 'storage_service_unavailable') return new UploadFailure(code, status, 'retry');
   if (code === 'storage_public_media_invalid') return new UploadFailure(code, status, 'none');
   if (code === 'storage_inventory_required') return new UploadFailure(code, status, 'none');
   if (code === 'storage_quota_exceeded') return new UploadFailure(code, status, 'none');
