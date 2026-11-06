@@ -468,6 +468,7 @@ type FanPublicAPI =
          :> QueryParam "pageSize" Int
          :> Get '[JSON] ArtistFansResponse
   :<|> "artists" :> Capture "artistId" Int64 :> "tips"
+         :> Header "Idempotency-Key" Text
          :> ReqBody '[JSON] ArtistTipRequest
          :> Post '[JSON] ArtistTipResponse
   :<|> "clubs" :> Capture "artistId" Int64 :> Get '[JSON] FanClubDTO

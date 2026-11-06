@@ -80,3 +80,36 @@ test('confirmation shell runner rejects unsafe routing before any database or St
     }
   } finally { await rm(folder, { recursive: true, force: true }); }
 });
+
+test('ticket payment runner validates routing before creating its fixture database', async () => {
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { spawnSync } = await import('node:child_process');
+  const folder = await mkdtemp(join(tmpdir(), 'tdf-ticket-gate-routing-'));
+  try {
+    for (const command of ['createdb', 'dropdb', 'psql', 'stack']) {
+      await writeFile(join(folder, command), '#!/bin/sh\necho DATABASE_COMMAND_REACHED >&2\nexit 77\n', { mode: 0o700 });
+    }
+    const clean = { ...process.env, PATH: folder + ':' + process.env.PATH, CI: 'false' };
+    for (const name of ['PGHOSTADDR', 'PGSERVICE', 'PGSERVICEFILE']) delete clean[name];
+    for (const overrides of [
+      { PGHOST: 'remote.example' },
+      { PGHOST: 'localhost:secret@remote.example' },
+      { PGHOST: 'postgres' },
+      { PGHOST: '127.0.0.1', PGSERVICE: 'synthetic-remote' },
+      { PGHOST: '127.0.0.1', PGHOSTADDR: '192.0.2.1' },
+    ]) {
+      const result = spawnSync('sh', ['scripts/test-ticket-payment-gate.sh'], {
+        encoding: 'utf8', env: { ...clean, ...overrides },
+      });
+      assert.notEqual(result.status, 0);
+      assert.doesNotMatch(result.stderr, /DATABASE_COMMAND_REACHED/);
+    }
+    const accepted = spawnSync('sh', ['scripts/test-ticket-payment-gate.sh'], {
+      encoding: 'utf8', env: { ...clean, PGHOST: '127.0.0.1' },
+    });
+    assert.equal(accepted.status, 77);
+    assert.match(accepted.stderr, /DATABASE_COMMAND_REACHED/);
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});

@@ -76,7 +76,7 @@ paths:
                 expectedRevision: {type: integer, format: int64, minimum: 1}
       responses:
         '200': {description: Only the selected artist featured-video field was updated}
-        '400': {description: Campaign is not review-ready or has no video URL}
+        '400': {description: Campaign is not review-ready, has no video URL or lacks rights and technical review}
         '401': {description: Invalid session}
         '403': {description: Artist ownership or strict administrator access required}
         '404': {description: Campaign not found}
@@ -101,6 +101,16 @@ paths:
                 properties:
                   registrations: {type: integer, minimum: 0}
                   follows: {type: integer, minimum: 0}
+                  byPiece:
+                    type: array
+                    items:
+                      type: object
+                      required: [source, piece, registrations, follows]
+                      properties:
+                        source: {type: string, enum: [instagram, tiktok]}
+                        piece: {type: string}
+                        registrations: {type: integer, minimum: 0}
+                        follows: {type: integer, minimum: 0}
         '401': {description: Invalid session}
         '403': {description: Campaign owner access required}
         '404': {description: Campaign not found}
@@ -1872,6 +1882,239 @@ paths:
         '400': { description: Cursor is malformed or limit is outside 1 through 50 }
         '401': { description: Authentication required }
         '404': { description: Profile is missing, ambiguous, non-person, blocked, or non-public }
+  /social-events/me/memory-invitations:
+    get:
+      operationId: getEventMemoryPreferences
+      tags: [Social events]
+      summary: Read explicit internal memory invitation consent
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryPreference' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    put:
+      operationId: setEventMemoryPreferences
+      tags: [Social events]
+      summary: Opt into or withdraw internal memory invitations
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: boolean }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryPreference' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/memory-invitations:
+    get:
+      operationId: getEventMemoryCampaign
+      tags: [Social events]
+      summary: Read aggregate memory campaign metrics as current organizer
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryCampaign' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    put:
+      operationId: setEventMemoryCampaign
+      tags: [Social events]
+      summary: Enable or disable an organizer-owned campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: boolean }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryCampaign' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/memory-invitations/{deliveryId}/open:
+    post:
+      operationId: openEventMemoryInvitation
+      tags: [Social events]
+      summary: Record an attributed event opening without granting access
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: deliveryId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { type: object, required: [recorded], properties: { recorded: { type: boolean } } }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/moments:
+    get:
+      operationId: listSocialEventMoments
+      tags: [Social events]
+      summary: Read the currently authorized event moment feed
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: extended, in: query, schema: { type: boolean, default: false }, description: Include audio and text. Legacy clients receive only image and video. }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/EventMoment' } }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    post:
+      operationId: createSocialEventMoment
+      tags: [Social events]
+      summary: Publish an image video audio or text memory
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventMomentCreate' }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMoment' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/moments/{momentId}:
+    put:
+      operationId: editSocialEventMoment
+      tags: [Social events]
+      summary: Edit the description as the current author with optimistic concurrency
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: momentId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventMomentEdit' }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMoment' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    delete:
+      operationId: deleteSocialEventMoment
+      tags: [Social events]
+      summary: Delete the current author source and retire its interaction target
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: momentId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      responses:
+        '204':
+          description: Successful authorized operation
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/moments/image:
+    post:
+      operationId: uploadSocialEventMomentImage
+      tags: [Social events]
+      summary: Upload a public raster image up to 10 MiB
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                name: { type: string, maxLength: 180 }
+      responses:
+        '200':
+          description: Public file accepted with MIME extension and signature validation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMomentUpload' }
+        '400': { description: Invalid type signature file name or size }
+        '401': { description: Authentication required }
+        '403': { description: Public-file uploads unavailable for private events }
+        '404': { description: Parent event unavailable }
+  /social-events/events/{eventId}/moments/media:
+    post:
+      operationId: uploadSocialEventMomentMedia
+      tags: [Social events]
+      summary: Upload a public image up to 10 MiB or audio or video up to 25 MiB
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                name: { type: string, maxLength: 180 }
+      responses:
+        '200':
+          description: Public file accepted with MIME extension and signature validation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMomentUpload' }
+        '400': { description: Invalid type signature file name or size }
+        '401': { description: Authentication required }
+        '403': { description: Public-file uploads unavailable for private events }
+        '404': { description: Parent event unavailable }
   /social-events/events/{eventId}/moments/{momentId}/reactions:
     post:
       tags: [Social events]
@@ -8281,6 +8524,30 @@ paths:
   /reviews/eligibility: { $ref: './reviews.yaml#/paths/~1reviews~1eligibility' }
   /reviews: { $ref: './reviews.yaml#/paths/~1reviews' }
 
+  /social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/receipt:
+    get:
+      tags: [Social events]
+      operationId: getTicketManualPaymentReceipt
+      summary: Read a private transfer receipt as the event organizer or an administrator
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Private JPG, PNG or PDF receipt
+          headers:
+            Cache-Control: { schema: { type: string }, description: Always no-store. }
+          content: { application/json: { schema: { $ref: '#/components/schemas/TicketPaymentReceipt' } } }
+        '401': { description: Authentication required }
+        '403': { description: Event management permission required }
+        '404': { description: Order does not belong to this event or no receipt was attached }
+
   /public/events/{eventId}/tickets:
     get:
       tags: [Public event tickets]
@@ -8588,6 +8855,48 @@ paths:
         '404': { description: Quote not found or lookup token does not match }
         '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
+  /public/domo/quotes/{quoteId}/cancel:
+    post:
+      tags: [Public Domo quotes]
+      summary: Cancel the quote and record its refund obligation (PAY-DOMO-CANCEL-001)
+      description: Releases the quote and its date hold. Collected money is priced by the single approved cancellation policy version (AUTHORITY-093, by lead time before the event) and recorded as an immutable cancellation with the retained and refundable amounts. The quote holder is not an authenticated party, so a refund due is recorded as an open obligation that an operator turns into a refund request; replaying returns the stored record.
+      operationId: cancelPublicDomoQuote
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuoteCancelRequest' } } }
+      responses:
+        '200':
+          description: The recorded cancellation outcome
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoCancellation' } } }
+        '400': { description: Cancellation not confirmed or note too long }
+        '404': { description: Quote not found or lookup token does not match }
+        '409': { description: Quote is completed or expired, or a deposit payment is still being verified }
+        '503': { description: No approved cancellation policy exists; nothing was cancelled }
+  /admin/domo/quotes/{quoteId}/cancel:
+    post:
+      tags: [Admin]
+      summary: Cancel a Domo quote as an operator and request the policy refund
+      description: Strict administrators only. The approved cancellation policy prices the refund (customer ladder or full refund when TDF cancels) and the refund request is created in the same transaction with the administrator as requester; a different party must approve it. Called on a customer-cancelled quote with an open obligation, it creates that refund request.
+      operationId: adminCancelDomoQuote
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DomoQuoteCancelRequest' } } }
+      responses:
+        '200':
+          description: The recorded cancellation including the linked refund request
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Malformed quoteId, canceller or note }
+        '403': { description: Admin role or module access missing }
+        '404': { description: Quote not found }
+        '409': { description: Quote cannot be cancelled or the refund request was refused }
+        '503': { description: No approved cancellation policy exists }
   /fans/me/notifications:
     get:
       tags: [Notifications]
@@ -9805,6 +10114,61 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MusicPlaybackConflict' }
         '503': { description: Music playback telemetry disabled }
+  /music/purchases:
+    post:
+      tags: [Music releases]
+      operationId: createMusicPurchase
+      summary: Confirm an exact music offer and create or replay a purchase
+      description: >-
+        Requires music commerce enabled for the process and checkout environments.
+        Confirm the displayed exact amount and currency. Current offer eligibility is
+        checked again. One buyer/key binds one original request; an eligible replay
+        with different bound inputs returns 409 without purchase effects. No payment
+        provider is contacted by this operation. Music commerce remains experimental.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+          description: Trimmed key of 8–160 visible ASCII characters, scoped to this buyer.
+        - name: CF-IPCountry
+          in: header
+          schema: { type: string }
+          description: Effective country is trusted only with the protected edge control enabled; otherwise it is unknown.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MusicPurchaseCreateInput' }
+      responses:
+        '201':
+          description: Original or matching replayed purchase in its current state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicPurchaseOrder' }
+        '400': { description: Invalid key, missing exact price confirmation or malformed input }
+        '401': { description: Authentication required }
+        '404': { description: No currently eligible offer or buyer billing identity }
+        '409': { description: Confirmed price or replay binding conflicts; no purchase effects }
+        '503': { description: Music commerce is disabled in the applicable environment }
+    get:
+      tags: [Music releases]
+      operationId: listMusicPurchases
+      summary: List only the authenticated buyer's purchases
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Purchases, newest first; monetary values retain exact minor units
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MusicPurchaseOrder' }
+        '401': { description: Authentication required }
+        '503': { description: Music commerce is disabled in the applicable environment }
+  /music/search:
+    $ref: './music-search.yaml#/paths/~1music~1search'
   /music/releases/{releaseId}/versions/{versionId}/validate:
     post:
       tags: [Music releases]
@@ -10184,6 +10548,10 @@ components:
         coverUrl: {type: string}
         durationSeconds: {type: number, minimum: 0, maximum: 43200}
         status: {type: string, enum: [draft, ready]}
+        proposedLaunchDate: {type: string, description: 'Optional inert date, YYYY-MM-DD; never schedules an external action'}
+        credits: {type: string, maxLength: 12000}
+        rightsConfirmed: {type: boolean, description: 'Required true on the saved revision for explicit TDF publication'}
+        technicalReviewed: {type: boolean, description: 'Required true on the saved revision for explicit TDF publication'}
         channels:
           type: array
           minItems: 1
@@ -10572,6 +10940,12 @@ components:
       $ref: './interactions.yaml#/components/schemas/InteractionPreferences'
     InteractionCommand:
       $ref: './interactions.yaml#/components/schemas/InteractionCommand'
+    EventMemorySourceControls:
+      $ref: './interactions.yaml#/components/schemas/EventMemorySourceControls'
+    EventMemorySourceReport:
+      $ref: './interactions.yaml#/components/schemas/EventMemorySourceReport'
+    EventMemorySourceReportPage:
+      $ref: './interactions.yaml#/components/schemas/EventMemorySourceReportPage'
     InteractionCommandRequest:
       $ref: './interactions.yaml#/components/schemas/InteractionCommandRequest'
     InteractionCommandResult:
@@ -10872,7 +11246,11 @@ components:
         badge: { type: string, enum: [Compra verificada] }
         author:
           type: object
-          description: Public name/avatar according to buyer privacy preferences
+          description: Public identity according to buyer privacy preferences; partyId and avatarUrl are omitted for anonymous buyers
+          properties:
+            partyId: { type: integer, format: int64, minimum: 1 }
+            name: { type: string }
+            avatarUrl: { type: string, nullable: true }
           additionalProperties: true
         dimensions:
           type: object
@@ -11684,6 +12062,40 @@ components:
       required: [termsAccepted]
       properties:
         termsAccepted: { type: boolean, enum: [true] }
+    PublicDomoQuoteCancelRequest:
+      type: object
+      additionalProperties: false
+      required: [confirmCancellation]
+      properties:
+        confirmCancellation: { type: boolean, enum: [true] }
+        cancellationNote: { type: string, maxLength: 4000 }
+    PublicDomoCancellation:
+      type: object
+      additionalProperties: false
+      required: [quoteId, quoteStatus, canceller, cancelledAt, leadDays, inProgress, retainedBasisPoints, depositCollectedMinor, balanceCollectedMinor, retainedMinor, refundDueMinor, currency, refundStatus, alreadyCancelled]
+      properties:
+        quoteId: { type: string, format: uuid }
+        quoteStatus: { type: string }
+        canceller: { type: string, enum: [customer, tdf] }
+        policyVersion: { type: integer, nullable: true }
+        cancelledAt: { type: string, format: date-time }
+        leadDays: { type: integer, description: Whole 24-hour periods before the event start; negative after it }
+        inProgress: { type: boolean }
+        retainedBasisPoints: { type: integer, minimum: 0, maximum: 10000 }
+        depositCollectedMinor: { type: integer, format: int64, minimum: 0 }
+        balanceCollectedMinor: { type: integer, format: int64, minimum: 0 }
+        retainedMinor: { type: integer, format: int64, minimum: 0 }
+        refundDueMinor: { type: integer, format: int64, minimum: 0, description: retainedMinor + refundDueMinor equals the collected money }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        refundStatus: { type: string, enum: [none, awaiting_operator, requested] }
+        alreadyCancelled: { type: boolean, description: True when the quote was cancelled earlier and the stored record is returned }
+    DomoQuoteCancelRequest:
+      type: object
+      additionalProperties: false
+      required: [canceller]
+      properties:
+        canceller: { type: string, enum: [customer, tdf] }
+        note: { type: string, maxLength: 500 }
     PublicDomoQuoteLine:
       type: object
       additionalProperties: false
@@ -11904,6 +12316,7 @@ components:
           type: string
           enum: [awaiting_evidence, submitted, under_review, approved, rejected]
         customerReference: { type: string, nullable: true }
+        receiptAttached: { type: boolean, description: Whether the buyer attached a private receipt file. }
         reviewNotes:
           type: string
           nullable: true
@@ -11914,6 +12327,14 @@ components:
       required: [customerReference]
       properties:
         customerReference: { type: string, minLength: 3, maxLength: 120 }
+        receipt: { $ref: '#/components/schemas/TicketPaymentReceipt' }
+    TicketPaymentReceipt:
+      type: object
+      additionalProperties: false
+      required: [contentType, base64]
+      properties:
+        contentType: { type: string, enum: [image/jpeg, image/png, application/pdf] }
+        base64: { type: string, format: byte, maxLength: 6990508, description: Private receipt file, at most 5 MiB decoded. }
     PublicEventTicketPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -12860,7 +13281,7 @@ components:
         creStatus: { type: string, enum: [open, assigned, resolved, ignored, unrecognized] }
         creReason:
           type: string
-          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, unrecognized]
+          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, music_paid_closed_order, unrecognized]
           description: Fixed safe classification, not raw stored exception text
         creCheckoutId: { type: string, format: uuid, nullable: true }
         crePaymentAttemptId: { type: string, format: uuid, nullable: true }
@@ -13488,6 +13909,59 @@ components:
           description: The backend enforces the persisted transition relation.
         sortOrder: { type: integer, minimum: 0 }
         notes: { type: string, nullable: true }
+    EventMemoryPreference:
+      type: object
+      additionalProperties: false
+      required: [inApp, supportsExtendedMoments]
+      properties:
+        inApp: { type: boolean, default: false }
+        supportsExtendedMoments: { type: boolean }
+    EventMemoryCampaign:
+      type: object
+      additionalProperties: false
+      required: [enabled, eventFinished, candidates, consented, invitations, reminders, opened, published, moments, uniqueAuthors]
+      properties:
+        enabled: { type: boolean, default: false }
+        eventFinished: { type: boolean }
+        dispatcherEnabled: { type: boolean }
+        candidates: { type: integer, minimum: 0 }
+        consented: { type: integer, minimum: 0 }
+        invitations: { type: integer, minimum: 0 }
+        reminders: { type: integer, minimum: 0 }
+        opened: { type: integer, minimum: 0 }
+        published: { type: integer, minimum: 0 }
+        moments: { type: integer, minimum: 0 }
+        uniqueAuthors: { type: integer, minimum: 0 }
+    EventMomentCreate:
+      type: object
+      additionalProperties: false
+      required: [emCreateMediaType]
+      description: Text requires a nonblank caption and absent or empty media URL. Other types require an absolute HTTPS media URL. Authenticated Party supplies authorship.
+      properties:
+        emCreateAuthorName: { type: string, deprecated: true }
+        emCreateCaption: { type: string, maxLength: 280 }
+        emCreateMediaUrl: { type: string, maxLength: 2048 }
+        emCreateMediaType: { type: string, enum: [image, video, audio, text] }
+        emCreateMediaWidth: { type: integer, minimum: 1 }
+        emCreateMediaHeight: { type: integer, minimum: 1 }
+        emCreateMediaDurationMs: { type: integer, minimum: 0 }
+    EventMomentEdit:
+      type: object
+      additionalProperties: false
+      required: [emeCaption, emeExpectedUpdatedAt]
+      properties:
+        emeCaption: { type: string, maxLength: 280 }
+        emeExpectedUpdatedAt: { type: string, format: date-time }
+    EventMomentUpload:
+      type: object
+      additionalProperties: false
+      required: [eiuEventId, eiuFileName, eiuPath, eiuPublicUrl, eiuImageUrl]
+      properties:
+        eiuEventId: { type: string }
+        eiuFileName: { type: string }
+        eiuPath: { type: string }
+        eiuPublicUrl: { type: string, format: uri }
+        eiuImageUrl: { type: string, format: uri, description: Legacy alias for the public media URL }
     EventMomentReactionRequest:
       type: object
       additionalProperties: false
@@ -18272,6 +18746,60 @@ components:
         platform: { type: string }
         active: { type: boolean }
         updatedAt: { type: string, format: date-time }
+    MusicMinorUnitsDecimal:
+      type: string
+      maxLength: 19
+      pattern: '^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)(?![\s\S])'
+      description: Canonical decimal minor units in 0..9223372036854775807. No sign, leading zeros, fractional part or exponent.
+    MusicPositiveMinorUnitsDecimal:
+      type: string
+      maxLength: 19
+      pattern: '^([1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)(?![\s\S])'
+      description: Canonical positive decimal minor units in 1..9223372036854775807.
+    MusicMinorUnits:
+      description: >-
+        Exact nonnegative minor units. Legacy numeric values are emitted only in
+        the interoperable integer range. Larger values are canonical decimal text;
+        clients must not convert the whole amount to a binary64 number.
+      oneOf:
+        - { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        - { $ref: '#/components/schemas/MusicMinorUnitsDecimal' }
+    MusicPurchaseCreateInput:
+      type: object
+      additionalProperties: false
+      required: [availabilityRuleId, territoryCode, termsVersion, expectedAmountMinor, expectedCurrency]
+      properties:
+        availabilityRuleId: { type: string, format: uuid }
+        territoryCode:
+          type: string
+          description: Declared country is trimmed and uppercased, then must contain two ASCII letters. It does not establish trusted territory eligibility.
+        termsVersion:
+          type: string
+          description: Trimmed, nonempty accepted terms identifier, limited to 160 characters after trimming.
+        expectedAmountMinor: { $ref: '#/components/schemas/MusicPositiveMinorUnitsDecimal' }
+        expectedCurrency:
+          type: string
+          pattern: '^[A-Z]{3}(?![\s\S])'
+          description: Canonical ISO currency of the displayed offer; current music sales support USD only.
+    MusicPurchaseOrder:
+      type: object
+      required: [id, releaseVersionId, availabilityRuleId, state, grossMinor, discountMinor, taxMinor, feeMinor, netMinor, currency, checkoutId, providerReference, createdAt, paidAt]
+      properties:
+        id: { type: string, format: uuid }
+        releaseVersionId: { type: string, format: uuid }
+        availabilityRuleId: { type: string, format: uuid }
+        state: { type: string, enum: [pending, awaiting_payment, paid, cancelled, refunded, chargeback] }
+        grossMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        discountMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        taxMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        feeMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        netMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        checkoutId: { type: string, format: uuid, nullable: true }
+        providerReference: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        paidAt: { type: string, format: date-time, nullable: true }
+        releaseTitle: { type: string, description: Included by the list operation. }
     MusicPlaybackConflict:
       type: object
       required: [code, message]

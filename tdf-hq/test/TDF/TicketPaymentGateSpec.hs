@@ -1,9 +1,11 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.TicketPaymentGateSpec (spec) where
 
-import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
-import Control.Exception (SomeException, try)
-import Control.Monad (void)
+import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
+import Control.Concurrent.Async (withAsync, wait)
+import Control.Exception (SomeException, bracket, finally, try)
+import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (ReaderT, runReaderT)
@@ -17,20 +19,28 @@ import qualified Data.Text as T
 import Data.Time (getCurrentTime)
 import Database.Persist (PersistValue(..))
 import Database.Persist.Postgresql (createPostgresqlPool)
-import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, toSqlKey, rawExecute, rawSql, runSqlPool)
 import Network.Socket (SockAddr(SockAddrInet), tupleToHostAddress)
-import Servant (Handler, ServerError, errBody, errHTTPCode, runHandler, (:<|>)(..))
-import System.Environment (lookupEnv)
+import Servant (Header, Headers, getResponse, getHeaders, Handler, ServerError, errBody, errHTTPCode, runHandler, (:<|>)(..))
+import System.Environment (lookupEnv, setEnv, unsetEnv)
+import System.IO.Temp (withSystemTempDirectory)
+import System.Timeout (timeout)
 import Test.Hspec
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 
 import TDF.API.ProviderExecution (PaymentSessionCreateDTO(..))
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
+import TDF.Auth (AuthedUser(..), modulesForRoles)
+import TDF.Models (RoleEnum(..))
 import TDF.Config (loadConfig)
 import TDF.DB (Env(..))
 import qualified TDF.Routes.EventTickets as Routes
 import TDF.Server.EventTicketCheckout
-  (lockTicketOrderSalesOpen, publicEventTicketsServer, ticketOrderSalesOpen, ticketSalesClosedRefusal)
+  ( lockTicketOrderSalesOpen, paypalCaptureFailureCode, publicEventTicketsServer, ticketCaptureUnverified
+  , ticketOrderSalesOpen, ticketSalesClosedRefusal, ticketUnverifiedCaptureRefusal )
+import qualified TDF.Server.TicketPaymentReceipt as Receipt
+import TDF.Server.SocialEventsHandlers (socialEventsServer)
 import TDF.Server.ProviderExecution (providerExecutionServer)
 
 -- | A held, unpaid ticket order must not be payable once its event stops selling
@@ -39,9 +49,13 @@ import TDF.Server.ProviderExecution (providerExecutionServer)
 spec :: Spec
 spec = describe "ticket-payment-gate-postgresql" $ do
   configured <- runIO (lookupEnv "TDF_TICKET_PAYMENT_GATE_TEST_DB")
+  ci <- runIO ((== Just "true") <$> lookupEnv "CI")
+  overrides <- runIO (traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"])
   case configured of
     Nothing -> it "requires the isolated runner" $ pendingWith "Run scripts/test-ticket-payment-gate.sh"
-    Just connection | not ("dbname=tdf_ticket_payment_gate_test_" `isInfixOf` connection) ->
+    Just _ | any (maybe False (not . null)) overrides ->
+      it "refuses inherited database routing overrides" $ expectationFailure "Unset libpq routing overrides"
+    Just connection | not (isDisposablePostgresUrl ci connection) ->
       it "refuses a non-disposable database" $ expectationFailure "Use the isolated runner"
     Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)) $ do
       it "lets a held order start payment while the event sells tickets" $ \pool -> do
@@ -100,11 +114,53 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) selected `shouldBe` Right (Just "awaiting_evidence")
         closeSales pool order "postponed"
         submitted <- run pool (bankEvidence (oEvent order) (oOrder order) (Just (oToken order))
-          (Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-REF-1"))
+          (Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-REF-1" Nothing))
         fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) submitted `shouldBe` Right (Just "submitted")
         stored <- runSqlPool (rawSql
           "SELECT count(*) FROM commerce_manual_payment_evidence WHERE customer_reference='SYNTHETIC-REF-1'" []) pool
         stored `shouldBe` [Single (1 :: Int64)]
+
+      it "binds private receipt evidence and refuses a different-file replay" $ \pool ->
+        withSystemTempDirectory "tdf-ticket-receipt" $ \root ->
+          bracket (lookupEnv "TICKET_PAYMENT_EVIDENCE_DIR")
+            (maybe (unsetEnv "TICKET_PAYMENT_EVIDENCE_DIR") (setEnv "TICKET_PAYMENT_EVIDENCE_DIR")) $ \_ -> do
+            setEnv "TICKET_PAYMENT_EVIDENCE_DIR" root
+            activateBankTransfer pool
+            order <- newOrder pool "receipt"
+            _ <- run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+            let file = Receipt.TicketPaymentReceipt "application/pdf" "JVBERi0xLjc="
+                request = Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-RECEIPT" (Just file)
+                submit token payload = run pool (bankEvidence (oEvent order) (oOrder order) token payload)
+            missingCapability <- submit (Just "wrong-token") request
+            missingCapability `shouldSatisfy` isLeft
+            before <- scalar pool "SELECT count(*) FROM commerce_manual_payment_evidence WHERE checkout_id=?::uuid AND evidence_object_key IS NOT NULL" [PersistText (oCheckout order)]
+            before `shouldBe` 0
+            submitted <- submit (Just (oToken order)) request
+            fmap (fmap Routes.receiptAttached . Routes.bankTransfer) submitted `shouldBe` Right (Just True)
+            replay <- submit (Just (oToken order)) request
+            fmap (fmap Routes.receiptAttached . Routes.bankTransfer) replay `shouldBe` Right (Just True)
+            let changed = Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-RECEIPT"
+                  (Just (Receipt.TicketPaymentReceipt "application/pdf" "JVBERi0yLjA="))
+            conflict <- submit (Just (oToken order)) changed
+            fmap errHTTPCode (either Just (const Nothing) conflict) `shouldBe` Just 409
+            keys <- runSqlPool (rawSql "SELECT evidence_object_key FROM commerce_manual_payment_evidence WHERE checkout_id=?::uuid"
+              [PersistText (oCheckout order)] :: SqlPersistT IO [Single (Maybe Text)]) pool
+            case keys of
+              [Single (Just key)] -> run pool (Receipt.loadReceipt (oOrder order) key) `shouldReturn` Right file
+              _ -> expectationFailure "Expected one private receipt"
+            let user role party = AuthedUser (toSqlKey party) [role] (modulesForRoles [role]) Nothing Nothing
+                readAs actor event = run pool (manualReceiptFor actor (T.pack (show event)) (T.pack (show (oOrder order))))
+            adminView <- readAs (user Admin 1) (oEvent order)
+            fmap getResponse adminView `shouldBe` Right file
+            fmap (lookup "Cache-Control" . getHeaders) adminView `shouldBe` Right (Just "no-store")
+            runSqlPool (rawExecute "UPDATE social_event SET organizer_party_id='2' WHERE id=?" [PersistInt64 (oEvent order)]) pool
+            organizerView <- readAs (user Fan 2) (oEvent order)
+            fmap getResponse organizerView `shouldBe` Right file
+            outsiderView <- readAs (user Fan 3) (oEvent order)
+            fmap errHTTPCode (either Just (const Nothing) outsiderView) `shouldSatisfy` (`elem` [Just 403, Just 404])
+            other <- newOrder pool "other-receipt-event"
+            wrongEvent <- readAs (user Admin 1) (oEvent other)
+            fmap errHTTPCode (either Just (const Nothing) wrongEvent) `shouldBe` Just 404
 
       it "does not gate a checkout that is already processing" $ \pool -> do
         order <- newOrder pool "processing"
@@ -188,6 +244,117 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         fmap (const ()) outcome `shouldBe` Right ()
         takeMVar closureSaw `shouldReturn` [Single 1]
 
+      it "keeps other rails closed while a PayPal capture is unverified, until it is settled" $ \pool -> do
+        -- A capture whose request and readback both failed may have charged the
+        -- buyer. The order must not offer or start another rail until PayPal
+        -- gives a definite answer for that same attempt.
+        activateBankTransfer pool
+        order <- newOrder pool "unverified"
+        let checkout = Checkout.CheckoutReference (oCheckout order)
+            offersTransfer = either (const False) (elem "bank_transfer" . Routes.paymentMethods)
+            view = run pool (getOrder (oEvent order) (oOrder order) (Just (oToken order)))
+            setFailureCode code = runSqlPool (rawExecute
+              "UPDATE commerce_payment_attempt SET failure_code=? WHERE checkout_id=?::uuid AND provider='paypal'"
+              [PersistText code, PersistText (oCheckout order)]) pool
+        view >>= (`shouldSatisfy` offersTransfer)
+        runSqlPool (do
+          rawExecute
+            "INSERT INTO commerce_payment_attempt (id, checkout_id, provider, environment, operation, status, amount_minor,\
+            \ currency, merchant_account_ref, idempotency_key, created_at, updated_at)\
+            \ SELECT gen_random_uuid(), id, 'paypal', environment, 'capture', 'failed', total_minor, currency,\
+            \ 'synthetic-merchant', 'synthetic-capture-unverified', now(), now() FROM commerce_checkout_session WHERE id=?::uuid"
+            [PersistText (oCheckout order)]
+          rawExecute "UPDATE commerce_checkout_session SET status='failed' WHERE id=?::uuid"
+            [PersistText (oCheckout order)]) pool
+        -- A failed capture alone is not the unverified state.
+        runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` False
+        view >>= (`shouldSatisfy` offersTransfer)
+
+        setFailureCode (paypalCaptureFailureCode Nothing)
+        runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` True
+        view >>= (`shouldNotSatisfy` offersTransfer)
+        fmap Routes.orderId <$> view `shouldReturn` Right (oOrder order)
+        run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldSatisfy` captureUnverified)
+        transfers <- scalar pool
+          "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid AND provider='bank_transfer'"
+          [PersistText (oCheckout order)]
+        transfers `shouldBe` 0
+
+        -- Missing/ambiguous captures and refund evidence never mean no charge.
+        forM_ ["UNKNOWN", "PARTIALLY_REFUNDED", "REFUNDED", "PENDING", "VOIDED"] $ \status -> do
+          setFailureCode (paypalCaptureFailureCode (Just status))
+          runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` True
+          view >>= (`shouldNotSatisfy` offersTransfer)
+          run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+            >>= (`shouldSatisfy` captureUnverified)
+        -- COMPLETED with the wrong merchant/order/amount is not proof that no
+        -- charge occurred. Reconciliation must retain the same cross-rail fence.
+        setFailureCode "provider_binding_mismatch"
+        runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` True
+        view >>= (`shouldNotSatisfy` offersTransfer)
+        run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+          >>= (`shouldSatisfy` captureUnverified)
+        -- DECLINED is a nested capture status; VOIDED is an order status.
+        setFailureCode (paypalCaptureFailureCode (Just "DECLINED"))
+        runSqlPool (ticketUnverifiedCaptureRefusal checkout) pool `shouldReturn` Nothing
+        view >>= (`shouldSatisfy` offersTransfer)
+        selected <- run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+        fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) selected `shouldBe` Right (Just "awaiting_evidence")
+
+      it "rechecks capture uncertainty after a competing failure writer releases the checkout" $ \pool -> do
+        activateBankTransfer pool
+        order <- newOrder pool "capture-failure-race"
+        let checkout = Checkout.CheckoutReference (oCheckout order)
+        [(Single attemptId, Single total, Single currency)] <- runSqlPool (rawSql
+          "INSERT INTO commerce_payment_attempt (checkout_id,provider,environment,operation,status,amount_minor,\
+          \ currency,merchant_account_ref,idempotency_key,created_at,updated_at)\
+          \ SELECT id,'paypal',environment,'capture','failed',total_minor,currency,\
+          \ 'synthetic-merchant','synthetic-capture-failure-race',now(),now()\
+          \ FROM commerce_checkout_session WHERE id=?::uuid RETURNING id::text,amount_minor,currency"
+          [PersistText (oCheckout order)]) pool
+        now <- getCurrentTime
+        let creation = Checkout.PaymentAttemptCreation checkout Checkout.ProviderBankTransfer
+              Checkout.CheckoutSandbox Checkout.OperationManualVerify total currency
+              "tdf-manual-settlement" "synthetic-fenced-bank-race" now "synthetic-fenced-bank-race"
+        held <- newEmptyMVar
+        release <- newEmptyMVar
+        entering <- newEmptyMVar
+        let writer = runSqlPool (do
+              _ <- rawSql "SELECT id::text FROM commerce_checkout_session WHERE id=?::uuid FOR UPDATE"
+                [PersistText (oCheckout order)] :: SqlPersistT IO [Single Text]
+              [Single pid] <- rawSql "SELECT pg_backend_pid()" []
+              liftIO (putMVar held (pid :: Int64))
+              liftIO (takeMVar release)
+              Checkout.recordPaymentFailure checkout (Checkout.PaymentAttemptReference attemptId)
+                Checkout.ProviderPayPal "paypal_capture_unverified" "synthetic-failure-race" now) pool
+            guard = do
+              [Single pid] <- rawSql "SELECT pg_backend_pid()" []
+              liftIO (putMVar entering (pid :: Int64))
+              ticketUnverifiedCaptureRefusal checkout
+            reader = runSqlPool (PaymentRuntime.beginPaymentAttemptGuarded guard creation) pool
+            observeBlocked holder waiter = do
+              rows <- runSqlPool (rawSql "SELECT ?::integer = ANY(pg_blocking_pids(?::integer))"
+                [PersistInt64 holder, PersistInt64 waiter]) pool
+              if rows == [Single True] then pure ()
+                else threadDelay 10000 >> observeBlocked holder waiter
+        withAsync writer $ \writing ->
+          (do
+            holder <- timeout 5000000 (takeMVar held)
+              >>= maybe (fail "Failure writer did not acquire the checkout") pure
+            withAsync reader $ \reading ->
+              (do
+                waiter <- timeout 5000000 (takeMVar entering)
+                  >>= maybe (fail "Payment admission did not reach its guard") pure
+                timeout 5000000 (observeBlocked holder waiter) `shouldReturn` Just ()
+                void (tryPutMVar release ())
+                timeout 5000000 (wait writing) `shouldReturn` Just ()
+                result <- timeout 5000000 (wait reading)
+                result `shouldSatisfy` maybe False isLeft
+                scalar pool "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid AND provider='bank_transfer'"
+                  [PersistText (oCheckout order)] `shouldReturn` 0
+              ) `finally` void (tryPutMVar release ())
+          ) `finally` void (tryPutMVar release ())
+
       it "treats an unknown or malformed ticket order as not on sale" $ \pool -> do
         runSqlPool (ticketOrderSalesOpen "999999999") pool `shouldReturn` False
         runSqlPool (ticketOrderSalesOpen "not-a-number") pool `shouldReturn` False
@@ -218,6 +385,16 @@ createOrder :: Int64 -> Maybe Text -> Routes.PublicEventTicketCheckoutRequest ->
 _ :<|> createOrder :<|> getOrder :<|> datafastCreate :<|> _ :<|> paypalCreate :<|> paypalCapture
   :<|> bankSelect :<|> bankEvidence = publicEventTicketsServer
 
+manualReceiptFor :: AuthedUser -> Text -> Text -> App (Headers '[Header "Cache-Control" Text] Receipt.TicketPaymentReceipt)
+manualReceiptFor user = case socialEventsServer user of
+  _events :<|> _cities :<|> _sources :<|> _research :<|> _venues :<|> _artists
+    :<|> _rsvps :<|> _invitations :<|> _moments :<|> _live :<|> tickets :<|> _ -> case tickets of
+      _tiers :<|> _createTier :<|> _updateTier :<|> _myOrders :<|> _orders
+        :<|> _createOrder :<|> _updateOrder :<|> _tickets :<|> _checkIn
+        :<|> _promos :<|> _createPromo :<|> _updatePromo :<|> _validatePromo
+        :<|> _stripe :<|> _requestRefund :<|> _refunds :<|> _approveRefund :<|> _rejectRefund
+        :<|> _manualPayments :<|> _review :<|> receipt :<|> _ -> receipt
+
 captureRequest :: Routes.PublicEventTicketPaypalCaptureRequest
 captureRequest = Routes.PublicEventTicketPaypalCaptureRequest "SYNTHETIC-PAYPAL-ORDER"
 
@@ -229,6 +406,10 @@ run pool action = do
 salesClosed :: Either ServerError a -> Bool
 salesClosed (Left err) = errHTTPCode err == 409 && "no longer on sale" `isInfixOf` BL.unpack (errBody err)
 salesClosed (Right _) = False
+
+captureUnverified :: Either ServerError a -> Bool
+captureUnverified (Left err) = errHTTPCode err == 409 && "could not be verified" `isInfixOf` BL.unpack (errBody err)
+captureUnverified (Right _) = False
 
 hostedSession :: ConnectionPool -> Order -> IO (Either ServerError ())
 hostedSession pool order = do

@@ -4,7 +4,9 @@ Campaña orgánica preparada para revisión. Objetivo: registros en TDF y seguid
 
 Perfil existente: https://www.tdfrecords.net/a/liquid-paper-girl (ID 51). No se creó otro perfil ni una cuenta personal.
 
-La sesión original adjunta se conserva sin modificación. Este paquete contiene seis extractos de 30 segundos, portadas y el plan importable. No incluye otra copia del original.
+Auditoría del 5 de noviembre: el video adjunto y el archivo de derivados de la entrega histórica no están accesibles en este entorno. El manifiesto conserva sus mediciones históricas y seis cortes candidatos, pero **no acredita una nueva inspección, escucha o entrega de esos archivos**. Se solicitó su ruta o enlace. No reemplazarlo por el liveset histórico de 47:05 del canal TDF ni dar por revisadas las piezas. `assets.json` distingue expresamente ambos estados.
+
+El perfil público existente ID 51 se volvió a consultar el 5 de noviembre: nombre y slug coinciden, no tiene cuenta personal y sus campos de imagen, ubicación y enlaces oficiales están vacíos. Se reutiliza; no se crea ninguna identidad ni se conceden permisos. La búsqueda encontró referencias con el mismo nombre en Red Tape y prensa musical, pero no hay enlace oficial cruzado que permita añadir biografía, integrantes o redes sin confirmación.
 
 ## Revisión antes del lanzamiento
 
@@ -14,17 +16,23 @@ Faltan enlaces de alojamiento del original y las piezas, créditos definitivos, 
 
 ## Calendario
 
-D0 será la fecha que elijas tras revisar. Los días D0 a D+13 forman las dos semanas; D−2 es una pieza previa de expectativa. Horarios sugeridos para experimentar: 19:00 America/Guayaquil, sujetos a las estadísticas reales de cada cuenta.
+D0 será la fecha que elijas tras revisar. El calendario actualizado cubre exactamente 14 días, de D−2 a D+11 inclusive, sin fecha externa. El detalle vigente por canal, archivo candidato, texto, CTA, enlace y métrica está en [calendar.csv](calendar.csv) y [campaign.json](campaign.json). Los textos de las secciones inferiores son la propuesta histórica y quedan sustituidos por esos dos archivos. No se ha reservado ningún horario en las redes.
 
 | Día | Enfoque | Archivo | Canales |
 | --- | --- | --- | --- |
 | D-2 | Muy pronto: Liquid Paper Girl en vivo | clip-01.mp4 | Instagram y TikTok |
-| D+0 | Liquid Paper Girl · Live session | clip-01.mp4 | Instagram y TikTok |
-| D+2 | Máquinas, manos y decisiones en tiempo real | clip-02.mp4 | Instagram y TikTok |
-| D+5 | Un momento de la sesión de Liquid Paper Girl | clip-03.mp4 | Instagram y TikTok |
-| D+8 | De cerca: Liquid Paper Girl construyendo la sesión en vivo | clip-04.mp4 | Instagram y TikTok |
-| D+11 | Otra entrada a la sesión de Liquid Paper Girl | clip-05.mp4 | Instagram y TikTok |
-| D+13 | Si todavía no viste la sesión de Liquid Paper Girl, este es un buen momento | clip-06.mp4 | Instagram y TikTok |
+| D−1 | Una escucha para mañana | clip-01.mp4 | Instagram y TikTok |
+| D0 | Liquid Paper Girl · Live session | clip-02.mp4 | Instagram y TikTok |
+| D+2 | Un momento para volver a escuchar | clip-03.mp4 | Instagram y TikTok |
+| D+5 | ¿Qué sonido te llamó la atención? | clip-04.mp4 | Instagram y TikTok |
+| D+8 | Otra entrada a la sesión | clip-05.mp4 | Instagram y TikTok |
+| D+11 | La sesión sigue disponible | clip-06.mp4 | Instagram y TikTok |
+
+El CSV conserva la asignación exacta del plan importable; D−2 y D−1 comparten el primer corte; desde D0 se usan los cinco restantes. La tabla expresa los enfoques creativos; comprobar la asignación en el CSV antes de montar. Ningún intervalo se considera aprobado por su posición en el calendario.
+
+Audiencia inicial: seguidores actuales de las sesiones de TDF y personas interesadas en actuaciones en vivo. Afinidades con electrónica experimental son una hipótesis a contrastar al recuperar y escuchar el video, no un género confirmado del perfil. No se usan segmentación pagada ni listas de contactos.
+
+Bio propuesta: «Liquid Paper Girl en vivo en TDF. Mira la sesión y sigue al artista desde su perfil». Usar en la bio el enlace atribuido a la pieza vigente del CSV, tras revisar el destino y la capacidad de la cuenta. Un único enlace compartido por varias publicaciones no permite distinguirlas; registrar esa limitación y verificar cada cambio manual de bio. Stories: «Ver la sesión / Seguir en TDF», mediante sticker verificado. En Reels no depender del enlace del pie de foto; en TikTok, si no hay enlace de perfil, indicar `tdfrecords.net` y el nombre exacto. La colaboración entre TDF y el artista es una propuesta; no se han enviado invitaciones.
 
 ## Cómo usarlo
 
@@ -57,89 +65,117 @@ Sin línea base, una hipótesis de piloto revisable es conseguir 10 registros y 
 
 La integración automática no está activada. TikTok exige una aplicación registrada, `video.publish`, autorización del usuario y auditoría para levantar las restricciones de visibilidad de clientes no auditados: https://developers.tiktok.com/docs/en/content-posting-api-get-started . Instagram requiere la configuración y permisos correspondientes al producto de Meta y a la cuenta: https://developers.facebook.com/documentation/instagram-platform . Este paquete no da por cumplidos esos requisitos.
 
-## Piezas y enlaces
+## Piezas y enlaces vigentes
 
-### instagram-1 · D-2
+### instagram · D-2 · clip-01.mp4
 
-Muy pronto: Liquid Paper Girl en vivo. Una sesión para descubrir de cerca. Crea tu cuenta en TDF y sigue al artista. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords
+Muy pronto: Liquid Paper Girl en vivo. Descubre el perfil en TDF y sigue al artista. Enlace en la bio; en Stories, usar sticker solo después de verificarlo. #LiquidPaperGirl #LiveSession #TDFRecords
 
-https://www.tdfrecords.net/a/51?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-1
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-1
 
-### instagram-2 · D+0
+Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendiente.
 
-Liquid Paper Girl · Live session. Mira la sesión completa desde su perfil de TDF. Crea tu cuenta y sigue al artista. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords
+### instagram · D-1 · clip-01.mp4
 
-https://www.tdfrecords.net/a/51?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-2
+Una escucha para mañana. Liquid Paper Girl en vivo, desde su perfil en TDF. Enlace en la bio; en Stories, usar sticker solo después de verificarlo. #LiquidPaperGirl #LiveSession #TDFRecords
 
-### instagram-3 · D+2
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-2
 
-Máquinas, manos y decisiones en tiempo real. Descubre la live session de Liquid Paper Girl en TDF y sigue su perfil. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
 
-https://www.tdfrecords.net/a/51?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-3
+### instagram · D0 · clip-02.mp4
 
-### instagram-4 · D+5
+Liquid Paper Girl · Live session. Mira la sesión completa en TDF, sin registro inicial. Para seguir al artista, crea tu cuenta o inicia sesión. Enlace en la bio; en Stories, usar sticker solo después de verificarlo. #LiquidPaperGirl #LiveSession #TDFRecords
 
-Un momento de la sesión de Liquid Paper Girl. ¿Qué sonido te llamó la atención? Mira la interpretación completa en TDF. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-3
 
-https://www.tdfrecords.net/a/51?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-4
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
 
-### instagram-5 · D+8
+### instagram · D+2 · clip-03.mp4
 
-De cerca: Liquid Paper Girl construyendo la sesión en vivo. Encuentra el video completo en su perfil de TDF. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords
+Un momento para volver a escuchar. Mira la sesión completa de Liquid Paper Girl en TDF. Enlace en la bio; en Stories, usar sticker solo después de verificarlo. #LiquidPaperGirl #LiveSession #TDFRecords
 
-https://www.tdfrecords.net/a/51?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-5
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-4
 
-### instagram-6 · D+11
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
 
-Otra entrada a la sesión de Liquid Paper Girl. Regístrate en TDF y sigue al artista para mantenerte cerca de su música. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords
+### instagram · D+5 · clip-04.mp4
 
-https://www.tdfrecords.net/a/51?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-6
+¿Qué sonido te llamó la atención? Descubre el resto de la interpretación de Liquid Paper Girl en TDF. Enlace en la bio; en Stories, usar sticker solo después de verificarlo. #LiquidPaperGirl #LiveSession #TDFRecords
 
-### instagram-7 · D+13
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-5
 
-Si todavía no viste la sesión de Liquid Paper Girl, este es un buen momento. Descúbrela en TDF y sigue su perfil. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
 
-https://www.tdfrecords.net/a/51?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-7
+### instagram · D+8 · clip-05.mp4
 
-### tiktok-1 · D-2
+Otra entrada a la sesión. Escucha a Liquid Paper Girl en TDF y sigue su perfil. Enlace en la bio; en Stories, usar sticker solo después de verificarlo. #LiquidPaperGirl #LiveSession #TDFRecords
 
-Muy pronto: Liquid Paper Girl en vivo. Una sesión para descubrir de cerca. Crea tu cuenta en TDF y sigue al artista. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-6
 
-https://www.tdfrecords.net/a/51?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-1
+Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendiente.
 
-### tiktok-2 · D+0
+### instagram · D+11 · clip-06.mp4
 
-Liquid Paper Girl · Live session. Mira la sesión completa desde su perfil de TDF. Crea tu cuenta y sigue al artista. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords
+La sesión sigue disponible. Mira el video de Liquid Paper Girl y, si quieres seguir al artista, entra a tu cuenta de TDF. Enlace en la bio; en Stories, usar sticker solo después de verificarlo. #LiquidPaperGirl #LiveSession #TDFRecords
 
-https://www.tdfrecords.net/a/51?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-2
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=instagram&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-7
 
-### tiktok-3 · D+2
+Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendiente.
 
-Máquinas, manos y decisiones en tiempo real. Descubre la live session de Liquid Paper Girl en TDF y sigue su perfil. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords
+### tiktok · D-2 · clip-01.mp4
 
-https://www.tdfrecords.net/a/51?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-3
+Muy pronto: Liquid Paper Girl en vivo. Descubre el perfil en TDF y sigue al artista.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
-### tiktok-4 · D+5
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-1
 
-Un momento de la sesión de Liquid Paper Girl. ¿Qué sonido te llamó la atención? Mira la interpretación completa en TDF. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords
+Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendiente.
 
-https://www.tdfrecords.net/a/51?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-4
+### tiktok · D-1 · clip-01.mp4
 
-### tiktok-5 · D+8
+Una escucha para mañana. Liquid Paper Girl en vivo, desde su perfil en TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
-De cerca: Liquid Paper Girl construyendo la sesión en vivo. Encuentra el video completo en su perfil de TDF. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-2
 
-https://www.tdfrecords.net/a/51?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-5
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
 
-### tiktok-6 · D+11
+### tiktok · D0 · clip-02.mp4
 
-Otra entrada a la sesión de Liquid Paper Girl. Regístrate en TDF y sigue al artista para mantenerte cerca de su música. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords
+Liquid Paper Girl · Live session. Mira la sesión completa en TDF, sin registro inicial. Para seguir al artista, crea tu cuenta o inicia sesión.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
 
-https://www.tdfrecords.net/a/51?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-6
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-3
 
-### tiktok-7 · D+13
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
 
-Si todavía no viste la sesión de Liquid Paper Girl, este es un buen momento. Descúbrela en TDF y sigue su perfil. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords
+### tiktok · D+2 · clip-03.mp4
 
-https://www.tdfrecords.net/a/51?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-7
+Un momento para volver a escuchar. Mira la sesión completa de Liquid Paper Girl en TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-4
+
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
+
+### tiktok · D+5 · clip-04.mp4
+
+¿Qué sonido te llamó la atención? Descubre el resto de la interpretación de Liquid Paper Girl en TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-5
+
+Métrica principal: Registros completados en TDF. Archivo candidato; revisión pendiente.
+
+### tiktok · D+8 · clip-05.mp4
+
+Otra entrada a la sesión. Escucha a Liquid Paper Girl en TDF y sigue su perfil.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-6
+
+Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendiente.
+
+### tiktok · D+11 · clip-06.mp4
+
+La sesión sigue disponible. Mira el video de Liquid Paper Girl y, si quieres seguir al artista, entra a tu cuenta de TDF.Busca Liquid Paper Girl en tdfrecords.net; usa el enlace del perfil solo si la cuenta lo permite y el destino está verificado. #LiquidPaperGirl #LiveSession #TDFRecords
+
+https://www.tdfrecords.net/a/liquid-paper-girl?utm_source=tiktok&utm_medium=organic_social&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=tiktok-7
+
+Métrica principal: Nuevos seguidores en TDF. Archivo candidato; revisión pendiente.
 

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import {
   Alert,
   Box,
@@ -19,6 +20,7 @@ import {
   Typography,
 } from '@mui/material';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/Place';
 import { useQuery } from '@tanstack/react-query';
@@ -40,6 +42,7 @@ import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { env } from '../utils/env';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
+import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
 
 const makeIdempotencyKey = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -135,6 +138,7 @@ export default function PublicEventTicketsPage() {
     enabled: validEventId,
     retry: false,
   });
+  const externalTickets = useMemo(() => findExternalTicketLink(storefront.data?.description), [storefront.data?.description]);
 
   useEffect(() => {
     if (tierId && storefront.data?.tiers.some((tier) => String(tier.tierId) === tierId)) return;
@@ -381,7 +385,7 @@ export default function PublicEventTicketsPage() {
     }
   };
 
-  const handleBankTransferEvidence = async (reference: string) => {
+  const handleBankTransferEvidence = async (reference: string, receipt?: File) => {
     if (!checkout || !checkoutLookupToken) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -391,6 +395,7 @@ export default function PublicEventTicketsPage() {
         checkout.orderId,
         reference,
         checkoutLookupToken,
+        ...(receipt ? [receipt] as const : []),
       ));
     } catch {
       setMessage(english
@@ -537,27 +542,59 @@ export default function PublicEventTicketsPage() {
               <Stack spacing={2}>
                 <Chip icon={<ConfirmationNumberIcon />} label={english ? 'Official TDF checkout' : 'Checkout oficial TDF'} color="primary" sx={{ alignSelf: 'flex-start' }} />
                 <Typography component="h1" variant="h3" fontWeight={900}>{storefront.data.title}</Typography>
-                {storefront.data.description && <Typography color="text.secondary">{storefront.data.description}</Typography>}
+                {storefront.data.description && <MarkdownText color="text.secondary">{storefront.data.description}</MarkdownText>}
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                   <Chip icon={<EventIcon />} label={date(storefront.data.startsAt)} variant="outlined" />
                   {storefront.data.venueName && <Chip icon={<PlaceIcon />} label={storefront.data.venueName} variant="outlined" />}
                 </Stack>
-                <Alert severity="info">{english
-                  ? 'Review the full total before paying. Your tickets are held for the time shown.'
-                  : 'Revisa el total antes de pagar. Tus entradas se reservan durante el tiempo indicado.'}</Alert>
+                {storefront.data.checkoutAvailable && (
+                  <Alert severity="info">{english
+                    ? 'Review the full total before paying. Your tickets are held for the time shown.'
+                    : 'Revisa el total antes de pagar. Tus entradas se reservan durante el tiempo indicado.'}</Alert>
+                )}
               </Stack>
             </CardContent>
           </Card> : <Typography component="h1" variant="h4">{english ? 'Your ticket order' : 'Tu orden de entradas'}</Typography>}
 
-          {!checkout && storefront.data ? (
+          {!checkout && storefront.data && !storefront.data.checkoutAvailable && (
+            <Card variant="outlined" data-testid="ticket-checkout-unavailable">
+              <CardContent>
+                <Stack spacing={2}>
+                  <Typography variant="h5" fontWeight={800}>{english ? 'Tickets' : 'Entradas'}</Typography>
+                  <Alert severity="info">{localizeTicketUnavailableReason(storefront.data.unavailableReason, english)}</Alert>
+                  {externalTickets ? (
+                    <>
+                      <Typography color="text.secondary">{english
+                        ? `Tickets for this event are sold by ${externalTickets.vendor ?? 'the organizer'}.`
+                        : `Las entradas de este evento se venden en ${externalTickets.vendor ?? 'la página del organizador'}.`}</Typography>
+                      <Button
+                        variant="contained"
+                        href={externalTickets.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        endIcon={<OpenInNewIcon />}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        {english
+                          ? `Buy tickets on ${externalTickets.vendor ?? 'the official site'}`
+                          : `Comprar entradas en ${externalTickets.vendor ?? 'la venta oficial'}`}
+                      </Button>
+                    </>
+                  ) : (
+                    <Typography color="text.secondary">{english
+                      ? 'Check the event description or the organizer for where tickets are sold.'
+                      : 'Revisa la descripción del evento o consulta al organizador para saber dónde se venden.'}</Typography>
+                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
+
+          {!checkout && storefront.data?.checkoutAvailable ? (
             <Card variant="outlined">
               <CardContent>
                 <Stack spacing={2} component="form" onSubmit={(event) => { event.preventDefault(); void handleCreateCheckout(); }}>
                   <Typography variant="h5" fontWeight={800}>{english ? 'Choose tickets' : 'Elige tus entradas'}</Typography>
-                  {!storefront.data.checkoutAvailable && (
-                    <Alert severity="warning">{storefront.data.unavailableReason
-                      ?? (english ? 'Checkout is currently disabled.' : 'El checkout está deshabilitado.')}</Alert>
-                  )}
                   <TextField select required label={english ? 'Ticket type' : 'Tipo de entrada'} value={tierId} onChange={(event) => setTierId(event.target.value)}>
                     {storefront.data.tiers.map((tier) => (
                       <MenuItem key={tier.tierId} value={String(tier.tierId)} disabled={tier.remaining <= 0}>
@@ -640,14 +677,14 @@ export default function PublicEventTicketsPage() {
                         title={english ? 'Ticket terms' : 'Términos de las entradas'}
                         summary={`${english ? 'Terms version' : 'Versión de términos'}: ${storefront.data.policy.termsVersion}`}
                       >
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.termsSummary}</Typography>
+                        <MarkdownText variant="body2">{storefront.data.policy.termsSummary}</MarkdownText>
                       </LegalDisclosure>
                       <LegalDisclosure
                         id="ticket-refund-policy"
                         language={english ? 'en' : 'es'}
                         title={english ? 'Refund policy' : 'Política de reembolso'}
                       >
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.refundPolicy}</Typography>
+                        <MarkdownText variant="body2">{storefront.data.policy.refundPolicy}</MarkdownText>
                       </LegalDisclosure>
                     </Stack>
                   )}
@@ -706,7 +743,7 @@ export default function PublicEventTicketsPage() {
                         amountLabel={money(checkout.bankTransfer.amountMinor, checkout.bankTransfer.currency)}
                         holdExpiresLabel={date(checkout.holdExpiresAt)}
                         busy={paymentBusy}
-                        onSubmitReference={(reference) => void handleBankTransferEvidence(reference)}
+                        onSubmitReference={(reference, receipt) => void handleBankTransferEvidence(reference, receipt)}
                       />
                     )}
                     {checkoutLookupToken && (

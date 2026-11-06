@@ -9,7 +9,6 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import sys
 import z3
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -92,39 +91,73 @@ def obligation(source, name, legacy=False):
     return current, limit, amount, result, domain, accepted, valid, preserved
 
 
-def check(formula, expected):
+def check(formula, expected, *, evidence=None, identity=None):
     solver = z3.Solver()
     solver.set(timeout=30_000)
     solver.add(formula)
+    if evidence is not None:
+        # Retain the exact solver input, including timeout and expected result.
+        problem = f"(set-option :timeout 30000)\n(set-logic QF_BV)\n{solver.sexpr()}\n(check-sat)\n"
+        evidence.append({"id": identity, "expected": expected, "smtlib": problem})
     result = solver.check()
+    if evidence is not None:
+        evidence[-1]["actual"] = str(result)
+        evidence[-1]["model"] = str(solver.model()) if result == z3.sat else None
     if str(result) != expected:
         raise AssertionError(f"Expected {expected}, got {result}: {solver.reason_unknown() if result == z3.unknown else solver}")
     return str(solver.model()) if result == z3.sat else "unsat"
 
 
-def verify(source):
+def verify(source, evidence=None):
     results = []
     for name in ("capture", "refund"):
         c, limit, amount, _, domain, accepted, valid, preserved = obligation(source, name)
-        check(z3.And(domain, accepted, z3.Not(preserved)), "unsat")
-        check(z3.And(domain, accepted != valid), "unsat")
+        check(z3.And(domain, accepted, z3.Not(preserved)), "unsat", evidence=evidence, identity=name + "-safety")
+        check(z3.And(domain, accepted != valid), "unsat", evidence=evidence, identity=name + "-admission")
         # Non-vacuity: both smallest payment and exact maximum balance can succeed.
         for count, cap, increment in ((0, 1, 1), (1, 2**63 - 1, 2**63 - 2)):
-            check(z3.And(domain, accepted, c == count, limit == cap, amount == increment), "sat")
+            check(z3.And(domain, accepted, c == count, limit == cap, amount == increment), "sat",
+                  evidence=evidence, identity=f"{name}-witness-{count}")
         lc, ll, la, _, ld, lac, _, lp = obligation(source, name, legacy=True)
-        counterexample = check(z3.And(ld, lac, z3.Not(lp), lc == 1, ll == 2**63 - 1, la == 2**63 - 1), "sat")
+        counterexample = check(z3.And(ld, lac, z3.Not(lp), lc == 1, ll == 2**63 - 1, la == 2**63 - 1), "sat",
+                               evidence=evidence, identity=name + "-legacy-counterexample")
         results.append({"function": name, "safety": "unsat", "admission_equivalence": "unsat",
                         "non_vacuity": "sat", "legacy_counterexample": counterexample})
     return results
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 1:
-        raise SystemExit("No options supported; verifies the actual repository source")
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, help="New directory for independently replayable SMT-LIB inputs")
+    args = parser.parse_args()
+    if args.output is not None:
+        args.output.mkdir()  # Never reuse evidence from a previous attempt.
     source_bytes = SOURCE.read_bytes()
     if z3.get_version_string() != "4.13.3":
         raise SystemExit("Use the pinned z3-solver==4.13.3.0 environment")
-    print(json.dumps({"source": str(SOURCE.relative_to(ROOT)),
-                      "sha256": hashlib.sha256(source_bytes).hexdigest(),
-                      "solver": z3.get_version_string(), "results": verify(source_bytes.decode()),
-                      "boundary": "Two recognized Haskell arithmetic fragments, all signed Int64 inputs with nonnegative current and limit; trusted shallow translation; not SQL or whole-program refinement"}, indent=2))
+    problems = []
+    results, failure = [], None
+    try:
+        results = verify(source_bytes.decode(), problems)
+    except Exception as error:
+        failure = error
+    artifacts = []
+    if args.output is not None:
+        for problem in problems:
+            content = problem["smtlib"].encode()
+            name = problem["id"] + ".smt2"
+            (args.output/name).write_bytes(content)
+            artifacts.append({"id": problem["id"], "file": name, "expected": problem["expected"],
+                              "sha256": hashlib.sha256(content).hexdigest(),
+                              "actual": problem.get("actual"), "model": problem.get("model")})
+    report = {"source": str(SOURCE.relative_to(ROOT)),
+              "sha256": hashlib.sha256(source_bytes).hexdigest(),
+              "solver": z3.get_version_string(), "results": results, "artifacts": artifacts,
+              "executionPassed": failure is None, "error": str(failure) if failure else None,
+              "boundary": "Two recognized Haskell arithmetic fragments, all signed Int64 inputs with nonnegative current and limit; trusted shallow translation; not SQL or whole-program refinement"}
+    if args.output is not None:
+        (args.output/"result.json").write_text(json.dumps(report, indent=2) + "\n")
+    print(json.dumps(report, indent=2))
+    if failure is not None:
+        raise SystemExit(1)

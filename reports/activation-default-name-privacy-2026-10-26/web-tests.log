@@ -1,0 +1,24 @@
+(node:42877) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+PASS src/pages/LoginPage.test.tsx (8.713 s)
+PASS src/utils/signupFields.test.ts
+PASS src/pages/FanHubPage.audit.test.tsx (15.858 s)
+PASS src/pages/FanHubPage.profileSafety.test.tsx (12.054 s)
+PASS src/pages/FanHubPage.onboarding.test.tsx (10.544 s)
+PASS src/pages/ArtistPublicPage.component.test.tsx
+PASS src/pages/ResetPasswordPage.test.tsx
+PASS src/pages/FanHubPage.playback.test.tsx
+PASS src/features/releases/ReleaseFeed.test.tsx
+PASS src/api/auth.test.ts
+PASS src/features/releases/ReleasePlayerActions.test.ts
+PASS src/utils/authErrorMessage.test.ts
+PASS src/features/fans/reconcileFollowState.test.ts
+
+Test Suites: 13 passed, 13 total
+Tests:       225 passed, 225 total
+Snapshots:   0 total
+Time:        60.892 s
+Ran all test suites within paths "src/pages/LoginPage.test.tsx", "src/utils/signupFields.test.ts", "src/pages/FanHubPage.audit.test.tsx", "src/pages/FanHubPage.profileSafety.test.tsx", "src/pages/FanHubPage.onboarding.test.tsx", "src/pages/FanHubPage.playback.test.tsx", "src/pages/ArtistPublicPage.component.test.tsx", "src/features/releases/ReleaseFeed.test.tsx", "src/features/releases/ReleasePlayerActions.test.ts", "src/features/fans/reconcileFollowState.test.ts", "src/api/auth.test.ts", "src/pages/ResetPasswordPage.test.tsx", "src/utils/authErrorMessage.test.ts".

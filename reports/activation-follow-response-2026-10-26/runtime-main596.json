@@ -1,0 +1,92 @@
+{
+  "plan": {
+    "mode": "rehearsal",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "providersUsed": false,
+    "fixtureSetup": "One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.",
+    "ports": {
+      "postgres": 55534,
+      "api": 18714,
+      "web": 4257
+    },
+    "scope": "Optimized candidate web and qualified native f0ba274 API with disposable223-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded."
+  },
+  "startedAt": "2026-10-26T23:39:33.644060+00:00",
+  "source": "1ebdd79a9c0029f6dad1d32c329286b8995b9738",
+  "sourceTree": "928ee2fd266f4b3a3dce38a23a15b81f435b602f",
+  "binaryRevision": "f0ba27468785574fce3a538224c6acf0e5f74b7c",
+  "schemaAuthority": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "migrationCount": 223,
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full223-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "VERIFIED-isolated-follow-response-recovery-only",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T23:38:02Z",
+    "commit": "f0ba27468785574fce3a538224c6acf0e5f74b7c",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "databaseAssertions": {
+    "syntheticPairs": 6,
+    "followRows": 6,
+    "followEvents": 8,
+    "explicitUnfollowEvents": 2,
+    "serverFirstValues": 6,
+    "clubRows": 0,
+    "artistProfiles": 1,
+    "duplicateRows": 0
+  },
+  "finishedAt": "2026-10-26T23:41:35.870264+00:00"
+}

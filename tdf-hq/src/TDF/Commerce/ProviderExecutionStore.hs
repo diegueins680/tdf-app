@@ -18,6 +18,7 @@ module TDF.Commerce.ProviderExecutionStore
   , claimProviderOperation
   , recordCreateResult
   , recordAmbiguousOperation
+  , authorizeCreateOperation
   , loadAuthorizedCreateOperation
   , loadAuthorizedCreateReplay
   , providerCreateRequestFingerprint
@@ -616,6 +617,27 @@ recordAmbiguousOperation operationRef checkout attempt provider errorCode correl
     , PersistText (providerOperationReferenceId operationRef)
     ]
 
+-- Authorize a polling read before consulting decryption configuration. Completed
+-- or expired checkouts remain readable; this is not admission for a new charge.
+authorizeCreateOperation
+  :: Text -> Text -> Text
+  -> SqlPersistT IO (Either Text ProviderOperationReference)
+authorizeCreateOperation checkoutId attemptId lookupTokenHash = do
+  refs <- rawSql
+    "SELECT operation.id::text FROM commerce_provider_operation operation\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = operation.payment_attempt_id\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = attempt.checkout_id\
+    \ WHERE checkout.id = ?::uuid AND attempt.id = ?::uuid\
+    \ AND checkout.lookup_token_hash = ? AND operation.operation = 'create'"
+    [ PersistText checkoutId
+    , PersistText attemptId
+    , PersistText lookupTokenHash
+    ] :: SqlPersistT IO [Single Text]
+  pure $ case refs of
+    [Single operationId] -> Right (ProviderOperationReference operationId)
+    [] -> Left "Provider operation was not found"
+    _ -> Left "Provider operation lookup was ambiguous"
+
 loadAuthorizedCreateOperation
   :: Text
   -> Text
@@ -626,21 +648,10 @@ loadAuthorizedCreateOperation checkoutId attemptId lookupTokenHash encryptionKey
   | not (validEncryptionKey encryptionKey) =
       pure (Left "Provider operation encryption key is invalid")
   | otherwise = do
-      refs <- rawSql
-        "SELECT operation.id::text FROM commerce_provider_operation operation\
-        \ JOIN commerce_payment_attempt attempt ON attempt.id = operation.payment_attempt_id\
-        \ JOIN commerce_checkout_session checkout ON checkout.id = attempt.checkout_id\
-        \ WHERE checkout.id = ?::uuid AND attempt.id = ?::uuid\
-        \ AND checkout.lookup_token_hash = ? AND operation.operation = 'create'"
-        [ PersistText checkoutId
-        , PersistText attemptId
-        , PersistText lookupTokenHash
-        ] :: SqlPersistT IO [Single Text]
-      case refs of
-        [Single operationId] -> loadOperation
-          (ProviderOperationReference operationId) encryptionKey
-        [] -> pure (Left "Provider operation was not found")
-        _ -> pure (Left "Provider operation lookup was ambiguous")
+      authorized <- authorizeCreateOperation checkoutId attemptId lookupTokenHash
+      case authorized of
+        Right operationRef -> loadOperation operationRef encryptionKey
+        Left err -> pure (Left err)
 
 -- | Authenticate and validate an exact request replay without checking whether
 -- a NEW charge may be started. Account suspension and checkout expiry must not

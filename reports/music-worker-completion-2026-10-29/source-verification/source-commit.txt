@@ -1,0 +1,5 @@
+[fix/music-worker-completion-evidence-20261029 4ac12ee2f] test(music): preserve lifecycle evidence on worker timeouts
+ 9 files changed, 536 insertions(+), 31 deletions(-)
+ create mode 100644 formal/system/music-worker-completion-observation.md
+ create mode 100644 scripts/__tests__/test-child-completion.test.mjs
+ create mode 100644 scripts/lib/test-child-completion.mjs

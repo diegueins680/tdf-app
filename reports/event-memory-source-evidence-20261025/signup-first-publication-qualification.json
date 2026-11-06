@@ -1,0 +1,74 @@
+{
+  "recordedAt": "2026-10-26T22:00:34.149486+00:00",
+  "qualifiedSource": "f03478ba9f831efb29cd2e86573e428cab10a29e",
+  "base": "4d5a460cb2bd8ca0d132effe7382454f6e0b21e7",
+  "scope": "New signup/publication HTTP/browser test code and formal test associations; application/backend/native source unchanged",
+  "unchangedGitSubtrees": {
+    "tdf-hq-ui/src": "5342fb3da311d5ce1c53f49353b1caff14e12cb9",
+    "tdf-hq": "233bc527aebe2b8d63ee0df75a6db3da602a53f7",
+    "tdf-mobile": "7000df1da934aa467e443ad267c0a8caa1e9cb72"
+  },
+  "directHttpRequests": 122,
+  "httpAssertionGroups": 19,
+  "runtimeHashes": 267,
+  "browserAssertions": 11,
+  "migrationLedger": {
+    "expectedCount": 226,
+    "appliedCount": 226,
+    "idsSha256": "37fbc984065234d4adfa0af656c9f1432cfeb0ae18a9c5f3b8bb664dd3d787cb",
+    "batchSha256": "4be40505e7b80f95454090352ced456d612984ef8f8850b7584c5cf1c6d864df"
+  },
+  "actualBinaryVersion": {
+    "buildTime": "2026-10-26T05:36:20Z",
+    "commit": "262295679df492dde850333779db431132092993",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "actualBinarySha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+  "binaryCompiledInputs": "Same278 compilation inputs previously qualified in78fa-input-correspondence.json; no new Darwin build claimed",
+  "newAccountPersistence": {
+    "partyId": 7,
+    "momentId": "8",
+    "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+    "survivesRealApiRestart": true,
+    "fixtureRoleGrants": 0
+  },
+  "registrationConsentAndAuthority": {
+    "partyId": 7,
+    "momentId": "8",
+    "assetPath": "/assets/serve/social-events/events/919143001/moments/d9580b36-e5fa-406b-a47d-797543f0d84e-newcomer-memory.png",
+    "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+    "signupStatus": 200,
+    "uploadStatus": 200,
+    "publicationStatus": 200,
+    "marketingRequested": false,
+    "invitationPreferenceBefore": false,
+    "invitationPreferenceAfter": false,
+    "privateReadStatus": 404,
+    "organizerCampaignStatus": 404,
+    "fixtureRoleGrants": 0
+  },
+  "dirtyAtExecution": true,
+  "untrackedAtExecution": [
+    "node_modules (owned dependency symlink)",
+    "tdf-hq-ui/node_modules (owned dependency symlink)"
+  ],
+  "cleanReleaseAttestation": false,
+  "cleanup": {
+    "apiStopped": true,
+    "databaseRemoved": true,
+    "browserFrontendStopped": true,
+    "ownedPgClusterStopped": true
+  },
+  "pendingQualificationAtThisCut": [],
+  "realUsers": 0,
+  "productionWrites": 0,
+  "realInvitations": 0,
+  "limits": [
+    "One synthetic new phone-browser account, not a physical device or observed human conversion",
+    "Parent4d CI results retain their own identity; this successor signup scenario has not executed in hosted CI",
+    "Existing previewCORSblock/review/main-integration/production acceptance gates remain"
+  ],
+  "repositoryQuality": "PASS on firstf034 before CI adapter changes",
+  "catalogQualification": "PASS1347 JSON/CSV and8controls on firstf034; subsequent733 scope recorded separately"
+}

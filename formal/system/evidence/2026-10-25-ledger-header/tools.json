@@ -1,0 +1,10 @@
+{
+  "node": "v24.13.1",
+  "npm": "11.12.0",
+  "python": "Python 3.13.5",
+  "psql": "psql (PostgreSQL) 16.13 (Homebrew)",
+  "packageLockSha256": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+  "qualifiedSource": "e57c8d1404e4a6f7b587e05c5ddbb2072520431c",
+  "stack": "3.7.1",
+  "ghc": "9.10.3"
+}

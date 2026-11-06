@@ -11,6 +11,7 @@ export function FanProfileEditor({
   genreCatalogReady,
   genreOptions,
   profileDraft,
+  profileReady,
   saving,
   setProfileDraft,
   onAvatarFileChange,
@@ -22,6 +23,7 @@ export function FanProfileEditor({
   genreCatalogReady: boolean;
   genreOptions: { id: string; name: string }[];
   profileDraft: FanProfileUpdate;
+  profileReady: boolean;
   saving: boolean;
   setProfileDraft: Dispatch<SetStateAction<FanProfileUpdate>>;
   onAvatarFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -39,124 +41,126 @@ export function FanProfileEditor({
           variant="contained"
           sx={{ alignSelf: 'flex-start' }}
           onClick={onSave}
-          disabled={saving || !genreCatalogReady || unavailableGenreIds.length > 0}
+          disabled={!profileReady || saving || !genreCatalogReady || unavailableGenreIds.length > 0}
         >
           {saving ? 'Guardando…' : 'Guardar perfil'}
         </Button>
       }
     >
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
-        <Stack spacing={1} alignItems="center" sx={{ minWidth: 140 }}>
-          <Box sx={{ position: 'relative', width: 104, height: 104 }}>
-            <Avatar
-              src={profileDraft.fpuAvatarUrl ?? undefined}
-              alt={profileDraft.fpuDisplayName ?? displayNameFallback ?? ''}
-              sx={{ width: 104, height: 104 }}
-            />
-            <IconButton
-              size="small"
-              onClick={() => avatarInputRef.current?.click()}
-              sx={{
-                position: 'absolute',
-                bottom: -8,
-                right: -8,
-                bgcolor: 'primary.main',
-                color: '#fff',
-                boxShadow: 2,
-                '&:hover': { bgcolor: 'primary.dark' },
-              }}
-              aria-label="Editar avatar"
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-            <input
-              type="file"
-              accept="image/*"
-              ref={avatarInputRef}
-              onChange={onAvatarFileChange}
-              style={{ display: 'none' }}
-            />
-          </Box>
-          <TextField
-            label="Avatar (pega enlace o sube)"
-            placeholder="https://..."
-            value={profileDraft.fpuAvatarUrl ?? ''}
-            onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: event.target.value }))}
-            fullWidth
-            size="small"
-          />
-          <Stack direction="row" spacing={1}>
-            <Button size="small" variant="contained" onClick={() => avatarInputRef.current?.click()}>
-              Subir imagen
-            </Button>
-            {profileDraft.fpuAvatarUrl && (
-              <Button
+      <Box component="fieldset" disabled={!profileReady} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
+          <Stack spacing={1} alignItems="center" sx={{ minWidth: 140 }}>
+            <Box sx={{ position: 'relative', width: 104, height: 104 }}>
+              <Avatar
+                src={profileDraft.fpuAvatarUrl ?? undefined}
+                alt={profileDraft.fpuDisplayName ?? displayNameFallback ?? ''}
+                sx={{ width: 104, height: 104 }}
+              />
+              <IconButton
                 size="small"
-                variant="text"
-                onClick={() => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: '' }))}
+                onClick={() => avatarInputRef.current?.click()}
+                sx={{
+                  position: 'absolute',
+                  bottom: -8,
+                  right: -8,
+                  bgcolor: 'primary.main',
+                  color: '#fff',
+                  boxShadow: 2,
+                  '&:hover': { bgcolor: 'primary.dark' },
+                }}
+                aria-label="Editar avatar"
               >
-                Quitar
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <input
+                type="file"
+                accept="image/*"
+                ref={avatarInputRef}
+                onChange={onAvatarFileChange}
+                style={{ display: 'none' }}
+              />
+            </Box>
+            <TextField
+              label="Avatar (pega enlace o sube)"
+              placeholder="https://..."
+              value={profileDraft.fpuAvatarUrl ?? ''}
+              onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: event.target.value }))}
+              fullWidth
+              size="small"
+            />
+            <Stack direction="row" spacing={1}>
+              <Button size="small" variant="contained" onClick={() => avatarInputRef.current?.click()}>
+                Subir imagen
               </Button>
-            )}
-          </Stack>
-        </Stack>
-        <Stack flex={1} spacing={2}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <TextField
-              label="Nombre público"
-              value={profileDraft.fpuDisplayName ?? ''}
-              onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuDisplayName: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Ciudad"
-              value={profileDraft.fpuCity ?? ''}
-              onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuCity: event.target.value }))}
-              fullWidth
-            />
-          </Stack>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <Autocomplete
-              multiple
-              disabled={!genreCatalogReady}
-              options={genreOptions}
-              value={genreOptions.filter((genre) => profileDraft.fpuFavoriteGenreIds.includes(genre.id))}
-              getOptionLabel={(genre) => genre.name}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              onChange={(_event, selected) => setProfileDraft((prev) => ({
-                ...prev,
-                fpuFavoriteGenreIds: selected.map((genre) => genre.id),
-              }))}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Géneros favoritos"
-                  helperText="Selecciona valores del catálogo publicado."
-                />
+              {profileDraft.fpuAvatarUrl && (
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: '' }))}
+                >
+                  Quitar
+                </Button>
               )}
+            </Stack>
+          </Stack>
+          <Stack flex={1} spacing={2}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <TextField
+                label="Nombre público"
+                value={profileDraft.fpuDisplayName ?? ''}
+                onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuDisplayName: event.target.value }))}
+                fullWidth
+              />
+              <TextField
+                label="Ciudad"
+                value={profileDraft.fpuCity ?? ''}
+                onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuCity: event.target.value }))}
+                fullWidth
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <Autocomplete
+                multiple
+                disabled={!genreCatalogReady}
+                options={genreOptions}
+                value={genreOptions.filter((genre) => profileDraft.fpuFavoriteGenreIds.includes(genre.id))}
+                getOptionLabel={(genre) => genre.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                onChange={(_event, selected) => setProfileDraft((prev) => ({
+                  ...prev,
+                  fpuFavoriteGenreIds: selected.map((genre) => genre.id),
+                }))}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Géneros favoritos"
+                    helperText="Selecciona valores del catálogo publicado."
+                  />
+                )}
+                fullWidth
+              />
+            </Stack>
+            {genreCatalogError && (
+              <Alert severity="error">
+                No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
+              </Alert>
+            )}
+            {unavailableGenreIds.length > 0 && genreCatalogReady && (
+              <Alert severity="warning">
+                Tu perfil referencia géneros inactivos o reemplazados. Sustitúyelos por valores vigentes.
+              </Alert>
+            )}
+            <TextField
+              label="Bio"
+              multiline
+              minRows={2}
+              value={profileDraft.fpuBio ?? ''}
+              onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuBio: event.target.value }))}
               fullWidth
             />
           </Stack>
-          {genreCatalogError && (
-            <Alert severity="error">
-              No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
-            </Alert>
-          )}
-          {unavailableGenreIds.length > 0 && genreCatalogReady && (
-            <Alert severity="warning">
-              Tu perfil referencia géneros inactivos o reemplazados. Sustitúyelos por valores vigentes.
-            </Alert>
-          )}
-          <TextField
-            label="Bio"
-            multiline
-            minRows={2}
-            value={profileDraft.fpuBio ?? ''}
-            onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuBio: event.target.value }))}
-            fullWidth
-          />
         </Stack>
-      </Stack>
+      </Box>
     </ProfileSectionCard>
   );
 }

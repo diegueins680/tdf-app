@@ -1,0 +1,20 @@
+{
+  "gitBase": "ff39d5e181764d99d3712b95545e0575f3749837",
+  "dirty": true,
+  "implementationAndRegressionSha256": {
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "6d0987f6d7160af13256a3565a96ef9a32d004df543d4dd72b0f51e59ff950c2",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+    "scripts/__tests__/ticket-admission-model.test.mjs": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a"
+  },
+  "compiledTestBinarySha256": "95997e2dfdd9a66a1cddc3583be7741e80960d0f8d8368fa849eaaae510cacd9",
+  "compiler": "Stack lts-24.42 / GHC 9.10.3",
+  "runtime": "PostgreSQL 16, full 227-migration UTF-8 disposable schema applied and replayed",
+  "tests": {
+    "command": "TDF_PROVIDER_RETRY_DATABASE_URL=<isolated> .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test --seed=20261028 +RTS -N2 -RTS",
+    "workingDirectory": "tdf-hq",
+    "examples": 4370,
+    "failures": 0,
+    "pending": 21
+  },
+  "limitation": "This is a compiled test binary. Stack target-only copy/register refused a separately configured but missing API executable; full package/image qualification is deferred to protected CI, not represented as a local pass."
+}

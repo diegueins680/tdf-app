@@ -1,0 +1,90 @@
+{
+  "source": "85c7c4b32906ed6e2e63627e2854a9e78625d115",
+  "sourceSha256": {
+    "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
+    "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529"
+  },
+  "steps": [
+    {
+      "name": "init",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "start",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "create",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "create-C",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "drop-C",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "create-en_US.UTF-8",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "drop-en_US.UTF-8",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "drop",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "stop",
+      "exitCode": 0,
+      "expectedFailure": false
+    }
+  ],
+  "cleanup": {
+    "ownedDatabaseRemoved": true,
+    "ownedClusterStopped": true
+  },
+  "productionOperations": false,
+  "versions": {
+    "python": "Python 3.13.5",
+    "node": "v24.13.1",
+    "psql": "psql (PostgreSQL) 16.13 (Homebrew)"
+  },
+  "functionSourceSha256": "fd22fc2ac4eea85f90475ab36276861556400d3184e849339d5ae38ff2ddb6b4",
+  "sourceFileSha256": "0918c16a03bf181ce88ca470a9549af5f2942abcdb3b5881d66c7cf8647197ef",
+  "cases": [
+    {
+      "lower": "luna",
+      "upper": "l na",
+      "locale": "C",
+      "encoding": "UTF8",
+      "server": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit"
+    },
+    {
+      "lower": "luna",
+      "upper": "luna",
+      "locale": "en_US.UTF-8",
+      "encoding": "UTF8",
+      "server": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit"
+    }
+  ],
+  "finding": {
+    "status": "FAILED in POSIX C, TESTED equality in en_US.UTF-8",
+    "property": "Existing case/accent normalization expects uppercase and lowercase forms to agree.",
+    "classification": "Independent directory normalization portability counterexample; supported locale policy remains an explicit open requirement, not an invented business exception.",
+    "financialGuardRelation": "Unrelated to immutable headers; does not justify relaxing any existing query assertion."
+  },
+  "finishedAt": "2026-10-26T06:31:18.870863+00:00"
+}

@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "archive": "local-execution-evidence.tar.gz",
+  "members": {
+    "frontend/qualification.json": {
+      "source": "/private/tmp/tdf-universal-music-search-frontend-qualified-20261026.json",
+      "bytes": 5012,
+      "sha256": "0c79dba1a214fd3841386dfcf08b730c1d6508f1419052592c5b6d7911a11e4e"
+    },
+    "frontend/affected-v2.log": {
+      "source": "/private/tmp/tdf-universal-music-search-ui-affected-v2-20261026.log",
+      "bytes": 1080,
+      "sha256": "f555d9417523b861d7f92069982c8991fc4a0459d6e71d51a223c5d2cdae0e2c"
+    },
+    "frontend/final-component.log": {
+      "source": "/private/tmp/tdf-universal-music-search-ui-final-component-20261026.log",
+      "bytes": 1048,
+      "sha256": "a590d8a27e4f418c3d98572b5c004ede6edb2c4ef638657bf7493221f693dc60"
+    },
+    "frontend/tsc-app.log": {
+      "source": "/private/tmp/tdf-universal-music-search-tsc-app-20261026.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frontend/lint-v2.log": {
+      "source": "/private/tmp/tdf-universal-music-search-ui-lint-v2-20261026.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frontend/initial-affected.log": {
+      "source": "/private/tmp/tdf-universal-music-search-ui-affected-20261026.log",
+      "bytes": 1917,
+      "sha256": "e95ac25a3f9866599b73422dbef9a6e9b43fd7d3775114e1be1f72bcbacb8be9"
+    },
+    "frontend/initial-focused.log": {
+      "source": "/private/tmp/tdf-universal-music-search-ui-focused-20261026.log",
+      "bytes": 9771,
+      "sha256": "a4e75494445338d7354c91d6f34168a5da05f81e18e5221bebc5dd64293218ee"
+    },
+    "frontend/initial-wrong-project-typecheck.log": {
+      "source": "/private/tmp/tdf-universal-music-search-tsc-20261026.log",
+      "bytes": 62470,
+      "sha256": "294e8e03ec8aee915cbb2a1d74be436058230778391b740c9dd6a2dfe359947f"
+    },
+    "frontend/initial-lint.log": {
+      "source": "/private/tmp/tdf-universal-music-search-ui-lint-20261026.log",
+      "bytes": 321,
+      "sha256": "1a8b972a725f575a56446defd12889f211e9f0f82268f517fd422bef5c2bc0d8"
+    },
+    "native/qualification.json": {
+      "source": "/private/tmp/tdf-music-search-native-qualified-receipt-20261026.json",
+      "bytes": 31489,
+      "sha256": "9ff3fcc717f8448776c6597103c27edf17e71e1f8fea06a2de3e01dd9419d385"
+    },
+    "native/final-results.json": {
+      "source": "/private/tmp/tdf-music-search-native-qualified-v2-20261026/results.json",
+      "bytes": 64664,
+      "sha256": "23382a7544b2d6c21686be0898d01c491078edb3dded26ae0ceebd649ae48f34"
+    },
+    "native/final.log": {
+      "source": "/private/tmp/tdf-music-search-native-qualified-v2-20261026.log",
+      "bytes": 5049,
+      "sha256": "12a1554e2c216d09d15be95c398355309c3e602fd3b43c8c318d0c9a31500b3e"
+    },
+    "native/final-source-pre.json": {
+      "source": "/private/tmp/tdf-music-search-native-v2-pre-20261026.json",
+      "bytes": 2432,
+      "sha256": "c15fd93be69be321ffb7bb5e0774a588c9a961ea06ac1fdf55e594bc86c3ad6e"
+    },
+    "native/final-source-post.json": {
+      "source": "/private/tmp/tdf-music-search-native-v2-post-20261026.json",
+      "bytes": 2432,
+      "sha256": "666aee2641470850b1bbe424033f71b7d18598a687c3013eacda4300892a1463"
+    },
+    "native/final-artifact-manifest.json": {
+      "source": "/private/tmp/tdf-music-search-native-v2-artifact-manifest-20261026.json",
+      "bytes": 990,
+      "sha256": "484b700e40e76f95e95a8353284aaf11eb277f8173e2a6cb23c7042b0b59f89a"
+    },
+    "native/first-failure-summary.json": {
+      "source": "/private/tmp/tdf-music-search-native-first-failure-20261026.json",
+      "bytes": 19449,
+      "sha256": "1c90e26af1430d72d5bde3c3ab76d55cc9603d0d3d32e39020d9ed78de8f149d"
+    },
+    "native/first-results.json": {
+      "source": "/private/tmp/tdf-music-search-native-qualified-20261026/results.json",
+      "bytes": 73755,
+      "sha256": "19ceafcea48f324350ee1d69687da2f1e0454e2020c85dae8200a1149f0997d0"
+    },
+    "native/first.log": {
+      "source": "/private/tmp/tdf-music-search-native-qualified-20261026.log",
+      "bytes": 15952,
+      "sha256": "caa922f346557e2f13e7e7d8b9810c8cdc6bc050ac5ee298cf70269d26a4c8ff"
+    },
+    "native/first-source-pre.json": {
+      "source": "/private/tmp/tdf-music-search-native-pre-20261026.json",
+      "bytes": 2432,
+      "sha256": "6d3524fca2fd6e57990c216b6c3e1f4da5c8c40c7c4aa0863df27a3b37feef82"
+    },
+    "native/first-source-post.json": {
+      "source": "/private/tmp/tdf-music-search-native-first-post-20261026.json",
+      "bytes": 2432,
+      "sha256": "d9c5523c366630a3a0a692377f49155702a76cf1fd8b063eb8ad13cfc294d932"
+    },
+    "native/setup-results.json": {
+      "source": "/private/tmp/tdf-music-search-native-20261026/results.json",
+      "bytes": 5281,
+      "sha256": "a8ad5010bf835b0dd528b8fdc209278e1432f24b390f36a413d67523071e28e0"
+    },
+    "native/setup-EPERM.log": {
+      "source": "/private/tmp/tdf-music-search-native-20261026.log",
+      "bytes": 3523,
+      "sha256": "c640be8f98374501fef865b120b2787cee4c4b4bc06fb66bff7b4e590fb2cef0"
+    },
+    "native/local-webkit-unsupported.log": {
+      "source": "/private/tmp/tdf-playwright-webkit-search-install-20261026.log",
+      "bytes": 85,
+      "sha256": "96c865a312add0cb2872dc43dc91c2d73e3c2dcabceafaf4bce59f2f4ef401a0"
+    },
+    "sql/final-results.json": {
+      "source": "/private/tmp/tdf-track-search-sql-3ooo3ynn/results.json",
+      "bytes": 958,
+      "sha256": "7c8a68c8f27cd5c47e4823e1ea601993cff2eb547bb784a97bb30d7ffc8f43ad"
+    },
+    "sql/final.log": {
+      "source": "/private/tmp/tdf-track-search-sql-3ooo3ynn/track-search-regressions.log",
+      "bytes": 1575,
+      "sha256": "244c6f1433f6fa6b77f4488ae303abd72ba47fda3b26fc2190b68e562651b1b5"
+    },
+    "sql/final-postgres.log": {
+      "source": "/private/tmp/tdf-track-search-sql-3ooo3ynn/postgres.log",
+      "bytes": 2538,
+      "sha256": "39e89840e16115afade0b21a9bbeb0ae3b899d92d84582beed3af9a623f4c695"
+    },
+    "sql/first-results.json": {
+      "source": "/private/tmp/tdf-track-search-sql-y45h_hl2/results.json",
+      "bytes": 914,
+      "sha256": "b6de8306821d840fc026828b2452c9d74e5588cb1d6625ce1e64bb348a566e08"
+    },
+    "sql/first.log": {
+      "source": "/private/tmp/tdf-track-search-sql-y45h_hl2/track-search-regressions.log",
+      "bytes": 3917,
+      "sha256": "d80130e2f0880a3026eb6c3ad9c8b40c8d18242b1a689582950850308ee9c8a0"
+    },
+    "sql/first-cleanup-reconciliation.json": {
+      "source": "/private/tmp/tdf-track-search-sql-y45h_hl2/cleanup-reconciliation.json",
+      "bytes": 403,
+      "sha256": "44f66fcfe0090d94cdfdb67dbedfdfa31c0e2752320205672c3362466db25078"
+    },
+    "sql/driver-v1.py": {
+      "source": "/private/tmp/tdf-track-search-contract-20261026/run-owned-postgres-v1.py",
+      "bytes": 3515,
+      "sha256": "5d64f3c99b757369daf98515961f88d29fcd6df76518667b53ba9cff55138527"
+    },
+    "sql/driver-v2.py": {
+      "source": "/private/tmp/tdf-track-search-contract-20261026/run-owned-postgres-v2.py",
+      "bytes": 3935,
+      "sha256": "6045ed62a92476d599ddf19c70ffe8889567a4280a3b0c24c8616bfd84435f2c"
+    },
+    "sql/backend-source-receipt.json": {
+      "source": "/private/tmp/tdf-track-search-contract-20261026/final-backend-sql-receipt.json",
+      "bytes": 1612,
+      "sha256": "c2a092318e9cfd4b1f43db692ad519ffc213c21e1f5b0e2346c71da3ac87c313"
+    },
+    "sql/baseline-source-inspection.json": {
+      "source": "/private/tmp/tdf-track-search-contract-20261026/baseline-source-reproduction.json",
+      "bytes": 792,
+      "sha256": "64797d7788441811e91d0e9f8947c7a044dc02ff8fdd142b8322bf91f4d848a0"
+    },
+    "sql/prior-functions-preserved.json": {
+      "source": "/private/tmp/tdf-track-search-contract-20261026/prior-functions-preserved.json",
+      "bytes": 303,
+      "sha256": "ccd9554fbc6eccc713bf91d75abe2bcc139d2356a19e1479b7aa1c1c7046e872"
+    },
+    "model/design-report.json": {
+      "source": "/private/tmp/tdf-track-search-model-final-20261026.json",
+      "bytes": 30762,
+      "sha256": "dca3d6c478e0426d3626bc73b278626ac6aa90a2accb47c32b9d47d9c0c76712"
+    },
+    "model/test.log": {
+      "source": "/private/tmp/tdf-track-search-model-tests-final-20261026.log",
+      "bytes": 2303,
+      "sha256": "4a6801891c983ad6685aa6668db994b2d4b52889720202b4335bfccb3704b022"
+    },
+    "model/root-confirmation.log": {
+      "source": "/private/tmp/tdf-track-search-model-root-confirmation-20261026.log",
+      "bytes": 2304,
+      "sha256": "c77af931340b7959cd241a2abaef81c6a960cb4cc48ad0b750a62fb64538fa33"
+    },
+    "model/qualification.json": {
+      "source": "/private/tmp/tdf-track-search-model-receipt-20261026.json",
+      "bytes": 3361,
+      "sha256": "b9c9d16495a03c6be621f87b3728a46790f13ce3e68b9b6f581ea4eec14997d4"
+    },
+    "source/initial-empty-capture.json": {
+      "source": "/private/tmp/tdf-track-search-build-20261026/initial-empty-input-capture.json",
+      "bytes": 285,
+      "sha256": "67fb52be3eb105d8af12c9cf67c5b34a80b8a7a565718ab46030b380fac93fd4"
+    },
+    "source/original972-capture.json": {
+      "source": "/private/tmp/tdf-track-search-contract-20261026/backend-committed-inputs-original972.json",
+      "bytes": 120313,
+      "sha256": "84faa0c11f28849754e480323a43de3aca508a3d1a3094550b2dbb0f558ad731"
+    },
+    "source/full973-supplemental-review.json": {
+      "source": "/private/tmp/tdf-track-search-contract-20261026/backend-full973-supplemental-review.json",
+      "bytes": 293392,
+      "sha256": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4"
+    },
+    "catalog/source-review.json": {
+      "source": "/private/tmp/tdf-track-search-catalog-source-review-20261026.json",
+      "bytes": 3243,
+      "sha256": "eff39526cb8fb87767135afb7403355efdb488c2a98efbd66cee1ed97439cbfa"
+    }
+  }
+}

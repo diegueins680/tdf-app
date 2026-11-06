@@ -1,0 +1,10 @@
+{
+  "source": "db2ec17c1fc2cd934d523a434fa833d286900a2c",
+  "command": [
+    "python3",
+    "-O",
+    "local-qualification-driver.py"
+  ],
+  "driverSha256": "fc12a7ce6abdab8a8f7f05388c4bb47c592a7cac6933e4ef15f6f48cef41b6e2",
+  "orchestratorControlsMatch": true
+}

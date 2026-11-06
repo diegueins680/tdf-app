@@ -78,12 +78,15 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
           <Typography variant="h6">{c.content.title}</Typography><Typography>{c.content.status === 'ready' ? 'Lista para revisar' : 'Borrador'}</Typography>
           <Button onClick={() => setActive(c)}>Continuar</Button>
           <Button onClick={() => { setActive({ ...c, id: crypto.randomUUID(), revision: 0,
-            content: { ...c.content, status: 'draft', title: `${c.content.title.slice(0, 190)} (copia)`,
+            content: { ...c.content, status: 'draft', rightsConfirmed: false, technicalReviewed: false, proposedLaunchDate: '', title: `${c.content.title.slice(0, 190)} (copia)`,
               pieces: c.content.pieces.map((p) => ({ ...p, status: 'draft', publishedUrl: '' })) } }); }}>Duplicar</Button>
         </Stack></CardContent></Card>)}</>}
       {active && <Alert severity={metrics.isError ? 'warning' : 'info'}>{metrics.data
         ? `Registros atribuidos: ${metrics.data.registrations} · Nuevos seguidores atribuidos: ${metrics.data.follows}`
         : metrics.isError ? 'No pudimos cargar las conversiones.' : 'Cargando conversiones…'}</Alert>}
+      {metrics.data?.byPiece?.map((p) => <Typography key={`${p.source}:${p.piece}`}>
+        {p.source} · {p.piece}: {p.registrations} registros · {p.follows} seguidores nuevos en TDF
+      </Typography>)}
       {(creating || active) && <CampaignEditor key={`${artistId}:${active?.id ?? 'new'}`} session={session}
         artistId={artistId} artistName={artist.apDisplayName} initial={active}
         onSaved={() => { void campaigns.refetch(); }} onClose={() => { setActive(null); setCreating(false); }} />}
@@ -105,7 +108,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
   const [error, setError] = useState('');
   const flight = useRef(false);
   const current = () => getActiveSession() === session;
-  const patch = (part: Partial<VideoCampaignDocument>) => setDoc((d) => ({ ...d, ...part, status: 'draft' }));
+  const patch = (part: Partial<VideoCampaignDocument>) => setDoc((d) => ({ ...d, rightsConfirmed: false, technicalReviewed: false, ...part, status: 'draft' }));
   const patchPiece = (id: string, part: Partial<VideoPiece>) => patch({ pieces: doc.pieces.map((p) => p.id === id ? { ...p, ...part } : p) });
   const save = async (ready = false) => {
     if (flight.current || !current()) return;
@@ -147,7 +150,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     setNotice('Plan descargado. El estado de las piezas se conserva; exportar no significa publicar.');
   };
   const featureVideo = async () => {
-    if (flight.current || !current() || doc.status !== 'ready' || revision < 1) return;
+    if (flight.current || !current() || doc.status !== 'ready' || !doc.rightsConfirmed || !doc.technicalReviewed || revision < 1) return;
     flight.current = true; setBusy(true); setError(''); setNotice('');
     try {
       await VideoCampaigns.feature(artistId, id, revision);
@@ -178,6 +181,9 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
           channels: checked ? [...doc.channels, c] : doc.channels.filter((v) => v !== c),
           pieces: doc.pieces.filter((p) => checked || p.channel !== c),
         })} />}/>)}
+      <TextField label="Fecha propuesta (opcional)" type="date" value={doc.proposedLaunchDate ?? ''}
+        slotProps={{ inputLabel: { shrink: true } }} helperText="Solo referencia del borrador. No programa publicaciones."
+        onChange={(e) => patch({ proposedLaunchDate: e.target.value })} />
       <Alert severity="info">Publicación manual disponible. Las conexiones de publicación automática aún no están habilitadas en este asistente.</Alert>
       <Button disabled={doc.pieces.length > 0 || !doc.channels.length} onClick={() => patch({ pieces: createCampaignPieces(artistName, doc.channels) })}>Preparar textos y calendario</Button>
     </>}
@@ -209,11 +215,18 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
       <Typography>{artistName} · {doc.pieces.length} piezas · 14 días · USD 0 de pauta</Typography>
       <Typography sx={{ overflowWrap: 'anywhere' }}>{doc.videoUrl || 'Falta el enlace del video completo.'}</Typography>
       <SessionVideoPreview url={doc.videoUrl} title={doc.title} />
+      <TextField multiline minRows={3} label="Créditos confirmados" value={doc.credits ?? ''}
+        helperText="Deja pendientes los cargos o nombres que no hayas verificado."
+        onChange={(e) => patch({ credits: e.target.value, rightsConfirmed: false, technicalReviewed: false })} />
+      <FormControlLabel label="Confirmo los permisos de música, imagen y video para publicar en TDF"
+        control={<Checkbox checked={doc.rightsConfirmed ?? false} onChange={(_e, checked) => patch({ rightsConfirmed: checked, technicalReviewed: doc.technicalReviewed })} />} />
+      <FormControlLabel label="Revisé el video completo, el audio, los cortes y los créditos"
+        control={<Checkbox checked={doc.technicalReviewed ?? false} onChange={(_e, checked) => patch({ technicalReviewed: checked, rightsConfirmed: doc.rightsConfirmed })} />} />
       <Typography>Revisa cortes, textos, permisos del video, créditos y enlaces antes de publicar desde cada red.</Typography>
       <Typography>Los enlaces incluyen atribución por pieza. Las conversiones verificadas se muestran al abrir una campaña guardada. Las métricas externas requieren una conexión autorizada.</Typography>
       <Button onClick={exportPlan}>Descargar plan y textos</Button>
       <Button variant="contained" onClick={() => void save(true)}>Guardar para revisión</Button>
-      {doc.status === 'ready' && revision > 0 && <>
+      {doc.status === 'ready' && doc.rightsConfirmed && doc.technicalReviewed && revision > 0 && <>
         <Typography>La siguiente acción hace visible el video en el perfil público del artista en TDF.</Typography>
         <Button color="secondary" variant="outlined" onClick={() => void featureVideo()}>Publicar video en el perfil de TDF</Button>
       </>}

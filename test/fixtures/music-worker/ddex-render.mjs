@@ -3,7 +3,12 @@
 import { writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 const [exportId, xml, manifest] = process.argv.slice(2);
-if (!/^postgresql:\/\/127\.0\.0\.1:5432\/tdf_music_worker_[a-z0-9_]+\?/.test(process.env.DATABASE_URL ?? '')) {
+const database = new URL(process.env.DATABASE_URL ?? '');
+if (database.protocol !== 'postgresql:' || database.search || database.hash
+    || !/^\/tdf_music_worker_[0-9]{1,10}_[a-f0-9]{32}$/.test(database.pathname)
+    || !(['127.0.0.1', 'localhost'].includes(database.hostname)
+      || (process.env.CI === 'true' && database.hostname === 'postgres'))
+    || ['PGHOSTADDR', 'PGSERVICE', 'PGSERVICEFILE'].some(name => process.env[name])) {
   throw new Error('Disposable worker test database required');
 }
 if (process.env.MUSIC_TEST_REVOKE_RECIPIENT === 'true') {

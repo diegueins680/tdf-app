@@ -72,7 +72,7 @@ const completeCampaign = (): VideoCampaign => ({
   id: '126f208c-2b38-47c1-952b-6ba633122c87', artistId: 51, revision: 3,
   createdAt: '2026-10-20T00:00:00Z', updatedAt: '2026-10-20T00:00:00Z',
   content: {
-    title: 'Liquid Paper Girl · Live session', status: 'draft',
+    title: 'Liquid Paper Girl · Live session', status: 'draft', rightsConfirmed: true, technicalReviewed: true,
     videoUrl: 'https://media.example.com/session.mp4', coverUrl: '', durationSeconds: 610.08,
     channels: ['instagram'], pieces: [{
       id: 'instagram-1', channel: 'instagram', day: 0, format: 'vertical-video',
@@ -112,4 +112,24 @@ it('reports a rejected public update without claiming publication or changing th
   expect(screen.queryByText(/Video publicado en el perfil de TDF/)).not.toBeInTheDocument();
   expect(save).not.toHaveBeenCalled();
   expect(feature).toHaveBeenCalledWith(51, row.id, 3);
+});
+
+it('requires saved rights and technical review and invalidates them after edits', async () => {
+  const row = completeCampaign(); row.content.status = 'ready';
+  row.content.rightsConfirmed = false; row.content.technicalReviewed = false; persisted = [row];
+  await openReview();
+  expect(screen.queryByRole('button', { name: 'Publicar video en el perfil de TDF' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText('Confirmo los permisos de música, imagen y video para publicar en TDF'));
+  fireEvent.click(screen.getByLabelText('Revisé el video completo, el audio, los cortes y los créditos'));
+  expect(feature).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar para revisión' }));
+  expect(await screen.findByText(/Campaña guardada para revisión/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Publicar video en el perfil de TDF' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+  fireEvent.change(screen.getByLabelText('Fecha propuesta (opcional)'), { target: { value: '2026-12-01' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+  expect(screen.getByLabelText('Confirmo los permisos de música, imagen y video para publicar en TDF')).not.toBeChecked();
+  expect(screen.queryByRole('button', { name: 'Publicar video en el perfil de TDF' })).not.toBeInTheDocument();
 });

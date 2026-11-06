@@ -19,6 +19,10 @@ export interface VideoCampaignDocument {
   durationSeconds: number;
   status: 'draft' | 'ready';
   channels: SocialChannel[];
+  proposedLaunchDate?: string;
+  credits?: string;
+  rightsConfirmed?: boolean;
+  technicalReviewed?: boolean;
   pieces: VideoPiece[];
 }
 export interface VideoCampaign {
@@ -39,6 +43,8 @@ export const importedCampaignSchema = z.object({
   campaignId: z.string().uuid(),
   title: z.string().min(1).max(200), videoUrl: z.string(), coverUrl: z.string(),
   durationSeconds: z.number().finite().min(0).max(43200), status: z.enum(['draft', 'ready']),
+  proposedLaunchDate: z.string().max(10).optional(), credits: z.string().max(12000).optional(),
+  rightsConfirmed: z.boolean().optional(), technicalReviewed: z.boolean().optional(),
   channels: z.array(z.enum(['instagram', 'tiktok'])).min(1).max(2),
   pieces: z.array(z.object({
     id: z.string().min(1).max(100), channel: z.enum(['instagram', 'tiktok']), day: z.number().int().min(-3).max(13),
@@ -56,11 +62,11 @@ export function campaignLink(artistId: number, campaignId: string, piece: Pick<V
 
 // A relative calendar remains inert until a creator chooses to publish manually.
 export function createCampaignPieces(artist: string, channels: SocialChannel[]): VideoPiece[] {
-  const days = [-2, 0, 2, 5, 8, 11, 13];
+  const days = [-2, -1, 0, 2, 5, 8, 11];
   const angles = [
     `Pronto: ${artist} en vivo. Conoce el perfil en TDF y sigue al artista.`,
-    `Ya puedes descubrir la live session de ${artist} en TDF. Crea tu cuenta y sigue al artista para mantenerte cerca de su música.`,
-    `Así suena ${artist} en vivo. Mira la sesión completa desde su perfil en TDF y síguelo.`,
+    `Mañana podrás descubrir la live session de ${artist} en TDF. Crea tu cuenta y sigue al artista para mantenerte cerca de su música.`,
+    `Ya disponible: así suena ${artist} en vivo. Mira la sesión completa desde su perfil en TDF y síguelo.`,
     `Una mirada a la interpretación de ${artist}. Encuentra más en su perfil de TDF.`,
     `¿Qué momento de la sesión de ${artist} volverías a escuchar? Descúbrela completa en TDF.`,
     `Detrás de cada cambio hay una decisión. Escucha a ${artist} en vivo y sigue su perfil en TDF.`,
@@ -69,7 +75,7 @@ export function createCampaignPieces(artist: string, channels: SocialChannel[]):
   return channels.flatMap((channel) => days.map((day, i) => ({
     id: `${channel}-${i + 1}`, channel, day,
     format: channel === 'instagram' && (i === 0 || i === 6) ? 'story' : 'vertical-video',
-    caption: `${angles[i]} ${channel === 'tiktok' ? 'Enlace en el perfil.' : 'Enlace en la bio o en la Story.'} #LiveSession #TDFRecords`,
+    caption: `${angles[i]} ${channel === 'tiktok' ? 'Busca el perfil de TDF del artista; usa el enlace del perfil solo si está disponible y verificado.' : 'Mira la sesión desde el enlace de la bio; en Stories, usa un sticker de enlace verificado.'} #LiveSession #TDFRecords`,
     assetUrl: '', sourceStart: 0, sourceEnd: 0, status: 'draft', publishedUrl: '',
   })));
 }
@@ -85,6 +91,9 @@ export function safeVideoUrl(value: string): boolean {
 }
 
 export function validateVideoCampaign(doc: VideoCampaignDocument): string | null {
+  if (doc.proposedLaunchDate && (!/^\d{4}-\d{2}-\d{2}$/.test(doc.proposedLaunchDate)
+    || Number.isNaN(Date.parse(doc.proposedLaunchDate)) || new Date(doc.proposedLaunchDate).toISOString().slice(0, 10) !== doc.proposedLaunchDate)) return 'Revisa la fecha propuesta.';
+  if ((doc.credits?.length ?? 0) > 12000) return 'Los créditos admiten hasta 12000 caracteres.';
   if (!doc.title.trim() || doc.title.length > 200) return 'Escribe un título de hasta 200 caracteres.';
   if (!safeVideoUrl(doc.videoUrl) || !safeVideoUrl(doc.coverUrl)) return 'Usa enlaces HTTPS válidos para video y portada.';
   if (!Number.isFinite(doc.durationSeconds) || doc.durationSeconds < 0 || doc.durationSeconds > 43200) return 'Revisa la duración del video.';

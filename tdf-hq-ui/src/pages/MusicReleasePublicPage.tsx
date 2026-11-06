@@ -1,3 +1,4 @@
+import { canonicalMusicMinor, formatMusicMinor, type MusicMinorUnits } from '../utils/musicMoney';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -32,12 +33,9 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 import { musicReleases, type MusicPublicRelease } from '../api/musicReleases';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { PLAYER_LOAD_TRACK_EVENT, type PlayerTrack } from '../player/types';
-import { musicSourceQuality } from '../player/sourceMetadata';
+import { publicMusicTrack } from '../player/publicMusicTrack';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
-
-const loudnessFor = (metadata: Record<string, unknown>): number | null =>
-  typeof metadata['loudness_lufs'] === 'number' ? metadata['loudness_lufs'] : null;
 
 type PublicOffer = MusicPublicRelease['availability'][number];
 
@@ -51,9 +49,9 @@ const openAuthorizedDownload = (accessUrl: string) => {
   anchor.remove();
 };
 
-const formatMinorMoney = (minor: number, currency: string) => {
-  try { return new Intl.NumberFormat('es-EC', { style: 'currency', currency }).format(minor / 100); }
-  catch { return `${currency} ${(minor / 100).toFixed(2)}`; }
+const formatMinorMoney = (minor: MusicMinorUnits, currency: string) => {
+  try { return formatMusicMinor(minor, currency); }
+  catch { return 'Precio no disponible'; }
 };
 
 const installSocialMetadata = (release: MusicPublicRelease, artworkUrl: string | null) => {
@@ -89,7 +87,6 @@ export default function MusicReleasePublicPage() {
   const location = useLocation();
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null);
   const [playError, setPlayError] = useState<string | null>(null);
-  const [loadingTrack, setLoadingTrack] = useState<string | null>(null);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<PublicOffer | null>(null);
   const [purchaseTermsAccepted, setPurchaseTermsAccepted] = useState(false);
@@ -169,41 +166,19 @@ export default function MusicReleasePublicPage() {
     return () => buttons.close?.();
   }, [paypalPurchase, paypalReady, release.data]);
 
-  const resolveTrack = async (track: MusicPublicRelease['tracks'][number]): Promise<PlayerTrack> => {
-    const attempts = await Promise.allSettled(track.sources.map(async (source) => {
-      const access = await musicReleases.getAssetAccess(source.assetId);
-      return {
-        url: access.url, assetId: source.assetId, expiresAt: access.expiresAt,
-        quality: musicSourceQuality(source.technicalMetadata, access.mediaType), mediaType: access.mediaType,
-        preview: source.role === 'preview_audio',
-      };
-    }));
-    const resolved = attempts.flatMap((attempt) => attempt.status === 'fulfilled' ? [attempt.value] : []);
-    if (resolved.length === 0) throw new Error('Esta pista no tiene una fuente autorizada disponible.');
-    const preview = resolved.every((source) => source.preview);
-    const authorizedAssetIds = new Set(resolved.map((source) => source.assetId));
-    const loudness = track.sources.filter((source) => authorizedAssetIds.has(source.assetId))
-      .map((source) => loudnessFor(source.technicalMetadata)).find((value) => value !== null) ?? null;
-    return {
-      id: track.trackId, recordingId: track.recordingId, releaseId: release.data?.id,
-      releaseVersionId: release.data?.versionId, title: track.title, artist: track.displayArtist,
-      artworkUrl, durationMs: track.durationMs, previewEndMs: preview ? 30000 : null,
-      loudnessLufs: loudness, sources: resolved,
-    };
-  };
+  const prepareTrack = (track: MusicPublicRelease['tracks'][number]): PlayerTrack => publicMusicTrack({
+    ...track, releaseId: release.data?.id, releaseVersionId: release.data?.versionId, artworkUrl,
+  });
 
-  const play = async (trackId: string) => {
+  const play = (trackId: string) => {
     if (!release.data) return;
-    setLoadingTrack(trackId); setPlayError(null);
-    try {
-      const attempts = await Promise.allSettled(release.data.tracks.map(resolveTrack));
-      const queue = attempts.flatMap((attempt) => attempt.status === 'fulfilled' ? [attempt.value] : []);
-      const selected = queue.find((track) => track.id === trackId);
-      if (!selected) throw new Error('La pista ya no está disponible.');
-      window.dispatchEvent(new CustomEvent(PLAYER_LOAD_TRACK_EVENT, { detail: { track: selected, queue, autoplay: true } }));
-    } catch (reason) {
-      setPlayError(reason instanceof Error ? reason.message : 'No se pudo iniciar la reproducción.');
-    } finally { setLoadingTrack(null); }
+    setPlayError(null);
+    // Select synchronously. The persistent engine authorizes only the source it
+    // needs, so slow queue items cannot delay or later replace this selection.
+    const queue = release.data.tracks.filter((track) => track.sources.length > 0).map(prepareTrack);
+    const selected = queue.find((track) => track.id === trackId);
+    if (!selected) { setPlayError('La pista ya no está disponible.'); return; }
+    window.dispatchEvent(new CustomEvent(PLAYER_LOAD_TRACK_EVENT, { detail: { track: selected, queue, autoplay: true } }));
   };
 
   const toggleFavorite = async (recordingId: string) => {
@@ -244,12 +219,13 @@ export default function MusicReleasePublicPage() {
   };
 
   const startPurchase = async () => {
-    if (!selectedOffer || !purchaseTermsAccepted) return;
+    if (!selectedOffer || !purchaseTermsAccepted || selectedOffer.priceMinor === null || !selectedOffer.currency) return;
     if (!session) { navigate(buildLoginRedirectPath(location.pathname)); return; }
     if (!paypalClientId) { setPlayError('PayPal no está configurado en este navegador.'); return; }
     setPurchaseBusy(true); setPlayError(null);
     try {
-      const purchase = await musicReleases.createPurchase(selectedOffer.ruleId, crypto.randomUUID());
+      const purchase = await musicReleases.createPurchase(selectedOffer.ruleId, crypto.randomUUID(),
+        selectedOffer.priceMinor, selectedOffer.currency);
       const provider = await musicReleases.createPaypalOrder(purchase.id, crypto.randomUUID());
       setPaypalPurchase({ purchaseId: purchase.id, orderId: provider.paypalOrderId });
     } catch (reason) {
@@ -284,7 +260,7 @@ export default function MusicReleasePublicPage() {
         <Typography variant="h5" color="text.secondary">{release.data.displayArtist}</Typography>
         <Typography color="text.secondary">{[release.data.labelName, releaseDate].filter(Boolean).join(' · ')}</Typography>
         <Button variant="contained" size="large" startIcon={<PlayArrowIcon />} onClick={() => void play(release.data.tracks[0]?.trackId ?? '')}
-          disabled={release.data.tracks.length === 0 || loadingTrack !== null} sx={{ alignSelf: 'flex-start' }}>
+          disabled={release.data.tracks.length === 0} sx={{ alignSelf: 'flex-start' }}>
           Reproducir release
         </Button>
         {session && <Button component={RouterLink} to="/musica/biblioteca" sx={{ alignSelf: 'flex-start' }}>Abrir mi biblioteca</Button>}
@@ -304,9 +280,9 @@ export default function MusicReleasePublicPage() {
             if (!session) navigate(buildLoginRedirectPath(location.pathname));
             else setPlaylistTrack({ recordingId: track.recordingId, title: track.title });
           }}><PlaylistAddIcon /></IconButton>
-          <Button startIcon={loadingTrack === track.trackId ? <CircularProgress size={16} /> : <QueueMusicIcon />} onClick={() => void play(track.trackId)} disabled={loadingTrack !== null}>Reproducir</Button>
+          <Button startIcon={<QueueMusicIcon />} onClick={() => play(track.trackId)} disabled={track.sources.length === 0}>Reproducir</Button>
           {offer?.downloadPolicy === 'free' && <Button startIcon={<DownloadIcon />} onClick={() => void freeDownload(offer)} disabled={purchaseBusy}>Descargar</Button>}
-          {offer?.downloadPolicy === 'purchase' && offer.priceMinor !== null && offer.currency && <Button startIcon={<ShoppingCartIcon />} onClick={() => { setSelectedOffer(offer); setPaypalPurchase(null); setPurchaseTermsAccepted(false); }} disabled={purchaseBusy}>Comprar {formatMinorMoney(offer.priceMinor, offer.currency)}</Button>}
+          {offer?.downloadPolicy === 'purchase' && offer.priceMinor !== null && offer.currency && <Button startIcon={<ShoppingCartIcon />} onClick={() => { setSelectedOffer(offer); setPaypalPurchase(null); setPurchaseTermsAccepted(false); }} disabled={purchaseBusy || canonicalMusicMinor(offer.priceMinor) === null || offer.currency !== 'USD'}>Comprar {formatMinorMoney(offer.priceMinor, offer.currency)}</Button>}
         </Stack>;
       })}
     </Stack></CardContent></Card>

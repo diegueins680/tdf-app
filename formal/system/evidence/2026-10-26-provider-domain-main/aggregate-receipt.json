@@ -1,0 +1,13 @@
+{
+  "source": "cb7773790f15099933b92b184cfb50d7cf20c8aa",
+  "command": [
+    "tdf-hq-test"
+  ],
+  "exitCode": 0,
+  "examples": 4039,
+  "failures": 0,
+  "pending": 21,
+  "scope": "Aggregate without optional database runner environment; the separate canonical provider runner executes317 real PostgreSQL cases with no pending cases.",
+  "logSha256": "54df5b16629bdf2ccbd0d6eefcf7a66b4c4d79f8bca2c9d4c765044d67a77455",
+  "finishedAt": "2026-10-26T05:33:57.289271+00:00"
+}

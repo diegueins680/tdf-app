@@ -1,3 +1,4 @@
+import MarkdownText from '../../components/MarkdownText';
 import { InteractionPanel } from '../interactions/InteractionPanel';
 import { useId, useRef, useState, type RefObject } from 'react';
 import {
@@ -83,7 +84,7 @@ const COPY = {
   focus: {
     ready: 'Feed de lanzamientos listo.',
     fanRole: 'Enviando la solicitud del rol Fan.',
-    playing: (title: string) => `Reproduciendo ${title}.`,
+    requested: (title: string) => `Solicitud para escuchar ${title}.`,
     uploadOpen: (title: string) => `Formulario de audio abierto para ${title}.`,
     saveLink: 'Guardando enlace de audio.',
     fileUpload: 'Selector de archivo abierto.',
@@ -451,9 +452,9 @@ function ReleaseSummary(props: ReleaseSummaryProps) {
         <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />
       </Stack>
       {release.arDescription && (
-        <Typography variant="body2" color="text.secondary">
+        <MarkdownText inline variant="body2" color="text.secondary">
           {shortDescription(release.arDescription)}
-        </Typography>
+        </MarkdownText>
       )}
     </Stack>
   );
@@ -488,7 +489,7 @@ function ReleaseActions(props: ReleaseActionsProps) {
         <Button
           disabled={isUploading}
           tabIndex={0}
-          onClick={() => actionContext.focus(() => onPlayRelease(release), COPY.focus.playing(release.arTitle))}
+          onClick={() => actionContext.focus(() => onPlayRelease(release), COPY.focus.requested(release.arTitle))}
           variant="contained"
           size="small"
           startIcon={playButtonIcon}

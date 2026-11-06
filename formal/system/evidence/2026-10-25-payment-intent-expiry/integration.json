@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "sourceCandidate": "5140a86f47b377ab56cbd5a6fc68262e86fae052",
+  "currentMain": "9a927fa390066f43cc27c872800bf1b0412e166e",
+  "originalPaymentCandidate": "5ca62256af0a8eecd2ec4929a7d0eb01a96425b5",
+  "pullRequest": {
+    "number": 609,
+    "url": "https://github.com/diegueins680/tdf-app/pull/609",
+    "created": 1,
+    "merged": 0,
+    "independentApproval": "PENDING",
+    "requiredCI": "PENDING"
+  },
+  "requirementReconciliation": {
+    "base": 136,
+    "paymentParent": 137,
+    "protectedMainParent": 137,
+    "combined": 138,
+    "conflictingSharedNormativeRecords": 0
+  },
+  "sourceInputsPreserved": true,
+  "sourceSha256": {
+    "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+    "scripts/verify-payment-intent-expiry.py": "7eefe7a53984897caed042f9eff42c2cdd654412239600af4cea4a8f4f1aab09",
+    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "b330b3fa88c6f63de6bed83991e7f2356934d02fe5f4fc390dde8865dcb341dd",
+    "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "e3ef7dda2df82c2c04080597197b8b13cc46aa8ce44d6d4877a8a4dabec8154d",
+    "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": "5acc12c8159c592832e38f69ed75e958504bf841341970759cc7df18fb1b2081",
+    "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
+    "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs": "b1aca48c2ade99b5ab27e4b5242465a7a9aabaec0fa99c801c1657922a987d52",
+    "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
+    "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs": "8cce3af5167840a9364733a2cb3c0da8fe76cb858177df7e0aee93f4a27fd9ec",
+    "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
+    "tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs": "3d932f13448339fc1d6991a838f969bf54a2c79d3bf0a854948d6d86529753d2",
+    "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
+    "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a",
+    "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs": "d8ff38c7077449bc2301a9d42231e115afe00aebb664726e60fe88444d2fe2b6",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": "901c237849c3a4b102ea5e0bdc16c029bfce1096fec5ccb40d0e8e3aa9d2f5cf",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs": "58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9",
+    "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs": "f0bcce416a0df53c74183d21292504c356c3374a40bfb00d484164fb16584744",
+    "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs": "053d58a62c59f6dfbb1a4ded7979c306f1a36c8f11eee6d5dc0b736b1e2d1fd9",
+    "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
+    "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "57320f3b97d5f82419e1942b769fd4c8ab9766a58cbdd8fc01caff82cd3ca639",
+    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
+    "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs": "f872cf68ae160595bdd18782cc55c93d351492b659e2aa60fee93640b208f61e",
+    "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
+    "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
+    "tdf-hq/src/TDF/Commerce/ServiceBookings.hs": "90633aeb479ada1c852bfaa99544864a1501e218992789ef4d83945bf6fa7de7",
+    "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
+    "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+    "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+    "tdf-hq/tdf-hq.cabal": "ee5e6128c1fc85318d3ebc98d224e2b3a25fc269f390c8d1eb3d17d896e16cbb",
+    "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
+    "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
+    "formal/event-operations/PaymentIntentExpiry.cfg": "99e6255b3049e3d4e03421e41be27cb4c98a6dbb300174dbcb9d3767aa966943",
+    "formal/event-operations/PaymentIntentExpiryTransaction.cfg": "c3f9bf74fabd61c706ce443319ac01974fb585f5eb451dd3086bcdf9a2aa1264",
+    "formal/event-operations/PaymentIntentExpiryInclusive.cfg": "b43b697b66ca9bd3cccb30c494c2fea57d7e152f24527a4dd3e7d90a9eaf1230",
+    "formal/event-operations/PaymentIntentExpiryBeforeLock.cfg": "c67f2fa7106cb988d6ffc32cce985baeab28ad7d718df0f6bfdd4ae130ed243e",
+    "formal/event-operations/PaymentIntentExpiryRequest.cfg": "0738b2aecdd57781a4636629369372ec478fcd6f3301ced4846f2a8f07b7c616",
+    "formal/event-operations/PaymentIntentExpiry.tla": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+    "scripts/verify-event-operations-formal.sh": "76f651557c3c731e605f5f53d6473689b17e35c9db4e6c50c6d36011a243343c"
+  },
+  "freshMergedStoreExecution": {
+    "examples": 7,
+    "failures": 0,
+    "log": "merged-store.log"
+  },
+  "freshAssurance": {
+    "requirementsTotal": 138,
+    "criticalRequirements": 112,
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 138,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 130,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 138,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 138,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "release": "BLOCKED",
+    "report": "merged-assurance-report.md"
+  },
+  "criticalDomainCounts": {
+    "PAY": 18,
+    "AUTH": 11
+  },
+  "retainedEvidenceScope": "Original clean source executions retain their 5ca62256a identity. Their exact implementation/model inputs match this merge; fresh seven-case actual-store execution and full assurance use this merge identity. No fresh whole-model/provider/UI run is inferred. Hosted final-head qualification remains required.",
+  "artifactSha256": {
+    "merged-store.log": "6e8003121f518b3c06a201411c63d4b292ee6a49afa493b335c21db52616d6e7",
+    "merged-assurance-report.md": "5aeb91956797cf12f0aac8c2982a51d32bf8c51976b0152e473b19f452d0d5d1"
+  }
+}

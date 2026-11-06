@@ -1,6 +1,11 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# OPTIONS_GHC -fforce-recomp #-}
+
+-- Git identity and build time are splice inputs outside the Haskell source.
+-- The canonical Stack gate also uses --force-dirty so restored package caches
+-- cannot skip GHC before this module-local recompilation policy is evaluated.
 
 module TDF.Version
   ( VersionInfo(..)

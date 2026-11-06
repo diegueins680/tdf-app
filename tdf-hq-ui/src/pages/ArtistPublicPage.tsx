@@ -1,11 +1,15 @@
+import { buildArtistPublicPath } from '../utils/artistIdentity';
+import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
+import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
+import { loadArtistCatalog } from '../api/artistCatalog';
+import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
@@ -23,13 +27,13 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import GroupsIcon from '@mui/icons-material/Groups';
 import LaunchIcon from '@mui/icons-material/Launch';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
-import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
+import { reconcileFollowState } from '../features/fans/reconcileFollowState';
 import type { ArtistReleaseDTO } from '../api/types';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import ArtistProfileImage from '../components/ArtistProfileImage';
 import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
 import SessionVideoPreview from '../components/SessionVideoPreview';
 import ArtistFansList from '../components/ArtistFansList';
@@ -48,6 +52,7 @@ interface ReleaseCardProps {
 }
 
 interface FollowCommand {
+  attributionSearch: string;
   artistId: number;
   viewerId: number;
   segment: string;
@@ -55,6 +60,7 @@ interface FollowCommand {
   resume: boolean;
   isCurrent: () => boolean;
   ownsProfile: () => boolean;
+  ownsSession: () => boolean;
 }
 
 type ArtistPublicPageDisplayContract = Readonly<{
@@ -137,9 +143,9 @@ function ReleaseCard({ release }: ReleaseCardProps) {
             </Typography>
           )}
           {description && (
-            <Typography variant="body2" color="text.secondary">
+            <MarkdownText variant="body2" color="text.secondary">
               {description}
-            </Typography>
+            </MarkdownText>
           )}
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {release.arSpotifyUrl && (
@@ -159,24 +165,6 @@ function ReleaseCard({ release }: ReleaseCardProps) {
   );
 }
 
-function CanonicalReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
-  const cover = useQuery({
-    queryKey: ['music-release-cover', release.coverAssetId],
-    queryFn: () => musicReleases.getAssetAccess(release.coverAssetId!),
-    enabled: Boolean(release.coverAssetId),
-    retry: false,
-  });
-  return <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
-    {cover.data?.url && <CardMedia component="img" height="180" image={cover.data.url} alt={`Portada de ${release.title}`} loading="lazy" />}
-    <CardContent><Stack spacing={1}>
-      <Chip label={`${release.kind.toUpperCase()} · TDF`} size="small" sx={{ alignSelf: 'flex-start' }} />
-      <Typography component="h3" fontWeight={800}>{release.title}</Typography>
-      <Typography variant="body2" color="text.secondary">{release.displayArtist}</Typography>
-      <Button size="small" component={RouterLink} to={`/musica/${release.slug}`} startIcon={<MusicNoteIcon />}>Escuchar en TDF</Button>
-    </Stack></CardContent>
-  </Card>;
-}
-
 export default function ArtistPublicPage() {
   const { t } = useTranslation();
   const { slugOrId } = useParams();
@@ -188,6 +176,8 @@ export default function ArtistPublicPage() {
   const hasToken = Boolean(session && safeArtistId(viewerId) && !sessionLoading);
   const mountedRef = useRef(true);
   const pendingRef = useRef(false);
+  const consumedResumeKeyRef = useRef<string | null>(null);
+  const [recoveredCommand, setRecoveredCommand] = useState<FollowCommand | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
@@ -206,8 +196,7 @@ export default function ArtistPublicPage() {
   const profileLink = useMemo(() => {
     const artist = artistQuery.data;
     if (!artist) return null;
-    if (artist.apSlug) return `/a/${artist.apSlug}`;
-    return `/a/${artist.apArtistId}`;
+    return buildArtistPublicPath(artist.apArtistId, artist.apSlug);
   }, [artistQuery.data]);
   const viewRef = useRef({ session, artistId, pathname: location.pathname, key: location.key, generation: 0 });
   const previousView = viewRef.current;
@@ -216,23 +205,22 @@ export default function ArtistPublicPage() {
   // A -> B -> A must not revive a receipt from the first profile/session lifetime.
   viewRef.current = { session, artistId, pathname: location.pathname, key: location.key, generation };
   const resumeFollow = hasToken && isArtistFollowResume(location.search, artistId);
-  const clearResume = () => {
+  const clearResume = useCallback(() => {
+    // The receipt and settled-query effect can run before navigation commits.
+    // Consume this location once so a second replacement cannot invalidate
+    // the next explicit follow command after the first replacement commits.
+    if (consumedResumeKeyRef.current === location.key) return;
+    consumedResumeKeyRef.current = location.key;
     const params = new URLSearchParams(location.search);
     params.delete('resume');
     params.delete('artistId');
     const search = params.toString();
     void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
-  };
+  }, [location.hash, location.key, location.pathname, location.search, navigate]);
 
-  const releasesQuery = useQuery({
-    queryKey: ['public-artist-releases', artistId],
-    queryFn: () => Fans.getReleases(artistId!),
-    enabled: Boolean(artistId),
-    retry: false,
-  });
-  const canonicalReleasesQuery = useQuery({
-    queryKey: ['public-canonical-music-releases', artistId],
-    queryFn: () => musicReleases.listPublic('', artistId!),
+  const catalogQuery = useQuery({
+    queryKey: ['artist-release-catalog', artistId],
+    queryFn: ({ signal }) => loadArtistCatalog(artistId!, signal),
     enabled: Boolean(artistId),
     retry: false,
   });
@@ -254,29 +242,41 @@ export default function ArtistPublicPage() {
     getAnalyticsClient().capture('video_campaign_profile_view', { ...videoAttribution(location.search), artistId });
     if (session?.partyId) void recordVideoConversion(location.search, artistId, 'registration').catch(() => undefined);
   }, [artistId, location.search, session?.partyId]);
+  const acceptConfirmedState = (command: FollowCommand) => {
+    if (!command.ownsProfile()) return;
+    if (!command.wasFollowing) {
+      void recordVideoConversion(command.attributionSearch, command.artistId, 'follow').catch(() => undefined);
+      // The completion endpoint checks actual server event evidence and only
+      // its newlyCompleted receipt can emit first-value analytics.
+      void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
+        .catch(() => undefined);
+    }
+    // A delayed receipt must not restore an earlier search or hash.
+    if (command.resume && !command.wasFollowing && command.isCurrent()) clearResume();
+  };
+
+  const recoverFollow = async (command: FollowCommand) => {
+    const following = await reconcileFollowState(qc, command);
+    if (following === null) return;
+    void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+    void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
+    if (following !== command.wasFollowing && command.ownsProfile()) {
+      setRecoveredCommand(command);
+      acceptConfirmedState(command);
+    }
+  };
 
   const followMutation = useMutation({
     mutationFn: async (command: FollowCommand) => {
       if (!command.isCurrent()) throw new Error('Follow context changed');
-      if (command.wasFollowing) {
-        await Fans.unfollow(command.artistId);
-      } else {
-        await Fans.follow(command.artistId);
-      }
+      await setArtistFollowing(command, !command.wasFollowing);
     },
     onSuccess: (_result, command) => {
       // The server write committed even if this profile or navigation lifetime ended.
-      void qc.invalidateQueries({ queryKey: ['fan-follows', command.viewerId] });
-      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
-      if (!command.isCurrent()) return;
-      if (!command.wasFollowing) {
-        void recordVideoConversion(location.search, command.artistId, 'follow').catch(() => undefined);
-        void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
-          .catch(() => undefined);
-      }
-      if (command.resume && !command.wasFollowing) clearResume();
+      void invalidateArtistAudience(qc, command.viewerId, command.artistId);
+      acceptConfirmedState(command);
     },
+    onError: (_error, command) => recoverFollow(command),
     onSettled: () => { pendingRef.current = false; },
   });
 
@@ -291,26 +291,24 @@ export default function ArtistPublicPage() {
       && viewRef.current.pathname === pathname && viewRef.current.generation === generation;
     pendingRef.current = true;
     followMutation.mutate({
-      artistId, viewerId, segment, wasFollowing: isFollowing, resume: resumeFollow,
-      ownsProfile, isCurrent: () => ownsProfile() && viewRef.current.key === key,
+      artistId, viewerId, segment, attributionSearch: location.search, wasFollowing: isFollowing, resume: resumeFollow,
+      ownsProfile, ownsSession: () => getActiveSession() === session,
+      isCurrent: () => ownsProfile() && viewRef.current.key === key,
     });
   };
 
   useEffect(() => {
     if (!resumeFollow || !isFollowing || !followsQuery.isSuccess || followsQuery.isFetching
       || getActiveSession() !== session || pendingRef.current) return;
-    const params = new URLSearchParams(location.search);
-    params.delete('resume');
-    params.delete('artistId');
-    const search = params.toString();
-    void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
-  }, [followsQuery.isFetching, followsQuery.isSuccess, isFollowing, location.hash, location.pathname, location.search, navigate, resumeFollow, session]);
+    clearResume();
+  }, [clearResume, followMutation.isPending, followsQuery.isFetching, followsQuery.isSuccess, isFollowing, resumeFollow, session]);
 
   const artist = artistQuery.data ?? null;
-  const releases = releasesQuery.data ?? [];
-  const canonicalReleases = canonicalReleasesQuery.data ?? [];
+  const releases = catalogQuery.data?.entries.flatMap((entry) => entry.source === 'legacy' ? [entry.release] : []) ?? [];
+  const canonicalReleases = catalogQuery.data?.entries.flatMap((entry) => entry.source === 'canonical' ? [entry.release] : []) ?? [];
+  const catalogIncomplete = catalogQuery.isError || (catalogQuery.data?.unavailableSources.length ?? 0) > 0;
 
-  const releaseSelection = usePublicationSelection('release', releases.map((release) => release.arReleaseId), releasesQuery.isLoading);
+  const releaseSelection = usePublicationSelection('release', releases.map((release) => release.arReleaseId), catalogQuery.isLoading);
 
   useMetaTags({
     title: artist?.apDisplayName ?? 'Artista',
@@ -361,7 +359,7 @@ export default function ArtistPublicPage() {
     );
   }
 
-  const heroImage = getArtistHeroImage(artist.apHeroLandscapeUrl ?? artist.apHeroImageUrl, artist.apSlug);
+  const heroImage = getArtistHeroImage(artist.apHeroLandscapeUrl ?? artist.apHeroImageUrl, artist.apSlug, artist.apDisplayName);
   const avatarImage = artist.apHeroSquareUrl ?? heroImage;
   const spotifyUrl =
     artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
@@ -389,19 +387,19 @@ export default function ArtistPublicPage() {
             bgcolor: '#0b1224',
           }}
         >
-          {heroImage && (
-            <Box component="picture" sx={{ position: 'absolute', inset: 0 }}>
-              {avifSourceSet && <source type="image/avif" srcSet={avifSourceSet} sizes="(max-width: 1040px) 100vw, 1040px" />}
-              {webpSourceSet && <source type="image/webp" srcSet={webpSourceSet} sizes="(max-width: 1040px) 100vw, 1040px" />}
-              <Box
-                component="img"
-                src={heroImage}
-                alt=""
-                aria-hidden="true"
-                sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: artist.apHeroFocalPoint ?? 'center' }}
-              />
-            </Box>
-          )}
+          <ArtistProfileImage
+            artistName={artist.apDisplayName}
+            imageUrl={heroImage}
+            alt=""
+            eager
+            width={1040}
+            height={280}
+            avifSourceSet={avifSourceSet}
+            webpSourceSet={webpSourceSet}
+            sizes="(max-width: 1040px) 100vw, 1040px"
+            objectPosition={artist.apHeroFocalPoint ?? 'center'}
+            sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+          />
           <Box
             sx={{
               position: 'absolute',
@@ -421,13 +419,14 @@ export default function ArtistPublicPage() {
             }}
           >
             <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-              <Avatar
-                src={avatarImage ?? undefined}
-                alt={artist.apDisplayName}
-                sx={{ width: 64, height: 64, bgcolor: 'rgba(59,130,246,0.35)', border: '1px solid rgba(148,163,184,0.35)' }}
-              >
-                {artist.apDisplayName?.[0]?.toUpperCase() ?? <MusicNoteIcon />}
-              </Avatar>
+              <ArtistProfileImage
+                artistName={artist.apDisplayName}
+                imageUrl={avatarImage}
+                width={64}
+                height={64}
+                eager
+                sx={{ borderRadius: '50%', border: '1px solid rgba(148,163,184,0.35)' }}
+              />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography component="h1" variant="h4" fontWeight={900} id="artist-hero" sx={{ lineHeight: 1.1 }}>
                   {artist.apDisplayName}
@@ -511,15 +510,22 @@ export default function ArtistPublicPage() {
             )}
             {hasToken && followsQuery.isError && (
               <Alert severity="warning" action={(
-                <Button onClick={() => { void followsQuery.refetch(); }} color="inherit" size="small">
+                <Button onClick={() => {
+                  const command = followMutation.variables;
+                  if (followMutation.isError && command?.ownsProfile()) {
+                    if (pendingRef.current) return;
+                    pendingRef.current = true;
+                    void recoverFollow(command).finally(() => { pendingRef.current = false; });
+                  } else void followsQuery.refetch();
+                }} color="inherit" size="small" disabled={followMutation.isPending || followsQuery.isFetching}>
                   {t('artistFollow.retry')}
                 </Button>
               )}>
                 {t('artistFollow.stateError')}
               </Alert>
             )}
-            {followMutation.isError && followMutation.variables?.isCurrent() && (
-              <Alert severity="error">{t('artistFollow.resumeError', { artist: artist.apDisplayName })}</Alert>
+            {followMutation.isError && followMutation.variables !== recoveredCommand && followMutation.variables?.isCurrent() && (
+              <Alert severity="error">{t('artistFollow.changeError')}</Alert>
             )}
             {canClaim && (
               <Alert
@@ -544,9 +550,9 @@ export default function ArtistPublicPage() {
                 <Typography component="h2" variant="h6" fontWeight={800}>
                   Bio
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
+                <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   {artist.apBio ?? 'Este artista aún no ha agregado una bio.'}
-                </Typography>
+                </MarkdownText>
               </Box>
               <Box sx={{ width: { xs: '100%', md: 340 } }}>
                 <Typography component="h2" variant="h6" fontWeight={800}>
@@ -696,7 +702,10 @@ export default function ArtistPublicPage() {
               </Stack>
 
               {releaseSelection.notice}
-              {(releasesQuery.isLoading || canonicalReleasesQuery.isLoading) && (
+              {catalogIncomplete && <Alert severity="warning" action={<Button aria-label="Reintentar catálogo del artista" onClick={() => { void catalogQuery.refetch(); }}>Reintentar</Button>}>
+                No pudimos cargar todo el catálogo del artista. Los lanzamientos disponibles se muestran abajo.
+              </Alert>}
+              {catalogQuery.isLoading && (
                 <Box display="flex" alignItems="center" gap={1.5} py={2}>
                   <CircularProgress size={18} aria-label="Cargando lanzamientos del artista" />
                   <Typography variant="body2" color="text.secondary">
@@ -705,20 +714,20 @@ export default function ArtistPublicPage() {
                 </Box>
               )}
 
-              {!releasesQuery.isLoading && !canonicalReleasesQuery.isLoading && releases.length === 0 && canonicalReleases.length === 0 && (
+              {!catalogQuery.isLoading && !catalogIncomplete && releases.length === 0 && canonicalReleases.length === 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   No hay releases publicados todavía.
                 </Typography>
               )}
 
               {canonicalReleases.length > 0 && <Grid container spacing={2} sx={{ mt: 0.5, mb: releases.length > 0 ? 2 : 0 }}>
-                {canonicalReleases.map((release) => <Grid key={release.id} item xs={12} sm={6} md={4}><CanonicalReleaseCard release={release} /></Grid>)}
+                {canonicalReleases.map((release) => <Grid key={release.id} item xs={12} sm={6} md={4}><PublishedReleaseCard release={release} /></Grid>)}
               </Grid>}
 
               {releases.length > 0 && (
                 <LazyPaginatedList
                   items={releases}
-                  loading={releasesQuery.isFetching}
+                  loading={catalogQuery.isFetching}
                   pagination={{ itemLabel: 'releases', initialRowsPerPage: 6, selectedIndex: releaseSelection.index, resetKey: releaseSelection.requested }}
                   renderItems={(visibleReleases) => (
                     <Grid container spacing={2} sx={{ mt: 0.5 }}>

@@ -1,0 +1,29 @@
+{
+  "qualifiedSource": "43a41d4f677d83f6b49bf018a88853cf60f1a12c",
+  "qualifiedTree": "98a12fc4399df66b14972a40bc7bbcacb310513b",
+  "webTree": "91f0b29d9969f463981f0467ddd051950b379e35",
+  "backendTree": "0947c67deded458c093666e947e0b0e239a1a8b4",
+  "binaryRevision": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+  "backendCorrespondence": "git diff --exit-code fe179de45d9b0e085bb7cd2f00a9704991fa1652 43a41d4f677d83f6b49bf018a88853cf60f1a12c -- tdf-hq: PASS",
+  "node": "v22.14.0",
+  "postgres": "postgres (PostgreSQL) 16.13 (Homebrew)",
+  "entries": [
+    {
+      "path": "/assets/index-HkASJ0v3.js",
+      "sha256": "0907e91e40c271d712dd7468055d4ab0d839253804e4dbafe555377c6b5ca562",
+      "sourceCommitEmbedded": true
+    }
+  ],
+  "materialSources": {
+    "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts": "782a11f3d42cf616f73e42f872468efabd2b40ee902a5d66a9fc7cb449b98db4",
+    "tdf-hq-ui/src/features/fans/reconcileFollowState.ts": "e88364850fb7660faa7a731f35754d05e097036a549c7207682356c5a10392d1",
+    "tdf-hq-ui/src/i18n/locales/en.ts": "8c4200b764a689dc68395e9986fa04b1499e3a00009607d5e7f57efea0c29be1",
+    "tdf-hq-ui/src/i18n/locales/es.ts": "1e2dc6585ab2e6e663a1e4909f37a76f3fa11061b8019d032b25eaae9eb6921f",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "8c8952f17baae317f568bc8002c8e9f54f85983333ec838858187a6d97c3eaa2",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "69d4451fc969e774d057e991ae08f1cfb32ef853ed7f8e87f973148b4c6e2cb2",
+    "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "3ccbe5b9fea851f81f67be2e9ec3e6fe49aae4ab597cf76ea7e4913789424751",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "65105fc75e42eb1a441bf521bf1749d7f6be6b1dfdc8d927b9f758bf1fcf4528"
+  },
+  "scope": "Exact clean tracked-source browser/API/SQL qualification. Later report-only commits may reuse this input-tree evidence but retain the actual43a identity. Native binary is not relabeled."
+}

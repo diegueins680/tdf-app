@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 
-type AuthErrorCode = 'network' | 'timeout' | 'credentials' | 'starting' | 'response';
+type AuthErrorCode = 'network' | 'timeout' | 'credentials' | 'reset-token' | 'starting' | 'response';
 
 // Preserve the existing API message for non-UI consumers; views translate stable codes.
 export class AuthRequestError extends Error {
@@ -16,6 +16,7 @@ export function authErrorMessage(error: unknown, t: TFunction, fallback: string)
       case 'network': return t('authEntry.networkError');
       case 'timeout': return t('authEntry.timeoutError');
       case 'credentials': return t('authEntry.invalidCredentials');
+      case 'reset-token': return t('authEntry.resetTokenExpired');
       case 'starting': return t('authEntry.servicePreparing');
     }
   }

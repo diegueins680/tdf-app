@@ -199,6 +199,7 @@ const en = {
     followedSince: 'Fan since {{date}}',
   },
   artistFollow: {
+    changeError: 'We could not confirm the follow change. Check your connection and try again.',
     stateError: 'We could not check whether you follow this artist.',
     retry: 'Retry',
     authCta: 'Create an account or sign in to follow',
@@ -358,6 +359,7 @@ const en = {
       paymentFailed: 'Payment failed',
       paymentUnclear: 'Payment status unclear. Please contact support.',
       unavailable: 'Payment is unavailable right now. No tickets were reserved. Please try again later.',
+      cardUnavailable: 'Card payments are temporarily unavailable. Please try again later.',
       paymentIntent: 'Failed to create payment intent',
       unexpected: 'An unexpected error occurred',
       termsRequired: 'Accept the ticket terms and refund policy to continue.',

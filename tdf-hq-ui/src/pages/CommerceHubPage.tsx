@@ -48,12 +48,6 @@ const offers: readonly {
     availability: 'request',
   },
   {
-    title: { es: 'DJ booth', en: 'DJ booth' },
-    description: { es: 'Solicitud pública para la cabina; confirmación y pago siguen pendientes.', en: 'Public booth request; confirmation and payment remain pending.' },
-    route: '/dj-booth',
-    availability: 'request',
-  },
-  {
     title: { es: 'Domo del Pululahua', en: 'Pululahua Dome' },
     description: { es: 'Solicitud de cotización sin precio client-side ni retención automática de fecha.', en: 'Quote request without client-side pricing or an automatic date hold.' },
     route: '/domo-del-pululahua',

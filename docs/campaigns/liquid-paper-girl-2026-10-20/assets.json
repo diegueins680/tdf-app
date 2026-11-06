@@ -38,5 +38,76 @@
     "No verified Instagram/TikTok artist handle, final session title, recording date or credits supplied.",
     "No connected provider publishing credentials/audit observed; manual export is supported.",
     "Publication requires Diego reviewing musical cuts, credits and file permissions."
+  ],
+  "currentAudit": {
+    "date": "2026-11-05",
+    "originalAvailable": false,
+    "derivativesAvailable": false,
+    "historicalMeasurementsOnly": true,
+    "publicProfileRechecked": true,
+    "publicProfileId": 51,
+    "externalPublicationActivated": false
+  },
+  "assetManifest": [
+    {
+      "file": "clip-01.mp4",
+      "sourceStart": 94.55,
+      "sourceEnd": 124.55,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-02.mp4",
+      "sourceStart": 171.75,
+      "sourceEnd": 201.75,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-03.mp4",
+      "sourceStart": 241.2,
+      "sourceEnd": 271.2,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-04.mp4",
+      "sourceStart": 344.15,
+      "sourceEnd": 374.15,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-05.mp4",
+      "sourceStart": 461.4,
+      "sourceEnd": 491.4,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-06.mp4",
+      "sourceStart": 537.75,
+      "sourceEnd": 567.75,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    }
   ]
 }

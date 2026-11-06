@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { resolveApiBase } from '../config/apiBase';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference, removeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { useTranslation } from 'react-i18next';
@@ -575,6 +576,10 @@ export default function MarketplacePage() {
     },
   });
   const cart = cartQuery.data;
+  const cartReadPending = Boolean(cartId) && cartQuery.isPending;
+  const cartReadPaused = Boolean(cartId) && cartQuery.fetchStatus === 'paused';
+  const cartNeedsConfirmation = Boolean(cartId)
+    && (cartQuery.isPending || cartQuery.isError || cartQuery.fetchStatus !== 'idle');
   const cartItems = useMemo<MarketplaceCartItemDTO[]>(() => cart?.mcItems ?? [], [cart]);
   const rentalCartItem = cartItems.find((item) => item.mciPurpose === 'rent') ?? null;
   const isRentalCart = Boolean(rentalCartItem);
@@ -1083,6 +1088,7 @@ export default function MarketplacePage() {
   const hasCartItems = cartItems.length > 0;
   const cartSubtotal = cart?.mcSubtotalDisplay ?? formatCurrencyForUser(0, paypalCurrency ?? resolveRuntimeCurrency());
   const checkoutDisabledReason = useMemo(() => {
+    if (cartNeedsConfirmation) return 'Confirma tu carrito antes de continuar. Reintenta cargarlo.';
     if (!hasCartItems || cartItemCount === 0) return 'Agrega al menos un producto para continuar.';
     if (!isValidName) return 'Ingresa tu nombre para coordinar el pedido.';
     if (!isValidEmail) return 'Ingresa un correo válido.';
@@ -1092,6 +1098,7 @@ export default function MarketplacePage() {
     if (!isValidPhone && contactPref === 'phone') return 'Agrega un teléfono para coordinar por WhatsApp.';
     return '';
   }, [
+    cartNeedsConfirmation,
     cartItemCount,
     contactPref,
     hasCartItems,
@@ -1750,9 +1757,15 @@ export default function MarketplacePage() {
           ...(variant === 'drawer' ? { id: 'marketplace-cart-drawer-title' } : {}),
         }}
         subheader={
-          hasCartItems
-            ? `${cartItems.length} productos · ${cartItemCount} en total`
-            : 'Sin productos aún'
+          cartReadPaused
+            ? 'Esperando conexión'
+            : cartQuery.isError
+              ? 'Carrito pendiente de confirmar'
+              : cartReadPending
+                ? 'Cargando carrito…'
+                : hasCartItems
+                  ? `${cartItems.length} productos · ${cartItemCount} en total`
+                  : 'Sin productos aún'
         }
         action={
           variant === 'drawer' ? (
@@ -1765,12 +1778,33 @@ export default function MarketplacePage() {
         }
       />
       <CardContent>
-        {cartQuery.isLoading && (
-          <Box display="flex" justifyContent="center">
-            <CircularProgress size={20} />
-          </Box>
+        {(cartReadPending || cartReadPaused) && (
+          <Stack spacing={1} alignItems="center" role="status">
+            <CircularProgress size={20} aria-label="Cargando carrito" />
+            {cartReadPaused && (
+              <Typography variant="body2">Esperando conexión para recuperar tu carrito.</Typography>
+            )}
+          </Stack>
         )}
-        {!hasCartItems && !cartQuery.isLoading && (
+        {cartQuery.isError && (
+          <Alert
+            severity="warning"
+            sx={{ mb: 2 }}
+            action={(
+              <Button
+                color="inherit"
+                disabled={cartQuery.fetchStatus !== 'idle'}
+                onClick={() => void cartQuery.refetch()}
+                sx={{ minHeight: 44 }}
+              >
+                {cartQuery.fetchStatus !== 'idle' ? 'Reintentando…' : 'Reintentar carrito'}
+              </Button>
+            )}
+          >
+            No pudimos cargar tu carrito. Reintenta para confirmar los productos y el total.
+          </Alert>
+        )}
+        {!hasCartItems && !cartReadPending && !cartReadPaused && !cartQuery.isError && (
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary">
               {variant === 'drawer' ? 'Tu carrito está vacío.' : 'Agrega artículos para continuar al checkout.'}
@@ -1889,7 +1923,7 @@ export default function MarketplacePage() {
                 Vaciar carrito
               </Button>
               {variant === 'drawer' ? (
-                <Button variant="contained" onClick={goToCheckoutFromDrawer} sx={{ minHeight: 44 }}>
+                <Button variant="contained" onClick={goToCheckoutFromDrawer} disabled={cartNeedsConfirmation} sx={{ minHeight: 44 }}>
                   Ir al checkout
                 </Button>
               ) : (
@@ -3094,9 +3128,9 @@ export default function MarketplacePage() {
                     title="Términos de renta"
                     summary={rentalDialogListing.miRentalTermsVersion ? `Versión ${rentalDialogListing.miRentalTermsVersion}` : undefined}
                   >
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <MarkdownText variant="body2">
                       {rentalDialogListing.miRentalTermsSummary}
-                    </Typography>
+                    </MarkdownText>
                   </LegalDisclosure>
                 ) : rentalDialogListing.miRentalTermsVersion && (
                   <Typography variant="caption" color="text.secondary">

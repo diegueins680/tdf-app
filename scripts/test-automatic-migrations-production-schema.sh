@@ -158,12 +158,12 @@ FROM (
 SQL
 )"
 
-# A reviewed rollout may already have enabled PayPal webhook intake. A restart
-# must preserve that state while continuing to reject absent or unstaged gates.
+# A reviewed rollout may already have enabled PayPal webhook intake and refunds.
+# Restart both enabled flags without changing the AUTHORITY-050 provider policy.
 psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
-  "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
+  "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds');" >/dev/null
 start_and_verify
-test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT enabled FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';")" = "t"
+test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT string_agg(enabled::text, ',' ORDER BY flag_key) FROM revenue_feature_flag WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds');")" = "true,true"
 
 verification_sql="$(node "${repo_root}/scripts/render-production-schema-verification.mjs")"
 assert_gate_rejected() {
@@ -220,7 +220,7 @@ for flag in checkout.placetopay.webhooks checkout.payphone.notifications; do
   assert_gate_rejected "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';"
 done
 psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
-  "UPDATE revenue_feature_flag SET enabled = FALSE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
+  "UPDATE revenue_feature_flag SET enabled = FALSE WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds');" >/dev/null
 
 schema_after="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 <<'SQL'
 SELECT md5(string_agg(definition, E'\n' ORDER BY definition))

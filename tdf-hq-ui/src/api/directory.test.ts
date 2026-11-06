@@ -22,7 +22,7 @@ describe('web music directory canonical API', () => {
   it('encodes anonymous universal-search and public-detail requests', async () => {
     mockGet.mockResolvedValue({});
     await Directory.search({ q: 'bajista & productor', cityId: '11111111-1111-4111-8111-111111111111', remote: true });
-    expect(mockGet).toHaveBeenCalledWith('/directory/search?q=bajista+%26+productor&cityId=11111111-1111-4111-8111-111111111111&remote=true');
+    expect(mockGet).toHaveBeenCalledWith('/directory/search?q=bajista+%26+productor&cityId=11111111-1111-4111-8111-111111111111&remote=true', { signal: undefined });
 
     await Directory.classified('audición/quito');
     expect(mockGet).toHaveBeenLastCalledWith('/directory/classifieds/audici%C3%B3n%2Fquito');

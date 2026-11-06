@@ -1,0 +1,22 @@
+Reviewer: existing independent_financial_review agent, read-only exact diff review.
+No blocking issue found. Both sides of the race require repair: atomic current
+sold predicate for edit; fresh locked current total for purchase. Manager predicate
+conditions all fields; getEntity is in the same transaction/row lock. Both reservation
+calls keep reserve/order/ticket inserts together and preserve existing409 behavior.
+No Inventory.hs changes. Stripe Event→terms SHARE→helper Event/Tier lock order
+retains existing ordering, promo compensation, idempotent reuse/conflict rollback,
+zero-total early return, and absence of provider/email IO within stock locks.
+Four actual-handler race tests cover two endpoints and both lock orderings, with
+unchanged tier-row lock only; no test-side stock mutation creates the observed
+sold3/total1 counterexample. Bounded waits/bracket release+join avoid hanging tests.
+Eight compatibility cases preserve empty/equal/increased tier totals and absent,
+below and exact event-capacity boundaries. Explicit no-email/no-Stripe config.
+Existing public decoders already bound quantity to1–100, matching shared helper.
+Active/sale-window checks use handler-start now and inclusive end as before;
+not a database-time deadline guarantee. Price/workflow snapshots, all other
+writers, existing negative stock and alternate isolation availability are outside scope.
+Finite model48inputs/current locked-read/atomic-edit semantics and nonvacuity
+coverage pass independent reasoning; three controls must each show both commits
+and SoldNeverExceedsTierTotal. Fixed capacity per input excludes concurrent-capacity proof.
+Final source-bound12case/full-suite receipts must qualify the final source.
+This agent review does not count as required independent GitHub approval.

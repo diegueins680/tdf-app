@@ -1,0 +1,10 @@
+{
+  "baselineRunner": "/private/tmp/tdf-account-recovery-main624-runtime-20261026/run.py",
+  "baselineSha256": "b3f3104b6b33af62498705aa80c25293f2d23c4db672128c7491eab184678a73",
+  "newRunnerSha256": "02b7779b4536e9fad73954976e7a868c7126f5cbd8e9c4bd44b203319db6c6c7",
+  "changes": "Only audited223registry guards: exact222protected2eprefix, exactf9full223manifest, header222andoriginalprovider223IDs, observedrowcount223. Allcompiledinput/binary/network/cleanup/14journeyguardsunchanged.",
+  "binarySource": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "binarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+  "smtpBrowserAndCByteExact": true,
+  "source": "Notyetexecuted; privatefuturecomposition only. Actualprotected596mergeanditsmaterialcorrespondence required before publication."
+}

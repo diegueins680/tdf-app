@@ -1,6 +1,7 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
 import { Alert, Button, Stack, Typography } from '@mui/material';
+import { reportClientError } from '../analytics/errorReporting';
 
 interface RouteErrorBoundaryProps {
   children: ReactNode;
@@ -10,10 +11,6 @@ interface RouteErrorBoundaryState {
   error: Error | null;
 }
 
-interface PostHogErrorReporter {
-  captureException: (error: Error, properties: Record<string, unknown>) => void;
-}
-
 export default class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBoundaryState> {
   override state: RouteErrorBoundaryState = { error: null };
 
@@ -21,24 +18,8 @@ export default class RouteErrorBoundary extends Component<RouteErrorBoundaryProp
     return { error };
   }
 
-  override componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('Route render failure', error, info.componentStack);
-
-    // Report to error tracking service
-    try {
-      // PostHog error capture (already integrated in the app)
-      const posthog = typeof window === 'undefined'
-        ? undefined
-        : (window as Window & { posthog?: PostHogErrorReporter }).posthog;
-      if (posthog) {
-        posthog.captureException(error, {
-          componentStack: info.componentStack,
-          url: window.location.href,
-        });
-      }
-    } catch {
-      // Silently fail — don't let error reporting crash the error handler
-    }
+  override componentDidCatch(error: Error, _info: ErrorInfo) {
+    reportClientError('app_render', error, { boundary: 'route' });
   }
 
   private handleRetry = () => {

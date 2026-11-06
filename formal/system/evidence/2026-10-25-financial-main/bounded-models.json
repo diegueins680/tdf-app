@@ -1,0 +1,3533 @@
+{
+  "executionStartSource": "2a4469dd175868a1c2cfaf01ab86ab74787b525d",
+  "unchangedModelSource": "f9ee2199273471a12cfb95da95bc5503fe51ac79",
+  "candidateSource": "b71ac3fad0fc86195ceea87c09c45b16847875f8",
+  "positiveTLCConfigurations": 120,
+  "negativeTLCControls": 353,
+  "alloy": [
+    {
+      "kind": "scenario",
+      "model": "EventStructure.als",
+      "command": "EventOperationsScenario",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "ExactlyOneAccountable",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "RequiredResponsibleIsPresent",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "DependenciesAreAcyclic",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "ConfirmedContractUsesOneAcceptedVersion",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "ExclusiveConflictHasAuthorizedOverride",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "InvitationCannotExpandScopes",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "RestrictedReadRequiresEventRelationship",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "assertion",
+      "model": "EventStructure.als",
+      "command": "RaciAssignmentsAreNotOrphaned",
+      "expected": "UNSAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "accountable",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "responsible",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "cycle",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "consent",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "exclusive",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "scope-expansion",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "private-read",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "negative",
+      "model": "EventStructure.als",
+      "command": "orphan-raci",
+      "expected": "SAT",
+      "modelSha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2"
+    },
+    {
+      "kind": "scenario",
+      "model": "TaskReadStructure.als",
+      "command": "leastPrivilegeScenario",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "assertion",
+      "model": "TaskReadStructure.als",
+      "command": "TargetIsEventLocal",
+      "expected": "UNSAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "assertion",
+      "model": "TaskReadStructure.als",
+      "command": "ExactGrantDoesNotWiden",
+      "expected": "UNSAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "assertion",
+      "model": "TaskReadStructure.als",
+      "command": "NoAmbientAuthority",
+      "expected": "UNSAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "assertion",
+      "model": "TaskReadStructure.als",
+      "command": "CandidateRequiresCurrentManager",
+      "expected": "UNSAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "assertion",
+      "model": "TaskReadStructure.als",
+      "command": "CandidateIsTaskScoped",
+      "expected": "UNSAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "negative",
+      "model": "TaskReadStructure.als",
+      "command": "cross-event",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "negative",
+      "model": "TaskReadStructure.als",
+      "command": "widen-task",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "negative",
+      "model": "TaskReadStructure.als",
+      "command": "revoked",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "negative",
+      "model": "TaskReadStructure.als",
+      "command": "foreign-actor",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "negative",
+      "model": "TaskReadStructure.als",
+      "command": "wrong-scope",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "negative",
+      "model": "TaskReadStructure.als",
+      "command": "non-manager",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    },
+    {
+      "kind": "negative",
+      "model": "TaskReadStructure.als",
+      "command": "foreign-candidate",
+      "expected": "SAT",
+      "modelSha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216"
+    }
+  ],
+  "tlc": [
+    {
+      "kind": "positive",
+      "module": "NativeLanding.tla",
+      "config": "NativeLanding.cfg",
+      "moduleSha256": "40f532a756d6b17f8271d07e60cdf9c7b587c897abb39183a68580676219f3d1",
+      "configSha256": "ff159f8ac5b1117e60cc762a4fd5827fc1a0c342a391c02c25b26c3c6b1a238d"
+    },
+    {
+      "kind": "positive",
+      "module": "NativeArtistFollow.tla",
+      "config": "NativeArtistFollow.cfg",
+      "moduleSha256": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
+      "configSha256": "dfef4ecafcf1daf1a0811e78feebd12644ca0d8561fe81c385380611b0af5c09"
+    },
+    {
+      "kind": "positive",
+      "module": "ExperimentAuthority.tla",
+      "config": "ExperimentAuthority.cfg",
+      "moduleSha256": "f3ebab49c6de75d267750eb2f14e8e8a92a56f6b73a865b3ce594b917b3f57dc",
+      "configSha256": "174915722db3cc6258512212b3378a5a8545157dc94c0c2bdf62ac4794a32917"
+    },
+    {
+      "kind": "positive",
+      "module": "ExperimentAuthority.tla",
+      "config": "ExperimentAuthorityPaused.cfg",
+      "moduleSha256": "f3ebab49c6de75d267750eb2f14e8e8a92a56f6b73a865b3ce594b917b3f57dc",
+      "configSha256": "3ca2bbda86ff7e517a2f8220b7548dfc72ff7249c7492fc9ae12d575343bf88a"
+    },
+    {
+      "kind": "positive",
+      "module": "EventLifecycle.tla",
+      "config": "EventLifecycle.cfg",
+      "moduleSha256": "3e0ab07bfab125e5039d1bbd753c876e6195819caf51c19cc24724aa054947d7",
+      "configSha256": "acc8eb27d52d4565654f77be0fbd9eb144fa5843e2aa11f98a8ad01b76be1159"
+    },
+    {
+      "kind": "positive",
+      "module": "EventLifecycle.tla",
+      "config": "EventLifecycleBoundaries.cfg",
+      "moduleSha256": "3e0ab07bfab125e5039d1bbd753c876e6195819caf51c19cc24724aa054947d7",
+      "configSha256": "8826b7ee00906afe87d63e77b049827d2968985aa5f1fb4112b39e745df1cb44"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationsCommandFence.tla",
+      "config": "OperationsCommandFence.cfg",
+      "moduleSha256": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
+      "configSha256": "d55b9c5138ba28c19a9b4e2e6c136aad000ceec2fda633754a38deef33588ac1"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsCommandFence.tla",
+      "config": "OperationsCommandFenceAllowStale.cfg",
+      "moduleSha256": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
+      "configSha256": "3ddc78d79f4d727258dba948c65d99929fd00e3a24496020e5e35d6332a9e680"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsCommandFence.tla",
+      "config": "OperationsCommandFenceAllowRevoked.cfg",
+      "moduleSha256": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
+      "configSha256": "358308f4a69eaf3ed95e27a4163e5b193a43412f0254aaa5b004ca5cf10953b7"
+    },
+    {
+      "kind": "positive",
+      "module": "WhatsAppRedelivery.tla",
+      "config": "WhatsAppRedelivery.cfg",
+      "moduleSha256": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+      "configSha256": "9db8bd7a24495d762b38f20a92bdb551c9b6129b5ce8928ed678b7dc8ff1c0cb"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppRedelivery.tla",
+      "config": "WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+      "moduleSha256": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+      "configSha256": "68c1aece036e6d1b5eb2af04a7fa597f8a4fc976781a29efb6ed0522a28bf789"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppRedelivery.tla",
+      "config": "WhatsAppRedeliveryDuplicateStore.cfg",
+      "moduleSha256": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+      "configSha256": "e83c566e96cd54c2515ee5e19d39d88d12eba827090cb8798b5c806956c6456f"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppRedelivery.tla",
+      "config": "WhatsAppRedeliveryEffectAfterStore.cfg",
+      "moduleSha256": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+      "configSha256": "d6b0afaa05315513388cd6e299e1e88ee8c9f2b85e9523dfac056c0e85f889c7"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppRedelivery.tla",
+      "config": "WhatsAppRedeliveryEveryDeliveryReplies.cfg",
+      "moduleSha256": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+      "configSha256": "898af974ec689664240af4da2d5b54a0a9a7c415ab751d1c78e0131c6b210423"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsCommandFence.tla",
+      "config": "OperationsCommandFenceLeakEffect.cfg",
+      "moduleSha256": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
+      "configSha256": "0a3854f8a7205b1be0d065c72eef9dff67a123628a51ada70109377fe869962e"
+    },
+    {
+      "kind": "positive",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrant.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "04d65f603d31f2a3ea6db6303ad2210452894b2629e4b1fc01a808dc6a393c17"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrantSelfApproval.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "443e87952adacf3c30c6adeb01fb17c57d62e77b48bbf71fc140f1088a345aab"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrantNonAdmin.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "a8163ae24167a2fe00adcaffeb2e03dd8bc76358449e6bea908e4ae3114397e8"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrantExpired.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "cf8f6142f0a630e51f80e22f67273369c2b561718c906846fd1979a8c5560f5b"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrantRebind.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "bc209ff661f1afc357a7eb5be88ce641b0a5153051ca30d6b0f3cf3b96929957"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrantRevokedLink.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "1b4719ff202d40627b6988bac812335dedcb70dfa9ab279644b8e52c006b8bbc"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrantReactivate.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "5662cd2dcabfb00eeadfe18fa9c509406ded9ac88d33e7a624f37ae1e7031d05"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessGrant.tla",
+      "config": "AccessGrantAdminInvite.cfg",
+      "moduleSha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "configSha256": "46c90de738c4270344fd79a72c6d0dabce9d2c86b37fe342005642c368ad07b5"
+    },
+    {
+      "kind": "positive",
+      "module": "LedgerNamespace.tla",
+      "config": "LedgerNamespace.cfg",
+      "moduleSha256": "f7b26caebed0f85a3eeaef4a0510d132456528998126515f1584651195371a65",
+      "configSha256": "db079045822f049d73f5ea7bb407b34dd639901336ea1a87edeedd9e188afe5e"
+    },
+    {
+      "kind": "negative",
+      "module": "LedgerNamespace.tla",
+      "config": "LedgerNamespacePosting.cfg",
+      "moduleSha256": "f7b26caebed0f85a3eeaef4a0510d132456528998126515f1584651195371a65",
+      "configSha256": "3dee59d1b2c19a6324aa348d588c9ad68acde0f8ba623b5b848ef4f891ffd970"
+    },
+    {
+      "kind": "negative",
+      "module": "LedgerNamespace.tla",
+      "config": "LedgerNamespaceEntry.cfg",
+      "moduleSha256": "f7b26caebed0f85a3eeaef4a0510d132456528998126515f1584651195371a65",
+      "configSha256": "4d69b721765f152a3431545e8f55df94d132247b607ca0d5fb1bb8a0545485ec"
+    },
+    {
+      "kind": "positive",
+      "module": "MigrationLedger.tla",
+      "config": "MigrationLedger.cfg",
+      "moduleSha256": "0e981a312edb48d9359c3637e174a77c301aab66b2e7ff966c025d66b0d8e1d2",
+      "configSha256": "0f757c07e56c045be149f4b14e41ad0ea03b04f550078df4c4ed3014cfc5312c"
+    },
+    {
+      "kind": "negative",
+      "module": "MigrationLedger.tla",
+      "config": "MigrationLedgerRecordAfterCommit.cfg",
+      "moduleSha256": "0e981a312edb48d9359c3637e174a77c301aab66b2e7ff966c025d66b0d8e1d2",
+      "configSha256": "1df67107dc4f8d5061101506c7fa85b691cd7a838036030f862c872fce0fecb9"
+    },
+    {
+      "kind": "negative",
+      "module": "MigrationLedger.tla",
+      "config": "MigrationLedgerBatchUnchecked.cfg",
+      "moduleSha256": "0e981a312edb48d9359c3637e174a77c301aab66b2e7ff966c025d66b0d8e1d2",
+      "configSha256": "abe5ed5ea3e04133aed1a588f93db73bf13561e46734c626f341e04b4efd32ec"
+    },
+    {
+      "kind": "negative",
+      "module": "MigrationLedger.tla",
+      "config": "MigrationLedgerPrepareUnchecked.cfg",
+      "moduleSha256": "0e981a312edb48d9359c3637e174a77c301aab66b2e7ff966c025d66b0d8e1d2",
+      "configSha256": "d58398e2d189544d7ebe65580e7c5cd4eac0740210f30744f530b289cfc5dc92"
+    },
+    {
+      "kind": "negative",
+      "module": "MigrationLedger.tla",
+      "config": "MigrationLedgerUnknownAccepted.cfg",
+      "moduleSha256": "0e981a312edb48d9359c3637e174a77c301aab66b2e7ff966c025d66b0d8e1d2",
+      "configSha256": "26bcdcdb9ebd45f83e9f5990221ebf2e2c56b74e4bb81bdaca67b33161c6dee7"
+    },
+    {
+      "kind": "positive",
+      "module": "StartupGates.tla",
+      "config": "StartupGates.cfg",
+      "moduleSha256": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
+      "configSha256": "e3f5eda4b6a1011d4c1833e16c3c3a9c3bc7417cd919b5bd27daf0a1b761c569"
+    },
+    {
+      "kind": "negative",
+      "module": "StartupGates.tla",
+      "config": "StartupGatesStagedAccepted.cfg",
+      "moduleSha256": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
+      "configSha256": "1328c90cee0acd0a6097ebbae6048ba63d76a184d148f7e647b42dacad72f83c"
+    },
+    {
+      "kind": "negative",
+      "module": "StartupGates.tla",
+      "config": "StartupGatesMissingAccepted.cfg",
+      "moduleSha256": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
+      "configSha256": "b27c55fa854977daf2534febd1f16aefb44fee9c16048a27c31b4b0bcf3c9d3f"
+    },
+    {
+      "kind": "negative",
+      "module": "StartupGates.tla",
+      "config": "StartupGatesEitherRejected.cfg",
+      "moduleSha256": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
+      "configSha256": "e5e1a9fc40d148fda964643f67d80228047b81b8dc9bb8e6da764d44287fc973"
+    },
+    {
+      "kind": "negative",
+      "module": "StartupGates.tla",
+      "config": "StartupGatesRequiredUnchecked.cfg",
+      "moduleSha256": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
+      "configSha256": "fe98e3e81f68e2cb507b9729aea5a45e8f3f080a5a7736470a22f2ce7a72eca5"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationsReadPolicy.tla",
+      "config": "OperationsReadPolicy.cfg",
+      "moduleSha256": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+      "configSha256": "e4db4d0d5e2a202e6a65c8a42e75efefa82b9f4b63d4141ce31999bea18ac37b"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsReadPolicy.tla",
+      "config": "OperationsReadPolicyWildcardSecurity.cfg",
+      "moduleSha256": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+      "configSha256": "77f56d3aa525aee811452b2a181fafbf004e7f6e45fdc31ff6f32b728ae65b53"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsReadPolicy.tla",
+      "config": "OperationsReadPolicySqlDrift.cfg",
+      "moduleSha256": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+      "configSha256": "595482014bcd0a3234b09e9e809c5dbc79f030c91c65948919bc61645cbdd6b6"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsReadPolicy.tla",
+      "config": "OperationsReadPolicyUnassigned.cfg",
+      "moduleSha256": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+      "configSha256": "170e0d4f47384ec6dc87249f4f6bb13eeece488ae453f39b627c43ca24058936"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsReadPolicy.tla",
+      "config": "OperationsReadPolicyReadOnlyWrites.cfg",
+      "moduleSha256": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+      "configSha256": "02b137a15796a74fd1be6fa43768d9d6c576cfca9a1608f94b1e9ae86656c5c8"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsReadPolicy.tla",
+      "config": "OperationsReadPolicyUnknownGrant.cfg",
+      "moduleSha256": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+      "configSha256": "81146d27606a6a5b62d7429ff0e54e63a698e5f979f52bb468fd90c49ea152e9"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationsWorkerTick.tla",
+      "config": "OperationsWorkerTick.cfg",
+      "moduleSha256": "c1f0d0b89dedfaff412c01b0097720addf1456fd3c6c928f13d8749c2b7b2423",
+      "configSha256": "9caf89b45ad803fe103f300e00436901f681e190b8f97fcdff88b4792998c9b1"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsWorkerTick.tla",
+      "config": "OperationsWorkerTickDeferredCheck.cfg",
+      "moduleSha256": "c1f0d0b89dedfaff412c01b0097720addf1456fd3c6c928f13d8749c2b7b2423",
+      "configSha256": "2625c9d9d1041b567a94662529b3d50d018763fdb20b36b54a5ff74f260892ca"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsWorkerTick.tla",
+      "config": "OperationsWorkerTickNoAttempt.cfg",
+      "moduleSha256": "c1f0d0b89dedfaff412c01b0097720addf1456fd3c6c928f13d8749c2b7b2423",
+      "configSha256": "e7621f5063764bbf75ce10d625e8bd52d3aef82b69ea1afd9b7435d79778084e"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsWorkerTick.tla",
+      "config": "OperationsWorkerTickUnboundedRetry.cfg",
+      "moduleSha256": "c1f0d0b89dedfaff412c01b0097720addf1456fd3c6c928f13d8749c2b7b2423",
+      "configSha256": "5989bf03823d4c58fa8b6fc97963f1f6bc6bf17bb7e3a3d09cb9d5691a2987ed"
+    },
+    {
+      "kind": "positive",
+      "module": "InvoiceReceipt.tla",
+      "config": "InvoiceReceipt.cfg",
+      "moduleSha256": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+      "configSha256": "0f23f3161a4e317ca1c73cb313dc3bacf61eda8326580a378db7a27d1d53aa9f"
+    },
+    {
+      "kind": "positive",
+      "module": "ApplicationCanary.tla",
+      "config": "ApplicationCanary.cfg",
+      "moduleSha256": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
+      "configSha256": "58e2f0b12d433c32d4c8c483cd3526ba9f2edbc04003d7991b69717dfaca1986"
+    },
+    {
+      "kind": "negative",
+      "module": "ApplicationCanary.tla",
+      "config": "ApplicationCanaryNetwork.cfg",
+      "moduleSha256": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
+      "configSha256": "2d5e74a5306a8843324f107fce7f8d544e5317387692d0673041224401cd373d"
+    },
+    {
+      "kind": "negative",
+      "module": "ApplicationCanary.tla",
+      "config": "ApplicationCanaryCleanup.cfg",
+      "moduleSha256": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
+      "configSha256": "dee7cfc258b02c3352db23e409256df51c463fcffa5567a5ba72522c31334650"
+    },
+    {
+      "kind": "negative",
+      "module": "ApplicationCanary.tla",
+      "config": "ApplicationCanaryFalseGreen.cfg",
+      "moduleSha256": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
+      "configSha256": "d4302711fb2f0d614815ccc4c4f245f85a84202cc160b49218a9809f815020f3"
+    },
+    {
+      "kind": "positive",
+      "module": "ReleaseJournal.tla",
+      "config": "ReleaseJournal.cfg",
+      "moduleSha256": "410051abec97d69e67108e5fa38e134f876b6db2e3725bf6eafb58011bfc1f87",
+      "configSha256": "927cd0866fae6f02f74a1dab5334b6cfe311b89ce56d9d665ab610ed55d8ea3f"
+    },
+    {
+      "kind": "negative",
+      "module": "ReleaseJournal.tla",
+      "config": "ReleaseJournalNoIntent.cfg",
+      "moduleSha256": "410051abec97d69e67108e5fa38e134f876b6db2e3725bf6eafb58011bfc1f87",
+      "configSha256": "144b75a0e86827f26227eff588d81733cd0ad4fdb815b805954a07807b85646b"
+    },
+    {
+      "kind": "negative",
+      "module": "ReleaseJournal.tla",
+      "config": "ReleaseJournalNewNonce.cfg",
+      "moduleSha256": "410051abec97d69e67108e5fa38e134f876b6db2e3725bf6eafb58011bfc1f87",
+      "configSha256": "b257d1d115ba36d72a5ff06cbfd5d44e5fb66056d5f17bcb902d3e66b2a771d1"
+    },
+    {
+      "kind": "negative",
+      "module": "ReleaseJournal.tla",
+      "config": "ReleaseJournalWrongObservation.cfg",
+      "moduleSha256": "410051abec97d69e67108e5fa38e134f876b6db2e3725bf6eafb58011bfc1f87",
+      "configSha256": "8c4354d72c48d62a3ba9c39eaf3abe5508ebc947d55b39f5aa5b57d65067c99f"
+    },
+    {
+      "kind": "positive",
+      "module": "LogicalBackup.tla",
+      "config": "LogicalBackup.cfg",
+      "moduleSha256": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
+      "configSha256": "1a53b72214e54e3ebd7a6003690f01da66ff49882cd3e8c42e7f11703ad38a7b"
+    },
+    {
+      "kind": "negative",
+      "module": "LogicalBackup.tla",
+      "config": "LogicalBackupLostParent.cfg",
+      "moduleSha256": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
+      "configSha256": "40f50103cd7267bf3e4a63f734eab0ec6957b611235d076925fff9ff8abd8826"
+    },
+    {
+      "kind": "negative",
+      "module": "LogicalBackup.tla",
+      "config": "LogicalBackupFailedWork.cfg",
+      "moduleSha256": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
+      "configSha256": "d3f6ce5e17bd966ff5ecf3ea5b65e107f95df033e677a67cb14c64a7803cbbda"
+    },
+    {
+      "kind": "negative",
+      "module": "LogicalBackup.tla",
+      "config": "LogicalBackupChangedSource.cfg",
+      "moduleSha256": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
+      "configSha256": "12645d3bebf25ddd50c850f8f50f46504b78fde0e4a2aef3263fb0c976ffd1a9"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceReceipt.tla",
+      "config": "InvoiceReceiptIgnoreInvoiceLock.cfg",
+      "moduleSha256": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+      "configSha256": "fc5a530879a20f7030b8af29fba92a74974fc3be33295f3ad62a647586997f37"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceReceipt.tla",
+      "config": "InvoiceReceiptStaleCounter.cfg",
+      "moduleSha256": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+      "configSha256": "43f890ca9776657cc95d64e615628e531999039bd2d4eec964280665e7491e72"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceReceipt.tla",
+      "config": "InvoiceReceiptIgnoreReplayBinding.cfg",
+      "moduleSha256": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+      "configSha256": "51b719439c3047f8a9d60181bf55bb318305763233bb08e471c14039a71ec4cf"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceReceipt.tla",
+      "config": "InvoiceReceiptIgnoreAuthorization.cfg",
+      "moduleSha256": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+      "configSha256": "b049bff21c202adcc7e9238cb8bb5cf47b917669b13fa06247e78b8ead47be4f"
+    },
+    {
+      "kind": "positive",
+      "module": "NotificationLease.tla",
+      "config": "NotificationLease.cfg",
+      "moduleSha256": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
+      "configSha256": "bf403b13a59aca11c744ebb7a494090355944136798798f5fa24b978cb77f5dc"
+    },
+    {
+      "kind": "negative",
+      "module": "NotificationLease.tla",
+      "config": "NotificationLeaseStaleClock.cfg",
+      "moduleSha256": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
+      "configSha256": "088e0bd02f7744b2e2361b314ae20cd211057628a20338c3b8e1d63026f33d3f"
+    },
+    {
+      "kind": "negative",
+      "module": "NotificationLease.tla",
+      "config": "NotificationLeaseForeign.cfg",
+      "moduleSha256": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
+      "configSha256": "f59de8bd03cce4af8664e73925c0ed7ea9be7f10a69d7f5f67aa2f87239110e9"
+    },
+    {
+      "kind": "negative",
+      "module": "NotificationLease.tla",
+      "config": "NotificationLeaseClaimClock.cfg",
+      "moduleSha256": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
+      "configSha256": "5e784c366aff4f79fa7d8dcb617eb33dc7d1f95b0f76d1f304881b02bb946109"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationsManualReceipt.tla",
+      "config": "OperationsManualReceipt.cfg",
+      "moduleSha256": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
+      "configSha256": "820d12fd1b64ee18fa993985770f6335be573af0780a6ba01ef02d360029350c"
+    },
+    {
+      "kind": "positive",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransfer.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "2a2123006efe1bafa296326d6e21e9a188d6606c6798cf7cd63a7b25e995bfaa"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferSharedReviewer.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "d51f4b99ff25f8ece76809ad892bf80b359cab852e45ed042d57ef924f11c526"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferOutsider.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "470fb0090ce08d410c7641a04eb710a49fa9a7522687427a25ad796f873a85c0"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferExpired.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "4fa0bdf12b323216307b18db6fe413419bfd94d123c06c20d5e1e7e2ec86d35b"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferUnbounded.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "4497a77c542f18aa12b6a41101a02fad477675cff3fd6c990d7a130427786baf"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferSecondRail.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "762988bdfa80e3d295ae6d47459130fa3cef171ec42c999b8bbb58a2631ec348"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferReplay.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "1b20311cd381ee60da30f5cf502f6c719f5c567fbf1a9946ac3254438d4f3987"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferReopen.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "f9b82ac97704d11df6cf562d5839b598a95c4bd86a030be03eb2f5d7eb6c766e"
+    },
+    {
+      "kind": "negative",
+      "module": "ManualBankTransfer.tla",
+      "config": "ManualBankTransferSplitIssuance.cfg",
+      "moduleSha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "configSha256": "aa1c53fabac69ff7c060beb32088634e66ef71cee6068679d99cbf2c9e81324b"
+    },
+    {
+      "kind": "positive",
+      "module": "TaxDocumentSubmission.tla",
+      "config": "TaxDocumentSubmission.cfg",
+      "moduleSha256": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+      "configSha256": "90948dc98ed7fcdf59b8197a42b8821d70faa31d7efe921a8a056f5b69c516c2"
+    },
+    {
+      "kind": "negative",
+      "module": "TaxDocumentSubmission.tla",
+      "config": "TaxDocumentSubmissionSkipStart.cfg",
+      "moduleSha256": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+      "configSha256": "800600ee6c07703d9cf5f5080b98e4b1d130da5ae50cbcabd8ecae1fd94855ac"
+    },
+    {
+      "kind": "negative",
+      "module": "TaxDocumentSubmission.tla",
+      "config": "TaxDocumentSubmissionUnguardedStart.cfg",
+      "moduleSha256": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+      "configSha256": "55bb957975b7464ec80f104e7ab447a23363c6771add7e1cf6904832f60ebe5e"
+    },
+    {
+      "kind": "negative",
+      "module": "TaxDocumentSubmission.tla",
+      "config": "TaxDocumentSubmissionLostAsRejected.cfg",
+      "moduleSha256": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+      "configSha256": "0d319e281d9fb06af6c7fa9ad37015a99df7e5c85cb5608209c002a545152136"
+    },
+    {
+      "kind": "negative",
+      "module": "TaxDocumentSubmission.tla",
+      "config": "TaxDocumentSubmissionRetryUncertain.cfg",
+      "moduleSha256": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+      "configSha256": "daf30c9ec55b3903a912d3367705863207297955a58d862f25edb4e7664070ad"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsManualReceipt.tla",
+      "config": "OperationsManualReceiptReuseSourceKey.cfg",
+      "moduleSha256": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
+      "configSha256": "699be1c569e31129446722ec50a92e39062ed29863d76db0246522271c778cc7"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsManualReceipt.tla",
+      "config": "OperationsManualReceiptUnboundReplay.cfg",
+      "moduleSha256": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
+      "configSha256": "456846d1b15b1fb0afe0e120f21fad3a02cd04ef72b7dc3411dc5fd379f964aa"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsManualReceipt.tla",
+      "config": "OperationsManualReceiptPartialCommit.cfg",
+      "moduleSha256": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
+      "configSha256": "0b91b46b09d2da43e4606ad70918ecef5f46e88563576ef987aedbf6f0849129"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationsApproval.tla",
+      "config": "OperationsApproval.cfg",
+      "moduleSha256": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+      "configSha256": "8d8d0648aaec5ac8b2c0f736ac978d06d13aff851dbefb48be68a8a1db3ff57d"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsApproval.tla",
+      "config": "OperationsApprovalUnboundReplay.cfg",
+      "moduleSha256": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+      "configSha256": "d3b1bf84b600586e526af81adbb4403ae839e7c03cda6cbfd07fefa480526659"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsApproval.tla",
+      "config": "OperationsApprovalDuplicateAudit.cfg",
+      "moduleSha256": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+      "configSha256": "b0b266939b10c98392fb73ff6823e76607f9133b9d4a4d8187032385435dabc8"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsApproval.tla",
+      "config": "OperationsApprovalReopen.cfg",
+      "moduleSha256": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+      "configSha256": "81da769be6fb8fb3dafb818c5c708431df18750002874412e8c823af99182a69"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsApproval.tla",
+      "config": "OperationsApprovalIgnoreExpiry.cfg",
+      "moduleSha256": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+      "configSha256": "eaf96eac0c8fa0e58cc0911b0c10e3655b2a4f234c6ca179091549725aa4dad9"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsApproval.tla",
+      "config": "OperationsApprovalSelfApprove.cfg",
+      "moduleSha256": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+      "configSha256": "3606a12806a291b1ae85c7405702713f4f62a95ea41ad7f57a285985e95e7ecf"
+    },
+    {
+      "kind": "positive",
+      "module": "AccountDeletionOperator.tla",
+      "config": "AccountDeletionOperator.cfg",
+      "moduleSha256": "3d9906c8ad39be476c4a91b360d6fe31a7abe598e18466fea16d14934632d6e7",
+      "configSha256": "99cd30c1adbb18bbfe816436629af126b771a8db0547d4cd5b4d9cc82c372215"
+    },
+    {
+      "kind": "positive",
+      "module": "AccountDeletionAuthority.tla",
+      "config": "AccountDeletionAuthority.cfg",
+      "moduleSha256": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
+      "configSha256": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionAuthority.tla",
+      "config": "AccountDeletionAuthorityStale.cfg",
+      "moduleSha256": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
+      "configSha256": "c6b8a18baf61e628545983beeca81dc434d65e16095c23ce6275edf1311d3161"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionAuthority.tla",
+      "config": "AccountDeletionAuthorityNoSessionLock.cfg",
+      "moduleSha256": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
+      "configSha256": "9ffa7bfe70a0ab31e818013caee13450114df13e9a504769e4885b9aa6d59698"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionAuthority.tla",
+      "config": "AccountDeletionAuthorityNoGrantLock.cfg",
+      "moduleSha256": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
+      "configSha256": "20756b6a3bdc85fb904bc8c81a6e0a7c8bcb2c38e06f7bc17c7f52dca93fc8e4"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionOperator.tla",
+      "config": "AccountDeletionOperatorRoleOnly.cfg",
+      "moduleSha256": "3d9906c8ad39be476c4a91b360d6fe31a7abe598e18466fea16d14934632d6e7",
+      "configSha256": "4e23f0abecc00bee64ce49bab3b529314041cf087766ca7aa8bcc4172b306e7e"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionOperator.tla",
+      "config": "AccountDeletionOperatorModuleOnly.cfg",
+      "moduleSha256": "3d9906c8ad39be476c4a91b360d6fe31a7abe598e18466fea16d14934632d6e7",
+      "configSha256": "ef3187d5ca6caa1ee13bf6363fb28f4b7387ba611d470c6bf8b49b18fa315c06"
+    },
+    {
+      "kind": "positive",
+      "module": "AccountDeletionIntake.tla",
+      "config": "AccountDeletionIntake.cfg",
+      "moduleSha256": "f2525e6c22ab4530ab33367fd17c2fc62ff24ebd5f5957abc5005f859c33eea8",
+      "configSha256": "05217a45c108319eb9594bc15d1a70e6e20ff3b3cc3e72a1105dc3ec22279294"
+    },
+    {
+      "kind": "positive",
+      "module": "AccountDeletionResolution.tla",
+      "config": "AccountDeletionResolution.cfg",
+      "moduleSha256": "8796ed24b3e872a7eca305f2e962f1c226965a489847f55038c9c849b9054fa1",
+      "configSha256": "1db4f2bab187d1b59ffae4b5595064904110e18344926b03a7a8c65f870a8b80"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionResolution.tla",
+      "config": "AccountDeletionResolutionNoOwnerLock.cfg",
+      "moduleSha256": "8796ed24b3e872a7eca305f2e962f1c226965a489847f55038c9c849b9054fa1",
+      "configSha256": "330e3713093f7c592335b71c217ad048f7ddb6a00df471f5f8690fb6d4825982"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionIntake.tla",
+      "config": "AccountDeletionIntakeNoOwnerLock.cfg",
+      "moduleSha256": "f2525e6c22ab4530ab33367fd17c2fc62ff24ebd5f5957abc5005f859c33eea8",
+      "configSha256": "5497ef8adbb266d1efa5e70a038d1155199125722a1df85aec17398084dbaa20"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionIntake.tla",
+      "config": "AccountDeletionIntakeReplayNotification.cfg",
+      "moduleSha256": "f2525e6c22ab4530ab33367fd17c2fc62ff24ebd5f5957abc5005f859c33eea8",
+      "configSha256": "dffc751ceaaa5be8d4f4fd359b51997d3e120a291f0b2da542d979bb42291b38"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionIntake.tla",
+      "config": "AccountDeletionIntakeGeneralAudience.cfg",
+      "moduleSha256": "f2525e6c22ab4530ab33367fd17c2fc62ff24ebd5f5957abc5005f859c33eea8",
+      "configSha256": "4031ae0a1e98fb7b6dfb4854f2e5c5b9c382be56ac1d796cfd95f3b2c8e36689"
+    },
+    {
+      "kind": "negative",
+      "module": "AccountDeletionIntake.tla",
+      "config": "AccountDeletionIntakeInvalidLegacy.cfg",
+      "moduleSha256": "f2525e6c22ab4530ab33367fd17c2fc62ff24ebd5f5957abc5005f859c33eea8",
+      "configSha256": "fe6bc325b6cc089743e2cd9782ff95c9b7d4248b4e26ee8dabb732ade77c380c"
+    },
+    {
+      "kind": "positive",
+      "module": "PrivacyDeletionWorkflow.tla",
+      "config": "PrivacyDeletionWorkflow.cfg",
+      "moduleSha256": "c0b5f2c3352e39d1f9b4f8ece2af8b609ff074f2b815b40f57485ebb4282f477",
+      "configSha256": "47e037d51fd62b11959215406921ca96076f10769e632b44da16b6d827e69bd2"
+    },
+    {
+      "kind": "negative",
+      "module": "PrivacyDeletionWorkflow.tla",
+      "config": "PrivacyDeletionEarlyClose.cfg",
+      "moduleSha256": "c0b5f2c3352e39d1f9b4f8ece2af8b609ff074f2b815b40f57485ebb4282f477",
+      "configSha256": "8fb72b8464abd30ca327e759ed5dae00697ed015fb3727ce8fb69b5b66b6737f"
+    },
+    {
+      "kind": "negative",
+      "module": "PrivacyDeletionWorkflow.tla",
+      "config": "PrivacyDeletionDeadlineReset.cfg",
+      "moduleSha256": "c0b5f2c3352e39d1f9b4f8ece2af8b609ff074f2b815b40f57485ebb4282f477",
+      "configSha256": "3d1c35871bcf7026093658312dc3ebc7c05e05f5627adb74370355f5155540ca"
+    },
+    {
+      "kind": "negative",
+      "module": "PrivacyDeletionWorkflow.tla",
+      "config": "PrivacyDeletionStaleWrite.cfg",
+      "moduleSha256": "c0b5f2c3352e39d1f9b4f8ece2af8b609ff074f2b815b40f57485ebb4282f477",
+      "configSha256": "fa6360c670f06ebd9614d13025852c0b82de811ee0b4d11c4cc1176c91c9e028"
+    },
+    {
+      "kind": "positive",
+      "module": "MetaRedelivery.tla",
+      "config": "MetaRedelivery.cfg",
+      "moduleSha256": "7002144788dc461497460daefb121e6df24d15cd958aff6fa7250cb000f007e3",
+      "configSha256": "cf591fb7addfe8447ece3c9ce41981e7d84a8db4efff75dd04c80cf99b8f1277"
+    },
+    {
+      "kind": "negative",
+      "module": "MetaRedelivery.tla",
+      "config": "MetaRedeliveryRepeatResetsReply.cfg",
+      "moduleSha256": "7002144788dc461497460daefb121e6df24d15cd958aff6fa7250cb000f007e3",
+      "configSha256": "f287a45782f040f7b03ca47d26f9e08a640cd18fd7465698ab9b90113331a865"
+    },
+    {
+      "kind": "negative",
+      "module": "MetaRedelivery.tla",
+      "config": "MetaRedeliveryRepeatRewritesText.cfg",
+      "moduleSha256": "7002144788dc461497460daefb121e6df24d15cd958aff6fa7250cb000f007e3",
+      "configSha256": "2aa32978ce8cf5bcf9131559d75f6f9512d2a8a7cafad20ae1d4ef5a5272cfad"
+    },
+    {
+      "kind": "negative",
+      "module": "MetaRedelivery.tla",
+      "config": "MetaRedeliveryRepeatMovesDeletion.cfg",
+      "moduleSha256": "7002144788dc461497460daefb121e6df24d15cd958aff6fa7250cb000f007e3",
+      "configSha256": "4d82b02dd6d3e28d462cecea8ded5df695474aced641ceec87b3eabb63e86ded"
+    },
+    {
+      "kind": "positive",
+      "module": "SessionCacheIsolation.tla",
+      "config": "SessionCacheIsolation.cfg",
+      "moduleSha256": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
+      "configSha256": "5f56615b039996337098e8887f3e64b1c90450f662e09cb4ff938ec4585f137c"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionCacheIsolation.tla",
+      "config": "SessionCacheShared.cfg",
+      "moduleSha256": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
+      "configSha256": "f74933f9f108b2b6ea0bb01fa076ed267545aa013310ce5bcda56158a5616c0a"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionCacheIsolation.tla",
+      "config": "SessionCacheActorReuse.cfg",
+      "moduleSha256": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
+      "configSha256": "a67bf510dafa80fe3c2ceb050c346c4c178e3806992c90b645c215eb38d4a3f8"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionCacheIsolation.tla",
+      "config": "SessionCacheStaleExpiry.cfg",
+      "moduleSha256": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
+      "configSha256": "a983ce3cc1d979a0cbde0d00531016bdf68c29efd49dc735cc62301212be82f1"
+    },
+    {
+      "kind": "positive",
+      "module": "CatalogReorder.tla",
+      "config": "CatalogReorder.cfg",
+      "moduleSha256": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
+      "configSha256": "c73710004e4ef24190de4d7812bd2c8aa7e300d34e55490899f5085d26973f9c"
+    },
+    {
+      "kind": "negative",
+      "module": "CatalogReorder.tla",
+      "config": "CatalogReorderPartialRollback.cfg",
+      "moduleSha256": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
+      "configSha256": "08dc592485e9cc8e7804e8a97f97efa09aa56fae6b85accc4767ed54c8a6297a"
+    },
+    {
+      "kind": "negative",
+      "module": "CatalogReorder.tla",
+      "config": "CatalogReorderStaleRevision.cfg",
+      "moduleSha256": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
+      "configSha256": "dbbd9ace4b61b22c5c42903a6e6d780a3922f07ebb39cd53599740f75c72e952"
+    },
+    {
+      "kind": "negative",
+      "module": "CatalogReorder.tla",
+      "config": "CatalogReorderNoAuthorization.cfg",
+      "moduleSha256": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
+      "configSha256": "782c3d6b0d255671f3c133f5771fa0d3e157f45b6ba442846670d13ac4c8c502"
+    },
+    {
+      "kind": "negative",
+      "module": "CatalogReorder.tla",
+      "config": "CatalogReorderNoAudit.cfg",
+      "moduleSha256": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
+      "configSha256": "483b2b4d028370b2ddc9fb3dbe925681a5c69b24304215977873feea8152cbbd"
+    },
+    {
+      "kind": "positive",
+      "module": "StudioBookingProjection.tla",
+      "config": "StudioBookingProjection.cfg",
+      "moduleSha256": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
+      "configSha256": "2187640378692c888ac61e9931a94bdcaaf427c74e2f1320dda18e5062de29c3"
+    },
+    {
+      "kind": "negative",
+      "module": "StudioBookingProjection.tla",
+      "config": "StudioBookingProjectionStale.cfg",
+      "moduleSha256": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
+      "configSha256": "671635a752655449bbee1a328feebf0f0b35f2f6db71035bdff75b4cbc4f94d8"
+    },
+    {
+      "kind": "negative",
+      "module": "StudioBookingProjection.tla",
+      "config": "StudioBookingProjectionReactivation.cfg",
+      "moduleSha256": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
+      "configSha256": "114fdc184805e8640a26953a5ac580e8825dc06c117d713e7c0262bcd2d41199"
+    },
+    {
+      "kind": "negative",
+      "module": "StudioBookingProjection.tla",
+      "config": "StudioBookingProjectionOverlap.cfg",
+      "moduleSha256": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
+      "configSha256": "9b817e2ae5cd71ba5abe0fb0fb91ea352103a45fc113ccaed1f71064f8cbed51"
+    },
+    {
+      "kind": "positive",
+      "module": "StudioBookingScope.tla",
+      "config": "StudioBookingScope.cfg",
+      "moduleSha256": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+      "configSha256": "c21d7078fadbb40825ec587cc3b9866f01a341160d6e3df7d7ab147a92efeb91"
+    },
+    {
+      "kind": "negative",
+      "module": "StudioBookingScope.tla",
+      "config": "StudioBookingScopeModuleOnly.cfg",
+      "moduleSha256": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+      "configSha256": "7645f5eb33c5b7f05e55316bc891ce49c9beaa444870052d5b9755ee17bd7804"
+    },
+    {
+      "kind": "negative",
+      "module": "StudioBookingScope.tla",
+      "config": "StudioBookingScopeRequestedAssignment.cfg",
+      "moduleSha256": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+      "configSha256": "3f6f49cd23dc4ac663aca88fb81ca37af2b45e988ac0f0e85f8c9af6174a8f36"
+    },
+    {
+      "kind": "negative",
+      "module": "StudioBookingScope.tla",
+      "config": "StudioBookingScopeRevokedWrite.cfg",
+      "moduleSha256": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+      "configSha256": "c180e2855c73a40819ceb4c73e11248e75fd1e0667f1b47c9aa2fa548d31c579"
+    },
+    {
+      "kind": "positive",
+      "module": "RestoreIsolation.tla",
+      "config": "RestoreIsolation.cfg",
+      "moduleSha256": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
+      "configSha256": "6f9c62a5027891b6bf9aad2bc2f6befb7ddfb2b20a4b12f2fe748d4a402ff0e2"
+    },
+    {
+      "kind": "negative",
+      "module": "RestoreIsolation.tla",
+      "config": "RestoreIsolationNoLock.cfg",
+      "moduleSha256": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
+      "configSha256": "31837374a28551c5aa52ce6a5289a9eb3f588d2574cc7b36c9d4e027a3b4d678"
+    },
+    {
+      "kind": "negative",
+      "module": "RestoreIsolation.tla",
+      "config": "RestoreIsolationOrphanRetry.cfg",
+      "moduleSha256": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
+      "configSha256": "4e0b0c9f842bdf6d7ecdbe2c8f68ac3898446ec632c1cb15dd76383e26b87168"
+    },
+    {
+      "kind": "negative",
+      "module": "RestoreIsolation.tla",
+      "config": "RestoreIsolationSourceTarget.cfg",
+      "moduleSha256": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
+      "configSha256": "2855814fc67299069d73cf6430c98a2ed486c3ffd265676e315d3843fa90e1c5"
+    },
+    {
+      "kind": "negative",
+      "module": "RestoreIsolation.tla",
+      "config": "RestoreIsolationEarlyReceipt.cfg",
+      "moduleSha256": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
+      "configSha256": "8bd39dcd11c09edee26cc41af1fe0b7814876aab7ccd99bea5608dbbc1e7d6fd"
+    },
+    {
+      "kind": "negative",
+      "module": "RestoreIsolation.tla",
+      "config": "RestoreIsolationLateCreate.cfg",
+      "moduleSha256": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
+      "configSha256": "745bd1a96a3c843230937ed912c7512b684a3bd248a13a8f3af62a645617a1a7"
+    },
+    {
+      "kind": "positive",
+      "module": "RecoveryExpiry.tla",
+      "config": "RecoveryExpiry.cfg",
+      "moduleSha256": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
+      "configSha256": "ba5b42ee5538275771e23bc917e77fda7787a78c8e6f35e4e4a0326061b663f3"
+    },
+    {
+      "kind": "negative",
+      "module": "RecoveryExpiry.tla",
+      "config": "RecoveryExpiryNoExpiry.cfg",
+      "moduleSha256": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
+      "configSha256": "74ce3698b9cc61bc113feab95dbaf0af4e577d015a7032a8e660cb3a5614456c"
+    },
+    {
+      "kind": "negative",
+      "module": "RecoveryExpiry.tla",
+      "config": "RecoveryExpiryStaleClock.cfg",
+      "moduleSha256": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
+      "configSha256": "4da264aa9560def6dbb1e10a301a6af59c6b3973b77aa5300c9c8fdf1d030669"
+    },
+    {
+      "kind": "negative",
+      "module": "RecoveryExpiry.tla",
+      "config": "RecoveryExpiryLegacy.cfg",
+      "moduleSha256": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
+      "configSha256": "cffabd1c35615f4962b8d435f4acb7b2139e7956eb839c15c3df1416a79e246d"
+    },
+    {
+      "kind": "negative",
+      "module": "RecoveryExpiry.tla",
+      "config": "RecoveryExpiryRebound.cfg",
+      "moduleSha256": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
+      "configSha256": "e0de6a65fbc6008f1b14230ed6b413609414757a149d40084edc22e8e4107545"
+    },
+    {
+      "kind": "positive",
+      "module": "DirectoryClaimReview.tla",
+      "config": "DirectoryClaimReview.cfg",
+      "moduleSha256": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+      "configSha256": "59984f003c88bf5175061ec403fa705c2bc96a6bbc268bb6d0f4151cad152e1c"
+    },
+    {
+      "kind": "negative",
+      "module": "DirectoryClaimReview.tla",
+      "config": "DirectoryClaimReviewConcurrent.cfg",
+      "moduleSha256": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+      "configSha256": "114a281f586c96b9198c772549042e401e53f05b5d21281bef7d0fe5b76b9d84"
+    },
+    {
+      "kind": "negative",
+      "module": "DirectoryClaimReview.tla",
+      "config": "DirectoryClaimReviewModuleOnly.cfg",
+      "moduleSha256": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+      "configSha256": "114cb22b721a16f7cdff3b0211e17cad256ce7f0b35146543bbdf2edcd6526b3"
+    },
+    {
+      "kind": "negative",
+      "module": "DirectoryClaimReview.tla",
+      "config": "DirectoryClaimReviewSelfReview.cfg",
+      "moduleSha256": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+      "configSha256": "e115b7c1bc1d7bbc2a82c6a6e27ebb7af5da705c0a5388bd06d64be118c45dae"
+    },
+    {
+      "kind": "negative",
+      "module": "DirectoryClaimReview.tla",
+      "config": "DirectoryClaimReviewReplay.cfg",
+      "moduleSha256": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+      "configSha256": "907e3f7f219797d4c5634a40521f5ae621cb74febae56f6d92b954fe30b97469"
+    },
+    {
+      "kind": "positive",
+      "module": "SignupIdentity.tla",
+      "config": "SignupIdentity.cfg",
+      "moduleSha256": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+      "configSha256": "434eee41dbd5dbdb00b52dd0587032edde518331c23731fd4794ed64eb8796eb"
+    },
+    {
+      "kind": "negative",
+      "module": "SignupIdentity.tla",
+      "config": "SignupIdentityPublicClaim.cfg",
+      "moduleSha256": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+      "configSha256": "bee183d5c61e8e697398eb1e174d361cb2c09e2eea398ad97f4aac389032ad51"
+    },
+    {
+      "kind": "negative",
+      "module": "SignupIdentity.tla",
+      "config": "SignupIdentityUnreviewed.cfg",
+      "moduleSha256": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+      "configSha256": "853345968145c3debe1311a314c8cf51d38dc890fc364195a4dcc2e66130e445"
+    },
+    {
+      "kind": "negative",
+      "module": "SignupIdentity.tla",
+      "config": "SignupIdentityRebind.cfg",
+      "moduleSha256": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+      "configSha256": "58f4660f8f87a8f5ff80cf98ecf91d4a0bcaacd5af2829de2dc52f955c190100"
+    },
+    {
+      "kind": "positive",
+      "module": "CredentialLifecycle.tla",
+      "config": "CredentialLifecycle.cfg",
+      "moduleSha256": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
+      "configSha256": "720b3d476cc1e240f915f72c424ea2cf9497b548588371dacda71725ee3a75e7"
+    },
+    {
+      "kind": "positive",
+      "module": "ChatMutationBoundary.tla",
+      "config": "ChatMutationBoundary.cfg",
+      "moduleSha256": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
+      "configSha256": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa"
+    },
+    {
+      "kind": "positive",
+      "module": "ChatNotificationAuthorization.tla",
+      "config": "ChatNotificationAuthorization.cfg",
+      "moduleSha256": "0a2aa1411e180ce0ed79d3231802aa993e5d36eddb92aa096c27f6a69e9ef357",
+      "configSha256": "531bf5aadfb520cc739cda4bc9aa3bd24049e79f815f89a243fa70e457854472"
+    },
+    {
+      "kind": "negative",
+      "module": "ChatNotificationAuthorization.tla",
+      "config": "ChatNotificationCachedDisplay.cfg",
+      "moduleSha256": "0a2aa1411e180ce0ed79d3231802aa993e5d36eddb92aa096c27f6a69e9ef357",
+      "configSha256": "380587b17b7e7467336fc787c0098c5af0eef03478d7be521140da893cfab124"
+    },
+    {
+      "kind": "negative",
+      "module": "ChatNotificationAuthorization.tla",
+      "config": "ChatNotificationEarlyRead.cfg",
+      "moduleSha256": "0a2aa1411e180ce0ed79d3231802aa993e5d36eddb92aa096c27f6a69e9ef357",
+      "configSha256": "d92ba4819e648431e710898778da68eff9623d63903b052a8742747dcbd6a5b5"
+    },
+    {
+      "kind": "positive",
+      "module": "ChatNotificationNavigation.tla",
+      "config": "ChatNotificationNavigation.cfg",
+      "moduleSha256": "d667159c8630ef9cc8c8e5ec17c23cb6ed2d7d0b881771707436a8b538e80b47",
+      "configSha256": "93a799971db6c12c9f7fb6c73ce63dd447ce9287929a0566c11d20ad0590a8ff"
+    },
+    {
+      "kind": "negative",
+      "module": "ChatNotificationNavigation.tla",
+      "config": "ChatNotificationNavigationCached.cfg",
+      "moduleSha256": "d667159c8630ef9cc8c8e5ec17c23cb6ed2d7d0b881771707436a8b538e80b47",
+      "configSha256": "336dee0f59c5f09a3b0b2417b6daaf3608efabf4f2d4d233f97309b41599cae4"
+    },
+    {
+      "kind": "negative",
+      "module": "ChatNotificationNavigation.tla",
+      "config": "ChatNotificationNavigationEarlyRead.cfg",
+      "moduleSha256": "d667159c8630ef9cc8c8e5ec17c23cb6ed2d7d0b881771707436a8b538e80b47",
+      "configSha256": "cf46029b8a66bee925dd273674c467559121dcd9897e38feadfba9bed44bb460"
+    },
+    {
+      "kind": "negative",
+      "module": "ChatNotificationNavigation.tla",
+      "config": "ChatNotificationNavigationOldResponse.cfg",
+      "moduleSha256": "d667159c8630ef9cc8c8e5ec17c23cb6ed2d7d0b881771707436a8b538e80b47",
+      "configSha256": "be1a0d07cfe025d245663027f13379768b366560d89619c6e7516e8b8235e475"
+    },
+    {
+      "kind": "negative",
+      "module": "ChatMutationBoundary.tla",
+      "config": "ChatMutationEarlyCommit.cfg",
+      "moduleSha256": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
+      "configSha256": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d"
+    },
+    {
+      "kind": "negative",
+      "module": "ChatMutationBoundary.tla",
+      "config": "ChatMutationNoRollback.cfg",
+      "moduleSha256": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
+      "configSha256": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f"
+    },
+    {
+      "kind": "negative",
+      "module": "CredentialLifecycle.tla",
+      "config": "CredentialLifecycleConcurrentReset.cfg",
+      "moduleSha256": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
+      "configSha256": "f9c4ee917db54f485284fe042419f4dd86b4421f607e4543f6d6e28ed1a9bd3f"
+    },
+    {
+      "kind": "negative",
+      "module": "CredentialLifecycle.tla",
+      "config": "CredentialLifecycleEarlyCommit.cfg",
+      "moduleSha256": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
+      "configSha256": "c882788d8911843b722c95763787549e604ada24b207650faa9b0436e6b59228"
+    },
+    {
+      "kind": "negative",
+      "module": "CredentialLifecycle.tla",
+      "config": "CredentialLifecycleGoogleSession.cfg",
+      "moduleSha256": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
+      "configSha256": "4afc2f5782bd00b4d770172547780b8fecbc917ef2e6aa11c37d424fe57262cb"
+    },
+    {
+      "kind": "positive",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsent.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentStaleReply.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "3562ab6ee72465ea40c5dca690c1ca00ca3108f733ccc273ce605fbc2f207de7"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentWithdrawnReply.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "b96a20e18c648021f6794527b13d50fefaaf40f310ffab2e5147ef7bdd80201c"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentStaleWithdrawalClock.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "730b2c17cbd520071cb7eeb845b2ed2cfb43c388c6792f9ff850a8f3bbdd1ee8"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentWithdrawalReset.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "34cc1751977ea8443e1573c240b29bdb22c2e87d89fd9e7345863af857709690"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentUnboundFailure.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "30f022a9bff35ad3e6760f3c45994fea034eb178b517b2ee4ea8e6d183422d87"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentReleasedFailure.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "96c5a3a384f45f1e9a6e28a19c6d1e24d6f07dce9a9ed91ec365ce9d149a03d1"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentLongUnsentWindow.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea"
+    },
+    {
+      "kind": "negative",
+      "module": "WhatsAppConsent.tla",
+      "config": "WhatsAppConsentRenewedUnsent.cfg",
+      "moduleSha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "configSha256": "7a80288380d6091257f5075a9b36c3edbbfc462b15f3fd903016e935e1ea3b34"
+    },
+    {
+      "kind": "positive",
+      "module": "PublicRouteAdmission.tla",
+      "config": "PublicRouteAdmission.cfg",
+      "moduleSha256": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
+      "configSha256": "1b3de23d072992eaeddcc7ff81085b8a3791fce58a00726a101088700710c97c"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicRouteAdmission.tla",
+      "config": "PublicRouteAdmissionUnregistered.cfg",
+      "moduleSha256": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
+      "configSha256": "95b497a6d8631f800cdc99dff0e8281cc846654f0c06d20275932e1c18fc4e51"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicRouteAdmission.tla",
+      "config": "PublicRouteAdmissionStale.cfg",
+      "moduleSha256": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
+      "configSha256": "8253b4ac345429d3cc7c822c2fcd2f9246224421fee430aef4218112ace48732"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicRouteAdmission.tla",
+      "config": "PublicRouteAdmissionUnreviewedMutation.cfg",
+      "moduleSha256": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
+      "configSha256": "61f02cc2412dea3c880a237d58e7b94dd9daff473425bbf9c57688988c04b62d"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicRouteAdmission.tla",
+      "config": "PublicRouteAdmissionDebtConformant.cfg",
+      "moduleSha256": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
+      "configSha256": "13aa887c70b0d08f9bfe53dc63faecd009e9d6d8177994dcbcba8f2fca5307a8"
+    },
+    {
+      "kind": "positive",
+      "module": "ReadinessProbe.tla",
+      "config": "ReadinessProbe.cfg",
+      "moduleSha256": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
+      "configSha256": "50fdf327a71210086792e372d3e52923958d19b93560ee24316b4dbf7f42607f"
+    },
+    {
+      "kind": "negative",
+      "module": "ReadinessProbe.tla",
+      "config": "ReadinessProbeSingleAttempt.cfg",
+      "moduleSha256": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
+      "configSha256": "344c666a1c21e44c31f82dee303358d020ee0411a3964182145eb79549d74910"
+    },
+    {
+      "kind": "negative",
+      "module": "ReadinessProbe.tla",
+      "config": "ReadinessProbePoolSizeAttempts.cfg",
+      "moduleSha256": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
+      "configSha256": "7d3bd4fc94504e3ff55d6bb101eeb2ef55841ebb0f16b0a5af4994bd67ff2d00"
+    },
+    {
+      "kind": "positive",
+      "module": "MarketplaceStorage.tla",
+      "config": "MarketplaceStorage.cfg",
+      "moduleSha256": "709d0cd9beb3cb7960a38e30058d526685f31c956aa53ce36c37c9903e5d7886",
+      "configSha256": "de412df32334b3881b2ff47dfc07fbed13931a9d192ae92794fe1db190470a89"
+    },
+    {
+      "kind": "positive",
+      "module": "InvoiceSubmission.tla",
+      "config": "InvoiceSubmission.cfg",
+      "moduleSha256": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
+      "configSha256": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceSubmission.tla",
+      "config": "InvoiceSubmissionUnfencedStart.cfg",
+      "moduleSha256": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
+      "configSha256": "dab915f61d964da7720b82f0197513fd4455b3f2b0b73c34cae627cf35feb2d7"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceSubmission.tla",
+      "config": "InvoiceSubmissionStaleFinish.cfg",
+      "moduleSha256": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
+      "configSha256": "0146a45dc8944a564e78422f32368bbe063143c339abb8b0a6b8c1d8a758750d"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceSubmission.tla",
+      "config": "InvoiceSubmissionUnknownAsRefused.cfg",
+      "moduleSha256": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
+      "configSha256": "9cea081fe4f68063303cf47bdb2668186e4a65cdda284625a2e7d426b86b63e3"
+    },
+    {
+      "kind": "negative",
+      "module": "InvoiceSubmission.tla",
+      "config": "InvoiceSubmissionRetryUncertain.cfg",
+      "moduleSha256": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
+      "configSha256": "ce0a27a215e1fabc85959522be05163aee7efb927dcebde6eaf063fd0343b393"
+    },
+    {
+      "kind": "negative",
+      "module": "MarketplaceStorage.tla",
+      "config": "MarketplaceStorageUnsafeCache.cfg",
+      "moduleSha256": "709d0cd9beb3cb7960a38e30058d526685f31c956aa53ce36c37c9903e5d7886",
+      "configSha256": "93cae28b05efede0510fa8510995cb319cea14955ef0c17cd1d347ca57d222b4"
+    },
+    {
+      "kind": "negative",
+      "module": "MarketplaceStorage.tla",
+      "config": "MarketplaceStorageUnsafeKey.cfg",
+      "moduleSha256": "709d0cd9beb3cb7960a38e30058d526685f31c956aa53ce36c37c9903e5d7886",
+      "configSha256": "55ca8fa62d91f10d763e85954a048a1da46bdcfad6548c07ea6b6daf29842a85"
+    },
+    {
+      "kind": "positive",
+      "module": "MusicDdexExport.tla",
+      "config": "MusicDdexExport.cfg",
+      "moduleSha256": "c7389586297018f37fbdddeaaeaf139dad2164a717165fc6e95334b67f093761",
+      "configSha256": "982e2b1826d915e7fce174a635279f9d1b3109e1735fec2d9be0d1852107dda2"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicDdexExport.tla",
+      "config": "MusicDdexExportUnfenced.cfg",
+      "moduleSha256": "c7389586297018f37fbdddeaaeaf139dad2164a717165fc6e95334b67f093761",
+      "configSha256": "ee19b53731ebf5347212970aaacf18926013260723ca13a99be25edc082b323f"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicDdexExport.tla",
+      "config": "MusicDdexExportReopen.cfg",
+      "moduleSha256": "c7389586297018f37fbdddeaaeaf139dad2164a717165fc6e95334b67f093761",
+      "configSha256": "99d76377ccaa53ae43d7659709a99baa384b69d54450a7027b27ec99b922df78"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicDdexExport.tla",
+      "config": "MusicDdexExportNoCommitGate.cfg",
+      "moduleSha256": "c7389586297018f37fbdddeaaeaf139dad2164a717165fc6e95334b67f093761",
+      "configSha256": "fdc38f54e748f48a0fce2febffe44d63703aa5a964bc35cad1fbd96c8591a5e6"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicDdexExport.tla",
+      "config": "MusicDdexExportReplayFailed.cfg",
+      "moduleSha256": "c7389586297018f37fbdddeaaeaf139dad2164a717165fc6e95334b67f093761",
+      "configSha256": "61e84b96ef4854d32351ae51e166df0fee6cf3c1b9d5e36e900e1a1758440d00"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicDdexExport.tla",
+      "config": "MusicDdexExportSplitDeadLetter.cfg",
+      "moduleSha256": "c7389586297018f37fbdddeaaeaf139dad2164a717165fc6e95334b67f093761",
+      "configSha256": "a6bf2a93ea00235265a4b017625e1a7f5834120bca4cb67511d6d6c678c7940e"
+    },
+    {
+      "kind": "positive",
+      "module": "OptionalTokenRecovery.tla",
+      "config": "OptionalTokenRecovery.cfg",
+      "moduleSha256": "5df3bc64e33b883534372ca2e541df0c73505a4b300186ce20ba36fab9e1bfed",
+      "configSha256": "f3ca0562255d81aaac483b10f2a7e2b7bc832ff2f5a0ccd6ea3f8d75ef2a4809"
+    },
+    {
+      "kind": "negative",
+      "module": "OptionalTokenRecovery.tla",
+      "config": "OptionalTokenRecoveryUnsafeStorage.cfg",
+      "moduleSha256": "5df3bc64e33b883534372ca2e541df0c73505a4b300186ce20ba36fab9e1bfed",
+      "configSha256": "4b0687ca30fc422a8da36336162c85bc135f61f589699763af3977d3494db056"
+    },
+    {
+      "kind": "negative",
+      "module": "OptionalTokenRecovery.tla",
+      "config": "OptionalTokenRecoveryUnsafeFragment.cfg",
+      "moduleSha256": "5df3bc64e33b883534372ca2e541df0c73505a4b300186ce20ba36fab9e1bfed",
+      "configSha256": "ee8c78705428a0b42ac23666c0e786711d0cec08200e36cdb8a838865b72ba72"
+    },
+    {
+      "kind": "negative",
+      "module": "NativeLanding.tla",
+      "config": "NativeLandingMarkerOnly.cfg",
+      "moduleSha256": "40f532a756d6b17f8271d07e60cdf9c7b587c897abb39183a68580676219f3d1",
+      "configSha256": "e2524e20afe3040d8854abea0ceabe370434cd4fcaddec246a878f6ef16853e0"
+    },
+    {
+      "kind": "negative",
+      "module": "NativeArtistFollow.tla",
+      "config": "NativeArtistFollowNamespace.cfg",
+      "moduleSha256": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
+      "configSha256": "193811ddb632bac7a1602f9d5235ca34b5994eca5be22b30fe890b367fd6f3cc"
+    },
+    {
+      "kind": "negative",
+      "module": "NativeArtistFollow.tla",
+      "config": "NativeArtistFollowSession.cfg",
+      "moduleSha256": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
+      "configSha256": "de4ab1f628d218a1847dabd68a6a3fbb696d197755bd25a4198ad27c5d56713c"
+    },
+    {
+      "kind": "positive",
+      "module": "MarketplaceCatalogRead.tla",
+      "config": "MarketplaceCatalogRead.cfg",
+      "moduleSha256": "2fe53fd4cdcc04f64d7fcbebaf7d87c1e2fd7fc0cad9996e1f4daaf671d05bfa",
+      "configSha256": "ff3cba8eea1f68fff31c447fec96b80a799900b982807069bfb45ce64be6fe8b"
+    },
+    {
+      "kind": "positive",
+      "module": "MarketplaceCatalogRead.tla",
+      "config": "MarketplaceCatalogReadUnapproved.cfg",
+      "moduleSha256": "2fe53fd4cdcc04f64d7fcbebaf7d87c1e2fd7fc0cad9996e1f4daaf671d05bfa",
+      "configSha256": "8701b000e593b958ce212b3cda4d191e61f845bd64adbebb374c910d836f0373"
+    },
+    {
+      "kind": "negative",
+      "module": "MarketplaceCatalogRead.tla",
+      "config": "MarketplaceCatalogReadUnsafe.cfg",
+      "moduleSha256": "2fe53fd4cdcc04f64d7fcbebaf7d87c1e2fd7fc0cad9996e1f4daaf671d05bfa",
+      "configSha256": "b587fffc7ea24317ee296ec32eb327a5c5859991fa5a2d1d153b1cc17a326be5"
+    },
+    {
+      "kind": "positive",
+      "module": "CalendarConnection.tla",
+      "config": "CalendarConnection.cfg",
+      "moduleSha256": "3709da003d3ef512db882eebd02ec6650c720f9e4c660717cae732195e14239d",
+      "configSha256": "115acfa81df940e88dabbb898d617da197e6e9b86e6670b0e16f79990f567a85"
+    },
+    {
+      "kind": "negative",
+      "module": "CalendarConnection.tla",
+      "config": "CalendarConnectionReplay.cfg",
+      "moduleSha256": "3709da003d3ef512db882eebd02ec6650c720f9e4c660717cae732195e14239d",
+      "configSha256": "c3210a25bd6b91659df7e41c800081b0815c90c2efae67ccb16114880aeb3f44"
+    },
+    {
+      "kind": "negative",
+      "module": "CalendarConnection.tla",
+      "config": "CalendarConnectionStorage.cfg",
+      "moduleSha256": "3709da003d3ef512db882eebd02ec6650c720f9e4c660717cae732195e14239d",
+      "configSha256": "6e633d096788f10fa94b1737f71d3805faaa22eea42ff72cae2e00231f5450d4"
+    },
+    {
+      "kind": "negative",
+      "module": "CalendarConnection.tla",
+      "config": "CalendarConnectionStale.cfg",
+      "moduleSha256": "3709da003d3ef512db882eebd02ec6650c720f9e4c660717cae732195e14239d",
+      "configSha256": "2a833f9e5e297175c4e1e8d78a20601bda0509847c4210672dc6a6247462cc31"
+    },
+    {
+      "kind": "positive",
+      "module": "DirectoryFavoriteAuthority.tla",
+      "config": "DirectoryFavoriteAuthority.cfg",
+      "moduleSha256": "4b4f5fb17e1f76f184faa76b9b8af020e2675ba39a288bc659bb70fdde7bfa5a",
+      "configSha256": "f4ebbf26f0544faa9113e675ba10a3d0a6b7822abed944c2b9a6b5a0cf35bdd4"
+    },
+    {
+      "kind": "negative",
+      "module": "DirectoryFavoriteAuthority.tla",
+      "config": "DirectoryFavoriteAuthorityUnsafeDispatch.cfg",
+      "moduleSha256": "4b4f5fb17e1f76f184faa76b9b8af020e2675ba39a288bc659bb70fdde7bfa5a",
+      "configSha256": "8146aaf4746aff04d101618562eff2b0e29e74e17274a2a1e38f57e6204d0246"
+    },
+    {
+      "kind": "negative",
+      "module": "DirectoryFavoriteAuthority.tla",
+      "config": "DirectoryFavoriteAuthorityUnsafeReceipt.cfg",
+      "moduleSha256": "4b4f5fb17e1f76f184faa76b9b8af020e2675ba39a288bc659bb70fdde7bfa5a",
+      "configSha256": "33704099b3f6c401886c12928375489ed674fd6197de0168094e3ba64b27eb0a"
+    },
+    {
+      "kind": "negative",
+      "module": "ExperimentAuthority.tla",
+      "config": "ExperimentAuthorityStale.cfg",
+      "moduleSha256": "f3ebab49c6de75d267750eb2f14e8e8a92a56f6b73a865b3ce594b917b3f57dc",
+      "configSha256": "76add80c78c999421d6223d1d2c70b09f5b1e66565d1d76516be1f866c0684d6"
+    },
+    {
+      "kind": "negative",
+      "module": "ExperimentAuthority.tla",
+      "config": "ExperimentAuthorityDuplicate.cfg",
+      "moduleSha256": "f3ebab49c6de75d267750eb2f14e8e8a92a56f6b73a865b3ce594b917b3f57dc",
+      "configSha256": "f12a7aec67a8668b0881f5496045656d28457d3779ae25b0e47ef003d5e710f1"
+    },
+    {
+      "kind": "negative",
+      "module": "ExperimentAuthority.tla",
+      "config": "ExperimentAuthorityAccount.cfg",
+      "moduleSha256": "f3ebab49c6de75d267750eb2f14e8e8a92a56f6b73a865b3ce594b917b3f57dc",
+      "configSha256": "d5ba2ecd0e9d9712495c193bb9c1c4573c3790c833c229db79917606bcbf576d"
+    },
+    {
+      "kind": "negative",
+      "module": "EventLifecycle.tla",
+      "config": "EventLifecycleUnsafeFinance.cfg",
+      "moduleSha256": "3e0ab07bfab125e5039d1bbd753c876e6195819caf51c19cc24724aa054947d7",
+      "configSha256": "66047c89535142c1da6adc81bf892b0c8dd31b4cc93481af39af904b6b300ccf"
+    },
+    {
+      "kind": "negative",
+      "module": "EventLifecycle.tla",
+      "config": "EventLifecycleUnsafeArchive.cfg",
+      "moduleSha256": "3e0ab07bfab125e5039d1bbd753c876e6195819caf51c19cc24724aa054947d7",
+      "configSha256": "2f5a386353a8c5aacf31a210a81487b20ab2e69fb5e4acb0954e6c8119e4f3e9"
+    },
+    {
+      "kind": "negative",
+      "module": "EventLifecycle.tla",
+      "config": "EventLifecycleUnsafeAudit.cfg",
+      "moduleSha256": "3e0ab07bfab125e5039d1bbd753c876e6195819caf51c19cc24724aa054947d7",
+      "configSha256": "894aac493b17cb878c4fab5338c9aa37b5716d84885e171a032108fe8f63e411"
+    },
+    {
+      "kind": "positive",
+      "module": "ReservationRace.tla",
+      "config": "ReservationRace.cfg",
+      "moduleSha256": "01b89664e7ecad373d0e36b93be01bf10ba5c504ec4129b6ee3742a826f70c53",
+      "configSha256": "d583555d78ee94e620cd4c3cba41da29875974cd33098836615c07b7ccecad7b"
+    },
+    {
+      "kind": "positive",
+      "module": "ReservationRace.tla",
+      "config": "ReservationOverride.cfg",
+      "moduleSha256": "01b89664e7ecad373d0e36b93be01bf10ba5c504ec4129b6ee3742a826f70c53",
+      "configSha256": "d42367fad32145f991def9b5b8bdc47e0de76ad536ca659068bece1d24c45dcf"
+    },
+    {
+      "kind": "positive",
+      "module": "InvitationSafety.tla",
+      "config": "InvitationSafety.cfg",
+      "moduleSha256": "744d0f369ef59b7639f9f8e01c1217ec288ecda6a7962e778a827478a392cc43",
+      "configSha256": "61505b22d7a3915f744f75b8b376137c26c4bb28da08ed56cd91e1485adaa831"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskRaci.tla",
+      "config": "TaskRaci.cfg",
+      "moduleSha256": "9db86c48d9c4fc9d09c98c94aebd3fa375fde4b0792242cc243d4fb2f2b531eb",
+      "configSha256": "d3d9af4262fdf857a50432890594804e8bbbf24317116599554de19657be8ee5"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskCommit.tla",
+      "config": "TaskCommit.cfg",
+      "moduleSha256": "1a2d9df9ef6abcecc0be3df497413da3a813371fb3121f63062d1c209355f0fe",
+      "configSha256": "afddcd28e28c8bd54d4b5bb575959dafb0b28ad6788bf81bea6853b0145230eb"
+    },
+    {
+      "kind": "positive",
+      "module": "LedgerPosting.tla",
+      "config": "LedgerPosting.cfg",
+      "moduleSha256": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+      "configSha256": "c9bd256bf365910ea502ddbab1ca36a90c49dcfd5844266212614e7462f90079"
+    },
+    {
+      "kind": "negative",
+      "module": "LedgerPosting.tla",
+      "config": "LedgerPostingReverserMutable.cfg",
+      "moduleSha256": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+      "configSha256": "979aa3ad107922440768d413c0d3c74ffc76c208ae45be81b9eb51ff01825244"
+    },
+    {
+      "kind": "negative",
+      "module": "LedgerPosting.tla",
+      "config": "LedgerPostingAppend.cfg",
+      "moduleSha256": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+      "configSha256": "f09d97280f6de2fd31d39a093062c124743e4de3af7a171302b96a1eba3f8905"
+    },
+    {
+      "kind": "negative",
+      "module": "LedgerPosting.tla",
+      "config": "LedgerPostingUnvalidated.cfg",
+      "moduleSha256": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+      "configSha256": "8c5604e88c2aff8b33363640efa19f3977d70bbf04818773ca8058cd9cfb4a7f"
+    },
+    {
+      "kind": "negative",
+      "module": "LedgerPosting.tla",
+      "config": "LedgerPostingReopen.cfg",
+      "moduleSha256": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+      "configSha256": "78d3b64415366b82bf28afac1938eeffab57e5acc089eb02d4f9fc7a3443932c"
+    },
+    {
+      "kind": "negative",
+      "module": "LedgerPosting.tla",
+      "config": "LedgerPostingInsertPosted.cfg",
+      "moduleSha256": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+      "configSha256": "b6b26746ff878e12fbc7184a5769502cb5f2364ad0a35512877b82f0d2b0b01f"
+    },
+    {
+      "kind": "positive",
+      "module": "MusicPublication.tla",
+      "config": "MusicPublication.cfg",
+      "moduleSha256": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
+      "configSha256": "0f2e7eb66feaa82e7c285a7d3fa5f6d1cad0042fe924f97e2e29d82fa3590640"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPublication.tla",
+      "config": "MusicPublicationBatch.cfg",
+      "moduleSha256": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
+      "configSha256": "9235cd26521de14679cda1db53049468bd322e1a199c5ab22681cbb26d894837"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPublication.tla",
+      "config": "MusicPublicationReplacedOnly.cfg",
+      "moduleSha256": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
+      "configSha256": "b9dfcafb16a72ecbd82cfbb0ed0cbfdb9d8e8888ff094d91ee3a5e67078c1a81"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPublication.tla",
+      "config": "MusicPublicationStayWithdrawn.cfg",
+      "moduleSha256": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
+      "configSha256": "f5d20864b4e36d2421b54fae9dcf51606b749c1706358125f06981c522cc6bc7"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPublication.tla",
+      "config": "MusicPublicationPointerStale.cfg",
+      "moduleSha256": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
+      "configSha256": "2d5916c7039d9722e3fb586341a26e8bbd2ea1909098c51e5235700c08543866"
+    },
+    {
+      "kind": "positive",
+      "module": "MusicWithdrawalFairness.tla",
+      "config": "MusicWithdrawalFairness.cfg",
+      "moduleSha256": "b3601c95025c442fb5aa924d302b8060382080060ea5083cec488ea6a8fae90c",
+      "configSha256": "51a572cd584d3e2828fd59d963afd9448490d16683d283c14578a7d905802442"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicWithdrawalFairness.tla",
+      "config": "MusicWithdrawalStarvation.cfg",
+      "moduleSha256": "b3601c95025c442fb5aa924d302b8060382080060ea5083cec488ea6a8fae90c",
+      "configSha256": "f25e357bc8d3cc3f09144cce60e16acceaf43d5fb7876d15834582faadf636ca"
+    },
+    {
+      "kind": "positive",
+      "module": "MusicAssetProcessing.tla",
+      "config": "MusicAssetProcessing.cfg",
+      "moduleSha256": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
+      "configSha256": "0972d9ab80204b322beb24dd99d49312b44c1e23595aa54ac846b973c4b1cf15"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicAssetProcessing.tla",
+      "config": "MusicAssetProcessingUnfenced.cfg",
+      "moduleSha256": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
+      "configSha256": "9dd50d8e5a4e802760fd2a91fd4f0479c569816392ab14b56dcd6dfb768ae1b4"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicAssetProcessing.tla",
+      "config": "MusicAssetProcessingPreempt.cfg",
+      "moduleSha256": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
+      "configSha256": "66f020b836a7aae643ff02e44fd0dbef4dad1241bfa9fcd13f8fd4d2e9457c19"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicAssetProcessing.tla",
+      "config": "MusicAssetProcessingUnverified.cfg",
+      "moduleSha256": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
+      "configSha256": "ed337a81bc1f02f30f7850b4d835ca5491e245b20669ce55100b005898b91d53"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicAssetProcessing.tla",
+      "config": "MusicAssetProcessingOverLimit.cfg",
+      "moduleSha256": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
+      "configSha256": "64f463cf7a8356dab9d5f0bac790b586a3cd35e7d717dc3dfe667250d022b3c7"
+    },
+    {
+      "kind": "positive",
+      "module": "PaymentRecovery.tla",
+      "config": "PaymentRecovery.cfg",
+      "moduleSha256": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+      "configSha256": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc"
+    },
+    {
+      "kind": "negative",
+      "module": "PaymentRecovery.tla",
+      "config": "PaymentRecoveryOverwrite.cfg",
+      "moduleSha256": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+      "configSha256": "ceb606c1e65996f2b72bcfc367255e149b22e42c2cc9ef72c2e6a9cd881b205c"
+    },
+    {
+      "kind": "negative",
+      "module": "PaymentRecovery.tla",
+      "config": "PaymentRecoveryReturn.cfg",
+      "moduleSha256": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+      "configSha256": "ac3bcb7094ab0c465b34347bc6282ec4038ac40dc6f464579ed069690a145643"
+    },
+    {
+      "kind": "negative",
+      "module": "PaymentRecovery.tla",
+      "config": "PaymentRecoveryCompleted.cfg",
+      "moduleSha256": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+      "configSha256": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d"
+    },
+    {
+      "kind": "positive",
+      "module": "WorkerCompletionEvidence.tla",
+      "config": "WorkerCompletionEvidence.cfg",
+      "moduleSha256": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
+      "configSha256": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970"
+    },
+    {
+      "kind": "negative",
+      "module": "WorkerCompletionEvidence.tla",
+      "config": "WorkerCompletionEvidenceFailed.cfg",
+      "moduleSha256": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
+      "configSha256": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e"
+    },
+    {
+      "kind": "negative",
+      "module": "WorkerCompletionEvidence.tla",
+      "config": "WorkerCompletionEvidenceUnacknowledged.cfg",
+      "moduleSha256": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
+      "configSha256": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860"
+    },
+    {
+      "kind": "positive",
+      "module": "ProviderRetryAdmission.tla",
+      "config": "ProviderRetryAdmission.cfg",
+      "moduleSha256": "5ec995de10c0d6b4d786da5d9b92ac177bf4dfc2958e103f41dab4457488c29f",
+      "configSha256": "f7a4f67154c28cc9a89c8abdf798a5f229cdf80cfeebfc21e1de199cf67ecae9"
+    },
+    {
+      "kind": "positive",
+      "module": "TicketCaptureClassification.tla",
+      "config": "TicketCaptureClassification.cfg",
+      "moduleSha256": "f94fd80b46159189a57499962a2787c9e7cd86588a26ac2d7ccc088ce9bf6ac3",
+      "configSha256": "ff6f88b7567c8c0dd72572d824c80b2950803df84080b3955537d5bec7a1a330"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketCaptureClassification.tla",
+      "config": "TicketCaptureClassificationUnsafeReadback.cfg",
+      "moduleSha256": "f94fd80b46159189a57499962a2787c9e7cd86588a26ac2d7ccc088ce9bf6ac3",
+      "configSha256": "20a2df7c95826696d692248a38292b4214dff988eb9c82d9847e79062ca2c3af"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketCaptureClassification.tla",
+      "config": "TicketCaptureClassificationUnsafeResponse.cfg",
+      "moduleSha256": "f94fd80b46159189a57499962a2787c9e7cd86588a26ac2d7ccc088ce9bf6ac3",
+      "configSha256": "88f4309cf6733aab969236b29ff68f3a1581ad7b33191310f9c563e1e8dfb11c"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketCaptureClassification.tla",
+      "config": "TicketCaptureClassificationBindingMismatch.cfg",
+      "moduleSha256": "f94fd80b46159189a57499962a2787c9e7cd86588a26ac2d7ccc088ce9bf6ac3",
+      "configSha256": "010507f3d8f72256d19c45c970277b98733209b7d01e823bc1fe8d855185bf5b"
+    },
+    {
+      "kind": "positive",
+      "module": "TicketCaptureFence.tla",
+      "config": "TicketCaptureFence.cfg",
+      "moduleSha256": "b3ed88ca239fd17c55789eef7879137e7a720dc3da8b0fc98155763ef21b06ea",
+      "configSha256": "c05ef7d66ef5d4a909c3ee18ee5e87fa8ed108ee9c1f188c59a6a10490ef42ca"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketCaptureFence.tla",
+      "config": "TicketCaptureFenceStaleRead.cfg",
+      "moduleSha256": "b3ed88ca239fd17c55789eef7879137e7a720dc3da8b0fc98155763ef21b06ea",
+      "configSha256": "e3d3bb98c9e0738aeae58704a90b5fa28436d5839db8a4d2db950ecaea4e715d"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketCaptureFence.tla",
+      "config": "TicketCaptureFenceUnlockedWriter.cfg",
+      "moduleSha256": "b3ed88ca239fd17c55789eef7879137e7a720dc3da8b0fc98155763ef21b06ea",
+      "configSha256": "59ae120393cc3d46851dd6f6e1ce89832e4af719addcab736a3e26521afc2e1c"
+    },
+    {
+      "kind": "positive",
+      "module": "PaymentIntentExpiry.tla",
+      "config": "PaymentIntentExpiry.cfg",
+      "moduleSha256": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+      "configSha256": "99e6255b3049e3d4e03421e41be27cb4c98a6dbb300174dbcb9d3767aa966943"
+    },
+    {
+      "kind": "negative",
+      "module": "PaymentIntentExpiry.tla",
+      "config": "PaymentIntentExpiryRequest.cfg",
+      "moduleSha256": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+      "configSha256": "0738b2aecdd57781a4636629369372ec478fcd6f3301ced4846f2a8f07b7c616"
+    },
+    {
+      "kind": "negative",
+      "module": "PaymentIntentExpiry.tla",
+      "config": "PaymentIntentExpiryTransaction.cfg",
+      "moduleSha256": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+      "configSha256": "c3f9bf74fabd61c706ce443319ac01974fb585f5eb451dd3086bcdf9a2aa1264"
+    },
+    {
+      "kind": "negative",
+      "module": "PaymentIntentExpiry.tla",
+      "config": "PaymentIntentExpiryBeforeLock.cfg",
+      "moduleSha256": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+      "configSha256": "c67f2fa7106cb988d6ffc32cce985baeab28ad7d718df0f6bfdd4ae130ed243e"
+    },
+    {
+      "kind": "negative",
+      "module": "PaymentIntentExpiry.tla",
+      "config": "PaymentIntentExpiryInclusive.cfg",
+      "moduleSha256": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+      "configSha256": "b43b697b66ca9bd3cccb30c494c2fea57d7e152f24527a4dd3e7d90a9eaf1230"
+    },
+    {
+      "kind": "positive",
+      "module": "DiscoveryFallbackPrivacy.tla",
+      "config": "DiscoveryFallbackPrivacy.cfg",
+      "moduleSha256": "e05472793509eb2c2837e3acae82bfd3b49ab9264d0da989f6c7cefda4cb5f3c",
+      "configSha256": "a6d95741d13316571594addba3bb26495081132058f0994c800a4b699745b1f8"
+    },
+    {
+      "kind": "negative",
+      "module": "DiscoveryFallbackPrivacy.tla",
+      "config": "DiscoveryFallbackPrivacyPrivateSubject.cfg",
+      "moduleSha256": "e05472793509eb2c2837e3acae82bfd3b49ab9264d0da989f6c7cefda4cb5f3c",
+      "configSha256": "b156d18649ac9c035343a35296637a3f20592e91663dd018d80ba16cda188853"
+    },
+    {
+      "kind": "negative",
+      "module": "DiscoveryFallbackPrivacy.tla",
+      "config": "DiscoveryFallbackPrivacyIgnoredLink.cfg",
+      "moduleSha256": "e05472793509eb2c2837e3acae82bfd3b49ab9264d0da989f6c7cefda4cb5f3c",
+      "configSha256": "6d4fdf4a9319c4c8a430e03613cb98531d1b5ad096b0f21df2f5321f40b51c9d"
+    },
+    {
+      "kind": "negative",
+      "module": "ProviderRetryAdmission.tla",
+      "config": "ProviderRetryAdmissionAmbiguous.cfg",
+      "moduleSha256": "5ec995de10c0d6b4d786da5d9b92ac177bf4dfc2958e103f41dab4457488c29f",
+      "configSha256": "21ebf3d2cc3576bd811adecf5acde3f34bd836a07b8620230452bc4309da15cb"
+    },
+    {
+      "kind": "negative",
+      "module": "ProviderRetryAdmission.tla",
+      "config": "ProviderRetryAdmissionDuplicate.cfg",
+      "moduleSha256": "5ec995de10c0d6b4d786da5d9b92ac177bf4dfc2958e103f41dab4457488c29f",
+      "configSha256": "4b63b91bce3f32ad1850e367fa794190aa3f32fa8544a4add17d5dbb412e1fc0"
+    },
+    {
+      "kind": "negative",
+      "module": "ProviderRetryAdmission.tla",
+      "config": "ProviderRetryAdmissionPayload.cfg",
+      "moduleSha256": "5ec995de10c0d6b4d786da5d9b92ac177bf4dfc2958e103f41dab4457488c29f",
+      "configSha256": "e45311f9c71bbcfe46171a0fba4bde38f656f8a5781fc6efbc8eb53fa86e86dd"
+    },
+    {
+      "kind": "negative",
+      "module": "ProviderRetryAdmission.tla",
+      "config": "ProviderRetryAdmissionClosed.cfg",
+      "moduleSha256": "5ec995de10c0d6b4d786da5d9b92ac177bf4dfc2958e103f41dab4457488c29f",
+      "configSha256": "cfd9a0da607ab344e9c3bd6c4c0fec2246f365f801a1c61906732731aaa08d08"
+    },
+    {
+      "kind": "negative",
+      "module": "ProviderRetryAdmission.tla",
+      "config": "ProviderRetryAdmissionLate.cfg",
+      "moduleSha256": "5ec995de10c0d6b4d786da5d9b92ac177bf4dfc2958e103f41dab4457488c29f",
+      "configSha256": "e8f74982567c8bfe974e9d7ab168d45043bbb8826a6e9b99f1805e99ee6f79d2"
+    },
+    {
+      "kind": "positive",
+      "module": "HostedServicePayment.tla",
+      "config": "HostedServicePayment.cfg",
+      "moduleSha256": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+      "configSha256": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227"
+    },
+    {
+      "kind": "negative",
+      "module": "HostedServicePayment.tla",
+      "config": "HostedServicePaymentAtomic.cfg",
+      "moduleSha256": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+      "configSha256": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73"
+    },
+    {
+      "kind": "negative",
+      "module": "HostedServicePayment.tla",
+      "config": "HostedServicePaymentReplay.cfg",
+      "moduleSha256": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+      "configSha256": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498"
+    },
+    {
+      "kind": "negative",
+      "module": "HostedServicePayment.tla",
+      "config": "HostedServicePaymentProgress.cfg",
+      "moduleSha256": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+      "configSha256": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402"
+    },
+    {
+      "kind": "positive",
+      "module": "RefundRecovery.tla",
+      "config": "RefundRecovery.cfg",
+      "moduleSha256": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+      "configSha256": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457"
+    },
+    {
+      "kind": "negative",
+      "module": "RefundRecovery.tla",
+      "config": "RefundRecoveryExecution.cfg",
+      "moduleSha256": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+      "configSha256": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349"
+    },
+    {
+      "kind": "negative",
+      "module": "RefundRecovery.tla",
+      "config": "RefundRecoveryAccounting.cfg",
+      "moduleSha256": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+      "configSha256": "75e88634e2988c7bb6988d41278280bd1e8c4c25c5f487b087f53584183d0668"
+    },
+    {
+      "kind": "negative",
+      "module": "RefundRecovery.tla",
+      "config": "RefundRecoveryAuthority.cfg",
+      "moduleSha256": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+      "configSha256": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCommit.tla",
+      "config": "TaskCommitEarlyValidation.cfg",
+      "moduleSha256": "1a2d9df9ef6abcecc0be3df497413da3a813371fb3121f63062d1c209355f0fe",
+      "configSha256": "51b1c6f2955010a6379f34579570e8d6726be78513845dab9413a53d91655740"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCommit.tla",
+      "config": "TaskCommitWriteSkew.cfg",
+      "moduleSha256": "1a2d9df9ef6abcecc0be3df497413da3a813371fb3121f63062d1c209355f0fe",
+      "configSha256": "c0b5b4a43093800fd8d68f25f01e926dc2165ec05ecfb2fc622253814ef6623f"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletion.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "42dae8c5e533ca1f24f903a4665392e59d3df7d2ad0a73f04238e58eeb44da3a"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletionAuthority.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "88aef2bd288aa2b60425d8d6510dd05c2e040e606658f68c8332b81c8e61b12a"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletionVersion.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "4c412e45e4759156f82f57de459b411ff8a63f1cdd81704fcf77aa9d964872a7"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletionDependencies.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "680e26e50dec6d0e5a83a405ea5b0d80c5e11b5b434f82924477ea629fd567ed"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletionRaci.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "bde1ef5579f733fb9c7b338e225fc704813a950f24300505f082fc8c144c4023"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletionLifecycle.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "8a5c24ae8206d1f38e4b273e09172887808a5d4a1092cd34c0c29b910e1562cd"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletionReplay.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "0b2432576a93a11017520e6a283ed4bba5c4e7ba675cd451128ef6bfc8b8fca3"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletion.tla",
+      "config": "TaskCompletionAudit.cfg",
+      "moduleSha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "configSha256": "6f32a29066e145e4876470af2430e30534b10f44017ca64c22ac59d58ee2f016"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskRevision.tla",
+      "config": "TaskRevision.cfg",
+      "moduleSha256": "e560cdc1e21b903eeac1acdc39b115329fb0162735e06d9d6a74261e281224ed",
+      "configSha256": "c9428cbdd82cee3702d6cda217bcb568f2164ee1cd70c4b632cf7b6f844a35de"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRevision.tla",
+      "config": "TaskRevisionRaci.cfg",
+      "moduleSha256": "e560cdc1e21b903eeac1acdc39b115329fb0162735e06d9d6a74261e281224ed",
+      "configSha256": "32245cdbae5927799c67728c6cd2d48838d1aeeb5e83e0feb9f33fd5ffdb252d"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRevision.tla",
+      "config": "TaskRevisionEarly.cfg",
+      "moduleSha256": "e560cdc1e21b903eeac1acdc39b115329fb0162735e06d9d6a74261e281224ed",
+      "configSha256": "9c09e34aec509860b38be3a268785e3e9f96396f3a1fd9793b4163db767183de"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskRevisionRead.tla",
+      "config": "TaskRevisionRead.cfg",
+      "moduleSha256": "ee3eb05e4b2d53c838eda2f0e6dba4db066ca0ff96c29456f58b3bc9f24efab9",
+      "configSha256": "c64595f91790bac44f144a753483408c85fe0c9b5293cd6d525a534c48272845"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRevisionRead.tla",
+      "config": "TaskRevisionReadMixed.cfg",
+      "moduleSha256": "ee3eb05e4b2d53c838eda2f0e6dba4db066ca0ff96c29456f58b3bc9f24efab9",
+      "configSha256": "8e547500a1b8d3b530959f78750a0c7c47bf25a1a6044b70e944e8349cb705ea"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRevisionRead.tla",
+      "config": "TaskRevisionReadEarly.cfg",
+      "moduleSha256": "ee3eb05e4b2d53c838eda2f0e6dba4db066ca0ff96c29456f58b3bc9f24efab9",
+      "configSha256": "5bfb1553aa145f243bc7848df3e7829f5422179598947761cf55a07acc2538ef"
+    },
+    {
+      "kind": "positive",
+      "module": "RaciReassignment.tla",
+      "config": "RaciReassignment.cfg",
+      "moduleSha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "configSha256": "cf4f419db8e5a00dfdda8fddda5c3680831e319abe9f01cf0fbaddc6e3a3cc25"
+    },
+    {
+      "kind": "positive",
+      "module": "CommandBoundary.tla",
+      "config": "CommandBoundary.cfg",
+      "moduleSha256": "c8466db2ac47c09b38d7ab31c2c6318a5f698417408757d8283f282af7794c83",
+      "configSha256": "125328caf4f0c9a4a6b631545de689217eef5e75fc2f7935e509e83a7325e53a"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskCompletionClient.tla",
+      "config": "TaskCompletionClient.cfg",
+      "moduleSha256": "adae254c537548dac0f13c77e1a7c70e8a57afd20e87a3eb6edb3c42deafbac2",
+      "configSha256": "850ad29f3dd5c12a5eb3fb69e2dcd201e1033ea4e873afe1b1b8caf8edaacd7c"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletionClient.tla",
+      "config": "TaskCompletionClientCapture.cfg",
+      "moduleSha256": "adae254c537548dac0f13c77e1a7c70e8a57afd20e87a3eb6edb3c42deafbac2",
+      "configSha256": "1f6ccd086855888f4db1e7583336850eca23a8af7d9a902baf2089d514078c5f"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletionClient.tla",
+      "config": "TaskCompletionClientShape.cfg",
+      "moduleSha256": "adae254c537548dac0f13c77e1a7c70e8a57afd20e87a3eb6edb3c42deafbac2",
+      "configSha256": "2c472f4d9d770e7d2dd967783c57d107c18e05bd0fa416fb85812079cbf41e1b"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletionClient.tla",
+      "config": "TaskCompletionClientBinding.cfg",
+      "moduleSha256": "adae254c537548dac0f13c77e1a7c70e8a57afd20e87a3eb6edb3c42deafbac2",
+      "configSha256": "ce5b34657798c338fde570f3608305ce9d88247b042783932ed4310b0e2c05f8"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskCompletionClient.tla",
+      "config": "TaskCompletionClientRetry.cfg",
+      "moduleSha256": "adae254c537548dac0f13c77e1a7c70e8a57afd20e87a3eb6edb3c42deafbac2",
+      "configSha256": "12ce5c3e16fc4f671517da833f54e9e1e166be01c0fea004781e793a7cc984f5"
+    },
+    {
+      "kind": "positive",
+      "module": "RaciEditorContext.tla",
+      "config": "RaciEditorContext.cfg",
+      "moduleSha256": "d26893c36a1e4cd48238316d1e496d80b297e17a65abb51959961b1b7c1ba8ea",
+      "configSha256": "88d86e1f1a56ae7514ee46cd41a42f14f9e7299e58e22cd21c8f5c8f050bb80e"
+    },
+    {
+      "kind": "positive",
+      "module": "RaciWebEditor.tla",
+      "config": "RaciWebEditor.cfg",
+      "moduleSha256": "365088c35477b00fef336f162043bc8860af1d9cc15519d2c365294ef62ceefd",
+      "configSha256": "7112d9756b77d113bd56e5ef51c3ac43ec4c1a5cd39955d1bb7bd10f9e2597bb"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciWebEditor.tla",
+      "config": "RaciWebEditorConsent.cfg",
+      "moduleSha256": "365088c35477b00fef336f162043bc8860af1d9cc15519d2c365294ef62ceefd",
+      "configSha256": "30cf48e4519ff2cf6527a08cf612898da159e1074b9a1aadbd53e2222eca18ff"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciWebEditor.tla",
+      "config": "RaciWebEditorContext.cfg",
+      "moduleSha256": "365088c35477b00fef336f162043bc8860af1d9cc15519d2c365294ef62ceefd",
+      "configSha256": "b89feec1eecd3f9616ad71ff87cd5353ce2db18db6cd0dbc7a63d49268ba63ac"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciWebEditor.tla",
+      "config": "RaciWebEditorFlight.cfg",
+      "moduleSha256": "365088c35477b00fef336f162043bc8860af1d9cc15519d2c365294ef62ceefd",
+      "configSha256": "b1b7b26e9d755e2d30d4c8ed65d5d96a96306dada30c6823e7232c21819f1361"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciWebEditor.tla",
+      "config": "RaciWebEditorRetry.cfg",
+      "moduleSha256": "365088c35477b00fef336f162043bc8860af1d9cc15519d2c365294ef62ceefd",
+      "configSha256": "4931120eb43ea3951f6210b4569bdee4e299eaae28bf1e284d02c7eb9d067d69"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciWebEditor.tla",
+      "config": "RaciWebEditorReceipt.cfg",
+      "moduleSha256": "365088c35477b00fef336f162043bc8860af1d9cc15519d2c365294ef62ceefd",
+      "configSha256": "a48e96bb71ecd32dcfee544f83921125b9bf26d512bef8e8727ca48d3a76bfa1"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciEditorContext.tla",
+      "config": "RaciEditorContextEarly.cfg",
+      "moduleSha256": "d26893c36a1e4cd48238316d1e496d80b297e17a65abb51959961b1b7c1ba8ea",
+      "configSha256": "f182b22b6b3009ccf8d79fecb59ec3427a1fe28a3090a8e99c00468bac168044"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciEditorContext.tla",
+      "config": "RaciEditorContextCandidate.cfg",
+      "moduleSha256": "d26893c36a1e4cd48238316d1e496d80b297e17a65abb51959961b1b7c1ba8ea",
+      "configSha256": "f84dc0887062b68875d35ab723334b6d715cd68b28bc0b16adce22626660901c"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciEditorContext.tla",
+      "config": "RaciEditorContextMixed.cfg",
+      "moduleSha256": "d26893c36a1e4cd48238316d1e496d80b297e17a65abb51959961b1b7c1ba8ea",
+      "configSha256": "0c0c61dd457ce4fe814527cd00f765e3cfe4785edf765280ceb6ff2f745b312c"
+    },
+    {
+      "kind": "negative",
+      "module": "CommandBoundary.tla",
+      "config": "CommandBoundaryEarly.cfg",
+      "moduleSha256": "c8466db2ac47c09b38d7ab31c2c6318a5f698417408757d8283f282af7794c83",
+      "configSha256": "3e2ff8bd499fd9aee905ac02dc498279e79fba4c1e64f9a0ca90e308f4df92ac"
+    },
+    {
+      "kind": "negative",
+      "module": "CommandBoundary.tla",
+      "config": "CommandBoundaryUnbound.cfg",
+      "moduleSha256": "c8466db2ac47c09b38d7ab31c2c6318a5f698417408757d8283f282af7794c83",
+      "configSha256": "d57a55831c957c847ae09017e00ed164d4c703fe2d522930a6875b3150c8d157"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciReassignment.tla",
+      "config": "RaciReassignmentEarly.cfg",
+      "moduleSha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "configSha256": "74439b5c978237f68ba579eef9e0f4fa76d856a12c773d0064c55c624e909cca"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciReassignment.tla",
+      "config": "RaciReassignmentVersion.cfg",
+      "moduleSha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "configSha256": "c40df5c53511aa03044b6fe574205d82eda54cbfbd99f33507619871ac4d09d9"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciReassignment.tla",
+      "config": "RaciReassignmentReplay.cfg",
+      "moduleSha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "configSha256": "fefd02612d6d350e34b708ceb9c7090d18cae7c7c887d5798918e2a3d419718a"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciReassignment.tla",
+      "config": "RaciReassignmentScope.cfg",
+      "moduleSha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "configSha256": "731aa2d6191c025e921185c75d701540a280af2a7ceae5c8fdd2e9a5132373d7"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciReassignment.tla",
+      "config": "RaciReassignmentSplit.cfg",
+      "moduleSha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "configSha256": "9e14c603ddde1dd9ad452f490befe3c41a163db7e14e26ea3f4f545b5eb08111"
+    },
+    {
+      "kind": "negative",
+      "module": "RaciReassignment.tla",
+      "config": "RaciReassignmentAudit.cfg",
+      "moduleSha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "configSha256": "cd71cca65e008cd62f8341a6803e24ac291b141cd24441e80ebd9c63044f794f"
+    },
+    {
+      "kind": "positive",
+      "module": "ReceiptReplay.tla",
+      "config": "ReceiptReplay.cfg",
+      "moduleSha256": "e68741aca6095dafcd46751b96f6deb57832d316b84067ccb6bab2b73acbcd4b",
+      "configSha256": "94e216fd2e6f46edcefcebf87ef3057f100b309e346bf2ca5e5cf9f33b2bc9d1"
+    },
+    {
+      "kind": "negative",
+      "module": "ReceiptReplay.tla",
+      "config": "ReceiptReplayBypass.cfg",
+      "moduleSha256": "e68741aca6095dafcd46751b96f6deb57832d316b84067ccb6bab2b73acbcd4b",
+      "configSha256": "9ea7285d83d2c2930c446401aedb3a63bbe52f6eaf80b1c8d32b2b9b0ab6af88"
+    },
+    {
+      "kind": "negative",
+      "module": "ReceiptReplay.tla",
+      "config": "ReceiptReplayStaleClock.cfg",
+      "moduleSha256": "e68741aca6095dafcd46751b96f6deb57832d316b84067ccb6bab2b73acbcd4b",
+      "configSha256": "ee8b6b90980a49f471775e292df0a5b702cb0794b72447464302771136c54f21"
+    },
+    {
+      "kind": "negative",
+      "module": "ReceiptReplay.tla",
+      "config": "ReceiptReplayStaleSnapshot.cfg",
+      "moduleSha256": "e68741aca6095dafcd46751b96f6deb57832d316b84067ccb6bab2b73acbcd4b",
+      "configSha256": "7e7b315796c0acacebe7b02c593ac0aeab867699a5282da6aafa7245ed67257a"
+    },
+    {
+      "kind": "positive",
+      "module": "PublicKnowledgeIndex.tla",
+      "config": "PublicKnowledgeIndex.cfg",
+      "moduleSha256": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
+      "configSha256": "110364d5b6e79afb7bae9589781c47b6501058d91518649f7e49a2d54e9d4f86"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeIndex.tla",
+      "config": "PublicKnowledgeIndexLegacy.cfg",
+      "moduleSha256": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
+      "configSha256": "cc6357a260598142a1c6dd3539022ed6a87efe5ce14d287380dc413831659166"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeIndex.tla",
+      "config": "PublicKnowledgeIndexPrivate.cfg",
+      "moduleSha256": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
+      "configSha256": "08fbf46652c2c63c504be1889e036a3d1fbc6d10c31716e15171f2fdbc8d4ddd"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeIndex.tla",
+      "config": "PublicKnowledgeIndexEmpty.cfg",
+      "moduleSha256": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
+      "configSha256": "8f13964a9f91cb89de6e8ad259021889519d6732e79ff6324221e72255f4b837"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeIndex.tla",
+      "config": "PublicKnowledgeIndexFailure.cfg",
+      "moduleSha256": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
+      "configSha256": "fc56c4bbf7316024a69b5c50dbc59486f204dfe421852ca85c2e061a76f5d389"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeIndex.tla",
+      "config": "PublicKnowledgeIndexCollision.cfg",
+      "moduleSha256": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
+      "configSha256": "e275baf98f73d812f21c07e4f08c60b0c31e3aa6fd1e9ac5b60a63185e8d9800"
+    },
+    {
+      "kind": "positive",
+      "module": "PublicKnowledgeRead.tla",
+      "config": "PublicKnowledgeRead.cfg",
+      "moduleSha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+      "configSha256": "afd4cfdc1b5e49a26e65ed6757ce457df798e7a407ff731385ba0d975b423df1"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeRead.tla",
+      "config": "PublicKnowledgeReadUnfiltered.cfg",
+      "moduleSha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+      "configSha256": "12f0f5ee730bc781f23298ff03abd15e842cd534882df1d3828765a390236f2f"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeRead.tla",
+      "config": "PublicKnowledgeReadCachedMetadata.cfg",
+      "moduleSha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+      "configSha256": "d2e15f4fc78ebfcc4c144d15d36b8fa20b85fd4e38bed84352dfcfa5c7632aa7"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeRead.tla",
+      "config": "PublicKnowledgeReadMissingFallback.cfg",
+      "moduleSha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+      "configSha256": "3da91e454821c0a7f16b8f009532c389c4300090822cf24f342234bf444e7cc7"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeRead.tla",
+      "config": "PublicKnowledgeReadRawText.cfg",
+      "moduleSha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+      "configSha256": "6ffd4b1fce062b139766d7fe9ef54737a99980e35030738abcebd616b54a5212"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeRead.tla",
+      "config": "PublicKnowledgeReadCollision.cfg",
+      "moduleSha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+      "configSha256": "d86d7823635966737c9e4b31af25c1a3f635c7e2d003d851abe512d4c02b885c"
+    },
+    {
+      "kind": "negative",
+      "module": "PublicKnowledgeRead.tla",
+      "config": "PublicKnowledgeReadMixedSnapshot.cfg",
+      "moduleSha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+      "configSha256": "65c5584f0d28b4399b7bc94e070bf9f660e2e1743c4ba7024f6b4a00a2eae989"
+    },
+    {
+      "kind": "positive",
+      "module": "SnapshotRead.tla",
+      "config": "SnapshotRead.cfg",
+      "moduleSha256": "117fcf2082d79fb03746b55b6dfa306ee145e9ad80144fb508fc91f2937eae96",
+      "configSha256": "1567ee3846333b270c74973d79c93ed4b03c6aa0ca45be54484497d2411936a1"
+    },
+    {
+      "kind": "negative",
+      "module": "SnapshotRead.tla",
+      "config": "SnapshotReadEarlyAuth.cfg",
+      "moduleSha256": "117fcf2082d79fb03746b55b6dfa306ee145e9ad80144fb508fc91f2937eae96",
+      "configSha256": "b275bab8e1a98c9fa76f98ba9db3300485629365113b90b2a0136507032e575d"
+    },
+    {
+      "kind": "negative",
+      "module": "SnapshotRead.tla",
+      "config": "SnapshotReadMixedClock.cfg",
+      "moduleSha256": "117fcf2082d79fb03746b55b6dfa306ee145e9ad80144fb508fc91f2937eae96",
+      "configSha256": "af88246107d10ebe9b5b3821525d27dc448f5c676cce7183eb6235e9b7a8ef60"
+    },
+    {
+      "kind": "negative",
+      "module": "SnapshotRead.tla",
+      "config": "SnapshotReadRawLog.cfg",
+      "moduleSha256": "117fcf2082d79fb03746b55b6dfa306ee145e9ad80144fb508fc91f2937eae96",
+      "configSha256": "d8f9bf17e2630637f66a3bc94041f0bae686320853daa54585ed9744567c1675"
+    },
+    {
+      "kind": "positive",
+      "module": "CommandPrivacy.tla",
+      "config": "CommandPrivacy.cfg",
+      "moduleSha256": "44974d2e9b290f35d9c94afa820eeea4d635b3f9f426bc10354b146beb45f2e2",
+      "configSha256": "6a61e40a0120b4e66105c0835d917ccc245953bb600a688874279fe25c17609a"
+    },
+    {
+      "kind": "negative",
+      "module": "CommandPrivacy.tla",
+      "config": "CommandPrivacyExistenceLeak.cfg",
+      "moduleSha256": "44974d2e9b290f35d9c94afa820eeea4d635b3f9f426bc10354b146beb45f2e2",
+      "configSha256": "daf108145374634c7bb6ac9ca80375cb0625b1a3c103cd5440f28e1c2d90d4a7"
+    },
+    {
+      "kind": "negative",
+      "module": "CommandPrivacy.tla",
+      "config": "CommandPrivacyReceiptLeak.cfg",
+      "moduleSha256": "44974d2e9b290f35d9c94afa820eeea4d635b3f9f426bc10354b146beb45f2e2",
+      "configSha256": "79c1e97ffa265af9def2df14f0c6292f64721e8c735b73a3646ee001052141a2"
+    },
+    {
+      "kind": "positive",
+      "module": "SessionFence.tla",
+      "config": "SessionFence.cfg",
+      "moduleSha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "configSha256": "35110db7a0007b753f31e7fc8002a588eb9258f580b3f24d0ceebb15d3afe8d8"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionFence.tla",
+      "config": "SessionFenceStale.cfg",
+      "moduleSha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "configSha256": "6fd52873b6303c6c697cf8b9e7f57354ca8194c7faf10afec1b2190099df57f7"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionFence.tla",
+      "config": "SessionFenceUnlocked.cfg",
+      "moduleSha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "configSha256": "4ae7cce8c2b73f940ccd585366efb1722e08db3be1e270a4f54ec805fc5776a9"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionFence.tla",
+      "config": "SessionFenceParty.cfg",
+      "moduleSha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "configSha256": "35ed05e71ad91d60c83386e73d513c3010e7ab88e33a1e15d78b10a382be14e5"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionFence.tla",
+      "config": "SessionFenceCredential.cfg",
+      "moduleSha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "configSha256": "751c46bace8b910df3da7941e024ea482e1b22a579089e8145c9568087e3f76c"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionFence.tla",
+      "config": "SessionFencePurpose.cfg",
+      "moduleSha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "configSha256": "796d3557d206d51efbf649a13dcbeb3ad4fcb36b99ca5224ffd370ddab1a773e"
+    },
+    {
+      "kind": "negative",
+      "module": "SessionFence.tla",
+      "config": "SessionFenceWitness.cfg",
+      "moduleSha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "configSha256": "0b43491e621cd1498c2a2e99fdd1aaf7fb5562eff13638d3865a0ccab054e81e"
+    },
+    {
+      "kind": "positive",
+      "module": "ContractPayment.tla",
+      "config": "ContractPayment.cfg",
+      "moduleSha256": "1b208581a400faf373dcddadcf07c9495a9537c7e5c6a467d6d3b196e86bc7d6",
+      "configSha256": "0d0c1404f88ea2707252dfa93b750aea8b33b313d7ece9c44a6d9cbae58d4f0a"
+    },
+    {
+      "kind": "positive",
+      "module": "CheckoutReadiness.tla",
+      "config": "CheckoutReadiness.cfg",
+      "moduleSha256": "fa23ae04e8c6502bde14fbcf065cee7b1a4d33a1396607b7e2e7216aeeeee301",
+      "configSha256": "0b026c707053ede33261074e7fa01b95267f1de9c51a6994800cfed902bff3f9"
+    },
+    {
+      "kind": "positive",
+      "module": "CheckoutCancellation.tla",
+      "config": "CheckoutCancellation.cfg",
+      "moduleSha256": "11e7011581224f269a1c55331dfde01ade8ec6c27ac2ef763fae8a050d0ab553",
+      "configSha256": "64c93ecd5a7f8da635b2caa53786f58da9348cc531e1b56d0365e939f36e7f10"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutCancellation.tla",
+      "config": "CheckoutCancellationUnsafe.cfg",
+      "moduleSha256": "11e7011581224f269a1c55331dfde01ade8ec6c27ac2ef763fae8a050d0ab553",
+      "configSha256": "a99d8ae1a17e7f30dcbb73f6446dee77988c1f192d356e66c5960fdbd09362a3"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutCancellation.tla",
+      "config": "CheckoutCancellationPaymentUnsafe.cfg",
+      "moduleSha256": "11e7011581224f269a1c55331dfde01ade8ec6c27ac2ef763fae8a050d0ab553",
+      "configSha256": "0477339a4454e7980e6313276ab08e4603b1c78ada5f7a70f4b01ca2cef50cc7"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutReadiness.tla",
+      "config": "CheckoutReadinessUnavailable.cfg",
+      "moduleSha256": "fa23ae04e8c6502bde14fbcf065cee7b1a4d33a1396607b7e2e7216aeeeee301",
+      "configSha256": "3f6d20c9b4fe9151a1666081cfafa3fb684aaec626e3f9dbb1e97d66f28313cc"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutReadiness.tla",
+      "config": "CheckoutReadinessStale.cfg",
+      "moduleSha256": "fa23ae04e8c6502bde14fbcf065cee7b1a4d33a1396607b7e2e7216aeeeee301",
+      "configSha256": "e2cdf31320284b351b7d9d40d179dac0e4cfd17798e59d6b1a83a102b66fd11c"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutReadiness.tla",
+      "config": "CheckoutReadinessDuplicate.cfg",
+      "moduleSha256": "fa23ae04e8c6502bde14fbcf065cee7b1a4d33a1396607b7e2e7216aeeeee301",
+      "configSha256": "ab86af1568a5421c67e5cf23f4e42db84aadcda966e38f0342531c912ce5c84d"
+    },
+    {
+      "kind": "positive",
+      "module": "CheckoutSnapshot.tla",
+      "config": "CheckoutSnapshot.cfg",
+      "moduleSha256": "2804fb92dabdc6f6ccaa518ad570abfbdc641ff94a881e6a1a9b580568b1e8b0",
+      "configSha256": "abca531531a609c6ef0eef4dc3fbaec8962fb240abbd3a886e4301d302177189"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutSnapshot.tla",
+      "config": "CheckoutSnapshotLateLines.cfg",
+      "moduleSha256": "2804fb92dabdc6f6ccaa518ad570abfbdc641ff94a881e6a1a9b580568b1e8b0",
+      "configSha256": "8315772d5acae64ac6cd79fc54f0b0391eb38340b634916f80befe19944e44d3"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutSnapshot.tla",
+      "config": "CheckoutSnapshotUnvalidated.cfg",
+      "moduleSha256": "2804fb92dabdc6f6ccaa518ad570abfbdc641ff94a881e6a1a9b580568b1e8b0",
+      "configSha256": "d12cb28153dca7a90a00bb13968fa1634846562d8867d224212aab93d6e954cf"
+    },
+    {
+      "kind": "negative",
+      "module": "CheckoutSnapshot.tla",
+      "config": "CheckoutSnapshotMutableTerms.cfg",
+      "moduleSha256": "2804fb92dabdc6f6ccaa518ad570abfbdc641ff94a881e6a1a9b580568b1e8b0",
+      "configSha256": "4dfb78201a2f21e44a9b08df5d6bfee520884f45a2bcca4d760645b04e303c31"
+    },
+    {
+      "kind": "positive",
+      "module": "TermsIdentityUpgrade.tla",
+      "config": "TermsIdentityUpgrade.cfg",
+      "moduleSha256": "d1b84f59f87b48ff500dac08c558d259c686b6addd142bbfc613f5836da52317",
+      "configSha256": "4debaa4424b0c45c037c98e86774f8d1ff407ec4eacb67f03ae33c9baf18a73d"
+    },
+    {
+      "kind": "positive",
+      "module": "TermsIdentityHistory.tla",
+      "config": "TermsIdentityHistory.cfg",
+      "moduleSha256": "539fec155667f28d8a6b3192f4d4d8ea18d647be8c33149899ed30e347067fea",
+      "configSha256": "f6a844e2f5cb1b60b231052abf63cacd227b348d00e4c4ced241075d1512d9c6"
+    },
+    {
+      "kind": "negative",
+      "module": "TermsIdentityHistory.tla",
+      "config": "TermsIdentityHistoryLiveOnly.cfg",
+      "moduleSha256": "539fec155667f28d8a6b3192f4d4d8ea18d647be8c33149899ed30e347067fea",
+      "configSha256": "038cdc5ca1885cedb5823e475c45e23ac6f4f360f9233750da4e18c7280fd439"
+    },
+    {
+      "kind": "negative",
+      "module": "TermsIdentityHistory.tla",
+      "config": "TermsIdentityHistoryDelete.cfg",
+      "moduleSha256": "539fec155667f28d8a6b3192f4d4d8ea18d647be8c33149899ed30e347067fea",
+      "configSha256": "36486f338a97dd6ef72340fb856b1ba1f1cac657b08061eb8b1c36d46b72e997"
+    },
+    {
+      "kind": "negative",
+      "module": "TermsIdentityHistory.tla",
+      "config": "TermsIdentityHistoryUpdate.cfg",
+      "moduleSha256": "539fec155667f28d8a6b3192f4d4d8ea18d647be8c33149899ed30e347067fea",
+      "configSha256": "9d5987aa66af9823396a5ce403c8a889ace33a7551274c5133a21d2dd7193b0a"
+    },
+    {
+      "kind": "negative",
+      "module": "TermsIdentityHistory.tla",
+      "config": "TermsIdentityHistoryTruncate.cfg",
+      "moduleSha256": "539fec155667f28d8a6b3192f4d4d8ea18d647be8c33149899ed30e347067fea",
+      "configSha256": "209f26cc661610e444d12e6d09945f092a6fb43cf58412cb73af6cae601c5df5"
+    },
+    {
+      "kind": "negative",
+      "module": "TermsIdentityUpgrade.tla",
+      "config": "TermsIdentityUpgradeUnfenced.cfg",
+      "moduleSha256": "d1b84f59f87b48ff500dac08c558d259c686b6addd142bbfc613f5836da52317",
+      "configSha256": "0df0c9bf61c0feb8c7a55df3988ea101391abff608ee9fc77137e34c925b93ff"
+    },
+    {
+      "kind": "negative",
+      "module": "TermsIdentityUpgrade.tla",
+      "config": "TermsIdentityUpgradeEarlyUnlock.cfg",
+      "moduleSha256": "d1b84f59f87b48ff500dac08c558d259c686b6addd142bbfc613f5836da52317",
+      "configSha256": "f97164f4bc5a7b64e9e09ad695d8415a32656de524219ecc49ef1dff343ace1f"
+    },
+    {
+      "kind": "negative",
+      "module": "TermsIdentityUpgrade.tla",
+      "config": "TermsIdentityUpgradeUnchecked.cfg",
+      "moduleSha256": "d1b84f59f87b48ff500dac08c558d259c686b6addd142bbfc613f5836da52317",
+      "configSha256": "c1c9707110748c1aae881c285d0f8698b11b4af8a08f160d2c5ff13be84083bf"
+    },
+    {
+      "kind": "positive",
+      "module": "DriveReplay.tla",
+      "config": "DriveReplay.cfg",
+      "moduleSha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "configSha256": "4269a173b57b22ee27491b3dcb2ac14d9eb2b06a4a4a7143cf2c2a062939fec6"
+    },
+    {
+      "kind": "positive",
+      "module": "DriveReplay.tla",
+      "config": "DriveReplayCrossFolder.cfg",
+      "moduleSha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "configSha256": "33a890c47fd4bf18a41cc1f868ac3788b0e364bb42e5150b435e98ab9d4c01ad"
+    },
+    {
+      "kind": "negative",
+      "module": "DriveReplay.tla",
+      "config": "DriveReplayCrossFolderObjects.cfg",
+      "moduleSha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "configSha256": "ef1af3c4f2c6214b876446b146e8719890987ff0593f6703ad1790fb6d4eab91"
+    },
+    {
+      "kind": "negative",
+      "module": "DriveReplay.tla",
+      "config": "DriveReplayUnchecked.cfg",
+      "moduleSha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "configSha256": "2bf51aafda6d0337f8422f35052aaecfd47c55de5e63c307906cb1623a9ce491"
+    },
+    {
+      "kind": "negative",
+      "module": "DriveReplay.tla",
+      "config": "DriveReplayActorIgnored.cfg",
+      "moduleSha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "configSha256": "6238ffd18f9c31777937297fa32be1800361705a989f315e291f3b56d15e8096"
+    },
+    {
+      "kind": "negative",
+      "module": "DriveReplay.tla",
+      "config": "DriveReplayLegacyAdopted.cfg",
+      "moduleSha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "configSha256": "a3fe9971114d1f19c88d5aa45c6758d40b4a1c113873f9db1cee9cea52997462"
+    },
+    {
+      "kind": "negative",
+      "module": "DriveReplay.tla",
+      "config": "DriveReplayRace.cfg",
+      "moduleSha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "configSha256": "20f5ac3591b3342afa3e432ce2e80c68c72259577688b2bc98d7f269b0c1050a"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationsAuxiliaryWrite.tla",
+      "config": "OperationsAuxiliaryWrite.cfg",
+      "moduleSha256": "d8ebed9ffa6a7441b7698c07bfbbc7d259ef10bc799f48910aa05df6084005ab",
+      "configSha256": "f73f1cc35037c5bf4eaadf8b3994ba57002eb44c2870ad53671238fecc7ed960"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsAuxiliaryWrite.tla",
+      "config": "OperationsAuxiliaryWriteUnlocked.cfg",
+      "moduleSha256": "d8ebed9ffa6a7441b7698c07bfbbc7d259ef10bc799f48910aa05df6084005ab",
+      "configSha256": "8d7a5ca567e9c9b4024dd5a329aa6680538d7bf565ba6e148684f830ad75f0b4"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsAuxiliaryWrite.tla",
+      "config": "OperationsAuxiliaryWriteResolvedRetry.cfg",
+      "moduleSha256": "d8ebed9ffa6a7441b7698c07bfbbc7d259ef10bc799f48910aa05df6084005ab",
+      "configSha256": "a9f56e46d42b3b6b16a5b793b4fea6b0c54ba6b932e35c9f99a38f3fd98fd15a"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsAuxiliaryWrite.tla",
+      "config": "OperationsAuxiliaryWritePartialAudit.cfg",
+      "moduleSha256": "d8ebed9ffa6a7441b7698c07bfbbc7d259ef10bc799f48910aa05df6084005ab",
+      "configSha256": "d42478fecb14e0e6e49fc9b505b2c5b17760831016503a3bf813f817ef79453a"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsAuxiliaryWrite.tla",
+      "config": "OperationsAuxiliaryWriteRetryTwice.cfg",
+      "moduleSha256": "d8ebed9ffa6a7441b7698c07bfbbc7d259ef10bc799f48910aa05df6084005ab",
+      "configSha256": "37d4e62d39ebc175793247627c56db9515c3aac429d777c8515c9ec8908b7f16"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsAuxiliaryWrite.tla",
+      "config": "OperationsAuxiliaryWriteUnencrypted.cfg",
+      "moduleSha256": "d8ebed9ffa6a7441b7698c07bfbbc7d259ef10bc799f48910aa05df6084005ab",
+      "configSha256": "18c81994a993886d9b69fead1cf7c43cbc83e748757ab1d7dbdfd6a0a0641866"
+    },
+    {
+      "kind": "positive",
+      "module": "NavigationVisit.tla",
+      "config": "NavigationVisit.cfg",
+      "moduleSha256": "e922f6f5af61dea1c18a72b5bd18c2efe7b3a37ed6b88f108ac8400676e5395b",
+      "configSha256": "a54954f5c2bf0e5131378cc4b7b02ce610610b7cb3538fc21784d2335d5cb11d"
+    },
+    {
+      "kind": "negative",
+      "module": "NavigationVisit.tla",
+      "config": "NavigationVisitUnsafe.cfg",
+      "moduleSha256": "e922f6f5af61dea1c18a72b5bd18c2efe7b3a37ed6b88f108ac8400676e5395b",
+      "configSha256": "4963e7b2167993c0a1999f42e5e3981fea94ae50c535c6f6f86d5d00ef0b2c4a"
+    },
+    {
+      "kind": "positive",
+      "module": "ProviderRollback.tla",
+      "config": "ProviderRollback.cfg",
+      "moduleSha256": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+      "configSha256": "a27970ead639d87ddc54113bc53930ababed2b580f4ecb59a9a24c7d20e845ec"
+    },
+    {
+      "kind": "positive",
+      "module": "ProviderRollback.tla",
+      "config": "ProviderRollbackCompatible.cfg",
+      "moduleSha256": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+      "configSha256": "c885b62f8739620aa274fbd753b44be57650b813052ba68dc1f82ec03c5b242b"
+    },
+    {
+      "kind": "positive",
+      "module": "ProviderRollback.tla",
+      "config": "ProviderRollbackMixed.cfg",
+      "moduleSha256": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+      "configSha256": "6a6f1f348bb636c40963a84d8be78e8900f775328425a7507e42bc4606796ed0"
+    },
+    {
+      "kind": "positive",
+      "module": "ProviderRollback.tla",
+      "config": "ProviderRollbackForward.cfg",
+      "moduleSha256": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+      "configSha256": "049183e045dc1534d63dd23fb083fc8ec3f13893e01dd23e9576af63d5b9f30a"
+    },
+    {
+      "kind": "negative",
+      "module": "ProviderRollback.tla",
+      "config": "ProviderRollbackPartial.cfg",
+      "moduleSha256": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+      "configSha256": "748c08c63104947bf8c0501fe3c0f35b27d07c5c56854e5ddb26e3ba1adec77f"
+    },
+    {
+      "kind": "negative",
+      "module": "ProviderRollback.tla",
+      "config": "ProviderRollbackUnsafe.cfg",
+      "moduleSha256": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+      "configSha256": "1b4252d24723914aaa7983194b2426980b23918c2f022e7bc1a816c34827c735"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationalLiveness.tla",
+      "config": "OperationalLiveness.cfg",
+      "moduleSha256": "e30f99075786c69184b310dc5052c782b3df3acef2fbf22c494c3ce3a3f77e0e",
+      "configSha256": "afd98dd0b242d18535aaf24a014ce201950fd495f339614e31347e3a9d27e27b"
+    },
+    {
+      "kind": "positive",
+      "module": "FanHubOnboarding.tla",
+      "config": "FanHubOnboarding.cfg",
+      "moduleSha256": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+      "configSha256": "8ab6af3091dddef215ca87a4cd57f12478f8fa55953e46ca3c6eb2461c3a455e"
+    },
+    {
+      "kind": "positive",
+      "module": "FanHubOnboarding.tla",
+      "config": "FanHubOnboardingLiveness.cfg",
+      "moduleSha256": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+      "configSha256": "5fd13577661b72d4d290284bc75817778aeef17ea022c52f6917040ff71a9663"
+    },
+    {
+      "kind": "negative",
+      "module": "FanHubOnboarding.tla",
+      "config": "FanHubOnboardingUnfair.cfg",
+      "moduleSha256": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+      "configSha256": "157176fb937c1c7e15f2e0b17fe0dcc8e2302bfc044c07c60af959c58b8ae858"
+    },
+    {
+      "kind": "negative",
+      "module": "FanHubOnboarding.tla",
+      "config": "FanHubOnboardingConsent.cfg",
+      "moduleSha256": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+      "configSha256": "d82bae8cbfdbe77c9d58ba696ba3a3f251feceac1c51006f44dd691a284dfb6e"
+    },
+    {
+      "kind": "negative",
+      "module": "FanHubOnboarding.tla",
+      "config": "FanHubOnboardingContext.cfg",
+      "moduleSha256": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+      "configSha256": "1f5983b459b04de2c43fb285928987039ab87c307825c7c41d0ed2d212ba0df3"
+    },
+    {
+      "kind": "negative",
+      "module": "FanHubOnboarding.tla",
+      "config": "FanHubOnboardingFlight.cfg",
+      "moduleSha256": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+      "configSha256": "61a5b90584686777949b356d20092ce998882880ebbe01800d2f6c16e7820dba"
+    },
+    {
+      "kind": "negative",
+      "module": "FanHubOnboarding.tla",
+      "config": "FanHubOnboardingTerminal.cfg",
+      "moduleSha256": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+      "configSha256": "06abebc756168b9d30abd6211a00b0bf26112fea042648a954ba9af9eef87d69"
+    },
+    {
+      "kind": "positive",
+      "module": "AccessCodeValidation.tla",
+      "config": "AccessCodeValidation.cfg",
+      "moduleSha256": "a2b0c9de2e5d5285a16e34066cce7dc9a5b82edd038b96f12990d9634aed6155",
+      "configSha256": "4a29f764763dbfba0ee6e790329799965083118660bfce5f1f16df597a3f2dca"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessCodeValidation.tla",
+      "config": "AccessCodeValidationStale.cfg",
+      "moduleSha256": "a2b0c9de2e5d5285a16e34066cce7dc9a5b82edd038b96f12990d9634aed6155",
+      "configSha256": "d4dc74345b1e79fb032b05b82be7031b6f3a570fd07835d1f97547e3793e4ad5"
+    },
+    {
+      "kind": "negative",
+      "module": "AccessCodeValidation.tla",
+      "config": "AccessCodeValidationSuperficial.cfg",
+      "moduleSha256": "a2b0c9de2e5d5285a16e34066cce7dc9a5b82edd038b96f12990d9634aed6155",
+      "configSha256": "ec79cb02c3f008d2e109d914823841736f16aca69f3377ad30e14d3fee896217"
+    },
+    {
+      "kind": "positive",
+      "module": "InboundCapture.tla",
+      "config": "InboundCapture.cfg",
+      "moduleSha256": "3f579c3b923f2691b692923337d10ccd26961166c4ba66fc405e884078ad2584",
+      "configSha256": "0ca2865e026a31d94ccda9880e10dc3d5f0fef60444bfcbeabf07ff82bf0490d"
+    },
+    {
+      "kind": "negative",
+      "module": "InboundCapture.tla",
+      "config": "InboundCaptureDisabled.cfg",
+      "moduleSha256": "3f579c3b923f2691b692923337d10ccd26961166c4ba66fc405e884078ad2584",
+      "configSha256": "2d03441196b8beeca703e0b0324a3d7aef8705ae4611984a721855f3067b083d"
+    },
+    {
+      "kind": "negative",
+      "module": "InboundCapture.tla",
+      "config": "InboundCaptureApplicationDirectionRefused.cfg",
+      "moduleSha256": "3f579c3b923f2691b692923337d10ccd26961166c4ba66fc405e884078ad2584",
+      "configSha256": "bd2121b6f1186418895729b5afb57ee66b817bae9a78f932d1cd9f74b28176a6"
+    },
+    {
+      "kind": "negative",
+      "module": "InboundCapture.tla",
+      "config": "InboundCaptureEveryIncomingRow.cfg",
+      "moduleSha256": "3f579c3b923f2691b692923337d10ccd26961166c4ba66fc405e884078ad2584",
+      "configSha256": "df00e8392abaaa1fe0851980977157f8be243e09064eeb2454868b145a8777a3"
+    },
+    {
+      "kind": "negative",
+      "module": "InboundCapture.tla",
+      "config": "InboundCaptureEveryDelivery.cfg",
+      "moduleSha256": "3f579c3b923f2691b692923337d10ccd26961166c4ba66fc405e884078ad2584",
+      "configSha256": "3fcdcc69ff4e3713fc5a8133f6b20830db1836848342c343f3b63e7f6a5c3b39"
+    },
+    {
+      "kind": "positive",
+      "module": "LiveIntakeAuthority.tla",
+      "config": "LiveIntakeAuthority.cfg",
+      "moduleSha256": "30d28aadd0265541ab32ac7cfe7fba981afd237251c88e8b105b7605adc155a2",
+      "configSha256": "eb4773c6bb8764d2e91a372dad7ece1d3fa5a6042bbebcffc391d74cebdfba30"
+    },
+    {
+      "kind": "negative",
+      "module": "LiveIntakeAuthority.tla",
+      "config": "LiveIntakeAmbient.cfg",
+      "moduleSha256": "30d28aadd0265541ab32ac7cfe7fba981afd237251c88e8b105b7605adc155a2",
+      "configSha256": "dac4bd9c0b73b17a37e3b6301058718d10a9bc42b344a57402fc939932dd2d22"
+    },
+    {
+      "kind": "negative",
+      "module": "LiveIntakeAuthority.tla",
+      "config": "LiveIntakeStale.cfg",
+      "moduleSha256": "30d28aadd0265541ab32ac7cfe7fba981afd237251c88e8b105b7605adc155a2",
+      "configSha256": "4245d511a4f85fb144fdd3e7159aa8cea6991fdd274ec0a52671f0a3721328fe"
+    },
+    {
+      "kind": "negative",
+      "module": "LiveIntakeAuthority.tla",
+      "config": "LiveIntakeUnpersisted.cfg",
+      "moduleSha256": "30d28aadd0265541ab32ac7cfe7fba981afd237251c88e8b105b7605adc155a2",
+      "configSha256": "8a462301eaf6b1cd9db946295ca830da0106b32d93dbde8c0e075dbad48aa760"
+    },
+    {
+      "kind": "positive",
+      "module": "ArtistActivation.tla",
+      "config": "ArtistActivation.cfg",
+      "moduleSha256": "9415d7c06aa03fdc14bc877c1ff99765b2a9adfb9d1685c420f34ab3eda6438f",
+      "configSha256": "ba58e8206d929c869b2ad2b869126c220abf63fe3c29993b8ad3698eb038741c"
+    },
+    {
+      "kind": "negative",
+      "module": "ArtistActivation.tla",
+      "config": "ArtistActivationUnsafe.cfg",
+      "moduleSha256": "9415d7c06aa03fdc14bc877c1ff99765b2a9adfb9d1685c420f34ab3eda6438f",
+      "configSha256": "ffc651e991802e25a23c9f826c0f11b6776cd2285f8847257f599fe82a19e86c"
+    },
+    {
+      "kind": "positive",
+      "module": "MusicEntitlement.tla",
+      "config": "MusicEntitlement.cfg",
+      "moduleSha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "configSha256": "1d01c4e7c22ffb65fdcd11c272eb6ffa9266ed87f46ad1493abd5b28bfb74ee5"
+    },
+    {
+      "kind": "positive",
+      "module": "MusicPurchaseReplay.tla",
+      "config": "MusicPurchaseReplay.cfg",
+      "moduleSha256": "564aace9809fc6b2c5b75b4f3dd265de68d1187b70b4fd5be99c89d838a9f05c",
+      "configSha256": "5e9dfb1ee970257c61287e1f2ddb43f340234c9b1ddf6bedc0d656c8aa5b608f"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPurchaseReplay.tla",
+      "config": "MusicPurchaseReplayUnbound.cfg",
+      "moduleSha256": "564aace9809fc6b2c5b75b4f3dd265de68d1187b70b4fd5be99c89d838a9f05c",
+      "configSha256": "df44977c82ee2fc30e8adee15b76dec819601b72c51f35c075e98fcb18ca2bae"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPurchaseReplay.tla",
+      "config": "MusicPurchaseReplayGlobalKey.cfg",
+      "moduleSha256": "564aace9809fc6b2c5b75b4f3dd265de68d1187b70b4fd5be99c89d838a9f05c",
+      "configSha256": "e399bb689384c94b746be13d209d8badb3a8bbae325e89825c2627fecdb3f096"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPurchaseReplay.tla",
+      "config": "MusicPurchaseReplayStaleLookup.cfg",
+      "moduleSha256": "564aace9809fc6b2c5b75b4f3dd265de68d1187b70b4fd5be99c89d838a9f05c",
+      "configSha256": "ecc87a3caa99d8ed0f429eeaa2590bf26337c462dc56232921f46254926d92af"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicEntitlement.tla",
+      "config": "MusicEntitlementForgedPaid.cfg",
+      "moduleSha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "configSha256": "ed7e5f9ea9215b37fd04415ae9513c21e4683ed031183bc3e50e16d910ab9db3"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicEntitlement.tla",
+      "config": "MusicEntitlementRepeatedGrant.cfg",
+      "moduleSha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "configSha256": "ab99a166e494cd24f8d1c97a221e4217e3861fbb81923e3a0cd4a4268eabb86b"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicEntitlement.tla",
+      "config": "MusicEntitlementNoLimit.cfg",
+      "moduleSha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "configSha256": "521403ca2a98706315a4d49c02e4a7a9e76e54cc3f5cac422c8c951e8f40adf2"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicEntitlement.tla",
+      "config": "MusicEntitlementEndlessReplay.cfg",
+      "moduleSha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "configSha256": "283adcf142b41fe6953e05e8560692a9525f60285ec12b1c39ca27c6899cc535"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicEntitlement.tla",
+      "config": "MusicEntitlementFreshReplayUrl.cfg",
+      "moduleSha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "configSha256": "87506adb35f6557b34ba036166bb36fd84f048caf2cfdef6f120c9e753f9fd68"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicEntitlement.tla",
+      "config": "MusicEntitlementRefundedDownload.cfg",
+      "moduleSha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "configSha256": "8aacebb1b70b924393fe43cc16b0e73de2de39453d9c123832ddd8de646c84a6"
+    },
+    {
+      "kind": "positive",
+      "module": "MusicPaymentOutcome.tla",
+      "config": "MusicPaymentOutcome.cfg",
+      "moduleSha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "configSha256": "c3fdd9a9434145f3337fb353bf5dc945bd477c5e06faa44a0b7eafe694291814"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPaymentOutcome.tla",
+      "config": "MusicPaymentOutcomeFailure.cfg",
+      "moduleSha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "configSha256": "1e6d32e530c7039ab3816df4ec0607d77b57ffee5da9926f19bf0e63ed6af963"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPaymentOutcome.tla",
+      "config": "MusicPaymentOutcomeClosed.cfg",
+      "moduleSha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "configSha256": "51c84a56b70e5daba2bebaf6db45735689b4824663383fb0d23c412d16c1a813"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPaymentOutcome.tla",
+      "config": "MusicPaymentOutcomeReview.cfg",
+      "moduleSha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "configSha256": "ca6f44102474c76f4c012662c5a12c21f41bb42cb83632998f94709cf07be398"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPaymentOutcome.tla",
+      "config": "MusicPaymentOutcomeReplay.cfg",
+      "moduleSha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "configSha256": "e5cded6e21c672f215d5361d0e90b30ccbb29724709d4e52d435e41e9f7d13a3"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPaymentOutcome.tla",
+      "config": "MusicPaymentOutcomeRetry.cfg",
+      "moduleSha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "configSha256": "ca53f72290f47acad3f395a4537e178e64968c193f482436d4e9c32f07ce1d51"
+    },
+    {
+      "kind": "negative",
+      "module": "MusicPaymentOutcome.tla",
+      "config": "MusicPaymentOutcomeFence.cfg",
+      "moduleSha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "configSha256": "a5f4313226b717a14af3fbbf43c9573eac3f223fb87bf6e192a70795e82ba0b8"
+    },
+    {
+      "kind": "positive",
+      "module": "ArtistClaimKind.tla",
+      "config": "ArtistClaimKind.cfg",
+      "moduleSha256": "3bc53a89a1753446a4822efd840c31c1ce3f59313b030be92d5fefb95b1707f6",
+      "configSha256": "0023ba673289b0699a730812a7479990ee049298acc9141063f10ab56573973c"
+    },
+    {
+      "kind": "negative",
+      "module": "ArtistClaimKind.tla",
+      "config": "ArtistClaimKindUnsafe.cfg",
+      "moduleSha256": "3bc53a89a1753446a4822efd840c31c1ce3f59313b030be92d5fefb95b1707f6",
+      "configSha256": "e612efbd883becb7f7fa2647578ee4b46281745cf99b1b7139ce553dd7be579b"
+    },
+    {
+      "kind": "positive",
+      "module": "ArtistClaimTarget.tla",
+      "config": "ArtistClaimTarget.cfg",
+      "moduleSha256": "08dd90946828374569f12d86313d8e61d94469a2c30a9c2dd15a9ebbb0143396",
+      "configSha256": "0c9e171bc4389555c19654d7741a7acb6d95ab8eaafc4328b6499ad5fb4922fe"
+    },
+    {
+      "kind": "negative",
+      "module": "ArtistClaimTarget.tla",
+      "config": "ArtistClaimTargetUnsafe.cfg",
+      "moduleSha256": "08dd90946828374569f12d86313d8e61d94469a2c30a9c2dd15a9ebbb0143396",
+      "configSha256": "fb3eb5ba48d8b9b430da9bf388e7fcab3e504c5bba4da72b8a1f27722273f2ea"
+    },
+    {
+      "kind": "positive",
+      "module": "OperationsFailureReplay.tla",
+      "config": "OperationsFailureReplay.cfg",
+      "moduleSha256": "d3ac5b0ea620d08527b750d30220218ec0477862d2422e8a042e8a8e7434b8b1",
+      "configSha256": "205df936878ff4095d2cd29f6c1a0ba007282a84fcfe4342553f9851b6de5a48"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsFailureReplay.tla",
+      "config": "OperationsFailureReplayRelabelOnly.cfg",
+      "moduleSha256": "d3ac5b0ea620d08527b750d30220218ec0477862d2422e8a042e8a8e7434b8b1",
+      "configSha256": "8e507e2e0a2af31263fb9437597b848a1ea13f450baa9a831af14542470bad6b"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsFailureReplay.tla",
+      "config": "OperationsFailureReplayUnsettled.cfg",
+      "moduleSha256": "d3ac5b0ea620d08527b750d30220218ec0477862d2422e8a042e8a8e7434b8b1",
+      "configSha256": "7e41a229e6053062889ca1803dc7eff0959ea349979bd01db10b0088422bd88c"
+    },
+    {
+      "kind": "negative",
+      "module": "OperationsFailureReplay.tla",
+      "config": "OperationsFailureReplayUnmerged.cfg",
+      "moduleSha256": "d3ac5b0ea620d08527b750d30220218ec0477862d2422e8a042e8a8e7434b8b1",
+      "configSha256": "06d83f5ea0616eeb3970fc5d2498a41582a13e3e77a303a25e5b12118eb05711"
+    },
+    {
+      "kind": "positive",
+      "module": "TicketManualReview.tla",
+      "config": "TicketManualReview.cfg",
+      "moduleSha256": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+      "configSha256": "d2188f7899d8797c5aa15a61d5d32dd5f48ff7117b93d4ed7557b152344ffe76"
+    },
+    {
+      "kind": "positive",
+      "module": "TicketManualReview.tla",
+      "config": "TicketManualReviewLockReleasedGuarded.cfg",
+      "moduleSha256": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+      "configSha256": "6ee38440ebb4d65c56a744d7aa8e4b74f9388159b5133a564d3f6d358b52da6d"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketManualReview.tla",
+      "config": "TicketManualReviewLockReleased.cfg",
+      "moduleSha256": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+      "configSha256": "6d345445daf969c94c0ba93bfcd21a892636d8ef1818d69bd06804dbfe58af8d"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketManualReview.tla",
+      "config": "TicketManualReviewSubmitterReviews.cfg",
+      "moduleSha256": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+      "configSha256": "94aa99787cade85e26b09bf56f2491f36d789ee9564322a47a43c8e7c14ceac4"
+    },
+    {
+      "kind": "negative",
+      "module": "TicketManualReview.tla",
+      "config": "TicketManualReviewLockReleasedUnguarded.cfg",
+      "moduleSha256": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+      "configSha256": "3393757d152879613fe1b2dc59a6a6196d4270bc029399df77b33b6ef3f76515"
+    },
+    {
+      "kind": "positive",
+      "module": "IndexDeclaration.tla",
+      "config": "IndexDeclaration.cfg",
+      "moduleSha256": "bb5f936380117713f7098e8d40a18883f40ead9a1bce3bb1f9e4bd92d4a49836",
+      "configSha256": "6da2310ea72d3b8415253bd26302cfae8e0ceffa601045d9e1582127649a89a3"
+    },
+    {
+      "kind": "negative",
+      "module": "IndexDeclaration.tla",
+      "config": "IndexDeclarationKeyUnique.cfg",
+      "moduleSha256": "bb5f936380117713f7098e8d40a18883f40ead9a1bce3bb1f9e4bd92d4a49836",
+      "configSha256": "49d5a50a11d0b741567941383f801b1cf505ffa162d134a2c8957f546681054e"
+    },
+    {
+      "kind": "negative",
+      "module": "IndexDeclaration.tla",
+      "config": "IndexDeclarationKeyTimeUnique.cfg",
+      "moduleSha256": "bb5f936380117713f7098e8d40a18883f40ead9a1bce3bb1f9e4bd92d4a49836",
+      "configSha256": "81fa3174a93205af07c0dc392d2b8f5be264278f1332b05cb05b2a24a3de0e37"
+    },
+    {
+      "kind": "negative",
+      "module": "IndexDeclaration.tla",
+      "config": "IndexDeclarationIdentityNotUnique.cfg",
+      "moduleSha256": "bb5f936380117713f7098e8d40a18883f40ead9a1bce3bb1f9e4bd92d4a49836",
+      "configSha256": "57807fc0522e2e8b48766b2aa0d61371a11c44325791b7861695df1fb008b190"
+    },
+    {
+      "kind": "positive",
+      "module": "InteractionWriteBudget.tla",
+      "config": "InteractionWriteBudget.cfg",
+      "moduleSha256": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
+      "configSha256": "086c31c178692802cafdd7277b1249d51366fdaff415a7b6b37b54a8a362f1c8"
+    },
+    {
+      "kind": "negative",
+      "module": "InteractionWriteBudget.tla",
+      "config": "InteractionWriteBudgetErrorRefunds.cfg",
+      "moduleSha256": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
+      "configSha256": "70122b16cd0d9168ca44894cfcc30979bf5a7d683ce46e3f30486b58ab0964ac"
+    },
+    {
+      "kind": "negative",
+      "module": "InteractionWriteBudget.tla",
+      "config": "InteractionWriteBudgetOneExtra.cfg",
+      "moduleSha256": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
+      "configSha256": "e58b11517278d49a941353c7653155f4df5f57f292328a9061a1bd6fc86e60ed"
+    },
+    {
+      "kind": "negative",
+      "module": "InteractionWriteBudget.tla",
+      "config": "InteractionWriteBudgetUnlockedIncrement.cfg",
+      "moduleSha256": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
+      "configSha256": "eb792a2cd1a29a13fdfb158b5a99a16398f01bd0b6e60ff02e3600e9c36697c8"
+    },
+    {
+      "kind": "negative",
+      "module": "InteractionWriteBudget.tla",
+      "config": "InteractionWriteBudgetOneCounter.cfg",
+      "moduleSha256": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
+      "configSha256": "987e3abf110f15b562209e6d8190c8a0a9270caff51e068882fc7a04a23c9471"
+    },
+    {
+      "kind": "positive",
+      "module": "EventOrganizer.tla",
+      "config": "EventOrganizer.cfg",
+      "moduleSha256": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
+      "configSha256": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d"
+    },
+    {
+      "kind": "negative",
+      "module": "EventOrganizer.tla",
+      "config": "EventOrganizerAnyoneClaims.cfg",
+      "moduleSha256": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
+      "configSha256": "87c88ff91027aa555ac04eeda4c6d98bbc92f34458a5c070bc7f70844c6d0ea5"
+    },
+    {
+      "kind": "negative",
+      "module": "EventOrganizer.tla",
+      "config": "EventOrganizerUnconditionalWrite.cfg",
+      "moduleSha256": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
+      "configSha256": "f735a2ec461f4995718cd73d66940e3e81e74cb166498b239100051de506e479"
+    },
+    {
+      "kind": "negative",
+      "module": "EventOrganizer.tla",
+      "config": "EventOrganizerTrustEarlierRead.cfg",
+      "moduleSha256": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
+      "configSha256": "55781bffd01b28268c218fe896d026901db6ad84803b38c89359a5e290f2b430"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskRead.tla",
+      "config": "TaskRead.cfg",
+      "moduleSha256": "6f35c2d986a1bc8680986c21531aef3acc9b4d1740dd589f471940cc4f6babc6",
+      "configSha256": "63eb22c06d6bfc768c5412d859e2f476239fd0996f89107f28e8c8310848c616"
+    },
+    {
+      "kind": "positive",
+      "module": "TaskView.tla",
+      "config": "TaskView.cfg",
+      "moduleSha256": "d641496834d630d801c21a268e73d8fea1881f72ec66b8087558db0597ba948d",
+      "configSha256": "d87a42d1351f4ea32e8c450540f81efa810538a40f3173b19da2ae0e25d19614"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskView.tla",
+      "config": "TaskViewLate.cfg",
+      "moduleSha256": "d641496834d630d801c21a268e73d8fea1881f72ec66b8087558db0597ba948d",
+      "configSha256": "bff484d1cb06b9bd9deec650630d774f6800d68d1fba3a861df29303e3e8c357"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskView.tla",
+      "config": "TaskViewRetained.cfg",
+      "moduleSha256": "d641496834d630d801c21a268e73d8fea1881f72ec66b8087558db0597ba948d",
+      "configSha256": "cb4b8ef88ae5f13160518540f4a05431c9e402ff6d98a73a910821c475ae8f31"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskView.tla",
+      "config": "TaskViewInvalid.cfg",
+      "moduleSha256": "d641496834d630d801c21a268e73d8fea1881f72ec66b8087558db0597ba948d",
+      "configSha256": "37ba55b00f0bdd07afeb1ddfc36aef859d74e2b5d57acc23fe67f286b69a0c76"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRead.tla",
+      "config": "TaskReadScope.cfg",
+      "moduleSha256": "6f35c2d986a1bc8680986c21531aef3acc9b4d1740dd589f471940cc4f6babc6",
+      "configSha256": "6beee61cf28335c10b9a28d5b12c14bda501bb0d96359e0a7921197021cc6809"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRead.tla",
+      "config": "TaskReadEvent.cfg",
+      "moduleSha256": "6f35c2d986a1bc8680986c21531aef3acc9b4d1740dd589f471940cc4f6babc6",
+      "configSha256": "376076d7020d9873e2a12794bfe5ac9dc4e207b50f7c048fc118ae261ed2a5f4"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRead.tla",
+      "config": "TaskReadEarly.cfg",
+      "moduleSha256": "6f35c2d986a1bc8680986c21531aef3acc9b4d1740dd589f471940cc4f6babc6",
+      "configSha256": "8bcceeb639d87cc0785d1e8f4f133f2c290060992ee3227ee3bd2947bf1eab63"
+    },
+    {
+      "kind": "negative",
+      "module": "TaskRead.tla",
+      "config": "TaskReadMixed.cfg",
+      "moduleSha256": "6f35c2d986a1bc8680986c21531aef3acc9b4d1740dd589f471940cc4f6babc6",
+      "configSha256": "01a84e47e0ead557ccfc5b5886f9cdb3a3624573bafa459e09a4de01cb4c7a63"
+    },
+    {
+      "kind": "positive",
+      "module": "WebOnboardingRecovery.tla",
+      "config": "WebOnboardingRecovery.cfg",
+      "moduleSha256": "34c0176d16039ce5f142b484522f61a305ea36c48526a512d587f3112cfebffd",
+      "configSha256": "ed92f2d992280f08b21a18cf2c26a63f32cde2e125e9b36a1843695a89d4f8ca"
+    },
+    {
+      "kind": "negative",
+      "module": "WebOnboardingRecovery.tla",
+      "config": "WebOnboardingRecoveryStale.cfg",
+      "moduleSha256": "34c0176d16039ce5f142b484522f61a305ea36c48526a512d587f3112cfebffd",
+      "configSha256": "242146f81cb14630d5bd9aad6e9ddd630a67248c81843503e8eca34577769108"
+    },
+    {
+      "kind": "negative",
+      "module": "WebOnboardingRecovery.tla",
+      "config": "WebOnboardingRecoveryReceipt.cfg",
+      "moduleSha256": "34c0176d16039ce5f142b484522f61a305ea36c48526a512d587f3112cfebffd",
+      "configSha256": "4e1aadb29d88af91bfeecd00e6db0ab75373bb0c9bd11a1b85c4b87c869d94c7"
+    },
+    {
+      "kind": "negative",
+      "module": "WebOnboardingRecovery.tla",
+      "config": "WebOnboardingRecoveryOverlap.cfg",
+      "moduleSha256": "34c0176d16039ce5f142b484522f61a305ea36c48526a512d587f3112cfebffd",
+      "configSha256": "8b0f60090091c9ef17e88c5d4196d09b9c2e5cfd43aff6e0ca9eaf54be0d30bf"
+    },
+    {
+      "kind": "positive",
+      "module": "ArtistFollowConsent.tla",
+      "config": "ArtistFollowConsent.cfg",
+      "moduleSha256": "bfe1972cf000459bc3e05925e9b83250d1dd148c7664de74672017bd88bcfb5d",
+      "configSha256": "af179af5ae5dee9762878d1c6655ade79409d75ae230fcb603b57c1a409e8dc3"
+    },
+    {
+      "kind": "negative",
+      "module": "ArtistFollowConsent.tla",
+      "config": "ArtistFollowConsentClick.cfg",
+      "moduleSha256": "bfe1972cf000459bc3e05925e9b83250d1dd148c7664de74672017bd88bcfb5d",
+      "configSha256": "a0151a22e9eb972bcd748b23e674cbddff16a0e5b6d989a4c4d14124d5735b68"
+    },
+    {
+      "kind": "negative",
+      "module": "ArtistFollowConsent.tla",
+      "config": "ArtistFollowConsentUnknown.cfg",
+      "moduleSha256": "bfe1972cf000459bc3e05925e9b83250d1dd148c7664de74672017bd88bcfb5d",
+      "configSha256": "6913da0e0214e9ffad45fb5e5f44e31c7ebdb910ca03ee6610eb23651899a917"
+    },
+    {
+      "kind": "negative",
+      "module": "ArtistFollowConsent.tla",
+      "config": "ArtistFollowConsentStale.cfg",
+      "moduleSha256": "bfe1972cf000459bc3e05925e9b83250d1dd148c7664de74672017bd88bcfb5d",
+      "configSha256": "ac208807eb6297e19e327dbe92ed74513528c3bed7dd259ca771775ee458a435"
+    }
+  ],
+  "limits": "Finite model scopes from the referenced configurations. No complete implementation/refinement or deployed correspondence."
+}

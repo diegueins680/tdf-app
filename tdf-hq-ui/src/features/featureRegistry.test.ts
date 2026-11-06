@@ -36,6 +36,14 @@ describe('featureRegistry', () => {
     }
   });
 
+  it('keeps legacy DJ booth routes out of feature search', () => {
+    expect(getFeatureByPath('/dj-booth')?.id).toBe('bookings.dj-booth');
+    expect(getFeatureByPath('/reservar/dj-booth')?.searchable).toBe(false);
+    for (const query of ['dj booth', 'cabina dj']) {
+      expect(searchFeatures(query).map(({ id }) => id)).not.toContain('bookings.dj-booth');
+    }
+  });
+
   it('has unique stable IDs and complete bilingual discovery metadata', () => {
     const ids = featureRegistry.map(({ id }) => id);
     expect(new Set(ids).size).toBe(ids.length);

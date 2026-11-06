@@ -1,0 +1,99 @@
+{
+  "recordedAt": "2026-10-26T22:00:50.115600+00:00",
+  "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "problem": {
+    "source": "7ddfbd73bf08d007b4658b700bb9cbe289a6b480",
+    "workflow": 40395684105,
+    "job": 121827958993,
+    "result": "CANCELLED at declared15minute job budget during browser/system dependency installation;63focused tests passed, browser journey did not run",
+    "failureArchiveSource": "d7657f3daf7ee037703a327d840a67e29ac61099",
+    "failureArchivePath": "reports/music-credential-cache-ci-failures-7ddf-20261026",
+    "all5ArchiveMemberHashesIndependentlyVerified": true,
+    "originalSocialLogSha256": "599368aae0e53dccdb6284ec4790ef636e68b56bb6b911bf10d116160c9b70c7"
+  },
+  "implementation": {
+    "image": "mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53",
+    "sameImageAsProtectedPersonaJob": true,
+    "containerOptions": "--init --ipc=host --user 1001",
+    "socialNodeVersion": "24 unchanged",
+    "timeoutMinutes": 15,
+    "requiredCheckName": "social-client unchanged",
+    "preflight": "Validate explicitly selected workflow/job image, lock and installed package versions, bundled metadata, browser directory and actual home owner; launch and close all3browsers before unchanged social journey",
+    "zeroArgumentPersonaSelectionPreserved": true,
+    "installerFallback": false
+  },
+  "preservedValidation": [
+    "All six focused social test files",
+    "Generated additive contract comparison",
+    "Keyboard, explicit connection acceptance,390px overflow and axe browser assertions",
+    "Always-run artifact upload and preview cleanup",
+    "All existing application assertions, job budgets, required contexts, branch protection and FIFO"
+  ],
+  "localVerification": {
+    "node": "22.14.0",
+    "pureAndPipelineControls": {
+      "passed": 49,
+      "failed": 0,
+      "skipped": 0,
+      "addedControls": 6
+    },
+    "metadataControls": {
+      "inventory": 6,
+      "traceability": 10,
+      "sourceAdmission": 11
+    },
+    "catalog": {
+      "candidates": 1341,
+      "unreviewed": 0,
+      "stale": 0,
+      "entireDecisionFileExactMain": true,
+      "allCandidateIdsValuesClassificationsUnchanged": true,
+      "canonicalConsumerAndLineReportsRegenerated": true,
+      "changedCandidateFields": [
+        "automationConsumers",
+        "consumerCount",
+        "line",
+        "lines"
+      ]
+    },
+    "requirements": {
+      "total": 147,
+      "wholeMainObjectsExact": 146,
+      "allNormativeFieldsExact": true,
+      "onlyImplementationMappingAppend": "SYS-CI-BROWSER-001 -> social workflow"
+    },
+    "entireApplicationBackendSqlOperationsDependenciesMobileAndApiExactMain": true,
+    "fullLocalRepoQuality": "Not run; current-head complete hosted quality remains mandatory.",
+    "actualLinuxImage": "PENDING: Docker daemon unavailable locally; finite tests and metadata do not qualify the runtime."
+  },
+  "preparationFailuresRetained": [
+    "Initial whole49control invocation:48PASS1FAIL because pinned Mobile checkout was not initialized; initialized only own detached d832, strict final49controlsPASS without weakening assertions.",
+    "Prepublication guard initially expected byte-exact generated catalogs, then refused11rows of legitimate consumer-count/line changes. Verified all1341IDs/values/classifications and exact decisions before copying canonical regenerated reports; no source commit or push had occurred."
+  ],
+  "materialInputSha256": {
+    ".github/workflows/social-verification.yml": "375f391cdf296138240d97c2fbdbb0f7f52fb349d42536241a104803e3745a45",
+    "scripts/verify-playwright-image.mjs": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
+    "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
+    "scripts/__tests__/ci-pipeline.test.mjs": "c16f7d089697c1ced43ea387585b2d8832c3f6a9891812935ca9ad249e615d3d"
+  },
+  "localLogSha256": {
+    "social-browser-2140-controls.log": "c67f3f6f7a7c0239fe6c304ac779920beb001cb5c1d633f019a9474e5e633067",
+    "social-browser-2140-controls-v2.log": "898feadbfe447d7649d37eb18b5d764b2d2e8ddd59de27d78661dba4457a07cd",
+    "social-browser-2140-inventory-controls.log": "13b94b2979c025c30129ec4f30fa875fe1ed590799863cbd6c396f463490bfb7",
+    "social-browser-2140-trace-controls.log": "781b89a5c4784d3409ac3f9232a00542cd8a9a1c8fcc481ea4be65babcb98113",
+    "social-browser-2140-admission-controls.log": "8c0f517246c3dc020f568c016f286166b2726c2c16f779a170c02cc61171d51f"
+  },
+  "limits": [
+    "Fresh exact-head Linux selected-image preflight and unchanged social browser assertions required.",
+    "This change does not establish a fix for the separate WebKit marketplace-cart timeout; retain that failure.",
+    "Registry availability remains external; no general speed guarantee.",
+    "Fresh independent review, all20required contexts, current main ancestry and FIFO remain mandatory before integration."
+  ],
+  "release": {
+    "draftUntilHostedQualification": true,
+    "productionWrites": 0,
+    "providerActivation": false,
+    "backendOrStoreDeployment": false,
+    "delivered": false
+  }
+}

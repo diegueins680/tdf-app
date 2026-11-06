@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-26T06:06:40.959428+00:00",
+  "status": "VERIFIED-synthetic-welcome-club-logout-and-activation-only",
+  "publishedPr": 619,
+  "previousPublishedHead": "b232c21cccd317149924981faa015e5414b94b03",
+  "runtimeSource": "fcc61665a1670a08bbcbaf273d6320a2cd4993c6",
+  "runtimeSourceTree": "b8d20e27f3972d1f46d57619433633e6d71c961f",
+  "protectedMain": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "prerequisitesMerged": [
+    613,
+    616,
+    618
+  ],
+  "sourceQualification": {
+    "protectedRequirementRecordsExact": 143,
+    "combinedRequirements": 144,
+    "additionalRequirement": "UX-WELCOME-001",
+    "backendSchemaOpsDependenciesMobileExactProtectedMain": true,
+    "materialSurfacesAdmitted": 12,
+    "strictCatalogCandidates": 1330,
+    "strictCatalogUnreviewed": 0,
+    "catalogDecisionsExactProtectedMain": true,
+    "canonicalCsvRefreshed": true,
+    "inventory": "PASS",
+    "traceability": "PASS",
+    "generatedApiClients": 2,
+    "typescript": "PASS",
+    "targetedClubEslint": "PASS",
+    "focusedUiTests": 234,
+    "focusedUiSuites": 22,
+    "focusedExecutionScope": "Frozen working-tree composition before merge commits; same application bytes as runtimeSource. No hosted-head claim."
+  },
+  "previousFullLocalUi": {
+    "source": "b232c21cccd317149924981faa015e5414b94b03",
+    "testsPassed": 3416,
+    "suitesPassed": 303,
+    "node": "v22.14.0",
+    "logSha256": "79a6f064c9960bbea026a46696190691f0a57311412112e35103108787ebe067",
+    "scope": "Completed B232 execution before club integration; retained separately, not relabeled as FCC."
+  },
+  "trackedSourceClean": true,
+  "worktreeDirty": true,
+  "untrackedAtExecution": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "node": "v22.14.0",
+  "binary": {
+    "sha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+    "qualifiedSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "actualVersion": {
+      "buildTime": "2026-10-26T02:41:57Z",
+      "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "limitation": "Retained compatible executable with original fe179 identity; not a new compilation of FCC or final PR head."
+  },
+  "frontend": {
+    "entry": "/assets/index-Nsg6dG9i.js",
+    "sha256": "ad05b5271a72480c74ed03aa552bbc4b1c0f5518facd1015243b2860ce12e15d",
+    "embeddedSource": "fcc61665a1670a08bbcbaf273d6320a2cd4993c6",
+    "apiBase": "http://127.0.0.1:18819"
+  },
+  "welcomeAssertions": {
+    "anonymousSession": true,
+    "rootToInicio": true,
+    "imageLoaded": true,
+    "keyboardNavigation": true,
+    "studioAnchor": true,
+    "serviceAnchor": true,
+    "noSignupBeforeExplicitAction": true
+  },
+  "artistAndFanJourney": {
+    "status": "VERIFIED-synthetic-only",
+    "humanParticipants": 0,
+    "syntheticFans": 2,
+    "uiSignup": true,
+    "profilePublication": true,
+    "uploadRecovery": true,
+    "saveRecovery": true,
+    "community": true,
+    "crossWebFormFactorRelogin": true,
+    "logoutUi": true,
+    "browserSessionAbsentAfterLogout": true,
+    "originalCookieRevoked": true,
+    "artistUiFollowerCount": 2,
+    "googleProviderTested": false,
+    "nativeDevicesTested": false
+  },
+  "clubFallback": [
+    {
+      "mode": "desktop",
+      "realMissingClub": true,
+      "artistFallback": true,
+      "failedReadThenRetry": true,
+      "clubProvisioned": false
+    },
+    {
+      "mode": "mobile-web",
+      "realMissingClub": true,
+      "artistFallback": true,
+      "failedReadThenRetry": false,
+      "clubProvisioned": false
+    }
+  ],
+  "logoutDiagnostic": {
+    "status": "VERIFIED-isolated-failed-logout-recovery",
+    "humanParticipants": 0,
+    "logoutClickedInUi": true,
+    "logoutNetworkFailureInjected": true,
+    "serverCookieRemainedValidDuringFailure": true,
+    "reloadRemainsAnonymous": true,
+    "unsignedArtistStillReadable": true,
+    "explicitRetryRevokesServerCookie": true,
+    "freshCredentialsRecoverAfterFailure": true,
+    "otherTabSignsOut": true,
+    "bearerOnlyRetryRevokesOriginalToken": true,
+    "noCookieAvailableDuringBearerRetry": true,
+    "queuedLogoutThenLoginDiscardsOldTabScope": true,
+    "realSecondCookieActorConfirmed": true,
+    "cookieOnlyBootstrapAfterFreshLogin": true,
+    "successLogoutUiVerified": true,
+    "samePartyArtistActivationPreservesBuyerAndBookingDrafts": true,
+    "serverReal": true,
+    "productionWrites": false,
+    "scope": "Real native browser/API/PostgreSQL. Logout POST failure and queued storage-event delivery are explicit adapters; cookie removal models a bearer-only browser; no offline revocation or full Set-Cookie ordering claim."
+  },
+  "databaseAssertions": {
+    "syntheticFirstValueRecords": 2,
+    "syntheticPairs": 2,
+    "followRows": 2,
+    "evidenceRows": 2,
+    "duplicateRows": 0
+  },
+  "schemaMigrations": 221,
+  "schemaApplyReplayRollback": "PASS",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full221-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "browserObservation": {
+    "blockedExternalRequests": 55,
+    "blockedBusinessMutations": 0,
+    "uploads": 1,
+    "uploadAttempts": 2,
+    "profilePutAttempts": 2
+  },
+  "adapters": [
+    "Fictional Drive/image upload authenticated against actual isolated API; one upload503 and one profile PUT503.",
+    "Desktop club-read503 until explicit retry, followed by actual native404; mobile actual native404; no club provisioning.",
+    "Injected logout network failure, delayed storage-event delivery and cookie removal for bearer-only revocation."
+  ],
+  "delivery": {
+    "implemented": true,
+    "locallyQualifiedAsScoped": true,
+    "freshHostedCi": "Required on final containing commit after publication",
+    "freshIndependentReview": "Required on final containing commit; B232 approval does not transfer",
+    "merged619": false,
+    "deployed619": false,
+    "verified619InProduction": false
+  },
+  "humanParticipants": 0,
+  "humanPilotHeldForVolunteersObserverConsent": true,
+  "productionWrites": false,
+  "liveProvidersTested": false,
+  "nativeDeviceTested": false,
+  "measuredProductionActivations": null,
+  "conversionImprovement": null,
+  "wholeSystemConformance": "PARTIAL/UNPROVEN; not a complete implementation/refinement proof.",
+  "replayDirectory": "reports/welcome-club-integration-evidence-20261026",
+  "executedHarnessSha256": {
+    "run.py": "1c69e3c73cc01d9f0f327e229579803ede752fa0f688e3b609a5130ab2814cd9",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "0cb4de41cc2b17651db32f66264f8ab14d81bbde5468b3aabe9798b795d96d75",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "privateRawReceipt": "/private/tmp/tdf-welcome-club-activation-20261026-rfzopc6d/results.json",
+  "limitations": [
+    "Current screenshots illustrate the welcome; club/privacy behavior is asserted in the native browser result, not separate club screenshots.",
+    "Prior B232/D819 and native FFA/FCC executions keep their original identities; no production or new-head qualification is inferred from passing a predecessor.",
+    "Identified host portrait, authorized studio gallery, teaching clips/interior plan/VR, human comprehension and measured user outcomes remain open."
+  ]
+}

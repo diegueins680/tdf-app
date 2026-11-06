@@ -23,11 +23,15 @@ docker run --rm -d \
   --name "$test_container" \
   -p 127.0.0.1::5432 \
   -e POSTGRES_PASSWORD=event-operations-api-test \
+  -e POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 \
   -e POSTGRES_DB="$test_database" \
   postgres:16-alpine >/dev/null
 
 attempt=0
-until docker exec "$test_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d "$test_database" -qAtc 'SELECT 1' >/dev/null 2>&1; do
+# The image starts a socket-only server during initialization, then stops it.
+# Wait for the final TCP listener before applying fixtures and migrations.
+# Host authentication requires the synthetic client password, not POSTGRES_PASSWORD.
+until docker exec -e PGPASSWORD=event-operations-api-test "$test_container" psql -h 127.0.0.1 -X -v ON_ERROR_STOP=1 -U postgres -d "$test_database" -qAtc 'SELECT 1' >/dev/null 2>&1; do
   attempt=$((attempt + 1))
   if [ "$attempt" -ge 30 ]; then
     docker logs "$test_container" >&2

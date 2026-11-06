@@ -52,6 +52,24 @@ spec = do
             , "channels" .= ["tiktok" :: String], "pieces" .= ([] :: [Value]) ]
       C.validateDocument (payload ("active" :: String)) `shouldSatisfy` isLeft
       C.validateDocument (payload ("ready" :: String)) `shouldSatisfy` isLeft
+    it "requires saved rights and technical review in addition to a complete ready draft" $ do
+      let reviewed rights technical state = object
+            [ "title" .= ("Session" :: String), "status" .= state
+            , "videoUrl" .= ("https://cdn.example.com/video.mp4" :: String)
+            , "coverUrl" .= ("" :: String), "durationSeconds" .= (610 :: Int)
+            , "channels" .= ["tiktok" :: String]
+            , "rightsConfirmed" .= rights, "technicalReviewed" .= technical
+            , "pieces" .= [object
+                [ "id" .= ("clip" :: String), "channel" .= ("tiktok" :: String)
+                , "day" .= (0 :: Int), "caption" .= ("Ver sesion" :: String)
+                , "assetUrl" .= ("https://cdn.example.com/clip.mp4" :: String)
+                , "status" .= ("prepared" :: String), "publishedUrl" .= ("" :: String)
+                , "sourceStart" .= (0 :: Int), "sourceEnd" .= (30 :: Int) ] ] ]
+      C.publicationVideo (reviewed True True ("ready" :: String))
+        `shouldBe` Right "https://cdn.example.com/video.mp4"
+      C.publicationVideo (reviewed False True ("ready" :: String)) `shouldSatisfy` isLeft
+      C.publicationVideo (reviewed True False ("ready" :: String)) `shouldSatisfy` isLeft
+      C.publicationVideo (reviewed True True ("draft" :: String)) `shouldSatisfy` isLeft
   describe "video campaign persistence and conflict recovery" $ do
     it "replays a lost save response without a duplicate and isolates artist lists" $ do
       now <- getCurrentTime

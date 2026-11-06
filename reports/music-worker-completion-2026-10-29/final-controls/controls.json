@@ -1,0 +1,31 @@
+{
+  "correctLibrarySha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+  "correctTestsSha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+  "positiveActualExit": 0,
+  "positiveCases": 6,
+  "mutations": [
+    {
+      "label": "omit-exit-observation",
+      "actualExit": 1,
+      "expectedFailure": "exited-awaiting-close",
+      "mutantSha256": "01b76d4475d0268f23579687408b7c0b84fabc2fb08098c2c5b2aad61380d9fb",
+      "selectedRealProcessCasesFailed": 1
+    },
+    {
+      "label": "complete-at-exit",
+      "actualExit": 1,
+      "expectedFailure": "Missing expected rejection",
+      "mutantSha256": "7a1609defc320dd3657c925918a6d67836c68278e6d0a2609329c7630dfdc88a",
+      "selectedRealProcessCasesFailed": 1
+    },
+    {
+      "label": "discard-timeout-context",
+      "actualExit": 1,
+      "expectedFailure": "Worker completion snapshot:",
+      "mutantSha256": "801d66710aa484c7318732c32b62e4a97a6d7fe575ab2b766184d5745e2eed2b",
+      "selectedRealProcessCasesFailed": 1
+    }
+  ],
+  "exactCorrectLibraryRestored": true,
+  "scope": "Real child lifecycle and CLI/structured context sensitivity; no hosted worker rootcause or proof."
+}

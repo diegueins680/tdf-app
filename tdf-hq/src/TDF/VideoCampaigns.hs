@@ -8,7 +8,7 @@
 -- Artist campaign planning; this module has no provider client, worker or ad budget.
 module TDF.VideoCampaigns
   ( VideoCampaignAPI, CampaignWrite(..), CampaignDTO(..), campaignServer
-  , campaignScope, validateDocument, saveCampaign, listCampaigns
+  , campaignScope, validateDocument, publicationVideo, saveCampaign, listCampaigns
   ) where
 
 import Control.Monad (unless, when)
@@ -28,7 +28,7 @@ import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
 import qualified Data.UUID as UUID
 import Database.Persist
 import Database.Persist.Sql
-  (SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
+  (SqlPersistT, Single(..), fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
 import GHC.Generics (Generic)
 import Network.URI (URI(..), URIAuth(..), parseURI)
 import Servant
@@ -59,7 +59,7 @@ data CampaignDTO = CampaignDTO
 instance ToJSON CampaignDTO
 
 data CampaignMetrics = CampaignMetrics
-  { registrations :: Int, follows :: Int } deriving (Show, Generic)
+  { registrations :: Int, follows :: Int, byPiece :: [Value] } deriving (Show, Generic)
 instance ToJSON CampaignMetrics
 
 data CampaignConversion = CampaignConversion
@@ -153,6 +153,18 @@ campaignDTO row = case eitherDecodeStrict' (TE.encodeUtf8 (M.videoCampaignDocume
     , revision = M.videoCampaignRevision row, content = value
     , createdAt = M.videoCampaignCreatedAt row, updatedAt = M.videoCampaignUpdatedAt row }
 
+-- A review draft is private. Only a separately confirmed saved revision can be featured.
+publicationVideo :: Value -> Either ServerError Text
+publicationVideo value = do
+  either (const (Left err400)) Right (validateDocument value)
+  case parseEither (withObject "PublicationReview" $ \o ->
+    (,,,) <$> o .: "status" <*> o .: "videoUrl"
+      <*> o .:? "rightsConfirmed" .!= False
+      <*> o .:? "technicalReviewed" .!= False) value of
+    Right (state, video, True, True)
+      | state == ("ready" :: Text), not (T.null video), safeMediaUrl video -> Right video
+    _ -> Left err400
+
 listCampaigns :: PartyId -> SqlPersistT IO (Either ServerError [CampaignDTO])
 listCampaigns artist = do
   rows <- selectList [M.VideoCampaignArtistPartyId ==. artist]
@@ -227,7 +239,13 @@ campaignServer user target = list :<|> (\key ->
             , M.VideoCampaignConversionKind ==. "registration" ]
           followed <- count [ M.VideoCampaignConversionCampaignId ==. campaignId
             , M.VideoCampaignConversionKind ==. "follow" ]
-          pure (Right (CampaignMetrics registered followed))
+          rows <- rawSql
+            "SELECT source,piece,count(*) FILTER (WHERE kind='registration'),count(*) FILTER (WHERE kind='follow') FROM video_campaign_conversion WHERE campaign_id=? GROUP BY source,piece ORDER BY source,piece"
+            [toPersistValue campaignId] :: SqlPersistT IO [(Single Text, Single Text, Single Int64, Single Int64)]
+          let breakdown = [object ["source" .= channel, "piece" .= item,
+                "registrations" .= accounts, "follows" .= fans]
+                | (Single channel, Single item, Single accounts, Single fans) <- rows]
+          pure (Right (CampaignMetrics registered followed breakdown))
     convert key CampaignConversion{..} = do
       unless (isJust (UUID.fromText key) && kind `elem` ["registration", "follow"]
         && source `elem` ["instagram", "tiktok"] && T.length piece <= 100) $
@@ -274,10 +292,8 @@ campaignServer user target = list :<|> (\key ->
         case rows of
           [Entity _ row] | M.videoCampaignRevision row == featureRevision ->
             case eitherDecodeStrict' (TE.encodeUtf8 (M.videoCampaignDocument row)) of
-              Right value -> case parseEither (withObject "Campaign" $ \o ->
-                (,) <$> o .: "status" <*> o .: "videoUrl") value of
-                Right (state, video) | state == ("ready" :: Text)
-                  , not (T.null video), safeMediaUrl video -> do
+              Right value -> case publicationVideo value of
+                Right video -> do
                     updateWhere [ArtistProfileArtistPartyId ==. artist]
                       [ ArtistProfileFeaturedVideoUrl =. Just video
                       , ArtistProfileUpdatedAt =. Just now ]

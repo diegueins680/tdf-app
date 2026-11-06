@@ -1,0 +1,19 @@
+{
+  "engine": "PostgreSQL 16.15 Ubuntu package 16.15-0ubuntu0.24.04.1",
+  "packageSha256": "d60ae76fb862cd4cca7bfdcdcdcc271c5e1d75f6b7915305ce2d962735a4b666",
+  "settings": {
+    "jit": "off",
+    "databaseEncoding": "UTF8",
+    "listen_addresses": "127.0.0.1"
+  },
+  "containerAdaptation": "The container maps only uid 0 and disallows setuid. The native unmodified PostgreSQL server ran with the retained LD_PRELOAD UID/stat reporting adapter, limited to initdb/pg_ctl/server. Clients and verifier ran without it. It changes UID/ownership reporting, not SQL, locking or MVCC. This is a local adapted environment; ordinary PostgreSQL 17 hosted execution remains required.",
+  "compiledBackendSuite": "NOT RUN: Stack/GHC 9.10.3 unavailable",
+  "wholeSystemProof": "UNPROVEN",
+  "freshManifestRehearsal": {
+    "migrations": 209,
+    "applications": 2,
+    "schemaLogSha256": "85ea6180d121bf3f4307ae791c6a8c7b5f0e569485fbf2e5e37017b2ef0dd3dd",
+    "result": "exit 0; FRESH_209_VERIFIED",
+    "fixtureKind": "Fresh full production-schema snapshot plus catalog synthetic fixture, not a reduced ledger schema"
+  }
+}

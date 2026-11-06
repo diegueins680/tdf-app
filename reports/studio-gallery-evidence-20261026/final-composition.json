@@ -1,0 +1,62 @@
+{
+  "executedHead": "fdf4bef37aa2b39b2b387a8968194a9964e6e9fd",
+  "qualificationHistory": "Private preparation commit. All web source, tests, assets and dependency inputs byte-identical to public candidate; public metadata strips original Drive folder/file locators. Published commit CI remains a distinct gate.",
+  "entry": "/assets/index-DwllKqQJ.js",
+  "entrySha256": "a4be66d7e2790307e8dcf76bce7422c8322ba1171542bfb43d266c633161ab96",
+  "nodeVersion": "22.14.0",
+  "stats": {
+    "startTime": "2026-10-26T16:39:58.903Z",
+    "duration": 45007.232,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected"
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected"
+    },
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected"
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected"
+    },
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected"
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "android-chrome-small",
+      "status": "expected"
+    },
+    {
+      "title": "studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected"
+    },
+    {
+      "title": "failed studio images retain public navigation and recover on retry @critical @mobile-flow",
+      "project": "firefox-critical",
+      "status": "expected"
+    }
+  ],
+  "catalogCandidates": 1340,
+  "catalogUnreviewed": 0,
+  "catalogStale": 0,
+  "newMaterialSurfacesMapped": 4,
+  "productionVerified": false
+}

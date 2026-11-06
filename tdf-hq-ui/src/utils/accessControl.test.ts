@@ -143,6 +143,20 @@ describe('hasSchoolPortalAccess', () => {
 });
 
 describe('canAccessPath', () => {
+  it('keeps feature flags and permissions independent for newly discoverable pages', () => {
+    expect(canAccessPath('/dashboard/operations', ['Admin'], ['Admin'])).toBe(false);
+    expect(canAccessPath('/dashboard/operations', ['Admin'], ['Admin'], ['operations_enabled'])).toBe(true);
+    expect(canAccessPath('/dashboard/operations', ['Fan'], [], ['operations_enabled'])).toBe(false);
+    for (const roles of [['Fan'], ['Artist'], ['Manager'], ['Webmaster']]) {
+      expect(canAccessPath('/admin/directorio', roles, ['Admin'])).toBe(false);
+      expect(canAccessPath('/admin/artistas-enriquecimiento', roles, ['Admin'])).toBe(false);
+    }
+    expect(canAccessPath('/admin/directorio', ['Admin'], ['Admin'])).toBe(true);
+    expect(canAccessPath('/admin/artistas-enriquecimiento', ['Admin'], ['Admin'])).toBe(true);
+    expect(canAccessPath('/label/ddex', ['Admin'], [])).toBe(false);
+    expect(canAccessPath('/label/ddex', ['Admin'], ['Catalog'])).toBe(true);
+  });
+
   it('blocks staff-only routes for public roles and allows legitimate staff access', () => {
     expect(canAccessPath('/social', ['Fan', 'Customer'], ['Packages'])).toBe(true);
     expect(canAccessPath('/social/eventos', ['Fan', 'Customer'], ['Packages'])).toBe(true);

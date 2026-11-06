@@ -1,0 +1,22 @@
+{
+  "baseline": "a9095bc3e3bf53f5a76244564472fe53cfff7691",
+  "sourceCommit": "5cac026c325c7f0ad08b62b08f5ad41b9d0958e7",
+  "sourceDigest": "21c2b2ca05807ac7bc7366161b1af0bf5d47f800cae9028640a00c3cfd6170ba",
+  "registeredSourceInputs": 1413,
+  "allRegisteredGitBlobAndMobileHashesVerified": true,
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "updatedContractSha256": "3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba",
+  "currentDiscoveryMatches": true,
+  "all156RequirementObjectsByteExactBaseline": true,
+  "whole1352HistoricalDecisionFileAndDerivedCatalogByteExactBaseline": true,
+  "allProductUIBackendAPIDependenciesWorkflowsOpsUnchanged": true,
+  "priorProviderArchiveUnchanged": true,
+  "localPhasePositives": "9instrumented+9uninstrumented/0fail/0skip/0retry",
+  "realControlledFailures": "1post-native helper edgefailure/rootfits320;1sole-option firstrootfailure362/320;1synthetic-only ack rejected/fails8s; exactproductsourceandC2distrestored",
+  "existingWidthClaims": "2manualconditionalinteger claims normal/-O andrejectmutant; notCSSOM/JS/refinementproof",
+  "globalAssurance": "156/312UNPROVEN11existingconditionalSMT;releaseBLOCKED",
+  "historicalHostedWebKitInitialOverlay": "FAILED at21628/a909; a909 timeline identifies pre-notification helper phase error.",
+  "correctedHostedPhase": "PENDING; local cases TESTED, no universal convergence proof or product repair claimed",
+  "mainComposition": "Contains protectedmainE302; requiredreview/all20/FIFOpending",
+  "cleanSource": true
+}

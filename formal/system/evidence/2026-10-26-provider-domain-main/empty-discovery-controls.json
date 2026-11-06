@@ -1,0 +1,26 @@
+{
+  "compiledBinarySha256": "6c6d1cef754b0eb193321eec53db00980b67cdcf65511b4153cb7be55446cfd1",
+  "scope": "Actual compiled Hspec discovery with a deliberately absent group; no database or provider call. Empty discovery must fail.",
+  "results": [
+    {
+      "name": "permissive",
+      "args": [
+        "--match=__missing_provider_runtime_control__"
+      ],
+      "exitCode": 0,
+      "logSha256": "644a40ed6ccc374dd2532302d10131b9e2772111aebd5f754969135bc4266ca0"
+    },
+    {
+      "name": "strict",
+      "args": [
+        "--match=__missing_provider_runtime_control__",
+        "--fail-on=empty"
+      ],
+      "exitCode": 1,
+      "logSha256": "014718291556131478e1355a2be11489c41a9a783e54b263ff2ab6f8b43e85ea"
+    }
+  ],
+  "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]",
+  "toolchain": "Stack3.7.1; LTS24.42; GHC9.10.3",
+  "recordedNativeSource": "cb7773790f15099933b92b184cfb50d7cf20c8aa"
+}

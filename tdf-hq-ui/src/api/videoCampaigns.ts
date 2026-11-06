@@ -6,7 +6,7 @@ export const VideoCampaigns = {
   save: (artistId: number, id: string, expectedRevision: number, document: VideoCampaignDocument) =>
     put<VideoCampaign>(`/artists/video-campaigns/${encodeURIComponent(id)}?artistId=${artistId}`,
       { expectedRevision, document }),
-  metrics: (artistId: number, id: string) => get<{ registrations: number; follows: number }>(
+  metrics: (artistId: number, id: string) => get<{ registrations: number; follows: number; byPiece?: { source: string; piece: string; registrations: number; follows: number }[] }>(
     `/artists/video-campaigns/${encodeURIComponent(id)}/metrics?artistId=${artistId}`),
   conversion: (artistId: number, id: string, kind: 'registration' | 'follow', source: string, piece: string) =>
     post(`/artists/video-campaigns/${encodeURIComponent(id)}/conversion?artistId=${artistId}`, { kind, source, piece }),

@@ -4,6 +4,7 @@ describe('artist video campaigns', () => {
   it('builds inert organic plans with attribution per channel and piece', () => {
     const pieces = createCampaignPieces('Liquid Paper Girl', ['instagram', 'tiktok']);
     expect(pieces).toHaveLength(14);
+    expect(Math.max(...pieces.map((p) => p.day)) - Math.min(...pieces.map((p) => p.day)) + 1).toBe(14);
     expect(pieces.every((p) => p.status === 'draft' && !p.publishedUrl && p.day <= 13)).toBe(true);
     expect(new Set(pieces.map((p) => p.id)).size).toBe(14);
     const url = new URL(campaignLink(51, 'campaign', pieces[0]!));
@@ -43,4 +44,13 @@ describe('artist video campaigns', () => {
     expect(importedCampaignSchema.safeParse({ ...emptyVideoCampaign(), artistId: 51,
       campaignId: '126f208c-2b38-47c1-952b-6ba633122c87' }).success).toBe(true);
   });
+});
+
+it('keeps optional proposed dates inert and rejects impossible calendar dates', () => {
+  const doc = emptyVideoCampaign();
+  doc.proposedLaunchDate = '2026-02-31';
+  expect(validateVideoCampaign(doc)).toMatch(/fecha/);
+  doc.proposedLaunchDate = '2026-12-01';
+  expect(validateVideoCampaign(doc)).toBeNull();
+  expect(doc.status).toBe('draft');
 });

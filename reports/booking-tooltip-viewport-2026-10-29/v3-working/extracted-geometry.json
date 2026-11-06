@@ -1,0 +1,428 @@
+[
+  {
+    "testTitle": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+    "attachment": "booking-tooltip-scroll",
+    "value": {
+      "beforeScroll": {
+        "at": 10773,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1527,
+        "anchor": {
+          "x": 212.25,
+          "y": 354.4375,
+          "right": 272.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 386,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "afterScroll": {
+        "at": 10810,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1567,
+        "anchor": {
+          "x": 212.25,
+          "y": 314.4375,
+          "right": 272.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 346,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "epsilon": 1
+    }
+  },
+  {
+    "testTitle": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+    "attachment": "booking-tooltip-scroll",
+    "value": {
+      "beforeScroll": {
+        "at": 3652,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1527,
+        "anchor": {
+          "x": 212.25,
+          "y": 354.4375,
+          "right": 272.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 386,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "afterScroll": {
+        "at": 3687,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1567,
+        "anchor": {
+          "x": 212.25,
+          "y": 314.4375,
+          "right": 272.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 346,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "epsilon": 1
+    }
+  },
+  {
+    "testTitle": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+    "attachment": "booking-tooltip-scroll",
+    "value": {
+      "beforeScroll": {
+        "at": 10706,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 3,
+        "scrollY": 1527,
+        "anchor": {
+          "x": 200.25,
+          "y": 354.4375,
+          "right": 260.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 386.3333435058594,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "afterScroll": {
+        "at": 10747,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 3,
+        "scrollY": 1567,
+        "anchor": {
+          "x": 200.25,
+          "y": 314.4375,
+          "right": 260.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 346.3333435058594,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "epsilon": 0.3333333333333333
+    }
+  },
+  {
+    "testTitle": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+    "attachment": "booking-tooltip-scroll",
+    "value": {
+      "beforeScroll": {
+        "at": 3605,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 3,
+        "scrollY": 1527,
+        "anchor": {
+          "x": 200.25,
+          "y": 354.4375,
+          "right": 260.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 386.3333435058594,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "afterScroll": {
+        "at": 3639,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 3,
+        "scrollY": 1567,
+        "anchor": {
+          "x": 200.25,
+          "y": 314.4375,
+          "right": 260.234375,
+          "width": 59.984375,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 346.3333435058594,
+          "right": 320.046875,
+          "width": 262.046875,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "epsilon": 0.3333333333333333
+    }
+  },
+  {
+    "testTitle": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+    "attachment": "booking-tooltip-scroll",
+    "value": {
+      "beforeScroll": {
+        "at": 12159,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1528,
+        "anchor": {
+          "x": 212.21665954589844,
+          "y": 353.566650390625,
+          "right": 272.18333435058594,
+          "width": 59.9666748046875,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 386,
+          "right": 319.6499938964844,
+          "width": 261.6499938964844,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "afterScroll": {
+        "at": 12202,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1568,
+        "anchor": {
+          "x": 212.21665954589844,
+          "y": 313.566650390625,
+          "right": 272.18333435058594,
+          "width": 59.9666748046875,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 346,
+          "right": 319.6499938964844,
+          "width": 261.6499938964844,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "epsilon": 1
+    }
+  },
+  {
+    "testTitle": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+    "attachment": "booking-tooltip-scroll",
+    "value": {
+      "beforeScroll": {
+        "at": 4727,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1528,
+        "anchor": {
+          "x": 212.21665954589844,
+          "y": 353.566650390625,
+          "right": 272.18333435058594,
+          "width": 59.9666748046875,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 386,
+          "right": 319.6499938964844,
+          "width": 261.6499938964844,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "afterScroll": {
+        "at": 4769,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": false,
+        "devicePixelRatio": 1,
+        "scrollY": 1568,
+        "anchor": {
+          "x": 212.21665954589844,
+          "y": 313.566650390625,
+          "right": 272.18333435058594,
+          "width": 59.9666748046875,
+          "height": 32,
+          "text": "04:00",
+          "placement": null
+        },
+        "tooltip": {
+          "x": 58,
+          "y": 346,
+          "right": 319.6499938964844,
+          "width": 261.6499938964844,
+          "height": 40.5,
+          "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+          "placement": "bottom"
+        }
+      },
+      "epsilon": 1
+    }
+  }
+]

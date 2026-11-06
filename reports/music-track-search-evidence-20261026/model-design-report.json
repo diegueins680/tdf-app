@@ -1,0 +1,1151 @@
+{
+  "schemaVersion": 1,
+  "kind": "FINITE_DESIGN_MODEL",
+  "bounds": {
+    "queries": [
+      "alpha",
+      "beta"
+    ],
+    "recordings": [
+      "A",
+      "B"
+    ],
+    "pages": [
+      0,
+      1
+    ],
+    "hitsPerPage": 1,
+    "searchGenerations": 2,
+    "sessionGenerations": 2,
+    "maxEvents": 12
+  },
+  "assumptions": [
+    "One application context has one persistent authoritative playback engine; tabs and native decoders are outside this model.",
+    "A and B are distinct recordings, each abstracted to one delivery asset. Multiple renditions, real identifiers, transport signatures and catalog/query text normalization are outside this finite abstraction.",
+    "Backend retrieval returns only assets authorized at retrieval time in the exact recording/release context; SQL and metadata correctness are trusted here and tested separately.",
+    "Rendered actions are derived from the current committed query/page/generation and are hidden when draft text differs or the search surface is not active.",
+    "Each explicit click names the exact rendered recording. A and B share a release whose first track is A; selecting a release first track is not equivalent to selecting its matching hit.",
+    "A source resolution response is bound to the selected recording and playback generation. Authority is rechecked before a new playback start; denial cannot substitute another recording.",
+    "Existing playback may continue after revocation until its separately defined credential/cache enforcement bound. This model checks new starts, not immediate decoder interruption or credential expiry.",
+    "Search and delivery responses can arrive in either order or fail; navigation and draft edits can interleave. User commands are bounded, and no fairness of the network or user is assumed by safety exploration.",
+    "Conditional completion checks stop new user commands and assume every remaining search/delivery response is eventually supplied. They establish bounded terminal reachability, not unconditional temporal liveness."
+  ],
+  "design": {
+    "states": 9642,
+    "transitions": 54454,
+    "exploredEventBound": 12,
+    "frontierStatesAtEventBound": 936,
+    "coverage": {
+      "draftHidesActions": 6092,
+      "staleSearchArrival": 4132,
+      "clickB": 136,
+      "staleSessionArrival": 5256,
+      "revokedBetweenHitAndClick": 148,
+      "navigationWhilePlaying": 1944,
+      "pageRequest": 240,
+      "searchFailure": 3916,
+      "deliveryFailure": 5512
+    },
+    "counterexamples": [],
+    "safety": "MODEL_CHECKED_WITH_BOUNDS",
+    "liveness": {
+      "status": "PARTIAL",
+      "conditionalTerminalReachability": "MODEL_CHECKED_WITH_BOUNDS",
+      "checkedStates": 9642,
+      "maxDrainSteps": 3,
+      "scope": "From each design state reached within the twelve-event safety bound, with no new user commands and every pending response eventually supplied, at most four additional response events reach resolved search and PLAYING/BLOCKED/ERROR/IDLE playback. No unconditional liveness or fairness proof."
+    }
+  },
+  "negativeControls": {
+    "acceptStaleResults": {
+      "states": 55,
+      "transitions": 109,
+      "exploredEventBound": 12,
+      "counterexamples": [
+        {
+          "property": "SEARCH-STALE-RESPONSE",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 2,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": null,
+            "searchGeneration": 2,
+            "requests": [
+              {
+                "generation": 1,
+                "query": "alpha",
+                "page": 0
+              },
+              {
+                "generation": 2,
+                "query": "alpha",
+                "page": 0
+              }
+            ],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 2,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 2,
+            "requests": [
+              {
+                "generation": 2,
+                "query": "alpha",
+                "page": 0
+              }
+            ],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          }
+        }
+      ],
+      "safety": "FAILED",
+      "coverage": {
+        "draftHidesActions": 0,
+        "staleSearchArrival": 1,
+        "clickB": 0,
+        "staleSessionArrival": 0,
+        "revokedBetweenHitAndClick": 0,
+        "navigationWhilePlaying": 0,
+        "pageRequest": 2,
+        "searchFailure": 4,
+        "deliveryFailure": 0
+      },
+      "expectedCounterexampleDetected": true
+    },
+    "firstTrackSubstitution": {
+      "states": 69,
+      "transitions": 129,
+      "exploredEventBound": 12,
+      "counterexamples": [
+        {
+          "property": "PLAYER-SELECTION-IDENTITY",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "A",
+            "intent": "B",
+            "sessionGeneration": 1,
+            "appliedGeneration": 0,
+            "playback": "resolving",
+            "deliveries": [
+              {
+                "generation": 1,
+                "asset": "A"
+              }
+            ]
+          }
+        },
+        {
+          "property": "PLAYER-EXACT-RENDERED-HIT",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "A",
+            "intent": "B",
+            "sessionGeneration": 1,
+            "appliedGeneration": 0,
+            "playback": "resolving",
+            "deliveries": [
+              {
+                "generation": 1,
+                "asset": "A"
+              }
+            ]
+          }
+        }
+      ],
+      "safety": "FAILED",
+      "coverage": {
+        "draftHidesActions": 2,
+        "staleSearchArrival": 4,
+        "clickB": 1,
+        "staleSessionArrival": 0,
+        "revokedBetweenHitAndClick": 0,
+        "navigationWhilePlaying": 0,
+        "pageRequest": 3,
+        "searchFailure": 8,
+        "deliveryFailure": 0
+      },
+      "expectedCounterexampleDetected": true
+    },
+    "autoplayOnResponse": {
+      "states": 21,
+      "transitions": 35,
+      "exploredEventBound": 12,
+      "counterexamples": [
+        {
+          "property": "PLAYER-SELECTION-IDENTITY",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": null,
+            "searchGeneration": 1,
+            "requests": [
+              {
+                "generation": 1,
+                "query": "alpha",
+                "page": 0
+              }
+            ],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "B",
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "playing",
+            "deliveries": []
+          }
+        },
+        {
+          "property": "PLAYER-NO-RESPONSE-AUTOPLAY",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": null,
+            "searchGeneration": 1,
+            "requests": [
+              {
+                "generation": 1,
+                "query": "alpha",
+                "page": 0
+              }
+            ],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "B",
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "playing",
+            "deliveries": []
+          }
+        },
+        {
+          "property": "MEDIA-NEW-PLAY-AUTHORIZED",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": null,
+            "searchGeneration": 1,
+            "requests": [
+              {
+                "generation": 1,
+                "query": "alpha",
+                "page": 0
+              }
+            ],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "B",
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "playing",
+            "deliveries": []
+          }
+        }
+      ],
+      "safety": "FAILED",
+      "coverage": {
+        "draftHidesActions": 0,
+        "staleSearchArrival": 0,
+        "clickB": 0,
+        "staleSessionArrival": 0,
+        "revokedBetweenHitAndClick": 0,
+        "navigationWhilePlaying": 0,
+        "pageRequest": 1,
+        "searchFailure": 0,
+        "deliveryFailure": 0
+      },
+      "expectedCounterexampleDetected": true
+    },
+    "acceptStaleSession": {
+      "states": 511,
+      "transitions": 1440,
+      "exploredEventBound": 12,
+      "counterexamples": [
+        {
+          "property": "PLAYER-STALE-SESSION",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            },
+            {
+              "type": "delivery",
+              "generation": 1,
+              "asset": "B",
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "B",
+            "intent": "B",
+            "sessionGeneration": 2,
+            "appliedGeneration": 0,
+            "playback": "resolving",
+            "deliveries": [
+              {
+                "generation": 1,
+                "asset": "B"
+              },
+              {
+                "generation": 2,
+                "asset": "B"
+              }
+            ]
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "B",
+            "intent": "B",
+            "sessionGeneration": 2,
+            "appliedGeneration": 1,
+            "playback": "playing",
+            "deliveries": [
+              {
+                "generation": 2,
+                "asset": "B"
+              }
+            ]
+          }
+        },
+        {
+          "property": "MEDIA-NEW-PLAY-AUTHORIZED",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            },
+            {
+              "type": "delivery",
+              "generation": 1,
+              "asset": "B",
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "B",
+            "intent": "B",
+            "sessionGeneration": 2,
+            "appliedGeneration": 0,
+            "playback": "resolving",
+            "deliveries": [
+              {
+                "generation": 1,
+                "asset": "B"
+              },
+              {
+                "generation": 2,
+                "asset": "B"
+              }
+            ]
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": "B",
+            "intent": "B",
+            "sessionGeneration": 2,
+            "appliedGeneration": 1,
+            "playback": "playing",
+            "deliveries": [
+              {
+                "generation": 2,
+                "asset": "B"
+              }
+            ]
+          }
+        }
+      ],
+      "safety": "FAILED",
+      "coverage": {
+        "draftHidesActions": 68,
+        "staleSearchArrival": 166,
+        "clickB": 10,
+        "staleSessionArrival": 1,
+        "revokedBetweenHitAndClick": 4,
+        "navigationWhilePlaying": 0,
+        "pageRequest": 35,
+        "searchFailure": 184,
+        "deliveryFailure": 8
+      },
+      "expectedCounterexampleDetected": true
+    },
+    "deniedRecordingFallback": {
+      "states": 526,
+      "transitions": 1477,
+      "exploredEventBound": 12,
+      "counterexamples": [
+        {
+          "property": "PLAYER-SELECTION-IDENTITY",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            },
+            {
+              "type": "revoke",
+              "asset": "B"
+            },
+            {
+              "type": "delivery",
+              "generation": 1,
+              "asset": "B",
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": false
+            },
+            "selected": "B",
+            "intent": "B",
+            "sessionGeneration": 1,
+            "appliedGeneration": 0,
+            "playback": "resolving",
+            "deliveries": [
+              {
+                "generation": 1,
+                "asset": "B"
+              }
+            ]
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": false
+            },
+            "selected": "A",
+            "intent": "B",
+            "sessionGeneration": 1,
+            "appliedGeneration": 1,
+            "playback": "playing",
+            "deliveries": []
+          }
+        },
+        {
+          "property": "MEDIA-NEW-PLAY-AUTHORIZED",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            },
+            {
+              "type": "click",
+              "asset": "B"
+            },
+            {
+              "type": "revoke",
+              "asset": "B"
+            },
+            {
+              "type": "delivery",
+              "generation": 1,
+              "asset": "B",
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": false
+            },
+            "selected": "B",
+            "intent": "B",
+            "sessionGeneration": 1,
+            "appliedGeneration": 0,
+            "playback": "resolving",
+            "deliveries": [
+              {
+                "generation": 1,
+                "asset": "B"
+              }
+            ]
+          },
+          "after": {
+            "draft": "alpha",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": false
+            },
+            "selected": "A",
+            "intent": "B",
+            "sessionGeneration": 1,
+            "appliedGeneration": 1,
+            "playback": "playing",
+            "deliveries": []
+          }
+        }
+      ],
+      "safety": "FAILED",
+      "coverage": {
+        "draftHidesActions": 76,
+        "staleSearchArrival": 166,
+        "clickB": 14,
+        "staleSessionArrival": 2,
+        "revokedBetweenHitAndClick": 5,
+        "navigationWhilePlaying": 1,
+        "pageRequest": 39,
+        "searchFailure": 184,
+        "deliveryFailure": 11
+      },
+      "expectedCounterexampleDetected": true
+    },
+    "exposeDraftActions": {
+      "states": 42,
+      "transitions": 94,
+      "exploredEventBound": 12,
+      "counterexamples": [
+        {
+          "property": "SEARCH-DRAFT-ACTIONS",
+          "events": [
+            {
+              "type": "edit",
+              "text": "alpha"
+            },
+            {
+              "type": "submit"
+            },
+            {
+              "type": "edit",
+              "text": ""
+            },
+            {
+              "type": "response",
+              "generation": 1,
+              "outcome": "ok"
+            }
+          ],
+          "before": {
+            "draft": "",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": null,
+            "searchGeneration": 1,
+            "requests": [
+              {
+                "generation": 1,
+                "query": "alpha",
+                "page": 0
+              }
+            ],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          },
+          "after": {
+            "draft": "",
+            "committed": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0
+            },
+            "rendered": {
+              "generation": 1,
+              "query": "alpha",
+              "page": 0,
+              "hits": [
+                "B"
+              ],
+              "outcome": "ok"
+            },
+            "searchGeneration": 1,
+            "requests": [],
+            "route": "music",
+            "authorized": {
+              "A": true,
+              "B": true
+            },
+            "selected": null,
+            "intent": null,
+            "sessionGeneration": 0,
+            "appliedGeneration": 0,
+            "playback": "idle",
+            "deliveries": []
+          }
+        }
+      ],
+      "safety": "FAILED",
+      "coverage": {
+        "draftHidesActions": 0,
+        "staleSearchArrival": 0,
+        "clickB": 0,
+        "staleSessionArrival": 0,
+        "revokedBetweenHitAndClick": 0,
+        "navigationWhilePlaying": 0,
+        "pageRequest": 2,
+        "searchFailure": 2,
+        "deliveryFailure": 0
+      },
+      "expectedCounterexampleDetected": true
+    }
+  },
+  "implementationRefinement": "UNPROVEN",
+  "implementationBoundary": "SQL, React and real browser/native tests are separate TESTED/PARTIAL evidence; this independent model does not extract implementation formulas or prove conformance.",
+  "result": "MODEL_CHECKED_WITH_BOUNDS"
+}

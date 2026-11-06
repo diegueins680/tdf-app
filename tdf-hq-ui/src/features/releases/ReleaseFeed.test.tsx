@@ -72,6 +72,8 @@ describe('ReleaseFeed', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Escuchar' }));
 
     expect(onPlayRelease).toHaveBeenCalledWith(release);
+    expect(screen.getByText('Solicitud para escuchar Luna Baja.')).toBeTruthy();
+    expect(screen.queryByText('Reproduciendo Luna Baja.')).toBeNull();
   });
 
   it('renders login calls to action for signed-out visitors', () => {
