@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-legacy-ticket-pricing-snapshot",
+  "observedAt": "2026-10-29T00:23:06.376591+00:00",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "f302b3da87a5e40934b2bdf5426dff64b686be49",
+  "sourceCommit": "c162c6f670c304d9c6ece578de3e8677e1b05e23",
+  "mainObserved": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-09",
+    "priority": "P1",
+    "category": "financial admission / concurrency / cross-layer contract",
+    "status": "corrected-tested-awaiting-protected-integration",
+    "consequence": "Both legacy purchase routes can issue free tickets from an earlier quote after the normal organizer makes the tier paid, or commit a currency snapshot inconsistent with the tier at admission. No unauthorized charge or provider transaction is claimed."
+  },
+  "invariants": [
+    {
+      "id": "EVT-LEGACY-PRICE-SNAPSHOT-001",
+      "parentRequirement": "EVT-TICKET-001",
+      "statement": "For a new legacy hold, current locked tier price and case-insensitive currency must equal the quote before hold effects; mismatches return409 with no hold effects. Later tier edits do not invalidate existing financial snapshots.",
+      "implementationAssurance": "TESTED",
+      "designAssurance": "BOUNDED_VERIFIED"
+    }
+  ],
+  "contract": "formal/system/legacy-ticket-pricing-snapshot.md",
+  "authority": [
+    "Existing direct-purchase restriction rejects positive-priced tiers without server-verified checkout.",
+    "ADR0112 ticket payment evidence and seat holds.",
+    "Canonical new-runtime SQL requires current tier price and uppercased currency to correspond to the new immutable financial snapshot.",
+    "Ordinary organizer updateTicketTier may change price and explicit ISO currency independently of event fallback currency."
+  ],
+  "correction": [
+    "One shared Tier SELECT FOR UPDATE compares event binding, price and uppercase currency.",
+    "Direct creation checks after current Event eligibility; new Stripe creation checks after Event and current terms share lock, before Inventory. Locks remain held through commit.",
+    "Refuse409 before stock, order, promo and ticket effects; provider and email IO remain outside these locks.",
+    "Existing order snapshots, idempotent reuse, current inventory validation and harmless tier edits retain their existing authorities. No schema, API or dependency changes."
+  ],
+  "counterexamples": {
+    "baselineExamples": 4,
+    "failures": 4,
+    "routes": 2,
+    "normalEdits": [
+      "price0->1",
+      "USD->EUR"
+    ],
+    "eachActualOutcome": "200; one paid0/USD order, sold3 and three tickets after the normal organizer edit committed.",
+    "testMutation": "Only unchanged Event barrier; no test-side business field update.",
+    "providerAndEmailCalls": 0
+  },
+  "verification": {
+    "qualifiedScoped": {
+      "examples": 11,
+      "failures": 0,
+      "originalCounterexamplesCovered": 4,
+      "coverage": [
+        "Both routes reject changed price and currency after Event wait.",
+        "Both routes admit after harmless name/position edit.",
+        "Both retain earlier admitted price/currency after later normal edit.",
+        "Free idempotent replay retains original order ID and amount/currency.",
+        "Both Tier FIFO schedules require financial-read locking even when Inventory locking remains."
+      ]
+    },
+    "implementationFaultControl": {
+      "mutation": "Remove ONLY FOR UPDATE from shared financial read; retain Inventory locking.",
+      "examples": 2,
+      "expectedFailuresObserved": 2,
+      "failureKind": "actual handler status/persisted effects, not compile/timeout/harness failure",
+      "eachActualOutcome": "200/paid0/sold3/tickets3 after editorprice1 committed.",
+      "correctSourceRestoredAndHashVerified": true,
+      "receipt": "lock-mutation.json"
+    },
+    "qualifiedFullStack": {
+      "examples": 4496,
+      "failures": 0,
+      "pending": 21,
+      "pendingIsNotPassed": true,
+      "schemaMigrations": 227,
+      "appliedAndReplayed": true,
+      "freshUTF8Template0Database": true,
+      "seed": 20261028,
+      "postgres": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+      "method": "Explicit full schema loader, provider fixtures, pinned Stack test component; no entire runtime-wrapper execution claim."
+    },
+    "model": {
+      "suiteTests": 25,
+      "failures": 0,
+      "newTests": 2,
+      "assurance": "BOUNDED_VERIFIED",
+      "buyers": 1,
+      "editors": 1,
+      "prices": [
+        0,
+        1
+      ],
+      "currencies": [
+        "USD",
+        "EUR"
+      ],
+      "distinctInitialTargetPairs": 12,
+      "states": 216,
+      "transitions": 216,
+      "retainedHistoricalStates": 12,
+      "properties": [
+        "FinancialSnapshotMatchesAtAdmission",
+        "RefusalHasNoEffects"
+      ],
+      "controls": [
+        {
+          "name": "omitPrice",
+          "states": 216,
+          "transitions": 216
+        },
+        {
+          "name": "omitCurrency",
+          "states": 216,
+          "transitions": 216
+        },
+        {
+          "name": "omitTierLock",
+          "states": 264,
+          "transitions": 312
+        },
+        {
+          "name": "effectsBeforeCheck",
+          "states": 216,
+          "transitions": 216
+        }
+      ],
+      "allControlsHaveExpectedCounterexamples": true,
+      "scope": "Design abstraction only; effects-on-refusal means durable committed effects, not rolled-back writes. No Haskell/SQL refinement proof."
+    },
+    "repositoryQuality": {
+      "passed": true,
+      "existingPlatformSkips": 11,
+      "assertionsWeakened": false
+    },
+    "catalog": {
+      "strictJSONAndCSV": "PASS",
+      "normativeParentDecisionsPreserved": 1353,
+      "newDecisions": 0,
+      "entireDecisionFileByteIdentical": true,
+      "freshJSONMatchExceptClock": true,
+      "freshCSVByteMatch": true
+    },
+    "sourceCorrespondence": {
+      "registeredInputs": 1408,
+      "digest": "da431387bffe0a8394cb0491d04bc1fff33f779ab72364ebfe65a18e2804c9db",
+      "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "allGitBlobHashesVerified": true,
+      "newContractIndependentlyHashBound": true,
+      "sequentialInventoryThenConformance": "PASS",
+      "otherRequirementObjectsPreserved": 153,
+      "immutableChangedMaterialSurfaces": 3,
+      "cleanCommittedReporterPass": true
+    },
+    "servingExecutable": {
+      "currentLocalQualification": "NOT_RUN",
+      "currentRequiredHostedBuild": "pending",
+      "parent661HostedCheckout": "17c913cb9cc59727817f9fd7352e2deadf3c8d6b",
+      "parent661PublishedHead": "f302b3da87a5e40934b2bdf5426dff64b686be49",
+      "parentMergeTreeEqualsPublishedTree": true,
+      "parentBinarySHA256": "27c16efc5407961e32e7c62b64d62bc04df5c8052e9c8ba84ab36e64d69e924e",
+      "parentTypedRoutes": 913,
+      "scope": "Parent661 serving inspection is historical and does not qualify this new implementation. Current tests compile production code; no older serving binary is promoted."
+    },
+    "independentReview": {
+      "blockingFindings": 0,
+      "readOnly": true,
+      "actualLockControlIndependentlyReconstructedAndHashesVerified": true,
+      "requiredGitHubApproval": "separate/pending"
+    },
+    "assurance": {
+      "candidateRegistryRequirementsUnproven": 154,
+      "implementationAndRefinementObligationsUnproven": 308,
+      "existingConditionalSMTClaims": 11,
+      "newWholeHandlerProofs": 0,
+      "release": "BLOCKED"
+    }
+  },
+  "regressionProtection": {
+    "actualHandlers": "Registered ProviderRetrySpec group runs in existing backend PostgreSQL lane.",
+    "designModel": "Existing backend CI explicitly runs ticket-admission-model.test.mjs.",
+    "sourceFreshness": "Existing immutable material-surface admission, catalog and specification checks retained.",
+    "controlledMutation": "Manual one-off verification of actual regression detection; not a newly installed CI mutation lane."
+  },
+  "hypothesesRuledOut": [
+    {
+      "candidate": "Ordinary stale organizer ownership transfer",
+      "result": "No ordinary API writer replaces existing nonempty organizerID; isEventManager is owner equality. No ordinary endpoint ownership exploit claimed."
+    }
+  ],
+  "integration": {
+    "pullRequest": 662,
+    "url": "https://github.com/diegueins680/tdf-app/pull/662",
+    "draft": true,
+    "parentPullRequest": 661,
+    "merged": false,
+    "deployed": false,
+    "autoMergeEnabled": false,
+    "requiredGitHubApproval": "pending",
+    "hostedQualification": "pending",
+    "currentMainComposition": "pending",
+    "queue": {
+      "context": "main-integration-admission",
+      "base": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+      "admittedPR": 637,
+      "admittedHead": "71e609d5b7021c80ee22a6e78728355898c12aa9",
+      "waitingPRs": [
+        495,
+        573,
+        592,
+        593,
+        599,
+        601,
+        630,
+        633,
+        638,
+        639,
+        640,
+        642,
+        643,
+        646,
+        648,
+        649,
+        650,
+        651,
+        653,
+        655,
+        656
+      ],
+      "duplicateHeads": [],
+      "applied": false
+    },
+    "protections": "All20 contexts, strict base, independent review/stale dismissal, conversation resolution and admin enforcement retained. No FIFO bypass.",
+    "parent661HostedResult": {
+      "run": 40781516155,
+      "backendJob": 123144939922,
+      "backend": "SUCCESS",
+      "repositoryQuality": "SUCCESS",
+      "personaJob": 123144939963,
+      "persona": "FAILURE",
+      "aggregate": "FAILURE",
+      "personaCounts": {
+        "passed": 621,
+        "skipped": 22,
+        "failed": 1
+      },
+      "failure": "WebKit studio gallery actions contrast3.64 vs4.5; opacity/root cause not captured or proven.",
+      "artifactReportedId": 12858058394,
+      "artifactReportedSHA256": "e71b4547b3aeb1f4fd0a4f12e9343cfee171ca445cd92d082bbeadc18f998f06",
+      "artifactDownloadedOrHashVerified": false,
+      "action": "Preserve failure; reuse independently approved PR648 at its slot, no duplicate gallery patch, waiver or rerun-as-proof."
+    }
+  },
+  "scorecard": {
+    "scope": "This correction only; no arbitrary platform score.",
+    "confirmedDefectsCorrected": 1,
+    "defectsIntegrated": 0,
+    "criticalInvariantsTested": 1,
+    "originalFailuresRegressionProtected": 4,
+    "controlledImplementationFaultCasesDetected": 2,
+    "boundedModelInputs": 12,
+    "boundedModelStates": 216,
+    "newWholeProgramProofs": 0,
+    "currentEvidenceSource": "c162c6f670c304d9c6ece578de3e8677e1b05e23"
+  },
+  "developmentLimitations": [
+    "Initial9case full4494 pass predates two actual lock controls; final11/4496 receipts supersede it.",
+    "A final launch used an explicit PATH without ghcup and failed before Stack execution; corrected absolute pinned Stack path and actual TDF_PROVIDER_RETRY_DATABASE_URL authority before qualified run. No behavioral claim from failed launch.",
+    "Strict audit outputs were regenerated after a lost session result to establish explicit final exit status. Existing decision authority and assertions were unchanged.",
+    "Existing generated reconciliation bookkeeping/order differences were rejected and exact baseline catalog bytes restored before strict qualification."
+  ],
+  "remainingRisks": [
+    "READ COMMITTED, valid initial financial fields and participating locking writers are assumptions. Alternate-isolation availability, mixed old binaries and out-of-protocol writes are separate.",
+    "Current DB-time sale cutoffs, promo/policy snapshot governance, provider recovery and existing initial retry refusals remain separate obligations.",
+    "Historical financial records are not rewritten. Current executable, authentication/provider flows and full Haskell/SQL refinement remain unproven.",
+    "Protected current-main composition, hosted CI and required independent GitHub review remain outstanding.",
+    "No production records, real provider or SMTP operations were performed."
+  ],
+  "prioritizedBacklog": [
+    {
+      "id": "PROTECTED-INTEGRATION",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "next": "Advance selected637 only on current-head approval/all20 checks/strict base; then qualify approved648 without editing its head beforehand."
+    },
+    {
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "blocker": "Material product allocation decision remains unresolved; continue is not a selection."
+    },
+    {
+      "id": "LEGACY-TIME-POLICY-SNAPSHOT",
+      "priority": "P1",
+      "status": "UNKNOWN",
+      "next": "Investigate actual DB-time sale-cutoff and promo/policy races using authoritative requirements and ordinary writers before any correction."
+    }
+  ],
+  "nextHighestValueTask": "Complete protected FIFO integration where eligible; otherwise investigate time/policy snapshot candidates with concrete counterexamples.",
+  "evidenceDirectory": "reports/legacy-ticket-pricing-snapshot-2026-10-28"
+}

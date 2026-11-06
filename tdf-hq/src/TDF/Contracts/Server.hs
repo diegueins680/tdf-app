@@ -2,7 +2,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RecordWildCards #-}
 module TDF.Contracts.Server
-  ( server
+  ( ContractsDeps (..)
+  , defaultRenderPdf
+  , server
+  , loadContract
+  , storedFromRecord
   , decodeStoredContract
   , decodeStoredContractFor
   , validateContractId
@@ -10,7 +14,13 @@ module TDF.Contracts.Server
   , validateContractSendPayload
   ) where
 
+import           Control.Exception (SomeException, displayException, try)
 import           Control.Monad.IO.Class (liftIO)
+import           Data.Maybe (fromMaybe)
+import           Database.Persist (get, insert, insertKey, update, (=.))
+import           Database.Persist.Sql (ConnectionPool, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toPersistValue)
+import           TDF.Models (PartyId)
+import qualified TDF.ModelsExtra as ME
 import qualified Data.Aeson as A
 import           Data.Aeson ((.=), (.:))
 import           Data.Aeson.Types (withObject)
@@ -24,7 +34,7 @@ import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, defaultTimeLocale, formatTime, getCurrentTime)
 import           GHC.Generics (Generic)
 import           Servant
-import           System.Directory (createDirectoryIfMissing, doesFileExist)
+import           System.Directory (doesFileExist)
 import           System.FilePath ((</>))
 import           TDF.Contracts.API
 import qualified TDF.Handlers.InputList as InputList
@@ -72,22 +82,38 @@ contractsDir = "contracts" </> "store"
 contractPath :: Text -> FilePath
 contractPath cid = contractsDir </> T.unpack cid <> ".json"
 
-server :: Server ContractsAPI
-server = createH :<|> pdfH :<|> sendH
+-- | What the contract handlers need from the application: the database, an
+-- email sender when SMTP is configured, and the acting party.
+data ContractsDeps = ContractsDeps
+  { cdPool  :: ConnectionPool
+  , cdEmail :: Maybe (Text -> Text -> Text -> BL.ByteString -> IO ())
+    -- ^ recipient, kind, contract id, PDF; throws when SMTP refuses
+  , cdActor :: Maybe PartyId
+  , cdRenderPdf :: Text -> IO (Either Text BL.ByteString)
+    -- ^ LaTeX to PDF; 'defaultRenderPdf' in production
+  }
+
+defaultRenderPdf :: Text -> IO (Either Text BL.ByteString)
+defaultRenderPdf = InputList.generateInputListPdf
+
+server :: ContractsDeps -> Server ContractsAPI
+server deps = createH :<|> pdfH :<|> sendH
   where
+    runDb :: SqlPersistT IO a -> Handler a
+    runDb action = liftIO (runSqlPool action (cdPool deps))
+
     createH :: A.Value -> Handler A.Value
     createH payload = do
-      cid <- liftIO (toText <$> nextRandom)
-      now <- liftIO getCurrentTime
       (kindText, normalizedPayload) <- either throwError pure (validateContractPayload payload)
-      let
-          stored = StoredContract
-            { scId = cid
-            , scKind = kindText
-            , scPayload = normalizedPayload
-            , scCreatedAt = now
-            }
-      liftIO (persistContract stored)
+      uuid <- liftIO nextRandom
+      now <- liftIO getCurrentTime
+      let cid = toText uuid
+      runDb $ insertKey (ME.ContractKey uuid) ME.Contract
+        { ME.contractKind = kindText
+        , ME.contractPayload = encodeContractPayload normalizedPayload
+        , ME.contractCreatedByPartyId = cdActor deps
+        , ME.contractCreatedAt = now
+        }
       pure (A.object
         [ "status" .= ("created" :: Text)
         , "id" .= cid
@@ -97,38 +123,113 @@ server = createH :<|> pdfH :<|> sendH
 
     pdfH :: Text -> Handler BL.ByteString
     pdfH cid = do
-      contractId <- either throwError pure (validateContractId cid)
-      storedResult <- liftIO (loadContract contractId)
-      case storedResult of
-        Left errMsg ->
-          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-        Right Nothing -> throwError err404 { errBody = "Contract not found" }
-        Right (Just stored) -> do
-          let latex = renderContractLatex stored
-          pdfResult <- liftIO (InputList.generateInputListPdf latex)
-          case pdfResult of
-            Left errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-            Right pdf -> pure pdf
+      stored <- loadOr404 cid
+      renderPdfOr500 stored
 
+    -- CONTRACT-SEND-001: "sent" means SMTP accepted a message carrying the
+    -- contract PDF. The delivery row is written before SMTP is contacted.
     sendH :: Text -> A.Value -> Handler A.Value
     sendH cid body = do
+      recipientEmail <- either throwError pure (validateContractSendPayload body)
+      stored <- loadOr404 cid
+      sendEmail <- maybe
+        (throwError err503 { errBody = "Contract email is not configured" })
+        pure
+        (cdEmail deps)
+      pdf <- renderPdfOr500 stored
+      requestedAt <- liftIO getCurrentTime
+      deliveryKey <- runDb $ insert ME.ContractDelivery
+        { ME.contractDeliveryContractId = contractKeyFor stored
+        , ME.contractDeliveryRecipientEmail = recipientEmail
+        , ME.contractDeliveryRequestedByPartyId = cdActor deps
+        , ME.contractDeliveryRequestedAt = requestedAt
+        , ME.contractDeliveryAcceptedAt = Nothing
+        , ME.contractDeliveryFailedAt = Nothing
+        , ME.contractDeliveryFailure = Nothing
+        }
+      outcome <- liftIO (try (sendEmail recipientEmail (scKind stored) (scId stored) pdf))
+      finishedAt <- liftIO getCurrentTime
+      case outcome of
+        Left err -> do
+          runDb $ update deliveryKey
+            [ ME.ContractDeliveryFailedAt =. Just finishedAt
+            , ME.ContractDeliveryFailure =. Just (T.take 300 (T.pack (displayException (err :: SomeException))))
+            ]
+          throwError err502 { errBody = "Contract email could not be sent" }
+        Right () -> do
+          runDb $ update deliveryKey [ME.ContractDeliveryAcceptedAt =. Just finishedAt]
+          pure (A.object
+            [ "status" .= ("sent" :: Text)
+            , "id" .= scId stored
+            , "email" .= recipientEmail
+            , "deliveryId" .= fromSqlKey deliveryKey
+            ])
+
+    loadOr404 :: Text -> Handler StoredContract
+    loadOr404 cid = do
       contractId <- either throwError pure (validateContractId cid)
-      _ <- either throwError pure (validateContractSendPayload body)
-      storedResult <- liftIO (loadContract contractId)
+      storedResult <- liftIO (loadContract (cdPool deps) contractId)
       case storedResult of
-        Left errMsg ->
-          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+        Left errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
         Right Nothing -> throwError err404 { errBody = "Contract not found" }
-        Right (Just _) ->
-          throwError err501 { errBody = "Contract email delivery is not implemented" }
+        Right (Just stored) -> pure stored
 
-persistContract :: StoredContract -> IO ()
-persistContract stored = do
-  createDirectoryIfMissing True contractsDir
-  BL.writeFile (contractPath (scId stored)) (A.encode stored)
+    renderPdfOr500 :: StoredContract -> Handler BL.ByteString
+    renderPdfOr500 stored = do
+      pdfResult <- liftIO (cdRenderPdf deps (renderContractLatex stored))
+      either (\errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }) pure pdfResult
 
-loadContract :: Text -> IO (Either Text (Maybe StoredContract))
-loadContract cid = do
+contractKeyFor :: StoredContract -> ME.ContractId
+contractKeyFor stored = ME.ContractKey (fromMaybe UUID.nil (UUID.fromText (scId stored)))
+
+encodeContractPayload :: A.Value -> Text
+encodeContractPayload = TE.decodeUtf8 . BL.toStrict . A.encode
+
+-- | Load a contract from the database. A contract that only exists in the
+-- legacy file store (written before CONTRACT-STORE-001) is validated and
+-- imported on first read, so contracts created before the migration survive.
+loadContract :: ConnectionPool -> Text -> IO (Either Text (Maybe StoredContract))
+loadContract pool cid =
+  case UUID.fromText cid of
+    Nothing -> pure (Left "Requested contract id is invalid")
+    Just uuid -> do
+      row <- runSqlPool (get (ME.ContractKey uuid)) pool
+      case row of
+        Just record -> pure (Just <$> storedFromRecord cid record)
+        Nothing -> do
+          legacy <- loadLegacyContract cid
+          case legacy of
+            Right (Just stored) -> do
+              runSqlPool (importLegacy uuid stored) pool
+              pure (Right (Just stored))
+            other -> pure other
+  where
+    -- One statement, so concurrent first reads of the same legacy contract
+    -- cannot both pass a check and then collide on the primary key.
+    importLegacy :: UUID.UUID -> StoredContract -> SqlPersistT IO ()
+    importLegacy uuid stored =
+      rawExecute
+        "INSERT INTO contract (id, kind, payload, created_by_party_id, created_at)\
+        \ VALUES (?,?,?,NULL,?) ON CONFLICT (id) DO NOTHING"
+        [ toPersistValue (ME.ContractKey uuid)
+        , toPersistValue (scKind stored)
+        , toPersistValue (encodeContractPayload (scPayload stored))
+        , toPersistValue (scCreatedAt stored)
+        ]
+
+storedFromRecord :: Text -> ME.Contract -> Either Text StoredContract
+storedFromRecord cid record =
+  case A.eitherDecodeStrict (TE.encodeUtf8 (ME.contractPayload record)) of
+    Left _ -> Left "Stored contract payload is unreadable"
+    Right payload -> validateStoredContract StoredContract
+      { scId = cid
+      , scKind = ME.contractKind record
+      , scPayload = payload
+      , scCreatedAt = ME.contractCreatedAt record
+      }
+
+loadLegacyContract :: Text -> IO (Either Text (Maybe StoredContract))
+loadLegacyContract cid = do
   let path = contractPath cid
   exists <- doesFileExist path
   if not exists

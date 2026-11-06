@@ -31,3 +31,14 @@ it('uses authenticated private downloads and rejects non-PDF bytes', async () =>
     expect(fetch).toHaveBeenCalledWith('https://api.example.test/social-events/events/216/workspace/plan.pdf', expect.objectContaining({ credentials: 'include', cache: 'no-store', headers: { Authorization: 'Bearer synthetic' } }));
   } finally { globalThis.fetch = previous; }
 });
+
+it.each(['agreements/550e8400-e29b-41d4-a716-446655440000/1/document.pdf', 'agreements/550e8400-e29b-41d4-a716-446655440000/acceptance.pdf'])('downloads private agreement evidence without calling email send: %s', async (path) => {
+  const blob = { slice: () => ({ text: async () => '%PDF-synthetic' }) } as unknown as Blob;
+  const fetch = jest.fn<typeof globalThis.fetch>().mockResolvedValue({ ok: true, headers: new Headers({ 'content-type': 'application/pdf' }), blob: async () => blob } as unknown as Response);
+  const previous = globalThis.fetch; globalThis.fetch = fetch;
+  try {
+    await expect(EventWorkspaceAPI.document('216', path)).resolves.toBe(blob);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(`https://api.example.test/social-events/events/216/workspace/${path}`, expect.objectContaining({ credentials: 'include', cache: 'no-store', headers: { Authorization: 'Bearer synthetic' } }));
+  } finally { globalThis.fetch = previous; }
+});

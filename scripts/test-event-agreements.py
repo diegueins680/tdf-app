@@ -119,6 +119,31 @@ class AgreementDatabaseTests(unittest.TestCase):
         self.assertEqual(self.db.execute('SELECT count(*) FROM event_agreement_acceptance WHERE agreement_id=%s', (agreement['id'],)).fetchone()[0], 1)
         self.assertEqual(self.db.execute("SELECT count(*) FROM event_workspace_action WHERE agreement_id=%s AND action='agreement.accept'", (agreement['id'],)).fetchone()[0], 1)
 
+    def test_internal_send_replay_and_acceptance_need_no_mail_transport(self):
+        # No mail configuration, transport or generic contract tables exist in
+        # this isolated schema. Sending means durable in-app availability only.
+        agreement = self.prepare()
+        self.assertNotIn('error', self.call(1, self.command(agreement, 'approve')))
+        request = {**self.command(agreement, 'send'), 'requestId': str(uuid.uuid4())}
+        before = self.db.execute('SELECT count(*) FROM notification').fetchone()[0]
+        sent = self.call(1, request)
+        self.assertEqual(sent, self.call(1, request))
+        self.assertEqual(self.call(2, request)['status'], 403)
+        self.assertEqual(self.db.execute('SELECT count(*) FROM notification').fetchone()[0], before + 1)
+        self.assertEqual(self.db.execute("SELECT count(*) FROM event_workspace_action WHERE agreement_id=%s AND action='agreement.send'", (agreement['id'],)).fetchone()[0], 1)
+        self.assertEqual(self.call(1, self.command(agreement, 'send'))['status'], 409)
+        proposed = self.read(2)['agreements'][-1]
+        self.assertEqual(proposed['state'], 'sent')
+        accepted = self.call(2, self.command(proposed, 'accept', acceptedName='Synthetic recipient', consent=True))['agreements'][-1]
+        receipt = accepted['acceptance']
+        frozen = accepted['versions'][receipt['version'] - 1]
+        self.assertEqual(receipt['document_hash'], frozen['document_hash'])
+        self.assertEqual(receipt['accepted_by'], 2)
+        self.assertTrue(receipt['accepted_at'])
+        self.assertEqual(frozen['content']['plan']['content'], self.plan)
+        self.assertEqual(self.read(1)['agreements'][-1]['acceptance'], receipt)
+        self.assertEqual(self.read(3)['status'], 403)
+
     def test_revisions_hide_unsent_content_and_invalidate_old_acceptance(self):
         agreement = self.sent()
         changed = self.call(2, self.command(agreement, 'request_changes', comment='Adjust the deliverables'))['agreements'][-1]
