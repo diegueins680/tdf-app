@@ -16,7 +16,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () =>
 jest.unstable_mockModule('../api/fans', () => ({ Fans: {
   getMyArtistProfile: async () => ({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' }),
 } }));
-jest.unstable_mockModule('../api/drive', () => ({ uploadToDrive: async () => ({}) }));
+jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({ default: () => null }));
 jest.unstable_mockModule('../api/client', () => ({ get: async () => ({}), put: async () => ({}) }));
 const { default: VideoCampaignsPage } = await import('./VideoCampaignsPage');
 const show = () => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>

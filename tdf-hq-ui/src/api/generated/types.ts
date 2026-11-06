@@ -456,6 +456,75 @@ export interface paths {
         patch: operations["operationsDecideApproval"];
         trace?: never;
     };
+    "/storage/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the current account's storage allowance and selected default */
+        get: operations["getContentStorageAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/me/destination": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change the default for future uploads without moving existing files */
+        put: operations["setContentStorageDestination"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List owned TDF uploads and pending cleanup intents */
+        get: operations["listContentStorageFiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download an owned private managed file; public files use the assets mount */
+        get: operations["downloadPrivateContentStorageFile"];
+        put?: never;
+        post?: never;
+        /** Persist an owner-authorized deletion intent and remove its managed bytes */
+        delete: operations["deleteContentStorageFile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/drive/upload": {
         parameters: {
             query?: never;
@@ -9206,6 +9275,31 @@ export interface components {
             status: "draft" | "prepared" | "exported" | "published_manual";
             /** @description Manual publication URL on the selected platform; export alone is not publication */
             publishedUrl: string;
+        };
+        StorageFileDTO: {
+            /** Format: uuid */
+            fileId: string;
+            fileName: string;
+            /** Format: int64 */
+            byteSize: number;
+            /** @enum {string} */
+            status: "uploading" | "completed" | "cancelled";
+            /** @enum {string} */
+            visibility: "private" | "public";
+        };
+        StorageAccountDTO: {
+            /** @description Existing unmetered files require operator reconciliation before new TDF storage grows */
+            legacyUsageVerified: boolean;
+            /** Format: int64 */
+            allowanceBytes: number;
+            /** Format: int64 */
+            usedBytes: number;
+            /** Format: int64 */
+            reservedBytes: number;
+            /** @enum {string|null} */
+            defaultDestination: "tdf" | "google_drive" | null;
+            /** Format: int64 */
+            revision: number;
         };
         InvoiceLineDTO: {
             /** Format: int64 */
@@ -18769,6 +18863,200 @@ export interface operations {
             };
         };
     };
+    getContentStorageAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Decimal bytes, including capacity reserved by uncertain uploads */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageAccountDTO"];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setContentStorageDestination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    destination: "tdf" | "google_drive";
+                    /** Format: int64 */
+                    expectedRevision: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated account preference */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageAccountDTO"];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preference was edited concurrently; reread before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listContentStorageFiles: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account-scoped files, ordered by immutable ID */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageFileDTO"][];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadPrivateContentStorageFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner-authenticated attachment */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: string;
+                    "X-Content-Type-Options"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description File missing or not owned by the current account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored bytes unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteContentStorageFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File deletion confirmed; metadata and tombstone retained */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No owned file */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Upload is still running; wait before retrying deletion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deletion intent retained for retry; cleanup unconfirmed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     uploadDriveFile: {
         parameters: {
             query?: never;
@@ -18786,6 +19074,18 @@ export interface operations {
                     folderId?: string;
                     name?: string;
                     accessToken?: string;
+                    /**
+                     * @description Explicit authority; user mode never falls back to TDF credentials
+                     * @enum {string}
+                     */
+                    authMode?: "user" | "server";
+                    /** @enum {string} */
+                    destination?: "tdf" | "google_drive";
+                    /**
+                     * @description New managed uploads default to private; public is restricted to passive image
+                     * @enum {string}
+                     */
+                    visibility?: "private" | "public";
                     idempotencyKey?: string;
                 };
             };

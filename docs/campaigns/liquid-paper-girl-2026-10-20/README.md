@@ -37,7 +37,7 @@ Bio propuesta: «Liquid Paper Girl en vivo en TDF. Mira la sesión y sigue al ar
 ## Cómo usarlo
 
 1. Revisa los videos y portadas. Confirma créditos y permisos.
-2. Aloja el original en el almacenamiento del artista y obtén un enlace reproducible. El original excede el límite actual de carga de 50 MiB; no se ha alterado ese límite.
+2. Aloja el original en el almacenamiento del artista y obtén un enlace reproducible. El asistente reutiliza el nuevo almacenamiento recuperable de main, sujeto a cuota, conciliación y despliegue; guardar el original privado no lo vuelve público.
 3. Abre `/mi-artista/campanas` cuando la nueva función esté desplegada. Un administrador debe elegir Liquid Paper Girl; el propio artista solo puede gestionar su identidad autorizada.
 4. Importa `campana.json`, añade los enlaces del video y de cada pieza, revisa los textos y guarda el borrador.
 5. En el paso de revisión verifica el video, el calendario y el recorrido de registro/seguimiento.

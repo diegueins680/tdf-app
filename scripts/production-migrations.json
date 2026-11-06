@@ -1220,6 +1220,31 @@
       "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
     },
     {
+      "id": "2026-11-04_content_storage",
+      "path": "tdf-hq/sql/2026-11-04_content_storage.sql",
+      "introducedBy": "40c1b42da3040b899af077cbc5be839e1c0a0abc"
+    },
+    {
+      "id": "2026-11-04_content_storage_drive",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_drive.sql",
+      "introducedBy": "62f17666954f0f3451aec8164562b20a85aefe1d"
+    },
+    {
+      "id": "2026-11-04_content_storage_deletion",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_deletion.sql",
+      "introducedBy": "f26654354f947e46aad3a41ce2180cdf283a33e0"
+    },
+    {
+      "id": "2026-11-04_content_storage_accounting",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_accounting.sql",
+      "introducedBy": "f26654354f947e46aad3a41ce2180cdf283a33e0"
+    },
+    {
+      "id": "2026-11-04_content_storage_delete_capacity",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql",
+      "introducedBy": "93068dd90898bce4c4d3e482dad4366a12124029"
+    },
+    {
       "id": "2026-10-20_video_campaigns",
       "path": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
       "introducedBy": "4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5"

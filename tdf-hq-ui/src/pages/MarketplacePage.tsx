@@ -2833,6 +2833,7 @@ export default function MarketplacePage() {
               );
             })()}
             <GoogleDriveUploadWidget
+              recoveryScope={`inventory-asset:${photoDialogListing?.miAssetId ?? 'new'}`}
               label="Subir imagen"
               helperText="JPG o PNG. Guardaremos la foto en el host de assets."
               onComplete={handlePhotoUploadComplete}

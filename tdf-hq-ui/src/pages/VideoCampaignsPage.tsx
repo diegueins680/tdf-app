@@ -5,7 +5,7 @@ import { Alert, Box, Button, Card, CardContent, Checkbox, CircularProgress, Form
   MenuItem, Stack, Step, StepLabel, Stepper, TextField, Typography } from '@mui/material';
 import SessionVideoPreview from '../components/SessionVideoPreview';
 import { Fans } from '../api/fans';
-import { uploadToDrive } from '../api/drive';
+import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { VideoCampaigns } from '../api/videoCampaigns';
 import { getActiveSession, useSession, type SessionUser } from '../session/SessionContext';
 import { getAuthSessionEpoch } from '../session/authEvents';
@@ -103,7 +103,6 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
   const [doc, setDoc] = useState<VideoCampaignDocument>(initial?.content ?? emptyVideoCampaign());
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<number | null>(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const flight = useRef(false);
@@ -124,20 +123,6 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     } catch (e) {
       if (current()) setError(e instanceof Error ? e.message : 'No pudimos guardar. Reintenta con el mismo borrador.');
     } finally { flight.current = false; if (current()) setBusy(false); }
-  };
-  const upload = async (file: File | undefined) => {
-    if (!file || flight.current || !current()) return;
-    if (file.size > 50 * 1024 * 1024) { setError('La carga actual admite hasta 50 MiB. Sube el original a tu almacenamiento y pega su enlace HTTPS.'); return; }
-    if (!file.type.startsWith('video/')) { setError('Selecciona un archivo de video.'); return; }
-    flight.current = true; setBusy(true); setError(''); setProgress(0);
-    try {
-      const media = await uploadToDrive(file, { onProgress: (p) => { if (current()) setProgress(p); } });
-      if (!current()) return;
-      const url = media.webViewLink ?? media.publicUrl ?? media.webContentLink;
-      if (!url) throw new Error('No se recibió un enlace al archivo.');
-      patch({ videoUrl: url }); setNotice('Archivo cargado. Comprueba sus permisos de reproducción antes de lanzar.');
-    } catch (e) { if (current()) setError(e instanceof Error ? e.message : 'Falló la carga. Puedes reintentar o pegar un enlace.'); }
-    finally { flight.current = false; if (current()) { setBusy(false); setProgress(null); } }
   };
   const exportPlan = () => {
     const invalid = validateVideoCampaign(doc); if (invalid) { setError(invalid); return; }
@@ -167,9 +152,15 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
       <TextField label="Título de la sesión" value={doc.title} onChange={(e) => patch({ title: e.target.value })} />
       <TextField label="Enlace HTTPS del video completo" value={doc.videoUrl} onChange={(e) => patch({ videoUrl: e.target.value })}
         helperText="Puedes usar tu propio almacenamiento. No modificamos los permisos del enlace." />
-      <Button component="label">Subir video (hasta 50 MiB)<input hidden type="file" accept="video/*"
-        onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; void upload(file); }} /></Button>
-      {progress !== null && <Typography role="status">Cargando: {progress}%</Typography>}
+      {revision > 0 ? <GoogleDriveUploadWidget label="Subir video original" accept="video/*" multiple={false}
+        visibility="private" recoveryScope={`video-campaign:${artistId}:${id}`} formRecoveryAvailable
+        helperText="Se conserva privado. Reanuda seleccionando el mismo original; la cuota y el destino los controla tu cuenta. Para una sesión pública, revisa después el enlace y sus permisos."
+        onComplete={(files) => {
+          if (!current()) return;
+          const media = files[0]; const url = media?.publicUrl ?? media?.webContentLink ?? media?.webViewLink;
+          if (url && safeVideoUrl(url)) { patch({ videoUrl: url }); setNotice('Original cargado. Revisa la reproducción y los permisos antes de publicar.'); }
+          else setError('El original está guardado, pero falta un enlace reproducible. Revisa el archivo en tu almacenamiento y conserva este borrador.');
+        }} /> : <Alert severity="info">Guarda primero el borrador para vincular una carga recuperable a esta campaña.</Alert>}
       <TextField label="Duración en segundos" type="number" value={doc.durationSeconds} onChange={(e) => patch({ durationSeconds: Number(e.target.value) })} />
       <TextField label="Enlace HTTPS de portada" value={doc.coverUrl} onChange={(e) => patch({ coverUrl: e.target.value })} />
     </>}

@@ -22,7 +22,7 @@ while retaining draft data if the release must be reversed.
 
 1. Open **Lanzar video** from the artist editor.
 2. Paste a playable HTTPS video link, or use the existing upload service for a
-   video within its current 50 MiB limit. The editor never raises that quota.
+   video through the existing recoverable storage widget after saving the draft. It keeps the source private, binds recovery to the campaign UUID, and uses current account quota and destination controls; it never raises quotas. A public playable destination still needs separate permission review.
 3. Choose Instagram, TikTok or both and generate an editable 14-day relative
    calendar (D−2 through D+11). An optional proposed date is stored only as draft
    metadata. There is no scheduler attached to this field.
