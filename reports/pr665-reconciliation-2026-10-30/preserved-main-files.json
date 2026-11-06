@@ -1,0 +1,20 @@
+{
+  "base": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "files": [
+    {
+      "path": "e2e/web/booking-catalog-recovery.spec.mjs",
+      "sha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+      "equalToProtectedMain": true
+    },
+    {
+      "path": "e2e/web/public-welcome.spec.mjs",
+      "sha256": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
+      "equalToProtectedMain": true
+    },
+    {
+      "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+      "sha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+      "equalToProtectedMain": true
+    }
+  ]
+}
