@@ -1,0 +1,19 @@
+{
+  "changed": [
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "docs/catalog-persistence/reports/static-list-inventory.json",
+    "formal/system/inventory.json",
+    "formal/system/legacy-ticket-inventory.md",
+    "formal/system/legacy-ticket-promo-snapshot.md",
+    "formal/system/requirements.json",
+    "formal/system/traceability.json",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+    "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
+  ],
+  "targetedEarlier": "15/0 before two additional boundary cases; full17/current-source still required",
+  "entireHistoricalCatalogDecisionFileExactBaseline": true,
+  "otherRequirementObjectsUnchanged": 153
+}
