@@ -1,0 +1,153 @@
+{
+  "observedAt": "2026-10-26T06:29:08.435730+00:00",
+  "classification": "PARTIAL: scoped local correction verified; protected delivery and deployed verification pending",
+  "problem": "An expired recovery link renders raw English Invalid or expired token in the Spanish reset form.",
+  "baselineSource": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "implementationSource": "72de75db2e7464f1be8b8274836a8a522c93f4e1",
+  "acceptanceSources": [
+    "docs/persona-testing/journey-specifications.md#ST-001",
+    "formal/system/mobile-entry-ux.md#AUTH-ENTRY-002"
+  ],
+  "implementation": "Only reset-confirmation HTTP400/401 with the exact known invalid/expired-token message acquires reset-token code. Views translate ES/EN and retain the existing safe new-link action. Raw API Error.message, login credentials, transport, server errors and other validation meanings remain compatible. No backend/SQL/dependency/permission/Mobile changes.",
+  "expectedBenefit": "Explain why recovery stopped and how to continue in the user's language; activation impact is an unmeasured hypothesis.",
+  "observedBenefit": "The synthetic local browser recovers the same account and returns to /mis-clasificados?st001=return after obtaining a fresh link in the actual local SMTP inbox.13 scoped assertions passed; old password and used/earlier tokens are rejected.",
+  "priority": {
+    "formula": "(15A+25G+15V+15J+15E+5C+5R+5T)/5",
+    "category": "S1",
+    "hypothesisOrdinals": {
+      "A": 4,
+      "G": 2,
+      "V": 4,
+      "J": 5,
+      "E": 5,
+      "C": 5,
+      "R": 5,
+      "T": 3
+    },
+    "score": 77,
+    "selection": "Existing higher-priority financial, welcome and playback candidates have active owners; release/native gates remain external. Independent reproduced recovery correction avoids parallel implementations."
+  },
+  "validation": {
+    "focused": {
+      "tests": 30,
+      "suites": 3,
+      "scope": "Existing execution before assertion-only act/lint cleanup; final full suite separate."
+    },
+    "negativeControl": {
+      "control": "Disable only endpoint-specific recovery token classification",
+      "exitCode": 1,
+      "expectedFailure": true,
+      "sourceRestoredSha256": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
+      "log": "/private/tmp/tdf-account-recovery-negative-control-20261026.log"
+    },
+    "runtime": "reports/account-recovery-runtime-2026-10-26.json",
+    "repositoryQuality": "PASS on implementation source72de",
+    "fullWebQuality": {
+      "tests": 3438,
+      "suites": 305,
+      "status": "PASS: lint, TypeScript, all tests and production build",
+      "executionSource": "72de75db2e7464f1be8b8274836a8a522c93f4e1",
+      "sourceScope": "Material source frozen through execution; commit recorded during the command, no repeated execution count.",
+      "initialGzipBytes": 335305,
+      "preloads": 5
+    },
+    "sourceAdmission": {
+      "mappedSurfaces": 7,
+      "head": "72de75db2e7464f1be8b8274836a8a522c93f4e1"
+    },
+    "catalogRegressions": 8,
+    "strictCatalog": {
+      "candidates": 1330,
+      "unreviewed": 0,
+      "stale": 0,
+      "jsonCsvRowCountsMatch": true,
+      "preservedBaselineDecisions": 1328,
+      "reviewedTechnicalExtensions": 2
+    },
+    "immutableSourceAudit": {
+      "base": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+      "head": "72de75db2e7464f1be8b8274836a8a522c93f4e1",
+      "requirements": 143,
+      "allNormativeRequirementFieldsUnchanged": true,
+      "requirementMappingExtensionsOnly": [
+        "AUTH-ENTRY-002"
+      ],
+      "unchangedInputs": {
+        "tdf-hq": true,
+        "api": true,
+        "packages": true,
+        "scripts": true,
+        ".github": true,
+        "ops": true,
+        "e2e": true,
+        "package.json": true,
+        "package-lock.json": true,
+        "tdf-mobile": true,
+        "formal/tla": true,
+        "formal/alloy": true
+      },
+      "migrationManifestExact": true,
+      "sameMobilePin": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "backendBinaryExecutionIdentity": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "scope": "Material-source audit, not a new backend compilation or mathematical correctness proof."
+    },
+    "logSha256": {
+      "tdf-account-recovery-final-lint-20261026.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+      "tdf-account-recovery-final-typecheck-20261026.log": "374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3",
+      "tdf-account-recovery-final-tests-20261026.log": "c8049be23730e20ec0350302475850451db1733d996f11af87abb90766caabd7",
+      "tdf-account-recovery-final-build-20261026.log": "f238f1f1ce13364d8a1a99400a29f16a3621e618e082ac0e0e6e087479207481",
+      "tdf-account-recovery-repo-quality-20261026.log": "829077c0a5be936d854da31328fa0988a7681362be9dbd7f43a4e3c931bd26a5",
+      "tdf-account-recovery-catalog-regressions-20261026.log": "07df3e6abd7f9cc04e5fdd828fd17997442f469374fd807c4e69d6fccad04eb9"
+    },
+    "qualityCommandHistory": "Initial full quality:ui stopped at the new test's lint stringification; assertion-only fix applied, failed lint stage and remaining canonical type/test/build stages all resumed successfully. Do not represent the initial whole command as exit0."
+  },
+  "failureHistory": [
+    {
+      "attempt": "v1",
+      "result": "Harness incorrectly assumed /comunidad was protected; selected actual authenticated /mis-clasificados instead. No product defect inferred."
+    },
+    {
+      "attempt": "v2",
+      "result": "Authoritative baseline defect: native expired challenge rejected correctly, Spanish rendered raw English. Full cleanup passed."
+    },
+    {
+      "attempt": "v3",
+      "result": "Localized corrected message observed; harness regex expected vencido and missed actual venció. Replaced with stricter exact approved Spanish text. Also allowed only the observed, owned navigation visit endpoint; all other mutation restrictions retained."
+    },
+    {
+      "attempt": "v4",
+      "result": "PASS; successful same72de build reused without renaming compilation; all13 checks/network isolation/cleanup pass."
+    }
+  ],
+  "scopeLimits": [
+    "0human participants; no measured conversion improvement.",
+    "Native API executable retains fe179 identity; frontend embeds72de.",
+    "Browser desktop Chromium only in this scoped runtime; component localization checked ES/EN; mobile/network/accessibility acceptance remains separate.",
+    "Server-side token invalidation models revoked/expired-session boundary; no ordinary session TTL assertion.",
+    "Old-session rejection refers to the explicitly revoked original session; reset revocation of a still-active old session is not newly established here. Existing backend lifecycle controls remain unchanged.",
+    "SMTP acceptance into a synthetic non-relaying loopback inbox is not real mailbox delivery or TLS/provider qualification.",
+    "Original whole ST-001 remains PARTIAL; formal implementation/refinement and release gates remain unchanged."
+  ],
+  "release": {
+    "pullRequest": null,
+    "merged": false,
+    "productionDeployed": false,
+    "productionWrites": false
+  },
+  "replayDirectory": "reports/account-recovery-evidence-20261026",
+  "publicationRule": "The containing final PR commit may add only sanitized evidence, replay files and derived catalog/formal metadata to72de. Material UI/backend/dependency/permission source equality must be checked before publication. Fresh final-head hosted CI and independent protected review remain required.",
+  "postWelcomeComposition": {
+    "observedAt": "2026-10-26T06:55:56.718938+00:00",
+    "protectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "previousPublishedHead": "bfa8f5b9b52a75b36806b5e5e979f08e37629597",
+    "mergeMethod": "normal merge",
+    "protectedRequirements": 144,
+    "requirementsScope": "All144 main objects exact except prior own implementation/test associations for AUTH-ENTRY-002; all normative fields retained.",
+    "sourceScope": "Own7 auth material files byteexact72de; all other UI/e2e material exact protectedmaina123. Backend/API/SQL221/dependencies/ops/models/Mobiled832 unchanged main.",
+    "derivedConflicts": "Only2catalog reports and formalinventory/traceability, canonically regenerated.",
+    "validation": "PASS scoped:175combinedtests/13suites+lint/types; fresh realAPI/PG221/SMTP/browser14checks/allcleanup; strict1330/0stale/0unreviewed and canonical artifactbudgetPASS. Prior3438whole-suite keeps72de executionidentity.",
+    "release": "Fresh final-head CI/review/FIFO/merge/deployed verification required.",
+    "qualifiedExecutionSource": "5768d8fa227163c3aca183b366726105f53b5a5f",
+    "evidence": "reports/account-recovery-after-welcome-2026-10-26.json"
+  }
+}

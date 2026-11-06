@@ -88,7 +88,7 @@ async function postAuthJson<T>(
   path: string,
   body: unknown,
   fallback: string,
-  options?: { retryDelaysMs?: readonly number[]; credentialsError?: boolean },
+  options?: { retryDelaysMs?: readonly number[]; credentialsError?: boolean; resetTokenError?: boolean },
 ): Promise<T> {
   const authRevision = getLogoutRevision();
   const pendingLogout = waitForLogoutRequest();
@@ -133,7 +133,12 @@ async function postAuthJson<T>(
     }
 
     const message = result.message;
-    const code = res.status === 401 && options?.credentialsError ? 'credentials' : message === SERVICE_STARTING_MESSAGE ? 'starting' : 'response';
+    const code = options?.resetTokenError && (res.status === 400 || res.status === 401)
+      && message.trim().toLowerCase() === 'invalid or expired token'
+      ? 'reset-token'
+      : res.status === 401 && options?.credentialsError
+        ? 'credentials'
+        : message === SERVICE_STARTING_MESSAGE ? 'starting' : 'response';
     throw new AuthRequestError(code, message);
   }
 
@@ -179,6 +184,7 @@ export async function confirmPasswordReset(
 ): Promise<LoginResponseDTO> {
   return postAuthJson<LoginResponseDTO>(
     '/v1/password-reset/confirm', payload, 'No pudimos restablecer la contraseña.',
+    { resetTokenError: true },
   );
 }
 

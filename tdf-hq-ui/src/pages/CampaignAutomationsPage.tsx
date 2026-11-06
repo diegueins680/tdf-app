@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -711,13 +712,12 @@ export default function CampaignAutomationsPage() {
                       </IconButton>
                     </Tooltip>
                   </Stack>
-                  <Typography
-                    component="pre"
+                  <MarkdownText
                     variant="body2"
-                    sx={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', mt: 2, mb: 0 }}
+                    sx={{ fontFamily: 'inherit', mt: 2, mb: 0 }}
                   >
                     {row.renderedBody}
-                  </Typography>
+                  </MarkdownText>
                 </Paper>
               ))}
             </Stack>

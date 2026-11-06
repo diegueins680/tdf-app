@@ -96,6 +96,17 @@ describe('analytics/posthog (web)', () => {
     );
   });
 
+  test('disables the SDK request path that bypasses event sanitization', () => {
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
+    expect(getAnalyticsClient().ready).toBe(true);
+    // advanced_disable_feature_flags only changes evaluation, not transmission.
+    expect(initMock.mock.calls[0]?.[1]).toEqual(expect.objectContaining({
+      advanced_disable_flags: true,
+      capture_pageview: true,
+      capture_pageleave: true,
+    }));
+  });
+
   test('filters routed failures through the real reporter, analytics client and SDK envelope', async () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const { default: RouteErrorBoundary } = await import('../components/RouteErrorBoundary');

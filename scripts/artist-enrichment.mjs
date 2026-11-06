@@ -8,6 +8,7 @@
  * DRIVE_REFRESH_TOKEN, DRIVE_UPLOAD_FOLDER_ID (or UPLOAD_FOLDER_ID).
  */
 import crypto from 'node:crypto';
+import { downloadArtistImage } from './artist-image-download.mjs';
 import { execFile } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -201,7 +202,7 @@ export function parseArgs(argv) {
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!['dry_run', 'production'].includes(options.mode)) throw new Error('--mode must be dry-run or production');
-  if (!['audit', 'research', 'media', 'full'].includes(options.scope)) throw new Error('--scope must be audit, research, media, or full');
+  if (!['audit', 'research', 'media', 'full', 'profiles'].includes(options.scope)) throw new Error('--scope must be audit, research, media, full, or profiles');
   if (options.artistId != null && (!Number.isSafeInteger(options.artistId) || options.artistId <= 0)) {
     throw new Error('--artist must be a positive integer');
   }
@@ -226,7 +227,7 @@ export function parseArgs(argv) {
 function help() {
   process.stdout.write(`Usage: node scripts/artist-enrichment.mjs [options]\n\n`
     + `  --mode dry-run|production  Never publish in dry-run mode (default)\n`
-    + `  --scope audit|research|media|full\n`
+    + `  --scope audit|research|media|full|profiles\n`
     + `  --artist ID                 Limit to one artist\n`
     + `  --batch-size N              Process 1-500 artists (default 25)\n`
     + `  --concurrency N             External requests in parallel (default 3)\n`
@@ -597,7 +598,7 @@ async function persistLinkChecks(api, profile, linkChecks) {
     if (!isPersistableResearchUrl(check.url)) continue;
     await persistSource(api, profile, {
       url: check.url,
-      type: check.valid ? 'link_validation_valid' : 'link_validation_broken',
+      type: check.valid ? 'link_validation_valid' : [404, 410].includes(check.status) ? 'link_validation_broken' : 'link_validation_unavailable',
       fields: [field],
       attribution: JSON.stringify({ httpStatus: check.status, valid: check.valid }),
     });
@@ -606,11 +607,15 @@ async function persistLinkChecks(api, profile, linkChecks) {
 
 export function isTdfManagedImageUrl(rawUrl) {
   try {
-    const host = new URL(rawUrl).hostname.toLowerCase();
+    const url = new URL(rawUrl);
+    if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443')) return false;
+    const host = url.hostname.toLowerCase();
     return host === 'drive.google.com'
       || host.endsWith('.googleusercontent.com')
       || host === 'tdf-hq.fly.dev'
       || host === 'api.tdfrecords.net'
+      || host === 'tdfrecords.net'
+      || host === 'www.tdfrecords.net'
       || host === 'tdfrecords.com'
       || host.endsWith('.tdfrecords.com');
   } catch {
@@ -623,10 +628,95 @@ async function persistHotlinkReview(api, profile) {
   if (!url || isTdfManagedImageUrl(url) || !/^https?:\/\//i.test(url)) return;
   await persistSource(api, profile, {
     url,
-    type: 'link_validation_broken',
+    type: 'media_rights_review',
     fields: ['heroImageUrl'],
-    attribution: JSON.stringify({ valid: false, reason: 'third_party_hotlink_requires_authorized_ingestion' }),
+    attribution: JSON.stringify({ rightsStatus: 'unconfirmed', reason: 'third_party_hotlink_requires_authorized_ingestion' }),
   });
+}
+
+export const isPlaceholderArtistImage = (value) => !String(value ?? '').trim()
+  || /(?:^|\/)artist-fallback\.svg(?:[?#]|$)/i.test(String(value).trim())
+  || (String(value).startsWith('data:image/svg+xml,') && String(value).slice(0, 350).includes('data-tdf-artist-avatar'));
+
+export const automaticFieldFillAllowed = (field, current) =>
+  !String(current ?? '').trim()
+  || (['heroImageUrl', 'heroOriginalUrl', 'heroSquareUrl', 'heroLandscapeUrl'].includes(field)
+    && isPlaceholderArtistImage(current));
+
+export function internalArtistMedia(profile, media = [], suggestions = []) {
+  const rejected = new Set(suggestions.filter((item) => item.aesArtistId === profile.apArtistId
+    && ['rejected', 'superseded'].includes(item.aesStatus))
+    .map((item) => `${item.aesFieldName}|${item.aesProposedValue}`));
+  let candidates = media.filter((item) => item.amaArtistId === profile.apArtistId
+    && ['authorized', 'licensed'].includes(item.amaRightsStatus)
+    && isTdfManagedImageUrl(item.amaPublicUrl)
+    && item.amaSourceAttribution?.trim())
+    .sort((left, right) => right.amaId - left.amaId);
+  if (!automaticFieldFillAllowed('heroImageUrl', profile.apHeroImageUrl)) {
+    const current = candidates.find((item) => item.amaPublicUrl === profile.apHeroImageUrl);
+    if (!current?.amaSourceContentHash) return [];
+    candidates = candidates.filter((item) => item.amaSourceContentHash === current.amaSourceContentHash);
+  }
+  return [
+    ['heroImageUrl', profile.apHeroImageUrl, ['landscape', 'original', 'square']],
+    ['heroSquareUrl', profile.apHeroSquareUrl, ['square']],
+    ['heroLandscapeUrl', profile.apHeroLandscapeUrl, ['landscape']],
+  ].flatMap(([field, current, kinds]) => {
+    if (!automaticFieldFillAllowed(field, current)) return [];
+    const candidate = kinds.map((kind) => candidates.find((item) => item.amaAssetKind === kind
+      && !rejected.has(`${field}|${item.amaPublicUrl}`))).find(Boolean);
+    return candidate ? [{ field, current: current ?? null, proposed: candidate.amaPublicUrl,
+      assetId: candidate.amaId, rights: candidate.amaRightsStatus,
+      sourceUrl: candidate.amaSourceUrl, attribution: candidate.amaSourceAttribution }] : [];
+  });
+}
+
+export function authorizedArtistImageSource(profile, sources = []) {
+  if (!isPlaceholderArtistImage(profile.apHeroImageUrl)) return null;
+  for (const source of sources.filter((item) => item.arsArtistId === profile.apArtistId
+    && item.arsSourceType === 'authorized_artist_image').sort((a, b) => b.arsId - a.arsId)) {
+    try {
+      const permission = JSON.parse(source.arsAttribution ?? '{}');
+      if (['authorized', 'licensed'].includes(permission.rights)
+        && permission.attribution?.trim() && /^[a-f0-9]{64}$/i.test(source.arsContentHash ?? '')) {
+        return { url: source.arsSourceUrl, rights: permission.rights,
+          attribution: permission.attribution, contentHash: source.arsContentHash };
+      }
+    } catch { /* malformed rights stay review-only */ }
+  }
+  return null;
+}
+
+export function verifiedArtistBiography({ name, city, country, genres = [], releases = [] }) {
+  const clean = (value) => String(value ?? '').trim().replace(/\s+/gu, ' ');
+  const parts = [clean(name)];
+  const location = [clean(city), clean(country)].filter(Boolean).join(', ');
+  if (location) parts.push(`Ubicación: ${location}.`);
+  if (genres.length) parts.push(`Géneros: ${genres.map(clean).filter(Boolean).slice(0, 6).join(', ')}.`);
+  if (releases.length) parts.push(`Lanzamientos: ${releases.map((item) => clean(item.title)).filter(Boolean).slice(0, 3).join('; ')}.`);
+  return parts.length > 1 ? parts.join(' ') : null;
+}
+
+/**
+ * An operator-supplied image (--image-source-url with --artist) replaces any
+ * automatic internal reuse for that artist: publishing old internal media first
+ * would move the profile baseline and supersede the requested image.
+ */
+export const explicitImageRequested = (profile, options) =>
+  Boolean(options?.imageSourceUrl) && options.artistId === profile?.apArtistId;
+
+async function reuseInternalArtistMedia(api, profile, options) {
+  const proposals = internalArtistMedia(profile, options.internalMedia, options.existingSuggestions);
+  for (const proposal of proposals) {
+    const evidence = evidenceFor(profile, [{ url: proposal.sourceUrl }],
+      ['same_artist_registered_media', 'explicit_media_rights'], proposal);
+    if (options.mode === 'production') {
+      const decision = await createSuggestion(api, profile, proposal.field, proposal.current,
+        proposal.proposed, 0.99, evidence, options.autoPublish);
+      proposal.status = decision?.aesStatus ?? 'unchanged';
+    } else proposal.status = 'would_reuse_authorized_internal_media';
+  }
+  return proposals;
 }
 
 async function createSuggestion(api, profile, fieldName, currentValue, proposedValue, confidence, evidence, autoPublish) {
@@ -638,14 +728,14 @@ async function createSuggestion(api, profile, fieldName, currentValue, proposedV
     aescCurrentValue: currentValue ?? null,
     aescProposedValue: String(proposedValue),
     aescConfidence: confidence,
-    aescAutoPublish: autoPublish,
+    aescAutoPublish: autoPublish && automaticFieldFillAllowed(fieldName, currentValue),
     aescEvidence: evidence,
   });
-  if (autoPublish && suggestion?.aesAutoPublish === true && suggestion?.aesStatus === 'pending') {
+  if (autoPublish && automaticFieldFillAllowed(fieldName, currentValue) && suggestion?.aesAutoPublish === true && suggestion?.aesStatus === 'pending') {
     return api('PATCH', `/admin/artists/enrichment/suggestions/${suggestion.aesId}`, {
       aedDecision: 'approve',
       aedEditedValue: null,
-      aedNote: 'Automatic publication: at least two independent matching signals.',
+      aedNote: 'Automatic fill: verified empty field or provisional avatar; server rechecks current value.',
     });
   }
   return suggestion;
@@ -765,10 +855,13 @@ export async function uploadTdfDriveFile(apiBase, adminToken, fileName, mimeType
 
 export async function probeImage(filePath) {
   const { stdout } = await execFileAsync('ffprobe', [
-    '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'json', filePath,
-  ]);
+    '-v', 'error', '-protocol_whitelist', 'file,pipe', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'json', filePath,
+  ], { timeout: 20_000, maxBuffer: 1024 * 1024 });
   const stream = JSON.parse(stdout).streams?.[0];
-  if (!stream?.width || !stream?.height) throw new Error('Image did not decode to positive dimensions');
+  if (!Number.isSafeInteger(stream?.width) || !Number.isSafeInteger(stream?.height)
+    || stream.width < 2 || stream.height < 2 || stream.width * stream.height > 40_000_000) {
+    throw new Error('Image did not decode within positive dimension/pixel limits');
+  }
   return { width: Number(stream.width), height: Number(stream.height) };
 }
 
@@ -777,9 +870,9 @@ async function transcode(input, output, format, filter, quality) {
     ? ['-c:v', 'libwebp', '-quality', String(quality), '-compression_level', '6']
     : ['-c:v', 'libaom-av1', '-crf', String(quality), '-still-picture', '1', '-pix_fmt', 'yuv420p'];
   await execFileAsync('ffmpeg', [
-    '-hide_banner', '-loglevel', 'error', '-y', '-i', input, '-vf', filter,
+    '-hide_banner', '-loglevel', 'error', '-y', '-protocol_whitelist', 'file,pipe', '-i', input, '-vf', filter,
     '-frames:v', '1', ...codecArgs, output,
-  ], { maxBuffer: 2 * 1024 * 1024 });
+  ], { timeout: 60_000, maxBuffer: 2 * 1024 * 1024 });
 }
 
 export async function transcodeWithinBudget(input, output, format, filter, budgetBytes) {
@@ -792,7 +885,7 @@ export async function transcodeWithinBudget(input, output, format, filter, budge
   throw new Error(`${path.basename(output)} could not meet the ${budgetBytes} byte budget`);
 }
 
-async function processMedia(api, profile, imageUrl, sourceAttribution, rightsStatus, focalPoint, autoPublish, serverDriveUpload) {
+async function processMedia(api, profile, imageUrl, sourceAttribution, rightsStatus, focalPoint, autoPublish, serverDriveUpload, expectedSourceHash = null) {
   if (!['authorized', 'licensed'].includes(rightsStatus)) {
     throw new Error('Image ingestion requires explicit authorized or licensed rights');
   }
@@ -804,10 +897,10 @@ async function processMedia(api, profile, imageUrl, sourceAttribution, rightsSta
   if (!directDriveAvailable && !serverDriveUpload) {
     throw new Error('Google Drive OAuth is incomplete and the TDF Drive proxy is unavailable');
   }
-  const response = await retryFetch(imageUrl, { redirect: 'follow' }, { attempts: 4, timeoutMs: 30_000 });
-  if (!response.ok) throw new Error(`Official image download failed (${response.status})`);
-  const sourceBytes = Buffer.from(await response.arrayBuffer());
+  const sourceBytes = await downloadArtistImage(imageUrl);
   if (sourceBytes.length > 25 * 1024 * 1024) throw new Error('Official image exceeds the 25MB ingestion limit');
+  const downloadedHash = crypto.createHash('sha256').update(sourceBytes).digest('hex');
+  if (expectedSourceHash && downloadedHash !== expectedSourceHash) throw new Error('Reviewed source image changed; renewed identity/rights review is required');
   const detectedMime = detectImageMime(sourceBytes);
   if (!detectedMime) throw new Error('Official image MIME/magic bytes are unsupported');
   const tempDir = await mkdtemp(path.join(os.tmpdir(), 'tdf-artist-media-'));
@@ -903,7 +996,8 @@ async function processMedia(api, profile, imageUrl, sourceAttribution, rightsSta
     ['heroFocalPoint', profile.apHeroFocalPoint, focalPoint],
   ];
   for (const [field, current, proposed] of suggestions) {
-    await createSuggestion(api, profile, field, current, proposed, 0.96, mediaEvidence, autoPublish);
+    await createSuggestion(api, profile, field, current, proposed, 0.96, mediaEvidence,
+      autoPublish && automaticFieldFillAllowed('heroImageUrl', profile.apHeroImageUrl));
   }
     return uploaded;
   } finally {
@@ -1052,6 +1146,22 @@ async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyTo
 }
 
 async function researchArtist(api, profile, enrichment, spotifyToken, options) {
+  // Inspect registered, rights-bearing same-artist assets before any provider search.
+  const internalMedia = explicitImageRequested(profile, options)
+    ? []
+    : await reuseInternalArtistMedia(api, profile, options);
+  const reviewedImage = internalMedia.length === 0 && !options.imageSourceUrl
+    ? authorizedArtistImageSource(profile, options.existingSources) : null;
+  let reviewedMedia = [];
+  if (reviewedImage) {
+    reviewedMedia = options.mode === 'production'
+      ? await processMedia(api, profile, reviewedImage.url, reviewedImage.attribution, reviewedImage.rights,
+        options.focalPoint, options.autoPublish, options.serverDriveUpload, reviewedImage.contentHash)
+      : [{ sourceUrl: reviewedImage.url, rights: reviewedImage.rights, action: 'would_ingest_hash_pinned_reviewed_image' }];
+  }
+  if (options.scope === 'media' && (internalMedia.length > 0 || reviewedMedia.length > 0) && !options.imageSourceUrl) {
+    return { ...await auditArtistLinks(profile, enrichment), internalMedia, media: reviewedMedia };
+  }
   const sources = [];
   const signals = [];
   const providerResults = await Promise.all([
@@ -1137,12 +1247,13 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
   const report = {
     artistId: profile.apArtistId,
     artistName: profile.apDisplayName,
+    internalMedia,
     sources: sources.map((source) => source.url),
     signals: meaningfulSignals(signals),
     confidence,
     reliable,
     suggestions: [],
-    media: [],
+    media: reviewedMedia,
     providerOutages,
     withheldReason: reliable ? null : 'fewer_than_two_independent_matching_signals',
   };
@@ -1164,11 +1275,11 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
     await persistHotlinkReview(api, profile);
   }
   report.linkChecks = linkChecks;
-  report.missingImage = !profile.apHeroImageUrl;
+  report.missingImage = isPlaceholderArtistImage(profile.apHeroImageUrl);
   if (profile.apHeroImageUrl && !isTdfManagedImageUrl(profile.apHeroImageUrl)) {
     report.mediaWithheldReason = 'existing_third_party_hotlink_requires_authorized_ingestion';
   }
-  if (options.imageSourceUrl && options.artistId === profile.apArtistId && ['media', 'full'].includes(options.scope)) {
+  if (options.imageSourceUrl && options.artistId === profile.apArtistId && ['media', 'full', 'profiles'].includes(options.scope)) {
     if (options.mode === 'production') {
       report.media = await processMedia(
         api,
@@ -1187,9 +1298,13 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
   const imageCandidateUrl = spotifyTrusted
     ? spotify?.images?.sort((a, b) => (b.width ?? 0) - (a.width ?? 0))?.[0]?.url ?? null
     : null;
-  if (!options.imageSourceUrl && imageCandidateUrl && !profile.apHeroImageUrl) {
+  if (!options.imageSourceUrl && imageCandidateUrl && isPlaceholderArtistImage(profile.apHeroImageUrl) && internalMedia.length === 0 && reviewedMedia.length === 0) {
     report.mediaWithheldReason = 'image_candidate_found_but_reuse_rights_not_confirmed';
     report.imageCandidateUrl = imageCandidateUrl;
+    if (options.mode === 'production') await persistSource(api, profile, {
+      url: imageCandidateUrl, type: 'media_rights_review', fields: ['heroImageUrl'],
+      attribution: JSON.stringify({ rightsStatus: 'unconfirmed', reason: report.mediaWithheldReason }),
+    });
   }
   if (!reliable) return report;
   const genres = [...new Set([
@@ -1197,7 +1312,12 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
     ...(musicBrainzTrusted ? (musicBrainz?.genres ?? []).map((item) => item.name) : []),
   ])];
   const featuredVideoId = youtubeTrusted ? await latestYouTubeVideo(youtube?.id?.channelId) : null;
+  const biography = verifiedArtistBiography({ name: profile.apDisplayName,
+    city: musicBrainzTrusted ? musicBrainz?.['begin-area']?.name : null,
+    country: musicBrainzTrusted ? mbCountry : null, genres,
+    releases: musicBrainzTrusted ? mbReleases : [] });
   const proposals = [
+    ['bio', profile.apBio, biography],
     ['officialName', profile.apOfficialName ?? profile.apDisplayName, (spotifyTrusted ? spotify?.name : null) ?? (musicBrainzTrusted ? musicBrainz?.name : null)],
     ['country', enrichment?.apeCountry, musicBrainzTrusted ? mbCountry : null],
     ['city', profile.apCity, musicBrainzTrusted ? musicBrainz?.['begin-area']?.name ?? null : null],
@@ -1210,7 +1330,7 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
     ['socialLinks', enrichment?.apeSocialLinks, musicBrainzTrusted && (Object.keys(otherSocials).length > 0 || bandcamp) ? JSON.stringify({ ...otherSocials, ...(bandcamp ? { bandcamp } : {}) }) : null],
     ['websiteUrl', profile.apWebsiteUrl, musicBrainzTrusted ? website : null],
     ['featuredVideoUrl', profile.apFeaturedVideoUrl, featuredVideoId ? `https://www.youtube.com/watch?v=${featuredVideoId}` : null],
-    ['discography', enrichment?.apeDiscography, musicBrainzTrusted && mbReleases.length > 0 ? JSON.stringify(mbReleases.slice(0, 30).map((item) => ({ title: item.title, type: item['primary-type'], firstReleaseDate: item['first-release-date'] ?? null }))) : null],
+    ['discography', enrichment?.apeDiscography, musicBrainzTrusted && mbReleases.length > 0 ? JSON.stringify(mbReleases.slice(0, 30).map((item) => ({ title: item.title, type: item['primary-type'], firstReleaseDate: item['first-release-date'] ?? null, ...(item.id ? { url: `https://musicbrainz.org/release-group/${encodeURIComponent(item.id)}` } : {}) }))) : null],
     ['lastVerifiedAt', enrichment?.apeLastVerifiedAt, `${nowIso().slice(0, 10)}T00:00:00Z`],
     ['confidence', enrichment?.apeConfidence, String(confidence)],
     ['reviewStatus', enrichment?.apeReviewStatus, 'verified'],
@@ -1245,12 +1365,57 @@ async function auditArtistLinks(profile, enrichment) {
     suggestions: [],
     media: [],
     withheldReason: null,
-    missingImage: !profile.apHeroImageUrl,
+    missingImage: isPlaceholderArtistImage(profile.apHeroImageUrl),
     linkChecks,
   };
 }
 
+async function runExistingProfileBatch(options) {
+  const token = process.env.ADMIN_TOKEN || process.env.API_TOKEN;
+  if (!token) throw new Error('ADMIN_TOKEN is required; do not pass secrets on the command line');
+  const api = createApiClient(process.env.TDF_API_BASE || process.env.API_BASE || DEFAULT_API_BASE, token);
+  const profiles = await api('GET', '/admin/artists/profiles');
+  const checkpoint = prepareCheckpointForAttempt(await readCheckpoint(options.checkpoint, options.resume));
+  const completed = new Set(checkpoint.completedArtists);
+  const candidates = profiles.filter((profile) => !completed.has(profile.apArtistId))
+    .sort((a, b) => Number(!isPlaceholderArtistImage(a.apHeroImageUrl)) - Number(!isPlaceholderArtistImage(b.apHeroImageUrl)) || a.apArtistId - b.apArtistId);
+  const selected = selectRunBatch(candidates, options.batchSize, nowIso().slice(0, 10), options.rotateBatches);
+  const artists = [];
+  let attempted = 0;
+  // Each discovery request is scoped to a known existing Party. A global
+  // production discovery can create missing profiles, so it is never used here.
+  for (const profile of selected) {
+    attempted += 1;
+    try {
+      const result = await runPipeline({ ...options, artistId: profile.apArtistId, batchSize: 1,
+        checkpoint: `${options.checkpoint}.artists/${profile.apArtistId}.json`,
+        report: `${options.report}.artists/${profile.apArtistId}.json` });
+      artists.push(...result.artists);
+      completed.add(profile.apArtistId);
+    } catch (error) {
+      checkpoint.errors.push({ artistId: profile.apArtistId, message: error.message, at: nowIso() });
+    }
+    checkpoint.completedArtists = [...completed].sort((a, b) => a - b);
+    await writeJson(options.checkpoint, checkpoint);
+    if (checkpoint.errors.length >= 3 || (attempted >= 5 && checkpoint.errors.length / attempted > 0.1)) break;
+  }
+  const duplicates = new Map();
+  for (const profile of profiles) {
+    const name = normalizeName(profile.apDisplayName);
+    duplicates.set(name, [...(duplicates.get(name) ?? []), profile.apArtistId]);
+  }
+  const report = { mode: options.mode, scope: 'profiles', generatedAt: nowIso(),
+    inventory: { profiles: profiles.length }, artists,
+    possibleDuplicates: [...duplicates].filter(([, ids]) => ids.length > 1)
+      .map(([normalizedName, artistIds]) => ({ normalizedName, artistIds })),
+    previousAttemptErrors: checkpoint.previousErrors, errors: checkpoint.errors };
+  await writeJson(options.report, report);
+  if (checkpoint.errors.length) throw new Error(`Existing-profile batch has ${checkpoint.errors.length} failed item(s); inspect the retained report`);
+  return report;
+}
+
 export async function runPipeline(options) {
+  if (options.scope === 'profiles' && options.artistId == null) return runExistingProfileBatch(options);
   const adminToken = process.env.ADMIN_TOKEN || process.env.API_TOKEN;
   if (!adminToken) throw new Error('ADMIN_TOKEN is required; do not pass secrets on the command line');
   const apiBase = process.env.TDF_API_BASE || process.env.API_BASE || DEFAULT_API_BASE;
@@ -1290,6 +1455,9 @@ export async function runPipeline(options) {
     api('GET', '/admin/artists/profiles'),
     api('GET', overviewRoute),
   ]);
+  options.internalMedia = overview.aeoMedia ?? [];
+  options.existingSources = overview.aeoSources ?? [];
+  options.existingSuggestions = overview.aeoSuggestions ?? [];
   const enrichmentById = new Map(overview.aeoProfiles.map((profile) => [profile.apeArtistId, profile]));
   const checkpoint = prepareCheckpointForAttempt(await readCheckpoint(options.checkpoint, options.resume));
   const completed = new Set(checkpoint.completedArtists);
@@ -1297,14 +1465,14 @@ export async function runPipeline(options) {
   const eligibleProfiles = profiles
     .filter((profile) => options.artistId == null || profile.apArtistId === options.artistId)
     .filter((profile) => !completed.has(profile.apArtistId))
-    .sort((left, right) => left.apArtistId - right.apArtistId);
+    .sort((left, right) => Number(!isPlaceholderArtistImage(left.apHeroImageUrl)) - Number(!isPlaceholderArtistImage(right.apHeroImageUrl)) || left.apArtistId - right.apArtistId);
   const selected = selectRunBatch(
     eligibleProfiles,
     options.batchSize,
     runDate,
     options.artistId == null && options.rotateBatches === true,
   );
-  const spotifyToken = ['research', 'media', 'full'].includes(options.scope) ? await spotifyAccessToken() : null;
+  const spotifyToken = ['research', 'media', 'full', 'profiles'].includes(options.scope) ? await spotifyAccessToken() : null;
   const artistReports = [];
   const inventoryReports = [];
   const inventoryGroups = new Map();
@@ -1389,7 +1557,7 @@ export async function runPipeline(options) {
     attempted += 1;
     try {
       const enrichment = enrichmentById.get(profile.apArtistId);
-      const result = ['research', 'media', 'full'].includes(options.scope)
+      const result = ['research', 'media', 'full', 'profiles'].includes(options.scope)
         ? await researchArtist(api, profile, enrichment, spotifyToken, options)
         : await auditArtistLinks(profile, enrichment);
       if (options.mode === 'production' && options.scope === 'audit') {
@@ -1451,6 +1619,8 @@ export async function runPipeline(options) {
       errors: checkpoint.errors.length,
       suggestions: report.artists.reduce((total, artist) => total + artist.suggestions.length, 0),
       media: report.artists.reduce((total, artist) => total + artist.media.length, 0),
+      internalMediaReused: report.artists.reduce((total, artist) => total + (artist.internalMedia?.filter((item) => ['approved', 'auto_applied'].includes(item.status)).length ?? 0), 0),
+      provisionalAvatars: report.artists.filter((artist) => artist.missingImage && !artist.internalMedia?.some((item) => item.field === 'heroImageUrl' && ['approved', 'auto_applied'].includes(item.status))).length,
     }),
     // A resumed successful run must replace, rather than retain, an error
     // summary written by an earlier failed attempt with the same run key.

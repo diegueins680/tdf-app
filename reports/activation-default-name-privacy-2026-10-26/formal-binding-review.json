@@ -1,0 +1,73 @@
+{
+  "status": "VERIFIED-local-source-bindings-only",
+  "capturedAt": "2026-10-27T02:33:14.229622+00:00",
+  "originalHostedFailure": {
+    "head": "6a097370d59d3c2b72ee2d387dc633b3eca98d96",
+    "job": 121971699793,
+    "run": 40438132479,
+    "reason": "authorization incomplete: Receipt source fingerprint mismatch; recovery incomplete: Receipt source fingerprint mismatch",
+    "artifact": 12705735230,
+    "zipSha256": "31d35543beb97295e399cbe30e5fe521e23e8cd1ecafe9582c8efc157dca8503"
+  },
+  "change": "Rebind exact new Cabal module registrations and ServerAuth initial-public-name import/call; preserve all obligation claims, assumptions, limitations and prior source-context reviews. No checker changes.",
+  "exactSourceReview": {
+    "cabalRevertingThreeRegistrationsReproducesMain": true,
+    "serverAuthRevertingOnlyHelperImportAndGoogleNameCallReproducesMain": true,
+    "base": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "authorizationAndRecoveryBodiesUnchanged": true
+  },
+  "localExecution": {
+    "passed": true,
+    "reason": "Fresh solver execution, controls and ten serialized SMT problems replayed successfully",
+    "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]"
+  },
+  "provenance": {
+    "revision": "6a097370d59d3c2b72ee2d387dc633b3eca98d96",
+    "worktreeDirty": true,
+    "digest": "b0ad7ee0c8fc726472880b564d0b387b385a1334d3a5c8f6abd5904ab2f03fca",
+    "scope": "Execution on6a09737 with explicitly modified formal metadata; not relabeled as future commit. A fresh final-head execution/CI is required."
+  },
+  "obligationsByCategory": {
+    "implementation": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 150,
+      "NOT_APPLICABLE": 0
+    },
+    "refinement": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 150,
+      "NOT_APPLICABLE": 0
+    },
+    "source-derived-SMT": {
+      "PROVEN": 4,
+      "REFUTED": 0,
+      "UNPROVEN": 0,
+      "NOT_APPLICABLE": 0
+    },
+    "source-derived-authorization-SMT": {
+      "PROVEN": 3,
+      "REFUTED": 0,
+      "UNPROVEN": 0,
+      "NOT_APPLICABLE": 0
+    },
+    "source-derived-recovery-SMT": {
+      "PROVEN": 4,
+      "REFUTED": 0,
+      "UNPROVEN": 0,
+      "NOT_APPLICABLE": 0
+    }
+  },
+  "regressionControls": {
+    "verificationReport": 27,
+    "authorization": 8,
+    "recovery": 8,
+    "passed": 43
+  },
+  "release": {
+    "decision": "BLOCKED",
+    "unprovenFullRequirements": 150,
+    "reason": "Arithmetic/predicate lemmas do not establish implementation, refinement, production readiness or payment certification."
+  }
+}

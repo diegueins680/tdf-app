@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useRef } from 'react';
 import { Alert, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -37,7 +38,7 @@ export default function NotificationPage() {
   if (destination) return <Navigate to={destination} replace />;
   return <Stack spacing={2}>
     <Typography component="h1" variant="h4">{english ? 'Notification' : 'Notificación'}</Typography>
-    {notification && <><Typography component="h2" variant="h6">{notification.nTitle}</Typography><Typography>{notification.nBody}</Typography></>}
+    {notification && <><Typography component="h2" variant="h6">{notification.nTitle}</Typography><MarkdownText>{notification.nBody}</MarkdownText></>}
     <Alert severity="info">{english
       ? 'A specific destination is unavailable for this notification. It may no longer be available to your account, or the original notification did not retain its reference.'
       : 'No hay un destino específico disponible para esta notificación. Puede que ya no esté disponible para tu cuenta o que la notificación original no haya conservado su referencia.'}</Alert>

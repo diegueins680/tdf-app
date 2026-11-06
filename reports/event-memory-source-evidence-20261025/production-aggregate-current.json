@@ -1,0 +1,21 @@
+{
+  "mode": "REPEATABLE READ READ ONLY then ROLLBACK",
+  "eventId": 141,
+  "observations": [
+    {
+      "relatedAccounts": 7,
+      "activeAccounts": 5,
+      "professionalAccounts": 5,
+      "rsvpIntentAccounts": 3,
+      "professionalAndRsvp": 1,
+      "archivedAliases": 0,
+      "newCampaignSchemaInstalled": false
+    },
+    {
+      "observedAt": "2026-10-25T21:36:00.828671+00:00",
+      "eventState": "on_sale",
+      "memorySchemaInstalled": false,
+      "completedPublicEnabled": false
+    }
+  ]
+}

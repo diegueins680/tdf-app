@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Avatar, Box, Button, Card, CardActionArea, CardContent, CardMedia, Chip, CircularProgress, Grid, Stack, Typography } from '@mui/material';
@@ -59,7 +60,7 @@ export default function MerchStorefrontPage() {
             <Avatar src={resolveMerchImageUrl(data.logoImageUrl)} alt="" sx={{ width: 72, height: 72 }}>{data.displayName.slice(0, 1)}</Avatar>
             <Box flex={1}>
               <Typography component="h1" variant="h3" fontWeight={900}>{data.displayName}</Typography>
-              {data.description && <Typography color="text.secondary">{data.description}</Typography>}
+              {data.description && <MarkdownText color="text.secondary">{data.description}</MarkdownText>}
             </Box>
             {profile?.url && <Button component={RouterLink} to={profile.url} startIcon={<GroupsIcon />}>{language === 'en' ? 'Artist profile & community' : 'Perfil y comunidad'}</Button>}
           </Stack>
@@ -99,12 +100,12 @@ export default function MerchStorefrontPage() {
             <Stack spacing={1}>
               {shippingPolicy && (
                 <LegalDisclosure id="store-shipping-policy" language={language} headingLevel={3} title={language === 'en' ? 'Shipping policy' : 'Política de envíos'}>
-                  <Typography sx={{ whiteSpace: 'pre-wrap' }}>{shippingPolicy}</Typography>
+                  <MarkdownText>{shippingPolicy}</MarkdownText>
                 </LegalDisclosure>
               )}
               {returnPolicy && (
                 <LegalDisclosure id="store-return-policy" language={language} headingLevel={3} title={language === 'en' ? 'Return policy' : 'Política de devoluciones'}>
-                  <Typography sx={{ whiteSpace: 'pre-wrap' }}>{returnPolicy}</Typography>
+                  <MarkdownText>{returnPolicy}</MarkdownText>
                 </LegalDisclosure>
               )}
             </Stack>

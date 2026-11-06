@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-26",
+  "requirement": "UX-WELCOME-001",
+  "baseCommit": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "problem": "Visitors requested real views of studio spaces and equipment before personal profiling. The studio section had text and links but no room gallery.",
+  "evidence": "One qualitative visitor conversation with eight voice notes; note16:42:25 requests spaces/equipment. Owner explicitly supplied three photo folders26Oct. Frequency and activation effect unknown.",
+  "priority": {
+    "impact": "Public pre-registration understanding and trust",
+    "confidence": "Direct feedback plus approved authentic assets",
+    "effort": "Small web-only increment",
+    "risk": "Historical equipment and people must not be misrepresented",
+    "severity": "P2-content; does not supersede functional P0 work owned by other PRs"
+  },
+  "existingWelcomePhoto": {
+    "path": "tdf-hq-ui/public/assets/tdf-ui/esteban-munoz.jpg",
+    "sha256": "c4bc06845a664d310380b4321e8554b96d7ddbe441bce9a193c60f3385355345",
+    "result": "Downloaded app-folder original is byte-identical to existing welcome asset; retained, no duplicate publication or identity inference.",
+    "sourceReference": "approved-source-A/app-existing"
+  },
+  "selection": [
+    {
+      "name": "control-room",
+      "originalBytes": 2276328,
+      "originalSha256": "e0726b39ed64ba7f22c1858bd075eaa691254ef3ced5192d3347eb303ddb30f0",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/control-room-640.webp",
+          "bytes": 52948,
+          "sha256": "fb7c808cb4f37fe6a3cd3e7bbcd5eb8a63eedb87c9b3cc336497c9d3b9315853"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/control-room-1280.webp",
+          "bytes": 167614,
+          "sha256": "dafb64b459f1a5e3b56995ecb9d5b871c25378c159ab53357a17712495d752c6"
+        }
+      ],
+      "sourceReference": "approved-photo-1"
+    },
+    {
+      "name": "recording-room",
+      "originalBytes": 1991364,
+      "originalSha256": "98f77313513981da7e913f4177316a0bcf852d40e4c8ce45f1c62cb1116418e1",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/recording-room-640.webp",
+          "bytes": 35434,
+          "sha256": "968fb927f443fe19e4d44126b5c6c9aa8f06f3937e07378d078881251595921f"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/recording-room-1280.webp",
+          "bytes": 113654,
+          "sha256": "03379ff3f7528147f8b94d62db1a0ffc865707966124964a6c2d34e363a3e0fe"
+        }
+      ],
+      "sourceReference": "approved-photo-2"
+    },
+    {
+      "name": "instruments",
+      "originalBytes": 5503833,
+      "originalSha256": "7934aca5e8ad0a3605a16a4cdf34ea70daa846b8be36ed5fe7830524cb2d3479",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/instruments-640.webp",
+          "bytes": 63616,
+          "sha256": "6eb35d4b89d5ccc525ac4dd10e98e2e070615aacec116de566fd05c0451b4008"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/instruments-1280.webp",
+          "bytes": 199498,
+          "sha256": "9c0927367eebd4aaf0e82a9d5e3e9b996954e957242558aa01efc1874d3003a4"
+        }
+      ],
+      "sourceReference": "approved-photo-3"
+    },
+    {
+      "name": "mixing-detail",
+      "originalBytes": 3935458,
+      "originalSha256": "25119fd1bc74d46d6ebc99db9615e88230824415e6202f92ee4fc438dbd0b329",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/mixing-detail-640.webp",
+          "bytes": 18176,
+          "sha256": "081beff7dbbd933f8460a51dabcde75ed924fd23345f85665c4ec7b8fb4bf98e"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/mixing-detail-1280.webp",
+          "bytes": 44624,
+          "sha256": "ad0e496638773b74bf041f7494204fb47746b404cc3a0573e500897956313b18"
+        }
+      ],
+      "sourceReference": "approved-photo-4"
+    },
+    {
+      "name": "drum-session",
+      "originalBytes": 1737058,
+      "originalSha256": "d22730bbda5ff76d3a4233db760809d5e7ebf87c7c9b9f78d820d3500d51ff24",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/drum-session-640.webp",
+          "bytes": 71490,
+          "sha256": "eccfb7278521eca26cc0a285f01a110bc128c1bde2de497a90a78e45b1ea33e2"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/drum-session-1280.webp",
+          "bytes": 317298,
+          "sha256": "215c1147dd7a6c38f9b11030eedb0954c49e47702c72c0c2570bcd1ae07d68f1"
+        }
+      ],
+      "sourceReference": "approved-photo-5"
+    },
+    {
+      "name": "studio-community",
+      "originalBytes": 10468464,
+      "originalSha256": "caab387865d1600deb39214077c6a96aa82d6e6887c7bb4c6c0124e563bada25",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/studio-community-640.webp",
+          "bytes": 26124,
+          "sha256": "5e1fc98bd7638f610ae6a97fdda10085b0c17c76917c55cdf207721dbf20a601"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/studio-community-1280.webp",
+          "bytes": 72896,
+          "sha256": "addae2406895c895a374e205e0917fdf4f8d5c7dcd4e2fb9add8446a47ec3a46"
+        }
+      ],
+      "sourceReference": "approved-photo-6"
+    }
+  ],
+  "encoding": {
+    "tool": "cwebp1.4.0",
+    "arguments": "cwebp -q 78 -metadata none -resize WIDTH 0 input.jpg -o output.webp; WIDTH is640 or1280",
+    "content": "Original scene and aspect ratio preserved. No AI recreation, retouch, imposed identities, embedded Drive links or provider scripts. Thumbnail CSS crops; dialog contains entire photograph.",
+    "privacy": "All12WebP files parsed as RIFF/WEBP and contain only VP8 chunks; no EXIF,XMP or ICC metadata. Originals and ephemeral authenticated downloads stay private.",
+    "thumbnailBytes": 267788,
+    "enlargementBytes": 915584,
+    "loading": "Six thumbnails lazy-loaded; enlarged file requested only after user opens its photo."
+  },
+  "acceptanceCriteria": [
+    "Gallery visible anonymously inside /tdf#estudio before signup",
+    "All six real photographs decode locally without Drive auth",
+    "Keyboard/touch opens selected complete image; Escape/close restores originating focus",
+    "Image failures preserve remaining gallery/navigation; retry makes new local request",
+    "No horizontal overflow at320CSSpx; automated WCAG2.2AA serious/critical violations absent",
+    "No added business writes, identity events, backend/API/SQL/dependency/Mobile pin changes"
+  ],
+  "delivery": {
+    "implemented": true,
+    "tested": true,
+    "merged": false,
+    "deployed": false,
+    "verifiedInProduction": false
+  },
+  "validation": [
+    {
+      "command": "PATH=<official Node22.14.0 bin>:$PATH bash scripts/quality-ui.sh",
+      "result": "PASS",
+      "nodeVersion": "22.14.0",
+      "testSuites": 306,
+      "tests": 3461,
+      "initialGzipJavaScriptBytes": 336422,
+      "preloads": 5,
+      "scope": "UI validation bundle, full lint/typecheck/Jest, optimized build and budget; built from3c25a9 with the gallery working-tree inputs.",
+      "privateLogSha256": "30dc0546b38e586e6ecc08b307a50fadc0eeea1a40e913edf5e092520e93bf54"
+    },
+    {
+      "command": "Playwright public-welcome.spec.mjs using isolated preview port4287",
+      "result": "PASS",
+      "nodeVersion": "22.14.0",
+      "tests": 32,
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone",
+        "android-chrome-small",
+        "firefox-critical"
+      ],
+      "evidence": "reports/studio-gallery-evidence-20261026/browser-results.json",
+      "accessibility": "No serious or critical violations in scoped axe WCAG2.2AA checks; no full conformance or human accessibility claim."
+    },
+    {
+      "checks": [
+        "specification-inventory --check",
+        "specification-conformance --check",
+        "requirement-declarations9",
+        "specification-inventory6",
+        "specification-conformance10",
+        "new-specification-surfaces11",
+        "catalog-list-audit controls8"
+      ],
+      "result": "PASS"
+    },
+    {
+      "command": "Node22.14.0 strict catalog-list-audit on original gallery base",
+      "result": "PASS",
+      "candidateCount": 1340,
+      "unreviewed": 0,
+      "stale": 0
+    },
+    {
+      "command": "Rebuild composed candidate with Node22.14.0; rerun8gallery cases on4projects; strict catalog audit and canonical source mappings",
+      "result": "PASS",
+      "evidence": "reports/studio-gallery-evidence-20261026/final-composition.json"
+    }
+  ],
+  "limitations": [
+    "Archive photographs do not establish current equipment availability; page directs visitors to confirm when booking.",
+    "Host identity, teaching videos and VR plan remain unverified.",
+    "No real users, conversion uplift, provider playback or production task completion claimed."
+  ],
+  "protectedBaseComposition": {
+    "main": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "gallerySourceCommit": "6b9f2cfb8",
+    "result": "All web source, tests, assets and dependency manifests byte-identical to executed gallery input. Main requirements preserved exactly except explicit UX-WELCOME-001 extension; all main catalog decisions preserved plus one local asset-manifest decision. Generated inventory/traceability reconciled.",
+    "backendScope": "Merged main ledger migration222 and its evidence as inherited history; gallery adds no backend/SQL change or release authorization."
+  },
+  "approvedSources": {
+    "count": 3,
+    "authorization": "Owner supplied three folders in this conversation26Oct2026 and asked selection for the studio gallery. Folder/file URLs and original IDs are retained privately; hashes below bind the selected content."
+  }
+}

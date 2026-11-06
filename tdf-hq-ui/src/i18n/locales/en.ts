@@ -199,6 +199,7 @@ const en = {
     followedSince: 'Fan since {{date}}',
   },
   artistFollow: {
+    changeError: 'We could not confirm the follow change. Check your connection and try again.',
     stateError: 'We could not check whether you follow this artist.',
     retry: 'Retry',
     authCta: 'Create an account or sign in to follow',

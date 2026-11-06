@@ -1,0 +1,878 @@
+{
+  "schemaVersion": 1,
+  "repository": "diegueins680/tdf-app",
+  "cycle": "2026-10-29 booking resize observations",
+  "pullRequest": 638,
+  "baselineCommit": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+  "baselineMain": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "6252d712c54aeb9561ea2116b7662d5c3fe36c19",
+  "sourceSeal": {
+    "baseline": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+    "sourceCommit": "6252d712c54aeb9561ea2116b7662d5c3fe36c19",
+    "sourceDigest": "9cae09e195bac34f26d3f12c472b6371b175a96f1452258f60f1fefe1fbd82d4",
+    "registeredSourceInputs": 1413,
+    "allRegisteredGitBlobAndMobileHashesVerified": true,
+    "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "updatedContractSha256": "12aeb6aec7a6379dd95b30c47abafb6f26cb01a1ba1e985c292f1e22e41e8254",
+    "currentDiscoveryMatches": true,
+    "all156RequirementObjectsByteExactBaseline": true,
+    "whole1352HistoricalDecisionFileAndDerivedCatalogByteExactBaseline": true,
+    "allProductUIBackendAPIDependenciesWorkflowsOpsUnchanged": true,
+    "priorProviderArchiveUnchanged": true,
+    "localDiagnosticPositives": "9/0/0skip/0retry",
+    "realControlledFailures": "1helper-only edgefailure/rootfits320;1sole-option rootfailure362/320; exactproductsourceandC2distrestored",
+    "existingWidthClaims": "2manualconditionalinteger claims normal/-O andrejectmutant; notCSSOM/JS/refinementproof",
+    "globalAssurance": "156/312UNPROVEN11existingconditionalSMT;releaseBLOCKED",
+    "currentHostedWebKitInitialOverlay": "FAILED at21628; observation-only followup, no repair or causality claimed",
+    "mainComposition": "Contains protectedmainE302; requiredreview/all20/FIFOpending",
+    "cleanSource": true
+  },
+  "purpose": "Close a diagnostic blind spot without changing product behavior or acceptance guards. No WebKit helper repair or causal conclusion claimed.",
+  "confirmedVerificationDefect": {
+    "id": "CORRECTNESS-20261029-03",
+    "category": "Verification reliability",
+    "statement": "Later geometry was attached only when root overflow was true. Real WebKit helper-only boundary failures had no event/update timeline or later geometry, preventing diagnosis of this distinct failing state.",
+    "evidence": "Current21628 root/client/inner320/scale1, helperright339.640625, first-edge assertionfails; sourceif(viewportMeasurement.overflow) excludes its later geometry.",
+    "correction": "Always attach immutable initial values; on any initial root/helper/scale failure attach bounded later geometry/events. Record window and visualViewport events and inline-style mutations before resize, without updating Popper or layout."
+  },
+  "knownProductFailure": {
+    "requirement": "BOOK-TOOLTIP-VIEWPORT-001",
+    "status": "FAILED",
+    "currentUnchangedProductUIHash": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+    "hostedHead": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+    "run": 40824696334,
+    "personaJob": 123285127676,
+    "aggregateJob": 123293217805,
+    "actualTotals": {
+      "passed": 640,
+      "failed": 3,
+      "skipped": 22
+    },
+    "bookingCases": "Both WebKit iPhone recovery scenarios pass original first root and scale checks, then fail the initial helper right edge339.640625>320.3333333333333.",
+    "primaryValues": "Decoded from Frame evaluate serialization; both inner/client/scroll320/320/320, scale1, helperx104/right339.640625; anchorY588.890625 vs helperY390.6666.",
+    "traceObservation": "Old fixed transform exists before resize and through final snapshots+92.399ms(error)/+75.766ms(empty); no resize-delivery/Popper-update milestones. This confirms stale geometry, not timing cause or painted clipping.",
+    "gallery": "Independent WebKit iPhone contrast1.03/1.02vs4.5 also fails; approved648/651 heads preserved, no duplicate patch.",
+    "artifact": {
+      "id": 12877535620,
+      "bytes": 118630708,
+      "sha256": "141e00d191127a8676342b0212c6f1d6539e372d9e84f2758af5c6909cc9c0d2",
+      "digestIndependentlyMatched": true,
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40824696334/artifacts/12877535620",
+      "rawFullZip": "Local retention /private/tmp/tdf-pr638-21628-persona-40824696334.zip; selected failing traces/decoded values committed."
+    }
+  },
+  "confirmedVersusHypotheses": {
+    "confirmed": [
+      "Root width/scale fit while helper initial bound fails on both native phone cases.",
+      "The old fixed transform persists through recorded snapshots.",
+      "Installed Popper listens to window.resize; its viewport math consumes visualViewport dimensions.",
+      "Previous root-only diagnostic condition misses helper-only failure observations."
+    ],
+    "hypotheses": [
+      "A visualViewport resize without a useful window resize may leave stale positioning.",
+      "An event/update can be delayed relative to first atomic measurement.",
+      "Other layout/scroll/focus or positioner lifecycle causes remain possible."
+    ],
+    "notEstablished": "Trace lacked event/update timeline. Failure PNG after assertion does not independently establish painted clipping. Do not silently relax the existing initial-overlay contract."
+  },
+  "diagnosticContract": {
+    "source": "formal/system/booking-tooltip-viewport.md",
+    "observations": [
+      "Bounded128 timestamps for window.resize/orientationchange and visualViewport.resize/scroll.",
+      "Mutation records current inline style/placement plus prior attribute values.",
+      "Explicit truncation, original-node connectivity and current-helper identity fields.",
+      "Initial atomic result always attached; all four later samples retain timeline snapshots."
+    ],
+    "nonInterferenceScope": "Callbacks do not read layout, update Popper, scroll, dismiss helpers or mutate product state. Test-owned observer globals are separate. Observer/listeners disconnect before normal assertions, with page teardown on exceptions.",
+    "limits": [
+      "Observation can perturb scheduling.",
+      "No absence-of-event conclusion after truncation.",
+      "MutationObserver batches; current state is not every intermediate style.",
+      "Original positioner is observed; identity/connectivity reveals replacement but observer does not follow it."
+    ],
+    "acceptance": "Every original initial root/scale/helper/focus and secondary scroll guard and tolerance remains; the captured first object supplies assertions. Later fit cannot heal an initial failure."
+  },
+  "verification": {
+    "diagnosticBehavior": "TESTED",
+    "finalLocalPositives": {
+      "cases": 9,
+      "failures": 0,
+      "skipped": 0,
+      "retries": 0,
+      "profiles": [
+        "Chrome desktop",
+        "Chromium phone emulation",
+        "Firefox"
+      ],
+      "scope": "Exact new test body executes against unchanged C2 UI artifacts, compileda5535c59e49064fec535daa3682a4a1dc31c68f4 with all artifact hashes matched. Not a newly stamped product build or Linux WebKit run."
+    },
+    "helperOnlyFault": {
+      "actualBrowserExit": 1,
+      "actualFailedCases": 1,
+      "rootClientScroll": [
+        320,
+        320
+      ],
+      "helperRight": 366.046875,
+      "assertion": "Original helper-right predicate fails; any-bound initial+4later event/geometry attachments present.",
+      "fixture": "Only test copy injects fixed misplaced tooltip CSS after client establishment; product code/source/artifacts stay correct."
+    },
+    "rootOptionRemoval": {
+      "actualBrowserExit": 1,
+      "actualFailedCases": 1,
+      "rootClientScroll": [
+        320,
+        362
+      ],
+      "assertion": "Original first root-overflow predicate fails with complete final diagnostic body; source removes only fixed strategy.",
+      "restoration": "Exact current product file and immutable C2 dist hashes restored; all owned servers/aliases removed."
+    },
+    "sourceChecks": "Node syntax, root repository quality with11existingplatformskips, actual8catalogtests, sequential inventory/conformance/checks PASS.",
+    "catalog": "1352historical decisions and entire review/derived files exact21628; fresh strict output equals tracked except generatedAt, because no audited SOURCE_ROOTS input changed.",
+    "sourceIdentity": "1413registeredGit/Mobile hashes and updated contract sealed; all156requirement objects byte-exact baseline. One new changed material test surface admitted versus21628; protected-main admission also passes.",
+    "formal": "Two inherited manual integer-width claims rechecked normal/-O with rejecting comparator mutations; no new CSSOM/JS/compiler/refinement proof.156whole requirements/312implementation-refinement obligations remainUNPROVEN;11existingconditionalSMT retain scope;releaseBLOCKED.",
+    "independentReview": "Zero blockers in native diagnosis and final diagnostic/control review; exact test transforms and real failure points independently checked from receipts. No independent runtime or physical iOS claim."
+  },
+  "criticalIntegrationLimit": "Unchanged product retains the proven uninstrumented21628 initial helper counterexample. Do NOT merge merely because an instrumented case later passes: observer scheduling can change the interleaving. A proposed product repair must also be validated against the retained uninstrumented21628 body/guards, alongside new diagnostics. No acceptance guard is relaxed.",
+  "integration": {
+    "state": "OBSERVATION_ONLY_AWAITING_NEW_HOSTED_DATA_PRODUCT_REPAIR_STILL_REQUIRED",
+    "merged": false,
+    "deployed": false,
+    "autoMerge": false,
+    "FIFO": "Selected638 retained; all20contexts/strictbase/current-headreview/staledismissal/admin/conversationcontrols preserved. No force or duplicate gallery patch.",
+    "newHostedStatusAtReport": "NOT_RUN/PENDING for this new observation source. Current21628 failure retained.",
+    "financialCycle": "Separate draft666source05e1/evidence02c2 implements owner-authorized reservation-time policy; full4544/0/20pending. This UI report does not qualify that branch or serving executable."
+  },
+  "scorecard": {
+    "newDiagnosticFailureClassesCorrected": 1,
+    "newProductUIFailureClassesCorrected": 0,
+    "currentNativeInitialOverlayAssurance": "FAILED",
+    "localPositiveCases": 9,
+    "independentActualFaultControls": 2,
+    "newAssertionsRemovedOrWeakened": 0,
+    "newWholePlatformProofs": 0,
+    "historicalProviderArtifactsChanged": 0,
+    "correctionsIntegrated": 0
+  },
+  "nextHighestValueTask": "Inspect the new native event/update chronology; select and test a minimal product correction only after evidence. Retain all guards and validate uninstrumented as well as instrumented cases.",
+  "historicalEvidence": "Original provider15files exacte29b and older317cases/223migrations/39reportedbefore2after2untimed keep historical scope; no promotion or old report rewrite.",
+  "retainedTraceManifest": [
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "cca05a94fdc0b8fc9d3fab44a01f1eb2cccd7a466b26c894550480e05294d9b5",
+      "bytes": 14765,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "d4d1503447adece28123118c743d187e2d3767d33c4ef58d98f28845f5a61fb8",
+      "bytes": 4940962,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "6259525bed422af0b2f4ee7601ad2c0220c6381536dd6c005016a80d4d9cd445",
+      "bytes": 3652823,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "c06d855f41bf5cc9de03677c81a5bff57b3b580a71e8bba9d5a60dc201f0c782",
+      "bytes": 15744,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "9e3999ece7e00d8d9bbbf667a3a7c4f30805df4d19656c16bdcc06998496474b",
+      "bytes": 4934816,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "987e58b855624b7f17bb19cf0c007004ad3219521e6281bf52726a1bbcd2aa99",
+      "bytes": 4210140,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-firefox/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "58b6335de817328e28c8c6e881827c56ccded6cf3583479c9b1710066f8b059a",
+      "bytes": 28121,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "fe46dbc2f1f5d502eca9b37e24cdf18d2eca29fc1dbd8df0b579b9fb29cad809",
+      "bytes": 5488710,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-final-matrix-20261029",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "9bc3a47ab77d0490b42056bfe71cf69aad0920399b331dc3c95a877b69c19cb8",
+      "bytes": 3092120,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-controls-20261029",
+      "relativePath": "helper-only-fault/helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "ff12489d62d9ba32ecf70d41bb39d3d6e352d82b6c00ef0aaefe5a490c06dec7",
+      "bytes": 5272962,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-observation-controls-20261029",
+      "relativePath": "root-option-removal/root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "da85295b38429041d80506478771d48d5dfe27dfbd9814efc2da791a1529d990",
+      "bytes": 5003858,
+      "scope": "Selected copies committed; omitted traces retained locally only."
+    }
+  ],
+  "evidenceDirectory": "reports/booking-resize-observation-2026-10-29",
+  "artifactManifest": [
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/capture-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/capture-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/capture-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/capture-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/capture-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/refund-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/refund-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/refund-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/refund-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/refund-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/arithmetic/result.json",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/cardinality-nonnegative.smt2",
+      "sha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+      "bytes": 173
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/cardinality-sum.smt2",
+      "sha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+      "bytes": 3774
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/cardinality-zero.smt2",
+      "sha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+      "bytes": 197
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/control-admit-operational-role.smt2",
+      "sha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+      "bytes": 6870
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/control-allow-zero-identity.smt2",
+      "sha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+      "bytes": 6955
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/control-drop-coherence.smt2",
+      "sha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+      "bytes": 7284
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/control-drop-module-grant.smt2",
+      "sha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+      "bytes": 4482
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/control-module-implies-admin.smt2",
+      "sha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+      "bytes": 7429
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission-witness-false.smt2",
+      "sha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+      "bytes": 6655
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission-witness-true.smt2",
+      "sha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+      "bytes": 6653
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission.smt2",
+      "sha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+      "bytes": 7063
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/module-access-witness-false.smt2",
+      "sha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+      "bytes": 4563
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/module-access-witness-true.smt2",
+      "sha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+      "bytes": 4562
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/module-access.smt2",
+      "sha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+      "bytes": 4447
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/result.json",
+      "sha256": "d5546a7c653f27b5a06aa741e305c33d7756058639a8ff179be9b61c4fa4e1a7",
+      "bytes": 19330
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/strict-admin-witness-false.smt2",
+      "sha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+      "bytes": 6527
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/strict-admin-witness-true.smt2",
+      "sha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+      "bytes": 6525
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization/strict-admin.smt2",
+      "sha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+      "bytes": 6914
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization-execution.log",
+      "sha256": "d50ab54cfe6fe524b74c7c7464211a17c006e0107d5b21bd393a2970c0f182ab",
+      "bytes": 251
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/authorization-replay.json",
+      "sha256": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+      "bytes": 10216
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/execution-0.log",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/execution-1.log",
+      "sha256": "d1f6823999dfce76b39d91ecc61771c0f3acb9137c581dde572570c0dae2c0c3",
+      "bytes": 101
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/control-database-lifetime.smt2",
+      "sha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+      "bytes": 1196
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/control-future-issuance.smt2",
+      "sha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/control-inclusive-deadline.smt2",
+      "sha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/control-issuance-lifetime.smt2",
+      "sha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+      "bytes": 1041
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/control-validator-lifetime.smt2",
+      "sha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/issuance-admission.smt2",
+      "sha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+      "bytes": 1041
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/issuance-exact.smt2",
+      "sha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+      "bytes": 1103
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/result.json",
+      "sha256": "9b7b3cc17a596c484854e111517b9c59de877f88acc6e15708e2020b8e78be86",
+      "bytes": 11466
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/schema-correspondence.smt2",
+      "sha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+      "bytes": 1196
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/window-equivalence.smt2",
+      "sha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/witness-0-0.smt2",
+      "sha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/witness-0-899.smt2",
+      "sha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/witness-9223372036854774907-0.smt2",
+      "sha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/witness-9223372036854774907-899.smt2",
+      "sha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery/witness-overflow-rejection.smt2",
+      "sha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+      "bytes": 1003
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery-execution.log",
+      "sha256": "b8476cb3db90f6063f98445f8374adc54db1ca7548da15da5be9572b0e676d24",
+      "bytes": 287
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/recovery-replay.json",
+      "sha256": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+      "bytes": 2490
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/replay.json",
+      "sha256": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+      "bytes": 1686
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/report.json",
+      "sha256": "5d6db11f364d2aaedab2404152e486bb9463a3ba258b737d7dc0f6aa096e470f",
+      "bytes": 750084
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/report.md",
+      "sha256": "06d1a390068aed15bfa78a27a4dea43c110936168863b260baed9c4e65b10567",
+      "bytes": 10047
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed/sources.json",
+      "sha256": "341d1c381a455ddf33e0bdb2feedadd461fa58abb0a8018b66cf3f2e936d967b",
+      "bytes": 169666
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/assurance-committed.txt",
+      "sha256": "6c677a367a44e4e3c5064928da7611b1df9c2bb895bb1cc85cc99aa66835574c",
+      "bytes": 763
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/catalog-unit.txt",
+      "sha256": "c3d0342388aa49c172b5fbc352757c81cb3f5327054d922ec53253d1950cf4eb",
+      "bytes": 961
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/conformance-check.txt",
+      "sha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+      "bytes": 35
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/conformance.txt",
+      "sha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+      "bytes": 37
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/diff-check.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/fresh-catalog.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/inner-width-checker-mutant.mjs",
+      "sha256": "fd96eb85cc5b8c10f2dbd7bed82e6b736cccaf5eba2d4ea601e58ea7da79d6af",
+      "bytes": 19863
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/inventory-check.txt",
+      "sha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+      "bytes": 38
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/inventory.txt",
+      "sha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+      "bytes": 40
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/main-admission.txt",
+      "sha256": "b743ab79fdc356d03b9430b931f192062e7e59d8070aa658042c6ce3e58c67ab",
+      "bytes": 532
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/qualification.json",
+      "sha256": "7992a74f6279c8c1d797bcf94f5cf70f890064f164fd892d826134b4c35f8745",
+      "bytes": 458
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/root-quality.txt",
+      "sha256": "a950ba3e50e9a5f4744d9bd52dc86687c794941f6aa0df2c6d75d45665a55610",
+      "bytes": 74655
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/source-C.json",
+      "sha256": "1c85083326b40ca7fb366ea8cd5d57c756e427801896154c4970381985b0bca4",
+      "bytes": 354
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/source-add.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/source-admission.txt",
+      "sha256": "23012591b31ee6778063c8df4d020822968599d7b8ed03c4a6139fda78535364",
+      "bytes": 483
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/source-commit.txt",
+      "sha256": "d27947948ce48c33eb13cf6637e13a105981f6a4961296c39c64a9dfb1472b5f",
+      "bytes": 164
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/source-seal.json",
+      "sha256": "0d9e086fe831a38119653938af669850332cfc76d3fd87f3b8f3a48068e3ef21",
+      "bytes": 1336
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/width-negative.txt",
+      "sha256": "5e34e9e88acd2aca1ef5ddb32d77963bae88f353f625ab4f17995cfa82ea23ca",
+      "bytes": 95
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/width-optimized-negative.txt",
+      "sha256": "5e34e9e88acd2aca1ef5ddb32d77963bae88f353f625ab4f17995cfa82ea23ca",
+      "bytes": 95
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/width-optimized.txt",
+      "sha256": "9ae09ce3b370288ffc16325a29627312623ca273c42fc7df6331fd9c9fa5290b",
+      "bytes": 874
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/source-verification/width.txt",
+      "sha256": "9ae09ce3b370288ffc16325a29627312623ca273c42fc7df6331fd9c9fa5290b",
+      "bytes": 874
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/booking.spec.mjs",
+      "sha256": "efb3a3c77cc99998a154f9d41255e73a96b59abd16ea61a99fc3bc916360fb14",
+      "bytes": 19995
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/execution-final-chromium-desktop.json",
+      "sha256": "990dd39942a61b7b4cedd9af6cbfdcd8fad4acc2818e170d680f7e7b39544684",
+      "bytes": 454
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/execution-final-chromium-phone.json",
+      "sha256": "5fed157cb6a2d7b49d1c5ff14956bc8543b53fe775d6d2f293f7e93f6d9ad819",
+      "bytes": 454
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/execution-final-firefox.json",
+      "sha256": "d09d9877dd81a2e2db134a3a853d7acbb4f88be393ff4eef09e2d103f0a22753",
+      "bytes": 453
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/final-chromium-desktop.json",
+      "sha256": "ab5bd2b46ab9f610896979c4a926aa99084f45915d21ae4b0955817b21ad84f1",
+      "bytes": 72408
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/final-chromium-phone.json",
+      "sha256": "a154160c70b52cca12e0941232a034860eceaeffa52ebe7b7c14dd6e8be3357f",
+      "bytes": 24350
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/final-firefox.json",
+      "sha256": "a77190a6f633b69dcc182852e6154f93dd0fd7083a13d7426535c4caf69c8b38",
+      "bytes": 72640
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/inputs.json",
+      "sha256": "0aeafe68cd9b0cad8bab30ca5af5a98b780102d8067f6ac31df87e0e5b3e17bf",
+      "bytes": 766
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/matrix.json",
+      "sha256": "8cb321a7a96df85565bccc8d650c7d3a020fde22a01776b9c22273e241b000e6",
+      "bytes": 3689
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/playwright.config.mjs",
+      "sha256": "6131cd9028a5494bddbb4844e1d03fdeece3c5a84d247950ac2bd326365a5f34",
+      "bytes": 1161
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/playwright.final-chromium-desktop.config.mjs",
+      "sha256": "239c1e85bc503ab43e89a4f170fc488ed1c042db37a7a504183653fc3ebe975b",
+      "bytes": 550
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/playwright.final-chromium-phone.config.mjs",
+      "sha256": "8296ae0b7c65256269204f363897dfe261a81313afbb429c4e4bcdc43635ba64",
+      "bytes": 544
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/playwright.final-firefox.config.mjs",
+      "sha256": "2176d1a210e351dd49784a7b25aadf808da06a2dbec174e2b513e1c4ecb1d8bd",
+      "bytes": 523
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/run-final-chromium-desktop.py",
+      "sha256": "fbce08ee8d045fbaf92dc065b7c6e9da64db36ad8d6cc8857f6236561490ae5e",
+      "bytes": 3380
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/run-final-chromium-phone.py",
+      "sha256": "d00b18646368178e49745f0d444d3c735b10ec868c4da92d56081cfcd2d1b2a8",
+      "bytes": 3370
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/run-final-firefox.py",
+      "sha256": "4fd697ebe6db0bf6552c78c91e18316f0e076bae210e7d43f5e754d9cb6ebfb5",
+      "bytes": 3335
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/controls.json",
+      "sha256": "4586557a67e3256d89bfc462e691b92a30e8edc67966f25c464cbc91f80d3ef6",
+      "bytes": 590
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault-browser.txt",
+      "sha256": "ae60651ac601e9ea0194ca45bc1b3129ecf976609677d830f151046a7953ea90",
+      "bytes": 3281
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault-execution.json",
+      "sha256": "be5f0235521d8370955eb50b7af44cad9c7fcee683e499eae4e33f05336c4d84",
+      "bytes": 385
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault-geometry.json",
+      "sha256": "7761f53d2c7837b4a0060b7b892e4a04ad4869d3421627fdafe099f59e5fc827",
+      "bytes": 22298
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault-preview.txt",
+      "sha256": "a7f340c7eb450cb6ed933fac677cacb97f0bf10091bbc815df288a8cae472272",
+      "bytes": 40
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault.config.mjs",
+      "sha256": "9fb24bec7a51be06c6e8ca222d04f483dbe48ddcc6753b2ef82cd6ee5d3fe245",
+      "bytes": 666
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault.json",
+      "sha256": "319ca26bdc6bc9e548594f9e2218d6469d3aa11f8f7099f657ca17a57dfd5f08",
+      "bytes": 39819
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault.spec.mjs",
+      "sha256": "f7e7b76c95b1ec88e3f655473f58890e8e258a94f1bc992b014a94857b90eeb5",
+      "bytes": 20291
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-mutant-build.txt",
+      "sha256": "0e868339c06e9c4005989b3a45b92d3962edd50abbf54ca4ee1b8fd14704561a",
+      "bytes": 31069
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-mutant-inputs.json",
+      "sha256": "5c4b3dcc9a3609ea02a5d1003f05eb628d68dcf716828ec862562b93b5c23bb5",
+      "bytes": 43747
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal-browser.txt",
+      "sha256": "c0b51b6f372b5edd56454a2a60c16dda1e45e550b89c178e7056e4ab5bcac0c0",
+      "bytes": 3277
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal-execution.json",
+      "sha256": "6ce7f002c213152c7641aa3e12c992766d580a388778da1177adcd1235883d54",
+      "bytes": 388
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal-geometry.json",
+      "sha256": "8337540ef3f638d8a9df9c8a5123b8cba6c7903451690e95a500a777453e8f5f",
+      "bytes": 22523
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal-preview.txt",
+      "sha256": "e961c9a25c9a5a7bf4240e670267fb246221f8c084757362d6f900a898a62246",
+      "bytes": 40
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal.config.mjs",
+      "sha256": "4a4ad639fc2eec12aca440c4f661aa8895ba786a020cf07ab9010873481c00fa",
+      "bytes": 670
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal.json",
+      "sha256": "b433ae1d1206cbb65f4ec28a30bf339b9cb8c42a42acd0f3c58a205ccaf56ad8",
+      "bytes": 40165
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal.spec.mjs",
+      "sha256": "efb3a3c77cc99998a154f9d41255e73a96b59abd16ea61a99fc3bc916360fb14",
+      "bytes": 19995
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/screenshots/helper-only-fault__helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone__test-failed-1.png",
+      "sha256": "d1745807ce075a43266894864906dfec7106d87c18b03fec136087f7b92bf4b9",
+      "bytes": 461659
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/screenshots/root-option-removal__root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone__test-failed-1.png",
+      "sha256": "7b3fee5403739c68cf508190c9a1aea0340c24916abf7f513477192194fe9821",
+      "bytes": 359838
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/helper-only-fault-trace.zip",
+      "sha256": "ff12489d62d9ba32ecf70d41bb39d3d6e352d82b6c00ef0aaefe5a490c06dec7",
+      "bytes": 5272962
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/diagnostic-controls/root-option-removal-trace.zip",
+      "sha256": "da85295b38429041d80506478771d48d5dfe27dfbd9814efc2da791a1529d990",
+      "bytes": 5003858
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/final-local-matrix/representative-phone-trace.zip",
+      "sha256": "9e3999ece7e00d8d9bbbf667a3a7c4f30805df4d19656c16bdcc06998496474b",
+      "bytes": 4934816
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/artifact-verification.json",
+      "sha256": "d0ae15867dafc4010593428cf431cda19186d4c2ed9903f0bc9accb6cf3c391a",
+      "bytes": 451
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/decoded-initial-viewport.json",
+      "sha256": "62f8d9aa30bfb40724a94b1bc3fc693e8e413c5c91d3411f2f5ee975d45d3763",
+      "bytes": 1050
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/error-context.md",
+      "sha256": "15579d118ca4fe4e796ae613c8296413684820047896f461ca1ecf759de99fad",
+      "bytes": 28110
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/test-failed-1.png",
+      "sha256": "7ed954d469fa0b8ed942fdf0b17eade1c345eb4e254f396eb3621cc29dc0297e",
+      "bytes": 255430
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/trace.zip",
+      "sha256": "aedde876e55e1090aeb162a06fb9860e407c2d36e8a683ea792afc03114d450d",
+      "bytes": 1293570
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/decoded-initial-viewport.json",
+      "sha256": "56e83ec5b8ccff523291fa69460809ae8530f4c75b5d2fc2cc9b35db3ce4c286",
+      "bytes": 1052
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/error-context.md",
+      "sha256": "c28ed50a74f6cc44aa26dc40f974ebf90c7b3710fae3488d14191104dd3db5be",
+      "bytes": 28110
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/test-failed-1.png",
+      "sha256": "7ed954d469fa0b8ed942fdf0b17eade1c345eb4e254f396eb3621cc29dc0297e",
+      "bytes": 255430
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/trace.zip",
+      "sha256": "e1d69c53c2d3e0ba3df5f15a3eaa92a04baab16d8e7b9809f3dfe7c3cad9ef4b",
+      "bytes": 1327771
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/hosted-21628/hosted-failure-excerpt.txt",
+      "sha256": "9a0b6883d6c8d191daf269584159560fae1f222983e1f5e259946021f9001932",
+      "bytes": 13033
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/independent-review/tdf-booking-tooltip-21628-independent-diagnosis-20261029.txt",
+      "sha256": "60c3ee2af625fbfceb28c794670dac36950e6e2824c1b44ee4966f93dddd560d",
+      "bytes": 8322
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/independent-review/tdf-booking-resize-observation-review-20261029.txt",
+      "sha256": "b3a44042cfe51c38cade603b55ed0969e51e0566ef68523d057a869a19179cef",
+      "bytes": 4022
+    },
+    {
+      "path": "reports/booking-resize-observation-2026-10-29/independent-review/tdf-booking-resize-observation-final-review-20261029.txt",
+      "sha256": "4b9d7069fc850b8e9eb1f908cbbc10fc4bb592b8d2466d63c05c824dc738a81e",
+      "bytes": 5753
+    }
+  ],
+  "cleanup": {
+    "ownedPreviewServersStopped": true,
+    "ownedDependencyAliasesRemoved": true,
+    "correctC2DistAndUIRestored": true,
+    "financialSyntheticPGStopped": true,
+    "productionProviderOperations": false
+  }
+}

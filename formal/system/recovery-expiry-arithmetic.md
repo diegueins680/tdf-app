@@ -214,6 +214,25 @@ original baselines; the JSON records the current manifest hashes and review.
 Fresh scoped solver/replay/mutation and independent certificate checks are
 required. This review does not promote full refinement or release readiness.
 
+## Interactive session expiry context review — 2026-10-31
+
+Against protected main `234ff6f7faf1aecf347c8e92a374228f4ec07aaa`, candidate
+`feat/session-token-expiry-20261031` (ID-SESSION-004) changes three pinned
+recovery inputs. `ServerAuth.hs` keeps `recoveryWindowValid` and the single
+`issued+900` challenge insert byte-identical; the same sampled `issued` is now
+also written to the token row as its validity window, and every interactive
+session issuer takes a leading `SessionTokenTtl` parameter. The Cabal manifest
+moves `src` into a `library` that the executables and test suite depend on,
+with module registrations, dependency bounds, GHC options, Stack resolver and
+lock unchanged. `identity-lifecycle.md` appends one ID-SESSION-004 section. The
+recovery migration is byte-identical. The three hashes are refreshed after
+reviewing those complete diffs; claims, translation and controls are unchanged
+and every obligation requires fresh execution. The candidate was authored
+without a local GHC, so compilation evidence comes only from the hosted build.
+
+The identity contract pin was refreshed once more on the same candidate after
+its ID-SESSION-004 section was extended to name the social transactional
+re-read; no other pinned input changed.
 
 ## Credential-cache build-context review (2026-10-26)
 
@@ -247,3 +266,15 @@ isolated replay must qualify this review; no historical result is relabeled.
 Full implementation/refinement remains **UNPROVEN**, and the full release gate
 remains **BLOCKED**. Fresh independent CPC checking remains required in addition
 to the source-bound SMT, witnesses, mutations and same-solver serialized replay.
+
+## Current protected-main credential-cache composition — 2026-11-06
+
+The normal composition retains protected main `e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324` and the original
+credential-cache implementation. The current library layout needs exactly two
+new registrations: `TDF.MusicRelease.CredentialCache` in library exposed modules
+and `TDF.MusicCredentialCacheSpec` in test modules. Removing those two lines
+reproduces the current main Cabal file byte for byte. Existing storage modules,
+dependencies, flags, source paths and all other reviewed sources are unchanged.
+The original three-stanza review and runtime receipts above retain their original
+commit identities. Fresh solver/replay and adversarial checks qualify only their
+scoped predicates; full refinement and release remain separate and blocked.

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from '../features/discovery/useDirectorySearch';
 import { useTranslation } from 'react-i18next';
 import {
@@ -55,6 +56,7 @@ import { getActiveSession, useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
 import PublicWelcome from '../components/PublicWelcome';
+import MusicSearchResults from '../features/discovery/MusicSearchResults';
 
 const ENTITY_LABELS: Record<DirectoryEntityType | 'artist' | 'all', string> = {
   all: 'directorySearch.entityAll',
@@ -141,6 +143,7 @@ export default function DirectorySearchPage() {
   const language = i18n.resolvedLanguage?.startsWith('es') ? 'es' : 'en';
   const location = useLocation();
   const showWelcome = location.pathname.replace(/\/+$/, '').toLowerCase() === '/inicio';
+  const showMusic = location.pathname.replace(/\/+$/, '').toLowerCase() === '/buscar';
   const navigate = useNavigate();
   const { session } = useSession();
   const queryClient = useQueryClient();
@@ -459,6 +462,8 @@ export default function DirectorySearchPage() {
             </Box>
           )}
 
+          {showMusic && <MusicSearchResults query={query} changingQuery={draftQuery.trim().replace(/\s+/gu, ' ') !== query.trim().replace(/\s+/gu, ' ')} />}
+
           <Typography component="h2" variant="h5" fontWeight={800}>{t('directorySearch.organicResults', { count: facets?.total ?? items.length })}</Typography>
 
           {results.isLoading ? <Stack alignItems="center" py={8}><CircularProgress aria-label={t('directorySearch.searchingLabel')} /><Typography mt={2}>{t('directorySearch.searching')}</Typography></Stack> : null}
@@ -466,6 +471,7 @@ export default function DirectorySearchPage() {
           {!results.isLoading && !results.isError && items.length === 0 && sponsored.length === 0 ? (
             <Paper variant="outlined" sx={{ p: 5, textAlign: 'center', borderRadius: 3 }}>
               <Typography variant="h5" fontWeight={800}>{t('directorySearch.emptyTitle')}</Typography>
+              {showMusic && query.trim() && <Typography color="text.secondary" mt={1}>{t('directorySearch.music.directoryEmpty')}</Typography>}
               <Typography color="text.secondary" mt={1}>{t('directorySearch.emptyHelp')}</Typography>
               <Stack direction="row" justifyContent="center" gap={1} mt={3} flexWrap="wrap">
                 {[t('directorySearch.hintMusician'), t('directorySearch.hintProducer'), t('directorySearch.hintStudio'), t('directorySearch.hintConcert')].map((value) => <Chip key={value} label={value} onClick={() => { setDraftQuery(value); updateSearch({ q: value }); }} clickable />)}
@@ -566,6 +572,7 @@ function ResultCard({
       }}
     >
       <DirectoryPreviewImage
+        profileName={item.type === 'profile' ? item.title : undefined}
         kind={item.type}
         imageUrl={item.imageUrl}
         alt={t('directorySearch.photo', { title: item.title })}
@@ -600,7 +607,7 @@ function ResultCard({
             </Box>
             {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
           </Stack>
-          <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</Typography>
+          <MarkdownText inline mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</MarkdownText>
           <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
             {eventDate && <Chip size="small" color="primary" variant="outlined" icon={<EventIcon />} label={eventDate} aria-label={t('directorySearch.eventDate', { date: eventDate })} />}
             {item.location.city && <Chip size="small" label={`${item.location.city}${item.location.countryCode ? `, ${item.location.countryCode}` : ''}`} />}

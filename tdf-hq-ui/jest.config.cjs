@@ -2,6 +2,10 @@ const path = require('path');
 
 /** @type {import('jest').Config} */
 module.exports = {
+  // Keep suites serial, but recycle the child between files when its retained
+  // heap grows. --runInBand would bypass Jest's worker memory limit.
+  maxWorkers: 1,
+  workerIdleMemoryLimit: '1GiB',
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
   testEnvironmentOptions: {
@@ -19,7 +23,7 @@ module.exports = {
     '^react-dom$': require.resolve('react-dom'),
     '^react/jsx-runtime$': require.resolve('react/jsx-runtime'),
     '^react/jsx-dev-runtime$': require.resolve('react/jsx-dev-runtime'),
-    '^webtorrent/dist/webtorrent\\.min\\.js(?:\\?url)?$': '<rootDir>/src/__mocks__/assetUrlMock.ts',
+    "^\\.\\./vendor/webtorrent/webtorrent\\.min\\.js(?:\\?url)?$": '<rootDir>/src/__mocks__/assetUrlMock.ts',
     '\\.(svg|png|jpe?g|gif|webp)$': '<rootDir>/src/__mocks__/assetUrlMock.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },

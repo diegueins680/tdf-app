@@ -1,0 +1,72 @@
+{
+  "source": "53cf108a28911bbf3c2d78c5bd1179e727f8f05b",
+  "protectedMain": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "catalogCounterexample": {
+    "head": "5818739c500b7703648423dd465a0238e080f2b1",
+    "run": 40421404633,
+    "job": 121916464314,
+    "exitCode": 1,
+    "candidate": "2e1934058d8b99179c1e",
+    "reason": "The newly added fixed CI gate dispatch registry had no individual catalog review; the audit correctly rejected it."
+  },
+  "correction": "Individually classify the three required workflow/status identifiers as a genuine technical constant; preserve all protected decisions, consumer detection, SQL and223 manifest. No audit waiver or parser exclusion.",
+  "catalogAfterReview": {
+    "candidates": 1342,
+    "unreviewed": 0,
+    "classification": "genuine-technical-constant"
+  },
+  "tests": {
+    "catalogRegressions": 8,
+    "pipelineTests": 52,
+    "failures": 0,
+    "skipped": 0
+  },
+  "repositoryQuality": {
+    "command": "npm run quality:repo",
+    "exitCode": 0,
+    "sha256": "ebc51c71f849f4faaf98527c07090452709b7fc8c6ddc48a6ced2545b7f3d155"
+  },
+  "proofMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 149,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 138,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 149,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 149,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "reportInputs": 1357,
+  "scope": "Finite TESTED CI component behavior. Source53 report retained exactly; all149 full requirements and298 implementation/refinement obligations remain UNPROVEN. Current-head hosted execution, independent review and strict/FIFO admission still required."
+}

@@ -1,0 +1,11 @@
+{
+  "label": "root-option-removal",
+  "port": 41322,
+  "actualExit": 1,
+  "trackedDiagnosticSha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+  "executedTestSha256": "cb0e8c06e80d1c65cefaad186397fb7db0e3a0d55f8c6cd953e1960c1ed3c668",
+  "startedAt": 1793287080.563282,
+  "finishedAt": 1793287101.9666991,
+  "serverStopped": true,
+  "ownedAliasesRemoved": true
+}

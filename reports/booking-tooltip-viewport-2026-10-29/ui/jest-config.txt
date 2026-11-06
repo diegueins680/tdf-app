@@ -1,0 +1,238 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --showConfig
+
+{
+  "configs": [
+    {
+      "automock": false,
+      "cache": true,
+      "cacheDirectory": "/private/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/jest_dx",
+      "clearMocks": false,
+      "collectCoverageFrom": [],
+      "coverageDirectory": "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/coverage",
+      "coveragePathIgnorePatterns": [
+        "/node_modules/"
+      ],
+      "coverageReporters": [
+        "json",
+        "text",
+        "lcov",
+        "clover"
+      ],
+      "cwd": "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui",
+      "detectLeaks": false,
+      "detectOpenHandles": false,
+      "errorOnDeprecated": false,
+      "extensionsToTreatAsEsm": [
+        ".ts",
+        ".tsx"
+      ],
+      "fakeTimers": {
+        "enableGlobally": false
+      },
+      "forceCoverageMatch": [],
+      "globals": {},
+      "haste": {
+        "computeSha1": false,
+        "enableSymlinks": false,
+        "forceNodeFilesystemAPI": true,
+        "throwOnModuleCollision": false
+      },
+      "id": "064177c51e5889c47fbe1670b8894e48",
+      "injectGlobals": true,
+      "moduleDirectories": [
+        "node_modules"
+      ],
+      "moduleFileExtensions": [
+        "js",
+        "mjs",
+        "cjs",
+        "jsx",
+        "ts",
+        "mts",
+        "cts",
+        "tsx",
+        "json",
+        "node"
+      ],
+      "moduleNameMapper": [
+        [
+          "^@mui/icons-material/(.*)$",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/src/__mocks__/muiIconMock.tsx"
+        ],
+        [
+          "^react$",
+          "/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react/index.js"
+        ],
+        [
+          "^react-dom$",
+          "/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react-dom/index.js"
+        ],
+        [
+          "^react/jsx-runtime$",
+          "/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react/jsx-runtime.js"
+        ],
+        [
+          "^react/jsx-dev-runtime$",
+          "/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/react/jsx-dev-runtime.js"
+        ],
+        [
+          "^webtorrent/dist/webtorrent\\.min\\.js(?:\\?url)?$",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/src/__mocks__/assetUrlMock.ts"
+        ],
+        [
+          "\\.(svg|png|jpe?g|gif|webp)$",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/src/__mocks__/assetUrlMock.ts"
+        ],
+        [
+          "\\.(css|less|scss|sass)$",
+          "identity-obj-proxy"
+        ]
+      ],
+      "modulePathIgnorePatterns": [],
+      "modulePaths": [
+        "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/node_modules",
+        "/private/tmp/tdf-provider-evidence-actualmain-20261028/node_modules"
+      ],
+      "openHandlesTimeout": 1000,
+      "prettierPath": "prettier",
+      "reporters": [
+        [
+          "default",
+          {}
+        ],
+        [
+          "/private/tmp/tdf-correctness-cycle-20261028/node_modules/@testomatio/reporter/lib/adapter/jest.js",
+          {}
+        ]
+      ],
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": false,
+      "rootDir": "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui",
+      "roots": [
+        "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui"
+      ],
+      "runner": "/private/tmp/tdf-correctness-cycle-20261028/node_modules/jest-runner/build/index.js",
+      "sandboxInjectedGlobals": [],
+      "setupFiles": [
+        "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/jest.polyfills.cjs"
+      ],
+      "setupFilesAfterEnv": [],
+      "skipFilter": false,
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": false,
+        "printBasicPrototype": false
+      },
+      "snapshotSerializers": [],
+      "testEnvironment": "/private/tmp/tdf-correctness-cycle-20261028/node_modules/jest-environment-jsdom/build/index.js",
+      "testEnvironmentOptions": {
+        "customExportConditions": [
+          "node",
+          "node-addons"
+        ]
+      },
+      "testLocationInResults": false,
+      "testMatch": [
+        "**/__tests__/**/*.?([mc])[jt]s?(x)",
+        "**/?(*.)+(spec|test).?([mc])[jt]s?(x)"
+      ],
+      "testPathIgnorePatterns": [
+        "/node_modules/"
+      ],
+      "testRegex": [],
+      "testRunner": "/private/tmp/tdf-correctness-cycle-20261028/node_modules/jest-circus/build/runner.js",
+      "transform": [
+        [
+          "^.+\\.(ts|tsx)$",
+          "/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/ts-jest/dist/index.js",
+          {
+            "tsconfig": "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/tsconfig.jest.json",
+            "useESM": true
+          }
+        ],
+        [
+          "^.+\\.m?tsx?$",
+          "/private/tmp/tdf-correctness-cycle-20261028/tdf-hq-ui/node_modules/ts-jest/dist/index.js",
+          {
+            "useESM": true
+          }
+        ]
+      ],
+      "transformIgnorePatterns": [
+        "/node_modules/",
+        "\\.pnp\\.[^\\/]+$"
+      ],
+      "waitForUnhandledRejections": false,
+      "watchPathIgnorePatterns": []
+    }
+  ],
+  "globalConfig": {
+    "bail": 0,
+    "changedFilesWithAncestor": false,
+    "ci": true,
+    "collectCoverage": false,
+    "collectCoverageFrom": [],
+    "coverageDirectory": "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/coverage",
+    "coverageProvider": "babel",
+    "coverageReporters": [
+      "json",
+      "text",
+      "lcov",
+      "clover"
+    ],
+    "detectLeaks": false,
+    "detectOpenHandles": false,
+    "errorOnDeprecated": false,
+    "expand": false,
+    "findRelatedTests": false,
+    "forceExit": false,
+    "json": false,
+    "lastCommit": false,
+    "listTests": false,
+    "logHeapUsage": false,
+    "maxConcurrency": 5,
+    "maxWorkers": 1,
+    "noStackTrace": false,
+    "nonFlagArgs": [],
+    "notify": false,
+    "notifyMode": "failure-change",
+    "onlyChanged": false,
+    "onlyFailures": false,
+    "openHandlesTimeout": 1000,
+    "passWithNoTests": false,
+    "projects": [],
+    "reporters": [
+      [
+        "default",
+        {}
+      ],
+      [
+        "/private/tmp/tdf-correctness-cycle-20261028/node_modules/@testomatio/reporter/lib/adapter/jest.js",
+        {}
+      ]
+    ],
+    "rootDir": "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui",
+    "runInBand": true,
+    "runTestsByPath": false,
+    "seed": -1453348212,
+    "skipFilter": false,
+    "snapshotFormat": {
+      "escapeString": false,
+      "printBasicPrototype": false
+    },
+    "testFailureExitCode": 1,
+    "testPathPatterns": [],
+    "testSequencer": "/private/tmp/tdf-correctness-cycle-20261028/node_modules/@jest/test-sequencer/build/index.js",
+    "updateSnapshot": "none",
+    "useStderr": false,
+    "waitForUnhandledRejections": false,
+    "watch": false,
+    "watchAll": false,
+    "watchman": true,
+    "workerThreads": false
+  },
+  "version": "30.1.3"
+}

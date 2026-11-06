@@ -319,14 +319,40 @@ describe('auth api', () => {
   });
 
 
-  it('keeps reset-token errors distinct from login credential errors', async () => {
+  it.each([400, 401])('classifies a rejected reset token at status %s without treating it as login credentials', async status => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status, headers: createHeaders('text/plain'),
+      text: async () => 'Invalid or expired token',
+    } as Response);
+    await expect(confirmPasswordReset({ token: 'expired', newPassword: 'fictional' }))
+      .rejects.toMatchObject({ code: 'reset-token', message: 'Invalid or expired token' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([500, 503])('does not turn a server failure at status %s into an expired-reset error', async status => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status, headers: createHeaders('text/plain'),
+      text: async () => 'Invalid or expired token',
+    } as Response);
+    await expect(confirmPasswordReset({ token: 'synthetic-token', newPassword: 'fictional' }))
+      .rejects.toMatchObject({ code: 'response', message: 'Invalid or expired token' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves other reset validation errors and login credential classification', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status: 400, headers: createHeaders('text/plain'),
+      text: async () => 'New password is required',
+    } as Response);
+    await expect(confirmPasswordReset({ token: 'synthetic-token', newPassword: '' }))
+      .rejects.toMatchObject({ code: 'response', message: 'New password is required' });
     fetchMock.mockResolvedValueOnce({
       ok: false, status: 401, headers: createHeaders('text/plain'),
       text: async () => 'Invalid or expired token',
     } as Response);
-    await expect(confirmPasswordReset({ token: 'expired', newPassword: 'fictional' }))
-      .rejects.toMatchObject({ code: 'response', message: 'Invalid or expired token' });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await expect(loginRequest({ username: 'synthetic', password: 'fictional' }))
+      .rejects.toMatchObject({ code: 'credentials' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
 });

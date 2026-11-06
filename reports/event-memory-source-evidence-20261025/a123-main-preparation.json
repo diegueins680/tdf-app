@@ -1,0 +1,62 @@
+{
+  "observedAt": "2026-10-26T08:16:25.415775+00:00",
+  "scope": "Qualified frozen preparation, not protected integration or deployment",
+  "applicationMergeSource": "39aa065e3869e5f0aab85056b1c169c21d34f3ed",
+  "actualHttpAndDriverSource": "e3d3f652185758ecdbf1b0386cc34fc35f41ac5e",
+  "mergedProtectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "newerObservedProtectedMain": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "newerMainPr": 620,
+  "newerMainIncluded": false,
+  "exactMainRequirements": 144,
+  "combinedRequirements": 148,
+  "migrations": 225,
+  "catalogCandidates": 1336,
+  "web": {
+    "node": "22.14.0",
+    "tests": 3501,
+    "suites": 309,
+    "lint": "PASS",
+    "types": "PASS",
+    "build": "PASS",
+    "initialGzipBytes": 335777,
+    "preloads": 5
+  },
+  "repositoryQuality": "PASS",
+  "api": {
+    "status": "PASS",
+    "runnerRequests": 120,
+    "assertionGroups": 17,
+    "runtimeSourceHashes": 24,
+    "actualVersion": {
+      "buildTime": "2026-10-26T05:36:20Z",
+      "commit": "262295679df492dde850333779db431132092993",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "binarySha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+    "backendInputsByteIdenticalTo": "262295679df492dde850333779db431132092993",
+    "sourceWorktreeDirty": true,
+    "browserAssertions": 5,
+    "faultInjection": "One expectedVersion mismatch, real API 409; same-context authenticated visibility read, explicit cancel/reload and new confirmed hide/restore",
+    "externalProviderCalls": 0,
+    "runtimesStopped": true,
+    "ownedDatabaseRemoved": true
+  },
+  "logSha256": {
+    "tdf-event-memory-a123-ui-quality-v1.log": "fff3840581051fe319ad403dcb4a9f730c24fd53c4dd44754a22cb5c89bee94c",
+    "tdf-event-memory-a123-repo-quality-v3.log": "7f0b8206b3805f8ce7f710bfdf1bb89bf877ad1efaafd4e34f77600170addd80",
+    "tdf-event-memory-a123-formal-v3.log": "f54add72199d8fb282f4791db10240b9c11ca05dd48b25b57aa1dbf8c4538732"
+  },
+  "sourcePr615Review": "PENDING",
+  "root608Draft": true,
+  "mobilePr173": "Native-qualified, independent review required",
+  "realInvitations": {
+    "attempted": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0,
+    "consentedEligible": null,
+    "excluded": null
+  },
+  "productionWritten": false
+}

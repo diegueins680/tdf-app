@@ -19,7 +19,7 @@ import Network.Wai
   , responseLBS, responseStatus, responseToStream
   )
 import Network.Wai.Internal (ResponseReceived(..))
-import Servant (NoContent(..), Proxy(..), serve, (:<|>)(..))
+import Servant (NoContent(..), Proxy(..), noHeader, serve, (:<|>)(..))
 import Test.Hspec
 
 import TDF.API.MusicRelease (MusicReleasePublicAPI)
@@ -93,7 +93,8 @@ publicRouter = serve (Proxy :: Proxy MusicReleasePublicAPI)
   ((\_ _ _ _ _ -> pure [])
     :<|> (\_ _ -> pure Null)
     :<|> (\_ _ -> pure (object ["url" .= ("https://storage.example.test/test" :: Text)]))
-    :<|> (\_ _ -> pure NoContent))
+    :<|> (\_ _ -> pure NoContent)
+    :<|> (\_ _ _ _ -> pure (noHeader [])))
 
 spec :: Spec
 spec = describe "music credential cache boundary" $ do

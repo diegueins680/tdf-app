@@ -1,0 +1,47 @@
+[1A[2K[2m[WebServer] [22m(node:97343) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 8 tests using 1 worker
+
+[1A[2K(node:97353) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:97353) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/8] [chromium-desktop] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for UTC › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K[2/8] [chromium-desktop] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for Europe/Madrid › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K(node:97448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:97448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[3/8] [chromium-phone] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for UTC › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K[4/8] [chromium-phone] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for Europe/Madrid › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K(node:98245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:98245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[5/8] [android-chrome-small] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for UTC › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K[6/8] [android-chrome-small] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for Europe/Madrid › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K(node:98804) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:98804) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[7/8] [firefox-critical] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for UTC › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K[8/8] [firefox-critical] › e2e/web/booking-timezone.spec.mjs:22:5 › Studio hours for Europe/Madrid › Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow
+[1A[2K  8 passed (53.8s)

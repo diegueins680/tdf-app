@@ -1,0 +1,123 @@
+{
+  "recordedAt": "2026-10-26T16:25:13.976992+00:00",
+  "parent": "41505ce859e83c24ecca0d1dc3e4939851e909d1",
+  "change": "Reuse existing modalHeaderAction minimum size for edit/delete cancel buttons; product logic unchanged.",
+  "status": "IMPLEMENTED_AND_LOCALLY_TESTED_NOT_DEPLOYED",
+  "node": "20.19.4",
+  "fullJest": {
+    "tests": 759,
+    "suites": 101,
+    "status": "PASS"
+  },
+  "releaseCheck": "PASS",
+  "sourceSha256": {
+    "app/eventDetail.tsx": "f626c210a52d9b9ac73fbf74871a86888aa66c995eeedead6d26a198ddc6f404",
+    "src/api/events.ts": "50ce6e23235e77299f7f6b588c6d96ffe56d431f637a35b5e25c6a7f1441d8a0",
+    "src/components/EventMomentCard.tsx": "4d6c16c22b1dc3ce3ced783af44aae982ffa3d8f3a9cb84a2db79638d754fd0e",
+    "src/localization/eventExperienceCopy.ts": "a37b5f49ca779bc94668f59abd7ea5a8e9cb8a21cebcdce854859179445cd17d",
+    "src/types/index.ts": "a46a8bb51b5edef441ed0d9e17e3f2565c20b0713a64f46e35d2597223470c2f",
+    "__tests__/EventDetailMoments.test.tsx": "5e687bd856c5ba6c44cad12b897b1d1d46f325d49cf0cb02b0ebe118a8fbc46f",
+    "__tests__/EventMomentAuthorCard.test.tsx": "d0c7dc29e64522fa5e2c4aa9e4944cc7c4148c05ec2e647aab2f1cea5ee6f4a1",
+    "__tests__/eventMomentAuthorApi.test.ts": "490bfec762d0bb151ed3641a23ad885d4bcff5354b4a207923c5b59b7fbb0728",
+    "scripts/test-event-moment-author-preview.mjs": "2c11e67792a4afc0b48e191aaaf8f53259e0cd416acc54adccef48bfd8a73f3c"
+  },
+  "logs": [
+    {
+      "path": "/private/tmp/tdf-mobile-author-full-v3.log",
+      "sha256": "36acf08ec58c06afac6d149bad0757e8b99cf4d77246772ee7d64481bfae7eff"
+    },
+    {
+      "path": "/private/tmp/tdf-mobile-author-release-v5.log",
+      "sha256": "5c900062b26307bf3dd8cafa98bc560013acad617743445e071bf5338c9dc191"
+    }
+  ],
+  "androidJavaScript": {
+    "scope": "JavaScript bundle only; no APK/device proof",
+    "sources": [
+      {
+        "path": "app/eventDetail.tsx",
+        "sha256": "f626c210a52d9b9ac73fbf74871a86888aa66c995eeedead6d26a198ddc6f404",
+        "exactSourceMap": true
+      },
+      {
+        "path": "src/api/events.ts",
+        "sha256": "50ce6e23235e77299f7f6b588c6d96ffe56d431f637a35b5e25c6a7f1441d8a0",
+        "exactSourceMap": true
+      },
+      {
+        "path": "src/components/EventMomentCard.tsx",
+        "sha256": "4d6c16c22b1dc3ce3ced783af44aae982ffa3d8f3a9cb84a2db79638d754fd0e",
+        "exactSourceMap": true
+      },
+      {
+        "path": "src/localization/eventExperienceCopy.ts",
+        "sha256": "a37b5f49ca779bc94668f59abd7ea5a8e9cb8a21cebcdce854859179445cd17d",
+        "exactSourceMap": true
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "/private/tmp/tdf-mobile-author-android-v2.bundle",
+        "bytes": 5307084,
+        "sha256": "000fda9efd44826b92c85b1aad1c2e6c9dfe2f40f8d69ea79dfde0f60fa60bba"
+      },
+      {
+        "path": "/private/tmp/tdf-mobile-author-android-v2.map",
+        "bytes": 18036613,
+        "sha256": "2a362961a628e8420ef602912cca7ea476bbad6eb37ff41e32722e7345d12b4f"
+      }
+    ]
+  },
+  "preview": {
+    "result": "event-moment-author-accessibility-20261026/results.json",
+    "status": "PASS synthetic Expo Web only",
+    "touchTargets": [
+      {
+        "action": "cancelEdit",
+        "width": 60,
+        "height": 44
+      },
+      {
+        "action": "cancelDelete",
+        "width": 60,
+        "height": 44
+      }
+    ],
+    "knownBlockedQrWorkerErrors": 1,
+    "unexpectedPageErrors": []
+  },
+  "earlierHead": {
+    "sha": "41505ce859e83c24ecca0d1dc3e4939851e909d1",
+    "mobileValidate": {
+      "run": 40357472951,
+      "status": "SUCCESS",
+      "tests": 759,
+      "suites": 101,
+      "artifactExecuted": 13,
+      "artifactSkipped": 1,
+      "doctor": "17/17"
+    },
+    "androidBuild": {
+      "run": 40357478781,
+      "status": "CANCELLED after source change; not a pass"
+    },
+    "iosBuild": {
+      "run": 40357483884,
+      "status": "CANCELLED after source change; not a pass"
+    },
+    "localArtifactGuards": "14 executed on macOS at original qualification; guard/native sources unchanged, not rerun for this styling delta"
+  },
+  "finalHeadHostedChecks": "Required after publication; not executed at this local receipt",
+  "nativeInputsUnchanged": [
+    "package.json",
+    "package-lock.json",
+    "app.json",
+    "ios/**",
+    "android/**",
+    "src/api/generated/types.ts"
+  ],
+  "physicalDevice": "NOT_VERIFIED",
+  "deployed": false,
+  "productionWrites": 0,
+  "realInvitationsSent": 0
+}

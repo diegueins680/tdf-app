@@ -61,3 +61,11 @@ it('opens a chat notification by its stored thread identity', () => {
 it.each(['0', '-1', '1.2', '9007199254740992', 'https://evil.example', '42?partyId=5'])('rejects unsafe chat thread identity %s', (nTargetKey) => {
   expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey }))).toBeNull();
 });
+
+it('retains an event-memory invitation identity through login without accepting arbitrary targets', () => {
+  const path = `/social/eventos/141?compose=1&invitation=${key}#momentos`;
+  expect(notificationTargetPath(notification({ nTargetType: 'event_memories', nTargetId: 141, nTargetKey: key }))).toBe(path);
+  const redirect = new URL(buildLoginRedirectPath(path), 'https://tdf.local').searchParams.get('redirect');
+  expect(resolvePostAuthPath(null, ['Customer'], [], redirect)).toBe(path);
+  expect(notificationTargetPath(notification({ nTargetType: 'event_memories', nTargetId: 141, nTargetKey: 'https://bad.test' }))).toBeNull();
+});

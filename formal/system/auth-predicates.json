@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
-    "tdf-hq/src/TDF/Models.hs": "92315ba9a595e5d6a106c5430371433927c3923535e2aebfc939f00442c9b45e",
+    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+    "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869"
+    "tdf-hq/tdf-hq.cabal": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674"
   },
   "obligations": [
     {
@@ -113,6 +113,177 @@
       "qualification": "Fresh source-bound solver/replay, mutation and independent certificate checks remain required. Full implementation/refinement and release obligations remain UNPROVEN."
     },
     {
+      "reviewedAgainst": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+      "candidateImplementation": "48eb295581e31a27b52e4a0353defce8aca890d0",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+          "currentSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27"
+        }
+      ],
+      "change": "Automatic account public-name privacy: register TDF.Auth.AccountName in the executable and tests, register AccountNameSpec, and replace the missing Google-name email fallback with initialAccountName gpName.",
+      "semanticReview": "Removing exactly three new Cabal module registrations reproduces protected main byte for byte: dependencies, source paths, GHC/CPP options and existing registrations are unchanged. Reverting only the new ServerAuth import and Google-name call reproduces protected main byte for byte. Authorization predicates, RoleEnum, RecordsIngestion, recoveryWindowValid, reset-token issuance, recovery SQL, identity contract and Stack/lock remain unchanged. The helper accepts only Maybe Text and returns a public label; it does not import or redefine authorization/recovery predicates. Obligation claims, assumptions, translations and limitations are preserved.",
+      "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required. Prior 6a09737 hosted failure and approval are historical; no waiver."
+    },
+    {
+      "reviewedAgainst": "f41c993a56e55242b5b0c09c4d5da96970ca21ae",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+          "currentSha256": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a"
+        }
+      ],
+      "change": "Remove automatic private-email substitution in the Google token validator; register GoogleProfileNameSpec in test other-modules only.",
+      "semanticReview": "Reversing the exact gpName assignment reproduces the parent ServerAuth bytes; removing exactly one test module registration reproduces the parent Cabal bytes. No authorization predicate, RoleEnum, ingestion admission, recoveryWindowValid, token issuance, expiry SQL, identity contract, dependency, source path, compiler/CPP option or Stack input changes. All obligation claims, assumptions and translator controls are preserved. The decoder-to-name regression uses synthetic contact data and retains six negative authentication cases.",
+      "qualification": "Requires fresh source-bound solver execution, replay and mutation controls. Context review is not independent PR approval, whole-program proof or production authorization."
+    },
+    {
+      "reviewedAgainst": "be87455bbb927b157fb41752f431b7e2dede9a91",
+      "candidateImplementation": "merge of claude/prompt-formal-validation-b2jmz3 (PR #691) with protected main be87455",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a",
+          "currentSha256": "07cdf1b3f89930c8a8bc02e545dc8ab814d6e3589b24b6b6424b82431a444a45"
+        }
+      ],
+      "change": "Formal audit phase 2 (PR #691) on top of protected main be87455: register TDF.Commerce.ArtistTip and TDF.Profiles.ArtistVisibility in the executable and test other-modules lists, and ArtistTipSpec, DomoQuotePropertiesSpec, ProviderAdapterBindingSpec, MetaWebhookSignatureSpec and CorsPropertiesSpec in the test modules (9 added lines).",
+      "semanticReview": "Removing exactly the 9 added module registration lines reproduces protected main be87455 byte for byte: dependencies, source paths, GHC/CPP options and existing registrations (including main's GoogleProfileNameSpec) are unchanged. Auth.hs, Models.hs, Server/RecordsIngestion.hs, ServerAuth.hs, the recovery expiry SQL, identity-lifecycle.md and Stack/lock are byte-identical to protected main. The new modules are pure tip admission/fee rules, the public artist visibility rule and property tests of pure predicates (including the Meta webhook HMAC verifier and CORS origin predicates, which are exercised, not redefined); none imports or redefines authorization or recovery predicates. Obligation claims, assumptions, translations and limitations are preserved.",
+      "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required."
+    },
+    {
+      "reviewedAgainst": "be87455bbb927b157fb41752f431b7e2dede9a91",
+      "candidateImplementation": "merge of claude/prompt-formal-validation-b2jmz3 (PR #691) with protected main be87455",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "07cdf1b3f89930c8a8bc02e545dc8ab814d6e3589b24b6b6424b82431a444a45",
+          "currentSha256": "1d4067bd9c4a00a49dc07ea26d80df872a38891d1e38630625e2a52231b3db53"
+        },
+        {
+          "source": "tdf-hq/src/TDF/Models.hs",
+          "previousSha256": "92315ba9a595e5d6a106c5430371433927c3923535e2aebfc939f00442c9b45e",
+          "currentSha256": "d333cba5261dca199883fd33d909008b9067eb010f21e52a72abc4ef1b9aab56"
+        }
+      ],
+      "change": "Formal audit phase 2, owner decisions AUTHORITY-093/094/095 (PR #691): register TDF.Commerce.DomoCancellation, TDF.Commerce.DepositPolicy and TDF.Social.AccountOwnership in the executable and test other-modules lists, and DomoCancellationSpec, DepositPolicySpec and AccountOwnershipSpec in the test modules (9 further added lines on top of the previous review). Models.hs: SocialSyncAccount gains deliveryDesignated (Bool default FALSE), connectedByPartyId, designatedByPartyId and designatedAt, and a new SocialSyncAccountEvent audit entity is added (14 added lines, nothing removed).",
+      "semanticReview": "Removing exactly the added module registration lines reproduces the previously reviewed cabal byte for byte; dependencies, source paths and GHC/CPP options are unchanged. The new modules are pure money and ownership rules (cancellation refund ladder, deposit minimum/full-payment switch, OAuth account rebind decision) and their property tests; none imports or redefines authorization or recovery predicates. In Models.hs the User, Party, role, session and recovery entities and every field the authorization predicates read are byte-identical; the diff is confined to the SocialSyncAccount block and the appended SocialSyncAccountEvent entity, which no reviewed predicate reads. Auth.hs, ServerAuth.hs, Server/RecordsIngestion.hs, the recovery expiry SQL, identity-lifecycle.md and Stack/lock remain byte-identical to protected main. Obligation claims, assumptions, translations and limitations are preserved.",
+      "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required."
+    },
+    {
+      "reviewedAgainst": "be87455bbb927b157fb41752f431b7e2dede9a91",
+      "candidateImplementation": "merge of claude/prompt-formal-validation-b2jmz3 (PR #691) with protected main be87455",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "1d4067bd9c4a00a49dc07ea26d80df872a38891d1e38630625e2a52231b3db53",
+          "currentSha256": "635d309b2552cedb13a5ea54af0945dfc0f7f86e1e3df1e573e43e3718f0697d"
+        }
+      ],
+      "change": "Formal audit phase 2, Domo cancellation and deposit policy wiring (PR #691): register TDF.Commerce.DomoCancellationStore, TDF.Commerce.ArtistTipStore and TDF.Social.AccountOwnershipStore in the executable and test other-modules lists, and DomoCancellationRuntimeSpec, ArtistTipStoreSpec and AccountOwnershipStoreSpec in the test modules (12 added lines on top of the previous review).",
+      "semanticReview": "Removing exactly the added module registration lines reproduces the previously reviewed cabal byte for byte; dependencies, source paths and GHC/CPP options are unchanged. The new modules are database persistence of the Domo cancellation transaction, keyed tip reservation and Instagram connection ownership, plus their database-backed tests; none imports or redefines authorization or recovery predicates. Auth.hs, Models.hs, ServerAuth.hs, Server/RecordsIngestion.hs, the recovery expiry SQL, identity-lifecycle.md and Stack/lock are byte-identical to their previously reviewed fingerprints. Obligation claims, assumptions, translations and limitations are preserved.",
+      "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required."
+    },
+    {
+      "reviewedAgainst": "f41c993a56e55242b5b0c09c4d5da96970ca21ae",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+          "currentSha256": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a"
+        }
+      ],
+      "change": "Remove automatic private-email substitution in the Google token validator; register GoogleProfileNameSpec in test other-modules only.",
+      "semanticReview": "Reversing the exact gpName assignment reproduces the parent ServerAuth bytes; removing exactly one test module registration reproduces the parent Cabal bytes. No authorization predicate, RoleEnum, ingestion admission, recoveryWindowValid, token issuance, expiry SQL, identity contract, dependency, source path, compiler/CPP option or Stack input changes. All obligation claims, assumptions and translator controls are preserved. The decoder-to-name regression uses synthetic contact data and retains six negative authentication cases.",
+      "qualification": "Requires fresh source-bound solver execution, replay and mutation controls. Context review is not independent PR approval, whole-program proof or production authorization."
+    },
+    {
+      "reviewedAgainst": "3293403e3f3df823b5bc2261dc788ecb465b40da",
+      "candidateImplementation": "feat/session-token-expiry-20261031 (merge of main 3293403e into ID-SESSION-004)",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "ce670990ab2b43addb5ee2410d70a71529f443b82b321d5a78380387ab5b9917",
+          "currentSha256": "9ddd4662b265d1cb29e88339707318dd1a60b0cda2b173293bdf870973a2e8d3"
+        }
+      ],
+      "change": "Merge origin/main (3293403e) into the ID-SESSION-004 branch: the only reviewed source that changes is tdf-hq.cabal, which gains main's GoogleProfileNameSpec test-module registration.",
+      "semanticReview": "Auth.hs, Models.hs and RecordsIngestion.hs are byte-identical to the previous review record (the six translated definitions, `apiTokenWithinValidity`, `sessionClockEpoch`, the `ApiToken` window fields and `requireAdmin` are unchanged). Cabal: the merged manifest keeps the PR's `library`/exposed-modules restructuring unchanged and adds exactly one line from main, `TDF.Auth.GoogleProfileNameSpec` in the test suite's other-modules (the module main added, with the matching Spec.hs import and spec call). Removing that one line reproduces the PR's reviewed manifest byte for byte. No library module, dependency, version bound, GHC/CPP option, Stack resolver or lock change. Main's own record for its ServerAuth.hs/Cabal change is carried over above. Claims, assumptions, translations and negative controls are unchanged.",
+      "qualification": "Merge-of-main pin refresh: this record only binds the merged snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "reviewedAgainst": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+      "previousSha256": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+      "currentSha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+      "change": "Merge of protected main dd9adc5d (PR #686, api_token session validity window) into the formal audit branch 644a3303 (PR #691). Git merged tdf-hq/src/TDF/Auth.hs without textual conflict: main's hunks and the audit's hunks touch disjoint regions.",
+      "semanticReview": "The merged file equals protected main's version (d53995a2b132bf8c...) plus exactly the audit's previously reviewed additions; neither side's hunks were altered. Main's pinned value for this file was d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7.",
+      "qualification": "Merge-of-main pin refresh: this record only binds the merged snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Models.hs",
+      "reviewedAgainst": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+      "previousSha256": "d333cba5261dca199883fd33d909008b9067eb010f21e52a72abc4ef1b9aab56",
+      "currentSha256": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
+      "change": "Merge of protected main dd9adc5d (PR #686, api_token session validity window) into the formal audit branch 644a3303 (PR #691). Git merged tdf-hq/src/TDF/Models.hs without textual conflict: main's hunks and the audit's hunks touch disjoint regions.",
+      "semanticReview": "The merged file equals protected main's version (598a3e13578e6269...) plus exactly the audit's previously reviewed additions; neither side's hunks were altered. Main's pinned value for this file was 598a3e13578e6269e599bc218b3a25900033ca82aa0e610dbfeba8f12b358b2a.",
+      "qualification": "Merge-of-main pin refresh: this record only binds the merged snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+      "previousSha256": "635d309b2552cedb13a5ea54af0945dfc0f7f86e1e3df1e573e43e3718f0697d",
+      "currentSha256": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+      "change": "Merge of protected main dd9adc5d (PR #686, api_token session validity window) into the formal audit branch 644a3303 (PR #691). Git merged tdf-hq/tdf-hq.cabal without textual conflict: main's hunks and the audit's hunks touch disjoint regions (the cabal file was rebuilt on main's new library layout with the audit's modules registered in exposed-modules and the test suite).",
+      "semanticReview": "The merged file equals protected main's version (9ddd4662b265d1cb...) plus exactly the audit's previously reviewed additions; neither side's hunks were altered. Main's pinned value for this file was 9ddd4662b265d1cb29e88339707318dd1a60b0cda2b173293bdf870973a2e8d3.",
+      "qualification": "Merge-of-main pin refresh: this record only binds the merged snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "reviewedAgainst": "1976242a72541ecfff90a54c72659df42f7bd085",
+      "previousSha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+      "currentSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "change": "Formal audit follow-up F-10 on protected main 1976242a: one export-list line and one new top-level function, secretTokenMatches, which compares the SHA-256 digests of a presented and a configured shared secret with constEq. The seed-token guards in Server.hs and ServerAdmin.hs call it instead of (/=).",
+      "semanticReview": "Removing the added export line and the eight added lines (comment, signature and definition of secretTokenMatches) reproduces protected main's Auth.hs byte for byte. The six translated definitions, apiTokenWithinValidity, sessionClockEpoch, hasModuleAccess, validateModuleAccess and requireAdmin are unchanged, and no translated predicate calls the new function; it reads no user, role, session or module state.",
+      "qualification": "Additive pin refresh: this record only binds the reviewed snapshot and proves nothing about secretTokenMatches, which is covered by ServerAdminSpec. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "084425384f01acd9db680f0d3f5178cf93b1122c",
+      "previousSha256": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+      "currentSha256": "95f8696701ff7bd4242307b831a4212f7165b1cba0d90c0c60516e9fa431af5c",
+      "change": "PAY-INVOICE-ISSUE-001 registers exactly two modules: TDF.Invoice.SessionIssue in the library's exposed-modules and TDF.Invoice.SessionIssueSpec in the test suite's other-modules.",
+      "semanticReview": "Removing exactly the two added module lines reproduces the previously reviewed cabal byte for byte; dependencies, version bounds, source paths and GHC/CPP options are unchanged. The new module is the session invoice issuance reservation (pure key, fingerprint and replay decisions plus three SQL statements) and its tests; it neither imports nor redefines authorization or recovery predicates.",
+      "qualification": "Additive pin refresh: this record only binds the reviewed snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "663a127de6c99d2eb73bc204940ceb39269c30b9",
+      "previousSha256": "95f8696701ff7bd4242307b831a4212f7165b1cba0d90c0c60516e9fa431af5c",
+      "currentSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
+      "change": "CONTRACT-STORE-001 registers exactly one test module, TDF.Contracts.StoreSpec, in the test suite's other-modules.",
+      "semanticReview": "Removing exactly the added module line reproduces the previously reviewed cabal byte for byte; library modules, dependencies, version bounds, source paths and GHC/CPP options are unchanged. The new module tests the contract store and send handlers and neither imports nor redefines authorization or recovery predicates.",
+      "qualification": "Additive pin refresh: this record only binds the reviewed snapshot and proves nothing. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required; it is not production authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "7b4b82519ecfdb0620ad320820d6c53b3404eb04",
+      "previousSha256": "eb0ce299e172cd82a3d82a157c3e60a8cea567ded5a8ced84048260be12d0211",
+      "currentSha256": "5cfa6ae42dd128664bd520b493f6d596bf325dc12033eb00a935275d0002d5f1",
+      "change": "PR #703 (account storage and recoverable uploads) registers two new library modules, TDF.API.ContentStorage and TDF.ContentStorage, in exposed-modules. No other line of the cabal file changes.",
+      "semanticReview": "The change only lists new modules for compilation; it alters no build flag, dependency, language extension or existing module, and neither new module is a source of the verified predicates. The verified obligations are therefore unaffected and the pin is refreshed to the new file."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "8efa5afe186705545103db80c527a09133708ede",
+      "previousSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
+      "currentSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "change": "Merge preserves protected main build declarations and appends only TDF.API.ContentStorage and TDF.ContentStorage exposed modules.",
+      "semanticReview": "New module registration changes no existing module implementation, flag or dependency. Both parent source-context reviews are retained. Fresh solver/replay execution remains required; this pin refresh is not a proof or release authorization."
+    },
+    {
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
       "reviewedTarget": "43b1b4b00715c5564525d7bce1fa838bf6366122",
@@ -121,6 +292,15 @@
       "change": "Register TDF.MusicRelease.CredentialCache in executable/test other-modules and TDF.MusicCredentialCacheSpec in test other-modules only. Removing exactly these three lines reproduces protected main Cabal bytes.",
       "semanticReview": "No source paths, module aliases, dependencies, extensions, compiler options, CPP flags or Stack/lock changes. The uniquely named middleware imports existing Data.List, Data.Text, Network.HTTP.Types and Network.Wai bindings; it forwards the unchanged request to the unchanged inner application, mapping only response Cache-Control for eight fixed music credential operations. Server.mkApp and App.Boot.wrapApp add this wrapper without changing authContext, handler dispatch, authorization predicates or recovery arithmetic. The new Hspec module exports only spec, has no import override, Template Haskell, CPP, foreign import or unsafePerformIO. Auth, Models, RecordsIngestion, ServerAuth, expiry SQL, identity-lifecycle contract and both translators remain byte-identical to protected main. Conditional claims, domains, assumptions and limitations are unchanged; this is not an HTTP, session, middleware correctness or whole-program refinement proof.",
       "qualification": "Fresh source-bound solver/replay, mutation and independent certificate checks remain required. Full implementation/refinement and release obligations remain UNPROVEN. Original CI fingerprint rejection is retained; this context review grants no merge, deployment or production authority."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "change": "Normal composition of existing633 with protected main e524. Preserve the complete current library/executable/test layout and add exactly TDF.MusicRelease.CredentialCache to library exposed-modules and TDF.MusicCredentialCacheSpec to test other-modules. Removing these two lines reproduces protected main Cabal bytes. Original three-stanza registrations and their43b1 receipts remain historical.",
+      "semanticReview": "No dependency, bound, source path, existing module registration, extension, GHC/CPP flag or Stack input changes. The unchanged original middleware maps only Cache-Control on eight fixed credential operations, forwarding the request and inner application; Server.mkApp and outer Boot.wrapApp add that idempotent wrapper without changing authContext, dispatch, private storage or recovery. All other pinned sources and translators equal protected main. Original review records and obligation claims/domains/assumptions/limitations are preserved.",
+      "qualification": "Fresh source-bound solver/replay and adversarial controls required on the combined source. Metadata binding alone establishes no HTTP correctness, full refinement, independent GitHub approval or release permission."
     }
   ]
 }

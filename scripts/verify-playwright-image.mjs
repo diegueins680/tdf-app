@@ -4,9 +4,27 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
+import { parseArgs } from 'node:util';
 
 export const packages = Object.freeze(['@playwright/test', 'playwright', 'playwright-core']);
 export const browsers = Object.freeze(['chromium', 'firefox', 'webkit']);
+
+export function parseWorkflowSelection(args) {
+  const { values } = parseArgs({ args, options: {
+    workflow: { type: 'string', default: '.github/workflows/ci.yml' },
+    job: { type: 'string', default: 'persona-web-e2e' },
+  }, strict: true, allowPositionals: false });
+  assert.ok(['.github/workflows/ci.yml', '.github/workflows/social-verification.yml'].includes(values.workflow),
+    'Select a supported repository browser workflow');
+  assert.match(values.job, /^[a-zA-Z0-9_-]+$/, 'Select a nonempty workflow job');
+  return values;
+}
+
+export function selectedWorkflowImage(workflow, jobName) {
+  const image = workflow?.jobs?.[jobName]?.container?.image;
+  assert.equal(typeof image, 'string', 'Selected workflow job must configure its container image');
+  return image;
+}
 
 export function validateHomeOwner(uid, homeUid) {
   assert.ok(Number.isInteger(uid) && uid >= 0 && Number.isInteger(homeUid) && homeUid >= 0,
@@ -44,7 +62,8 @@ export async function launchBrowsers(types) {
 
 async function main() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const workflow = parseYaml(await readFile(path.join(root, '.github/workflows/ci.yml'), 'utf8'));
+  const selection = parseWorkflowSelection(process.argv.slice(2));
+  const workflow = parseYaml(await readFile(path.join(root, selection.workflow), 'utf8'));
   const lock = JSON.parse(await readFile(path.join(root, 'package-lock.json'), 'utf8'));
   const locked = {};
   const installed = {};
@@ -57,12 +76,13 @@ async function main() {
   const browserUser = process.getuid();
   validateHomeOwner(browserUser, (await stat(homedir())).uid);
   const version = validateImage({
-    image: workflow.jobs['persona-web-e2e'].container.image,
+    image: selectedWorkflowImage(workflow, selection.job),
     locked, installed, metadata, browserPath: process.env.PLAYWRIGHT_BROWSERS_PATH,
   });
   const results = await launchBrowsers(await import('playwright'));
   console.log(JSON.stringify({
-    kind: 'bundled-browser-preflight', playwright: version, browserUser, browsers: results,
+    kind: 'bundled-browser-preflight', workflow: selection.workflow, job: selection.job,
+    playwright: version, browserUser, browsers: results,
   }));
 }
 
