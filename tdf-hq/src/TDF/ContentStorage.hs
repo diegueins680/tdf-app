@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts #-}
 module TDF.ContentStorage
   ( contentStorageServer, storeManagedUpload, storageError, managedImageExtension
   , bindExternalDriveAttempt, requireUploadsEnabled, bindReference
@@ -7,8 +8,9 @@ module TDF.ContentStorage
   , publicRootSafe, publicRequestSafe ) where
 
 import Control.Monad (forM_, unless, when)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (ReaderT, asks)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Except (MonadError)
+import Control.Monad.Reader (MonadReader, ReaderT, asks)
 import Control.Exception (fromException)
 import qualified Control.Exception.Safe as Safe
 import Crypto.Hash (Digest, SHA256, hash)
@@ -101,7 +103,9 @@ requireReference user apiBase kind resource url = do
   outcome <- bindReference user apiBase kind resource url
   either (liftIO . Safe.throwIO) pure outcome
 
-runReferenceMutation :: AuthedUser -> SqlPersistT IO a -> AppM a
+runReferenceMutation
+  :: (MonadReader Env m, MonadIO m, MonadError ServerError m)
+  => AuthedUser -> SqlPersistT IO a -> m a
 runReferenceMutation user action = do
   pool <- asks envPool
   result <- liftIO $ Safe.tryAny $ runSqlPool (withCurrentModuleAccess ModuleAdmin user action) pool
