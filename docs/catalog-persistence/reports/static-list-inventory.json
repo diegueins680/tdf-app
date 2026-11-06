@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T16:51:22.974Z",
+  "generatedAt": "2026-11-06T00:28:37.523Z",
   "repositoryRoot": ".",
   "filesScanned": 2599,
   "candidateCount": 1394,
@@ -151046,7 +151046,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 460,
+      "line": 463,
       "values": [
         "ModuleCRM",
         "ModuleScheduling",
@@ -151060,8 +151060,8 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        460,
-        462
+        463,
+        465
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -151107,7 +151107,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 461,
+      "line": 464,
       "values": [
         "ModuleCRM",
         "ModuleScheduling",
@@ -151120,7 +151120,7 @@
       "valueCount": 7,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        461
+        464
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -151166,7 +151166,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 463,
+      "line": 466,
       "values": [
         "ModuleCRM",
         "ModuleScheduling"
@@ -151174,9 +151174,9 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        463,
-        467,
-        474
+        466,
+        470,
+        477
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -151222,7 +151222,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 469,
+      "line": 472,
       "values": [
         "ModuleScheduling",
         "ModulePackages"
@@ -151230,8 +151230,8 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        469,
-        470
+        472,
+        473
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -151277,7 +151277,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 471,
+      "line": 474,
       "values": [
         "ModuleAdmin",
         "ModuleCRM"
@@ -151285,7 +151285,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        471
+        474
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -151331,7 +151331,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 484,
+      "line": 487,
       "values": [
         "ModuleCRM",
         "ModuleScheduling",
@@ -151340,7 +151340,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        484
+        487
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -151386,7 +151386,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 488,
+      "line": 491,
       "values": [
         "ModuleCRM",
         "ModuleCatalog"
@@ -151394,7 +151394,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        488
+        491
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -151440,7 +151440,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 490,
+      "line": 493,
       "values": [
         "ModulePackages",
         "ModuleScheduling",
@@ -151449,7 +151449,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        490
+        493
       ],
       "consumerCount": 19,
       "backendConsumers": [
