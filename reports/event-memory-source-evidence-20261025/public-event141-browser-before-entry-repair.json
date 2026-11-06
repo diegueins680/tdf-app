@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-10-26T17:42:14.822Z",
+  "scope": "Anonymous production page, public GET/HEAD only; external egress and every non-GET/HEAD blocked. Not authenticated publication or new-feature production acceptance.",
+  "status": "OBSERVED",
+  "businessResponses": [
+    {
+      "method": "GET",
+      "path": "/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/batch",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/batch",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/batch",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/batch",
+      "status": 200
+    }
+  ],
+  "blockedBusinessMutations": 0,
+  "sentBusinessMutations": 0,
+  "blockedExternal": 7,
+  "pageErrors": [],
+  "pageHttpStatus": 200,
+  "finalUrl": "https://www.tdfrecords.net/login?redirect=%2Fsocial%2Feventos%2F141",
+  "title": "TDF Records",
+  "publicEventTitleVisible": false,
+  "momentSectionVisible": false,
+  "signInPromptVisible": true,
+  "notFoundVisible": false,
+  "scopeResult": "SIGN_IN_REQUIRED",
+  "browserClosed": true
+}

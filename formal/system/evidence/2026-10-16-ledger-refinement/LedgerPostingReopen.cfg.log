@@ -1,0 +1,95 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 32 and seed -743467051115486789 with 1 worker on 2 cores with 2048MB heap and 64MB offheap memory [pid: 99] (Linux 6.18.44 amd64, Ubuntu 17.0.20 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /workspace/scratch/87d34f5fc53e/tdf-app/formal/event-operations/LedgerPosting.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module LedgerPosting
+Starting... (2026-10-17 03:58:29)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-10-17 03:58:29.
+Error: Invariant PostedHistory is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ reverser = "none"
+/\ entries = 0
+/\ postedShape = <<>>
+/\ balance = [USD |-> 0, EUR |-> 0]
+/\ status = "absent"
+/\ firstShape = <<>>
+
+State 2: <Create line 51, col 3 to line 54, col 70 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 0
+/\ postedShape = <<>>
+/\ balance = [USD |-> 0, EUR |-> 0]
+/\ status = "draft"
+/\ firstShape = <<>>
+
+State 3: <AddEntry line 57, col 3 to line 62, col 60 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 1
+/\ postedShape = <<>>
+/\ balance = [USD |-> -2, EUR |-> 0]
+/\ status = "draft"
+/\ firstShape = <<>>
+
+State 4: <AddEntry line 57, col 3 to line 62, col 60 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 2
+/\ postedShape = <<>>
+/\ balance = [USD |-> 0, EUR |-> 0]
+/\ status = "draft"
+/\ firstShape = <<>>
+
+State 5: <Post line 67, col 3 to line 72, col 45 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 2
+/\ postedShape = <<[USD |-> 0, EUR |-> 0], 2>>
+/\ balance = [USD |-> 0, EUR |-> 0]
+/\ status = "posted"
+/\ firstShape = <<[USD |-> 0, EUR |-> 0], 2>>
+
+State 6: <Reopen line 75, col 3 to line 77, col 70 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 2
+/\ postedShape = <<[USD |-> 0, EUR |-> 0], 2>>
+/\ balance = [USD |-> 0, EUR |-> 0]
+/\ status = "draft"
+/\ firstShape = <<[USD |-> 0, EUR |-> 0], 2>>
+
+State 7: <AddEntry line 57, col 3 to line 62, col 60 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 3
+/\ postedShape = <<[USD |-> 0, EUR |-> 0], 2>>
+/\ balance = [USD |-> -2, EUR |-> 0]
+/\ status = "draft"
+/\ firstShape = <<[USD |-> 0, EUR |-> 0], 2>>
+
+State 8: <AddEntry line 57, col 3 to line 62, col 60 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 4
+/\ postedShape = <<[USD |-> 0, EUR |-> 0], 2>>
+/\ balance = [USD |-> 0, EUR |-> 0]
+/\ status = "draft"
+/\ firstShape = <<[USD |-> 0, EUR |-> 0], 2>>
+
+State 9: <Post line 67, col 3 to line 72, col 45 of module LedgerPosting>
+/\ reverser = "none"
+/\ entries = 4
+/\ postedShape = <<[USD |-> 0, EUR |-> 0], 4>>
+/\ balance = [USD |-> 0, EUR |-> 0]
+/\ status = "posted"
+/\ firstShape = <<[USD |-> 0, EUR |-> 0], 2>>
+
+4193 states generated, 1016 distinct states found, 226 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 3).
+Finished in 00s at (2026-10-17 03:58:29)

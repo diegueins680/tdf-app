@@ -45,6 +45,10 @@ const removeFavoriteMock = jest.fn(async () => undefined);
 const captureFirstValueOnceMock = jest.fn(async () => true);
 const analyticsCaptureMock = jest.fn();
 
+jest.unstable_mockModule('../api/musicReleases', () => ({
+  musicReleases: { searchTracks: jest.fn(async () => []) },
+}));
+
 jest.unstable_mockModule('../api/directory', () => ({
   Directory: {
     search: searchMock,
@@ -92,6 +96,52 @@ describe('DirectorySearchPage', () => {
     favoritesMock.mockResolvedValue([]);
   });
 
+  it.each(['/inicio?q=bass', '/inicio/?q=bass', '/Inicio?q=bass', '/buscar?q=bass'])('welcomes visitors on the start page while preserving direct search at %s', async (entry) => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[entry]}><DirectorySearchPage /></MemoryRouter></QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      const welcome = container.querySelector('#public-welcome-title');
+      expect(Boolean(welcome)).toBe(entry.toLowerCase().startsWith('/inicio'));
+      expect(container.querySelector('input')?.value).toBe('bass');
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'bass' }), expect.any(AbortSignal));
+      expect(container.textContent).toContain('Estos filtros describen lo que buscas, no quién eres.');
+      expect(container.querySelector('h1')?.textContent).toBe(entry.toLowerCase().startsWith('/inicio') ? 'Bienvenido a TDF Records' : esDirectory.heading);
+      expect(addFavoriteMock).not.toHaveBeenCalled();
+      if (welcome) {
+        const link = container.querySelector<HTMLAnchorElement>('a[href="/records"]')!;
+        expect(link).not.toBeNull();
+        await act(async () => { fireEvent.click(link); });
+        expect(analyticsCaptureMock).toHaveBeenCalledWith('public_discovery_cta_clicked', { route: '/inicio', destination: '/records' });
+      }
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+    }
+  });
+
+  it('keeps public exploration available when the directory fails', async () => {
+    searchMock.mockRejectedValue(new Error('Synthetic directory outage'));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => { root.render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/inicio']}><DirectorySearchPage /></MemoryRouter></QueryClientProvider>); });
+      await waitFor(() => expect(container.textContent).toContain(esDirectory.searchError));
+      expect(container.querySelector('a[href="/tdf"]')).not.toBeNull();
+      expect(container.querySelector('a[href="/records"]')).not.toBeNull();
+      expect(container.querySelector('#public-welcome-title')?.textContent).toBe('Bienvenido a TDF Records');
+      expect(container.querySelector('form[role="search"]')?.getAttribute('aria-label')).toBe('Buscar artistas y profesionales');
+      expect(addFavoriteMock).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+    }
+  });
+
   it.each(['getter', 'getItem', 'setItem'] as const)('keeps public search usable when optional city storage denies %s', async (operation) => {
     const storageDescriptor = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
     const denial = () => { throw new DOMException('Storage denied', 'SecurityError'); };
@@ -111,7 +161,7 @@ describe('DirectorySearchPage', () => {
       await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
       expect(container.querySelector('input')?.value).toBe('music');
       expect(container.textContent).not.toContain('Arrival failed');
-      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }), expect.any(AbortSignal));
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -357,8 +407,9 @@ describe('DirectorySearchPage', () => {
       await waitFor(() => {
         const profileImage = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Bassist"]');
         expect(profileImage?.src).toBe('https://api.tdfrecords.net/assets/serve/directory/profiles/synthetic-bassist.webp');
-        const fallbackImage = container.querySelector<HTMLImageElement>('img[alt="Imagen de referencia de Profile Without Photo"]');
-        expect(fallbackImage?.src).toBe('http://localhost/artist-fallback.svg');
+        const fallbackImage = container.querySelector<HTMLImageElement>('img[alt="Avatar provisional de Profile Without Photo"]');
+        expect(fallbackImage?.dataset.artistImage).toBe('initials');
+        expect(decodeURIComponent(fallbackImage?.src ?? '')).toContain('>PP</text>');
       });
       await expectNoSeriousAccessibilityViolations(container);
     } finally {
@@ -474,15 +525,15 @@ describe('DirectorySearchPage', () => {
     try {
       await act(async () => {
         root.render(<QueryClientProvider client={queryClient}>
-          <MemoryRouter initialEntries={[`/buscar?entityType=event&cityId=${quito}`]}><DirectorySearchPage /></MemoryRouter>
+          <MemoryRouter initialEntries={[`/buscar?entityType=event&cityId=${quito}&profileKind=band`]}><DirectorySearchPage /></MemoryRouter>
         </QueryClientProvider>);
       });
       await waitFor(() => expect(container.textContent).toContain('Synthetic Event'));
-      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito }));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito, profileKind: undefined }), expect.any(AbortSignal));
       const selectedTab = container.querySelector('[role="tab"][aria-selected="true"]');
       expect(selectedTab?.textContent).toBe('Eventos (1)');
       const tabLabels = Array.from(container.querySelectorAll('[role="tab"]')).map((tab) => tab.textContent);
-      expect(tabLabels).toEqual(['Todo (6)', 'Perfiles (3)', 'Clasificados (2)', 'Eventos (1)', 'Venues']);
+      expect(tabLabels).toEqual(['Todo (6)', 'Artistas y proyectos', 'Perfiles (3)', 'Clasificados (2)', 'Eventos (1)', 'Venues']);
       expect(container.textContent).toContain('Resultados orgánicos · 1');
       expect(container.textContent).not.toContain('Todavía no hay coincidencias');
       expect(container.textContent).toContain('Andes Brewing — La Pradera');
@@ -550,7 +601,7 @@ describe('DirectorySearchPage', () => {
       const eventsTab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find((tab) => tab.textContent?.startsWith('Eventos'))!;
       await act(async () => { fireEvent.click(eventsTab); });
       await waitFor(() => expect(currentSearch()).toBe(`?entityType=event&cityId=${quito}`));
-      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito })));
+      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito }), expect.any(AbortSignal)));
       expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Eventos');
       const back = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'history back')!;
       await act(async () => { fireEvent.click(back); });
@@ -601,7 +652,7 @@ describe('DirectorySearchPage', () => {
       // Entering nearby mode on a city URL keeps the coordinates and replaces the entry.
       await act(async () => { fireEvent.click(button(esDirectory.useLocation)); });
       await waitFor(() => expect(currentSearch()).toBe('?entityType=event&radiusKm=25'));
-      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ latitude: -0.18, longitude: -78.48, radiusKm: 25 })));
+      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ latitude: -0.18, longitude: -78.48, radiusKm: 25 }), expect.any(AbortSignal)));
       expect(container.querySelector('input[type="number"]')).not.toBeNull();
 
       // Back restores the earlier city search instead of rewriting it as nearby.

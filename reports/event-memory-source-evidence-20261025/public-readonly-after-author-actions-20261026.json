@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-26T16:16:39.085176+00:00",
+  "scope": "public GET availability only; no authenticated writes or eligibility inspection",
+  "results": [
+    {
+      "name": "event141",
+      "httpStatus": 200,
+      "url": "https://www.tdfrecords.net/social/eventos/141",
+      "bodySha256": "10e3e5c21b45ed05002169d7303b9240ded9e73045eb5a282a18c9eb4fcf28d6"
+    },
+    {
+      "name": "health",
+      "httpStatus": 200,
+      "url": "https://api.tdfrecords.net/health",
+      "bodySha256": "d996479d94f900ef9b33b173ef75ebe94be72be324576712f15e9d460bb36017",
+      "body": {
+        "db": "ok",
+        "status": "ok"
+      }
+    },
+    {
+      "name": "version",
+      "httpStatus": 200,
+      "url": "https://api.tdfrecords.net/version",
+      "bodySha256": "c847904a3205e0b283456e5bceebbcb62a6a15247bcfae3ff23c158234c046e3",
+      "body": {
+        "buildTime": "2026-10-24T01:24:48Z",
+        "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      }
+    }
+  ]
+}

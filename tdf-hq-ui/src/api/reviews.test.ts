@@ -52,4 +52,15 @@ describe('Reviews API', () => {
       headers: { 'Idempotency-Key': 'review-create-1' },
     });
   });
+
+  it.each([undefined, 248])('accepts review identities from both old and new API responses: %s', async (partyId) => {
+    mockGet.mockResolvedValue({
+      summary: { targetKind: 'event', targetId: '42', average: 5, count: 1 },
+      items: [{ id: 'review-1', targetKind: 'event', targetId: '42', rating: 5, body: '**Excelente**',
+        status: 'published', createdAt: '2026-10-28T12:00:00Z', verified: true,
+        sourceKind: 'event_ticket_order', author: { name: 'Juan', partyId } }],
+    });
+    const page = await Reviews.list('event', '42');
+    expect(page.items[0]?.author.partyId).toBe(partyId);
+  });
 });

@@ -1,0 +1,24 @@
+Independent read-only composed worker source/evidence review
+
+Composed M ab261ee88fd48ec784419ad62f06c9bf1a06421a, parents qualified worker C4ac12ee2f9a4b2e1b7fd33ae01ac2b0adfb8b630 and protected main6197b87326a437350dca239ee64902e78da6964c. Worktree observed clean at M. No independent runtime, DB/server/process/test/solver execution or remote GitHub action. This is not required GitHub approval, hosted-worker diagnosis or merge authorization.
+
+Blocking correspondence/evidence-scope findings: 0.
+
+Independently rehashed all1415 registered committed inputs:1315 main Git blobs plus100 pinned Mobile blobs, zero mismatches. Assurance digest matches2d1515df350bcb7a85d77e5abaa3165f2204621758e4fa1525dfb3c4a1433e1e. Source key set is identical to qualified C; exactly three hash values change: e2e/web/booking-catalog-recovery.spec.mjs, formal/system/requirements.json and PublicBookingPage.tsx. These correspond to incoming protected-main booking work, not a changed worker implementation.
+
+Git comparison independently confirms every script equals qualified C. Product UI/backend/Mobile/workflows/ops and inspected package/lock surfaces equal incoming protected main. Both merge parents match the declared normal composition. Parsed requirement comparison preserves all156 incoming-main objects exactly and appends the worker requirement exactly as qualified C, totaling157. The1352-row historical catalog decision file is byte-identical to both parents. Regenerated conflict surfaces are derived indexes, not an assertion that old source fingerprints remain current.
+
+Markdown lies outside the registered source fingerprint. Independently checked both selected contract Git hashes and matching discovery-inventory entries: music-worker-completion-observation d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60 and booking-tooltip-viewport3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba. Their separate binding is necessary and explicit; the1415-input digest alone is not evidence for Markdown contents or document authority.
+
+Evidence reuse is properly bounded. Qualified C's root quality, six final lifecycle cases, three selected intended mutation failures and seven actual worker-concurrency scenarios remain receipts for their exact unchanged script/core hashes. The previously documented older runtime manifest versus final unit-only cleanup/container-bound distinction is not erased by this merge. Protected-main hosted booking receipts retain their own source identity. Current composed catalog raw output records8passed/0failed/0cancelled/0skipped; composed index/admission/strictJSON+CSV/assurance checks are separate current-source metadata controls. No single complete composed backend/serving execution, new product worker result or hosted shutdown repair is claimed.
+
+Global assurance keeps157 complete requirements and314 implementation/refinement obligations UNPROVEN,11 inherited conditional SMT obligations and release BLOCKED. Runtime observation is empirically TESTED only within its synthetic scope. The original worker-stop cause remains UNKNOWN; deployment is UNVERIFIED. Later current-head hosted checks, independent required approval, main freshness, FIFO and protected integration remain necessary. This review supports focused draft publication of the composed change without claiming those later controls completed.
+
+Reviewed SHA256 values:
+/private/tmp/tdf-worker-completion-source-20261029/composed-source-seal.json: c197ee2b8f2f231bd009e4569194e8d61c23172ba3cb55a5face2750a9965f49
+/private/tmp/tdf-worker-completion-source-20261029/assurance-composed/report.json: ced002cedea435720e7052c0fb5bda6d01ffb16219c21d3218e0009d2f3c3c9f
+/private/tmp/tdf-worker-completion-source-20261029/qualification.json: d3d4024f9ffc8e0ba57ada9a5d192cc0dcb382fce22eaa953cb24594863e3efa
+/private/tmp/tdf-worker-completion-source-20261029/incoming-requirement-preservation.json: a748f0e56aa1b661fac2304f3e73f9a18a03a7693e83d8f1367dd3bb24908493
+/private/tmp/tdf-worker-completion-source-20261029/composed-catalog-unit.txt: fc5be9d1026bdcee851a91e01ed227ac184cd626a8045ae41f2ff4730085a018
+/private/tmp/tdf-music-worker-completion-20261029/formal/system/music-worker-completion-observation.md: d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60
+/private/tmp/tdf-music-worker-completion-20261029/formal/system/booking-tooltip-viewport.md: 3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba

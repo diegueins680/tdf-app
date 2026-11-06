@@ -1,0 +1,10 @@
+{
+  "base": "a9095bc3e3bf53f5a76244564472fe53cfff7691",
+  "head": "5cac026c325c7f0ad08b62b08f5ad41b9d0958e7",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    "e2e/web/booking-catalog-recovery.spec.mjs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

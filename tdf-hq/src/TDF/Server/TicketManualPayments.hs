@@ -62,7 +62,7 @@ listTicketManualPayments eventKey = do
     "SELECT runtime.order_id, ticket_order.buyer_name, ticket_order.buyer_email,\
     \ runtime.quantity, runtime.checkout_total_minor, runtime.currency, evidence.status,\
     \ evidence.customer_reference, evidence.submitted_at, evidence.reviewed_at,\
-    \ evidence.review_notes, checkout.status,\
+    \ evidence.review_notes, checkout.status, evidence.evidence_object_key IS NOT NULL,\
     \ GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at)\
     \ FROM event_ticket_checkout_runtime runtime\
     \ JOIN event_ticket_order ticket_order ON ticket_order.id = runtime.order_id\
@@ -78,14 +78,14 @@ listTicketManualPayments eventKey = do
     :: SqlPersistT IO
       [( Single Int64, Single (Maybe Text), Single (Maybe Text), Single Int, Single Int64
        , Single Text, Single Text, Single (Maybe Text), Single (Maybe UTCTime)
-       , Single (Maybe UTCTime), Single (Maybe Text), Single Text, Single UTCTime
+       , Single (Maybe UTCTime), Single (Maybe Text), Single Text, Single Bool, Single UTCTime
        )]
   pure (map toDTO rows)
   where
     toDTO ( Single orderId, Single buyerName, Single buyerEmail, Single quantity
           , Single amountMinor, Single currency, Single evidenceStatus
           , Single customerReference, Single submittedAt, Single reviewedAt
-          , Single reviewNotes, Single checkoutStatus, Single holdExpiresAt
+          , Single reviewNotes, Single checkoutStatus, Single hasReceipt, Single holdExpiresAt
           ) = TicketManualPaymentDTO
       { tmpOrderId = T.pack (show orderId)
       , tmpPaymentReference = "TDF-" <> T.pack (show orderId)
@@ -96,6 +96,7 @@ listTicketManualPayments eventKey = do
       , tmpCurrency = currency
       , tmpEvidenceStatus = evidenceStatus
       , tmpCustomerReference = customerReference
+      , tmpHasReceipt = hasReceipt
       , tmpSubmittedAt = submittedAt
       , tmpReviewedAt = reviewedAt
       , tmpReviewNotes = reviewNotes

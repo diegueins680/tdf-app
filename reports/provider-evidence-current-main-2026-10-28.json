@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-provider-evidence-current-main",
+  "repository": "diegueins680/tdf-app",
+  "pullRequest": 638,
+  "baselineMain": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "8780495dbf345ad3afabbc356f0be8a908f5a745",
+  "publishedHeadBefore": "e29b516cda72e4c1e3afd6b0bd39f091525c34a9",
+  "reusedPreparation": "c828bfc668fde798401d07791924cf61426aa0c3",
+  "problem": "Existing historical evidence publication was behind the selected protected integration slot. Its corrected chronology must remain explicitly historical when composed with current main.",
+  "correction": "Normal-merge actual protected main into the existing qualified private preparation; retain the original15 historical files exactly. No new application or verification-policy rewrite.",
+  "confirmedHistoricalIssue": "A post-merge snapshot with43 successful/skipped entries does not establish43 pre-merge gates; two completions are reported later and two lack completion times.",
+  "formalProperties": {
+    "ReportedChronologyCorrespondence": "TESTED: stored categories equal recomputation from the immutable reported timestamps.",
+    "OriginalSnapshotIntegrity": "TESTED: anchored raw-snapshot and all14 archive hashes match.",
+    "HistoricalRequiredGateEnforcement": "UNKNOWN; required-set/status-history/enforcement audit is absent.",
+    "WholeApplicationRefinement": "UNPROVEN"
+  },
+  "counterexamplesAndControls": {
+    "positiveRecomputation": "PASS",
+    "false43PremergeSummary": "rejected with stale/incorrect chronology",
+    "modifiedRawCompletion": "rejected by original snapshot hash anchor",
+    "naiveTimestamp": "rejected; timezone required",
+    "freshControlRuns": 4,
+    "nativeProviderRuntimeRerun": false
+  },
+  "verification": {
+    "assurance": "TESTED evidence integrity, chronology and source preservation",
+    "reportedCompletions": {
+      "atOrBeforeMerge": 39,
+      "afterMerge": 2,
+      "timeUnknown": 2
+    },
+    "all15FilesExactOriginalPublicHead": true,
+    "all14ArchiveManifestHashesVerified": true,
+    "mainApplicationAndVerificationObjectsByteIdentical": true,
+    "freshRepositoryQuality": "PASS",
+    "existingPlatformSkips": 11,
+    "currentSequentialIndexChecks": "PASS",
+    "immutableMaterialChanges": 0,
+    "cleanCommittedAssurance": "PASS",
+    "registeredInputs": 1413,
+    "sourceDigest": "3329353367f2479f5156fabeb1e99f96dca18a0986d8c8b876e95860df3e5551",
+    "allRegisteredGitBlobHashesVerified": true,
+    "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "independentReadOnlyReviewBlockers": 0,
+    "currentRequirementsUnproven": 156,
+    "currentImplementationAndRefinementObligationsUnproven": 312,
+    "existingConditionalSMTClaims": 11,
+    "newWholeProgramProofs": 0,
+    "release": "BLOCKED"
+  },
+  "historicalEvidenceScope": {
+    "nativeSource": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
+    "hostedCheckout": "7f89768d75bfcdf019f5c9ba192f08c4e4ed55eb",
+    "nativeProviderCases": 317,
+    "historicalSchemaMigrations": 223,
+    "historicalRequirementsUnproven": 148,
+    "historicalImplementationAndRefinementUnproven": 296,
+    "scope": "Original identities, tools, pass markers, limitations and cleanup remain in the immutable archive. None is relabeled as new application/native/provider qualification."
+  },
+  "integration": {
+    "pullRequest": 638,
+    "merged": false,
+    "autoMergeEnabled": false,
+    "draft": false,
+    "publication": "Normal fast-forward to existing branch after remote-head/main guard",
+    "freshHostedCI": "pending",
+    "freshCurrentHeadGitHubReview": "required; old approval not reused",
+    "protections": "All20 required contexts, strict base, independent approval/stale dismissal, conversation resolution and admin enforcement retained. FIFO slot638 only; no bypass/force push.",
+    "oldPublicHeadVercelStatus": "FAILURE observed at old e29b; no claim of current preview success. New-head hosted qualification remains required.",
+    "precedingProtectedMerge": {
+      "PR": 637,
+      "baseline": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+      "merge": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+      "all20RequiredAndOtherJobs": "SUCCESS",
+      "exactHeadApproval": 5691234560,
+      "threads": 0,
+      "mergeAndMainReadbacksVerified": true,
+      "mergeTreeEqualsReviewedHead": true
+    },
+    "productionOperation": false
+  },
+  "scorecard": {
+    "newProductDefectsClaimed": 0,
+    "existingEvidenceCorrectionReconciled": 1,
+    "originalHistoricalFilesPreserved": 15,
+    "freshChronologyControls": 4,
+    "currentSourceInputsBound": 1413,
+    "newNativeExecutionsClaimed": 0,
+    "newWholeProgramProofs": 0,
+    "protectedMergesCompletedEarlierThisCycle": 1
+  },
+  "remainingRisks": [
+    "Historical required gate enforcement remains unknown, even though later snapshots are successful.",
+    "Current source assurance remains conditional and the platform release remains blocked.",
+    "Fresh remote CI, exact-head review and protected current-main/FIFO admission remain required.",
+    "No application/provider/deployment proof follows from adding evidence files."
+  ],
+  "nextHighestValueTask": "Obtain fresh638 hosted qualification/current-head independent approval before normal protected merge; continue separately qualified promo-limit correction and preserve approved later heads until their slots.",
+  "evidenceDirectory": "reports/provider-evidence-current-main-2026-10-28"
+}

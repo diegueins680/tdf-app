@@ -16,7 +16,8 @@ const moderation = jest.fn<() => Promise<InteractionPage>>();
 const context = jest.fn<() => Promise<InteractionCommentContext>>();
 const command = jest.fn<(id: string, input: InteractionCommand, key: string) => Promise<unknown>>();
 jest.unstable_mockModule('../../api/interactions', () => ({ Interactions: { summary, comments, context, command, reactors: jest.fn(), moderation } }));
-jest.unstable_mockModule('../../session/SessionContext', () => ({ useSession: () => ({ session: { partyId: 7 } }), getActiveSession: () => ({ partyId: 7 }), getStoredSessionToken: () => null }));
+let currentSession: { partyId: number } | null = { partyId: 7 };
+jest.unstable_mockModule('../../session/SessionContext', () => ({ useSession: () => ({ session: currentSession }), getActiveSession: () => currentSession, getStoredSessionToken: () => null }));
 jest.unstable_mockModule('../../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture: jest.fn() }) }));
 jest.unstable_mockModule('../../components/party-selector/PartySelector', () => ({ UserSelector: () => null, PartyMultiSelector: () => null }));
 const { InteractionPanel } = await import('./InteractionPanel');
@@ -28,12 +29,13 @@ const data: InteractionSummary = { id: target, kind: 'recording', key: 'record',
   myReactionTypeId: null, subscription: 'participating', defaultSort: 'newest' };
 let root: InteractionComment;
 let reply: InteractionComment;
-function view(props = {}) {
+function view(props = {}, initialEntry = '/') {
   client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(<MemoryRouter><QueryClientProvider client={client}><ThemeProvider theme={createTheme({ components: { MuiButtonBase: { defaultProps: { disableRipple: true } } } })}><InteractionPanel kind="recording" entityKey={`record-${++ordinal}`} {...props} /></ThemeProvider></QueryClientProvider></MemoryRouter>);
+  return render(<MemoryRouter initialEntries={[initialEntry]}><QueryClientProvider client={client}><ThemeProvider theme={createTheme({ components: { MuiButtonBase: { defaultProps: { disableRipple: true } } } })}><InteractionPanel kind="recording" entityKey={`record-${++ordinal}`} {...props} /></ThemeProvider></QueryClientProvider></MemoryRouter>);
 }
 beforeEach(() => {
   jest.clearAllMocks();
+  currentSession = { partyId: 7 };
   Object.defineProperty(crypto, 'randomUUID', { configurable: true, value: () => `20000000-0000-4000-8000-${String(++ordinal).padStart(12, '0')}` });
   root = { id: rootId, targetId: target, parentId: null, rootId, depth: 0, version: 1, createdAt: '2026-09-28T10:00:00Z', editedAt: null,
     state: 'visible', body: 'Root comment', author: { id: 7, displayName: 'Ana', avatarUrl: null }, canEdit: true, canDelete: true, mentions: [], replyCount: 1 };
@@ -224,4 +226,18 @@ test.each([null, 8])('offers follower policy only when publication owner exists:
   fireEvent.click(screen.getByRole('option', { name: 'Comentarios desactivados' }));
   fireEvent.click(screen.getByRole('button', { name: 'Guardar', exact: true }));
   await waitFor(() => expect(command).toHaveBeenCalledWith(target, expect.objectContaining({ operation: 'settings.update', commentPolicy: 'off' }), expect.any(String)));
+});
+
+
+test('retains event context when an anonymous reader chooses to join the conversation', async () => {
+  currentSession = null;
+  summary.mockResolvedValue({ ...data, canReact: false, canComment: false });
+  comments.mockResolvedValue({ items: [], nextCursor: null, sort: 'newest' });
+  const route = '/social/eventos/141?utm_source=shared#momentos';
+  view({ initiallyExpanded: true }, route);
+  const link = await screen.findByRole('link', { name: 'Inicia sesión' });
+  const destination = new URL(link.getAttribute('href') ?? '', 'https://tdf.test');
+  expect(destination.pathname).toBe('/login');
+  expect(destination.searchParams.get('redirect')).toBe(route);
+  expect(command).not.toHaveBeenCalled();
 });

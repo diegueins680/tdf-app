@@ -1,0 +1,84 @@
+{
+  "startedAt": "2026-10-26T07:45:33.984511+00:00",
+  "source": "b7053f9426d624f2fdaf8a9731389e8ef52e3bdf",
+  "tree": "7a69ed40a31a9d38356b486d4bef20eb72ee0381",
+  "protectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "compiledSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "compiledInputsByteExact": [
+    "tdf-hq/src",
+    "tdf-hq/app",
+    "tdf-hq/tdf-hq.cabal",
+    "tdf-hq/stack.yaml",
+    "tdf-hq/stack.yaml.lock"
+  ],
+  "actualExecutableSha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+  "migrations": 222,
+  "unchangedMainPrefix": 221,
+  "status": "FAILED",
+  "steps": [
+    {
+      "name": "compile-loopback-adapter",
+      "exitCode": 0
+    },
+    {
+      "name": "deny-nonlocal-egress",
+      "exitCode": 0
+    },
+    {
+      "name": "init",
+      "exitCode": 0
+    },
+    {
+      "name": "start",
+      "exitCode": 0
+    },
+    {
+      "name": "create",
+      "exitCode": 0
+    },
+    {
+      "name": "canonical-sql-http",
+      "exitCode": 0
+    },
+    {
+      "name": "drop",
+      "exitCode": 0
+    },
+    {
+      "name": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "apiListenerClosed": true,
+    "databaseRemoved": true,
+    "clusterStopped": true,
+    "postgresListenerClosed": true
+  },
+  "productionOperations": false,
+  "newCompilation": false,
+  "scope": "Untouched canonical source SQL/checkpoint and real HTTP. Native executable retains fe179 identity. Only explicit test-bind adapter and owned network sandbox wrap the executable; wrapper hash is separate from executable hash.",
+  "harnessSha256": {
+    "run.py": "1fa2b603f1f7e28a83c01c79c4fdd4d5521f8a6cab287ae0405383dea5445ec8",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "networkIsolation": {
+    "policy": "Local-machine destinations only; services separately bound to literal127.0.0.1",
+    "externalTcpControl": "api.github.com:443, handshake only, no application data",
+    "externalAllowedOutsideDeniedInsideSandbox": true,
+    "externalAddressRetained": false
+  },
+  "testWrapperSha256": "7dd859378456c9528459523250c1c8ab4ce4d7060d6fa85408cd961be7e04176",
+  "apiLoopbackVerified": true,
+  "driverMeasuredProvenance": {
+    "qualificationSourceCommit": "b7053f9426d624f2fdaf8a9731389e8ef52e3bdf",
+    "compiledCommit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "binarySha256": "7dd859378456c9528459523250c1c8ab4ce4d7060d6fa85408cd961be7e04176",
+    "sourceDirectorySha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
+    "scope": "Compiled identity is measured without deployment overrides; local source/binary correspondence is bounded by recorded hashes and real HTTP assertions; CI requires exact HEAD"
+  },
+  "driverBinaryHashIsTestWrapper": true,
+  "realHttpRequests": 107,
+  "failureType": "CalledProcessError",
+  "finishedAt": "2026-10-26T07:46:35.990227+00:00"
+}

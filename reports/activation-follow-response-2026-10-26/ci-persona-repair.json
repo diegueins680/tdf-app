@@ -1,0 +1,74 @@
+{
+  "capturedAt": "2026-10-26T15:26:28.783230+00:00",
+  "status": "PARTIAL",
+  "approvedPreviousHead": "d17946ac9f72bfd9b826ec21814dc855feab2385",
+  "hostedFailure": {
+    "run": 40290423533,
+    "job": 121464285029,
+    "url": "https://github.com/diegueins680/tdf-app/actions/runs/40290423533/job/121464285029",
+    "logSha256": "aadbcd917eb1e1a0f6824c989b2e5367095caeeefbb3bb49fc9ada884f817a1c",
+    "passed": 547,
+    "skipped": 22,
+    "failed": 5,
+    "cause": "One existing E2E expectation still looked for the former follow error text; the same assertion failed on Chromium desktop/phone/tablet, Firefox and WebKit. No evidence of timing failure.",
+    "notExecutedAfterFailure": [
+      "default-off deletion rollout",
+      "discovery follow-on stage"
+    ]
+  },
+  "localNegativeControl": {
+    "head": "d17946ac9f72bfd9b826ec21814dc855feab2385",
+    "project": "chromium-desktop",
+    "case": "artist follow requires keyboard consent and keeps intent on failure",
+    "stats": {
+      "startTime": "2026-10-26T15:21:33.545Z",
+      "duration": 45700.377,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "expectedFailure": "Exact same old-copy visibility assertion"
+  },
+  "repair": {
+    "file": "e2e/web/artist-follow.spec.mjs",
+    "change": "Expect the full honest follow-change confirmation error text used by the shipped source; extend own requirement test mapping.",
+    "applicationCodeUnchanged": true,
+    "preservedAssertions": [
+      "keyboard consent before write",
+      "visible actionable error",
+      "resume intent after failure",
+      "explicit user retry",
+      "two writes only: first failure and explicit retry",
+      "confirmed current membership",
+      "unrelated search/hash preservation",
+      "axe serious/critical violations absent",
+      "guest cannot mutate",
+      "English guest CTA"
+    ],
+    "timeoutAndRetryPolicyUnchanged": true
+  },
+  "localAfter": {
+    "passed": 14,
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone",
+      "chromium-tablet",
+      "firefox-critical"
+    ],
+    "stats": {
+      "startTime": "2026-10-26T15:22:43.845Z",
+      "duration": 60658.857,
+      "expected": 14,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    },
+    "webkit": "BLOCKED locally: matching Playwright WebKit binary is unavailable and installer explicitly rejects mac12. No browser skip or platform spoofing added; supported canonical Linux CI must execute both cases."
+  },
+  "protectedIntegration": {
+    "status": "PARTIAL",
+    "reason": "The new test commit must obtain fresh CI and a new independent review; the prior approval is not inherited."
+  },
+  "scope": "Synthetic API fixtures only; native25e API/PostgreSQL receipt and frozen3479 web-unit evidence retain their actual identities. No production writes or human pilot."
+}

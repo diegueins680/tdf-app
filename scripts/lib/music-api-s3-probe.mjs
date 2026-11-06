@@ -162,10 +162,18 @@ export async function assertStoredAsset(url, expectedSha256, durationMs) {
   assert.equal(stored.status, 200);
   assert.equal(sha(stored.body), expectedSha256);
   if (durationMs !== undefined) {
-    const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries',
-      'format=duration', '-of', 'json', '-i', 'pipe:0'], { input: stored.body, encoding: 'utf8', timeout: 30000 }));
-    assert.ok(Math.abs(Number(probe.format.duration) * 1000 - durationMs) < 40,
-      `Stored preview duration ${probe.format.duration}s must match ${durationMs}ms`);
+    // ffprobe can finish after reading metadata and close stdin early, which
+    // makes spawnSync throw EPIPE even on a successful probe. Inspect the exact
+    // hash-checked bytes through a private seekable file instead.
+    const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-duration-'));
+    try {
+      const input = join(runtime, 'asset');
+      writeFileSync(input, stored.body, { mode: 0o600, flag: 'wx' });
+      const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries',
+        'format=duration', '-of', 'json', '-i', input], { encoding: 'utf8', timeout: 30000 }));
+      assert.ok(Math.abs(Number(probe.format.duration) * 1000 - durationMs) < 40,
+        `Stored preview duration ${probe.format.duration}s must match ${durationMs}ms`);
+    } finally { rmSync(runtime, { recursive: true, force: true }); }
   }
   const range = await localStorageRequest(url, 'GET', undefined, { Range: 'bytes=0-127' });
   assert.equal(range.status, 206);

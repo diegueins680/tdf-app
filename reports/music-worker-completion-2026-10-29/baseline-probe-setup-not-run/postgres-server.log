@@ -1,0 +1,13 @@
+2026-10-29 10:28:47.151 -05 [54868] LOG:  starting PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit
+2026-10-29 10:28:47.153 -05 [54868] LOG:  listening on IPv4 address "127.0.0.1", port 55728
+2026-10-29 10:28:47.154 -05 [54868] LOG:  listening on Unix socket "/private/tmp/.s.PGSQL.55728"
+2026-10-29 10:28:47.852 -05 [54872] LOG:  database system was shut down at 2026-10-29 01:39:42 -05
+2026-10-29 10:28:48.022 -05 [54868] LOG:  database system is ready to accept connections
+2026-10-29 10:28:48.263 -05 [54877] FATAL:  role "macpro" does not exist
+2026-10-29 10:28:48.294 -05 [54868] LOG:  received fast shutdown request
+2026-10-29 10:28:48.294 -05 [54868] LOG:  aborting any active transactions
+2026-10-29 10:28:48.298 -05 [54868] LOG:  background worker "logical replication launcher" (PID 54875) exited with exit code 1
+2026-10-29 10:28:48.298 -05 [54870] LOG:  shutting down
+2026-10-29 10:28:48.299 -05 [54870] LOG:  checkpoint starting: shutdown immediate
+2026-10-29 10:28:48.305 -05 [54870] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.001 s, total=0.007 s; sync files=3, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/56F4EDA0, redo lsn=0/56F4EDA0
+2026-10-29 10:28:48.516 -05 [54868] LOG:  database system is shut down

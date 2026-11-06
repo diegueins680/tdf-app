@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-25T23:16:26.012007+00:00",
+  "sourceCandidate": "b71ac3fad0fc86195ceea87c09c45b16847875f8",
+  "observedProtectedMain": "b732efd65de23e5b97f3f619a2242397c64965c3",
+  "parentPR": 551,
+  "runtimeTestSource": "f9ee2199273471a12cfb95da95bc5503fe51ac79",
+  "startupAndCIQualifiedSource": "f8f3d4d3d1de06c5444be238f8b3ed84ee6a3528",
+  "assurance": "Partial and scoped. No complete specification/implementation equivalence established.",
+  "requirements": {
+    "registered": 140,
+    "critical": 113,
+    "completeAssuranceLevels": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 140,
+      "NOT_APPLICABLE": 0
+    },
+    "canonicalConformance": {
+      "PARTIAL": 140
+    },
+    "withValidCompleteEvidence": 0,
+    "withCurrentScopedFormulaEvidence": 5,
+    "formulaRequirementIds": [
+      "AUTH-ARTIST-INVITE-001",
+      "AUTH-REGISTRY-001",
+      "ID-SESSION-003",
+      "SYS-MONEY-001",
+      "SYS-MONEY-002"
+    ]
+  },
+  "proofObligationsByCategory": {
+    "implementation": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 140,
+      "NOT_APPLICABLE": 0
+    },
+    "refinement": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 140,
+      "NOT_APPLICABLE": 0
+    },
+    "source-derived-SMT": {
+      "PROVEN": 4,
+      "REFUTED": 0,
+      "UNPROVEN": 0,
+      "NOT_APPLICABLE": 0
+    },
+    "source-derived-authorization-SMT": {
+      "PROVEN": 3,
+      "REFUTED": 0,
+      "UNPROVEN": 0,
+      "NOT_APPLICABLE": 0
+    },
+    "source-derived-recovery-SMT": {
+      "PROVEN": 4,
+      "REFUTED": 0,
+      "UNPROVEN": 0,
+      "NOT_APPLICABLE": 0
+    }
+  },
+  "financial": {
+    "criticalRegistered": 18,
+    "completeProven": 0,
+    "completeOutstanding": 18,
+    "integratedScopedCorrection": "PAY-INTENT-EXPIRY-001 / #609; TESTED and finite-model evidence, not complete proof",
+    "candidateScopedCorrections": [
+      "SYS-MONEY-003",
+      "PAY-RETRY-001",
+      "PAY-CHECKOUT-002",
+      "LEGAL-CONSENT-001"
+    ]
+  },
+  "authorization": {
+    "criticalRegistered": 11,
+    "completeProven": 0,
+    "completeOutstanding": 11,
+    "selectedSourcePredicatesProven": 3,
+    "limits": "Selected source predicates and executed HTTP cases do not verify every endpoint, tenant or concurrent revocation."
+  },
+  "counterexamples": {
+    "records": 7,
+    "businessConfirmed": 3,
+    "businessFixed": 3,
+    "businessIntegratedMain": 1,
+    "verificationConfirmedAndFixed": 4
+  },
+  "executions": {
+    "aggregate": [
+      {
+        "name": "aggregate",
+        "exitCode": 0,
+        "summary": "4039 examples, 0 failures, 21 pending"
+      },
+      {
+        "name": "music-unit-domain",
+        "exitCode": 0,
+        "summary": "25 examples, 0 failures"
+      },
+      {
+        "name": "music-unit-content",
+        "exitCode": 0,
+        "summary": "10 examples, 0 failures"
+      },
+      {
+        "name": "music-unit-ddex",
+        "exitCode": 0,
+        "summary": "22 examples, 0 failures"
+      },
+      {
+        "name": "music-unit-storage",
+        "exitCode": 0,
+        "summary": "4 examples, 0 failures"
+      }
+    ],
+    "aggregatePendingAreNotPostgresPasses": true,
+    "native": [
+      {
+        "name": "compiled-ledger-posting-postgresql",
+        "exitCode": 0,
+        "expectedFailure": null,
+        "summary": "10 examples, 0 failures"
+      },
+      {
+        "name": "compiled-ticket-payment-gate-postgresql",
+        "exitCode": 0,
+        "expectedFailure": null,
+        "summary": "12 examples, 0 failures"
+      },
+      {
+        "name": "compiled-music-purchase-postgresql",
+        "exitCode": 0,
+        "expectedFailure": null,
+        "summary": "23 examples, 0 failures"
+      },
+      {
+        "name": "compiled-music-publication-postgresql",
+        "exitCode": 0,
+        "expectedFailure": null,
+        "summary": "8 examples, 0 failures"
+      },
+      {
+        "name": "compiled-rag-index-privacy-postgresql",
+        "exitCode": 0,
+        "expectedFailure": null,
+        "summary": "26 examples, 0 failures"
+      }
+    ],
+    "nativeExamples": 79,
+    "TLCPositiveConfigurations": 120,
+    "TLCNamedNegativeControls": 353,
+    "AlloyScenarios": 2,
+    "AlloyFiniteAssertions": 13,
+    "AlloyMutationControls": 15,
+    "conditionalSourceSMTClaims": 11,
+    "independentCrossSolverInputs": 41,
+    "independentCPCObligations": 14,
+    "distinctCPCInputs": 12,
+    "newCheckerExecutionOnThisCandidate": false,
+    "unpublishedRegressionsObservedInCompletedSelectedChecks": 0,
+    "localServerBuild": {
+      "passed": true,
+      "source": "f9ee2199273471a12cfb95da95bc5503fe51ac79",
+      "buildStartSource": "2a4469dd175868a1c2cfaf01ab86ab74787b525d",
+      "command": "STACK_ROOT=/Users/macpro/.stack stack build --test --no-run-tests",
+      "sourceNote": "Only generated inventory/catalog files changed between build-start and F9; Haskell/Cabal/Stack inputs were unchanged. Aggregate and native tests have their own executions.",
+      "binarySha256": {
+        "tdf-hq-test": "31e4acb0c38e9d27af26b736378869e3fb48d68578dacd3006b42c62d2a82721",
+        "tdf-hq-exe": "577f3c1e045e73a8d8489ee557d7b5f856f59fa9d729d3b83cc1b8ef96cbbc6a",
+        "tdf-ddex-render": "023e2c2c77202bc4927813516857e684eade46db3e8a4d84577db44e03475727"
+      }
+    }
+  },
+  "currentInputIdentity": {
+    "assuranceSourceFiles": 1296,
+    "mismatches": 0,
+    "runtimeBackendMatchesNativeSource": true,
+    "protectedUIAndMobileRetained": true,
+    "registryEntries": 220,
+    "originalNamespaceIntroduction": "9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391",
+    "preservedMainMigrationPrefix": 213
+  },
+  "repositoryQuality": {
+    "passed": true,
+    "source": "995d56fcc3284fad7455eebb7b16788a4e3af781",
+    "inputHashesMatchCandidate": true
+  },
+  "limits": [
+    "The native executable remains identified with F9. Equal source bytes are not a new binary build or a new hosted check.",
+    "All complete requirements and implementation/refinement obligations remain UNPROVEN.",
+    "CPC checking retains its F8 execution identity; generated candidate SMT input identity is recorded separately.",
+    "Finite models, tests and conditional formula proofs are not combined into a correctness percentage.",
+    "Final-head protected-main CI/review, production privilege audit, migration preflight and deployment approval remain separate."
+  ],
+  "productionOperations": false,
+  "commands": [
+    "PATH=<jq and verification venv> npm run quality:repo",
+    "python3 scripts/verification-report.py --output <new external directory>",
+    "JAVA_BIN=<pinned Java> TLA2TOOLS_JAR=<pinned jar> ALLOY_JAR=<pinned jar> npm run verify:event-operations:formal",
+    "STACK_ROOT=/Users/macpro/.stack stack build --test --no-run-tests (tdf-hq)",
+    "<compiled test binary> --seed=20261025 --fail-on=empty (tdf-hq; explicit external runners remain pending)",
+    "TDF_LEDGER_POSTING_DATABASE_URL=<owned full-schema fixture> node scripts/__tests__/ledger-startup-namespace.mjs"
+  ],
+  "artifactSha256": {
+    "assurance-report.md": "9ae120d6df52a14dc1209a746ee6ea5850cdfe6063b31a4ee4ec41ac09d063ba",
+    "repository-quality.log": "2364882d33b9997efff44189c2c66f591f396999f7ff964ce7c908742d6929ed",
+    "source-admission.log": "742e3ef31f502ecb752f23d52b8166deb14d5e9e70a800617bf68f02c601aa6c",
+    "native-qualification.log": "be4a531724471674dfe01cd7b37dc73651f6dae438ee40b554215ea9d0069a29",
+    "aggregate-qualification.log": "d3140b9e4ae4c154e1b10394792ae47a8b04e504aab0d6731b6af45dfc015371",
+    "provider-expiry.log": "8808a3a73b93e32997b62dbe30965dcf3a7594ab9fdbcbe9a2786cc24dee8176",
+    "native-driver.py": "c1f1a2daf979b61cc3b6f853330f281a81e9ba24cf3cabfe2cceca9437ad3dc7",
+    "aggregate-driver.py": "6c36e4242e8e2ece557f03b4001b65456bbf3b74e340e6d7f46c90ae6c588ccd",
+    "provider-expiry-driver.py": "2d4a120e74f9d9f8d3d3acbf3ed6c9bb9a6f218dad5218008bfe421e37ec48a8",
+    "native-receipt.json": "616bd477aabd0a1f8d9ab3c07eedc5bda86120d8913bcdce06658832b87a468f",
+    "aggregate-receipt.json": "5ccc54a5306adaca1419b441a6f2bbdc75b497cbcf98c1b40d9827dbf9b2842c",
+    "provider-fixture-receipt.json": "d80431a0759a4d45e1eaada6f75a436e904fe4046474df776c5ad123048b8fd2",
+    "expiry-with-namespace.json": "ccb52c76f5e983f759161ff539a4461290524855b9c7f73a6b0b1487141e127c",
+    "delivery.json": "162d1c119a70c7a8ef4c9f02aeafc0e787addbdc580dc2bcc29bed18da2a1d33",
+    "child-617-checks.json": "d53d3ffb19b1dc213e11325dd4838cf86c1e132390b1ab44de34cb702ff0f258",
+    "expiry-main-reviews.json": "7729df814b6a3cf4f16bdf4b6665dd6dc05412facece118486efad681193faa4",
+    "source-inputs.json": "3594718fe35bc9072958a7ef1c351c5fb7445c8fe0462002dc025c81169fc3dd",
+    "bounded-models.json": "1da0e664205b8ab0cfc57af3980a79e4ff84d4bfbf8ec9227a94493ae9bbfa69",
+    "conditional-certificate-input-identity.json": "8e0b5acd7f82dcbfe225b022ecbc17d7023cc28a2d60ab20ef9166eea8746654",
+    "formal-execution.log.gz": "7490c9943dd79fc5f5aeb551b013968c5e1fe458836770b931fee077a57e0666",
+    "aggregate-execution.log.gz": "e316e4a2830da352368b8524fe824170c907f3e8d60a0934d6f45e8d489f9c2d",
+    "fixture-failures.json": "c739621454e54ab76026fdbcd10d4217cb8975c164b16d320512878002bf159a",
+    "counterexamples.json": "241e533fcf2627a2d8f32a9e824720e35c1bf95e922ff00521bfec8bfca29cbf",
+    "tools.json": "5bac1e4146caf9fa18401c105e4e6ac2087e5240174a1449f78feee6f3679e3c",
+    "README.md": "415b2ef82e3fa6d32743c45d65d73f4832066ed492e4a57991d5d631423abbdc",
+    "backlog.json": "0bd833492da5ad1e7c91fe1cf848542f6bd126f7c1d1b3fda830387da1d45936",
+    "fixture-aggregate-failure.log.gz": "417d965d845385673e1ba62021d959d032998e29c39cf9012bc1491515c3f014",
+    "fixture-music-url-failure.log.gz": "3346a05dc4e55318386884ec064c29a318d812fd0ddcdd041ca68d0cf7299046",
+    "fixture-target-format.log.gz": "6f586e4f35481cfd4168f40c879d41d4c0ff703149ed97762c01262bf5e81a42",
+    "stack-build.log.gz": "c7edd5488709eaca6d383f235e436c59448747e86ace9b698f4b52f887644bf6"
+  },
+  "rawArtifactSha256": {
+    "assurance-report.md": "9ae120d6df52a14dc1209a746ee6ea5850cdfe6063b31a4ee4ec41ac09d063ba",
+    "repository-quality.log": "55f47cbeeea99f43c48bac38c9076bdbc9888d27ac488ff2b14d6904251d54f8",
+    "source-admission.log": "742e3ef31f502ecb752f23d52b8166deb14d5e9e70a800617bf68f02c601aa6c",
+    "native-qualification.log": "be4a531724471674dfe01cd7b37dc73651f6dae438ee40b554215ea9d0069a29",
+    "aggregate-qualification.log": "d3140b9e4ae4c154e1b10394792ae47a8b04e504aab0d6731b6af45dfc015371",
+    "provider-expiry.log": "8808a3a73b93e32997b62dbe30965dcf3a7594ab9fdbcbe9a2786cc24dee8176",
+    "native-driver.py": "c1f1a2daf979b61cc3b6f853330f281a81e9ba24cf3cabfe2cceca9437ad3dc7",
+    "aggregate-driver.py": "6c36e4242e8e2ece557f03b4001b65456bbf3b74e340e6d7f46c90ae6c588ccd",
+    "provider-expiry-driver.py": "2d4a120e74f9d9f8d3d3acbf3ed6c9bb9a6f218dad5218008bfe421e37ec48a8",
+    "formal-execution.log.gz": "576cafb6579df863c95f98db0964a223caca22b0c06cfd4f8d94fd4c5915b547",
+    "aggregate-execution.log.gz": "8e8627f0b483b89d6dba5301ec3715eb423a7953b55756747a2c7436d30f97f3",
+    "fixture-aggregate-failure.log.gz": "a83c9efebdbdb167175d1ceea872e87d74132549ea489ddb41f46ab71ee4ef10",
+    "fixture-music-url-failure.log.gz": "9c8278200aa1f956be47aa7cfe7ba1d5c80f0aaf9faa27a8f21adce14526d1d0",
+    "fixture-target-format.log.gz": "c89fa2d4194723894b34ceb072ea952ab6e9bfecb222b73f418143b339fb5e15",
+    "stack-build.log.gz": "4811bd7e2379bed2b9ccaa99948dcdd73fff4d5fb32e94e0d5469e9d12cd9e6f"
+  },
+  "textNormalization": "Stored plain-text logs strip trailing whitespace and replace the candidate checkout path. Raw hashes and compressed raw executions remain separate.",
+  "tools": "tools.json"
+}

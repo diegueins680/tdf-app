@@ -1,3 +1,5 @@
+import MarkdownText from '../components/MarkdownText';
+import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from '../features/discovery/useDirectorySearch';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -35,7 +37,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import LoginIcon from '@mui/icons-material/Login';
 import EventIcon from '@mui/icons-material/Event';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link as RouterLink, NavigationType, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 
@@ -53,37 +55,35 @@ import { useMetaTags } from '../hooks/useMetaTags';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
+import PublicWelcome from '../components/PublicWelcome';
+import MusicSearchResults from '../features/discovery/MusicSearchResults';
 
-const CITY_STORAGE_KEY = 'tdf.directory.cityId';
-const ENTITY_LABELS: Record<DirectoryEntityType | 'all', string> = {
+const ENTITY_LABELS: Record<DirectoryEntityType | 'artist' | 'all', string> = {
   all: 'directorySearch.entityAll',
+  artist: 'directorySearch.entityArtist',
   profile: 'directorySearch.entityProfile',
   classified: 'directorySearch.entityClassified',
   event: 'directorySearch.entityEvent',
   venue: 'directorySearch.entityVenue',
 };
 
-const resultPath = (item: DirectorySearchItem) => {
-  if (item.type === 'profile') return `/directorio/${item.slug}`;
-  if (item.type === 'classified') return `/clasificados/${item.slug}`;
-  if (item.type === 'event') return `/eventos/${item.id}`;
-  return `/venues/${item.id}`;
-};
+const resultPath = directoryResultPath;
 
 // Own keys only: `in` would accept prototype names such as "constructor".
-const isEntityTypeKey = (value: string): value is DirectoryEntityType | 'all' =>
+const isEntityTypeKey = (value: string): value is DirectoryEntityType | 'artist' | 'all' =>
   Object.prototype.hasOwnProperty.call(ENTITY_LABELS, value);
 
 // Profession, service, instrument, availability and remote filters describe
 // people and listings. The server ignores them for events and venues, so the
 // controls are hidden on those tabs (their values stay in the URL).
-const PERSON_FILTER_KINDS: ReadonlySet<DirectoryEntityType | 'all'> = new Set(['all', 'profile', 'classified']);
+const PERSON_FILTER_KINDS: ReadonlySet<DirectoryEntityType | 'artist' | 'all'> = new Set(['all', 'profile', 'artist', 'classified']);
 
 // The URL is the only source of the search state, so a deep link, a reload
 // and the browser's back and forward buttons all hydrate the same way.
 interface SearchUrlState {
   q: string;
-  entityType: DirectoryEntityType | 'all';
+  profileKind?: DirectorySearchQuery['profileKind'];
+  entityType: DirectoryEntityType | 'artist' | 'all';
   cityId: string | null;
   professionId: string;
   serviceId: string;
@@ -100,6 +100,7 @@ const parseSearchUrl = (search: string): SearchUrlState => {
   const radius = Number(params.get('radiusKm') ?? 25);
   return {
     q: params.get('q') ?? '',
+    profileKind: (params.get('profileKind') ?? undefined) as DirectorySearchQuery['profileKind'],
     entityType: requestedType !== null && requestedType !== 'all' && isEntityTypeKey(requestedType)
       ? (requestedType as DirectoryEntityType)
       : 'all',
@@ -117,6 +118,7 @@ const parseSearchUrl = (search: string): SearchUrlState => {
 const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
   const params = new URLSearchParams();
   if (state.q) params.set('q', state.q);
+  if (state.profileKind) params.set('profileKind', state.profileKind);
   if (state.entityType !== 'all') params.set('entityType', state.entityType);
   if (state.cityId && !nearby) params.set('cityId', state.cityId);
   if (state.professionId) params.set('professionId', state.professionId);
@@ -140,6 +142,8 @@ export default function DirectorySearchPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage?.startsWith('es') ? 'es' : 'en';
   const location = useLocation();
+  const showWelcome = location.pathname.replace(/\/+$/, '').toLowerCase() === '/inicio';
+  const showMusic = location.pathname.replace(/\/+$/, '').toLowerCase() === '/buscar';
   const navigate = useNavigate();
   const { session } = useSession();
   const queryClient = useQueryClient();
@@ -152,10 +156,6 @@ export default function DirectorySearchPage() {
   const isActiveParty = (expectedPartyId: number) => mounted.current && session?.partyId === expectedPartyId
     && getActiveSession() === session && occurrence.current.generation === generation;
   const urlState = useMemo(() => parseSearchUrl(location.search), [location.search]);
-  const [storedCityId] = useState(() => {
-    try { return window.localStorage.getItem(CITY_STORAGE_KEY) ?? ''; }
-    catch { return ''; } // A saved city is optional; search remains available.
-  });
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const { q: query, entityType, professionId, serviceId, instrumentId, genreId, remote, available, radiusKm } = urlState;
   const taxonomies = useQuery({
@@ -163,14 +163,7 @@ export default function DirectorySearchPage() {
     queryFn: () => Directory.taxonomies(language),
     staleTime: 30 * 60 * 1000,
   });
-  // A link without a city keeps the visitor's last city, and a city that can
-  // no longer be selected falls back to the default; the URL is then
-  // completed below so that it stays shareable and reloadable.
-  const requestedCityId = urlState.cityId ?? storedCityId;
-  const cities = taxonomies.data?.cities;
-  const cityId = !cities?.length || cities.some((city) => city.id === requestedCityId)
-    ? requestedCityId
-    : cities.find((city) => city.code === 'quito-ec-p')?.id ?? cities[0]?.id ?? '';
+  const cityId = urlState.cityId ?? '';
   const [draftQuery, setDraftQuery] = useState(query);
   useEffect(() => { setDraftQuery(query); }, [query]);
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
@@ -195,13 +188,19 @@ export default function DirectorySearchPage() {
   // memory, so a nearby entry restored by Back could never show its results.
   const updateSearch = (patch: Partial<SearchUrlState>, mode: 'push' | 'replace' = 'push', nearby = Boolean(coordinates)) => {
     const next = buildSearchUrl({ ...urlState, cityId, ...patch }, nearby);
-    if (location.pathname === '/buscar' && location.search.replace(/^\?/, '') === next) return;
-    navigate({ pathname: '/buscar', search: next }, { replace: mode === 'replace' || Boolean(coordinates) });
+    if (location.search.replace(/^\?/, '') === next) return;
+    navigate({ pathname: location.pathname, search: next }, { replace: mode === 'replace' || Boolean(coordinates) });
   };
+  const debouncedQuery = useDebouncedSearch(draftQuery);
+  const previousQuery = useRef(query);
+  useEffect(() => {
+    if (previousQuery.current !== query) { previousQuery.current = query; return; }
+    if (debouncedQuery !== query && debouncedQuery === draftQuery.trim().replace(/\s+/gu, ' ')) updateSearch({ q: debouncedQuery }, 'replace');
+  }, [debouncedQuery, draftQuery, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates));
   useEffect(() => {
-    if (location.pathname === '/buscar' && location.search.replace(/^\?/, '') === canonicalSearch) return;
-    navigate({ pathname: '/buscar', search: canonicalSearch }, { replace: true });
+    if (location.search.replace(/^\?/, '') === canonicalSearch) return;
+    navigate({ pathname: location.pathname, search: canonicalSearch }, { replace: true });
   }, [canonicalSearch, location.pathname, location.search, navigate]);
 
   useMetaTags({
@@ -217,14 +216,11 @@ export default function DirectorySearchPage() {
     },
   });
 
-  useEffect(() => {
-    if (!cityId) return;
-    try { window.localStorage.setItem(CITY_STORAGE_KEY, cityId); }
-    catch { /* Keep the selected city in memory and in the search URL. */ }
-  }, [cityId]);
+
 
   const searchBase: DirectorySearchQuery = {
     q: query || undefined,
+    profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
     entityType: entityType === 'all' ? undefined : entityType,
     cityId: coordinates ? undefined : cityId || undefined,
     professionId: professionId || undefined,
@@ -239,13 +235,7 @@ export default function DirectorySearchPage() {
     limit: 20,
   };
 
-  const results = useInfiniteQuery({
-    queryKey: ['directory', 'search', searchBase],
-    initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => Directory.search({ ...searchBase, cursor: pageParam }),
-    getNextPageParam: (page) => page.nextCursor ?? undefined,
-    staleTime: 30_000,
-  });
+  const results = useDirectorySearch(searchBase);
   const pages = results.data?.pages ?? [];
   const items = pages.flatMap((page) => page.items);
   const sponsored = pages[0]?.sponsoredItems ?? [];
@@ -337,25 +327,26 @@ export default function DirectorySearchPage() {
   };
 
   const suggestions = useQuery({
-    queryKey: ['directory', 'suggestions', draftQuery, cityId],
-    queryFn: () => Directory.suggestions(draftQuery, cityId || undefined),
-    enabled: draftQuery.trim().length >= 2,
+    queryKey: ['directory', 'suggestions', debouncedQuery, cityId],
+    queryFn: () => Directory.suggestions(debouncedQuery, cityId || undefined),
+    enabled: debouncedQuery.trim().length >= 2,
     staleTime: 60_000,
   });
 
   return (
     <Box sx={{ pb: 8 }}>
+      {showWelcome && <PublicWelcome />}
       <Box sx={{ background: 'linear-gradient(135deg, #17112d 0%, #3b1d66 52%, #0e6470 100%)', color: 'white', py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
           <Stack spacing={3} maxWidth={900}>
             <Chip label={t('directorySearch.region')} sx={{ alignSelf: 'flex-start', bgcolor: 'rgba(255,255,255,.14)', color: 'white' }} />
-            <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '4rem' } }}>
+            <Typography component={showWelcome ? 'h2' : 'h1'} variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '4rem' } }}>
               {t('directorySearch.heading')}
             </Typography>
             <Typography variant="h6" sx={{ maxWidth: 760, color: 'rgba(255,255,255,.82)' }}>
               {t('directorySearch.intro')}
             </Typography>
-            <Paper component="form" onSubmit={submitSearch} elevation={8} sx={{ p: 1.5, borderRadius: 3 }}>
+            <Paper component="form" role="search" aria-label={t('directorySearch.welcomeSearch')} onSubmit={submitSearch} elevation={8} sx={{ p: 1.5, borderRadius: 3 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                 <Autocomplete
                   freeSolo
@@ -369,6 +360,7 @@ export default function DirectorySearchPage() {
                   <InputLabel id="directory-city-label">{t('directorySearch.city')}</InputLabel>
                   {/* Leaving nearby mode replaces the entry: the consented coordinates are held in memory only, so a nearby URL cannot be restored by Back. */}
                   <Select labelId="directory-city-label" label={t('directorySearch.city')} value={citySelectValue} onChange={(event) => { setCoordinates(null); updateSearch({ cityId: event.target.value }, coordinates ? 'replace' : 'push', false); }}>
+                    <MenuItem value="">{t('directorySearch.allCities')}</MenuItem>
                     {coordinates && <MenuItem value="__nearby">{t('directorySearch.nearby')}</MenuItem>}
                     {(taxonomies.data?.cities ?? []).map((city) => <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>)}
                   </Select>
@@ -392,6 +384,7 @@ export default function DirectorySearchPage() {
       <Container maxWidth="xl" sx={{ mt: 4 }}>
         <Stack spacing={3}>
           <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+            <Typography variant="body2" sx={{ mb: 2 }}>{t('directorySearch.searchPurpose')}</Typography>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
               {personFilters && (
                 <>
@@ -433,7 +426,7 @@ export default function DirectorySearchPage() {
                 </>
               )}
               {!personFilters && <Typography variant="body2" color="text.secondary">{t('directorySearch.placeFiltersHint')}</Typography>}
-              <Button onClick={() => updateSearch({ professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
+              <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
             </Stack>
           </Paper>
 
@@ -447,8 +440,8 @@ export default function DirectorySearchPage() {
           ) : null}
 
           <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
-            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && isEntityTypeKey(value)) updateSearch({ entityType: value }); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
-              {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'all')[]).map((type) => {
+            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && isEntityTypeKey(value)) updateSearch({ entityType: value, profileKind: value === 'profile' || value === 'artist' ? urlState.profileKind : undefined }); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
+              {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'artist' | 'all')[]).map((type) => {
                 // Every tab is counted under the current filters whichever tab
                 // is selected; `all` is the mixed tab's own count.
                 const count = type === 'all' ? facets?.entityTypes['all'] ?? (entityType === 'all' ? facets?.total : undefined) : facets?.entityTypes[type];
@@ -469,6 +462,8 @@ export default function DirectorySearchPage() {
             </Box>
           )}
 
+          {showMusic && <MusicSearchResults query={query} changingQuery={draftQuery.trim().replace(/\s+/gu, ' ') !== query.trim().replace(/\s+/gu, ' ')} />}
+
           <Typography component="h2" variant="h5" fontWeight={800}>{t('directorySearch.organicResults', { count: facets?.total ?? items.length })}</Typography>
 
           {results.isLoading ? <Stack alignItems="center" py={8}><CircularProgress aria-label={t('directorySearch.searchingLabel')} /><Typography mt={2}>{t('directorySearch.searching')}</Typography></Stack> : null}
@@ -476,6 +471,7 @@ export default function DirectorySearchPage() {
           {!results.isLoading && !results.isError && items.length === 0 && sponsored.length === 0 ? (
             <Paper variant="outlined" sx={{ p: 5, textAlign: 'center', borderRadius: 3 }}>
               <Typography variant="h5" fontWeight={800}>{t('directorySearch.emptyTitle')}</Typography>
+              {showMusic && query.trim() && <Typography color="text.secondary" mt={1}>{t('directorySearch.music.directoryEmpty')}</Typography>}
               <Typography color="text.secondary" mt={1}>{t('directorySearch.emptyHelp')}</Typography>
               <Stack direction="row" justifyContent="center" gap={1} mt={3} flexWrap="wrap">
                 {[t('directorySearch.hintMusician'), t('directorySearch.hintProducer'), t('directorySearch.hintStudio'), t('directorySearch.hintConcert')].map((value) => <Chip key={value} label={value} onClick={() => { setDraftQuery(value); updateSearch({ q: value }); }} clickable />)}
@@ -576,6 +572,7 @@ function ResultCard({
       }}
     >
       <DirectoryPreviewImage
+        profileName={item.type === 'profile' ? item.title : undefined}
         kind={item.type}
         imageUrl={item.imageUrl}
         alt={t('directorySearch.photo', { title: item.title })}
@@ -610,7 +607,7 @@ function ResultCard({
             </Box>
             {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
           </Stack>
-          <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</Typography>
+          <MarkdownText inline mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</MarkdownText>
           <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
             {eventDate && <Chip size="small" color="primary" variant="outlined" icon={<EventIcon />} label={eventDate} aria-label={t('directorySearch.eventDate', { date: eventDate })} />}
             {item.location.city && <Chip size="small" label={`${item.location.city}${item.location.countryCode ? `, ${item.location.countryCode}` : ''}`} />}
@@ -624,7 +621,7 @@ function ResultCard({
             <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
           )}
           <Button onClick={() => { void share(); }} disabled={shareStatus === 'pending'} aria-busy={shareStatus === 'pending' || undefined} startIcon={<ShareIcon />}>{t(shareStatus === 'pending' ? 'directorySearch.sharePending' : 'directorySearch.share')}</Button>
-          {partyId ? (
+          {item.id.startsWith('artist-') ? null : partyId ? (
             <Button
               onClick={() => { if (isActiveParty(partyId)) favorite.mutate({ ownerPartyId: partyId, saved: !isFavorite }); }}
               disabled={favorite.isPending || favoriteAvailability !== 'ready'}

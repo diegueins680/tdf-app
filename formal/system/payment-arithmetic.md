@@ -41,11 +41,13 @@ snapshot plus the migration batch: balanced, unbalanced, cross-currency, the
 `[M,M,2]` modular wrap, extreme compensating values and empty postings behave as
 required. With the trigger disabled the test fails.
 
-Open enforcement gaps, probed on the same schema: a transaction inserted directly
-as `posted` is never validated, and an entry inserted into an already posted
-transaction is accepted (entry immutability covers only `UPDATE`/`DELETE`). No
-current writer does either, so live postings conform; the database alone does not
-yet guarantee it. Closing this needs an additive migration and a manifest entry.
+The historical direct-insert and append enforcement gaps are addressed by the
+2026-10-12 integrity migration on PR #551; they are still gaps on the observed
+main until integration. Its lock-only entry fence was then refuted under stale
+REPEATABLE READ snapshots. The additive 2026-10-16 write fence and named SQL
+schedules are documented in [ledger-refinement-2026-10-16.md](ledger-refinement-2026-10-16.md).
+Neither these integrations nor the arithmetic helper proofs establish complete
+SQL/MVCC or whole-program refinement.
 
 ## Machine-checked claims
 

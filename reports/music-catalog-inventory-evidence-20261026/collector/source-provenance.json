@@ -1,0 +1,19 @@
+{
+  "repository": "/private/tmp/tdf-player-listening-identity-20261026",
+  "sourceRevision": "2dc5c6a8308c8a8eeac1cf08d4d75788f179544b",
+  "canonicalPath": "ops/hetzner/inspect-runtime.py",
+  "canonicalSha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+  "canonicalCopiedBytesEqual": true,
+  "schemaSources": [
+    "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+    "tdf-hq/src/TDF/Models.hs"
+  ],
+  "scope": "Preparation only. Canonical guard functions are copied byte-for-byte,not reimplemented. No SSH execution or production observation.",
+  "priorCanonicalInspector": {
+    "receipt": "/private/tmp/tdf-audio-production-readonly-20261026-v1.json",
+    "receiptSha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+    "sourceRevision": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+    "canonicalSourceSha256Matches": true,
+    "scope": "Historical root-executed canonical inspector evidence only; no new catalog aggregate execution."
+  }
+}

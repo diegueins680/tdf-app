@@ -1,0 +1,105 @@
+{
+  "startedAt": "2026-10-26T06:25:35.696621+00:00",
+  "source": "72de75db2e7464f1be8b8274836a8a522c93f4e1",
+  "tree": "3682842bcab909e141c9265a5b878282a24d50be",
+  "binarySource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+  "sourceStatus": [],
+  "steps": [
+    {
+      "step": "compile-loopback-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "VERIFIED-synthetic-local-only",
+  "humanParticipants": 0,
+  "productionWrites": false,
+  "mailScope": "Actual native MIME generation/SMTP transport to non-relaying loopback synthetic inbox; no real mailbox, TLS/provider/deliverability claim.",
+  "harnessSha256": {
+    "run.py": "e67985de9ba266d2762d6a8d0550eb1f9b49803348ae42470e3c9bbcd41504df",
+    "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+    "browser.mjs": "b70cbc35401efdda92edfea39e182982898c0f7b5646549a028d9f4582aa83e9",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "migrations": 221,
+  "reusedBuildReceipt": "/private/tmp/tdf-account-recovery-20261026-77m_182r/results.json",
+  "frontend": {
+    "entry": "/assets/index-DhLNZonn.js",
+    "sha256": "c87aa9f2317d11df58bb3463ac5ae599a330e980e5013fe2747a500308e18db1",
+    "sourceVerified": true,
+    "freshCompilation": false
+  },
+  "networkIsolation": {
+    "fourListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T02:41:57Z",
+    "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "journey": {
+    "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+    "checks": {
+      "protectedIntentPreserved": true,
+      "uiSignupAndOriginalIntent": true,
+      "revokedSessionReturnsToLoginWithIntent": true,
+      "nativeLocalizedMailPreservesIntent": true,
+      "tokenRemovedFromVisibleUrl": true,
+      "expiredResetRejectedInUi": true,
+      "resetUiReturnsToOriginalIntent": true,
+      "oldPasswordRejected": true,
+      "newPasswordAuthenticatesSameParty": true,
+      "resetTokenSingleUse": true,
+      "earlierResetStillRejected": true,
+      "oldSessionRejected": true,
+      "singlePersistedCredential": true
+    },
+    "blockedExternal": 10,
+    "blockedMutations": 0,
+    "blockedMutationPaths": [],
+    "pageErrors": 0,
+    "partyId": 4,
+    "status": "PASS"
+  },
+  "finishedAt": "2026-10-26T06:26:13.693889+00:00"
+}

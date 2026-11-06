@@ -162,3 +162,74 @@ A controlled bootstrap/final-server regression fixture rejects the prior socket
 behavior. This repairs evidence collection, not an application correctness bug.
 The failed hosted run remains part of the audit history; tests and proofs must
 be regenerated for the corrected runner revision.
+
+## Prepared integration source review, 2026-10-22
+
+The local merge of `580a74560405112ae817748f4d9e796a8ba2a002` with prepared
+retrieval parent `c063bb5d806f73c9b4e305d1ccef53a353db6f33` changes only the
+Cabal manifest among the pinned recovery inputs. Its complete diff registers
+`TDF.Courses.PublicMetadata` and `TDF.PublicUrl` in the executable and test suite,
+and adds `RagIndexPrivacySpec`, `CoursePublicMetadataSpec` and
+`MusicPublicationSpec` to test modules. Dependencies and compiler configuration
+are unchanged. `ServerAuth.hs`, the recovery migration and the identity contract
+remain byte-identical. The Cabal hash is refreshed after that review; recovery
+claims, translation and negative controls remain unchanged and require fresh
+execution. This preparation is not independent approval or protected admission.
+
+## Music integration context review — 2026-10-23
+
+Against protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, the Cabal
+manifest adds only `TDF.MusicRelease.Money` to the executable and test
+`other-modules` lists. Removing those two lines reproduces the protected file
+byte for byte. Source paths, dependency versions, compiler options, CPP flags
+and Stack/lock are unchanged. The new module imports Aeson, Int64, Text and
+Text.Read and supplies no authorization or recovery binding. The complete
+authorization, RoleEnum, ingestion, ServerAuth and expiry SQL source files remain
+byte-identical to protected main. The contract records both manifest hashes and
+this dependency review; its updated context pin still requires fresh solver,
+serialized replay, mutation and independent certificate checks. No predicate,
+assumption or full implementation/refinement status is strengthened by the pin.
+
+## Financial integration context review — 2026-10-23
+
+Relative to protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, Cabal
+adds only `TDF.LedgerPostingSpec` to the test-suite module list. Removing that
+one line reproduces protected main byte for byte. The test module exports only
+its Hspec specification and uses existing SQL/Persistent and disposable-database
+guards. Runtime module bindings, source paths, dependencies, compiler/CPP options,
+Stack/lock, authorization/RoleEnum/ingestion and recovery source/SQL are unchanged.
+The contract records both manifest hashes and this dependency review. Its new
+context pin requires fresh solver, replay, mutation and independent certificate
+checks; full implementation/refinement and financial release remain unproven.
+
+## Combined Ledger/Music manifest context review — 2026-10-23
+
+The current comparison uses protected main `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`.
+The merged Cabal file retains its two MusicRelease.Money registrations and adds
+only TDF.LedgerPostingSpec to the test module list. Removing that single line
+reproduces the protected manifest byte for byte. Runtime bindings, dependencies,
+compiler/CPP options, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth
+and recovery SQL are unchanged. Earlier context reviews above retain their
+original baselines; the JSON records the current manifest hashes and review.
+Fresh scoped solver/replay/mutation and independent certificate checks are
+required. This review does not promote full refinement or release readiness.
+
+## Interactive session expiry context review — 2026-10-31
+
+Against protected main `234ff6f7faf1aecf347c8e92a374228f4ec07aaa`, candidate
+`feat/session-token-expiry-20261031` (ID-SESSION-004) changes three pinned
+recovery inputs. `ServerAuth.hs` keeps `recoveryWindowValid` and the single
+`issued+900` challenge insert byte-identical; the same sampled `issued` is now
+also written to the token row as its validity window, and every interactive
+session issuer takes a leading `SessionTokenTtl` parameter. The Cabal manifest
+moves `src` into a `library` that the executables and test suite depend on,
+with module registrations, dependency bounds, GHC options, Stack resolver and
+lock unchanged. `identity-lifecycle.md` appends one ID-SESSION-004 section. The
+recovery migration is byte-identical. The three hashes are refreshed after
+reviewing those complete diffs; claims, translation and controls are unchanged
+and every obligation requires fresh execution. The candidate was authored
+without a local GHC, so compilation evidence comes only from the hosted build.
+
+The identity contract pin was refreshed once more on the same candidate after
+its ID-SESSION-004 section was extended to name the social transactional
+re-read; no other pinned input changed.

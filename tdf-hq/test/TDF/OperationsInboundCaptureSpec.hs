@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.OperationsInboundCaptureSpec (spec) where
 
+import Control.Exception (bracket, finally)
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
@@ -38,8 +39,30 @@ spec = describe "operations-inbound-capture-postgresql" $ do
         expectationFailure "Unset PGHOSTADDR, PGSERVICE and PGSERVICEFILE for the isolated runner"
     Just connection | not (safeConnection connection) ->
       it "refuses a non-disposable database" $ expectationFailure "Use the isolated integration runner"
-    Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)) $
-      afterAll (\pool -> forget used pool >> destroyAllResources pool) $ do
+    Just connection -> aroundAll (withEnabledFixture connection used) $ do
+        it "stores all three channels without capture while Operations is disabled" $ \pool -> do
+          wa <- newId
+          ig <- newId
+          fb <- newId
+          let mids = [wa, ig, fb]
+          withEnabled pool False $ do
+            whatsapp pool wa
+            social pool MetaInstagram ig
+            social pool MetaFacebook fb
+          mapM_ (\mid -> events pool mid `shouldReturn` []) mids
+          rows <- runSqlPool (rawSql
+            "SELECT (SELECT count(*) FROM whats_app_message WHERE external_id=?) + \
+            \(SELECT count(*) FROM instagram_message WHERE external_id=?) + \
+            \(SELECT count(*) FROM facebook_message WHERE external_id=?)"
+            (map PersistText mids)) pool
+          rows `shouldBe` [Single (3 :: Int)]
+
+        it "does not capture a disabled-period message on redelivery after enablement" $ \pool -> do
+          mid <- newId
+          withEnabled pool False (whatsapp pool mid)
+          whatsapp pool mid
+          events pool mid `shouldReturn` []
+
         it "records one event for an inbound WhatsApp message stored by the application" $ \pool -> do
           mid <- newId
           whatsapp pool mid
@@ -108,6 +131,27 @@ spec = describe "operations-inbound-capture-postgresql" $ do
           rows <- runSqlPool (rawSql "SELECT count(*) FROM instagram_message WHERE external_id=?" [PersistText mid]) pool
           rows `shouldBe` [Single (1 :: Int)]
           events pool mid `shouldReturn` []
+
+withEnabledFixture :: String -> IORef [Text] -> ActionWith ConnectionPool -> IO ()
+withEnabledFixture connection used action = bracket
+  (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4))
+  destroyAllResources $ \pool ->
+    withEnabled pool True (action pool `finally` forget used pool)
+
+withEnabled :: ConnectionPool -> Bool -> IO a -> IO a
+withEnabled pool enabled action = bracket acquire restore (const action)
+  where
+    acquire = do
+      rows <- runSqlPool (rawSql
+        "SELECT operations_enabled FROM operations_organization \
+        \WHERE id='00000000-0000-4000-8000-000000000001'::uuid" []) pool
+      case rows of
+        [Single previous] -> setEnabled enabled >> pure previous
+        _ -> fail "The isolated fixture requires the default Operations organization"
+    restore = setEnabled
+    setEnabled value = runSqlPool (rawExecute
+      "UPDATE operations_organization SET operations_enabled=? \
+      \WHERE id='00000000-0000-4000-8000-000000000001'::uuid" [PersistBool value]) pool
 
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])

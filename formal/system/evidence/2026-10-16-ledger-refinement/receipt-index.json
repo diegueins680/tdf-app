@@ -1,0 +1,17 @@
+{
+  "requirement": "SYS-MONEY-003",
+  "classification": "PARTIAL",
+  "completeImplementation": "UNPROVEN",
+  "completeRefinement": "UNPROVEN",
+  "artifacts": {
+    "postgresql-schedules.jsonl": "b36750d9cfd6fbd804c18fe805e64d2c7fdfa01280462a95d673d121a49deb0b",
+    "legacy-upgrade.log": "7ee8fb6294df5f4e7f3ce764efd3efb719a8b8931ee99f668070d95a8be0551d",
+    "exact-arithmetic.log": "3373efc43fc99f64fdcfb3ff0ca5fe82c41d406815e490ff52ddae471ae02112",
+    "tlc-receipt.json": "cdb2427cb42352336bf0df35c0108d0e4236c021aaf6897455a72cf554661c48",
+    "lock-only-failure.log": "2908fd40e66c56451db33d8544cec0a87de51e3f9406a9008526f57f0e690b5f",
+    "critical-triage.json": "ec19c4d9e882c40f1573fe05baaab609f87e2448e8a2651211e5c34829169b68",
+    "open-prs.json": "c29c205db3de9dde49a0c1ab3dd411ae5a5f7c3bdc040f699a95b35d969c66ad",
+    "environment.json": "a710f4772fcd30b28360f1ab810ccef78e40070cef34563c2e7071370c42d000",
+    "uid-container-adapter.c": "fdd1468c9a6deeb89d4b91e609af18c19e46096a306724511ac28406388653d2"
+  }
+}

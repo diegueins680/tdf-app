@@ -219,6 +219,9 @@ export function getAnalyticsClient(): AnalyticsClient {
     disable_session_recording: true,
     persistence: 'localStorage+cookie',
     mask_personal_data_properties: true,
+    // Flags requests serialize initial URLs outside before_send. Web uses only
+    // event capture; application feature flags come from the session API.
+    advanced_disable_flags: true,
     before_send: (event) => {
       if (event === null) return null;
       const projectToken = event.properties?.['token'];

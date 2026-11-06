@@ -1,0 +1,13 @@
+Evidencia de bienvenida y activación sintética — 26/oct/2026 UTC
+
+Los cuatro archivos se conservaron EXACTAMENTE como se ejecutaron. SHA256 en manifest.json. No son código de producción.
+
+Requisitos: macOS con sandbox-exec, PostgreSQL16, Node y las dependencias exactas del repositorio; copia del source 600db4d99b576aeda53bac416a2644545f3d9ed3 en la ruta del manifiesto. El binario compatible 577f3c... debe provenir de su calificación independiente conservada; no está incluido. Compilar de nuevo puede producir bytes distintos por metadatos: no cambies el hash esperado para hacer pasar el ensayo. Un ejecutable nuevo necesita su propia calificación.
+
+Para consultar el plan sin iniciar servicios: copiar esta carpeta a /private/tmp/tdf-welcome-runtime-20261026 y ejecutar python3 run.py --mode plan. Para el ensayo, usar el comando completo del manifiesto. Comprueba antes que los puertos 55578/18819/4289 estén libres. El runner exige fuentes/ancestría/hash exactos, prohíbe Python -O, bloquea salida del backend excepto PostgreSQL local y verifica que los tres listeners sean loopback. Crea una base y directorio propios y limpia sus procesos/base/cluster al terminar.
+
+Alcance: una alta de artista y dos de fans sintéticos; perfil público, seguimiento persistido y cierre de sesión exitoso; imagen/Drive y dos fallos controlados son adaptadores. Cero personas reales, sin proveedor Google/almacenamiento real ni dispositivo físico. No usar este runner para un piloto humano; el defecto de logout fallido requiere la corrección #616 y su propia validación.
+
+El resultado pertenece a source 600db, aunque esta evidencia se conserve después en un commit solo de informes. Los resultados originales de d819, este ensayo y cualquier futura composición mantienen identidades distintas. Ningún despliegue de producción se acredita por este paquete.
+
+El manifiesto conserva el estado PREPARED-NOT-EXECUTED que tenía al congelar los archivos; el resultado de ejecución posterior está en reports/welcome-runtime-2026-10-26.json. No se reescribe la evidencia previa para convertirla en un resultado.

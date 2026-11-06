@@ -5,9 +5,9 @@ describe('auth failure presentation', () => {
   it.each(['es', 'en'])('translates stable transport/status codes in %s', async locale => {
     await i18n.changeLanguage(locale);
     const expected = locale === 'en'
-      ? ['Could not connect', 'took too long', 'Incorrect username', 'service is starting']
-      : ['No se pudo conectar', 'tardó demasiado', 'Credenciales inválidas', 'Estamos activando el servicio'];
-    for (const [index, code] of (['network', 'timeout', 'credentials', 'starting'] as const).entries()) {
+      ? ['Could not connect', 'took too long', 'Incorrect username', 'service is starting', 'has expired. Request a new link']
+      : ['No se pudo conectar', 'tardó demasiado', 'Credenciales inválidas', 'Estamos activando el servicio', 'ya venció. Solicita uno nuevo'];
+    for (const [index, code] of (['network', 'timeout', 'credentials', 'starting', 'reset-token'] as const).entries()) {
       expect(authErrorMessage(new AuthRequestError(code, 'raw API sentinel'), i18n.t, 'authEntry.loginError')).toContain(expected[index]);
     }
     expect(authErrorMessage(undefined, i18n.t, 'authEntry.loginError')).toBe(i18n.t('authEntry.loginError'));

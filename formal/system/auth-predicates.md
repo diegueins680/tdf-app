@@ -142,3 +142,72 @@ found no changes to role constructors, Party identity, imports or translated
 authorization expressions. Those two source pins were refreshed after that
 review; all proof obligations must still be regenerated for the integrated
 candidate. Historical success is not carried forward as current evidence.
+
+## Prepared integration source review, 2026-10-22
+
+The local merge of `580a74560405112ae817748f4d9e796a8ba2a002` with prepared
+retrieval parent `c063bb5d806f73c9b4e305d1ccef53a353db6f33` changes two pinned
+files. `Models.hs` adds only the two-line explanatory comment after `ChatMessage`;
+role constructors, Party identity and imports are byte-identical. The Cabal diff
+registers `TDF.Courses.PublicMetadata` and `TDF.PublicUrl` in the executable and
+test suite, plus `RagIndexPrivacySpec`, `CoursePublicMetadataSpec` and
+`MusicPublicationSpec` in the test modules. Dependencies, compiler configuration,
+authorization predicates and ingestion guard are unchanged. The two hashes are
+refreshed after reviewing those complete diffs. Claims, assumptions, translation
+and negative controls are unchanged; all obligations require fresh execution.
+This local source review supplies neither independent PR approval nor admission
+for the prepared parent, which has not yet reached protected main.
+
+## Music integration context review — 2026-10-23
+
+Against protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, the Cabal
+manifest adds only `TDF.MusicRelease.Money` to the executable and test
+`other-modules` lists. Removing those two lines reproduces the protected file
+byte for byte. Source paths, dependency versions, compiler options, CPP flags
+and Stack/lock are unchanged. The new module imports Aeson, Int64, Text and
+Text.Read and supplies no authorization or recovery binding. The complete
+authorization, RoleEnum, ingestion, ServerAuth and expiry SQL source files remain
+byte-identical to protected main. The contract records both manifest hashes and
+this dependency review; its updated context pin still requires fresh solver,
+serialized replay, mutation and independent certificate checks. No predicate,
+assumption or full implementation/refinement status is strengthened by the pin.
+
+## Financial integration context review — 2026-10-23
+
+Relative to protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, Cabal
+adds only `TDF.LedgerPostingSpec` to the test-suite module list. Removing that
+one line reproduces protected main byte for byte. The test module exports only
+its Hspec specification and uses existing SQL/Persistent and disposable-database
+guards. Runtime module bindings, source paths, dependencies, compiler/CPP options,
+Stack/lock, authorization/RoleEnum/ingestion and recovery source/SQL are unchanged.
+The contract records both manifest hashes and this dependency review. Its new
+context pin requires fresh solver, replay, mutation and independent certificate
+checks; full implementation/refinement and financial release remain unproven.
+
+## Combined Ledger/Music manifest context review — 2026-10-23
+
+The current comparison uses protected main `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`.
+The merged Cabal file retains its two MusicRelease.Money registrations and adds
+only TDF.LedgerPostingSpec to the test module list. Removing that single line
+reproduces the protected manifest byte for byte. Runtime bindings, dependencies,
+compiler/CPP options, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth
+and recovery SQL are unchanged. Earlier context reviews above retain their
+original baselines; the JSON records the current manifest hashes and review.
+Fresh scoped solver/replay/mutation and independent certificate checks are
+required. This review does not promote full refinement or release readiness.
+
+## Interactive session expiry context review — 2026-10-31
+
+Against protected main `234ff6f7faf1aecf347c8e92a374228f4ec07aaa`, candidate
+`feat/session-token-expiry-20261031` (ID-SESSION-004) changes three pinned
+authorization inputs. `Auth.hs` keeps all six translated predicates and their
+signatures byte-identical and adds `isInteractiveSessionLabel`,
+`apiTokenWithinValidity` and `sessionClockEpoch`, used only as additional
+denying guards in `loadAuthedUser`, the locked session witness and
+`lookupUsernameFromToken`; the only new import is `Data.Int (Int64)`.
+`Models.hs` keeps `RoleEnum` byte-identical and appends two nullable `Int64`
+fields to `ApiToken`. The Cabal manifest moves `src` into a `library` without
+changing module registrations, dependency bounds, GHC options, Stack resolver or
+lock. `RecordsIngestion.hs` is byte-identical. The three hashes are refreshed
+after reviewing those complete diffs; claims, assumptions, translation and
+negative controls are unchanged and every obligation requires fresh execution.

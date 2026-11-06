@@ -47,6 +47,8 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
+import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
@@ -55,6 +57,7 @@ import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
+import qualified TDF.TicketPaymentReceiptSpec as TicketPaymentReceiptSpec
 import qualified TDF.IndexDeclarationSpec as IndexDeclarationSpec
 import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
@@ -118,12 +121,24 @@ import TDF.Merch.Reputation
       commercialStoreScore, initialCommercialFormula, roundPublicRating, temporalWeight,
       validateCommercialFormula )
 import qualified TDF.APITypesSpec as APITypesSpec
+import qualified TDF.Commerce.ArtistTipSpec as ArtistTipSpec
+import qualified TDF.Commerce.DomoQuotePropertiesSpec as DomoQuotePropertiesSpec
+import qualified TDF.Commerce.ProviderAdapterBindingSpec as ProviderAdapterBindingSpec
+import qualified TDF.MetaWebhookSignatureSpec as MetaWebhookSignatureSpec
+import qualified TDF.CorsPropertiesSpec as CorsPropertiesSpec
+import qualified TDF.Commerce.DomoCancellationSpec as DomoCancellationSpec
+import qualified TDF.Commerce.ArtistTipStoreSpec as ArtistTipStoreSpec
+import qualified TDF.Social.AccountOwnershipStoreSpec as AccountOwnershipStoreSpec
+import qualified TDF.Commerce.DepositPolicySpec as DepositPolicySpec
+import qualified TDF.Social.AccountOwnershipSpec as AccountOwnershipSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import qualified TDF.CorsSpec as CorsSpec
 import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import qualified TDF.ReadinessSpec as ReadinessSpec
 import qualified TDF.Invoice.ReceiptSpec as ReceiptSpec
+import qualified TDF.Invoice.SessionIssueSpec as SessionIssueSpec
+import qualified TDF.Contracts.StoreSpec as ContractStoreSpec
 import TDF.Cors
     ( corsPolicy,
       isAccountDeletionRequestAllowed,
@@ -477,6 +492,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentCaption,
     normalizeMomentCommentBody,
     normalizeMomentMediaType,
+    validMomentMediaSignature,
     normalizeLiveBroadcastTitle,
     normalizeLiveBroadcastDescription,
     normalizeLiveBroadcastQuality,
@@ -608,6 +624,7 @@ import TDF.Config
       sessionCookiePath,
       sessionCookieSameSite,
       sessionCookieSecure,
+      sessionTokenTtlSeconds,
       smtpPort,
       smtpUseTLS,
       supportedCurrencies )
@@ -626,11 +643,19 @@ import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.OperationsInboundCaptureSpec as OperationsInboundCaptureSpec
 import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
+import qualified TDF.RagIndexPrivacySpec as RagIndexPrivacySpec
+import qualified TDF.CoursePublicMetadataSpec as CoursePublicMetadataSpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
+import qualified TDF.LedgerPostingSpec as LedgerPostingSpec
+import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
+import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
+import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
+import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
+import qualified TDF.MusicRelease.Storage.S3Spec as MusicS3Spec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
 import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
@@ -874,9 +899,13 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    AccountNameSpec.spec
+    GoogleProfileNameSpec.spec
     FailureBoundarySpec.spec
     ReadinessSpec.spec
     ReceiptSpec.spec
+    SessionIssueSpec.spec
+    ContractStoreSpec.spec
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
@@ -886,6 +915,7 @@ main = hspec $ do
     EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
+    TicketPaymentReceiptSpec.spec
     IndexDeclarationSpec.spec
     InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
@@ -1360,6 +1390,29 @@ main = hspec $ do
                   `shouldSatisfy` isLeft
                 ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "OTHER" outcome
                   `shouldSatisfy` isLeft
+
+        it "retains capture uncertainty when an approved order has no capture" $ do
+            let payload = A.object
+                  [ "id" .= ("PAYPAL-ORDER" :: Text), "status" .= ("APPROVED" :: Text)
+                  , "purchase_units" .= [A.object ["custom_id" .= ("ticket-order" :: Text)]]
+                  ]
+            case ServiceStorefront.parsePaypalBoundCaptureOutcome "PAYPAL-ORDER" payload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
+                EventTicketCheckoutServer.paypalCaptureFailureCode
+                  (Just (ServiceStorefront.spcoStatus outcome))
+                  `shouldBe` "paypal_capture_unverified"
+
+        it "requires affirmative no-charge capture evidence before allowing another rail" $ do
+            forM_ ["DECLINED", "FAILED"] $ \status ->
+              EventTicketCheckoutServer.paypalCaptureFailureCode (Just status)
+                `shouldBe` "paypal_capture_request"
+            forM_ [Nothing, Just "", Just "UNKNOWN", Just "PENDING", Just "APPROVED",
+                   Just "VOIDED", Just "PARTIALLY_REFUNDED", Just "REFUNDED",
+                   Just "FUTURE_PROVIDER_STATUS"] $ \status ->
+              EventTicketCheckoutServer.paypalCaptureFailureCode status
+                `shouldBe` "paypal_capture_unverified"
 
         it "rejects ambiguous multi-capture PayPal responses" $ do
             let capture captureId = A.object
@@ -4977,6 +5030,36 @@ main = hspec $ do
             assertInvalid "0"
             assertInvalid "-1"
             assertInvalid "thirty-days"
+
+        it "derives the server-side session lifetime from the cookie max-age unless overridden" $ do
+            withEnvOverrides
+                [ ("SESSION_COOKIE_MAX_AGE", Just "3600")
+                , ("SESSION_TOKEN_TTL_SECONDS", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sessionTokenTtlSeconds cfg `shouldBe` 3600
+            withEnvOverrides
+                [ ("SESSION_COOKIE_MAX_AGE", Just "3600")
+                , ("SESSION_TOKEN_TTL_SECONDS", Just " 900 ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sessionTokenTtlSeconds cfg `shouldBe` 900
+
+            let assertInvalid rawTtl expected =
+                    withEnvOverrides
+                        [ ("SESSION_COOKIE_MAX_AGE", Just "3600")
+                        , ("SESSION_TOKEN_TTL_SECONDS", Just rawTtl)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expected `isInfixOf` show (err :: IOException)
+            assertInvalid "0" "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+            assertInvalid "-1" "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+            assertInvalid "one-hour" "SESSION_TOKEN_TTL_SECONDS must be a positive integer number of seconds"
+            -- A server window longer than the cookie would keep tokens usable after
+            -- the browser has forgotten them: the unbounded-session problem again.
+            assertInvalid "3601" "SESSION_TOKEN_TTL_SECONDS must not exceed SESSION_COOKIE_MAX_AGE"
 
         it "defaults generated public links to the canonical web and asset hosts" $
             withEnvOverrides
@@ -10668,6 +10751,7 @@ main = hspec $ do
         it "keeps the internal evidence subtree outside the public raw asset route" $ do
             assetsServePathAllowed [] `shouldBe` True
             assetsServePathAllowed ["inventory", "fixture.png"] `shouldBe` True
+            assetsServePathAllowed [".content-storage-staging", "partial.pending"] `shouldBe` False
             assetsServePathAllowed [".internal-feedback"] `shouldBe` False
             assetsServePathAllowed [".internal-feedback", "report", "evidence.png"] `shouldBe` False
 
@@ -11778,6 +11862,12 @@ main = hspec $ do
                         ("Expected unexpected invitation create keys to be rejected, got " <> show parsed)
 
     describe "social event moment request parsing" $ do
+        it "decodes a text memory without fabricating a media URL" $ do
+            let parsed = eitherDecode "{\"emCreateMediaType\":\"text\",\"emCreateCaption\":\"A real memory\"}" :: Either String EventMomentCreateDTO
+            fmap emCreateMediaUrl parsed `shouldBe` Right ""
+            fmap emCreateMediaType parsed `shouldBe` Right "text"
+
+
         it "accepts canonical moment payloads and rejects unexpected keys before handlers silently ignore them" $ do
             case eitherDecode
                 "{\"emCreateAuthorName\":\"Ada\",\"emCreateCaption\":\"Aftermovie\",\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":1080}"
@@ -12506,7 +12596,16 @@ main = hspec $ do
         it "normalizes supported media types and reactions" $ do
             normalizeMomentMediaType " PHOTO " `shouldBe` Just "image"
             normalizeMomentMediaType "clip" `shouldBe` Just "video"
-            normalizeMomentMediaType "audio" `shouldBe` Nothing
+            normalizeMomentMediaType "audio" `shouldBe` Just "audio"
+            normalizeMomentMediaType "text" `shouldBe` Just "text"
+            normalizeMomentMediaType "document" `shouldBe` Nothing
+
+        it "rejects forged media bytes even when a raster MIME was supplied" $ do
+            validMomentMediaSignature "image/png" "<html>not a photo</html>" `shouldBe` False
+            validMomentMediaSignature "audio/mpeg" "ID3synthetic-audio" `shouldBe` True
+            validMomentMediaSignature "video/mp4" "0000ftypisom" `shouldBe` True
+            validMomentMediaSignature "image/png" (BS.pack [137,80,78,71,13,10,26,10]) `shouldBe` True
+            validMomentMediaSignature "text/html" "<html>" `shouldBe` False
 
         it "accepts blank captions as missing and rejects oversize captions" $ do
             normalizeMomentCaption (Just "   ") `shouldBe` Right Nothing
@@ -12775,6 +12874,17 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 409
                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+
+    describe "event logistics timezone inheritance" $ do
+        it "inherits an event's clock instead of the server default for a new plan" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") Nothing
+                `shouldBe` "America/Guayaquil"
+        it "preserves an explicitly saved logistics timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") (Just "Europe/Berlin")
+                `shouldBe` "Europe/Berlin"
+        it "keeps the configured default for legacy events without a timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "America/Guayaquil" Nothing Nothing
+                `shouldBe` "America/Guayaquil"
 
     describe "stored discovery ownership metadata boundary" $ do
         it "accepts internal evidence without exposing it through the public projection" $ do
@@ -17874,6 +17984,16 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ArtistTipSpec.spec
+    DomoQuotePropertiesSpec.spec
+    ProviderAdapterBindingSpec.spec
+    MetaWebhookSignatureSpec.spec
+    CorsPropertiesSpec.spec
+    DomoCancellationSpec.spec
+    ArtistTipStoreSpec.spec
+    AccountOwnershipStoreSpec.spec
+    DepositPolicySpec.spec
+    AccountOwnershipSpec.spec
     ProviderRetrySpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
@@ -17896,12 +18016,21 @@ main = hspec $ do
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec
+    LedgerPostingSpec.spec
+    MusicPublicationSpec.spec
     InteractionWriteBudgetSpec.spec
     MusicPurchaseSpec.spec
+    describe "music release unit contracts" $ do
+      describe "music-unit-domain" MusicDomainSpec.spec
+      describe "music-unit-content" MusicContentSpec.spec
+      describe "music-unit-ddex" MusicErn432Spec.spec
+      describe "music-unit-storage" MusicS3Spec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
     MetaRedeliverySpec.spec
+    RagIndexPrivacySpec.spec
+    CoursePublicMetadataSpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
     TicketPaymentGateSpec.spec

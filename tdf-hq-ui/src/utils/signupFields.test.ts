@@ -23,12 +23,12 @@ describe('validateSignupFields', () => {
 
 describe('deriveSignupDisplayName', () => {
   it.each([
-    ['llamaestepez@gmail.com', 'Llamaestepez'],
-    ['maria.jose_perez@example.com', 'Maria jose perez'],
-    ['ana+tdf@example.com', 'Ana'],
-    ['...@example.com', 'Fan TDF'],
-    [`${'x'.repeat(120)}@example.com`, `X${'x'.repeat(79)}`],
-  ])('derives a server-valid display name from %s', (email, expected) => {
+    ['private-identity-938421@example.test', 'Cuenta TDF'],
+    ['maria.jose_perez@example.com', 'Cuenta TDF'],
+    ['ana+tdf@example.com', 'Cuenta TDF'],
+    ['...@example.com', 'Cuenta TDF'],
+    [`${'x'.repeat(120)}@example.com`, 'Cuenta TDF'],
+  ])('keeps the automatic public name independent of private email %s', (email, expected) => {
     expect(deriveSignupDisplayName(email)).toBe(expected);
   });
 });

@@ -76,6 +76,21 @@ test('production entrypoint applies reviewed SQL then disables Persistent migrat
   assert.equal(readFileSync(current.serverLog, 'utf8'), 'RUN_MIGRATIONS=false\nAPP_PORT=18881\n');
 });
 
+test('production entrypoint fails before starting when the migration batch exits non-zero', (context) => {
+  // A held migration lock or a failing migration ends psql with status 3; the
+  // entrypoint must stop there, never print the success line or start the server.
+  const current = fixture();
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+  writeFileSync(path.join(current.directory, 'bin', 'psql'),
+    `#!/bin/sh\nprintf '%s\\n' "$*" > "${current.psqlLog}"\necho 'Another production schema migration is active; refusing to wait'\nexit 3\n`, { mode: 0o755 });
+
+  const result = run(current);
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.doesNotMatch(result.stdout, /schema verification passed/i);
+  assert.equal(existsSync(current.serverLog), false, 'the backend must not start');
+});
+
 test('migration precheck verifies reviewed SQL without starting the backend', (context) => {
   const current = fixture();
   context.after(() => rmSync(current.directory, { recursive: true, force: true }));

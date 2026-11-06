@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Box, Button, Card, CardActionArea, CardMedia, Chip, IconButton, Stack, Typography } from '@mui/material';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, matchPath, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '../../api/client';
+import { Fans } from '../../api/fans';
+import { listArtistUpcomingEvents } from '../../api/artistUpcomingEvents';
 import {
   SocialEventsAPI,
   type PublicUpcomingEventDTO,
@@ -67,6 +69,9 @@ export default function UpcomingEventsCarousel() {
   const onEventsPage = location.pathname === EVENTS_PATH || location.pathname.startsWith(`${EVENTS_PATH}/`);
   // A stored session is only a hint until the server confirms it.
   const enabled = Boolean(session) && !sessionLoading && !dismissed && !onEventsPage;
+  const artistRoute = matchPath('/artista/:slugOrId', location.pathname) ?? matchPath('/a/:slugOrId', location.pathname);
+  const artistSegment = artistRoute?.params.slugOrId;
+  const onArtistProfile = Boolean(artistSegment && artistSegment !== 'crear');
   // Wall-clock time, so a started event leaves even if no refetch succeeds.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -92,9 +97,35 @@ export default function UpcomingEventsCarousel() {
     staleTime: REFRESH_MS,
     refetchInterval: REFRESH_MS,
   });
+  const artistQuery = useQuery({
+    queryKey: ['public-artist', artistSegment],
+    queryFn: () => Fans.getPublicArtist(artistSegment!),
+    enabled: enabled && onArtistProfile,
+    retry: false,
+  });
+  const artistPartyId = artistQuery.data?.apArtistId;
+  const artistEventsQuery = useQuery({
+    queryKey: ['artist-upcoming-events-carousel', artistSegment, artistPartyId, session?.partyId],
+    queryFn: ({ signal }) => listArtistUpcomingEvents(artistPartyId!, new Date().toISOString(), signal),
+    enabled: enabled && onArtistProfile && Boolean(artistPartyId),
+    staleTime: REFRESH_MS,
+    refetchInterval: REFRESH_MS,
+  });
   // This sits in both shells: an unexpected response must hide the carousel, never break the page.
-  const events = (Array.isArray(eventsQuery.data) ? eventsQuery.data : [])
-    .filter((event) => notStarted(event, now));
+  const artistEvents = onArtistProfile && Array.isArray(artistEventsQuery.data) ? artistEventsQuery.data : [];
+  // Keep every future artist date, including those outside the general eight-card window.
+  const events = Array.from(new Map([
+    ...artistEvents,
+    ...(Array.isArray(eventsQuery.data) ? eventsQuery.data : []),
+  ].filter((event) => notStarted(event, now))
+    .map((event) => [event.publicUpcomingEventId, event])).values());
+  const listRef = useRef<HTMLDivElement>(null);
+  const hasArtistEvents = artistEvents.some((event) => notStarted(event, now));
+  useLayoutEffect(() => {
+    // Scroll snapping can preserve the old general card when artist dates are
+    // prepended. Start at the artist's first date, also when switching profiles.
+    if (listRef.current) listRef.current.scrollLeft = 0;
+  }, [location.pathname, hasArtistEvents]);
 
   const rsvpQueries = useQueries({
     queries: events.map((event) => ({
@@ -145,6 +176,7 @@ export default function UpcomingEventsCarousel() {
         </IconButton>
       </Stack>
       <Box
+        ref={listRef}
         role="list"
         sx={{
           display: 'grid',

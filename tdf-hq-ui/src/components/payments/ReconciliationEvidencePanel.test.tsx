@@ -140,3 +140,16 @@ it('supports English labels and preserves non-USD scale explicitly', async () =>
   await screen.findByText('Expected amount: 123 minor units · JPY');
   expect(screen.getByText(/Resolved or ignored does not release a held payment/)).toBeTruthy();
 });
+
+
+it.each([
+  ['es', 'Pago de compra musical cerrada requiere revisión'],
+  ['en', 'Payment for closed music purchase requires review'],
+])('identifies closed music fulfillment for review without a success state: %s', async (locale, label) => {
+  language = locale;
+  getMock.mockResolvedValue(report({ crrEntries: [entry({ creReason: 'music_paid_closed_order' })] }));
+  mount();
+  await screen.findByText(label);
+  const article = await screen.findByRole('article');
+  expect(article.querySelector('.MuiChip-colorSuccess')).toBeNull();
+});

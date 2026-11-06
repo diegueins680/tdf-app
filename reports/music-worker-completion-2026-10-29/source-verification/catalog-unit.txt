@@ -1,0 +1,16 @@
+✔ music/main reconciliation retains both reviews and the protected migration prefix (52.105345ms)
+✔ memory226 and ledger succession preserve213/214/220/221/222/224/225 reviews and reject stale approvals (11116.885994ms)
+✔ event catalog retirement ledger preserves evidence and distinct reviewed successors (13.43365ms)
+✔ reconciled fingerprints match current sources; retired decisions still fail the gate (3652.819158ms)
+✔ main integration archives exact old decisions and retains reviewed successors or source-removal evidence (18.088795ms)
+✔ catalog audit excludes ignored local source files from candidate fingerprints (1075.554407ms)
+✔ decision reconciliation preserves reviewed entries, removes stale IDs, and records rule evidence (115.342327ms)
+✔ ticket main merge retains stale approvals only as provenance (10.010141ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16235.364026

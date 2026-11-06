@@ -68,7 +68,11 @@ export const Fans = {
   getPublicArtist: async (artistRef: number | string) =>
     (await read(`/artists/${encodeURIComponent(String(artistRef))}/public`)) as ArtistProfileDTO,
   getArtist: async (artistId: number) => (await read(`/fans/artists/${artistId}`)) as ArtistProfileDTO,
-  getReleases: async (artistId: number) => (await read(`/fans/artists/${artistId}/releases`)) as ArtistReleaseDTO[],
+  getReleases: async (artistId: number, signal?: AbortSignal) => {
+    if (!Number.isSafeInteger(artistId) || artistId <= 0) throw new RangeError('Invalid artist ID');
+    return signal ? get<ArtistReleaseDTO[]>(`/fans/artists/${artistId}/releases`, { signal })
+      : (await read(`/fans/artists/${artistId}/releases`)) as ArtistReleaseDTO[];
+  },
   getArtistFans: async (artistId: number, page = 1, pageSize = 5) =>
     (await read(`/fans/artists/${artistId}/fans?page=${page}&pageSize=${pageSize}`)) as ArtistFansResponse,
   getProfile: async () => (await read('/fans/me/profile')) as FanProfileDTO,

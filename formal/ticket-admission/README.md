@@ -115,3 +115,29 @@ An accepted refund response persists its validated provider refund identifier
 before monetary mismatch handling. Mismatches keep money/tickets reserved; an
 authenticated GET must bind the same refund, capture, environment and exact
 amount/currency before completion. Later approvals cannot submit another POST.
+
+## Stripe ticket initialization boundary
+
+A provider initialization refusal must not expose raw Stripe response bodies,
+account/dashboard links or request diagnostics to the ticket buyer. The existing
+inventory rollback is preserved; its failure response is a bounded generic 503,
+and its log carries only order identity and an enumerated reason. The modal also
+filters legacy Stripe diagnostic text and HTTP 5xx responses, retains buyer
+input and leaves inventory conflicts actionable.
+
+`StripeCheckoutModal.test.tsx` reproduces the legacy raw response plus 500, 502
+and 503 responses; it requires the bounded translated alert, retained buyer
+fields, no payment element and no success callback. Its original-source negative
+control fails all four diagnostic cases. The inventory-conflict regression keeps
+an ordinary 409 visible. No new payment-method selection or provider POST retry
+is introduced: web/native customer binding, metadata, amounts and existing
+idempotency remain on the existing request path.
+
+Account capability and payment-method display preference are distinct. An enabled
+display preference cannot make an unavailable payment capability usable. The
+account owner must resolve activation/verification in Stripe when required;
+changing request method types is not an account activation procedure. See
+[Stripe account readiness](https://docs.stripe.com/api/accounts/object) and
+[dynamic method eligibility](https://docs.stripe.com/payments/payment-methods/dynamic-payment-methods).
+These source/UI checks establish error boundaries, not Stripe acceptance,
+database rollback/concurrency correctness or a successful real capture.

@@ -1,0 +1,13 @@
+{
+  "base": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "head": "8ecc837d62cff32804756966a6e67a869ee1fd92",
+  "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mappedChangedSurfaces": [
+    ".github/workflows/social-verification.yml",
+    "scripts/__tests__/ci-pipeline.test.mjs",
+    "scripts/__tests__/playwright-image.test.mjs",
+    "scripts/verify-playwright-image.mjs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

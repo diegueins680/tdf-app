@@ -1,0 +1,1 @@
+{"executionPassed": true, "error": null, "obligations": {"strict-admin": "PROVEN", "module-access": "PROVEN", "ingestion-admission": "PROVEN"}, "output": "/private/tmp/tdf-worker-completion-source-20261029/assurance-composed/authorization"}

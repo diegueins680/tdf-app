@@ -1,0 +1,365 @@
+{
+  "observedAt": "2026-10-16",
+  "prs": [
+    {
+      "number": 595,
+      "title": "fix(marketplace): recover failed cart reads without showing an empty cart",
+      "head": "19b8bcb1aab951a4d20704651497954aec176762",
+      "branch": "fix/marketplace-cart-read-recovery-20261016",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/595"
+    },
+    {
+      "number": 594,
+      "title": "fix(web): keep request deadlines active through response reads",
+      "head": "df07bb9476a9283fde1bb5afddeb58ee41246f20",
+      "branch": "fix/user-value-auth-20261016",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/594"
+    },
+    {
+      "number": 593,
+      "title": "verify: check payment helper preconditions against caller source",
+      "head": "50e798d819be3d81c8ad64fff3edb3d9ba207139",
+      "branch": "verify/payment-caller-preconditions-20261015",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/593"
+    },
+    {
+      "number": 592,
+      "title": "Specify and verify patched Mobile URI decoding",
+      "head": "82db422f216ecf6f18ff49b4eaccf3998e0b7c42",
+      "branch": "fix/mobile-uri-decoder-20261015",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/592"
+    },
+    {
+      "number": 591,
+      "title": "fix(music): preserve exact amounts and confirm purchase prices",
+      "head": "a89b15abfa67102d9da0934e939e548a6051b6e9",
+      "branch": "fix/music-exact-money-contract-20261015",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/591"
+    },
+    {
+      "number": 590,
+      "title": "Reject conflicting music purchase idempotency replays",
+      "head": "e2a77e07fb3ed6e89b20f4dfc7783f1da8f12d83",
+      "branch": "fix/music-purchase-replay-binding-20261015",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/590"
+    },
+    {
+      "number": 589,
+      "title": "Verify music money, purchase replay and payment outcomes",
+      "head": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+      "branch": "fix/music-payment-state-consistency-20261015",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/589"
+    },
+    {
+      "number": 588,
+      "title": "verify: complete CPC checks for existing source-derived contracts",
+      "head": "b090b70b4131fa5cdc6c30254d679ed2388db65e",
+      "branch": "verify/cpc-complete-contracts-20261015",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/588"
+    },
+    {
+      "number": 587,
+      "title": "verify: independently check contract refutations with CPC certificates",
+      "head": "3b8dc0ad4079788beda2da35b61409f50ddf8264",
+      "branch": "verify/cpc-certificates-20261015",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/587"
+    },
+    {
+      "number": 586,
+      "title": "fix(directory): resync events when a genre search alias changes (#572)",
+      "head": "e7ed5a0949337944306c384e723a9a91189e61b9",
+      "branch": "fix/event-search-alias-resync-20261014",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/586"
+    },
+    {
+      "number": 585,
+      "title": "Replay every SMT suite before admitting proof labels",
+      "head": "87eee6bd838bef892d50af154275dfbaf682963a",
+      "branch": "verify/independent-proof-receipts-20261015",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/585"
+    },
+    {
+      "number": 584,
+      "title": "fix(privacy): gate inbound Operations capture and require retention before activation",
+      "head": "846fc6d944f28feb9c15a76741fa4192c9103ccd",
+      "branch": "fix/operations-capture-policy-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/584"
+    },
+    {
+      "number": 583,
+      "title": "Verify recovery expiry arithmetic against Haskell and PostgreSQL sources",
+      "head": "d83eb73fd737ce1f9334f8eec0b8cb57396dd7c0",
+      "branch": "verify/recovery-expiry-20261014",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/583"
+    },
+    {
+      "number": 582,
+      "title": "feat(formal): verify source-bound authorization predicate contracts",
+      "head": "2db6bca94c52031720721c04d6a7cdc27b2bfb73",
+      "branch": "verify/auth-predicates-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/582"
+    },
+    {
+      "number": 581,
+      "title": "Consolidate formal contracts and independently replay every proof receipt",
+      "head": "580a74560405112ae817748f4d9e796a8ba2a002",
+      "branch": "verify/formal-evidence-20261013",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/581"
+    },
+    {
+      "number": 580,
+      "title": "fix(privacy): restrict RAG indexing to public courses with executable contracts",
+      "head": "f29dd762d66658369f9de3d60c7f4a978d6b0f10",
+      "branch": "spec/rag-retrieval-conformance-20261013",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/580"
+    },
+    {
+      "number": 578,
+      "title": "fix(chat): notify recipients and permit replies in existing conversations",
+      "head": "f565909c67efec6f0f9b9ae43589ba020ea5ec00",
+      "branch": "fix/chat-recipient-notifications-20261013",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/578"
+    },
+    {
+      "number": 576,
+      "title": "Add shared community artist discovery and navigation scroll restoration",
+      "head": "5b90372684d1228ec740dbd02987eaa45ced9444",
+      "branch": "feat/community-discovery-scroll-20261013",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/576"
+    },
+    {
+      "number": 575,
+      "title": "style(test): wrap EventOrganizerSpec to the 100-column limit",
+      "head": "9fa8573185a34a924db57b15943c705606f88b10",
+      "branch": "style/organizer-spec-line-length-20261013",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/575"
+    },
+    {
+      "number": 574,
+      "title": "Consolidate production migration, startup and runtime flag verification",
+      "head": "ece1d7052bd8ddaaca757901fa51537e77abcdfd",
+      "branch": "spec/runtime-flag-conformance-20261013",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/574"
+    },
+    {
+      "number": 573,
+      "title": "Sign in with Apple: verify Apple identity tokens and issue sessions (/login/apple)",
+      "head": "e7ec452787e15f09deda4c4328ec6a8c1cece727",
+      "branch": "feat/sign-in-with-apple-backend-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/573"
+    },
+    {
+      "number": 571,
+      "title": "fix(formal): require Alloy guard-removal counterexamples and complete receipts",
+      "head": "a46f8a7869c94b81322fd6ae13971fa06dc3e975",
+      "branch": "spec/consolidated-conformance-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/571"
+    },
+    {
+      "number": 570,
+      "title": "Model the DDEX export lifecycle under worker leases; keep worker stderr out of the export report (MEDIA-MUSIC-DDEX-001)",
+      "head": "75bdc9e110c672ff72daa02fdb138fbc4d92e97c",
+      "branch": "spec/music-ddex-export-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/570"
+    },
+    {
+      "number": 569,
+      "title": "Checkout policies: a terms_version names exactly one terms text per course or event (#564)",
+      "head": "d5ce51ef1c884ce21bc7fd4799d9c1b8feec5cce",
+      "branch": "fix/checkout-policy-terms-identity-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/569"
+    },
+    {
+      "number": 567,
+      "title": "SYS-STATE-001: bind the five directory machines through their membership relations (stacked on #566)",
+      "head": "9e63b1875189c24b9ca3913749d5896f9a740039",
+      "branch": "spec/directory-machine-bindings-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/567"
+    },
+    {
+      "number": 566,
+      "title": "SYS-STATE-001: bind the operations work-item machine through its targets function; checker reads clause-form validators and renderers",
+      "head": "e202b3131f2b8713f0b0b6061c5e1dcb1bb93e43",
+      "branch": "spec/state-machine-bindings-20261013",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/566"
+    },
+    {
+      "number": 565,
+      "title": "AUTH-PUBLIC-001: served denial sweep of every deny-boundary public route, admission model, Stripe webhook 503",
+      "head": "055906fdc92a986036511271ffeaa8e26b0a3fde",
+      "branch": "spec/public-route-denial-20261013",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/565"
+    },
+    {
+      "number": 563,
+      "title": "spec(startup-gates): pin the startup verifier's capability-gate policy for every asserted flag state (DEPLOY-STARTUP-001)",
+      "head": "c42109ab1d6184c5afde60c759e471f31a6c070a",
+      "branch": "spec/startup-gates-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/563"
+    },
+    {
+      "number": 562,
+      "title": "spec(operations-worker-tick): isolate a poisoned outbox row from the whole worker tick (OPS-WORKER-001)",
+      "head": "a2b1a8b4b1c08a849019ab236a7d44ae5573f5bc",
+      "branch": "spec/operations-worker-tick-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/562"
+    },
+    {
+      "number": 561,
+      "title": "spec(migration-correspondence): atomic ledger rows and fail-closed lock refusal in the production migration batch",
+      "head": "75f65f8dbb5fa1b9d6deaa40c6e634ce16a4d0a0",
+      "branch": "spec/migration-correspondence-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/561"
+    },
+    {
+      "number": 560,
+      "title": "fix(assistant): point course link in chat assistant prompt to tdfrecords.net",
+      "head": "b066d9cced2416fa90aecf945617276d6fab6490",
+      "branch": "fix/assistant-prompt-tdfrecords-domain-20261012",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/560"
+    },
+    {
+      "number": 559,
+      "title": "spec(whatsapp-consent): record the confirmation notice with its own timestamp (PRIV-WHATSAPP-001)",
+      "head": "530477eee0807b2ed496502b749e714849c6fe99",
+      "branch": "spec/whatsapp-consent-notice-20261012",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/559"
+    },
+    {
+      "number": 558,
+      "title": "Check the Operations read policy exhaustively; strip ReadOnly from the approval handler's linked-item check (AUTH-OPS-READ-001)",
+      "head": "f97b02048d26b8fe82e5b23405fc38924f6f4749",
+      "branch": "spec/ops-read-policy-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/558"
+    },
+    {
+      "number": 557,
+      "title": "Model the auxiliary Operations writes under their locks (OPS-AUX-WRITE-001)",
+      "head": "bcbe60e2da0598607a2b975eb7d3b98bf84285ce",
+      "branch": "spec/ops-aux-write-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/557"
+    },
+    {
+      "number": 556,
+      "title": "Model Drive upload replay by idempotency key with the lookup-then-create race made explicit (MEDIA-DRIVE-001)",
+      "head": "5602af66b7f9ae532816bb8956219ca631e2efc7",
+      "branch": "spec/drive-idempotency-20261012",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/556"
+    },
+    {
+      "number": 555,
+      "title": "fix(tickets): keep other payment rails closed while a PayPal capture is unverified",
+      "head": "497c52384d46426646570ceb2c29b73810134767",
+      "branch": "fix/ticket-unresolved-capture-lock",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/555"
+    },
+    {
+      "number": 554,
+      "title": "Create checkout lines only with their checkout; model the fixed line snapshot (PAY-CHECKOUT-002)",
+      "head": "a35d7783fb2f4f3d6e01f9ff5577ae5ad8d04f1a",
+      "branch": "spec/checkout-snapshot-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/554"
+    },
+    {
+      "number": 552,
+      "title": "Consolidate public booking, discovery and authorized chat navigation",
+      "head": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+      "branch": "fix/public-booking-service-picker-20261012",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/552"
+    },
+    {
+      "number": 551,
+      "title": "Consolidate ledger integrity, checkout snapshots and fenced terms upgrades",
+      "head": "9d7551353a7c278cd0937eb57d04a94241318d42",
+      "branch": "spec/ledger-balance-20261012",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/551"
+    },
+    {
+      "number": 550,
+      "title": "Inspect a re-uploaded music asset after a checksum-mismatch dead letter (MEDIA-MUSIC-ASSET-001)",
+      "head": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+      "branch": "spec/music-upload-rebind-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/550"
+    },
+    {
+      "number": 549,
+      "title": "Model leased music asset processing and record the re-upload defect (MEDIA-MUSIC-ASSET-001)",
+      "head": "b15988d0531a2d53d65fb0818a40bff6003de5dc",
+      "branch": "spec/music-asset-processing-20261012",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/549"
+    },
+    {
+      "number": 548,
+      "title": "Consolidate music publication, asset recovery and DDEX export invariants",
+      "head": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+      "branch": "spec/music-release-lifecycle-20261011",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/548"
+    },
+    {
+      "number": 546,
+      "title": "Consolidate Operations replay, authorization, worker isolation and capture policy",
+      "head": "7f94604f39ec93b4ba51c179677ce47d145367ee",
+      "branch": "spec/operations-failure-replay-20261011",
+      "draft": false,
+      "url": "https://github.com/diegueins680/tdf-app/pull/546"
+    },
+    {
+      "number": 530,
+      "title": "Auth boundary evidence and feature registry fix (AUTH-CORS/WEBHOOK/RADIO/PUBLIC/REGISTRY/OPS-READ/ENTRY)",
+      "head": "3a723c0719861addc14fc43e3007c387e4c663df",
+      "branch": "spec/auth-external-boundary-20261009",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/530"
+    },
+    {
+      "number": 495,
+      "title": "Verify bound recovery bundles, source retention and application cleanup",
+      "head": "44cb4703a0d64dfbc30aa73f907eb786de1693c8",
+      "branch": "audit/coordinated-executor-20261005",
+      "draft": true,
+      "url": "https://github.com/diegueins680/tdf-app/pull/495"
+    }
+  ]
+}

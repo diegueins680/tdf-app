@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "executedAt": "2026-10-22T20:32:04.033957+00:00",
+  "implementationRevision": "dc16d0c42c65971fda07fe85968f78d796d389a6",
+  "implementationPath": "scripts/test-event-operations-api-migration.sh",
+  "implementationSha256": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
+  "previousTcpProbeRevision": "3adfbee7fa266e2ded9706fce4fc94f2df090709",
+  "serverVersion": "postgres (PostgreSQL) 16.13 (Homebrew)",
+  "execution": "Actual native PostgreSQL; extracted Docker exec command with an environment-forwarding adapter",
+  "hostAuthentication": "scram-sha-256",
+  "localAuthentication": "trust",
+  "fixturePath": "tdf-hq/test/integration/event_operations_foundation_fixture.sql",
+  "fixtureSha256": "c7b2d2fbcf715f79a3b854e28e0bee2a9eda0bb477ec00fcb9f476f7d4b5369e",
+  "controls": [
+    {
+      "case": "initialize-owned-scram-cluster",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "start-socket-only-bootstrap",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "create-owned-database",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "original-socket-probe-accepts-bootstrap",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "authenticated-tcp-rejects-bootstrap",
+      "exitCode": 2,
+      "expected": "reject",
+      "passed": true
+    },
+    {
+      "case": "stop-bootstrap",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "authenticated-tcp-rejects-stopped-server",
+      "exitCode": 2,
+      "expected": "reject",
+      "passed": true
+    },
+    {
+      "case": "start-final-scram-tcp-server",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "verify-role-has-scram-verifier",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "previous-tcp-postgres-password-only-rejects",
+      "exitCode": 2,
+      "expected": "reject",
+      "passed": true
+    },
+    {
+      "case": "wrong-client-password-rejects",
+      "exitCode": 2,
+      "expected": "reject",
+      "passed": true
+    },
+    {
+      "case": "explicit-client-password-accepts-final-tcp",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "apply-first-real-api-fixture",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "drop-owned-database",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    },
+    {
+      "case": "stop-owned-cluster",
+      "exitCode": 0,
+      "expected": "success",
+      "passed": true
+    }
+  ],
+  "ownedDatabaseRemoved": true,
+  "ownedClusterStopped": true,
+  "fullDockerMigrationJobExecuted": false,
+  "productionOperations": false,
+  "limitations": [
+    "Finite lifecycle and authentication controls only",
+    "Complete current-head Linux Docker migration job remains required",
+    "No production or general fixture-readiness proof"
+  ]
+}

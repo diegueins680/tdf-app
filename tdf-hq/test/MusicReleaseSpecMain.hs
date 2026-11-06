@@ -1,3 +1,5 @@
+-- Development-only convenience runner. Spec.hs now registers these same specs
+-- in canonical `stack test`; quality-backend.sh rejects a missing unit group.
 module Main (main) where
 
 import Test.Hspec (hspec)

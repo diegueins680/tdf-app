@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "ledgerParent": "ac588fcfcf294b46027dfeacc5928e86dd197617",
+  "snapshotParent": "879900fa014b97e0ac971bcdf59a62b5bd55f28e",
+  "mainParent": "5e33a25cb9aaceca8fcafb6adef7c3faf2e6e767",
+  "mergeBase": "8de1bae4c30961eaa11637e5b4307271250ee176",
+  "migrationCount": 216,
+  "protectedMainManifestCanonicalSha256": "6bdf37145262822ce9307b2b4860e1756cfe4a65c4d02291ea8838dc6ef41308",
+  "sharedDecisionDifferences": [],
+  "retiredManifestDecisions": [
+    {
+      "id": "e60cbdb9121493f47fa6",
+      "source": {
+        "sourceRevision": "5e33a25cb9aaceca8fcafb6adef7c3faf2e6e767",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "8d3d9e64531b6762a3b27580faa3c0ebfe0e58e20104473203b78b0d1abef4c4",
+        "sourceEntry": {
+          "id": "e60cbdb9121493f47fa6"
+        },
+        "sourceEntryCanonicalSha256": "24ba7ed913a4b392df53e5ea645f0f83dd233ceefc34e67565c785156d6d98f3",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      }
+    }
+  ],
+  "scope": "Draft combination of reviewed source histories; finite verification does not establish complete refinement, independent approval or production authorization.",
+  "currentManifestId": "3834687cda771cfcd52b"
+}

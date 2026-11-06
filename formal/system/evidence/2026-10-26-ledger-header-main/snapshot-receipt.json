@@ -1,0 +1,24 @@
+{
+  "appliedMigrations": 222,
+  "cases": 37,
+  "claim": "Named finite SQL schedules only; complete refinement remains UNPROVEN",
+  "dirtyWorktree": false,
+  "installedEntryFunctionSha256": "bd4fec1bd429938d75e5122393e438490a53adc97aeb346a16f433b6500aaa1d",
+  "kind": "postgresql-integration-receipt",
+  "server": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+  "sourceHashes": {
+    "formal/event-operations/LedgerHeader.tla": "09d3c1f235ddc92be3a774e185ece7d4022897c0c1f9d56f30b530665dd159e8",
+    "formal/event-operations/LedgerPosting.tla": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+    "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+    "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+    "scripts/__tests__/ledger-posting-snapshot.py": "a69dc1a988132d62c614fe09b4da4207da0ab00134d1e68d0fcdf3adf79f4af3",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
+    "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": "9ccec46d936ceca2c1feb8155b1ef61444fb273898b7f5a3e5b307f4713d4648",
+    "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
+    "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql": "3f0cf2121f5de8bc3074c0d7d1eddaf1fb8217d3d46895ae5b0e92070da9ec05",
+    "tdf-hq/sql/2026-10-25_ledger_posted_header.sql": "63e84df8458ee3bf522fc4ce0c8bfa355d9e2b1236ccd2bee31437af23a3ad70"
+  },
+  "sourceRevision": "db2ec17c1fc2cd934d523a434fa833d286900a2c",
+  "timestamp": "2026-10-26T04:25:05.871343+00:00"
+}
