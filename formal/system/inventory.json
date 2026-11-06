@@ -3082,7 +3082,7 @@
     {
       "id": "SURFACE-2b332f1e11171387",
       "path": "e2e/web/chat-notification-navigation.spec.mjs",
-      "sha256": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
+      "sha256": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9778,13 +9778,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
+      "sha256": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "554957039d5b90e5368a42c627ce91b4d39dcf7b5cec55816b91f1e8f4de423b",
+      "sha256": "e343896f44a02eff3ea8c817365916413dee4d542258bb0633831e2a478650e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
