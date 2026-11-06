@@ -1,0 +1,800 @@
+{
+  "schemaVersion": 1,
+  "repository": "diegueins680/tdf-app",
+  "cycle": "2026-10-29 new ticket reservation clock",
+  "baselineCommit": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "baselineParentPR": 664,
+  "protectedMainAtCycle": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "sourceSeal": {
+    "baseline": "b827b7303e99196043f554dd16c4dedbfe725d36",
+    "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+    "sourceTree": "eeadc08fc4ccdc916cf75eba034a98fe9d564f4a",
+    "registeredSourceInputs": 1408,
+    "sourceDigest": "6bdbde0da0f054e6926eef47568132e0f14877eb51c738ed2cd460065fdaa7be",
+    "allRegisteredGitBlobAndMobileHashesVerified": true,
+    "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "newContract": {
+      "path": "formal/system/ticket-reservation-clock.md",
+      "sha256": "8e25fe8724f48710dfa8e31237bc10023123717bb9601859dfcc4e537266be80",
+      "discoveryHashMatches": true
+    },
+    "whole1353HistoricalCatalogFileExactBaseline": true,
+    "other153RequirementObjectsUnchanged": true,
+    "UIAPIDependenciesMigrationsScriptsWorkflowsOpsEqualParent": true,
+    "cleanCommittedAssurance": "PASS",
+    "completeRequirementsUNPROVEN": 154,
+    "implementationRefinementUNPROVEN": 308,
+    "existingConditionalSMT": 11,
+    "newUniversalClockProofs": 0,
+    "release": "BLOCKED",
+    "currentMainComposition": "PENDING; stacked financial parent is not protected current main",
+    "scope": "Current actual17-case behavior TESTED by identical committed code hashes. Full and mutation qualification still pending."
+  },
+  "requirementAuthority": {
+    "date": "2026-10-29",
+    "ownerQuestion": "If a new ticket checkout waits past a sale or promo deadline, should it be refused when inventory is finally reserved?",
+    "ownerAnswer": "Require validity when inventory is reserved (Recommended)",
+    "meaning": "This explicitly resolves the previous request-time/admission-time ambiguity. Existing inclusive endpoints and stored order/reuse semantics remain.",
+    "parent": "EVT-TICKET-001",
+    "invariant": "EVT-TICKET-RESERVATION-CLOCK-001",
+    "contract": "formal/system/ticket-reservation-clock.md"
+  },
+  "confirmedDefect": {
+    "id": "CORRECTNESS-20261029-02",
+    "priority": "P1 financial integrity/core journey",
+    "category": "Reliability/implementation under an explicitly established business rule",
+    "rootCause": "All three new ticket reservation callers used request-start time after blocking Event/Tier/Promo waits. Promo snapshot equality compares endpoints, not elapsed time.",
+    "consequencesObserved": "Expired sale or promo windows still create new orders and consume stock; legacy free/fully discounted routes additionally issue tickets, and promo paths consume redemptions. No actual external charge or production incident is claimed.",
+    "distinctFailureClass": 1
+  },
+  "counterexamples": {
+    "initialLegacy": "Actual unmodified app b827:3examples/3failures.",
+    "expandedAllThreeRoutes": "Actual unmodified app b827:7examples/7failures, observed unchanged Event/Tier/Promo lock wait then database clock strictly beyond deadline. Five legacy200/paid0/sold3/tickets3 outcomes; two canonical200/order1/stock1 outcomes, with expired promotion consuming redemption.",
+    "actualMutation": {
+      "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+      "correctInventorySha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+      "mutantInventorySha256": "023dbd0e95d795858033a5e15824e4665e85f8c2892e010389a5632c01e19e80",
+      "mutation": "Change ONLY shared SELECT clock_timestamp() to SELECT now(); keep all locks/date guards/test bodies and SQL inventory predicates. now() is transaction-start time even though queried after wait.",
+      "expected": "17actualcases,7expired cases fail withactual200/new effects,10compatibility/boundary/history cases pass.",
+      "scope": "Real compiled Haskell/PostgreSQL mutation, not only a finite design model.",
+      "driverExit": 1,
+      "exactCorrectSourceRestored": true,
+      "qualified": true,
+      "actualCases": 17,
+      "actualExpiredFailuresWithPersistedEffects": 7,
+      "actualCompatibilityPasses": 10,
+      "inputHashesStable": true,
+      "noAssertionOrTestChanged": true
+    },
+    "independentPersistenceQuery": "Separate direct psql after mutant test exit confirms all seven committed effects in preserved synthetic archive, including canonical pending totals1020 and918. See independent-mutant-persistence.json.",
+    "noTestSideFinancialMutationDuringWait": "Deadlines are seeded or set through ordinary legacy editor handlers before buyer starts. Only an unchanged row lock is held while time elapses; canonical initial fixture uses the established full-schema fixture. No fake application clock or provider callback."
+  },
+  "correction": {
+    "sharedAuthority": "One shared ticketReservationTime reads SELECT clock_timestamp() in a separate statement after the last admission lock. Request time, now()/CURRENT_TIMESTAMP, and clock_timestamp inside a locking SELECT may predate waits.",
+    "paths": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:createTicketOrder",
+        "after": "Event/Tier pricing locks",
+        "checks": "Existing Inventory current tier window using fresh sample."
+      },
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:createStripePaymentIntent new order",
+        "after": "Event/optional terms/Tier/Promo locks",
+        "checks": "Locked promo window and Inventory tier window use same sample."
+      },
+      {
+        "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs:createTicketCheckoutTransaction new branch",
+        "after": "Advisory/Event/old-hold cleanup/Tier/policy/Promo locks",
+        "checks": "Locked promo and tier sale windows use same sample; existing Inventory authority reserves with it."
+      }
+    ],
+    "sharedImplementation": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+    "preserved": [
+      "Inclusive start/end: start<=admissionTime<=end; absent endpoints unbounded.",
+      "Request/audit timestamps, existing hold duration and canonical hold-cleanup lock order.",
+      "Both canonical reuse exits and existing legacy idempotent replay paths; historical rows are not rewritten.",
+      "Current pricing/promo snapshot locks, atomic cap claim, inventory stock bounds and refusal-before-new-effect behavior."
+    ],
+    "scopeLimit": "The clock sample is the logical admission point after locks, immediately before new reservation effects. It is not commit/provider completion time. Canonical outer date checks already precede reuse; arbitrary expired canonical replay is not newly promised."
+  },
+  "formalProperties": [
+    {
+      "id": "EVT-TICKET-RESERVATION-CLOCK-001",
+      "statement": "For each participating new reservation, one post-final-lock database wall time must belong to the current tier sale interval and any promotion validity interval before new inventory/redemption/order/ticket effects. Inclusive endpoints preserved.",
+      "status": "TESTED",
+      "assumptions": [
+        "Valid initial rows and participating PostgreSQL READ COMMITTED writers.",
+        "Final Event/Tier/Promo/policy locks are held before sampling; Inventory reacquires already-held Event/Tier locks.",
+        "Database wall time is authoritative; hostile clock manipulation/DDL or old/out-of-protocol writers excluded."
+      ],
+      "verification": "Observed-lock actual handlers, expired/live pairings, inclusive boundaries, history/replay, real transaction-clock mutation and full schema regression.",
+      "notClaimed": "No mathematical proof, Haskell/SQL/compiler refinement, all schedules or alternate-isolation availability guarantee."
+    }
+  ],
+  "verification": {
+    "toolchain": "Canonical Stack lts24.42/GHC9.10.3, explicit tdf-hq:test:tdf-hq-test; no system-GHC/Cabal/Hpack build substitution.",
+    "targeted15": {
+      "actualExit": 0,
+      "passed": 15,
+      "failed": 0,
+      "scope": "Earlier working test bodies; exact three application source hashes equal final C. Separate from final17."
+    },
+    "targetedFinal17": {
+      "actualExit": 0,
+      "passed": 17,
+      "failed": 0,
+      "cases": "7expired refusals/7future acceptances/1retained legacy promo history+samekey replay/2inclusive boundary component cases.",
+      "sourceBinding": "Executed before C with b827 HEAD/dirty test context, final app/test blobs match C exactly; full clean-C execution below is separate."
+    },
+    "actualSharedClockMutation": {
+      "actualExit": 1,
+      "examples": 17,
+      "expectedFailedExpiredCases": 7,
+      "compatibilityPasses": 10,
+      "singleDifference": "SELECT now() replaces ONLY SELECT clock_timestamp(); every lock, guard, fixture and assertion retained. All seven failures are actual200/new effects, not generic process errors.",
+      "correctSourceRestored": true
+    },
+    "fullCorrectC": {
+      "actualExit": 0,
+      "examples": 4544,
+      "failures": 0,
+      "pending": 20,
+      "seed": 20261029,
+      "inputHashesStable": true,
+      "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+      "databaseIsolation": "Distinct fresh UTF8 template0 provider and canonical gate databases; all227 migrations applied/replayed. Provider full database loaded at C; gate prepared at b827 with SQL/loader bytes verified identical C.",
+      "pendingScope": "Explicit existing integration/platform cases; pending is not a database pass."
+    },
+    "rootRepositoryQuality": "PASS,11existing platform skips; no new skip/suppression.",
+    "actualCatalogLane": "8examples/0failures",
+    "strictCatalog": "1353current candidates/JSON+CSV; whole immutable historical decision file exact b827. Consumer evidence refresh only in generated inventory.",
+    "traceability": "Sequential generation/checks PASS; five changed material surfaces admitted vs full parent SHA; other153 requirement objects identical;1408 registered committed Git/Mobile hashes and new contract independently sealed.",
+    "independentReview": "Zero blocking findings across investigation/design/source/contract/final evidence reviews. Final reviewer independently rehashed all1408 inputs, reconstructed sole mutation, verified full raw4544/0/20 and preserved catalog/requirement objects. No independent runtime claimed.",
+    "wholePlatformAssurance": "154requirements and308implementation/refinement obligations UNPROVEN;11existing conditional source-derived SMT claims remain scoped; releaseBLOCKED. No new clock proof claimed.",
+    "servingExecutableQualification": "NOT_RUN: actual test component and code hashes do not establish a fresh serving executable, HTTP authentication or provider payment."
+  },
+  "regressionProtection": {
+    "legacyCI": "Existing provider-retry-runtime full-schema lane includes13new cases.",
+    "canonicalCI": "Existing ticket-payment-gate-postgresql lane, invoked by .github/workflows/ci.yml, includes4new canonical cases.",
+    "negativeControl": "Actual shared clock mutation detects transaction-start time even when queried after final wait. Final Tier/Promo wait schedules prevent an Event-only clock sample from silently satisfying all coverage.",
+    "boundaryProtection": "Pure promo equality and locked Inventory equality at each edge are tested. Tier boundary fixture rolls dates/stock back with SAVEPOINT; it is not a physical exact-instant handler test.",
+    "historyProtection": "Same-key legacy replay after promo expiry retains earlier order, amount, tickets and one redemption; no new purchase effects."
+  },
+  "verificationSystemNotes": [
+    "The first post-commit seal wrongly assumed absent Hpack package.yaml. The verifier was corrected to the actual unchanged tdf-hq.cabal, then all committed inputs were rechecked. No domain/spec/assertion changed; failure is retained.",
+    "Historical source-seal/independent-review pending fields record their creation time. Final-local-qualification/full-execution receipts supersede runtime status; older model/receipt scope is not promoted.",
+    "Existing inventory and promo quote-identity docs now explicitly link the successor clock contract; historical models still exclude elapsed-time proof."
+  ],
+  "integration": {
+    "state": "LOCAL_VERIFIED_AWAITING_DRAFT_STACK_PUBLICATION_AND_PROTECTED_INTEGRATION",
+    "branch": "fix/legacy-ticket-reservation-clock-20261029",
+    "intendedBaseBranch": "fix/legacy-ticket-promo-snapshot-20261028",
+    "baseSHA": "b827b7303e99196043f554dd16c4dedbfe725d36",
+    "pullRequestCreatedAtReportCommit": false,
+    "merged": false,
+    "deployed": false,
+    "autoMerge": false,
+    "requiredNext": [
+      "Publish focused draft on parent664; fresh hosted CI and independent exact-head review.",
+      "Compose with latest protected main at its FIFO slot; no stale approvals.",
+      "All20requiredcontexts, strictbase, stale-review dismissal, admin enforcement and resolved conversations."
+    ],
+    "selected638": "Published21628 still fails current initial WebKit helper edges and independent gallery contrast. Observation-only diagnostics are being prepared separately; no duplicate gallery648/651 patch."
+  },
+  "scorecard": {
+    "registeredRequirements": 154,
+    "criticalRegisteredRequirements": 123,
+    "scopedTemporalInvariantsTESTED": 1,
+    "newFailureClassesCorrectedLocally": 1,
+    "newCorrectionsIntegrated": 0,
+    "newImplementationOrRefinementProofs": 0,
+    "newModelCheckingClaims": 0,
+    "newClockCasesProtected": 17,
+    "existingConditionalSMTClaims": 11,
+    "historicalReviewObjectsChanged": 0,
+    "newSkippedChecks": 0,
+    "architecture": "One authoritative SQL clock implementation reused by all3 existing reservation callers; original date validators/inventory authority reused, no new dependencies/schema/API/workflow."
+  },
+  "environmentCleanup": {
+    "postgresActive": false,
+    "stoppedStatusExit": 3,
+    "allSyntheticDataPreserved": true,
+    "providerFinal": "tdf_provider_retry_test",
+    "canonicalFinal": "tdf_ticket_clock_gate_full_test",
+    "baselineAndMutantArchive": "tdf_provider_retry_clock_controls_20261029_test",
+    "earlier4516Archive": "tdf_provider_retry_before_clock_20261029_test",
+    "mutantActive": false,
+    "compiledTestBinaryIsMutant": false,
+    "realProviderProductionOperations": false
+  },
+  "prioritizedBacklog": [
+    {
+      "priority": "P0",
+      "id": "PROTECTED-INTEGRATION",
+      "status": "PARTIAL",
+      "task": "Qualify/repair selected638 helper behavior from event evidence; retain gallery failures/approved648and651 heads, all20controls andFIFO. Financial stack requires current-main compositions/reviews."
+    },
+    {
+      "priority": "P0",
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "status": "UNKNOWN",
+      "task": "Existing material product allocation policy remains unresolved; generic continue is not a policy decision."
+    },
+    {
+      "priority": "P1",
+      "id": "TIME-AND-POLICY-OTHER-BOUNDARIES",
+      "status": "UNKNOWN",
+      "task": "Terms/policy interval changes, hold cleanup/duration, older/mixed writers, HTTP/runtime/prod/source composition remain outside this completed sale/promo admission correction."
+    }
+  ],
+  "nextHighestValueTask": "Publish the verified focused draft, inspect current-head hosted results, and use new observational data to resolve selected638 without weakening guards or duplicating later gallery work.",
+  "evidenceDirectory": "reports/ticket-reservation-clock-2026-10-29",
+  "artifactManifest": [
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/actual-clock-mutation.json",
+      "sha256": "b78c8743891e054a9c78a8113cd431c82c7f1a7cd25f06a24b2174540a39d240",
+      "bytes": 927
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/capture-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/capture-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/capture-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/capture-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/capture-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/refund-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/refund-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/refund-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/refund-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/refund-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/arithmetic/result.json",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/cardinality-nonnegative.smt2",
+      "sha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+      "bytes": 173
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/cardinality-sum.smt2",
+      "sha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+      "bytes": 3774
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/cardinality-zero.smt2",
+      "sha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+      "bytes": 197
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/control-admit-operational-role.smt2",
+      "sha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+      "bytes": 6870
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/control-allow-zero-identity.smt2",
+      "sha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+      "bytes": 6955
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/control-drop-coherence.smt2",
+      "sha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+      "bytes": 7284
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/control-drop-module-grant.smt2",
+      "sha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+      "bytes": 4482
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/control-module-implies-admin.smt2",
+      "sha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+      "bytes": 7429
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/ingestion-admission-witness-false.smt2",
+      "sha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+      "bytes": 6655
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/ingestion-admission-witness-true.smt2",
+      "sha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+      "bytes": 6653
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/ingestion-admission.smt2",
+      "sha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+      "bytes": 7063
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/module-access-witness-false.smt2",
+      "sha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+      "bytes": 4563
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/module-access-witness-true.smt2",
+      "sha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+      "bytes": 4562
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/module-access.smt2",
+      "sha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+      "bytes": 4447
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/result.json",
+      "sha256": "00465be5674c2cf034e21f1245e27b08624f9c7fbdfaf3dbe43d32ad97345fc9",
+      "bytes": 19330
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/strict-admin-witness-false.smt2",
+      "sha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+      "bytes": 6527
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/strict-admin-witness-true.smt2",
+      "sha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+      "bytes": 6525
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization/strict-admin.smt2",
+      "sha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+      "bytes": 6914
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization-execution.log",
+      "sha256": "7de2e3c53dd9e7a6adb9278e706b28f380819b2d0dfa3e537a25f12837beac43",
+      "bytes": 240
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/authorization-replay.json",
+      "sha256": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+      "bytes": 10216
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/execution-0.log",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/execution-1.log",
+      "sha256": "db149ce6b788dbaee1a76d8bda10082147fff54f4bb0e6f59b6c4bc592d492f7",
+      "bytes": 101
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/control-database-lifetime.smt2",
+      "sha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+      "bytes": 1196
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/control-future-issuance.smt2",
+      "sha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/control-inclusive-deadline.smt2",
+      "sha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/control-issuance-lifetime.smt2",
+      "sha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+      "bytes": 1041
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/control-validator-lifetime.smt2",
+      "sha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/issuance-admission.smt2",
+      "sha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+      "bytes": 1041
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/issuance-exact.smt2",
+      "sha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+      "bytes": 1103
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/result.json",
+      "sha256": "7b591b20d71a58b3c6d0c759bf67b47f0400632e9f097ed3b59573e9764c7deb",
+      "bytes": 11466
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/schema-correspondence.smt2",
+      "sha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+      "bytes": 1196
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/window-equivalence.smt2",
+      "sha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/witness-0-0.smt2",
+      "sha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/witness-0-899.smt2",
+      "sha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/witness-9223372036854774907-0.smt2",
+      "sha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/witness-9223372036854774907-899.smt2",
+      "sha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery/witness-overflow-rejection.smt2",
+      "sha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+      "bytes": 1003
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery-execution.log",
+      "sha256": "c556ccd0dd73a3e059abc3d549efeac34c684c4a0ed95ec61f0e485c4f7eed1f",
+      "bytes": 276
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/recovery-replay.json",
+      "sha256": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+      "bytes": 2490
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/replay.json",
+      "sha256": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+      "bytes": 1686
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/report.json",
+      "sha256": "2beb3446a533e224be96881454f0b74714ed0cd426e6f3036888e2e9f520dd0c",
+      "bytes": 744542
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/report.md",
+      "sha256": "b0fa58fd8d16cac0f99f6a612a3d044407b1bcded837b1ef4182465c2abf88f0",
+      "bytes": 9931
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed/sources.json",
+      "sha256": "aab7a80dedede0da44a8f389d50d3c91c2ffe815e9e0e3bd0a0fa3e3eddefaa6",
+      "bytes": 169066
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/assurance-committed.txt",
+      "sha256": "9cbebe28f7b84393c8ba5a0642e42a70d10d6d681d66a908d81e0f09b310b70e",
+      "bytes": 752
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/baseline-counterexamples.json",
+      "sha256": "7206fcbc49395319f7ea99ddde3bba4722f1dd1dcbc368bee23ef24650ed5f5f",
+      "bytes": 1016
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/baseline-expanded-ProviderRetrySpec.hs",
+      "sha256": "8c1b0e7ee01675744acfb4137e9d562e02aaf03af302af06bda5aee33e1f4c3c",
+      "bytes": 381513
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/baseline-expanded-TicketPaymentGateSpec.hs",
+      "sha256": "e7ff26dbeb48ce99a697ca3022fd6406a29d92aa8fc58e8080ddccc2b8636f31",
+      "bytes": 34635
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/baseline-expanded-red.txt",
+      "sha256": "1f90df4c62404cec85483164041b2396fcec6f67391629e6bdb465eb11a1e920",
+      "bytes": 16360
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/baseline-legacy-clock-tests.hs",
+      "sha256": "73522345a538bb4e4e5b41c10bbb9d91ae2cf7c6c1b4d6dcfcbdcff13958208b",
+      "bytes": 380996
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/baseline-red.txt",
+      "sha256": "23790cd39446ce9916adec7a91b1587ff4faefd9116bf05a9bade478581524a2",
+      "bytes": 8878
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/baseline-test-inputs.json",
+      "sha256": "7a5d6e52fe7e0578f251a780b8300b39afb9b9aabd47d60195aa48f870ab3843",
+      "bytes": 546
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/catalog-csv.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/catalog-json.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/catalog-unit.txt",
+      "sha256": "3c5b9448589e09740a3d61b2dd1e8d83e94c993347449abaf9fe9b2ffffedc7e",
+      "bytes": 964
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/conformance-check.txt",
+      "sha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+      "bytes": 35
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/conformance.txt",
+      "sha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+      "bytes": 37
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/corrected-final17-execution.json",
+      "sha256": "2760115243ee4db5c44630ca9455acc57d6ded5b973359509383946c70cb4c92",
+      "bytes": 1312
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/corrected-final17-inputs.json",
+      "sha256": "0929b11306000d1087e3442a2272196aa8715fd5bfc56baccb246a013b3dac7e",
+      "bytes": 1229
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/corrected-final17.txt",
+      "sha256": "d5f7847227180d2629c6e0fe26f47f99abf3f832ddcc32df833e8a301689b173",
+      "bytes": 8189
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/corrected-targeted-execution.json",
+      "sha256": "b579d0acb18ba9f39cfc074791dd4dbe5817a00e7198ca09075fbf4a8e7c6e7d",
+      "bytes": 1312
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/corrected-targeted-inputs.json",
+      "sha256": "0cfe30fa7780cdbf5e066862796d64fab20025ddeb86fce18eb0385887104ec7",
+      "bytes": 1228
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/corrected-targeted.txt",
+      "sha256": "b6a72ef431544e9f8162a7170d4472036bbcd418ffa31630e6b71692cccefd88",
+      "bytes": 26766
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/database.json",
+      "sha256": "26aed1337640fe9115e1d5dd38d08f757605255fdaabde9f41ea14fc3b74af58",
+      "bytes": 350
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/diff-check.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/domain-fixture.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/expanded-baseline-test-inputs.json",
+      "sha256": "153a0ab0c1d86247665c74a38d1dbc36fe11f4e9c5a5d1a496557eb5c0cdce27",
+      "bytes": 531
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/expanded-counterexamples.json",
+      "sha256": "c85995259c489bd9a4b32f47f17e76242ccbf4d1b4465f6124aa7fb3ea56bba8",
+      "bytes": 1256
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/final-local-qualification.json",
+      "sha256": "9a7ad904f3e44c62b32b29f27abce89d5562b567c58f02be2280367fb0cc7140",
+      "bytes": 684
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/fresh-schema.txt",
+      "sha256": "d779a0141921a3edb283fd22e0a1afe950b1b5abdd2f7ba5ede0143f7da901bd",
+      "bytes": 238458
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/full-correct-C-execution.json",
+      "sha256": "791abe30f59fc30f51c7f413a040e82a21242c15ed2e0fa483d69f183102a391",
+      "bytes": 1270
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/full-correct-C-inputs.json",
+      "sha256": "14417e71e25c49d9138ddd35020bd1eb5055bf7f9891afdda6cb29a92be9f9e4",
+      "bytes": 1187
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/full-correct-C.txt",
+      "sha256": "b76eca88c0d14716b4260f547cac009a646d8cb66164286d684865bc2778196a",
+      "bytes": 1960951
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/full-database.json",
+      "sha256": "87967a9a93730601d3f2e85def5363896621cb3c74c1adf7486538180b48ae28",
+      "bytes": 576
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/full-domain-fixture.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/full-fresh-schema.txt",
+      "sha256": "c34585a9d33ccd3797593732d1f285fc7d320fa06e2c1f0cf3b81b82952deee0",
+      "bytes": 238458
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/gate-full-database.json",
+      "sha256": "4ab965a610a4e899283a021761c3115b1bc190ae61ea55ae6ebcec6c94a58586",
+      "bytes": 294
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/gate-full-fresh-schema.txt",
+      "sha256": "cd37373d551e2e4b37019e85c94787d7a3bb59f6d7fe568ce7d3df0ee7aab55a",
+      "bytes": 238458
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/independent-mutant-persistence.json",
+      "sha256": "45dc8a38513e0796757214abd0f4cb3e7e7a4c2429261aa2f0df1d8b23e9638d",
+      "bytes": 1256
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/independent-mutant-persistence.txt",
+      "sha256": "8e067915138a89bbad4abfd02c8d38495a325099c72662ea1ba57cb8db085bbc",
+      "bytes": 137
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/inventory-check.txt",
+      "sha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+      "bytes": 38
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/inventory.txt",
+      "sha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+      "bytes": 40
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/root-quality.txt",
+      "sha256": "52123cc3112042805a84abaf7fbabd0f1885971a881d852f02122b9578b1fa5c",
+      "bytes": 73195
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/run-clock-tests.py",
+      "sha256": "67f366ba0b7a5aab4bfe6b4875dfea0625540c51653a12e97ba75a33f4d767fb",
+      "bytes": 2934
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/seal-harness-limitation.json",
+      "sha256": "8ad7e8537c7f37ceba1acb121651da547bbd999d9c703bb1e1d8e281cc9509ab",
+      "bytes": 344
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/source-C.json",
+      "sha256": "f89a589ebc0a1b9233363ec07fb4db71689c1aaef37fd52e09f1b6c2afa50671",
+      "bytes": 446
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/source-add.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/source-admission.txt",
+      "sha256": "ff7a7f0dddebc64e98c19ae2fab545b4756d1154e0007e03a8b617063b9857a4",
+      "bytes": 685
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/source-commit.txt",
+      "sha256": "1ed30a994b230606f5aad06cf097cd0de8a28b08bc639ca29108d9afd120c55b",
+      "bytes": 236
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/source-precommit-changes.json",
+      "sha256": "c6452beb380bfdf5ef5f517d5c6144f07607b19cc97fd8f82ba5159dda1cb195",
+      "bytes": 827
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/source-seal.json",
+      "sha256": "95183018aca8f0061d77dffd834f25324ca4d167db9989e3c80e134ca81722d4",
+      "bytes": 1226
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/ticket-reservation-clock.md",
+      "sha256": "61742f254fbc3d28969b3b4d22de972bb0595930135c2e99800f3f4cadd87952",
+      "bytes": 3943
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/transaction-clock-mutant-execution.json",
+      "sha256": "f03120fec0e09eec5bd54761474d9c36382e6e02d331717de8bada08572d598d",
+      "bytes": 1311
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/transaction-clock-mutant-inputs.json",
+      "sha256": "33a23604a4c24df53b7b3ecb92e342f434ea61fe63ae0d246a2ce963fcb1d8d4",
+      "bytes": 1228
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/transaction-clock-mutant.hs",
+      "sha256": "023dbd0e95d795858033a5e15824e4665e85f8c2892e010389a5632c01e19e80",
+      "bytes": 2889
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/transaction-clock-mutant.txt",
+      "sha256": "a79592f8c0d1f7dc9a35870043c24edfe1520b9781934a1a27b73d2e0f81431b",
+      "bytes": 16216
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/independent-review/tdf-ticket-admission-clock-investigation-20261029.txt",
+      "sha256": "0de9c885336dae285c3077dd1428004b4222d0c5d1bf9f0820cd0b199c86c3c8",
+      "bytes": 7865
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/independent-review/tdf-ticket-admission-clock-design-review-20261029.txt",
+      "sha256": "694a6dba6435446aa2b03dcb8ec91bea5a0ec9d5f7be76a331f1f72ae94022f1",
+      "bytes": 7813
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/independent-review/tdf-ticket-clock-source-review-20261029.txt",
+      "sha256": "9ba569b8f2be6f42b93cf79013107b030dbf6f457eb3f81a609d25fbc82240fc",
+      "bytes": 5795
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/independent-review/tdf-ticket-clock-contract-review-20261029.txt",
+      "sha256": "de9bff2ea7d29506715b2530af34d0a08ab55c0435a7efed8b3aac3dd5680ea6",
+      "bytes": 4615
+    },
+    {
+      "path": "reports/ticket-reservation-clock-2026-10-29/independent-review/tdf-ticket-clock-final-review-20261029.txt",
+      "sha256": "7354e356ed9e5c56671f35227dc8e5b8dd8de12d21cdcc7549984094a43422c6",
+      "bytes": 6558
+    }
+  ],
+  "limitations": [
+    "Empirical actual-handler/full-schema evidence is TESTED, not mathematical completeness.",
+    "No current-main integration, production deployment, real provider operation or ticket HTTP authentication proof.",
+    "Existing pending cases and unproven platform/refinement obligations remain visible."
+  ]
+}
