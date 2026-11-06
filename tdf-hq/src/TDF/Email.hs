@@ -14,6 +14,8 @@ module TDF.Email
   , sendMarketplaceOrderEmail
   , sendTestEmail
   , sendTransactionalEmail
+  , sendContractEmail
+  , contractEmailContent
   , sendEngineerBookingEmail
   -- Ticketing system emails
   , sendTicketConfirmationEmail
@@ -34,6 +36,7 @@ import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
 import qualified Data.Text.Lazy           as TL
 import qualified Data.ByteString.Char8    as BS
+import qualified Data.ByteString.Lazy     as BL
 import           Network.Mail.Mime        ( Address(..)
                                           , Mail(..)
                                           , emptyMail
@@ -339,6 +342,27 @@ sendTransactionalEmail cfg name email subject preheader bodyLines mCtaUrl = do
       toAddr = Address (Just name) email
       mail = buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl
   sendMailWithLogging cfg toAddr subject mail
+
+-- | Subject, preheader and body lines of the contract email (CONTRACT-SEND-001).
+contractEmailContent :: Text -> Text -> (Text, Text, [Text])
+contractEmailContent kind contractId =
+  ( "Contrato de TDF Records"
+  , "Adjuntamos tu contrato en PDF."
+  , [ "Adjuntamos el contrato (" <> kind <> ") en formato PDF."
+    , "Referencia: " <> contractId
+    , "Si no esperabas este correo, respóndenos y lo revisamos."
+    ]
+  )
+
+-- | Email a contract PDF as an attachment. Callers must persist the delivery
+-- request first; a return value means SMTP accepted the message.
+sendContractEmail :: EmailConfig -> Text -> Text -> Text -> BL.ByteString -> IO ()
+sendContractEmail cfg recipient kind contractId pdf = do
+  let (subject, preheader, bodyLines) = contractEmailContent kind contractId
+      toAddr = Address Nothing recipient
+      mail = buildMail cfg toAddr subject preheader "Hola," bodyLines Nothing
+      withPdf = Mime.addAttachmentBS "application/pdf" ("contrato-" <> contractId <> ".pdf") pdf mail
+  sendMailWithLogging cfg toAddr subject withPdf
 
 -- | Send an email and record a small audit trail for admins.
 sendMailWithLogging :: EmailConfig -> Address -> Text -> Mime.Mail -> IO ()

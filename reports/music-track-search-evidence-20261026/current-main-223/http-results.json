@@ -1,0 +1,489 @@
+{
+  "status": "PASS-real-compiled-track-search-http-synthetic-metadata-only",
+  "source": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "backendGitTree": "aec2a9853dd53f868a684de9d20ae62233cce47b",
+  "backendManifestSha256": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3",
+  "backendFilesVerified": 975,
+  "knownCommittedDocumentation": {
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "reviewManifestSha256": "c797379d72188a6a696de87670f506c29b2f8731b2212e3f3eca440f5e3179b3",
+  "binarySha256": "8df6e58359fe29ec2a841d232094106038be08f703abb5a698eeb23eb6cb51cb",
+  "wholeCheckoutCleanClaimed": false,
+  "frontendMetadataContextBefore": {
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "sourceHelperSha256": {
+    "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
+    "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
+    "scripts/production-migrations.json": "2ef157906e6bc8f922fd5f3f838b5daca8b1ef60f5943f5f7b136ec3f9225699",
+    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+    "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
+    "reports/welcome-club-integration-evidence-20261026/loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "startedAt": "2026-10-27T00:04:08.909028+00:00",
+  "steps": [
+    {
+      "label": "node-version",
+      "exitCode": 0
+    },
+    {
+      "label": "compile-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "label": "egress-denied-positive-control",
+      "exitCode": 0
+    },
+    {
+      "label": "initdb",
+      "exitCode": 0
+    },
+    {
+      "label": "start-pg",
+      "exitCode": 0
+    },
+    {
+      "label": "create-owned-db",
+      "exitCode": 0
+    },
+    {
+      "label": "full223-production-schema",
+      "exitCode": 0
+    },
+    {
+      "label": "generate-exact-authoritative-fixture",
+      "exitCode": 0
+    },
+    {
+      "label": "GET /health",
+      "status": 200,
+      "durationMs": 2.83
+    },
+    {
+      "label": "GET /version",
+      "status": 200,
+      "durationMs": 1.4
+    },
+    {
+      "label": "GET /music/search",
+      "status": 404,
+      "durationMs": 2.66
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 2.87
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 1.92
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 14.24
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.7
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.72
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.42
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 7.96
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.3
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 8.55
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 17.54
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.04
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 2.68
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 3.09
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 2.26
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 2.96
+    },
+    {
+      "label": "GET /music/search",
+      "status": 400,
+      "durationMs": 1.07
+    },
+    {
+      "label": "HEAD /music/search",
+      "status": 200,
+      "durationMs": 7.3
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 44.21
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 46.64
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 43.17
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 45.15
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 42.07
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.42
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 4.7
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.17
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 5.14
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.74
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 17.02
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 43.14
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 16.28
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 15.57
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 14.07
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.98
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.46
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 13.36
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 12.98
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 15.6
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 16.43
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 28.31
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 23.31
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 16.83
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 15.84
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 4.98
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 4.91
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 15.19
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 4.99
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 262.67
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 266.92
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 316.99
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 259.16
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 262.03
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 12.43
+    },
+    {
+      "label": "GET /music/search",
+      "status": 200,
+      "durationMs": 6.54
+    },
+    {
+      "label": "drop-owned-db",
+      "exitCode": 0
+    },
+    {
+      "label": "stop-owned-pg",
+      "exitCode": 0
+    }
+  ],
+  "assertions": [
+    "Exact fresh owned PostgreSQL identity",
+    "Full223 ledger verified",
+    "Actual compiled version matches integrated checkpoint without environment revision override",
+    "Exactly one private/no-store GET status404",
+    "Disabled public feature returns handler404/private-no-store",
+    "Exactly one private/no-store GET status200",
+    "Blank query returns empty array",
+    "Exactly one private/no-store GET status200",
+    "Blank query returns empty array",
+    "Exactly one private/no-store GET status200",
+    "Specific B identity returned; never first track A",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: Canción",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: CANCION",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: nocturna",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: B Canción",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B:   canción noct  ",
+    "Exactly one private/no-store GET status200",
+    "Normalized title/artist match returns exact B: Guest Artist",
+    "Exactly one private/no-store GET status200",
+    "Release match returns both authorized album tracks",
+    "Exactly one private/no-store GET status200",
+    "200-character boundary accepted",
+    "Exactly one private/no-store GET status400",
+    "Exactly one private/no-store GET status400",
+    "Exactly one private/no-store GET status400",
+    "Exactly one private/no-store GET status400",
+    "Invalid integer parser rejects400; no handler-cache promise for parser failure",
+    "Exactly one private/no-store HEAD status200",
+    "Actual HEAD resolves search with private-no-store and no body",
+    "Real publication check rejects missing ready rendition; no trigger bypass",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording 2082b79e-c170-4dd1-a79a-febc067bb305",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording 7069c6a8-b556-4765-9267-4b3659e3cb9f",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording 42977444-75c3-4351-89cd-72f95ffc137e",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording fb20c735-0bba-478e-a3ef-3acf3d43bdea",
+    "Exactly one private/no-store GET status200",
+    "Broad artist match excludes unavailable recording 00ea6a0b-2891-49d8-b412-ab9c324312b9",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Private sentinel",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Withdrawn sentinel",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Listening denied sentinel",
+    "Exactly one private/no-store GET status200",
+    "Exact unavailable sentinel title never disclosed: Missing rendition sentinel",
+    "Exactly one private/no-store GET status200",
+    "Mixed hidden track remains absent even on broad context match: US hidden sentinel",
+    "Exactly one private/no-store GET status200",
+    "Mixed hidden track remains absent even on broad context match: Spec mixed",
+    "Exactly one private/no-store GET status200",
+    "Mixed hidden track remains absent even on broad context match: Spec Artist",
+    "Exactly one private/no-store GET status200",
+    "Actual trusted US header authorizes US-only track",
+    "Exactly one private/no-store GET status200",
+    "US-only release positive control",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: None",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: XX",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: T1",
+    "Exactly one private/no-store GET status200",
+    "Unknown/invalid territory fails closed: invalid",
+    "Exactly one private/no-store GET status200",
+    "Untrusted territory query parameter cannot override trusted EC header",
+    "Exactly one private/no-store GET status200",
+    "Preview-only listening never yields full rendition",
+    "Exactly one private/no-store GET status200",
+    "Only full/current preview renditions returned; no master/pending/stale preview",
+    "Quality variants do not duplicate source identities",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Deduplicate canonical recording before pagination; newest matching context",
+    "Exactly one private/no-store GET status200",
+    "Context matching precedes canonical deduplication",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Non-Latin literal query never becomes match-all",
+    "Exactly one private/no-store GET status200",
+    "Wildcards remain literal before matching fixture exists",
+    "Exactly one private/no-store GET status200",
+    "Literal wildcard-containing title matches without broadening",
+    "Exactly one private/no-store GET status200",
+    "Actual parameter binding rejects SQL injection text as a match",
+    "Exactly one private/no-store GET status200",
+    "Enough unique authorized canonical recordings for13/12 lookahead pages",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Actual limit/offset bindings preserve13-request12-display ordering",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "Terminal offset empty and repeated ordering stable",
+    "All HTTP hits/source DTOs whitelist metadata and exact authorized context; no keys/URLs/owners/failure text",
+    "Exactly one private/no-store GET status200",
+    "Exactly one private/no-store GET status200",
+    "SQL withdrawal immediately removes fresh exact/context search disclosure",
+    "Compiled binary unchanged throughout qualification"
+  ],
+  "cleanup": {
+    "backendStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "scope": "Actual compiled GET/HEAD search on owned PostgreSQL16/full223schema and synthetic publication fixtures. No signup/login, HTTP mutation, S3/signing/media/object/browser/production/SLO claim.",
+  "nodeVersion": "v22.14.0",
+  "postgresVersion": "pg_ctl (PostgreSQL) 16.13 (Homebrew)",
+  "bindAdapterSha256": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101",
+  "fixtureSqlSha256": "cb2cdfd46728b80f7e98d687434847b1ce04e92b09df2da045ebb266536b706b",
+  "startupBounds": {
+    "monotonicDeadlineSeconds": 90,
+    "maximumRequestTimeoutSeconds": 10,
+    "requestTimeoutAlsoCappedToRemainingBudget": true,
+    "maximumPollingOverrunAllowanceSeconds": 10
+  },
+  "startupElapsedSeconds": 1.011,
+  "networkIsolation": {
+    "listenersLoopback": true,
+    "lanDenied": true,
+    "nonLoopbackEgressDeniedPositiveControl": true,
+    "credentialsInherited": false
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-27T00:01:20Z",
+    "commit": "b8a13e66fb40613250c047df92b6775a04eebf67",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "frontendMetadataContextAfter": {
+    "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32"
+  },
+  "frontendMetadataChangedDuringRun": false,
+  "finishedAt": "2026-10-27T00:04:48.251456+00:00"
+}

@@ -1,0 +1,1394 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-29",
+  "repository": "diegueins680/tdf-app",
+  "pullRequest": 639,
+  "baselineMain": "6197b87326a437350dca239ee64902e78da6964c",
+  "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+  "sourceParents": [
+    "5788f07b0013a067c359f67a36290011e59f8414",
+    "6197b87326a437350dca239ee64902e78da6964c"
+  ],
+  "publishedHistoricalArtistSource": "dd8f2c9c14cc0b3c77ef9c84ab1a112a8c6b2f4d",
+  "evidenceCommit": "Containing Git commit; report-only child of sourceCommit, verified after commit.",
+  "purpose": "Qualify and normally integrate the existing artist correction after booking638 without duplicating or rewriting its implementation.",
+  "confirmedDefects": [
+    {
+      "classification": "implementation/cross-layer consistency",
+      "behavior": "Working external photos were falsely recorded as broken because reuse rights were unconfirmed; HTTP404 and rights records shared a source kind.",
+      "evidence": "Actual protected-main worker substitution fails two existing exact tests at persisted source kind, exit1."
+    },
+    {
+      "classification": "implementation/scope consistency",
+      "behavior": "Selecting one artist retained unrelated identity candidates.",
+      "evidence": "Actual protected-main page substitution fails the existing selected3 assertion, exit1; initial4 observed; postselection4 is source inference only."
+    }
+  ],
+  "properties": [
+    {
+      "id": "ART-ENRICH-REVIEW-001/AVAILABILITY",
+      "statement": "For an external image, rights remain unconfirmed independently of HTTP200 versus HTTP404; new rights observations use media_rights_review and never replace actual network-failure observations. The web review recognizes the documented legacy rights reason without hiding genuine same-URL network failures.",
+      "assumptions": [
+        "Existing strict-admin enrichment API and source schema",
+        "Fixture-controlled HTTP availability; no licence is inferred",
+        "Historical observations and backend aggregate are retained; other API consumers are not claimed repaired"
+      ],
+      "implementation": [
+        "scripts/artist-enrichment.mjs",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.ts"
+      ],
+      "verification": [
+        "27 worker cases",
+        "full UI tests including helper cases",
+        "4 compiled browser cases",
+        "2 old-worker behavioral counterexamples"
+      ],
+      "status": "TESTED",
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "requirement": "ART-ENRICH-REVIEW-001",
+      "contract": "docs/artist-enrichment-runbook.md",
+      "ciProtection": [
+        "repo-quality includes worker units",
+        "ui-quality includes component/helper units",
+        "strict protected main required quality gate"
+      ],
+      "newMathematicalProof": false
+    },
+    {
+      "id": "ART-ENRICH-REVIEW-001/IDENTITY-SCOPE",
+      "statement": "For selected artist A, displayed candidates satisfy candidate.artistId=A OR candidate.inventoryReferenceId belongs to A inventory references. Unlinked and competing candidates for those references remain visible.",
+      "assumptions": [
+        "API fixture exposes the inventory and candidate sets shown to the component",
+        "No change to backend authorization or decision endpoints"
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx"
+      ],
+      "verification": [
+        "Unchanged DD8 component test fails actual-main implementation at expected selected count3",
+        "Corrected component tests in full suite",
+        "4 compiled browser cases observe initial4 then selected3"
+      ],
+      "status": "TESTED",
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "requirement": "ART-ENRICH-REVIEW-001",
+      "contract": "docs/artist-enrichment-runbook.md",
+      "ciProtection": [
+        "repo-quality includes worker units",
+        "ui-quality includes component/helper units",
+        "strict protected main required quality gate"
+      ],
+      "newMathematicalProof": false
+    },
+    {
+      "id": "ART-ENRICH-REVIEW-001/GUIDANCE",
+      "statement": "The existing evidence/field-approval workflow distinguishes verified identity metadata, optional profile completeness, photo rights and account ownership; Spanish status is rendered as Verificado.",
+      "assumptions": [
+        "Owner-established review workflow documented by existing DD8 requirement/runbook",
+        "Guidance does not itself establish identity, rights or account ownership"
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
+        "docs/artist-enrichment-runbook.md"
+      ],
+      "verification": [
+        "Component tests and4 compiled browser cases"
+      ],
+      "status": "TESTED",
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "requirement": "ART-ENRICH-REVIEW-001",
+      "contract": "docs/artist-enrichment-runbook.md",
+      "ciProtection": [
+        "repo-quality includes worker units",
+        "ui-quality includes component/helper units",
+        "strict protected main required quality gate"
+      ],
+      "newMathematicalProof": false
+    }
+  ],
+  "correction": {
+    "sixFunctionalFilesAndRunbookByteExactHistoricalApprovedDD8": true,
+    "reusedExistingPrep": "5788f07b0013a067c359f67a36290011e59f8414",
+    "sourceChangeSinceMain": "Exactly7 artist inputs plus5 canonical requirement/inventory/catalog files. No backend/Mobile/workflow/dependency/browser-test code changes.",
+    "generatedMergeConflicts": "Three canonical generated JSON files regenerated and checked; canonical JSON/CSV scans also current."
+  },
+  "verification": {
+    "fullUI": {
+      "tests": 3679,
+      "suites": 320,
+      "failures": 0,
+      "actualExit": 0,
+      "lintTypecheckBuildInitialBundleBudget": "PASS",
+      "sourceInputsStableAndGitExact": true
+    },
+    "repositoryQuality": {
+      "actualExit": 0,
+      "catalogUnitCases": 8,
+      "strictCatalogEntries": 1352,
+      "historicalCatalogDecisionsWholeBytesExactMain": true
+    },
+    "browser": {
+      "actualExit": 0,
+      "passed": 4,
+      "profiles": [
+        "Chrome desktop1440",
+        "Chrome iPhone13 emulation390"
+      ],
+      "axes": [
+        "HTTP200",
+        "HTTP404"
+      ],
+      "assertions": "Guide/status, rights vs real broken link, initial4 then selected3 identities, broken-only filtering, standards/root/scale1.",
+      "allReadAPIsSynthetic": true,
+      "allWriteIntentsAborted": true,
+      "artistWriteIntents": 0,
+      "automaticAppWriteIntents": "Three exact global method/path pairs recorded and aborted per case; not sent.",
+      "physicalIOSOrHostedQualification": false,
+      "ownedPreviewStoppedAndAliasesRemoved": true,
+      "sourceAndDistUnchanged": true
+    },
+    "negativeControls": {
+      "controls": [
+        {
+          "baselineFile": "scripts/artist-enrichment.mjs",
+          "baselineSha256": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
+          "actualExit": 1,
+          "actualBehavioralFailures": 2,
+          "point": "Persisted source type incorrectly conflates HTTP availability with unconfirmed reuse rights"
+        },
+        {
+          "baselineFile": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
+          "baselineSha256": "923f72c77a82ef34dc9b94b7d42fa9084b3c9ff2ab82dbf2c0d7905d1d3fcd70",
+          "actualExit": 1,
+          "actualBehavioralFailures": 1,
+          "initialCountObservedByTest": 4,
+          "expectedSelectedCount": 3,
+          "actualAfterSelection": "Expected3absent; postselectionDOMcountnotcaptured. Oldunscopedsourcewouldretainall4 fixturecandidates byinspection.",
+          "point": "Existingselected-artistcount assertionfails, not a setup/runtimeerror"
+        }
+      ],
+      "exactSourceRestored": true,
+      "correctWorkerActualExit": 0,
+      "correctWorkerCases": 27,
+      "scope": "Existing exact tests against actual-main baseline; all API/provider operations are fixture-intercepted."
+    },
+    "sourceCorrespondence": {
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "baselineMain": "6197b87326a437350dca239ee64902e78da6964c",
+      "publishedArtistSource": "dd8f2c9c14cc0b3c77ef9c84ab1a112a8c6b2f4d",
+      "sourceDigest": "0cbdf8490c5a105931563e996f6233a47b77a16f83477f1605e382b35fc8c566",
+      "registeredGitBlobsChecked": 1417,
+      "rootBlobs": 1317,
+      "mobileBlobs": 100,
+      "mobileCommit": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "everyRegisteredHashVerifiedAgainstCommittedGitBlob": true,
+      "sevenArtistInputsByteExactDD8": true,
+      "all156IncomingRequirementsExact": true,
+      "artistRequirementExactDD8": true,
+      "totalRequirements": 157,
+      "changedPathsExactlyOwnedAndCanonicalGenerated": [
+        "docs/artist-enrichment-runbook.md",
+        "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "docs/catalog-persistence/reports/static-list-inventory.json",
+        "formal/system/inventory.json",
+        "formal/system/requirements.json",
+        "formal/system/traceability.json",
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "scripts/artist-enrichment.mjs",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.ts"
+      ],
+      "historicalReviewFilesByteExactMain": {
+        "formal/system/evidence/2026-10-05-crash-safety/reviews-43ff.json": "c032b263e608581b953a0e622b5a729a6b8ab6c413f5fa79408191fd6399bb3c",
+        "formal/system/evidence/2026-10-25-financial-main/expiry-main-reviews.json": "7729df814b6a3cf4f16bdf4b6665dd6dc05412facece118486efad681193faa4",
+        "formal/system/evidence/2026-10-26-ci-selected-jobs/catalog-review-main625.json": "025f3f6c22bf66acab7a33a10e50762d90496d4829d51a4209582c13cbd0bb10",
+        "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/review-observation.json": "2d15281af6a70950efdafaae678bd571d99df7a77f87206443a78854466831a4"
+      },
+      "markdownOutsideSourceFingerprintSeparatelyBoundGitSha256": {
+        "docs/artist-enrichment-runbook.md": "ca9048fc7127144f831667d69d4ba1184698f8205ba9bd0f8eed96179347ac40"
+      },
+      "scope": "Git/source correspondence only, not runtime correctness or complete compiler/package attestation.",
+      "wholeHistoricalCatalogDecisionFileByteExactMain": {
+        "path": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sha256": "dfb05263f8744d61806b46ff4d2f7295c5ee65ef1e2df5fdd6fc4195792044fc",
+        "byteExact": true,
+        "decisions": 1352
+      }
+    },
+    "independentReview": {
+      "receipt": "reports/artist-review-after-main638-2026-10-29/tdf-artist-639-after638-review-20261029.txt",
+      "scope": "Read-only independent reasoning and receipt/source inspection; reviewer did not independently rerun runtime tests."
+    },
+    "harnessLimitationsAndCorrections": [
+      "Initial identity receipt parser wrongly expected truncated prettyDOM to include postselection4; corrected evidence parser, retained original assertion failure, no source/test change.",
+      "Initial fullApp zero-write-intent assumption failed on automatic onboarding/presence/navigation requests, all aborted; final harness accepts only exact global intents while still aborting every write and rejecting artist/unknown intents.",
+      "Initial source seal expected wrong CSV filename; exact-path assertion failed, corrected checker to canonical list-consumer-matrix.csv, no product/spec change."
+    ]
+  },
+  "formalAssurance": {
+    "executionPassed": true,
+    "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+    "canonicalWholeRequirementStatus": "157 UNPROVEN",
+    "canonicalImplementationAndRefinementStatus": "314 UNPROVEN",
+    "missionAssuranceMapping": "UNKNOWN for those whole/implementation/refinement guarantees; selected finite artist behavior TESTED.",
+    "existingConditionalSMTLemmas": 11,
+    "newWholePlatformProofs": 0,
+    "releaseDecision": "BLOCKED",
+    "scope": "Re-executed inherited arithmetic/auth/recovery solvers within their documented assumptions; no proof of artist workflow or complete system. Source fingerprint omits Markdown; runbook separately Git-hash bound."
+  },
+  "regressionProtection": {
+    "testsUnchangedExactDD8": true,
+    "baselineMutationsDetected": 3,
+    "fullQualityCanonicalScriptsUnchanged": true,
+    "noFailingAssertionsRemovedOrDeadlinesIncreased": true
+  },
+  "integration": {
+    "asOfReport": "Not yet published; previous DD8 approval/checks are historical. Disable auto-merge before new publication, request fresh exact-head independent approval and require20 protected contexts/current strict base/FIFO/resolved threads.",
+    "requiredChecks": 20,
+    "bypass": false,
+    "productionDataWrites": false,
+    "productionDeployment": "UNVERIFIED",
+    "historicalVerdeProductionRepair": "Prior work described on PR639 is historical and was not replayed this cycle."
+  },
+  "separateWorker668HostedClosure": {
+    "head": "7082d7d045dcd6b2c7f8d33282e9ff2d6588d617",
+    "run": 40911214007,
+    "backend": "SUCCESS4045/0/21pending;23 music worker scenarios passed",
+    "persona": "FAILED642/1/22skip; only WebKit-iPhone gallery contrast1.01<4.5;21 booking cases passed",
+    "review": "Exact tdfrecords5702607706 APPROVED; draft/autoOFF/unmerged",
+    "scope": "Diagnostic correction only; original worker stop cause UNKNOWN. Does not qualify ticket-clock666 tests absent from this source. Preserve existing gallery draft648 and separate refund651 heads for their FIFO slots; no duplicate patch or unchanged rerun-to-green."
+  },
+  "remainingRisks": [
+    "Fresh exact published-head hostedCI and independent approval pending.",
+    "No real artist writes/provider calls or end-to-end authorization validation in the synthetic browser cases.",
+    "Backend legacy brokenFields aggregate remains historical; only scoped web consumer recognizes old rights records. No historic database rewrite.",
+    "Image rights/account ownership/deployment not established by these checks.",
+    "Known gallery contrast failure remains; reuse existing gallery draft648. Separate refund651 head is preserved for its protected queue slot.",
+    "Financial reservation clock666 locally repaired/verified, not integrated; hosted qualification remains pending."
+  ],
+  "nextHighestValueTask": "Publish this exact composition with autoOFF, obtain current20checks/exact-head review and normally merge if permitted; then advance existing FIFO work.",
+  "artifacts": [
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/capture-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628,
+      "originalArtifact": "assurance-committed/arithmetic/capture-admission.smt2",
+      "originalSha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "originalBytes": 628,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/capture-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773,
+      "originalArtifact": "assurance-committed/arithmetic/capture-legacy-counterexample.smt2",
+      "originalSha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "originalBytes": 773,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/capture-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662,
+      "originalArtifact": "assurance-committed/arithmetic/capture-safety.smt2",
+      "originalSha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "originalBytes": 662,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/capture-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459,
+      "originalArtifact": "assurance-committed/arithmetic/capture-witness-0.smt2",
+      "originalSha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "originalBytes": 459,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/capture-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459,
+      "originalArtifact": "assurance-committed/arithmetic/capture-witness-1.smt2",
+      "originalSha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "originalBytes": 459,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/refund-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628,
+      "originalArtifact": "assurance-committed/arithmetic/refund-admission.smt2",
+      "originalSha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "originalBytes": 628,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/refund-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773,
+      "originalArtifact": "assurance-committed/arithmetic/refund-legacy-counterexample.smt2",
+      "originalSha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "originalBytes": 773,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/refund-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662,
+      "originalArtifact": "assurance-committed/arithmetic/refund-safety.smt2",
+      "originalSha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "originalBytes": 662,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/refund-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459,
+      "originalArtifact": "assurance-committed/arithmetic/refund-witness-0.smt2",
+      "originalSha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "originalBytes": 459,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/refund-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459,
+      "originalArtifact": "assurance-committed/arithmetic/refund-witness-1.smt2",
+      "originalSha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "originalBytes": 459,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/arithmetic/result.json",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706,
+      "originalArtifact": "assurance-committed/arithmetic/result.json",
+      "originalSha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "originalBytes": 3706,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/cardinality-nonnegative.smt2",
+      "sha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+      "bytes": 173,
+      "originalArtifact": "assurance-committed/authorization/cardinality-nonnegative.smt2",
+      "originalSha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+      "originalBytes": 173,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/cardinality-sum.smt2",
+      "sha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+      "bytes": 3774,
+      "originalArtifact": "assurance-committed/authorization/cardinality-sum.smt2",
+      "originalSha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+      "originalBytes": 3774,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/cardinality-zero.smt2",
+      "sha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+      "bytes": 197,
+      "originalArtifact": "assurance-committed/authorization/cardinality-zero.smt2",
+      "originalSha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+      "originalBytes": 197,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/control-admit-operational-role.smt2",
+      "sha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+      "bytes": 6870,
+      "originalArtifact": "assurance-committed/authorization/control-admit-operational-role.smt2",
+      "originalSha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+      "originalBytes": 6870,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/control-allow-zero-identity.smt2",
+      "sha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+      "bytes": 6955,
+      "originalArtifact": "assurance-committed/authorization/control-allow-zero-identity.smt2",
+      "originalSha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+      "originalBytes": 6955,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/control-drop-coherence.smt2",
+      "sha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+      "bytes": 7284,
+      "originalArtifact": "assurance-committed/authorization/control-drop-coherence.smt2",
+      "originalSha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+      "originalBytes": 7284,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/control-drop-module-grant.smt2",
+      "sha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+      "bytes": 4482,
+      "originalArtifact": "assurance-committed/authorization/control-drop-module-grant.smt2",
+      "originalSha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+      "originalBytes": 4482,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/control-module-implies-admin.smt2",
+      "sha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+      "bytes": 7429,
+      "originalArtifact": "assurance-committed/authorization/control-module-implies-admin.smt2",
+      "originalSha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+      "originalBytes": 7429,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/ingestion-admission-witness-false.smt2",
+      "sha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+      "bytes": 6655,
+      "originalArtifact": "assurance-committed/authorization/ingestion-admission-witness-false.smt2",
+      "originalSha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+      "originalBytes": 6655,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/ingestion-admission-witness-true.smt2",
+      "sha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+      "bytes": 6653,
+      "originalArtifact": "assurance-committed/authorization/ingestion-admission-witness-true.smt2",
+      "originalSha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+      "originalBytes": 6653,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/ingestion-admission.smt2",
+      "sha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+      "bytes": 7063,
+      "originalArtifact": "assurance-committed/authorization/ingestion-admission.smt2",
+      "originalSha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+      "originalBytes": 7063,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/module-access-witness-false.smt2",
+      "sha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+      "bytes": 4563,
+      "originalArtifact": "assurance-committed/authorization/module-access-witness-false.smt2",
+      "originalSha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+      "originalBytes": 4563,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/module-access-witness-true.smt2",
+      "sha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+      "bytes": 4562,
+      "originalArtifact": "assurance-committed/authorization/module-access-witness-true.smt2",
+      "originalSha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+      "originalBytes": 4562,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/module-access.smt2",
+      "sha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+      "bytes": 4447,
+      "originalArtifact": "assurance-committed/authorization/module-access.smt2",
+      "originalSha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+      "originalBytes": 4447,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/result.json",
+      "sha256": "117c0cc6df02064ac87c5a66a3160de99a37eab9b438a85630e97e5c043e085f",
+      "bytes": 19330,
+      "originalArtifact": "assurance-committed/authorization/result.json",
+      "originalSha256": "117c0cc6df02064ac87c5a66a3160de99a37eab9b438a85630e97e5c043e085f",
+      "originalBytes": 19330,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/strict-admin-witness-false.smt2",
+      "sha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+      "bytes": 6527,
+      "originalArtifact": "assurance-committed/authorization/strict-admin-witness-false.smt2",
+      "originalSha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+      "originalBytes": 6527,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/strict-admin-witness-true.smt2",
+      "sha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+      "bytes": 6525,
+      "originalArtifact": "assurance-committed/authorization/strict-admin-witness-true.smt2",
+      "originalSha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+      "originalBytes": 6525,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization/strict-admin.smt2",
+      "sha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+      "bytes": 6914,
+      "originalArtifact": "assurance-committed/authorization/strict-admin.smt2",
+      "originalSha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+      "originalBytes": 6914,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization-execution.log",
+      "sha256": "538e1c9ce415dd230cfd7d2b3c7a86c8722bd08f101f0a68e28873863f6dd77e",
+      "bytes": 242,
+      "originalArtifact": "assurance-committed/authorization-execution.log",
+      "originalSha256": "538e1c9ce415dd230cfd7d2b3c7a86c8722bd08f101f0a68e28873863f6dd77e",
+      "originalBytes": 242,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/authorization-replay.json",
+      "sha256": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+      "bytes": 10216,
+      "originalArtifact": "assurance-committed/authorization-replay.json",
+      "originalSha256": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+      "originalBytes": 10216,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/execution-0.log",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706,
+      "originalArtifact": "assurance-committed/execution-0.log",
+      "originalSha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "originalBytes": 3706,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/execution-1.log",
+      "sha256": "dab7701bbebd8929a0e9ea16e9a5a53b1120cf9b78769531aed60c53239ae3ad",
+      "bytes": 101,
+      "originalArtifact": "assurance-committed/execution-1.log",
+      "originalSha256": "dab7701bbebd8929a0e9ea16e9a5a53b1120cf9b78769531aed60c53239ae3ad",
+      "originalBytes": 101,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/control-database-lifetime.smt2",
+      "sha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+      "bytes": 1196,
+      "originalArtifact": "assurance-committed/recovery/control-database-lifetime.smt2",
+      "originalSha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+      "originalBytes": 1196,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/control-future-issuance.smt2",
+      "sha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+      "bytes": 1069,
+      "originalArtifact": "assurance-committed/recovery/control-future-issuance.smt2",
+      "originalSha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+      "originalBytes": 1069,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/control-inclusive-deadline.smt2",
+      "sha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+      "bytes": 1069,
+      "originalArtifact": "assurance-committed/recovery/control-inclusive-deadline.smt2",
+      "originalSha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+      "originalBytes": 1069,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/control-issuance-lifetime.smt2",
+      "sha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+      "bytes": 1041,
+      "originalArtifact": "assurance-committed/recovery/control-issuance-lifetime.smt2",
+      "originalSha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+      "originalBytes": 1041,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/control-validator-lifetime.smt2",
+      "sha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+      "bytes": 1069,
+      "originalArtifact": "assurance-committed/recovery/control-validator-lifetime.smt2",
+      "originalSha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+      "originalBytes": 1069,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/issuance-admission.smt2",
+      "sha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+      "bytes": 1041,
+      "originalArtifact": "assurance-committed/recovery/issuance-admission.smt2",
+      "originalSha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+      "originalBytes": 1041,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/issuance-exact.smt2",
+      "sha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+      "bytes": 1103,
+      "originalArtifact": "assurance-committed/recovery/issuance-exact.smt2",
+      "originalSha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+      "originalBytes": 1103,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/result.json",
+      "sha256": "e29c957d66cbb1e716351d40c5a60e89c197c5f52c3d627717927a1a68cb3352",
+      "bytes": 11466,
+      "originalArtifact": "assurance-committed/recovery/result.json",
+      "originalSha256": "e29c957d66cbb1e716351d40c5a60e89c197c5f52c3d627717927a1a68cb3352",
+      "originalBytes": 11466,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/schema-correspondence.smt2",
+      "sha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+      "bytes": 1196,
+      "originalArtifact": "assurance-committed/recovery/schema-correspondence.smt2",
+      "originalSha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+      "originalBytes": 1196,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/window-equivalence.smt2",
+      "sha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+      "bytes": 1069,
+      "originalArtifact": "assurance-committed/recovery/window-equivalence.smt2",
+      "originalSha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+      "originalBytes": 1069,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/witness-0-0.smt2",
+      "sha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+      "bytes": 1063,
+      "originalArtifact": "assurance-committed/recovery/witness-0-0.smt2",
+      "originalSha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+      "originalBytes": 1063,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/witness-0-899.smt2",
+      "sha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+      "bytes": 1063,
+      "originalArtifact": "assurance-committed/recovery/witness-0-899.smt2",
+      "originalSha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+      "originalBytes": 1063,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/witness-9223372036854774907-0.smt2",
+      "sha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+      "bytes": 1063,
+      "originalArtifact": "assurance-committed/recovery/witness-9223372036854774907-0.smt2",
+      "originalSha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+      "originalBytes": 1063,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/witness-9223372036854774907-899.smt2",
+      "sha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+      "bytes": 1063,
+      "originalArtifact": "assurance-committed/recovery/witness-9223372036854774907-899.smt2",
+      "originalSha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+      "originalBytes": 1063,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery/witness-overflow-rejection.smt2",
+      "sha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+      "bytes": 1003,
+      "originalArtifact": "assurance-committed/recovery/witness-overflow-rejection.smt2",
+      "originalSha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+      "originalBytes": 1003,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery-execution.log",
+      "sha256": "ad132b8f225612b8589c0b5d3df79f4ae5418de8ba9bc5a89f5f64d9ae7ac02c",
+      "bytes": 278,
+      "originalArtifact": "assurance-committed/recovery-execution.log",
+      "originalSha256": "ad132b8f225612b8589c0b5d3df79f4ae5418de8ba9bc5a89f5f64d9ae7ac02c",
+      "originalBytes": 278,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/recovery-replay.json",
+      "sha256": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+      "bytes": 2490,
+      "originalArtifact": "assurance-committed/recovery-replay.json",
+      "originalSha256": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+      "originalBytes": 2490,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/replay.json",
+      "sha256": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+      "bytes": 1686,
+      "originalArtifact": "assurance-committed/replay.json",
+      "originalSha256": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+      "originalBytes": 1686,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/report.json.gz",
+      "sha256": "dcec8667335cddfb9b2c24926f40de8c3899380d260bcea300186f9847807bd5",
+      "bytes": 149577,
+      "originalArtifact": "assurance-committed/report.json",
+      "originalSha256": "9fc061eb4879691009165ac64578c543c4156f37ca7a8204b5f4e25000e31989",
+      "originalBytes": 753449,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/report.md",
+      "sha256": "1268c834d1f6dbcb0e2ce9b6a7591de44174328a5ee0fad31a2fdd51e475ed97",
+      "bytes": 10105,
+      "originalArtifact": "assurance-committed/report.md",
+      "originalSha256": "1268c834d1f6dbcb0e2ce9b6a7591de44174328a5ee0fad31a2fdd51e475ed97",
+      "originalBytes": 10105,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/assurance-committed/sources.json.gz",
+      "sha256": "854abd80edceaaf9eca278b5b1bd2d8a402475a1f6056ad5e3ba5ec706da5cca",
+      "bytes": 70805,
+      "originalArtifact": "assurance-committed/sources.json",
+      "originalSha256": "cdb3ea54de7031c09afa3c986083f76255494ffeb98fd82c2c0b629c23fbdd35",
+      "originalBytes": 170170,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/baseline-identity-scope-counterexample.txt",
+      "sha256": "ba8d2c55b74766af692ade42146beb358e8fd013df72364c3c8e0b15fe9d58fb",
+      "bytes": 15901,
+      "originalArtifact": "baseline-identity-scope-counterexample.txt",
+      "originalSha256": "ba8d2c55b74766af692ade42146beb358e8fd013df72364c3c8e0b15fe9d58fb",
+      "originalBytes": 15901,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/baseline-identity-scope.json",
+      "sha256": "e20c3f29df818edf4413b24c155ace70d1ae19cc595cbe000213c85e2d0a186a",
+      "bytes": 21767,
+      "originalArtifact": "baseline-identity-scope.json",
+      "originalSha256": "e20c3f29df818edf4413b24c155ace70d1ae19cc595cbe000213c85e2d0a186a",
+      "originalBytes": 21767,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/baseline-worker-rights-counterexamples.txt",
+      "sha256": "f89539e4b56d33a2aa52adbdf22f44dcb25e67dbb5ccc0bb119277ca6d3c562e",
+      "bytes": 2573,
+      "originalArtifact": "baseline-worker-rights-counterexamples.txt",
+      "originalSha256": "f89539e4b56d33a2aa52adbdf22f44dcb25e67dbb5ccc0bb119277ca6d3c562e",
+      "originalBytes": 2573,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-cleanup.json",
+      "sha256": "4b49dc704a8fa7f6b71551fc1109ee0e9e707a92ad7e72cfcc5d14fdd3bed2de",
+      "bytes": 213,
+      "originalArtifact": "browser-cleanup.json",
+      "originalSha256": "4b49dc704a8fa7f6b71551fc1109ee0e9e707a92ad7e72cfcc5d14fdd3bed2de",
+      "originalBytes": 213,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-desktop-broken.png",
+      "sha256": "6626babe4b3ba505b060fb6be76bf95ef18bbc491ccf0d18a0648f3a2ea7f036",
+      "bytes": 143755,
+      "originalArtifact": "browser-desktop-broken.png",
+      "originalSha256": "6626babe4b3ba505b060fb6be76bf95ef18bbc491ccf0d18a0648f3a2ea7f036",
+      "originalBytes": 143755,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-desktop-valid-failure.json",
+      "sha256": "cbdc63d9ca8c49729582dc6c4cfbffe72d3359515ce8a8e068af50ce09d778dc",
+      "bytes": 1192,
+      "originalArtifact": "browser-desktop-valid-failure.json",
+      "originalSha256": "cbdc63d9ca8c49729582dc6c4cfbffe72d3359515ce8a8e068af50ce09d778dc",
+      "originalBytes": 1192,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-desktop-valid-failure.png",
+      "sha256": "7b45fd1d14fdee48bed2f71f8d4a31b0278b8988229b0e8386297c81ecc750f0",
+      "bytes": 137395,
+      "originalArtifact": "browser-desktop-valid-failure.png",
+      "originalSha256": "7b45fd1d14fdee48bed2f71f8d4a31b0278b8988229b0e8386297c81ecc750f0",
+      "originalBytes": 137395,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-desktop-valid.png",
+      "sha256": "d1c4b48ba5f9351fd4b9d066ad7b9529553df9ef9a54f89a91de5f37da1298ca",
+      "bytes": 132232,
+      "originalArtifact": "browser-desktop-valid.png",
+      "originalSha256": "d1c4b48ba5f9351fd4b9d066ad7b9529553df9ef9a54f89a91de5f37da1298ca",
+      "originalBytes": 132232,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-driver.txt",
+      "sha256": "d8c1e21cf1e6fbaa063f2181448ba68087b3240507429cf1a42ad4ae35f72d55",
+      "bytes": 74,
+      "originalArtifact": "browser-driver.txt",
+      "originalSha256": "d8c1e21cf1e6fbaa063f2181448ba68087b3240507429cf1a42ad4ae35f72d55",
+      "originalBytes": 74,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-initial-harness-history/browser-desktop-valid-failure.json",
+      "sha256": "cbdc63d9ca8c49729582dc6c4cfbffe72d3359515ce8a8e068af50ce09d778dc",
+      "bytes": 1192,
+      "originalArtifact": "browser-initial-harness-history/browser-desktop-valid-failure.json",
+      "originalSha256": "cbdc63d9ca8c49729582dc6c4cfbffe72d3359515ce8a8e068af50ce09d778dc",
+      "originalBytes": 1192,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-initial-harness-history/browser-desktop-valid-failure.png",
+      "sha256": "7b45fd1d14fdee48bed2f71f8d4a31b0278b8988229b0e8386297c81ecc750f0",
+      "bytes": 137395,
+      "originalArtifact": "browser-initial-harness-history/browser-desktop-valid-failure.png",
+      "originalSha256": "7b45fd1d14fdee48bed2f71f8d4a31b0278b8988229b0e8386297c81ecc750f0",
+      "originalBytes": 137395,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-initial-harness-history/browser-driver.txt",
+      "sha256": "4f86103bf06d5a726c8b6dfe67e6f5da051b8085dfcd6fc1bc0815e828b83bed",
+      "bytes": 580,
+      "originalArtifact": "browser-initial-harness-history/browser-driver.txt",
+      "originalSha256": "4f86103bf06d5a726c8b6dfe67e6f5da051b8085dfcd6fc1bc0815e828b83bed",
+      "originalBytes": 580,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-initial-harness-history/browser-results.json",
+      "sha256": "35f9d86cf3e88585a9bd70a676a69c2b4b7e5a3f5aaf5df37b7b149f6434243e",
+      "bytes": 217,
+      "originalArtifact": "browser-initial-harness-history/browser-results.json",
+      "originalSha256": "35f9d86cf3e88585a9bd70a676a69c2b4b7e5a3f5aaf5df37b7b149f6434243e",
+      "originalBytes": 217,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-initial-harness-history/browser-server.txt",
+      "sha256": "75396efd070b45e4ec7148b4762ef8138e57f534873165fbac5424beb6e34b31",
+      "bytes": 40,
+      "originalArtifact": "browser-initial-harness-history/browser-server.txt",
+      "originalSha256": "75396efd070b45e4ec7148b4762ef8138e57f534873165fbac5424beb6e34b31",
+      "originalBytes": 40,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-initial-harness-history/history.json",
+      "sha256": "ac5e45f5f6615f311bbd2a4230ede3e2f793b0f2afb457cce779831d052652bd",
+      "bytes": 606,
+      "originalArtifact": "browser-initial-harness-history/history.json",
+      "originalSha256": "ac5e45f5f6615f311bbd2a4230ede3e2f793b0f2afb457cce779831d052652bd",
+      "originalBytes": 606,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-phone-broken.png",
+      "sha256": "497a9142c4e273d9db33108bc9792730384ec5589387fd91169c93eb60bf0563",
+      "bytes": 120533,
+      "originalArtifact": "browser-phone-broken.png",
+      "originalSha256": "497a9142c4e273d9db33108bc9792730384ec5589387fd91169c93eb60bf0563",
+      "originalBytes": 120533,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-phone-valid.png",
+      "sha256": "7ebaf2b80582856b3c1a1bb677100ae7730be5e1c775dbed9ade68158a1b7d58",
+      "bytes": 103854,
+      "originalArtifact": "browser-phone-valid.png",
+      "originalSha256": "7ebaf2b80582856b3c1a1bb677100ae7730be5e1c775dbed9ade68158a1b7d58",
+      "originalBytes": 103854,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-results.json",
+      "sha256": "fde5f5cf7b3785146de5d2ffabdcbe42274a000562e35ec67c11176df6efeab7",
+      "bytes": 6263,
+      "originalArtifact": "browser-results.json",
+      "originalSha256": "fde5f5cf7b3785146de5d2ffabdcbe42274a000562e35ec67c11176df6efeab7",
+      "originalBytes": 6263,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/browser-server.txt",
+      "sha256": "75396efd070b45e4ec7148b4762ef8138e57f534873165fbac5424beb6e34b31",
+      "bytes": 40,
+      "originalArtifact": "browser-server.txt",
+      "originalSha256": "75396efd070b45e4ec7148b4762ef8138e57f534873165fbac5424beb6e34b31",
+      "originalBytes": 40,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/catalog-unit.txt",
+      "sha256": "12026b031ef77c3d30077f18f811751bf6d2b005f7d4a5f114e3293effc4cf5f",
+      "bytes": 962,
+      "originalArtifact": "catalog-unit.txt",
+      "originalSha256": "12026b031ef77c3d30077f18f811751bf6d2b005f7d4a5f114e3293effc4cf5f",
+      "originalBytes": 962,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/conformance-check.txt",
+      "sha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+      "bytes": 35,
+      "originalArtifact": "conformance-check.txt",
+      "originalSha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+      "originalBytes": 35,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/conformance.txt",
+      "sha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+      "bytes": 37,
+      "originalArtifact": "conformance.txt",
+      "originalSha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+      "originalBytes": 37,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/correct-worker-unit.txt",
+      "sha256": "21fc39b4b9343ff8f167cdfabb87637e6099069d734e83036f43d6777a78d227",
+      "bytes": 4241,
+      "originalArtifact": "correct-worker-unit.txt",
+      "originalSha256": "21fc39b4b9343ff8f167cdfabb87637e6099069d734e83036f43d6777a78d227",
+      "originalBytes": 4241,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/counterexamples.json",
+      "sha256": "5a9d7519dd6ae8b92f2f2fc11118265ddfa079d3856e8ec919cd6c64f57821be",
+      "bytes": 1111,
+      "originalArtifact": "counterexamples.json",
+      "originalSha256": "5a9d7519dd6ae8b92f2f2fc11118265ddfa079d3856e8ec919cd6c64f57821be",
+      "originalBytes": 1111,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/current-catalog.csv.gz",
+      "sha256": "9804917f5d4a947d1f33df2a02c7d146bba757e951fa713925bdce1838428d41",
+      "bytes": 497439,
+      "originalArtifact": "current-catalog.csv",
+      "originalSha256": "8d6884c2c8e811b845f5eacf76c3d5916d1759399543644091fdd4d449ed9224",
+      "originalBytes": 4775144,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/current-catalog.json.gz",
+      "sha256": "aaef232b8c729ef8cd30535f4ff8adf0e4063c7d80ed35495287b8e79f1d437e",
+      "bytes": 714721,
+      "originalArtifact": "current-catalog.json",
+      "originalSha256": "779925b30301564e795140565900acba853f310970b6a19659c2b8842ebc9980",
+      "originalBytes": 7661309,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/full-quality.json",
+      "sha256": "e9e8f8ad6e7c6fed8cb6ba0aa6917a9996f2269ad6b493cb09a868017a65d4f4",
+      "bytes": 43998,
+      "originalArtifact": "full-quality.json",
+      "originalSha256": "e9e8f8ad6e7c6fed8cb6ba0aa6917a9996f2269ad6b493cb09a868017a65d4f4",
+      "originalBytes": 43998,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/full-validation-inputs.json",
+      "sha256": "4d1fe1de2c33e8e9d19955b7c64b32868337c65cb5a9778bd56e9d8af1bcb869",
+      "bytes": 107631,
+      "originalArtifact": "full-validation-inputs.json",
+      "originalSha256": "4d1fe1de2c33e8e9d19955b7c64b32868337c65cb5a9778bd56e9d8af1bcb869",
+      "originalBytes": 107631,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/harness-history.json",
+      "sha256": "91d0322497e9c6afdeba38c7fa70da89649a643adecb6c8074e658be3ba2197b",
+      "bytes": 941,
+      "originalArtifact": "harness-history.json",
+      "originalSha256": "91d0322497e9c6afdeba38c7fa70da89649a643adecb6c8074e658be3ba2197b",
+      "originalBytes": 941,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/initial-correspondence.json",
+      "sha256": "f2720bc9a0f56d35cd1a86ad0aef330ff556c5f99b2fd970a2ea339d792ba150",
+      "bytes": 1363,
+      "originalArtifact": "initial-correspondence.json",
+      "originalSha256": "f2720bc9a0f56d35cd1a86ad0aef330ff556c5f99b2fd970a2ea339d792ba150",
+      "originalBytes": 1363,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/initial-truncated-dom.json",
+      "sha256": "ee3a583cd28ed4c7b401923ef0e2fb0c1c310d7388b8c8e074d7c1f00154532b",
+      "bytes": 21767,
+      "originalArtifact": "initial-truncated-dom.json",
+      "originalSha256": "ee3a583cd28ed4c7b401923ef0e2fb0c1c310d7388b8c8e074d7c1f00154532b",
+      "originalBytes": 21767,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/initial-truncated-dom.txt",
+      "sha256": "449d8e3207b49a75d04dbea6015951368230c059caaf66c19a5d670d2ef7cc05",
+      "bytes": 15901,
+      "originalArtifact": "initial-truncated-dom.txt",
+      "originalSha256": "449d8e3207b49a75d04dbea6015951368230c059caaf66c19a5d670d2ef7cc05",
+      "originalBytes": 15901,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/inventory-check.txt",
+      "sha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+      "bytes": 38,
+      "originalArtifact": "inventory-check.txt",
+      "originalSha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+      "originalBytes": 38,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/inventory.txt",
+      "sha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+      "bytes": 40,
+      "originalArtifact": "inventory.txt",
+      "originalSha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+      "originalBytes": 40,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/main-protection-before-publication.json",
+      "sha256": "c7faee329215accb9fa474e6818144b99f293e7081dc77853334a56b90c075f6",
+      "bytes": 2651,
+      "originalArtifact": "main-protection-before-publication.json",
+      "originalSha256": "c7faee329215accb9fa474e6818144b99f293e7081dc77853334a56b90c075f6",
+      "originalBytes": 2651,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/new-surface-admission.json",
+      "sha256": "d61bdf0a4a5259c2d9b6e47a17df016d81f8392d8a9b891c36fcb2fe4eb3a9ec",
+      "bytes": 755,
+      "originalArtifact": "new-surface-admission.json",
+      "originalSha256": "d61bdf0a4a5259c2d9b6e47a17df016d81f8392d8a9b891c36fcb2fe4eb3a9ec",
+      "originalBytes": 755,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/preparation-independent-review.txt",
+      "sha256": "929018fbcae5097fca94fb80de302cbf13818ebfa31be883f423ed3c70008ac4",
+      "bytes": 5391,
+      "originalArtifact": "preparation-independent-review.txt",
+      "originalSha256": "929018fbcae5097fca94fb80de302cbf13818ebfa31be883f423ed3c70008ac4",
+      "originalBytes": 5391,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/resolve-generated-conflicts.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "originalArtifact": "resolve-generated-conflicts.txt",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "originalBytes": 0,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/root-quality.txt",
+      "sha256": "c11f0b8bf8b9a2a142362403c8d4fc1492cc66b5cc45772d285275ac52da423d",
+      "bytes": 75438,
+      "originalArtifact": "root-quality.txt",
+      "originalSha256": "c11f0b8bf8b9a2a142362403c8d4fc1492cc66b5cc45772d285275ac52da423d",
+      "originalBytes": 75438,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/artifact-manifest.json",
+      "sha256": "ef813a51aebcb935dd43c78c173f4bc48ec4c200311f5841196fff8952689156",
+      "bytes": 623,
+      "originalArtifact": "separate-worker668-hosted/artifact-manifest.json",
+      "originalSha256": "ef813a51aebcb935dd43c78c173f4bc48ec4c200311f5841196fff8952689156",
+      "originalBytes": 623,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/compiled-api/availability.json",
+      "sha256": "2d489dccce84dea7fc110caea009d11304a2d816ec98c2907755f0b9073fe27c",
+      "bytes": 1365,
+      "originalArtifact": "separate-worker668-hosted/compiled-api/availability.json",
+      "originalSha256": "2d489dccce84dea7fc110caea009d11304a2d816ec98c2907755f0b9073fe27c",
+      "originalBytes": 1365,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/compiled-api/compiled-types.json.gz",
+      "sha256": "ad7ea5158553bb969363fca94b7a761ac218fcf5280b8ba8e57525caf9779674",
+      "bytes": 27378,
+      "originalArtifact": "separate-worker668-hosted/compiled-api/compiled-types.json",
+      "originalSha256": "68cb750b13916833242aaaa853e4a73da4f378b0f140fa2d958a2de84ac98e98",
+      "originalBytes": 1261893,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/compiled-api/contract-candidate.json.gz",
+      "sha256": "3b95b30557dc70906199c74d2c192dee815f0d7a7c883bc85bcf7118b3cc6af7",
+      "bytes": 34722,
+      "originalArtifact": "separate-worker668-hosted/compiled-api/contract-candidate.json",
+      "originalSha256": "d9d20bd1cde94c439b04fb575d926204f804dbb536c518c4a3245cc426dda2fe",
+      "originalBytes": 1407128,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/compiled-api/response-status.json",
+      "sha256": "036b7e6e10f356618935aa888efb0e0083d8785f0762bf427da5e1225ac5ffe9",
+      "bytes": 532,
+      "originalArtifact": "separate-worker668-hosted/compiled-api/response-status.json",
+      "originalSha256": "036b7e6e10f356618935aa888efb0e0083d8785f0762bf427da5e1225ac5ffe9",
+      "originalBytes": 532,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/compiled-api/surface.json.gz",
+      "sha256": "889f3c781e9e011ad8001632bea1fa319c50f18063360b61bd4cf0fd1183461c",
+      "bytes": 37647,
+      "originalArtifact": "separate-worker668-hosted/compiled-api/surface.json",
+      "originalSha256": "65be492abf5ebe9250f7c50c322ebc7bc15c1c5371b5f203e92d936b23bd8bf7",
+      "originalBytes": 1317107,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/hosted-summary.json",
+      "sha256": "9fb9b1dd3cafee4af36e0f0cbaf062d85d80e52fc1186a090747573f29fddd2f",
+      "bytes": 61656,
+      "originalArtifact": "separate-worker668-hosted/hosted-summary.json",
+      "originalSha256": "9fb9b1dd3cafee4af36e0f0cbaf062d85d80e52fc1186a090747573f29fddd2f",
+      "originalBytes": 61656,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/persona-booking-gallery.json.gz",
+      "sha256": "a240672a818e2417bfc395cabab746787c03bea48fbc1fd55b6140a6e7af5096",
+      "bytes": 10621,
+      "originalArtifact": "separate-worker668-hosted/persona-booking-gallery.json",
+      "originalSha256": "84e2cde86569622cec20d5e5dd0b6ffd24ff3680962ff417a41661b7c36cf178",
+      "originalBytes": 412765,
+      "encoding": "gzip"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/intended/initial-version.json",
+      "sha256": "a3dd81f6fb306fe2b726d326e1f6b514d479b2c3907015963530557f6bcd7666",
+      "bytes": 105,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/intended/initial-version.json",
+      "originalSha256": "a3dd81f6fb306fe2b726d326e1f6b514d479b2c3907015963530557f6bcd7666",
+      "originalBytes": 105,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/intended/version-at-A.json",
+      "sha256": "7deede567ee81798c293b96c0452cb292a7eff9db93e6dad50e07fc5aa3df6c2",
+      "bytes": 142,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/intended/version-at-A.json",
+      "originalSha256": "7deede567ee81798c293b96c0452cb292a7eff9db93e6dad50e07fc5aa3df6c2",
+      "originalBytes": 142,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/intended/version-at-B.json",
+      "sha256": "56c763f102260c82e55b5fed6d2db380bba070f40147f42f048ac57260098554",
+      "bytes": 142,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/intended/version-at-B.json",
+      "originalSha256": "56c763f102260c82e55b5fed6d2db380bba070f40147f42f048ac57260098554",
+      "originalBytes": 142,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/result.json",
+      "sha256": "853a760a968740af136fe7f0f451d6cdedf126592397f327219db44292c0ec99",
+      "bytes": 1633,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/result.json",
+      "originalSha256": "853a760a968740af136fe7f0f451d6cdedf126592397f327219db44292c0ec99",
+      "originalBytes": 1633,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/without-module-force-recomp/initial-version.json",
+      "sha256": "1a35fd31f8200fd80d07182b192a978209b7be5dcde52a0459ffbf4ffb3f36e0",
+      "bytes": 105,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/without-module-force-recomp/initial-version.json",
+      "originalSha256": "1a35fd31f8200fd80d07182b192a978209b7be5dcde52a0459ffbf4ffb3f36e0",
+      "originalBytes": 105,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/without-module-force-recomp/version-at-A.json",
+      "sha256": "1a35fd31f8200fd80d07182b192a978209b7be5dcde52a0459ffbf4ffb3f36e0",
+      "bytes": 105,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/without-module-force-recomp/version-at-A.json",
+      "originalSha256": "1a35fd31f8200fd80d07182b192a978209b7be5dcde52a0459ffbf4ffb3f36e0",
+      "originalBytes": 105,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/without-stack-force-dirty/initial-version.json",
+      "sha256": "3083e0942e80dcb5538fb95f56e826941507b1630b7696e07fcda76b249dd2f7",
+      "bytes": 105,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/without-stack-force-dirty/initial-version.json",
+      "originalSha256": "3083e0942e80dcb5538fb95f56e826941507b1630b7696e07fcda76b249dd2f7",
+      "originalBytes": 105,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/separate-worker668-hosted/version-rebuild/without-stack-force-dirty/version-at-A.json",
+      "sha256": "3083e0942e80dcb5538fb95f56e826941507b1630b7696e07fcda76b249dd2f7",
+      "bytes": 105,
+      "originalArtifact": "separate-worker668-hosted/version-rebuild/without-stack-force-dirty/version-at-A.json",
+      "originalSha256": "3083e0942e80dcb5538fb95f56e826941507b1630b7696e07fcda76b249dd2f7",
+      "originalBytes": 105,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/source-M.json",
+      "sha256": "ccc44968fdf2da5d244fae68613647a27f585e44bb34855e937a123b7d38fa8b",
+      "bytes": 424,
+      "originalArtifact": "source-M.json",
+      "originalSha256": "ccc44968fdf2da5d244fae68613647a27f585e44bb34855e937a123b7d38fa8b",
+      "originalBytes": 424,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/source-correspondence-final.json",
+      "sha256": "ec6c9a2ab304e2959cb96f741db37e489dbee3a767b18fbee9f4092c56b7be88",
+      "bytes": 2501,
+      "originalArtifact": "source-correspondence-final.json",
+      "originalSha256": "ec6c9a2ab304e2959cb96f741db37e489dbee3a767b18fbee9f4092c56b7be88",
+      "originalBytes": 2501,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/source-diff-check.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "originalArtifact": "source-diff-check.txt",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "originalBytes": 0,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/source-merge-commit.txt",
+      "sha256": "48efc162747ecc3a91695e7ecf22c7df678b7cca7d9d08b14c9dc78177336d3c",
+      "bytes": 102,
+      "originalArtifact": "source-merge-commit.txt",
+      "originalSha256": "48efc162747ecc3a91695e7ecf22c7df678b7cca7d9d08b14c9dc78177336d3c",
+      "originalBytes": 102,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/source-seal-command.txt",
+      "sha256": "1e26c8f41b7ba90b4b1104f3722882bf03fcfa0eeae7560c336f011e60513981",
+      "bytes": 1181,
+      "originalArtifact": "source-seal-command.txt",
+      "originalSha256": "1e26c8f41b7ba90b4b1104f3722882bf03fcfa0eeae7560c336f011e60513981",
+      "originalBytes": 1181,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/strict-catalog-csv.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "originalArtifact": "strict-catalog-csv.txt",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "originalBytes": 0,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/strict-catalog-json.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "originalArtifact": "strict-catalog-json.txt",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "originalBytes": 0,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/tdf-artist-639-after638-review-20261029.txt",
+      "sha256": "d7f8449c5a6b2bbaf60695ad56071df9d75f77eb348efdfbd89564bd52c19499",
+      "bytes": 7628,
+      "originalArtifact": "tdf-artist-639-after638-review-20261029.txt",
+      "originalSha256": "d7f8449c5a6b2bbaf60695ad56071df9d75f77eb348efdfbd89564bd52c19499",
+      "originalBytes": 7628,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/tdf-artist-639-browser-20261029.mjs",
+      "sha256": "c69ae80a8bc4c650126a0be6b4cd4bfd02a8a0a9af4629d2d520735c352e6c16",
+      "bytes": 7553,
+      "originalArtifact": "tdf-artist-639-browser-20261029.mjs",
+      "originalSha256": "c69ae80a8bc4c650126a0be6b4cd4bfd02a8a0a9af4629d2d520735c352e6c16",
+      "originalBytes": 7553,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/tdf-artist-639-browser-control-20261029.py",
+      "sha256": "f55c52515e0580272951fdb433f8f8108028ba3fb3e5c2b4b4682d1782836c7a",
+      "bytes": 3091,
+      "originalArtifact": "tdf-artist-639-browser-control-20261029.py",
+      "originalSha256": "f55c52515e0580272951fdb433f8f8108028ba3fb3e5c2b4b4682d1782836c7a",
+      "originalBytes": 3091,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/tdf-artist-639-prepare-20261029.py",
+      "sha256": "2780d7c4fc9d90c4b3f9330151defe0b34acd8da56a4ed3c4cf034e573d54265",
+      "bytes": 7904,
+      "originalArtifact": "tdf-artist-639-prepare-20261029.py",
+      "originalSha256": "2780d7c4fc9d90c4b3f9330151defe0b34acd8da56a4ed3c4cf034e573d54265",
+      "originalBytes": 7904,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/tdf-artist-639-qualify-20261029.py",
+      "sha256": "c4cd5bf4b77586a4ae665f0b28fe05873ecb18f43fbeb26a413724819fb0b70f",
+      "bytes": 4463,
+      "originalArtifact": "tdf-artist-639-qualify-20261029.py",
+      "originalSha256": "c4cd5bf4b77586a4ae665f0b28fe05873ecb18f43fbeb26a413724819fb0b70f",
+      "originalBytes": 4463,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/tdf-artist-639-source-seal-20261029.py",
+      "sha256": "7f85114e258ed1585ccbf08c28a47297fd30bec66375f85695bc96512f1d4e88",
+      "bytes": 3904,
+      "originalArtifact": "tdf-artist-639-source-seal-20261029.py",
+      "originalSha256": "7f85114e258ed1585ccbf08c28a47297fd30bec66375f85695bc96512f1d4e88",
+      "originalBytes": 3904,
+      "encoding": "identity"
+    },
+    {
+      "path": "reports/artist-review-after-main638-2026-10-29/ui-quality.txt.gz",
+      "sha256": "4ba8adf10032ae69b9fdf762d177377ac1e2faa673b223ed4f4a995ce6e5ea2d",
+      "bytes": 52989,
+      "originalArtifact": "ui-quality.txt",
+      "originalSha256": "cc548af8e4938cc95d0e98451c8a13792557abf21331c107de99d78166e8d168",
+      "originalBytes": 1501646,
+      "encoding": "gzip"
+    }
+  ],
+  "createdAt": "2026-10-29T19:21:27.470065+00:00",
+  "reportScopeErratum": {
+    "date": "2026-10-29",
+    "priorEvidenceCommit": "150718a4c03e346c409e7bc443e6d061b2cd23fc",
+    "finding": "Earlier prose grouped648/651 as approved gallery heads. Live PR metadata/files show648 is gallery paint-readiness draft and651 is a separate legacy Stripe refund correction.648 has no current approval requested.",
+    "correction": "Only648 is the existing gallery work. Preserve both distinct heads in their normal protected queue slots; old embedded summaries/reviewer wording are historical and do not establish gallery scope or approval.",
+    "sourceAndQualificationUnchanged": true,
+    "liveEvidence": [
+      "https://api.github.com/repos/diegueins680/tdf-app/pulls/648",
+      "https://api.github.com/repos/diegueins680/tdf-app/pulls/651/files?per_page=100"
+    ],
+    "notARerunToHideFailure": "This changes report metadata only; previous fresh CI40939530124 is retained with its actual eventual status."
+  }
+}

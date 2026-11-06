@@ -1,0 +1,29 @@
+{
+  "backendCheckpoint": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "worktreeHeadAtSeal": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+  "sourceHashes": {
+    "tdf-hq/src/TDF/API/MusicRelease.hs": "3cb60fb17c91e6d8c5ac46e02c637f88456f047fb34ce6ea3137120881e37072",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "ef9e613714411c9f7388714b7b80d49e4a0001d440472fa74fbbd83047ced199",
+    "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e"
+  },
+  "sqlDriverResults": "/private/tmp/tdf-track-search-sql-3ooo3ynn/results.json",
+  "sqlDriverResultsSha256": "7c8a68c8f27cd5c47e4823e1ea601993cff2eb547bb784a97bb30d7ffc8f43ad",
+  "sqlLogSha256": "244c6f1433f6fa6b77f4488ae303abd72ba47fda3b26fc2190b68e562651b1b5",
+  "result": "PASS",
+  "nodeVersion": "v22.14.0",
+  "postgresVersion": "pg_ctl (PostgreSQL) 16.13 (Homebrew)",
+  "cleanup": {
+    "clusterStopped": true,
+    "ownedDatabasesRemoved": true
+  },
+  "scope": "Owned PostgreSQL16, selected fourteen historical migrations and actual shipped SQL/bindings; no compiled HTTP, storage, production, or SLO claim.",
+  "firstFixtureFailure": "Retained at /private/tmp/tdf-track-search-sql-y45h_hl2; initial blank artist test used impossible data and failed actual check constraint. Corrected fixture now asserts exact constraint rejection; backend unchanged.",
+  "expectedNegativeControls": [
+    "omitted binding",
+    "reordered binding",
+    "removed source-authorization gate",
+    "blank attribution check constraint"
+  ],
+  "priorHandlerSpanPreserved": true,
+  "noStageCommitPushBuildOrProductionByAgent": true
+}

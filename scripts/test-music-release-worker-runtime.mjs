@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir, userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { disposableMusicDatabase, musicTestEnvironment, musicTestDatabaseUrl } from './lib/music-test-database.mjs';
+import { observeTestChild, completedTestChild as completed } from './lib/test-child-completion.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-worker-test-'));
@@ -24,17 +25,9 @@ function startWorker(extra = {}, script = 'scripts/run-music-release-worker-once
     env: { ...workerEnv, ...extra }, stdio: ['ignore', 'pipe', 'pipe'],
   });
   children.add(child);
-  let stdout = '', stderr = '';
-  child.stdout.on('data', (data) => { stdout += data; });
-  child.stderr.on('data', (data) => { stderr += data; });
-  const done = new Promise((resolve, reject) => {
-    child.on('error', reject);
-    child.on('close', (status, signal) => {
-      children.delete(child);
-      resolve({ status, signal, stdout, stderr });
-    });
-  });
-  return { child, done, snapshot: () => ({ stdout, stderr }) };
+  const observed = observeTestChild(child);
+  child.once('close', () => children.delete(child));
+  return observed;
 }
 async function until(predicate, label, milliseconds = 15000) {
   const deadline = Date.now() + milliseconds;
@@ -42,14 +35,6 @@ async function until(predicate, label, milliseconds = 15000) {
     assert.ok(Date.now() < deadline, `Timed out: ${label}`);
     await setTimeout(100);
   }
-}
-async function completed(workerProcess) {
-  let timer;
-  try {
-    return await Promise.race([workerProcess.done, new Promise((_, reject) => {
-      timer = globalThis.setTimeout(() => reject(new Error('Worker did not stop within 30s')), 30000);
-    })]);
-  } finally { clearTimeout(timer); }
 }
 async function waitForGate(workerProcess, gate, label, milliseconds = 45000) {
   try {

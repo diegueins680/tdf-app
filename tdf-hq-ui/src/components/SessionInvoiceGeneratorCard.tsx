@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PrintIcon from '@mui/icons-material/Print';
@@ -28,7 +28,17 @@ import {
 } from '@mui/material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Invoices, type GenerateSessionInvoiceInput, type GenerateSessionInvoiceResponse, type InvoiceDTO } from '../api/invoices';
+import {
+  Invoices,
+  forgetInvoiceIssueAttempt,
+  invoiceIssueFingerprint,
+  invoiceIssueSettled,
+  nextInvoiceIssueAttempt,
+  type GenerateSessionInvoiceInput,
+  type GenerateSessionInvoiceResponse,
+  type InvoiceDTO,
+  type InvoiceIssueAttempt,
+} from '../api/invoices';
 import { Sessions, type SessionDTO } from '../api/sessions';
 import type { PartySelectorOption } from '../api/partySelector';
 import { PartySelector } from './party-selector/PartySelector';
@@ -179,6 +189,34 @@ export default function SessionInvoiceGeneratorCard() {
     setFormError(null);
   }, [selectedSession]);
 
+  // PAY-INVOICE-ISSUE-001: one idempotency key per distinct request. Resubmitting
+  // the same request (after a timeout or a double click) reuses the key, so the
+  // server replays its answer instead of issuing a second SRI invoice; any edit
+  // gets a new key. The certificate password is not part of the fingerprint.
+  const issueAttempt = useRef<InvoiceIssueAttempt | null>(null);
+  // Set when a request failed while an SRI attempt is still unresolved (for
+  // example 409 because the first request never stored its answer), so the
+  // verified "new attempt" action is reachable from the error as well.
+  const [unresolvedAfterError, setUnresolvedAfterError] = useState(false);
+  // After the verified reset, a submission of that same invoice request tells
+  // the server that staff checked the SRI portal, so it may issue even though
+  // an earlier attempt for it is unresolved (the server refuses otherwise).
+  // The verification is bound to the request fingerprint it was given for, so
+  // it never applies to another session or an edited invoice.
+  const portalVerifiedFingerprint = useRef<string | null>(null);
+  const startNewIssueAttempt = () => {
+    portalVerifiedFingerprint.current = issueAttempt.current?.fingerprint ?? null;
+    forgetInvoiceIssueAttempt(issueAttempt.current);
+    issueAttempt.current = null;
+    setUnresolvedAfterError(false);
+    setResult(null);
+    setFormError(null);
+  };
+  const idempotencyKeyFor = (sessionId: string, payload: GenerateSessionInvoiceInput) => {
+    issueAttempt.current = nextInvoiceIssueAttempt(issueAttempt.current, sessionId, payload, () => crypto.randomUUID());
+    return issueAttempt.current.key;
+  };
+
   const generateMutation = useMutation<GenerateSessionInvoiceResponse, Error, GenerateSessionInvoiceInput>({
     mutationFn: async (payload) => {
       if (!selectedSession?.sessionId) {
@@ -187,12 +225,23 @@ export default function SessionInvoiceGeneratorCard() {
       return Invoices.generateForSession(selectedSession.sessionId, payload);
     },
     onSuccess: async (response) => {
+      // Keep the key after an uncertain SRI outcome: the portal may have issued
+      // the document, so resubmitting must replay rather than issue again.
+      setUnresolvedAfterError(false);
+      portalVerifiedFingerprint.current = null;
+      if (invoiceIssueSettled(response)) {
+        forgetInvoiceIssueAttempt(issueAttempt.current);
+        issueAttempt.current = null;
+      }
       setResult(response);
       setFormError(null);
       await qc.invalidateQueries({ queryKey: ['session-invoices', selectedSession?.sessionId ?? 'none'] });
     },
-    onError: (error) => {
+    onError: (error, payload) => {
       setFormError(error.message);
+      // Keep the key for ordinary retries; offer the verified reset only for
+      // a request that issues to SRI.
+      setUnresolvedAfterError(issueAttempt.current !== null && payload.issueSri !== false);
     },
   });
 
@@ -222,6 +271,13 @@ export default function SessionInvoiceGeneratorCard() {
         issueSri,
         certificatePassword: toOptionalText(certificatePassword),
       };
+      payload.idempotencyKey = idempotencyKeyFor(selectedSession.sessionId, payload);
+      if (
+        portalVerifiedFingerprint.current !== null &&
+        portalVerifiedFingerprint.current === invoiceIssueFingerprint(selectedSession.sessionId, payload)
+      ) {
+        payload.sriPortalVerified = true;
+      }
       setFormError(null);
       setResult(null);
       generateMutation.mutate(payload);
@@ -558,7 +614,22 @@ export default function SessionInvoiceGeneratorCard() {
 
         {formError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {formError}
+            <Stack spacing={0.5}>
+              <Typography variant="body2">{formError}</Typography>
+              {unresolvedAfterError && (
+                <>
+                  <Typography variant="body2">
+                    Esta factura tiene un intento SRI sin resolver. Reintentar con los mismos datos no emite otra factura.
+                    Si confirmas en el portal del SRI que no se emitió, inicia un nuevo intento.
+                  </Typography>
+                  <Box>
+                    <Button size="small" variant="outlined" onClick={startNewIssueAttempt}>
+                      Verifiqué el portal: nuevo intento
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </Stack>
           </Alert>
         )}
 
@@ -582,6 +653,23 @@ export default function SessionInvoiceGeneratorCard() {
                 </Typography>
               ) : (
                 <Typography variant="body2">SRI no ejecutado.</Typography>
+              )}
+              {!invoiceIssueSettled(result) && (
+                <>
+                  <Typography variant="body2">
+                    La emisión SRI no quedó confirmada. Volver a generar con los mismos datos repite esta respuesta sin
+                    emitir otra factura. Si confirmas en el portal del SRI que no se emitió, inicia un nuevo intento.
+                  </Typography>
+                  <Box>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={startNewIssueAttempt}
+                    >
+                      Verifiqué el portal: nuevo intento
+                    </Button>
+                  </Box>
+                </>
               )}
             </Stack>
           </Alert>

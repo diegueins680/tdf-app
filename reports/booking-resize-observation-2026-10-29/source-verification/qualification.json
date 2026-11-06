@@ -1,0 +1,10 @@
+{
+  "baseline": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+  "appUIUnchanged": true,
+  "strictCatalogCurrent1352UnchangedExceptClock": true,
+  "wholeHistoricalCatalogFileUnchanged": true,
+  "finalDiagnosticBrowserCases": "9pass/0skip/0retry",
+  "controlledFaults": "1helper-only edgefailure withroot320;1sole-option rootfailure362/320",
+  "rootAndIndices": "PASS",
+  "purpose": "Observation only, current WebKit initial-overlay requirement remainsFAILED"
+}

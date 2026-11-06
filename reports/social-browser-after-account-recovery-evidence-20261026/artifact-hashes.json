@@ -1,0 +1,50 @@
+{
+  "source-material.json": {
+    "sha256": "b99bf6db08ef4aa1804b0d45bbe00d4c3efd4a9e5f14fec46ded1871f130b12e",
+    "bytes": 1048
+  },
+  "case-identities.json": {
+    "sha256": "ef111bdf6651e336324849259895689f2ebc4d369eb67d7f8703b800240bdd1b",
+    "bytes": 125314
+  },
+  "source-admission.json": {
+    "sha256": "38007a2cc3014ae4a841fe44462bbf1d7b781a9ee05be84d0a236ce3a64a4cc4",
+    "bytes": 623
+  },
+  "local-controls50.log": {
+    "sha256": "8b92ba0513a4ddddacc6075c481451ca944d6eb7560716a5e4fd9206f7717744",
+    "bytes": 10039
+  },
+  "inventory6.log": {
+    "sha256": "0d3643b0cd860c09d67d34ae3edff841582511b4bb9c2f9c7cdbf1175cc92093",
+    "bytes": 105
+  },
+  "trace10.log": {
+    "sha256": "5797e45b2c7c3d7f625aac114cce3b553b2c99e72108dde4b162e57b16996648",
+    "bytes": 109
+  },
+  "admission11.log": {
+    "sha256": "4d1dac29391484b1ab6d534f4954b859053e91dcef75418c8f2bee14eb6d6cca",
+    "bytes": 110
+  },
+  "hosted3206-persona.json": {
+    "sha256": "61a7027ed48c234cdda7c38a669103690773a4fa344dd43e90fdbc3a1ec898b6",
+    "bytes": 1217
+  },
+  "hosted3206-persona.log": {
+    "sha256": "7ff8a69e9f803da0e6fae1b7bf6eb3dc68eba15611263a22cfb7c3ea800a11f0",
+    "bytes": 162963
+  },
+  "hosted3206-social.json": {
+    "sha256": "4eca1a1b777a030ae852bbd7eb243c4c5f28e9c0e8df67e1bfe01285d168f2af",
+    "bytes": 1500
+  },
+  "hosted3206-social.log": {
+    "sha256": "b131860f38c709736c091ab716ed5b4655748472bb4c64f204c5e19379fb7b1f",
+    "bytes": 36366
+  },
+  "hosted3206-quality.log": {
+    "sha256": "3fd8d3bb3e67bcf7cb37f3becb2a287866f3869419c7a353ea4ce0dab18ad6f8",
+    "bytes": 3154
+  }
+}

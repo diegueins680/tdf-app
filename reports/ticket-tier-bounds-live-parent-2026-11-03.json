@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-03T01:04:42.755947+00:00",
+  "baseline659": "93589a5f31426c8542d8c36fe1da37dabad4fd22",
+  "incoming658": "8e18b249084f3b411ed927e85ea1aaf94eb8e2ad",
+  "composition": "cc6b87fbd54611c88ca289024932ef922be9426c",
+  "qualifiedSource": "23022063d2cc2700fc4c9ba04f16c099188ac0a0",
+  "main": "a0cc6529fa10d3aae33804a06c3da23c648a9fbb",
+  "problem": "A tier total edit racing a purchase persisted total1/sold3 from valid initial total20/sold0. Both edit and reservation used stale independently checked inventory. Four original actual-handler counterexamples cover directpurchase/legacycheckout in both mutation orders; barrier onlylocks unchangedtier, no provider or test-side stock mutation.",
+  "correction": "Preserve existing659atomiccomplete-tieredit guarded by current sold count+event binding and return entity in same transaction. Both reservation paths reuse existinglocked Event-to-Tier Inventory.reserveTicketInventory insideorder/ticketcreation. Sharedhelper itself remains exact to originalqualifiedsource. Two duplicated reservation implementations removed, net43handlerlinesremoved.",
+  "preservation": {
+    "incoming658": "8e18b249084f3b411ed927e85ea1aaf94eb8e2ad",
+    "composition": "cc6b87fbd54611c88ca289024932ef922be9426c",
+    "oldQualified659": "93589a5f31426c8542d8c36fe1da37dabad4fd22",
+    "oldParent658": "1667d586b3901f9470baaedb6024a34e6e388118",
+    "exactResidualPatches": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "exactResidual": true,
+        "originalPatchSHA256": "f220720de0e411360c3d2f5bf832b1aa760a8647fa1f5e401a866c0a0b9460dd",
+        "composedPatchSHA256": "f220720de0e411360c3d2f5bf832b1aa760a8647fa1f5e401a866c0a0b9460dd"
+      },
+      {
+        "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "exactResidual": true,
+        "originalPatchSHA256": "213da662f776fbf17603b4fb630d811deb02d7e2e5a720a46073e0a4f59f2f76",
+        "composedPatchSHA256": "213da662f776fbf17603b4fb630d811deb02d7e2e5a720a46073e0a4f59f2f76"
+      },
+      {
+        "path": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "exactResidual": true,
+        "originalPatchSHA256": "93caa1f1f560f9d41f9eb5f4b4ec7ffa1e7073a2379339bdbc69733e328c1966",
+        "composedPatchSHA256": "93caa1f1f560f9d41f9eb5f4b4ec7ffa1e7073a2379339bdbc69733e328c1966"
+      }
+    ],
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq-ui",
+      "tdf-mobile",
+      "package-lock.json",
+      "package.json",
+      "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/stack.yaml.lock",
+      ".github/workflows",
+      "scripts/quality-repo.sh",
+      "scripts/run-music-release-worker-once.sh",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "scripts/lib/test-child-completion.mjs",
+      "tdf-hq/src/TDF/Ticketing"
+    ],
+    "otherRequirementObjectsExact": 169,
+    "totalRequirements": 170,
+    "catalogDecisionObjectsExact": 1372,
+    "architecture": {
+      "reservationCopiesReplacedWithSharedAuthority": 2,
+      "handlerAddedLines": 30,
+      "handlerRemovedLines": 73,
+      "handlerNetRemovedLines": 43
+    },
+    "contractClarifications": "Acceptanceboundsclausesunchanged;227evidencehistorical/current228required; owneractualreservationtimingruleunderexisting666retainedasoutstanding.",
+    "currentRuntime": "12tier+90refund=102combinedhandlercasesPENDING; noold4464/12relabelling.",
+    "sharedInventoryAuthorityMatchesHistoricalQualifiedSource": true
+  },
+  "properties": [
+    {
+      "id": "EVT-TIER-EDIT-BOUNDS-001",
+      "status": "BOUNDED_VERIFIED",
+      "scope": "Successful tier edit total remains at least current sold; fixed48input/606state/658transition model with currentread/lock assumptions."
+    },
+    {
+      "id": "EVT-LEGACY-RESERVE-BOUNDS-001",
+      "status": "BOUNDED_VERIFIED",
+      "scope": "Reservation reads locked current stock and commits stock with order/tickets. Eventcapacity fixedpermodelinput; noSQL/Haskellrefinement.",
+      "currentImplementation": "PARTIAL untilfreshcurrent102handlerqualification."
+    }
+  ],
+  "verification": {
+    "currentLocal": "21finitechecks,8catalogcontrols,fullrootQA,strictJSON/CSV,inventory/conformancegenerate/check+immutableadmissionPASS.",
+    "counterexamples": "Original4actualcasesallfailed,total1/sold3; currentfinite stale-sold/stale-total/omitted-tier-lock controls exposeoversells.",
+    "priorRuntime": "Original93589:12newhandlercasesPASS(4races+8compatibility),4464full0fail21pending,227migrations. Original913compiledAPIoperationclaimishistoricalonly.",
+    "currentRuntime": "NOT_EXECUTED locally; freshhostedStackGHC9.10.3/full228manifest mustqualify12tiercases plusall90parentrefundcases=102intendedcases. No old4464/12countsrelabeled.",
+    "parent658": "ALL7workflowsSUCCESS exact8e18; actual90casesoncewithin407PGgroup/0fail/full228appliedreplayed,4091full0fail21pending,23worker,682browser. Theseareparentresults, notnew659execution.",
+    "contract": "Inventoryboundsacceptanceunchanged; original227schemaevidenceexplicitlyhistorical. Ownerrequiresdeadlinevalidityatactualreservation; existing666followupcovers it. Thiscandidatepreservesoldtimeargument anddoesnotestablishthattimingrequirement."
+  },
+  "assurance": {
+    "newTheorems": 0,
+    "wholeRequirements": 170,
+    "wholeImplementation": "170UNPROVEN",
+    "wholeRefinement": "170UNPROVEN",
+    "inheritedConditionalSMTLemmas": 11,
+    "release": "BLOCKED",
+    "limits": [
+      "Finite modelisnotSQL/Haskellrefinement; eventcapacityfixedperinput.",
+      "Initiallyvalidnonnegative stock/cooperatingwriters assumed; oldbinaries/directwriters/historicalbadstockoutsideguarantee.",
+      "Actual-reservationdeadlinevalidity remainsestablishedownerrequirementunderexisting666, notfulfilledbythisinventory-onlychange.",
+      "Price/currency/workflow/privacy/ownershipsnapshots and providerrecovery remainseparateexistingfollowups.",
+      "No alternative-isolationavailability guarantee from defaultREADCOMMITTED tests.",
+      "Freshcurrent102actualhandlerqualificationpending."
+    ]
+  },
+  "integration": {
+    "existingPR": 659,
+    "base": "fix/legacy-refund-history-fence-20261028",
+    "draft": true,
+    "autoMerge": false,
+    "review": "Fresh exact-head required.",
+    "upstream": "699ALL6SUCCESS/657+658ALL7SUCCESS+READY but approvalsabsentlastread;654oldDCredCIretained. No ownmerge.",
+    "messagesOrReviewerRequestsSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Qualifyactual12tier+90refund=102cases/full228manifest oncurrentcandidate, thenrequiredreview.",
+    "699requirescurrentapprovalbeforeordinaryfeaturemergeinto654; freshmainstrict20contexts/exactheadreviewfollow.",
+    "657/658readyqualifiedheadsrequireownreviewsandsafeupstreamintegration; no priorapprovalborrowed.",
+    "Existing660eligibility/661fees/662prices/663promo/664terms/666actualreservationclock followqualifiedstack."
+  ],
+  "evidence": {
+    "archive": "reports/ticket-tier-bounds-live-parent-2026-11-03/evidence.tar.gz",
+    "sha256": "ce27f305f7c0fc01dac185e930c8e9ada0955b8359919a1c1e17efa63c54fea4",
+    "regularFiles": 104,
+    "independentlyVerifiedManifestEntries": 103,
+    "manifest": "reports/ticket-tier-bounds-live-parent-2026-11-03/manifest.json"
+  }
+}

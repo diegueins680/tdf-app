@@ -10,8 +10,12 @@ import { promisify } from 'node:util';
 import {
   collectFailingFormalFindings,
   collectFormalFindings,
+  countFormalFindingsByRule,
   findingMeetsSeverityThreshold,
+  formalRuleCategory,
   formatFormalFinding,
+  maskHaskellCommentsAndStrings,
+  selectFormalFindingsInScope,
   summarizeFormalFindings,
 } from '../lib/formal-methods-audit.mjs';
 
@@ -174,6 +178,129 @@ test('formal audit CLI exposes a nonblocking default and an explicit stricter ga
     await assert.rejects(
       () => execFileAsync('node', [auditScriptPath, '--fail-on', 'warning'], { cwd: repoDir }),
       /Command failed/,
+    );
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('Haskell masking blanks comments, strings and char literals but keeps code and lines', () => {
+  const source = [
+    'x = 1 -- open with lock',
+    '{- openFile {- nested -} connect -}',
+    'y = "connect with \\"openFile\\"" ++ [\'"\']',
+    "z' = openFile p",
+    'q = a --> b',
+  ].join('\n');
+  const masked = maskHaskellCommentsAndStrings(source);
+  assert.equal(masked.split('\n').length, 5);
+  assert.equal(masked.length, source.length);
+  assert.doesNotMatch(masked.split('\n').slice(0, 3).join('\n'), /openFile|connect|with|lock/);
+  assert.match(masked.split('\n')[3], /openFile p/);
+  assert.match(masked.split('\n')[4], /a --> b/);
+});
+
+test('resource rule ignores prose, SQL and messages and flags only unreleased handles (F-11)', async () => {
+  const { tempRoot, repoDir } = await initTrackedRepo([
+    [
+      'src/Prose.hs',
+      [
+        'module Prose (prose, leak, released) where',
+        '',
+        'import System.IO (IOMode(ReadMode), openFile, withFile, hClose)',
+        'import Control.Exception (finally)',
+        '',
+        '-- | Locks the row; acquire the lock with care.',
+        'prose :: String',
+        'prose = "WITH requested AS (SELECT 1) -- connect with lock"',
+        '',
+        'leak :: IO ()',
+        'leak = do',
+        '  _ <- openFile "leak.txt" ReadMode',
+        '  pure ()',
+        '',
+        'released :: IO ()',
+        'released = do',
+        '  h <- openFile "ok.txt" ReadMode',
+        '  pure () `finally` hClose h',
+        '',
+      ].join('\n'),
+    ],
+  ]);
+
+  try {
+    const findings = await collectFormalFindings(repoDir);
+    assert.deepEqual(
+      findings.map((finding) => [finding.rule, finding.line]),
+      [['unbracketed-resource', 12]],
+    );
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('rule categories separate semantic findings from style debt', () => {
+  const findings = [
+    { rule: 'magic-number', severity: 'info' },
+    { rule: 'unbracketed-resource', severity: 'warning' },
+    { rule: 'deep-nesting', severity: 'warning' },
+    { rule: 'some-future-rule', severity: 'warning' },
+  ];
+  assert.equal(formalRuleCategory('magic-number'), 'style');
+  assert.equal(formalRuleCategory('unbracketed-resource'), 'semantic');
+  // An uncategorised rule is reported, never silently hidden.
+  assert.equal(formalRuleCategory('some-future-rule'), 'semantic');
+  assert.deepEqual(
+    selectFormalFindingsInScope(findings, 'semantic').map((finding) => finding.rule),
+    ['unbracketed-resource', 'some-future-rule'],
+  );
+  assert.deepEqual(
+    selectFormalFindingsInScope(findings, 'style').map((finding) => finding.rule),
+    ['magic-number', 'deep-nesting'],
+  );
+  assert.equal(selectFormalFindingsInScope(findings, 'all').length, 4);
+  assert.deepEqual(countFormalFindingsByRule(findings), {
+    'deep-nesting': 1,
+    'magic-number': 1,
+    'some-future-rule': 1,
+    'unbracketed-resource': 1,
+  });
+});
+
+test('formal audit CLI reports semantic findings by default and style debt on request', async () => {
+  const { tempRoot, repoDir } = await initTrackedRepo([
+    [
+      'src/Active.hs',
+      ['module Active where', '', 'active :: Int', 'active = 4242', ''].join('\n'),
+    ],
+    [
+      'src/numbers.ts',
+      ['export const timeoutMs = setTimeout(() => undefined, 4242);', ''].join('\n'),
+    ],
+  ]);
+
+  try {
+    const semantic = JSON.parse(
+      (await execFileAsync('node', [auditScriptPath, '--json'], { cwd: repoDir })).stdout,
+    );
+    assert.equal(semantic.scope, 'semantic');
+    assert.deepEqual(semantic.findings.map((finding) => finding.rule), ['implicit-module-exports']);
+    assert.equal(semantic.outOfScope, 1);
+    assert.deepEqual(semantic.byRule, { 'implicit-module-exports': 1, 'magic-number': 1 });
+
+    const style = JSON.parse(
+      (await execFileAsync('node', [auditScriptPath, '--json', '--scope', 'style'], { cwd: repoDir })).stdout,
+    );
+    assert.deepEqual(style.findings.map((finding) => finding.rule), ['magic-number']);
+
+    const all = JSON.parse(
+      (await execFileAsync('node', [auditScriptPath, '--json', '--scope', 'all'], { cwd: repoDir })).stdout,
+    );
+    assert.equal(all.summary.total, 2);
+
+    await assert.rejects(
+      () => execFileAsync('node', [auditScriptPath, '--scope', 'bogus'], { cwd: repoDir }),
+      /Unsupported --scope value/,
     );
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });

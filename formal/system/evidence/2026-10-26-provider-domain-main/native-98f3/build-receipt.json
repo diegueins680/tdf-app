@@ -1,0 +1,14 @@
+{
+  "source": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
+  "command": [
+    "stack",
+    "build",
+    "--test",
+    "--no-run-tests"
+  ],
+  "exitCode": 0,
+  "startedAt": "2026-10-26T22:33:03.872903+00:00",
+  "finishedAt": "2026-10-26T22:40:25.158807+00:00",
+  "logSha256": "85f5673ea50d4405add7a60f639022fe648e63ecba89c6f303dce683bdbb0a97",
+  "sourceRevisionUnchanged": true
+}

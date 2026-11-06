@@ -104,6 +104,10 @@ psql_file() {
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql" >/dev/null
 # A restart/retry before the migration ledger is committed must be harmless.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
 # Exercise the actual incremental deploy retry and operational rollback path.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
@@ -390,6 +394,7 @@ BEGIN
 END
 $$;
 
+
 DO $$
 DECLARE public_json JSONB;
 BEGIN
@@ -416,6 +421,43 @@ BEGIN
     ORDER BY source_updated_at DESC,entity_kind,entity_id LIMIT 50;
   elapsed_ms := extract(epoch FROM (clock_timestamp()-started))*1000;
   IF elapsed_ms>750 THEN RAISE EXCEPTION 'representative search exceeded 750ms: % ms',elapsed_ms; END IF;
+END
+$$;
+SQL
+
+# AUTHORITY-097: revocation of an approved claim requires reviewer evidence and
+# a reason, refuses to leave an active grant behind, and is terminal in code.
+psql_exec <<'SQL' >/dev/null
+DO $$
+DECLARE
+  fixture_party BIGINT;
+  target_id UUID;
+  claim_id UUID := gen_random_uuid();
+BEGIN
+  SELECT id INTO fixture_party FROM party WHERE display_name='Synthetic directory migration fixture';
+  SELECT id INTO target_id FROM directory_profile WHERE slug='synthetic-canonical-profile';
+  INSERT INTO directory_claim(id,profile_id,claimant_party_id,claim_type,status,evidence,submitted_at,reviewer_party_id,reviewed_at)
+  VALUES (claim_id,target_id,fixture_party,'profile','approved','[]',now(),fixture_party,now());
+  INSERT INTO directory_profile_manager(profile_id,account_party_id,can_edit,source_claim_id)
+  VALUES (target_id,fixture_party,TRUE,claim_id)
+  ON CONFLICT (profile_id,account_party_id) DO UPDATE SET active=TRUE,revoked_at=NULL,source_claim_id=EXCLUDED.source_claim_id;
+  BEGIN
+    UPDATE directory_claim SET status='revoked' WHERE id=claim_id;
+    RAISE EXCEPTION 'revocation without a reason was accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
+    UPDATE directory_claim SET status='revoked',reviewer_notes='Fraudulent evidence' WHERE id=claim_id;
+    RAISE EXCEPTION 'revocation left an active manager grant';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  UPDATE directory_profile_manager SET active=FALSE,revoked_at=now(),version=version+1 WHERE source_claim_id=claim_id AND active;
+  UPDATE directory_claim SET status='revoked',reviewer_notes='Fraudulent evidence' WHERE id=claim_id;
+  IF (SELECT status FROM directory_claim WHERE id=claim_id)<>'revoked' THEN RAISE EXCEPTION 'revocation did not persist'; END IF;
+  IF EXISTS (SELECT 1 FROM directory_profile_manager WHERE source_claim_id=claim_id AND active) THEN RAISE EXCEPTION 'grant survived revocation'; END IF;
+  -- Clean up so later fixtures keep their management expectations.
+  DELETE FROM directory_profile_manager WHERE source_claim_id=claim_id;
+  DELETE FROM directory_claim WHERE id=claim_id;
 END
 $$;
 SQL
@@ -507,6 +549,8 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-09_music_directory_suppressed_
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+# Later directory migrations the current handlers depend on (kept in manifest order).
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql" >/dev/null
 
 # Exercise the anonymous taxonomy handler against the migrated database. This catches
 # drift between the SQL implementation and the canonical OpenAPI/client projection.
@@ -1001,6 +1045,8 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sy
 # redefines the venue projection (venue image); keep the database in release
 # order before serving searches from it.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+# Later directory migrations the current handlers depend on (kept in manifest order).
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql" >/dev/null
 # A genre search alias edit resyncs the events it reaches (2026-10-14):
 # apply twice, verify, roll back, reapply and verify again.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null

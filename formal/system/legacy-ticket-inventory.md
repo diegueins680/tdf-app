@@ -62,8 +62,9 @@ orders; future participating reservations still check its current capacity.
 Workflow/privacy, original payment, price/currency/manager snapshots and terms
 lifecycle beyond the retained existing check are not proven by inventory reuse.
 
-Actual handlers are TESTED against the full227-migration PostgreSQL schema
-with its default READ COMMITTED isolation. Serialization failures or other
+The original 2026-10-28 handler evidence is TESTED against the full227-migration
+PostgreSQL schema with its default READ COMMITTED isolation. A reconciled candidate
+must qualify against the current complete production manifest. Serialization failures or other
 isolation defaults are not promoted to availability guarantees by these tests.
 The bounded design model enumerates48 initial sold/total/requested/quantity/
 fixed-event-capacity combinations and both interleavings, including a tier read
@@ -72,3 +73,7 @@ stale sold, stale total or omit the tier lock and must yield counterexamples.
 This BOUNDED_VERIFIED abstraction is not a SQL/Haskell refinement, whole-handler
 proof or proof about concurrent capacity edits (capacity is fixed per model input).
 Existing inventory component tests and full regression suites remain required.
+
+The later owner decision requires deadline validity at actual inventory reservation;
+existing follow-up #666 covers that timing correction. This change preserves the
+historical supplied timestamp and does not establish that timing requirement.

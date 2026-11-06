@@ -1,0 +1,1 @@
+[fix/music-worker-completion-evidence-20261029 ab261ee88] Merge protected booking correction into worker diagnostics

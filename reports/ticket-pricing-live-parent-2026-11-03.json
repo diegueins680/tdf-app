@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-03T05:00:09.553193+00:00",
+  "baseline662": "0d66f3d7a1a81d4ecc02d84ae5c95f184df75e9d",
+  "incoming661": "c2da8b63c02e560550e90c89f570cf933b817acd",
+  "composition": "71a31fb10d799f4fa851241d876662c0c5632c00",
+  "qualifiedSource": "ce3604b4d4f9a9476d538a265de5611457403438",
+  "mainObserved": "c44d32816821051cf7a97096779c99bc1614e7fc",
+  "compositionScope": "Component parent661 reconciliation. Unrelated main694 radio is not in this parent; actual current-main reconciliation remains required before protected integration. Parent658 is separately reconciled with main694.",
+  "problem": "Four original handler counterexamples admit a paid zero-value order and three tickets after a normal organizer changes tier price0-to1 or currencyUSD-toEUR while the buyer waits. These are real internal admission failures, without provider or SMTP calls.",
+  "correction": "Preserve the shared locked Tier financial check before new-hold effects in both legacy routes. Current event binding, exact unit price and uppercased currency must match the server quote; mismatch returns409. Hold Tier lock through order commit. Preserve historical snapshots/replay and harmless edits; leave inventory authority unchanged.",
+  "preservation": {
+    "baseline662": "0d66f3d7a1a81d4ecc02d84ae5c95f184df75e9d",
+    "oldParent661": "f302b3da87a5e40934b2bdf5426dff64b686be49",
+    "incoming661": "c2da8b63c02e560550e90c89f570cf933b817acd",
+    "exactResidualPatches": [
+      {
+        "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "exactResidual": true,
+        "originalSHA256": "98b0a48cd208c800f1f8094cfb2088ce82cebfb2af4c0e5b2d20392df0f3ce63",
+        "composedSHA256": "98b0a48cd208c800f1f8094cfb2088ce82cebfb2af4c0e5b2d20392df0f3ce63"
+      },
+      {
+        "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "exactResidual": true,
+        "originalSHA256": "2a16f65982d73543c5f1d596890dd707141904adaed7dbf349f390d684fbceea",
+        "composedSHA256": "2a16f65982d73543c5f1d596890dd707141904adaed7dbf349f390d684fbceea"
+      },
+      {
+        "path": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "exactResidual": true,
+        "originalSHA256": "2ebcdeec62f4433ea5990613cab5a2455259912446a4e993cad1c056a0b0fb7c",
+        "composedSHA256": "2ebcdeec62f4433ea5990613cab5a2455259912446a4e993cad1c056a0b0fb7c"
+      }
+    ],
+    "otherRequirementsExact": 169,
+    "totalRequirements": 170,
+    "canonicalDecisionObjectsExact": 1372,
+    "canonicalFileByteExact": true,
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq-ui",
+      "tdf-mobile",
+      "package.json",
+      "package-lock.json",
+      "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/stack.yaml.lock",
+      ".github/workflows",
+      "scripts/quality-repo.sh",
+      "scripts/run-music-release-worker-once.sh",
+      "tdf-hq/src/TDF/Ticketing"
+    ],
+    "normativeContractExact": true,
+    "scope": "Componentparentcomposition;unrelatedmain694radioisnotaddedto662diff. Freshactualmainreconciliationstillrequiredbeforeintegration.",
+    "composition": "71a31fb10d799f4fa851241d876662c0c5632c00"
+  },
+  "properties": [
+    {
+      "id": "EVT-LEGACY-PRICE-SNAPSHOT-001",
+      "designAssurance": "BOUNDED_VERIFIED",
+      "bounds": "One buyer/editor,two prices/two currencies,12 distinct initial/target pairs,216states/216transitions/12retainedhistoricalstates.",
+      "currentImplementation": "PARTIAL until fresh134-case Stack/PostgreSQL qualification."
+    },
+    {
+      "id": "FinancialSnapshotMatchesAtAdmission",
+      "assurance": "BOUNDED_VERIFIED",
+      "scope": "At admission, not equality with every future tier edit; no Haskell/SQL refinement."
+    },
+    {
+      "id": "RefusalHasNoEffects",
+      "assurance": "BOUNDED_VERIFIED",
+      "scope": "Durable effects; temporary writes rolled back by exception are not counted as committed violations."
+    }
+  ],
+  "traceability": {
+    "requirement": "EVT-TICKET-001",
+    "invariant": "EVT-LEGACY-PRICE-SNAPSHOT-001",
+    "authority": "formal/system/legacy-ticket-pricing-snapshot.md;ADR0112;canonical new checkout price/currency correspondence",
+    "implementation": {
+      "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+      "entryPoints": [
+        "directnewpurchase",
+        "legacynewStripehold"
+      ],
+      "authorityFunction": "lockTicketPurchaseTierPricing"
+    },
+    "tests": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+    "formalModel": "scripts/__tests__/ticket-admission-model.test.mjs",
+    "ciProtection": {
+      "workflow": ".github/workflows/ci.yml",
+      "job": "backend-quality",
+      "runtimeRunner": "scripts/test-provider-retry-runtime.sh",
+      "sourceAdmission": "scripts/check-new-specification-surfaces.py"
+    },
+    "evidenceCommit": "ce3604b4d4f9a9476d538a265de5611457403438",
+    "localEvidence": "checks/composed-model.json andsource-bindings.json incommittedcapsule",
+    "currentNativeStatus": "PARTIAL pendingfresh134cases/full228; no old runtime relabeled"
+  },
+  "verification": {
+    "currentLocal": "25modelchecks/4pricingnegativecontrols,8catalogcontrols,strictJSON/CSV,6metadata steps,sourceadmission,frozenchecks,fullrepositoryqualityPASS.",
+    "historicalCounterexamples": "Original4handlerfailures; final11targetedcasesPASS. Removing only financial-read FORUPDATE while retaining Inventory locking makes both Tier FIFO cases fail with200/paid0/sold3. Correct source restored and independently hash-checked in original evidence; not re-executed locally on this composition.",
+    "historicalRuntime": "Original4496full examples/0failures/21pending,227migrations and913-operation API/serving identities retain their original source scope. sourceDirectorySha256 hashes Directory.hs only, not the ticketing directory or whole tree.",
+    "currentRuntime": "NOT_EXECUTED locally. Fresh canonical Stack/GHC9.10.3 must qualify11pricing+123parent=134intendedcases within451PostgreSQLexamples and all228migrations.",
+    "parent661": "Exactc2da all7workflowsSUCCESS;actual123casesoncein440PG/full228/4091full0fail21pending/23worker/682browser. Parent results are not child execution.",
+    "environment": "Owned verification dependencies reused; exactMobilec3b initialized; no fresh canonicalinstall/native-lockcompleteness or localHaskellcoldbuild claimed."
+  },
+  "assurance": {
+    "wholeRequirements": 170,
+    "wholeImplementation": "170UNPROVEN",
+    "wholeRefinement": "170UNPROVEN",
+    "canonicalConditionalSMTLemmas": 11,
+    "newTheorems": 0,
+    "release": "BLOCKED",
+    "limits": [
+      "Finite model assumes participating Tier writers and transactions; no Haskell/SQL refinement.",
+      "DefaultREADCOMMITTED is the runtime target; alternate-isolation availability and mixed old/direct writers remain separate.",
+      "Actual reservation-time eligibility666,promo/policy snapshots663/664,owner snapshots and provider recovery remain separate obligations.",
+      "Historical financial data is preserved; current134-case combined runtime and current-main qualification remain pending."
+    ]
+  },
+  "integration": {
+    "existingPR": 662,
+    "base": "fix/legacy-ticket-final-amount-20261028",
+    "draft": true,
+    "autoMerge": false,
+    "mainIntegration": "Requires upstream integration,current-main reconciliation,fresh main checks/current review/ordinary admission.",
+    "messagesOrReviewerRequestsSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Fresh134cases/full228/runtime/workflow qualification;keepdraftuntilrelevantworkflows pass.",
+    "658main694head6b20requiresitsfresh90cases/mainchecks/currentapproval;659660661thenfollowserially.",
+    "Existing663promo/664terms/666reservation-clock remain focused followups."
+  ],
+  "evidence": {
+    "archive": "reports/ticket-pricing-live-parent-2026-11-03/evidence.tar.gz",
+    "sha256": "67bb69eb2e7d5cb93f20bf2e9d154132d0f8817faf0297ff94ab88745b601e5a",
+    "regularFiles": 106,
+    "independentlyVerifiedManifestEntries": 105,
+    "manifest": "reports/ticket-pricing-live-parent-2026-11-03/manifest.json"
+  }
+}

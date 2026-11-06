@@ -1,0 +1,192 @@
+{
+  "kind": "read-only-hosted-persona-timeout-diagnosis",
+  "capturedAtUtc": "2026-10-26T17:40:47.500385+00:00",
+  "PR": 622,
+  "publishedHead": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+  "actualCIMergeCommit": "23215675cad7520b99f6208296e3f441914da158",
+  "run": 40363971868,
+  "job": 121717766727,
+  "artifactId": 12671562371,
+  "artifactZipSha256": "852e30d3a099976e89db574069784cefc57b56b5beb3ed3e380b0909e2e9c044",
+  "uploadedDigestFromHostedLog": "852e30d3a099976e89db574069784cefc57b56b5beb3ed3e380b0909e2e9c044",
+  "image": "mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53",
+  "workers": 2,
+  "stats": {
+    "startTime": "2026-10-26T17:09:21.535Z",
+    "duration": 1206228.064,
+    "expected": 565,
+    "skipped": 22,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "failure": {
+    "case": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+    "project": "webkit-iphone",
+    "location": "e2e/web/marketplace-cart.spec.mjs:116",
+    "status": "timedOut",
+    "configuredWholeTestBudgetMs": 30000,
+    "durationMs": 30798,
+    "activeAction": "Final close-cart click at line172; driver waiting for visible/enabled/stable before dispatch.",
+    "failedBusinessAssertions": 0,
+    "evidenceLimit": "Later JS assertions record without errors during teardown after deadline; those are not a passing test result."
+  },
+  "confirmedObservations": {
+    "cartNetwork": [
+      {
+        "method": "POST",
+        "path": "/marketplace/cart",
+        "status": 200,
+        "durationMs": 117.253
+      },
+      {
+        "method": "POST",
+        "path": "/marketplace/cart/00000000-0000-4000-8000-00000000ca27/items",
+        "status": 200,
+        "durationMs": 339.719
+      },
+      {
+        "method": "GET",
+        "path": "/marketplace/cart/00000000-0000-4000-8000-00000000ca27",
+        "status": 200,
+        "durationMs": 154.061
+      },
+      {
+        "method": "GET",
+        "path": "/marketplace/cart/00000000-0000-4000-8000-00000000ca27",
+        "status": 200,
+        "durationMs": 30.445
+      },
+      {
+        "method": "POST",
+        "path": "/marketplace/cart/00000000-0000-4000-8000-00000000ca27/items",
+        "status": 200,
+        "durationMs": 101.498
+      }
+    ],
+    "actionabilityWaits": [
+      {
+        "call": "call@1226",
+        "selector": "internal:role=button[name=\"Agregar: Micr\u00f3fono Vintage SM58\"i]",
+        "startMonotonicMs": 660993.717,
+        "endMonotonicMs": 661938.223,
+        "actionabilityStableWaitMs": 617.983,
+        "notStableOrPointerInterceptionMessages": []
+      },
+      {
+        "call": "call@1264",
+        "selector": "header >> internal:testid=[data-testid=\"marketplace-cart-button\"s]",
+        "startMonotonicMs": 667852.025,
+        "endMonotonicMs": 668371.097,
+        "actionabilityStableWaitMs": 327.052,
+        "notStableOrPointerInterceptionMessages": []
+      },
+      {
+        "call": "call@1274",
+        "selector": "internal:role=dialog[name=\"Carrito\"i] >> internal:role=button[name=\"Cerrar carrito\"i]",
+        "startMonotonicMs": 669289.699,
+        "endMonotonicMs": 674066.854,
+        "actionabilityStableWaitMs": 4290.513,
+        "notStableOrPointerInterceptionMessages": []
+      },
+      {
+        "call": "call@1324",
+        "selector": "header >> internal:testid=[data-testid=\"marketplace-cart-button\"s]",
+        "startMonotonicMs": 675420.605,
+        "endMonotonicMs": 679280.581,
+        "actionabilityStableWaitMs": 3491.334,
+        "notStableOrPointerInterceptionMessages": []
+      },
+      {
+        "call": "call@1328",
+        "selector": "internal:role=dialog[name=\"Carrito\"i] >> internal:role=button[name=\"Quitar Micr\u00f3fono Vintage SM58 del carrito\"i]",
+        "startMonotonicMs": 679363.061,
+        "endMonotonicMs": 682589.069,
+        "actionabilityStableWaitMs": 3053.003,
+        "notStableOrPointerInterceptionMessages": []
+      },
+      {
+        "call": "call@1336",
+        "selector": "internal:role=dialog[name=\"Carrito\"i] >> internal:role=button[name=\"Cerrar carrito\"i]",
+        "startMonotonicMs": 682876.939,
+        "endMonotonicMs": null,
+        "actionabilityStableWaitMs": 5067.597,
+        "notStableOrPointerInterceptionMessages": []
+      }
+    ],
+    "noReportedInstabilityOrInterception": true,
+    "pageErrorOrCrashEvents": [],
+    "cartRemovedSuccessfully": "Actual synthetic response mcItems=[]; screenshot visibly shows empty drawer before final close.",
+    "sameCaseProjectDurations": [
+      {
+        "project": "chromium-desktop",
+        "status": "expected",
+        "durationMs": 5068
+      },
+      {
+        "project": "chromium-phone",
+        "status": "expected",
+        "durationMs": 4869
+      },
+      {
+        "project": "chromium-tablet",
+        "status": "expected",
+        "durationMs": 5593
+      },
+      {
+        "project": "android-chrome-small",
+        "status": "expected",
+        "durationMs": 3925
+      },
+      {
+        "project": "webkit-iphone",
+        "status": "unexpected",
+        "durationMs": 30798
+      }
+    ],
+    "fixtureTestSourceMatchesTraceResourceExactly": true,
+    "sourceFingerprints": {
+      "e2e/web/marketplace-cart.spec.mjs": {
+        "sha256": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
+        "unchangedFromMain78fa": true
+      },
+      "tdf-hq-ui/src/pages/MarketplacePage.tsx": {
+        "sha256": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
+        "unchangedFromMain78fa": true
+      }
+    }
+  },
+  "assessment": {
+    "confirmed": "Whole-test deadline exhausted amid multi-second WebKit actionability stability polling. Five cart API calls returned200 in30\u2013340ms; no failed business assertion, network policy mismatch, app crash or intercept condition evidenced.",
+    "inference": "Environment/render-frame scheduling slowness is supported; one long multi-stage journey accumulates those delays. Underlying WebKit/host cause is not established.",
+    "notEstablished": [
+      "new audio/search product regression",
+      "specific WebKit engine defect",
+      "repeatable isolated failure",
+      "safe waiver of release gate"
+    ]
+  },
+  "reproductionAvailability": {
+    "localWebKitExecutable": "/Users/macpro/Library/Caches/ms-playwright/webkit-2272/pw_run.sh",
+    "installed": false,
+    "colimaRunning": false,
+    "newBrowserExecution": false,
+    "noToolInstallOrVMStartup": true
+  },
+  "recommendedNextSteps": [
+    "If additional reproduction is needed, run this exact unmodified test once in isolated pinned Linux/WebKit with trace and same30s budget; do not blindly rerun the entire pipeline.",
+    "With root authorization, split the oversized journey into add/open/reload persistence and independent seeded saved-cart removal/recovery journeys, retaining each existing assertion and30s budgets. This is a proposed fixture restructuring, not implemented or proven by this audit."
+  ],
+  "repoEdits": [],
+  "testsRerun": false,
+  "timeoutOrSkipOrAssertionChanges": false,
+  "fileSha256": {
+    "/private/tmp/tdf-audio-discovery-5f-persona-failure.log": "4cf67bff3e9773ad1b3669d7d06c12a8e94d5f425c3f3b36a0e81d940204871b",
+    "/private/tmp/tdf-discovery-5f-persona-artifact-20261026.zip": "852e30d3a099976e89db574069784cefc57b56b5beb3ed3e380b0909e2e9c044",
+    "/private/tmp/tdf-discovery-5f-persona-artifact-20261026/results.json": "669dc22084fa2fd8b0401b4e796c069b4d34bcba665e50b888cbd7ec99993dd3",
+    "/private/tmp/tdf-discovery-5f-persona-artifact-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-webkit-iphone/trace/test.trace": "f1569850eed5dd21538dc09d0a710dafafb3377d7ee9b4061c26892bac2a0221",
+    "/private/tmp/tdf-discovery-5f-persona-artifact-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-webkit-iphone/trace/0-trace.trace": "a62b54bb3426352fee32c8cd9d97c26223acefbed1bceeb92a015327bc06fbd8",
+    "/private/tmp/tdf-discovery-5f-persona-artifact-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-webkit-iphone/trace/0-trace.network": "06e08b9424cea962cf278a9e210f35ecaf5b4ced5b510c15780a88d21e4e51ae",
+    "/private/tmp/tdf-discovery-5f-persona-artifact-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-webkit-iphone/error-context.md": "ba3ffde1609df68db801e7dd54512d1ff8fd6ee641932c5219d5a3327daa23e4",
+    "/private/tmp/tdf-discovery-5f-persona-artifact-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-webkit-iphone/test-failed-1.png": "11f4a321d7ae0794f42dea5e0f9fafdd0e8a1d3ad7db55506220b82246260b22"
+  }
+}

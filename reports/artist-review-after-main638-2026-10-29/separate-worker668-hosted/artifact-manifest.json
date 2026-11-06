@@ -1,0 +1,20 @@
+[
+  {
+    "localArchive": "/private/tmp/tdf-pr668-persona-40911214007.zip",
+    "bytes": 113464617,
+    "sha256": "1161fe30eb9b42c6ea04007439305e7aaacf1aadd27c2276545d20b1a3c33f44",
+    "matched": true
+  },
+  {
+    "localArchive": "/private/tmp/tdf-pr668-compiled-api-40911214007.zip",
+    "bytes": 116184,
+    "sha256": "6299ff0671f27ddf7ac87c6dd123883c8cd6f93cf5b11cfa1819cac55bd1603c",
+    "matched": true
+  },
+  {
+    "localArchive": "/private/tmp/tdf-pr668-version-rebuild-40911214007.zip",
+    "bytes": 8989,
+    "sha256": "b1149e5d7e0eeec59cf149dd8b983a2fef1c7503be3a13e3dc78cc39c95661d8",
+    "matched": true
+  }
+]
