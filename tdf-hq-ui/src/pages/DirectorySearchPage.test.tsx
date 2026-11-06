@@ -45,6 +45,10 @@ const removeFavoriteMock = jest.fn(async () => undefined);
 const captureFirstValueOnceMock = jest.fn(async () => true);
 const analyticsCaptureMock = jest.fn();
 
+jest.unstable_mockModule('../api/musicReleases', () => ({
+  musicReleases: { searchTracks: jest.fn(async () => []) },
+}));
+
 jest.unstable_mockModule('../api/directory', () => ({
   Directory: {
     search: searchMock,
@@ -403,8 +407,9 @@ describe('DirectorySearchPage', () => {
       await waitFor(() => {
         const profileImage = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Bassist"]');
         expect(profileImage?.src).toBe('https://api.tdfrecords.net/assets/serve/directory/profiles/synthetic-bassist.webp');
-        const fallbackImage = container.querySelector<HTMLImageElement>('img[alt="Imagen de referencia de Profile Without Photo"]');
-        expect(fallbackImage?.src).toBe('http://localhost/artist-fallback.svg');
+        const fallbackImage = container.querySelector<HTMLImageElement>('img[alt="Avatar provisional de Profile Without Photo"]');
+        expect(fallbackImage?.dataset.artistImage).toBe('initials');
+        expect(decodeURIComponent(fallbackImage?.src ?? '')).toContain('>PP</text>');
       });
       await expectNoSeriousAccessibilityViolations(container);
     } finally {

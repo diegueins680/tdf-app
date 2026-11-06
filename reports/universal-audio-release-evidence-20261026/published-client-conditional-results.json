@@ -1,0 +1,1041 @@
+{
+  "startedAt": "2026-10-26T15:26:10.902Z",
+  "expectedCommit": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "status": "VERIFIED-published-Chromium-native-decoding-with-synthetic-business-and-media",
+  "productionMusicFeatureEnabled": false,
+  "scope": "Production music_releases.public remains false. This is a counterfactual client-only check with synthetic successful catalog/access responses, not a delivered real-user music journey. Published canonical web with all API/auth/catalog/delivery metadata intercepted synthetic. Media bytes are injected silent WAV fixtures decoded by the real Chromium engine. No media prototype, playback clock or play/pause method replaced. External requests blocked. No real account, rights/territory authorization, provider, CDN transport, physical device or native-store acceptance claim.",
+  "wavSha256": "7f81ab7656af6047b5324dece71b552ff3b24534c920e727c321cdff8f99845d",
+  "productionBusinessWrites": false,
+  "cases": [
+    {
+      "mode": "desktop",
+      "assetRequests": [
+        {
+          "id": "55000000-0000-4000-8000-000000000011",
+          "beforeNext": true
+        },
+        {
+          "id": "55000000-0000-4000-8000-000000000021",
+          "beforeNext": false
+        }
+      ],
+      "playbackEvents": [
+        {
+          "eventId": "72e0e26c-0aa1-4a74-ad76-98a3f315846a",
+          "sessionId": "e0106dc8-6990-4eaf-83db-5b0026a96db1",
+          "sequenceNumber": 0,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "quality_selected",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:12.345Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "automatic": true,
+            "pagePath": "/musica/audio-nativo-sintetico"
+          }
+        },
+        {
+          "eventId": "bc61094e-48df-4d18-9b8b-6a865257e8b9",
+          "sessionId": "e0106dc8-6990-4eaf-83db-5b0026a96db1",
+          "sequenceNumber": 1,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "buffering",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "occurredAt": "2026-10-26T15:26:12.368Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica/audio-nativo-sintetico"
+          }
+        },
+        {
+          "eventId": "abf36b3f-f28f-474e-b561-9920d3284349",
+          "sessionId": "e0106dc8-6990-4eaf-83db-5b0026a96db1",
+          "sequenceNumber": 2,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "play_start",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:12.632Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica/audio-nativo-sintetico"
+          }
+        },
+        {
+          "eventId": "79c44ab6-c393-40dc-b50b-6e12d777efc7",
+          "sessionId": "e0106dc8-6990-4eaf-83db-5b0026a96db1",
+          "sequenceNumber": 3,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "progress",
+          "positionMs": 1582,
+          "listenedDeltaMs": 1488,
+          "occurredAt": "2026-10-26T15:26:14.342Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "560ff790-9fad-4785-9724-21bfc51aa82f",
+          "sessionId": "e0106dc8-6990-4eaf-83db-5b0026a96db1",
+          "sequenceNumber": 4,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "pause",
+          "positionMs": 1582,
+          "listenedDeltaMs": 0,
+          "occurredAt": "2026-10-26T15:26:14.344Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "8c9eeaea-dddb-4d62-a1b8-225c2df1ad5b",
+          "sessionId": "e0106dc8-6990-4eaf-83db-5b0026a96db1",
+          "sequenceNumber": 5,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "play_start",
+          "positionMs": 1673,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:14.433Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "2d57e422-9d04-4ae6-9912-63c23d4b8d9c",
+          "sessionId": "7f77c1ce-e9fe-4abb-8463-11da96f6d01d",
+          "sequenceNumber": 0,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000002",
+          "eventType": "quality_selected",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:14.512Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "automatic": true,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "cf6f010c-f093-44b2-80ae-70b7e920be4b",
+          "sessionId": "7f77c1ce-e9fe-4abb-8463-11da96f6d01d",
+          "sequenceNumber": 1,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000002",
+          "eventType": "buffering",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "occurredAt": "2026-10-26T15:26:14.530Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "ac4be731-2ac4-4869-b7c2-640852122e75",
+          "sessionId": "7f77c1ce-e9fe-4abb-8463-11da96f6d01d",
+          "sequenceNumber": 2,
+          "anonymousId": "4b049257-4a51-4ccb-93a6-47cb0e7d583195b659d3-ea9f-4e59-b9e7-8d7291452f06",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000002",
+          "eventType": "play_start",
+          "positionMs": 6,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:14.585Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        }
+      ],
+      "ambientRadioCleanup": 0,
+      "unexpectedWrites": [],
+      "externalBlocked": 5,
+      "entries": [
+        {
+          "url": "https://www.tdfrecords.net/assets/index-BbZYQAQh.js",
+          "sha256": "c26ca054054eb8f7e03a19c37e608bb02c9733dea22dd0b83128abdae431878c",
+          "expectedVersionObserved": true
+        }
+      ],
+      "pageErrors": [],
+      "selectedRecordingOnly": true,
+      "playbackPersistsAcrossNavigation": true,
+      "nativePause": true,
+      "nativeResume": true,
+      "nativeEvents": [
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "",
+          "error": null
+        },
+        {
+          "type": "loadedmetadata",
+          "trusted": true,
+          "time": 0,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "playing",
+          "trusted": true,
+          "time": 0,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.160656,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.427249,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.692476,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.959277,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.224989,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.488337,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.581745,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 1.581745,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "playing",
+          "trusted": true,
+          "time": 1.673031,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.716879,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 1.716879,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "loadedmetadata",
+          "trusted": true,
+          "time": 0,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "playing",
+          "trusted": true,
+          "time": 0.006347,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.189117,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.452339,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.718328,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        }
+      ],
+      "nextTrackDecodes": true
+    },
+    {
+      "mode": "mobile-web",
+      "assetRequests": [
+        {
+          "id": "55000000-0000-4000-8000-000000000011",
+          "beforeNext": true
+        },
+        {
+          "id": "55000000-0000-4000-8000-000000000021",
+          "beforeNext": false
+        }
+      ],
+      "playbackEvents": [
+        {
+          "eventId": "c1a21521-51cc-40bf-bc2b-56cee8e0dea9",
+          "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+          "sequenceNumber": 0,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "quality_selected",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:16.808Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "automatic": true,
+            "pagePath": "/musica/audio-nativo-sintetico"
+          }
+        },
+        {
+          "eventId": "0192a86f-4efe-4672-ba1d-3a2ece21efa0",
+          "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+          "sequenceNumber": 1,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "buffering",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "occurredAt": "2026-10-26T15:26:16.821Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica/audio-nativo-sintetico"
+          }
+        },
+        {
+          "eventId": "3dffbfd4-a242-46fb-aaae-f67bc93bd865",
+          "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+          "sequenceNumber": 2,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "play_start",
+          "positionMs": 28,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:16.871Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica/audio-nativo-sintetico"
+          }
+        },
+        {
+          "eventId": "45371bba-d858-4118-beb3-d6dde9fc0a8f",
+          "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+          "sequenceNumber": 3,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "progress",
+          "positionMs": 1887,
+          "listenedDeltaMs": 1755,
+          "occurredAt": "2026-10-26T15:26:18.789Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "6afe8894-e1fe-4751-920e-b52413885379",
+          "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+          "sequenceNumber": 4,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "pause",
+          "positionMs": 1887,
+          "listenedDeltaMs": 0,
+          "occurredAt": "2026-10-26T15:26:18.791Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "a8b94276-aa14-413c-ac05-99dfec917a84",
+          "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+          "sequenceNumber": 5,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000001",
+          "eventType": "play_start",
+          "positionMs": 1962,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:18.865Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "f8c47a8f-83a3-4d92-aa08-ac40d35c83f0",
+          "sessionId": "3323d2d8-67ba-4cd2-9da9-54d0d235ac1f",
+          "sequenceNumber": 0,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000002",
+          "eventType": "quality_selected",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:18.925Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "automatic": true,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "adf934bc-2aba-481d-8c84-b90f7c237fa6",
+          "sessionId": "3323d2d8-67ba-4cd2-9da9-54d0d235ac1f",
+          "sequenceNumber": 1,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000002",
+          "eventType": "buffering",
+          "positionMs": 0,
+          "listenedDeltaMs": 0,
+          "occurredAt": "2026-10-26T15:26:18.960Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        },
+        {
+          "eventId": "90ff81bf-e3d6-4ce2-90f1-4d1f0907065c",
+          "sessionId": "3323d2d8-67ba-4cd2-9da9-54d0d235ac1f",
+          "sequenceNumber": 2,
+          "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+          "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+          "recordingId": "44000000-0000-4000-8000-000000000002",
+          "eventType": "play_start",
+          "positionMs": 7,
+          "listenedDeltaMs": 0,
+          "quality": "high",
+          "occurredAt": "2026-10-26T15:26:18.988Z",
+          "metadata": {
+            "schemaVersion": 1,
+            "pagePath": "/musica"
+          }
+        }
+      ],
+      "ambientRadioCleanup": 0,
+      "unexpectedWrites": [],
+      "externalBlocked": 5,
+      "entries": [
+        {
+          "url": "https://www.tdfrecords.net/assets/index-BbZYQAQh.js",
+          "sha256": "c26ca054054eb8f7e03a19c37e608bb02c9733dea22dd0b83128abdae431878c",
+          "expectedVersionObserved": true
+        }
+      ],
+      "pageErrors": [],
+      "selectedRecordingOnly": true,
+      "playbackPersistsAcrossNavigation": true,
+      "nativePause": true,
+      "nativeResume": true,
+      "nativeEvents": [
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "",
+          "error": null
+        },
+        {
+          "type": "loadedmetadata",
+          "trusted": true,
+          "time": 0,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "playing",
+          "trusted": true,
+          "time": 0.02819,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.19026,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.455656,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.720446,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.988116,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.25262,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.5182,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.783302,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.886511,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 1.886511,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "playing",
+          "trusted": true,
+          "time": 1.962264,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 2.009839,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 2.009839,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+          "error": null
+        },
+        {
+          "type": "loadedmetadata",
+          "trusted": true,
+          "time": 0,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "playing",
+          "trusted": true,
+          "time": 0.007341,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.191009,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.455026,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.720385,
+          "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+          "error": null
+        }
+      ],
+      "nextTrackDecodes": true
+    }
+  ],
+  "activeCase": {
+    "mode": "mobile-web",
+    "assetRequests": [
+      {
+        "id": "55000000-0000-4000-8000-000000000011",
+        "beforeNext": true
+      },
+      {
+        "id": "55000000-0000-4000-8000-000000000021",
+        "beforeNext": false
+      }
+    ],
+    "playbackEvents": [
+      {
+        "eventId": "c1a21521-51cc-40bf-bc2b-56cee8e0dea9",
+        "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+        "sequenceNumber": 0,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000001",
+        "eventType": "quality_selected",
+        "positionMs": 0,
+        "listenedDeltaMs": 0,
+        "quality": "high",
+        "occurredAt": "2026-10-26T15:26:16.808Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "automatic": true,
+          "pagePath": "/musica/audio-nativo-sintetico"
+        }
+      },
+      {
+        "eventId": "0192a86f-4efe-4672-ba1d-3a2ece21efa0",
+        "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+        "sequenceNumber": 1,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000001",
+        "eventType": "buffering",
+        "positionMs": 0,
+        "listenedDeltaMs": 0,
+        "occurredAt": "2026-10-26T15:26:16.821Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "pagePath": "/musica/audio-nativo-sintetico"
+        }
+      },
+      {
+        "eventId": "3dffbfd4-a242-46fb-aaae-f67bc93bd865",
+        "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+        "sequenceNumber": 2,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000001",
+        "eventType": "play_start",
+        "positionMs": 28,
+        "listenedDeltaMs": 0,
+        "quality": "high",
+        "occurredAt": "2026-10-26T15:26:16.871Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "pagePath": "/musica/audio-nativo-sintetico"
+        }
+      },
+      {
+        "eventId": "45371bba-d858-4118-beb3-d6dde9fc0a8f",
+        "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+        "sequenceNumber": 3,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000001",
+        "eventType": "progress",
+        "positionMs": 1887,
+        "listenedDeltaMs": 1755,
+        "occurredAt": "2026-10-26T15:26:18.789Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "pagePath": "/musica"
+        }
+      },
+      {
+        "eventId": "6afe8894-e1fe-4751-920e-b52413885379",
+        "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+        "sequenceNumber": 4,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000001",
+        "eventType": "pause",
+        "positionMs": 1887,
+        "listenedDeltaMs": 0,
+        "occurredAt": "2026-10-26T15:26:18.791Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "pagePath": "/musica"
+        }
+      },
+      {
+        "eventId": "a8b94276-aa14-413c-ac05-99dfec917a84",
+        "sessionId": "255073d5-298f-48c0-8b11-f9efe5245663",
+        "sequenceNumber": 5,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000001",
+        "eventType": "play_start",
+        "positionMs": 1962,
+        "listenedDeltaMs": 0,
+        "quality": "high",
+        "occurredAt": "2026-10-26T15:26:18.865Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "pagePath": "/musica"
+        }
+      },
+      {
+        "eventId": "f8c47a8f-83a3-4d92-aa08-ac40d35c83f0",
+        "sessionId": "3323d2d8-67ba-4cd2-9da9-54d0d235ac1f",
+        "sequenceNumber": 0,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000002",
+        "eventType": "quality_selected",
+        "positionMs": 0,
+        "listenedDeltaMs": 0,
+        "quality": "high",
+        "occurredAt": "2026-10-26T15:26:18.925Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "automatic": true,
+          "pagePath": "/musica"
+        }
+      },
+      {
+        "eventId": "adf934bc-2aba-481d-8c84-b90f7c237fa6",
+        "sessionId": "3323d2d8-67ba-4cd2-9da9-54d0d235ac1f",
+        "sequenceNumber": 1,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000002",
+        "eventType": "buffering",
+        "positionMs": 0,
+        "listenedDeltaMs": 0,
+        "occurredAt": "2026-10-26T15:26:18.960Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "pagePath": "/musica"
+        }
+      },
+      {
+        "eventId": "90ff81bf-e3d6-4ce2-90f1-4d1f0907065c",
+        "sessionId": "3323d2d8-67ba-4cd2-9da9-54d0d235ac1f",
+        "sequenceNumber": 2,
+        "anonymousId": "adb0e472-4586-4569-aab4-7dc376bcad01b973eb90-7c16-4477-88a7-ce0673806fba",
+        "releaseVersionId": "22000000-0000-4000-8000-000000000001",
+        "recordingId": "44000000-0000-4000-8000-000000000002",
+        "eventType": "play_start",
+        "positionMs": 7,
+        "listenedDeltaMs": 0,
+        "quality": "high",
+        "occurredAt": "2026-10-26T15:26:18.988Z",
+        "metadata": {
+          "schemaVersion": 1,
+          "pagePath": "/musica"
+        }
+      }
+    ],
+    "ambientRadioCleanup": 0,
+    "unexpectedWrites": [],
+    "externalBlocked": 5,
+    "entries": [
+      {
+        "url": "https://www.tdfrecords.net/assets/index-BbZYQAQh.js",
+        "sha256": "c26ca054054eb8f7e03a19c37e608bb02c9733dea22dd0b83128abdae431878c",
+        "expectedVersionObserved": true
+      }
+    ],
+    "pageErrors": [],
+    "selectedRecordingOnly": true,
+    "playbackPersistsAcrossNavigation": true,
+    "nativePause": true,
+    "nativeResume": true,
+    "nativeEvents": [
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0,
+        "source": "",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0,
+        "source": "",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0,
+        "source": "",
+        "error": null
+      },
+      {
+        "type": "loadedmetadata",
+        "trusted": true,
+        "time": 0,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "playing",
+        "trusted": true,
+        "time": 0.02819,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0.19026,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0.455656,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0.720446,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0.988116,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 1.25262,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 1.5182,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 1.783302,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 1.886511,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "pause",
+        "trusted": true,
+        "time": 1.886511,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "playing",
+        "trusted": true,
+        "time": 1.962264,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 2.009839,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "pause",
+        "trusted": true,
+        "time": 2.009839,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0,
+        "source": "https://tdf-native-fixture.invalid/media/first/1.wav",
+        "error": null
+      },
+      {
+        "type": "loadedmetadata",
+        "trusted": true,
+        "time": 0,
+        "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+        "error": null
+      },
+      {
+        "type": "playing",
+        "trusted": true,
+        "time": 0.007341,
+        "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0.191009,
+        "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0.455026,
+        "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+        "error": null
+      },
+      {
+        "type": "timeupdate",
+        "trusted": true,
+        "time": 0.720385,
+        "source": "https://tdf-native-fixture.invalid/media/second/1.wav",
+        "error": null
+      }
+    ],
+    "nextTrackDecodes": true
+  },
+  "browserClosed": true,
+  "finishedAt": "2026-10-26T15:26:20.006Z"
+}

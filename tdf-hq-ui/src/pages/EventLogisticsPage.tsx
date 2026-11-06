@@ -1,7 +1,9 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -33,6 +35,7 @@ import { firstNonEmptyString } from '../utils/stringValues';
 
 import PageShell from '../components/PageShell';
 import { GOOGLE_MAPS_BROWSER_API_KEY } from '../config/appConfig';
+import { formatInEventTimeZone } from '../utils/dateTime';
 import {
   SocialEventsAPI,
   type EventLogisticsActivityDTO,
@@ -214,7 +217,7 @@ function PlacesSection({
                     `${place.elpLatitude}, ${place.elpLongitude}`,
                   )}
                 </Typography>
-                {place.elpInstructions && <Typography variant="caption">{place.elpInstructions}</Typography>}
+                {place.elpInstructions && <MarkdownText variant="caption">{place.elpInstructions}</MarkdownText>}
               </Box>
               <Stack className="no-print" direction="row">
                 <Button component={Link} href={`https://www.google.com/maps/search/?api=1&query=${place.elpLatitude},${place.elpLongitude}`} size="small" target="_blank">
@@ -297,7 +300,7 @@ function PlaceMapPicker({ draft, onChange }: { draft: PlaceDraft; onChange: (nex
   return (
     <Stack spacing={1}>
       <TextField inputRef={searchRef} label="Buscar lugar en Google" placeholder="Hotel, venue, aeropuerto…" disabled={!GOOGLE_MAPS_BROWSER_API_KEY} />
-      {!GOOGLE_MAPS_BROWSER_API_KEY && <Alert severity="info">Configura VITE_GOOGLE_MAPS_BROWSER_API_KEY para búsqueda y selección mediante pin. Las coordenadas manuales siguen disponibles.</Alert>}
+      {!GOOGLE_MAPS_BROWSER_API_KEY && <Alert severity="info">El mapa no está disponible por ahora. Puedes guardar el lugar ingresando sus coordenadas.</Alert>}
       {mapError && <Alert severity="warning">{mapError}</Alert>}
       {GOOGLE_MAPS_BROWSER_API_KEY && <Box ref={mapRef} aria-label="Mapa para seleccionar coordenadas" sx={{ height: 280, borderRadius: 2, overflow: 'hidden', bgcolor: 'action.hover' }} />}
     </Stack>
@@ -609,7 +612,16 @@ export default function EventLogisticsPage() {
             }} />
             <TextField type="tel" label="Teléfono externo" value={activityDraft.externalPhone} onChange={(event) => setActivityDraft({ ...activityDraft, externalPhone: event.target.value })} />
             <TextField label="Email externo" value={activityDraft.externalEmail} onChange={(event) => setActivityDraft({ ...activityDraft, externalEmail: event.target.value })} />
-            <TextField label="Dependencias (IDs separados por coma)" value={activityDraft.dependencyIds} onChange={(event) => setActivityDraft({ ...activityDraft, dependencyIds: event.target.value })} />
+            <Autocomplete
+              multiple
+              options={(plan?.elgActivities ?? []).filter((activity) => activity.eacId && activity.eacId !== editingActivity?.eacId).map((activity) => String(activity.eacId))}
+              value={activityDraft.dependencyIds.split(',').map((value) => value.trim()).filter(Boolean)}
+              onChange={(_, ids) => setActivityDraft({ ...activityDraft, dependencyIds: ids.join(',') })}
+              getOptionLabel={(id) => plan?.elgActivities.find((activity) => String(activity.eacId) === id)?.eacTitle ?? 'Actividad no disponible'}
+              filterSelectedOptions
+              noOptionsText="No hay otras actividades disponibles"
+              renderInput={(params) => <TextField {...params} label="Actividades previas" helperText="Selecciona las actividades que deben terminar antes de esta." />}
+            />
             <TextField label="Notas e instrucciones" multiline minRows={2} value={activityDraft.notes} onChange={(event) => setActivityDraft({ ...activityDraft, notes: event.target.value })} sx={{ gridColumn: { md: 'span 2' } }} />
           </Box>
           <Stack direction="row" spacing={1}>
@@ -637,13 +649,13 @@ export default function EventLogisticsPage() {
             const routeUrl = origin && destination ? `https://www.google.com/maps/dir/?api=1&origin=${origin.elpLatitude},${origin.elpLongitude}&destination=${destination.elpLatitude},${destination.elpLongitude}` : '';
             return <Card key={activity.eacId} variant="outlined" sx={{ outline: String(activity.eacId) === notificationActivity ? '3px solid' : undefined, outlineColor: 'primary.main', borderLeft: 5, borderLeftColor: activity.eacPriority === 'critical' ? 'error.main' : activity.eacPriority === 'high' ? 'warning.main' : 'primary.main' }}><CardContent><Stack spacing={1}>
               <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
-                <Box><Typography variant="caption" color="text.secondary">{new Date(activity.eacStart).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}{activity.eacEnd ? ` – ${new Date(activity.eacEnd).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}` : ''}</Typography><Typography variant="h6">{activity.eacTitle}</Typography></Box>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap><Chip size="small" label={activity.eacType} /><Chip size="small" label={activity.eacStatus} /><Chip size="small" label={activity.eacPriority} /></Stack>
+                <Box><Typography variant="caption" color="text.secondary">{formatInEventTimeZone(new Date(activity.eacStart), locale, plan?.elgSettings.elsTimezone ?? timezone)}{activity.eacEnd ? ` – ${formatInEventTimeZone(new Date(activity.eacEnd), locale, plan?.elgSettings.elsTimezone ?? timezone)}` : ''}</Typography><Typography variant="h6">{activity.eacTitle}</Typography></Box>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap><Chip size="small" label={{ task: 'Tarea', milestone: 'Hito', wait: 'Espera', travel: 'Traslado' }[activity.eacType]} /><Chip size="small" label={{ planned: 'Planificado', confirmed: 'Confirmado', in_progress: 'En curso', completed: 'Completado', cancelled: 'Cancelado' }[activity.eacStatus]} /><Chip size="small" label={{ low: 'Baja', normal: 'Normal', high: 'Alta', critical: 'Crítica' }[activity.eacPriority]} /></Stack>
               </Stack>
               {activity.eacType === 'travel' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}><DirectionsCarIcon color="action" /><Typography>{origin?.elpLabel ?? 'Origen'} → {destination?.elpLabel ?? 'Destino'}</Typography>{routeUrl && <Link href={routeUrl} target="_blank" rel="noreferrer">Abrir ruta</Link>}</Stack>}
               {activity.eacPlaceId && <Typography variant="body2">Lugar: {placesById.get(activity.eacPlaceId)?.elpLabel ?? activity.eacPlaceId}</Typography>}
               {activity.eacAssignments.length > 0 && <Typography variant="body2">Responsables: {activity.eacAssignments.map((assignment) => assignment.elaDisplayName ?? assignment.elaExternalName ?? assignment.elaPartyId).filter(Boolean).join(', ')}</Typography>}
-              {activity.eacNotes && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{activity.eacNotes}</Typography>}
+              {activity.eacNotes && <MarkdownText>{activity.eacNotes}</MarkdownText>}
               {verification && <Alert icon={<RouteIcon />} severity={verification.ervVerdict === 'feasible' ? 'success' : verification.ervVerdict === 'tight' ? 'warning' : 'error'}>
                 Ruta {verification.ervVerdict}: estimado {secondsLabel(verification.ervDurationSeconds)}, holgura {secondsLabel(verification.ervBufferSeconds)}, reservado {secondsLabel(verification.ervAllocatedSeconds)}{verification.ervDistanceMeters ? ` · ${(verification.ervDistanceMeters / 1000).toFixed(1)} km` : ''}.
               </Alert>}

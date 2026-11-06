@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -156,12 +157,12 @@ function EventCard({ event }: { event: PublicUpcomingEventDTO }) {
         <Typography color="primary" sx={{ mt: 0.75 }}>{formatEventDate(event.publicUpcomingEventStart)}</Typography>
         {event.publicUpcomingEventCity && <Typography color="text.secondary" sx={{ mt: 0.5 }}>{event.publicUpcomingEventCity}</Typography>}
         {event.publicUpcomingEventDescription && (
-          <Typography
+          <MarkdownText disableLinks inline
             color="text.secondary"
             sx={{ mt: 1, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
           >
             {event.publicUpcomingEventDescription}
-          </Typography>
+          </MarkdownText>
         )}
       </CardContent>
     </Card>

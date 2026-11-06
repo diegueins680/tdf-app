@@ -208,6 +208,23 @@ test('actual recovery guard rejects safe unused stubs with financial routes rebo
       : escrowSource.replace(':<|> releaseServiceMarketplaceEscrow user', ':<|> legacyRelease user')), /Unsafe financial-write/);
 });
 
+test('session-expiry metadata never permits a pre-enforcement rollback', async () => {
+  const sessionFloor = '8187065f81fad94677c8ba27760ab2cb74f58f79';
+  const session = { migrations: [
+    { id: '2026-10-31_api_token_session_expiry' },
+    { id: '2026-10-04_auth_recovery_expiry' }, ...context.migrations,
+  ] };
+  assert.equal(requiredIdentityCommit(session), sessionFloor);
+  let writes = 0;
+  const history = async (required, candidate) => {
+    assert.equal(required, sessionFloor); return candidate === sessionFloor;
+  };
+  await assert.rejects(withCompatibleRollback(session, modern, () => { writes++; }, history), /Unsafe authentication rollback/);
+  assert.equal(writes, 0);
+  assert.equal(await withCompatibleRollback(session, sessionFloor, () => { writes++; return 'compatible'; }, history), 'compatible');
+  assert.equal(writes, 1);
+});
+
 test('recovery-expiry metadata never permits a pre-enforcement rollback', async () => {
   const expiryFloor = '57315f2d4b3aafac8ec7242c5913028f157dff8d';
   const expiry = { migrations: [

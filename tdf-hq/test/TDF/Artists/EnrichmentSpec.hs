@@ -3,7 +3,7 @@
 module TDF.Artists.EnrichmentSpec (spec) where
 
 import Control.Exception (SomeException, try)
-import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Data.Int (Int64)
 import Data.Text (Text)
@@ -25,6 +25,7 @@ import TDF.API.Admin
 import TDF.Artists.Enrichment
   ( DiscoveryReference(..)
   , automaticIdentityMatchAllowed
+  , automaticFieldFillAllowed
   , artistNameAliasCandidate
   , independentSignalCount
   , matchConfidence
@@ -52,6 +53,13 @@ import TDF.Models
 
 spec :: Spec
 spec = describe "artist enrichment identity policy" $ do
+  it "only automatically fills empty fields and explicit provisional avatars" $ do
+    automaticFieldFillAllowed "bio" Nothing `shouldBe` True
+    automaticFieldFillAllowed "bio" (Just "Artist-written biography") `shouldBe` False
+    automaticFieldFillAllowed "heroImageUrl" (Just "/artist-fallback.svg") `shouldBe` True
+    automaticFieldFillAllowed "heroImageUrl" (Just "https://official.example/portrait.jpg") `shouldBe` False
+    automaticFieldFillAllowed "websiteUrl" (Just "https://artist.example") `shouldBe` False
+
   it "normalizes aliases without losing accents from the stored original" $ do
     normalizeArtistName "  Diego   SAÁ " `shouldBe` "diego saa"
     slugifyArtistName "Diego Saá" `shouldBe` "diego-saa"
@@ -242,6 +250,12 @@ spec = describe "artist enrichment identity policy" $ do
       rejectedResult <- decideArtistSuggestion "test" partyId (aesId rejectSuggestion)
         ArtistEnrichmentDecision
           { aedDecision = "reject", aedEditedValue = Nothing, aedNote = Just "Not corroborated" }
+      replayedRejection <- createArtistSuggestion now
+        ((mkSuggestion partyId (Just "Different baseline") "Rejected bio")
+          { aescEvidence = "Changed evidence must not replace the reviewed rejection" })
+      liftIO $ aesEvidence replayedRejection `shouldBe` aesEvidence rejectSuggestion
+      liftIO $ aesCurrentValue replayedRejection `shouldBe` aesCurrentValue rejectSuggestion
+      liftIO $ aesStatus replayedRejection `shouldBe` "rejected"
       approveSuggestion <- createArtistSuggestion now (mkSuggestion partyId Nothing "Approved bio")
       _approvedResult <- decideArtistSuggestion "test" partyId (aesId approveSuggestion)
         ArtistEnrichmentDecision

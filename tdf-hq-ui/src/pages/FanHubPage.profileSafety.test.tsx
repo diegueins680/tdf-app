@@ -129,6 +129,7 @@ const artistSave = () => screen.getByRole('button', { name: 'Actualizar perfil d
 const artistName = () => screen.getByLabelText<HTMLInputElement>('Nombre artístico');
 
 beforeEach(() => {
+  window.sessionStorage.clear();
   localStorage.clear();
   onUploadComplete = undefined;
   setAccount(42);

@@ -1,0 +1,25 @@
+{
+  "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+  "baselineMain": "6197b87326a437350dca239ee64902e78da6964c",
+  "publishedArtistSource": "dd8f2c9c14cc0b3c77ef9c84ab1a112a8c6b2f4d",
+  "sourceDigest": "0cbdf8490c5a105931563e996f6233a47b77a16f83477f1605e382b35fc8c566",
+  "registeredGitBlobsChecked": 1417,
+  "rootBlobs": 1317,
+  "mobileBlobs": 100,
+  "mobileCommit": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "everyRegisteredHashVerifiedAgainstCommittedGitBlob": true,
+  "sevenArtistInputsByteExactDD8": true,
+  "all156IncomingRequirementsExact": true,
+  "artistRequirementExactDD8": true,
+  "totalRequirements": 157,
+  "markdownOutsideSourceFingerprintSeparatelyBoundGitSha256": {
+    "docs/artist-enrichment-runbook.md": "ca9048fc7127144f831667d69d4ba1184698f8205ba9bd0f8eed96179347ac40"
+  },
+  "scope": "Git/source correspondence only, not runtime correctness or complete compiler/package attestation.",
+  "wholeHistoricalCatalogDecisionFileByteExactMain": {
+    "path": "docs/catalog-persistence/catalog-list-decisions.json",
+    "sha256": "dfb05263f8744d61806b46ff4d2f7295c5ee65ef1e2df5fdd6fc4195792044fc",
+    "byteExact": true,
+    "decisions": 1352
+  }
+}

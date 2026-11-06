@@ -28,6 +28,7 @@ describe('collaborative event creation', () => {
       DateTime.fromISO('2026-07-28T10:15:00', { zone: 'America/Guayaquil' }),
     )).toMatchObject({
       startAt: '2026-07-28T11:00',
+      timezone: 'America/Guayaquil',
       durationMinutes: 120,
       eventTypeId: '',
       isPublic: false,
@@ -43,6 +44,7 @@ describe('collaborative event creation', () => {
 
     expect(payload).toEqual({
       eventTitle: 'TDF Summer Session',
+      eventTimezone: 'America/Guayaquil',
       eventDescription: 'Show colaborativo',
       eventVenueId: null,
       eventPriceCents: 1250,
@@ -55,10 +57,24 @@ describe('collaborative event creation', () => {
       eventIsPublic: false,
       eventArtists: [],
     });
-    expect(start.toLocal().toFormat("yyyy-MM-dd'T'HH:mm")).toBe(
+    expect(start.setZone('America/Guayaquil').toFormat("yyyy-MM-dd'T'HH:mm")).toBe(
       '2026-07-28T11:00',
     );
     expect(end.diff(start, 'minutes').minutes).toBe(120);
+  });
+
+  it('uses the event timezone independently of the browser and rejects DST shifts', () => {
+    expect(buildCollaborativeEventPayload({ ...draft(), startAt: '2026-11-28T18:00' }).eventStart)
+      .toBe('2026-11-28T23:00:00.000Z');
+    expect(() => buildCollaborativeEventPayload({ ...draft(), timezone: 'Invalid/Zone' }))
+      .toThrow('Selecciona una zona horaria válida');
+    // Luxon accepts fixed-offset zones but Intl (used to render the event) does not.
+    expect(() => buildCollaborativeEventPayload({ ...draft(), timezone: 'UTC+5' }))
+      .toThrow('Selecciona una zona horaria válida');
+    for (const startAt of ['2026-03-08T02:30', '2026-11-01T01:30']) {
+      expect(() => buildCollaborativeEventPayload({ ...draft(), timezone: 'America/New_York', startAt }))
+        .toThrow('horario de verano');
+    }
   });
 
   it('does not invent an end when the official duration is unknown', () => {

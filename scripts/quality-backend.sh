@@ -16,6 +16,12 @@ fi
 STACK_ROOT_DIR="${STACK_ROOT:-$ROOT/.stack-root}"
 mkdir -p "$STACK_ROOT_DIR"
 
+node --test "$ROOT/scripts/__tests__/content-storage-model.test.mjs" "$ROOT/scripts/__tests__/content-storage-reconciliation.test.mjs"
+
+if [ -n "${TDF_TEST_POSTGRES_HOST:-}" ]; then
+  node "$ROOT/scripts/test-content-storage-postgres.mjs"
+fi
+
 echo "▶ Building and testing Haskell backend in one Stack invocation"
 build_args=(--no-terminal test --force-dirty tdf-hq)
 if [ -n "${BACKEND_BINARY_OUT:-}" ]; then
@@ -42,10 +48,12 @@ STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-cors-boundary.py"
   for group in music-unit-domain music-unit-content music-unit-ddex music-unit-storage; do
     "$test_binary" "--match=$group" --fail-on=empty
   done
+  "$test_binary" "--match=Google public-name privacy through token decoding" --fail-on=empty
 )
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-request-failures.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-readiness.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-invoice-receipts.py"
+STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-google-account-name.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-checkout-money.py"
 
 # Exercise the real contact handler and financial overview query against a

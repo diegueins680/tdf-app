@@ -34,6 +34,22 @@ describe('DomoQuotes client', () => {
     });
   });
 
+  it('cancels a quote with explicit confirmation and the secure lookup token', async () => {
+    await DomoQuotes.cancelQuote(quoteId, 'lookup-token-1');
+    expect(postMock).toHaveBeenCalledWith(
+      `/public/domo/quotes/${quoteId}/cancel`,
+      { confirmCancellation: true },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-token-1' } },
+    );
+    postMock.mockReset();
+    await DomoQuotes.cancelQuote(quoteId, 'lookup-token-1', '  change of plans  ');
+    expect(postMock).toHaveBeenCalledWith(
+      `/public/domo/quotes/${quoteId}/cancel`,
+      { confirmCancellation: true, cancellationNote: 'change of plans' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-token-1' } },
+    );
+  });
+
   it('encodes the Datafast resource and sends the secure lookup token', async () => {
     await DomoQuotes.confirmDatafastStatus(
       quoteId,

@@ -1,0 +1,27 @@
+{
+  "sourceSha256": "64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87",
+  "comparisonField": "clientWidth",
+  "claims": [
+    {
+      "id": "no-client-overflow-accepted",
+      "negation": "unsat",
+      "assurance": "PROVEN under stated integer-width abstraction"
+    },
+    {
+      "id": "old-rejections-retained",
+      "negation": "unsat",
+      "assurance": "PROVEN under stated integer-width abstraction"
+    }
+  ],
+  "knownCounterexample": {
+    "client": 320,
+    "inner": 400,
+    "scroll": 400
+  },
+  "omittedOrderingControl": "SAT",
+  "assumptions": [
+    "Integer widths; positive client; client<=inner; unchanged captured measurement.",
+    "Literal field correspondence is hash/syntax binding, not JavaScript/CSSOM/compiler refinement."
+  ],
+  "scope": "Manual comparison abstraction only; no WebKit timing, page-layout or whole-test proof."
+}

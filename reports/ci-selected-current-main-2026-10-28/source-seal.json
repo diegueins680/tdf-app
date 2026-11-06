@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "0964e3ec11a52d97511c9f0197250d891c29452a",
+  "sourceTree": "3bb15504cb75854462fe5ab8c91bc99b674925b7",
+  "baselineMain": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+  "publishedHeadBefore": "3450e6033ad132c0457794c4a82bab8dbab74558",
+  "reusedPreparation": "89d929c732107f7ab93e6458b153fb859e1d6c2d",
+  "registeredInputs": 1413,
+  "sourceDigest": "3329353367f2479f5156fabeb1e99f96dca18a0986d8c8b876e95860df3e5551",
+  "gitBlobHashesVerified": true,
+  "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "protectedMainObjectsPreserved": {
+    "tdf-hq": "ae5c962e2447322b86ddcae2e0eee1674523ffb2",
+    "tdf-hq-ui": "12011eef081f9b3aba1d2337265438ee2140627b",
+    "tdf-mobile": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "ops": "86c3e0e7dc70ea510968977e87df094da5d07639",
+    "package-lock.json": "7800d461b89474b779b0ed8753b7b128d3cc2db3",
+    "scripts/production-migrations.json": "14d89d59e927fb261ad0c1cbd97f83def423a185"
+  },
+  "protectedMainRequirementsPreserved": 155,
+  "protectedMainCatalogDecisionsPreserved": 1351,
+  "addedRequirement": "SYS-CI-SELECTED-001",
+  "combinedRequirements": 156,
+  "combinedDecisions": 1352,
+  "unchangedPreparedSurfaces": [
+    ".github/workflows/ci.yml",
+    "package.json",
+    "scripts/__tests__/ci-change-scope.test.mjs",
+    "scripts/__tests__/ci-job-admission.test.mjs",
+    "scripts/__tests__/ci-pipeline.test.mjs",
+    "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+    "scripts/ci-change-scope.mjs",
+    "scripts/ci-job-admission.mjs"
+  ],
+  "contract": {
+    "path": "formal/system/ci-selected-job-admission.md",
+    "sha256": "af0eae67852ec12417d34a8d70e41ae4598af4d331954ab373ef4a46642f5a8b",
+    "discoveryMatches": true
+  },
+  "cleanCommittedAssurancePass": true,
+  "immutableAdmissionPass": true,
+  "currentMainAncestry": true,
+  "freshHostedCI": "pending",
+  "newExactHeadReview": "required",
+  "release": "BLOCKED",
+  "scope": "TESTED component/CLI behavior. Full GitHub orchestration and156 requirements/312 implementation-refinement obligations remain unproven. No newly executed application/native/provider/runtime tests are claimed."
+}

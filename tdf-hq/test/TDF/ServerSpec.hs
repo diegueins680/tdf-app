@@ -27,7 +27,7 @@ import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.Persist
-    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
+    ( Entity(..), Filter, Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -79,7 +79,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
+import Servant (err400, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -142,7 +142,8 @@ import TDF.DTO
 import qualified TDF.DTO as DTO
 import qualified TDF.Server as NotificationServer
 import TDF.Server
-    ( MarketplaceCartTotalsState(..)
+    ( createPurchase
+    , MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
     , DriveMetaResp(..)
     , GoogleToken(..)
@@ -347,6 +348,9 @@ import TDF.Server
     , validateCourseRegistrationFollowUpId
     , whatsAppConsentStatusFromRow
     , validateDriveAccess
+    , resolveDriveUploadVisibility
+    , resolveDriveUploadAuthority
+    , storageProviderError
     , resolveResourcesForBooking
     , runDb
     , resolvePackagePurchaseRefs
@@ -424,7 +428,8 @@ import qualified TDF.ServerRadio as Radio
 import qualified TDF.Server.SocialSync as SocialSync
 import qualified TDF.WhatsApp.Types as WA
 import TDF.ServerAuth
-    ( findReusableActiveToken
+    ( SessionTokenTtl (..)
+    , findReusableActiveToken
     , normalizeAuthEmailAddress
     , parsePasswordChangeAuthToken
     , resolvePasswordResetDelivery
@@ -3389,6 +3394,79 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"buyerId\":42,\"productId\":7,\"packageId\":9}"
                 `shouldSatisfy` isLeft
 
+    describe "createPurchase expiry" $ do
+        forM_ [1, 120, 365] $ \days ->
+            it ("persists " <> show days <> " elapsed days from the stored purchase time") $
+                withPackagePurchaseFixture (Just days) True $ \env buyerKey productKey -> do
+                    before <- getCurrentTime
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                    after <- getCurrentTime
+                    assertPackagePurchaseSuccess result
+                    rows <- runSqlPool (selectList [] []) (envPool env)
+                    case rows of
+                        [Entity _ purchase] -> do
+                            M.packagePurchasePurchasedAt purchase `shouldSatisfy` (>= before)
+                            M.packagePurchasePurchasedAt purchase `shouldSatisfy` (<= after)
+                            M.packagePurchaseExpiresAt purchase `shouldBe`
+                                Just (addUTCTime (fromIntegral days * 86400)
+                                    (M.packagePurchasePurchasedAt purchase))
+                            M.packagePurchaseBuyerId purchase `shouldBe` buyerKey
+                            M.packagePurchaseProductId purchase `shouldBe` productKey
+                            M.packagePurchasePriceCents purchase `shouldBe` 50000
+                            M.packagePurchaseRemainingUnits purchase `shouldBe` 24
+                            M.packagePurchaseStatus purchase `shouldBe` "Active"
+                        _ -> expectationFailure "Expected exactly one persisted package purchase"
+
+        forM_ [0, -1] $ \days ->
+            it ("refuses nonpositive validity " <> show days <> " without creating a purchase") $
+                withPackagePurchaseFixture (Just days) True $ \env buyerKey productKey -> do
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                    assertPackagePurchaseFailure 409 result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        it "keeps an explicitly nonexpiring product nonexpiring" $
+            withPackagePurchaseFixture Nothing True $ \env buyerKey productKey -> do
+                result <- runHandler $ runReaderT
+                    (createPurchase (mkUser [Admin])
+                        (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                assertPackagePurchaseSuccess result
+                rows <- runSqlPool (selectList [] []) (envPool env)
+                case rows of
+                    [Entity _ purchase] -> M.packagePurchaseExpiresAt purchase `shouldBe` Nothing
+                    _ -> expectationFailure "Expected exactly one persisted nonexpiring purchase"
+
+        forM_ [("inactive product", True), ("unknown product", False)] $ \(label, inactive) ->
+            it ("preserves rejection of an " <> label <> " without writing a purchase") $
+                withPackagePurchaseFixture (Just 120) (not inactive) $ \env buyerKey productKey -> do
+                    let selectedProduct = if inactive then fromSqlKey productKey else 999999
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) selectedProduct)) env
+                    assertPackagePurchaseFailure (if inactive then 409 else 422) result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        forM_ [("malformed buyer", 0, 400), ("unknown buyer", 999999, 422)] $ \(label, buyer, code) ->
+            it ("preserves rejection of an " <> label <> " without writing a purchase") $
+                withPackagePurchaseFixture (Just 120) True $ \env _ productKey -> do
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq buyer (fromSqlKey productKey))) env
+                    assertPackagePurchaseFailure code result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        it "preserves the module permission guard before writing a purchase" $
+            withPackagePurchaseFixture (Just 120) True $ \env buyerKey productKey -> do
+                let denied = (mkUser [Fan]) { auModules = Set.empty }
+                result <- runHandler $ runReaderT
+                    (createPurchase denied
+                        (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                assertPackagePurchaseFailure 403 result
+                runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
     describe "resolvePackagePurchaseRefs" $ do
         it "resolves existing active package products for known buyers" $ do
             (expectedBuyerId, expectedProductId, result) <- runPackageSqlite $ do
@@ -4932,7 +5010,58 @@ spec = describe "TDF.Server helpers" $ do
                             <> show value
                         )
 
-    describe "loadAuthedUser" $
+    describe "loadAuthedUser" $ do
+        it "enforces the server-side validity window and fails closed on legacy interactive sessions" $ do
+            results <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Session Window User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "window@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
+                    , partyCreatedAt = now
+                    }
+                let token value label window = insert_ ApiToken
+                        { apiTokenToken = value
+                        , apiTokenPartyId = partyId
+                        , apiTokenLabel = label
+                        , apiTokenActive = True
+                        , apiTokenIssuedAtEpoch = fst <$> window
+                        , apiTokenExpiresAtEpoch = snd <$> window
+                        }
+                token "live-login-token" (Just "password-login:window@example.com") (Just (0, farFutureEpoch))
+                token "expired-login-token" (Just "password-login:window@example.com") (Just (0, 1))
+                token "legacy-login-token" (Just "password-login:window@example.com") Nothing
+                token "legacy-google-token" (Just "google-login:window@example.com") Nothing
+                token "unbounded-service-token" Nothing Nothing
+                token "expired-service-token" (Just "service:synthetic") (Just (0, 1))
+                rawExecute
+                    "INSERT INTO party_security_role (party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) SELECT ?,id,NULL,NULL,'bootstrap',NULL,NULL,NULL,TRUE,CURRENT_TIMESTAMP,NULL,1 FROM security_role WHERE code IN ('fan','customer')"
+                    [toPersistValue partyId]
+                live <- loadAuthedUser "live-login-token"
+                expiredLogin <- loadAuthedUser "expired-login-token"
+                legacyLogin <- loadAuthedUser "legacy-login-token"
+                legacyGoogle <- loadAuthedUser "legacy-google-token"
+                unboundedService <- loadAuthedUser "unbounded-service-token"
+                expiredService <- loadAuthedUser "expired-service-token"
+                pure (partyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService)
+            let (expectedPartyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService) = results
+            fmap auPartyId live `shouldBe` Just expectedPartyId
+            fmap auPartyId unboundedService `shouldBe` Just expectedPartyId
+            expiredLogin `shouldBe` Nothing
+            legacyLogin `shouldBe` Nothing
+            legacyGoogle `shouldBe` Nothing
+            expiredService `shouldBe` Nothing
+
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
@@ -4957,18 +5086,24 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "reset-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "mixed-reset-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "Password-Reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 insert_
                     UserCredential
@@ -5051,6 +5186,8 @@ spec = describe "TDF.Server helpers" $ do
                             , apiTokenPartyId = partyId
                             , apiTokenLabel = Nothing
                             , apiTokenActive = True
+                            , apiTokenIssuedAtEpoch = Nothing
+                            , apiTokenExpiresAtEpoch = Nothing
                             }
                 singlePartyId <- insertTestParty "Single Login User" "single@example.com"
                 _ <- insertCredential singlePartyId "single@example.com"
@@ -5096,8 +5233,8 @@ spec = describe "TDF.Server helpers" $ do
                                     , partyCreatedAt = now
                                     }
                         (,)
-                            <$> insert (ApiToken "authorization-token" partyId (Just "password-login:logout@example.com") True)
-                            <*> insert (ApiToken "cookie-token" partyId (Just "password-login:logout@example.com") True)
+                            <$> insert (ApiToken "authorization-token" partyId (Just "password-login:logout@example.com") True (Just 0) (Just farFutureEpoch))
+                            <*> insert (ApiToken "cookie-token" partyId (Just "password-login:logout@example.com") True (Just 0) (Just farFutureEpoch))
                     let env =
                             Env
                                 { envPool = pool
@@ -5987,7 +6124,7 @@ spec = describe "TDF.Server helpers" $ do
                                 , M.partyCountryId = Nothing
                                 , M.partyCreatedAt = now
                                 }
-                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True)
+                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True Nothing Nothing)
                         pure partyIdValue
                     let signupAt = addUTCTime (-3600) now
                         insertProgress partyIdValue signupAtValue =
@@ -7230,6 +7367,34 @@ spec = describe "TDF.Server helpers" $ do
                     [ "client_secret" .= ("session-secret" :: Text)
                     , "expires_after" .= object ["seconds" .= (0 :: Int)]
                     ])
+
+    describe "Drive storage failure isolation" $ do
+        it "defaults explicit personal destinations to private without changing legacy sharing" $ do
+            resolveDriveUploadVisibility (Just "google_drive") Nothing `shouldBe` Just "private"
+            resolveDriveUploadVisibility Nothing Nothing `shouldBe` Nothing
+
+        it "refuses missing personal credentials instead of selecting TDF credentials" $
+            case resolveDriveUploadAuthority (Just "user") Nothing of
+                Left failure -> do
+                    errHTTPCode failure `shouldBe` 409
+                    BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+                Right _ -> expectationFailure "Personal upload selected shared credentials"
+        it "recognizes an explicit personal upload" $
+            resolveDriveUploadAuthority (Just "user") (Just "personal") `shouldBe` Right True
+        it "rejects mixed service and personal authority" $
+            case resolveDriveUploadAuthority (Just "server") (Just "personal") of
+                Left failure -> errHTTPCode failure `shouldBe` 400
+                Right _ -> expectationFailure "Mixed authority accepted"
+        it "does not turn service revocation into an expired TDF session" $ do
+            let failure = storageProviderError False (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 503
+            BL8.unpack (errBody failure) `shouldContain` "storage_service_unavailable"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
+        it "offers personal reconnection without disclosing the provider payload" $ do
+            let failure = storageProviderError True (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 409
+            BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
 
     describe "DriveUploadForm FromMultipart" $ do
         it "trims optional upload fields before handler fallback resolution" $ do
@@ -9235,11 +9400,13 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 rawExecute
                     "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
                     [toPersistValue tokenId, toPersistValue credId]
-                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                result <- runPasswordResetConfirm testSessionTokenTtl "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
                 pure
@@ -9285,11 +9452,13 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 rawExecute
                     "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
                     [toPersistValue tokenId, toPersistValue credId]
-                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                result <- runPasswordResetConfirm testSessionTokenTtl "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
                 pure
@@ -9331,12 +9500,16 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Nothing
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "different-login-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:old-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 findReusableActiveToken partyId (Just "password-login:login@example.com")
 
@@ -9366,12 +9539,16 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:duplicate-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "second-login-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:duplicate-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 findReusableActiveToken partyId (Just "password-login:duplicate-login@example.com")
 
@@ -15739,6 +15916,7 @@ marketplaceTestConfig seedFlag =
         , sessionCookieSecure = False
         , sessionCookieSameSite = "Lax"
         , sessionCookieMaxAgeSeconds = Nothing
+        , sessionTokenTtlSeconds = 3600
         , stripeSecretKey = Nothing
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
@@ -15886,6 +16064,7 @@ seedSessionUsernameFallbackRows = do
                     , userCredentialPasswordHash = "hash"
                     , userCredentialActive = True
                     }
+        -- Interactive labels need a validity window; unlabeled tokens stay unbounded.
         insertToken partyId tokenValue labelValue =
             insert_
                 ApiToken
@@ -15893,6 +16072,8 @@ seedSessionUsernameFallbackRows = do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = labelValue
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0 <* labelValue
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch <* labelValue
                     }
     ambiguousPartyId <- insertParty "Ambiguous Session User" "ambiguous-session@example.com"
     insertCredential ambiguousPartyId "first-session@example.com"
@@ -15904,6 +16085,44 @@ seedSessionUsernameFallbackRows = do
     insertCredential googlePartyId "second-google-session@example.com"
     insertToken googlePartyId "google-token" (Just "google-login:google@example.com")
     pure (ambiguousPartyId, googlePartyId)
+
+assertPackagePurchaseSuccess :: Either ServerError NoContent -> Expectation
+assertPackagePurchaseSuccess (Right NoContent) = pure ()
+assertPackagePurchaseSuccess (Left err) = expectationFailure ("Unexpected purchase error: " <> show err)
+
+assertPackagePurchaseFailure :: Int -> Either ServerError NoContent -> Expectation
+assertPackagePurchaseFailure code (Left err) = errHTTPCode err `shouldBe` code
+assertPackagePurchaseFailure _ (Right _) = expectationFailure "Unexpected successful package purchase"
+
+withPackagePurchaseFixture
+    :: Maybe Int -> Bool -> (Env -> Key Party -> Key PackageProduct -> IO a) -> IO a
+withPackagePurchaseFixture days active action =
+    bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+        now <- getCurrentTime
+        (buyerKey, productKey) <- runSqlPool (do
+            initializeAuthSchema
+            initializePackageSchema
+            rawExecute "CREATE TABLE package_purchase(id INTEGER PRIMARY KEY,buyer_id INTEGER NOT NULL REFERENCES party(id),product_id INTEGER NOT NULL REFERENCES package_product(id),purchased_at TIMESTAMP NOT NULL,price_cents INTEGER NOT NULL,expires_at TIMESTAMP NULL,remaining_units INTEGER NOT NULL,status TEXT NOT NULL)" []
+            buyer <- insert Party
+                { partyLegalName = Nothing
+                , partyDisplayName = "Synthetic expiry buyer"
+                , partyIsOrg = False
+                , partyTaxId = Nothing
+                , partyPrimaryEmail = Nothing
+                , partyPrimaryPhone = Nothing
+                , partyWhatsapp = Nothing
+                , partyInstagram = Nothing
+                , partyEmergencyContact = Nothing
+                , partyNotes = Nothing
+                , partyStripeCustomerId = Nothing
+                , partyCountryCode = Nothing
+                , partyCountryId = Nothing
+                , partyCreatedAt = now
+                }
+            product <- insert (PackageProduct "Synthetic expiring product" Classes Hours 24 50000
+                days False CreditOnly active)
+            pure (buyer, product)) pool
+        action (Env pool (marketplaceTestConfig False)) buyerKey productKey
 
 runPackageSqlite :: SqlPersistT IO a -> IO a
 runPackageSqlite action =
@@ -15919,6 +16138,14 @@ runResourceSqlite action =
         backend <- ask
         liftIO $ runReaderT initializeResourceSchema backend
         liftIO $ runReaderT action backend
+
+-- Interactive session fixtures need a validity window that cannot elapse
+-- during a test run; service-token fixtures stay unbounded (Nothing).
+farFutureEpoch :: Int64
+farFutureEpoch = 4102444800 -- 2100-01-01T00:00:00Z
+
+testSessionTokenTtl :: SessionTokenTtl
+testSessionTokenTtl = SessionTokenTtl 3600
 
 initializeAuthSchema :: SqlPersistT IO ()
 initializeAuthSchema = do
@@ -16170,6 +16397,8 @@ initializeAuthSchema = do
         \\"party_id\" INTEGER NOT NULL,\
         \\"label\" VARCHAR NULL,\
         \\"active\" BOOLEAN NOT NULL,\
+        \\"issued_at_epoch\" INTEGER NULL,\
+        \\"expires_at_epoch\" INTEGER NULL,\
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"

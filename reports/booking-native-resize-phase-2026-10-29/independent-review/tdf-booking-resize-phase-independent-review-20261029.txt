@@ -1,0 +1,40 @@
+Independent read-only review: native resize notification observation phase
+
+Scope: independently read both actual a909 geometry.json files, not merely the root summary; inspected installed Popper eventListeners/debounce/update source; read the cited primary CSSOM View and HTML algorithms through read-only browsing. No browser/server/test execution, DB activity, product/test edit or permission action. This is specification/design review, not execution qualification, proof or GitHub approval.
+
+Judgment: the proposed explicit overlay-phase correction is justified by the observed event-order counterexamples and primary algorithms, subject to the safeguards below. It is not an additional user business rule, a product listener repair or permission to waive the original immediate root/scale contract. The previously written pre-notification initial-overlay contract remains FAILED historically and should be recorded as an unsupported timing requirement introduced by the harness, not retroactively marked satisfied.
+
+Actual trace observations
+
+Error recovery: initial at11380 has inner/client/scroll320/320/320 and visual width320/scale1. The expected helper is x104/right339.640625/y390.666626 while the focused anchor is y588.890625. Initial events contain only before-viewport-request at11347; truncation is false and the original node is connected/identical. No resize event appears in samples11389,11396 or11496. The final11796 sample records first window.resize, visualViewport.resize and corrected style at11518; helper right is319.97396087646484, with transform translate3d(84.333333px,621px,0).
+
+Empty recovery: initial at4096 has the same320/320/320, scale1 and stale helper/anchor geometry. Its only initial event is before-viewport-request at3996, with the same untruncated/connected/identical flags. Samples4112,4130 and4231 still have no resize event. The final4531 sample records first window/visualViewport resize and corrected transform at4316, and helper right319.97396087646484.
+
+Thus the two initial measurements precede the observed resize-delivery/update batch by138ms and220ms. They are not evidence of an absent visualViewport event or permanently nonresponsive Popper. Style MutationObserver entries appear before the observer's window.resize record at the same coarsened timestamp; observer batching/listener registration/microtask order mean this is not an independent proof of every causation step. The data nevertheless separates pre-notification measurement from the later event/update phase. It does not prove what was painted during the interval or the original84d failure cause.
+
+Primary-source basis
+
+CSSOM View13.1 specifies that resize steps compare dimensions changed since their previous execution and then fire Window/VisualViewport resize events. This supplies notification ordering, not a promise that reading clientWidth means delivery already occurred. The cited snapshot is a W3C Working Draft and must be identified as such.
+https://www.w3.org/TR/2025/WD-cssom-view-1-20250916/#resizing-viewports
+
+HTML's current update-the-rendering algorithm queues rendering work and invokes resize steps in that work before later rendering stages. It does not turn an external viewport-setting protocol return into an acknowledgment that JavaScript listeners already ran. The event-loop algorithm supports observing the input notification before demanding an event-driven JavaScript result.
+https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering
+
+Installed Popper attaches window.resize to instance.update; debounce schedules the update through Promise resolution and forceUpdate recomputes geometry. A next task after that delivered event is a concrete boundary for those callbacks/microtasks. It is not a universal browser convergence/paint-time theorem or an all-widget completion contract.
+
+Required acceptance and lifecycle safeguards
+
+1. Keep the first atomic root overflow and visual-scale results immutable, attach them and assert them strictly before any native-resize acknowledgment can provide acceptance. Original standards/client-bound preconditions and zero root-overflow tolerance remain intact. An initial root/zoom failure must still fail even if all later samples fit.
+2. Register the acknowledgment before requesting viewport320. Bind it to actual Window resize for that requested width, preferably requiring event.isTrusted. An unrelated prior event, synthetic dispatch, layout rectangle, Popper mutation or a fit predicate is not acknowledgment. A delivered requested resize followed by one task is the revised overlay phase; do not poll helper/root dimensions until they pass.
+3. Fail closed when the native acknowledgment is absent after the fixture's8-second bound. This is a finite test-scheduling deadline, not a new product latency SLA. Clear timeout/remove listener on success, timeout and early initial-assertion failure. Avoid an unobserved rejecting Promise if the earlier root check aborts the case. Retain observation snapshots/cleanup without leaking them into application behavior.
+4. At the first post-acknowledgment observation, require the expected still-focused helper, unchanged content/name, same edge tolerance, root/scale fit and existing nonvacuous scroll tracking. No test forceUpdate, extra product listener, dismissal, clipping, arbitrary delay or retry-to-green is warranted by these traces.
+5. Preserve all a909/21628 literal-contract failures and previous uninstrumented counterexamples. Validate the revised harness on source-identical UI, then require the sole-option-removal control to fail its original immediate root predicate and the helper-only fault to fail the revised strict helper predicate. Deliberately missing/synthetic acknowledgment should not pass. New local/hosted source-bound execution remains necessary; no candidate execution is qualified by this review.
+
+This is a documented specification/harness correction because it replaces an unsupported pre-input-notification demand with a causal input-delivered boundary for a JavaScript overlay. It retains the independent immediate CSS/root safety requirement and a falsifiable helper requirement. It would become mere weakening if it accepted a fit without the event, erased old failures, moved the original root guard, removed strict edges/focus checks or treated later convergence as a substitute for the first root result.
+
+Reviewed local SHA256 values:
+/private/tmp/tdf-pr638-a909-booking-failure-20261029/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/geometry.json: 57924fe063d65216ed4fac6f34d50ffe1c75769040b524029dc52ceb8123ca1b
+/private/tmp/tdf-pr638-a909-booking-failure-20261029/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/geometry.json: 228ce0383944ef6c4ce92401007b493bc2e11edcaa35472e748e6772d4dfa005
+/private/tmp/tdf-correctness-cycle-20261028/node_modules/@popperjs/core/lib/modifiers/eventListeners.js: 6d10614b494320d1dd278b26c1707aa1f8191ef39875984cf1d51bac7cbfd9e9
+/private/tmp/tdf-correctness-cycle-20261028/node_modules/@popperjs/core/lib/utils/debounce.js: 30bce1b3ef4b3153a3c455bf48d8d17c8f7a6b062298b300520573b5d4ce88b7
+/private/tmp/tdf-correctness-cycle-20261028/node_modules/@popperjs/core/lib/createPopper.js: f9939ec81f7feaec3131624f824e6417ab944c06029d977ae7a818feb6ec6f27

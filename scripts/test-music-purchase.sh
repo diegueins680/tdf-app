@@ -11,3 +11,4 @@ cd "$repo_root/tdf-hq"
 test_binary="$(stack path --dist-dir)/build/tdf-hq-test/tdf-hq-test"
 test -x "$test_binary"
 "$test_binary" --match=music-purchase-postgresql --fail-on=empty
+python3 "$repo_root/scripts/test-music-purchase-asset-query.py"
