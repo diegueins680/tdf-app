@@ -33,7 +33,7 @@ async function fixture(page, baseURL, verified) {
     const request = route.request(); const url = new URL(request.url());
     if (url.hostname === 'i.ytimg.com') {
       requests.push(url.pathname);
-      diagnostic.noteRequest(url.href);
+      diagnostic.noteRequest(request);
       if (url.pathname.includes('f2BabxM1Pjc')) return route.fulfill({ contentType: 'image/png', body: validImage });
       if (url.pathname.includes('ooPsIHsikYU') && url.pathname.endsWith('hqdefault.jpg')) {
         return route.fulfill({ contentType: 'image/png', body: placeholderImage });
