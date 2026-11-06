@@ -1960,8 +1960,10 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/test-checkout-money-verifier.py"
       ],
-      "formalModels": [],
-      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "formalModels": [
+        "formal/payments/checkout_money_arithmetic.py"
+      ],
+      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration. Z3 (formal/payments/checkout_money_arithmetic.py, pinned 4.13.3, run in the formal workflow): under the exact TDF.Commerce.Money guards, accepted canonical lines (1 to 6, plus a step lemma for any length) are positive, within the parent, unchanged by Int64 narrowing and sum to the parent; accepted legacy cart amounts narrow unchanged; controls show that wrap-around before checking would accept wrong amounts.",
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",

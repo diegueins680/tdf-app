@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003.
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001.
 
 ## Contract
 
@@ -197,3 +197,20 @@ drop one guard each (rate above 10000, discount above subtotal, no seller-net gu
 no total bound) and find the value each lemma excludes. The lemmas are about the
 function's arithmetic; that the handler persists these values unchanged is covered
 by `tdf-hq/test` and the `2026-10-04_merch_commission_exact` constraints, not here.
+
+## Checkout line products and totals (PAY-CHECKOUT-001)
+
+`checkout_money_arithmetic.py` (Z3 4.13.3, pinned) assumes exactly the guards of
+`TDF.Commerce.Money` and proves over unbounded integers that:
+
+- for canonical checkouts of 1 to 6 lines, every accepted line amount is positive,
+  at most the parent amount and unchanged by narrowing to Int64, and the narrowed
+  lines still sum to the parent; a step lemma extends this to any number of lines;
+- legacy cart products and sums of nonnegative amounts that pass the bound narrow
+  unchanged (host Int assumed 64-bit), and each amount lies within the total.
+
+Controls show why the code computes before narrowing: with Int64 wrap-around, a line
+whose true product overflows can match the parent amount, and three in-range cart
+amounts can wrap to a nonnegative wrong total. Atomic rejection of an overflowing
+cart (no partial rows) is a property of the calling transaction, tested in
+`tdf-hq/test`, not proved here.
