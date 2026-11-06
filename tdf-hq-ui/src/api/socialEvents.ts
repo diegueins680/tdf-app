@@ -1,3 +1,4 @@
+import { assertSafeEventFinanceMoney } from '../utils/eventFinanceMoney';
 import { del, get, post, postForm, put } from './client';
 
 export interface SocialArtistDTO {
@@ -718,21 +719,21 @@ export const SocialEventsAPI = {
   checkInTicket: async (eventId: string, payload: { ticketCheckInTicketId?: string | null; ticketCheckInTicketCode?: string | null }) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/check-in`, payload) as SocialTicketDTO,
   listBudgetLines: async (eventId: string) =>
-    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`) as SocialEventBudgetLineDTO[],
+    (await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`) as SocialEventBudgetLineDTO[]).map(assertSafeEventFinanceMoney),
   createBudgetLine: async (eventId: string, payload: SocialEventBudgetLineDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`, payload) as SocialEventBudgetLineDTO,
   updateBudgetLine: async (eventId: string, lineId: string, payload: SocialEventBudgetLineDTO) =>
     await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines/${encodeURIComponent(lineId)}`, payload) as SocialEventBudgetLineDTO,
   listFinanceEntries: async (eventId: string, opts?: { direction?: string; source?: string; status?: string }) => {
     const qs = buildQuery({ direction: opts?.direction, source: opts?.source, status: opts?.status });
-    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries${qs}`) as SocialEventFinanceEntryDTO[];
+    return (await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries${qs}`) as SocialEventFinanceEntryDTO[]).map(assertSafeEventFinanceMoney);
   },
   createFinanceEntry: async (eventId: string, payload: SocialEventFinanceEntryDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries`, payload) as SocialEventFinanceEntryDTO,
   updateFinanceEntry: async (eventId: string, entryId: string, payload: SocialEventFinanceEntryDTO) =>
     await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries/${encodeURIComponent(entryId)}`, payload) as SocialEventFinanceEntryDTO,
   getFinanceSummary: async (eventId: string) =>
-    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`) as SocialEventFinanceSummaryDTO,
+    assertSafeEventFinanceMoney(await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`) as SocialEventFinanceSummaryDTO),
   getLogisticsPlan: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics`) as EventLogisticsPlanDTO,
   updateLogisticsSettings: async (eventId: string, payload: EventLogisticsSettingsDTO) =>

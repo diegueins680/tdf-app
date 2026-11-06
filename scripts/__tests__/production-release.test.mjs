@@ -1023,6 +1023,35 @@ test('every manifest migration can run inside the batch transaction', async () =
   }
 });
 
+test('buildMigrationBatchSql verifies the pre-designation social shape only on explicit opt-out', () => {
+  const before = {
+    id: '2026-10-25_event_memory_invitations',
+    path: 'tdf-hq/sql/2026-10-25_event_memory_invitations.sql',
+    checksum: '1'.repeat(64),
+    content: 'SELECT 1;',
+  };
+  const designation = {
+    id: '2026-11-01_social_sync_account_delivery_designation',
+    path: 'tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql',
+    checksum: '2'.repeat(64),
+    content: 'SELECT 2;',
+  };
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false });
+  const full = buildMigrationBatchSql([before, designation]);
+  // Without the explicit opt-out a batch verifies the current production shape.
+  assert.match(buildMigrationBatchSql([before]), /table_name = 'social_sync_account'\n\s*\) <> 17 OR/);
+  const socialCount = (sql) => sql.match(/table_name = 'social_sync_account'\n\s*\) <> (\d+) OR/)[1];
+  const socialForeignKeys = (sql) => sql.match(/<> (\d+) THEN\n\s*RAISE EXCEPTION 'A social-sync foreign key/)[1];
+  assert.equal(socialCount(prefix), '13');
+  assert.equal(socialForeignKeys(prefix), '7');
+  assert.doesNotMatch(prefix, /'social_sync_account', 'delivery_designated'/);
+  assert.equal(socialCount(full), '17');
+  assert.equal(socialForeignKeys(full), '9');
+  assert.match(full, /'social_sync_account', 'designated_by_party_id', 'bigint', 'YES'/);
+  // Production verification outside a batch always expects the full shape.
+  assert.equal(socialCount(buildSchemaVerificationSql()), '17');
+});
+
 test('buildMigrationBatchSql rejects unexpanded include directives', () => {
   assert.throws(
     () => buildMigrationBatchSql([{

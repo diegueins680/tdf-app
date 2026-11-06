@@ -25,6 +25,131 @@ const SKIPPED_SEGMENTS = [
   `${path.sep}.cabal${path.sep}`,
 ];
 
+// Haskell functions returning a handle or connection that must be released
+// explicitly. Connection pools and http-client managers are deliberately
+// absent: they live for the process (or test) and reap idle resources.
+const HASKELL_RESOURCE_ACQUISITIONS = new Set([
+  'openFile',
+  'openBinaryFile',
+  'openTempFile',
+  'openBinaryTempFile',
+  'connectPostgreSQL',
+  'takeResource',
+]);
+
+// Any of these near the acquisition gives guaranteed release.
+const HASKELL_CLEANUP_PATTERN = /\bbracket\w*\b|\bwith[A-Z]\w*\b|\bfinally\b|\ballocate\b|\bonException\b|\bresourceForkIO\b/;
+
+// Rule categories. Semantic rules flag possible contract, state or resource
+// defects; style rules flag readability debt. The CLI reports semantic
+// findings by default and only counts style findings per rule (F-11).
+export const FORMAL_RULE_CATEGORIES = Object.freeze({
+  'unbracketed-resource': 'semantic',
+  'unvalidated-state-mutation': 'semantic',
+  'missing-default-case': 'semantic',
+  'missing-precondition': 'semantic',
+  'missing-error-boundary': 'semantic',
+  'implicit-module-exports': 'semantic',
+  'magic-number': 'style',
+  'deep-nesting': 'style',
+  'long-function': 'style',
+  'boolean-trap': 'style',
+  'missing-invariant-docs': 'style',
+  'missing-property-tests': 'style',
+  'undocumented-side-effect': 'style',
+});
+
+export const FORMAL_SCOPES = Object.freeze(['semantic', 'style', 'all']);
+
+export function formalRuleCategory(rule) {
+  return FORMAL_RULE_CATEGORIES[rule] ?? 'semantic';
+}
+
+export function selectFormalFindingsInScope(findings, scope = 'semantic') {
+  if (scope === 'all') return findings;
+  return findings.filter((finding) => formalRuleCategory(finding.rule) === scope);
+}
+
+export function countFormalFindingsByRule(findings) {
+  const counts = {};
+  for (const finding of findings) {
+    counts[finding.rule] = (counts[finding.rule] ?? 0) + 1;
+  }
+  return Object.fromEntries(Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+// Replace Haskell comments, string literals and character literals with
+// spaces, keeping newlines, so line numbers stay valid and only code remains.
+export function maskHaskellCommentsAndStrings(source) {
+  const out = [];
+  const blank = (ch) => (ch === '\n' || ch === '\r' ? ch : ' ');
+  let i = 0;
+  while (i < source.length) {
+    const ch = source[i];
+    const next = source[i + 1];
+    if (ch === '{' && next === '-') {
+      let depth = 0;
+      while (i < source.length) {
+        if (source[i] === '{' && source[i + 1] === '-') {
+          depth += 1;
+          out.push('  ');
+          i += 2;
+        } else if (source[i] === '-' && source[i + 1] === '}') {
+          depth -= 1;
+          out.push('  ');
+          i += 2;
+          if (depth === 0) break;
+        } else {
+          out.push(blank(source[i]));
+          i += 1;
+        }
+      }
+      continue;
+    }
+    if (ch === '-' && next === '-') {
+      let j = i;
+      while (source[j] === '-') j += 1;
+      const after = source[j];
+      const prev = source[i - 1];
+      const symbolic = /[!#$%&*+./<=>?@\\^|~:]/;
+      if ((after === undefined || !symbolic.test(after)) && (prev === undefined || !symbolic.test(prev))) {
+        while (i < source.length && source[i] !== '\n') {
+          out.push(blank(source[i]));
+          i += 1;
+        }
+        continue;
+      }
+    }
+    if (ch === '"') {
+      out.push(' ');
+      i += 1;
+      while (i < source.length && source[i] !== '"') {
+        if (source[i] === '\\' && i + 1 < source.length) {
+          out.push(' ', blank(source[i + 1]));
+          i += 2;
+        } else {
+          out.push(blank(source[i]));
+          i += 1;
+        }
+      }
+      out.push(' ');
+      i += 1;
+      continue;
+    }
+    if (ch === "'" && !/[A-Za-z0-9_']/.test(source[i - 1] ?? '')) {
+      const literal = /^'(?:\\[^']{1,8}|[^'\\\n])'/.exec(source.slice(i, i + 12));
+      if (literal) {
+        out.push(' '.repeat(literal[0].length));
+        i += literal[0].length;
+        continue;
+      }
+    }
+    out.push(ch);
+    i += 1;
+  }
+  return out.join('');
+}
+
 const SEVERITY_RANK = {
   info: 0,
   warning: 1,
@@ -362,25 +487,28 @@ function auditHaskellFormal(source, filePath) {
     }
   }
 
-  // 3. IO without bracket / withResource
-  const ioPattern = /\b(openFile|connect|acquire|lock|with)\b/gi;
-  for (const match of source.matchAll(ioPattern)) {
-    const line = lineNumberAt(source, match.index);
-    const currentLine = lines[line - 1] ?? '';
-    if (/^\s*import\s+/.test(currentLine)) continue;
-    const surrounding = lines.slice(Math.max(0, line - 1), line + 3).join('\n');
-    if (!/\bbracket\b|\bwith\w+\b|\bfinally\b/.test(surrounding)) {
+  // 3. Resource acquisition without guaranteed cleanup. Matching runs on code
+  // with comments and string literals blanked out, and only on the names of
+  // functions that acquire a handle, connection or pooled resource, so prose
+  // such as "with" or "lock" in comments, messages and SQL is not a finding.
+  const codeLines = maskHaskellCommentsAndStrings(source).split(/\r?\n/);
+  const acquisitionPattern = new RegExp(`\\b(${[...HASKELL_RESOURCE_ACQUISITIONS].join('|')})\\b`, 'g');
+  codeLines.forEach((codeLine, index) => {
+    if (/^\s*import\s+/.test(codeLine)) return;
+    for (const match of codeLine.matchAll(acquisitionPattern)) {
+      const surrounding = codeLines.slice(Math.max(0, index - 1), index + 4).join('\n');
+      if (HASKELL_CLEANUP_PATTERN.test(surrounding)) continue;
       findings.push({
         rule: 'unbracketed-resource',
         severity: 'warning',
         file: filePath,
-        line,
-        message: 'Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.',
-        snippet: compactSnippet(lines[line - 1] ?? ''),
+        line: index + 1,
+        message: `Resource acquisition "${match[1]}" lacks guaranteed cleanup; prefer bracket or a with-pattern.`,
+        snippet: compactSnippet(lines[index] ?? ''),
         importance: scoreImportance('warning', 1, 1.5),
       });
     }
-  }
+  });
 
   return findings;
 }

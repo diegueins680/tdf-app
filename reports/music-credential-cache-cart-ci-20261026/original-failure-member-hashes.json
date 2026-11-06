@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "archive": "d765-original-failure.tar.gz",
+  "archiveSha256": "2734594e48a5e1a9c9f8da259d29e868d8ce695b421053cae9bc844c5b40fa41",
+  "members": {
+    "original/qa-failure-receipt.json": {
+      "originalPath": "/private/tmp/tdf-633-d765-persona-failure-evidence-20261026.json",
+      "bytes": 24469,
+      "sha256": "466a754c340b93a8b0741c92e33436a8d7fd5184cd1a69565eca94f06ce00dbc"
+    },
+    "original/persona-failure.log": {
+      "originalPath": "/private/tmp/tdf-633-d765-persona-original-failure-20261026.log",
+      "bytes": 152585,
+      "sha256": "c6a64b1358e3584e61c6044f01a7e62dad01db4c6ac9d9a80662aa93138fcd4f"
+    },
+    "original/quality-propagation.log": {
+      "originalPath": "/private/tmp/tdf-633-d765-quality-original-failure-20261026.log",
+      "bytes": 3298,
+      "sha256": "898cfed8ba0c2294000e3ed6d48345a9804f8917ef4fff79f764e378309b869b"
+    },
+    "original/cart-source-excerpt.json": {
+      "originalPath": "/private/tmp/tdf-633-d765-cart-source-excerpt-20261026.json",
+      "bytes": 4221,
+      "sha256": "bbf6be126f34270a202d40ce5af9a70eb8b167198f227688e7e8ea923512471f"
+    },
+    "original/trace-actions.json": {
+      "originalPath": "/private/tmp/tdf-633-d765-cart-trace-actions-20261026.json",
+      "bytes": 19683,
+      "sha256": "8e0da53602b50d9dfb98217867e660d0b934367f55c59c33f9dc2fc0cecb625b"
+    },
+    "original/extraction-receipt.json": {
+      "originalPath": "/private/tmp/tdf-633-d765-cart-trace-20261026/extraction-receipt.json",
+      "bytes": 541,
+      "sha256": "0aa948052ee29728918dbc2a222625c8ff5e9595881959354b746f54f58819fc"
+    },
+    "original/persona-results.json": {
+      "originalPath": "/private/tmp/tdf-633-d765-cart-trace-20261026/persona-results.json",
+      "bytes": 1624030,
+      "sha256": "a1d2cfa9c87cfffd62f1f16544be94533e5d9887e3771356d0a531d8eb669927"
+    },
+    "original/error-context.md": {
+      "originalPath": "/private/tmp/tdf-633-d765-cart-trace-20261026/error-context.md",
+      "bytes": 11087,
+      "sha256": "ba3ffde1609df68db801e7dd54512d1ff8fd6ee641932c5219d5a3327daa23e4"
+    },
+    "original/test-failed-1.png": {
+      "originalPath": "/private/tmp/tdf-633-d765-cart-trace-20261026/test-failed-1.png",
+      "bytes": 151647,
+      "sha256": "11f4a321d7ae0794f42dea5e0f9fafdd0e8a1d3ad7db55506220b82246260b22"
+    },
+    "original/failing-trace.zip": {
+      "originalPath": "/private/tmp/tdf-633-d765-cart-trace-20261026/trace.zip",
+      "bytes": 1259441,
+      "sha256": "d8649d59363d1498059067e2365c76ead7b5a6f59c25ce6562194ce58485f397"
+    },
+    "proposal-before-first-reload-strengthening/original-marketplace-cart.spec.mjs": {
+      "originalPath": "/private/tmp/tdf-cart-budget-proposal-20261026/original-marketplace-cart.spec.mjs",
+      "bytes": 9566,
+      "sha256": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385"
+    },
+    "proposal-before-first-reload-strengthening/proposed-marketplace-cart.spec.mjs": {
+      "originalPath": "/private/tmp/tdf-cart-budget-proposal-20261026/proposed-marketplace-cart.spec.mjs",
+      "bytes": 11014,
+      "sha256": "99f794a61c3c22f0c0cc8796e9a2e4d1057c88970a3e85cf82c176ed53ad8057"
+    },
+    "proposal-before-first-reload-strengthening/decomposition.patch": {
+      "originalPath": "/private/tmp/tdf-cart-budget-proposal-20261026/decomposition.patch",
+      "bytes": 1911,
+      "sha256": "e003c77c1ff939f0e1de37d49a13c9d28ab64d9d459df32790f38a872bf19224"
+    },
+    "proposal-before-first-reload-strengthening/assertion-traceability.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-proposal-20261026/assertion-traceability.json",
+      "bytes": 10929,
+      "sha256": "aa2345d123cb1120140d7a5658012b086ff78b01c3631099aa65f80eec33ccfe"
+    },
+    "proposal-before-first-reload-strengthening/trace-diagnosis-and-plan.json": {
+      "originalPath": "/private/tmp/tdf-cart-budget-proposal-20261026/trace-diagnosis-and-plan.json",
+      "bytes": 27316,
+      "sha256": "58911c8351c3f13d77c6e093a29d08bb571c401f739d99d5b2d8fc06238990f8"
+    }
+  },
+  "excludedParentZip": {
+    "artifact": 12691896566,
+    "path": "/private/tmp/tdf-633-d765-persona-12691896566.zip",
+    "bytes": 70428099,
+    "actualDownloadedFileSha256": "75d6a47be209899ba10ce34b28cce4f25d8b2edc2944c8be46458b2bc34e70b9",
+    "downloadAndMemberHashVerification": "Root downloaded; metadata owner independently rehashed actual local ZIP and extracted members. Full70MB ZIP remains private.",
+    "sourceHead": "d7657f3daf7ee037703a327d840a67e29ac61099"
+  }
+}

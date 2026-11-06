@@ -17,6 +17,7 @@ const contract = yaml.parse(readFileSync('../docs/music-directory/formal-model.y
 const labels: Record<string, string> = {
   submitted: 'Enviar a revisión', under_review: 'Tomar revisión', withdrawn: 'Retirar',
   approved: 'Aprobar', rejected: 'Rechazar', more_evidence_requested: 'Solicitar evidencia',
+  revoked: 'Revocar',
 };
 let client: QueryClient;
 beforeEach(() => {

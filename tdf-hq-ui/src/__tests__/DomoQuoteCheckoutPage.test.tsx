@@ -11,12 +11,15 @@ const confirmDatafastStatusMock = jest.fn<(
   token: string,
 ) => Promise<unknown>>();
 
+const cancelQuoteMock = jest.fn<(quoteId: string, token: string, note?: string) => Promise<unknown>>();
+
 jest.unstable_mockModule('../api/domoQuotes', () => ({
   DomoQuotes: {
     getQuote: (quoteId: string, token: string) => getQuoteMock(quoteId, token),
     confirmDatafastStatus: (quoteId: string, resourcePath: string, token: string) =>
       confirmDatafastStatusMock(quoteId, resourcePath, token),
     acceptQuote: jest.fn(),
+    cancelQuote: (quoteId: string, token: string, note?: string) => cancelQuoteMock(quoteId, token, note),
     createDatafastCheckout: jest.fn(),
     createPaypalOrder: jest.fn(),
     capturePaypalOrder: jest.fn(),
@@ -102,6 +105,7 @@ describe('DomoQuoteCheckoutPage verified deposit boundary', () => {
     window.localStorage.setItem(`tdf:domo-quote:${quoteId}`, 'secure-lookup-token');
     getQuoteMock.mockReset();
     confirmDatafastStatusMock.mockReset();
+    cancelQuoteMock.mockReset();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -169,5 +173,56 @@ describe('DomoQuoteCheckoutPage verified deposit boundary', () => {
     expect(container.textContent).toContain('Esto no significa que el evento esté completado');
     expect(container.textContent).toContain('Saldo restante');
     expect(container.textContent).toContain('Cumplimiento del espacio: date_reserved');
+  });
+  it('cancels a paid quote only after explicit confirmation and shows the policy outcome', async () => {
+    getQuoteMock.mockResolvedValue(quoteFixture({
+      quoteStatus: 'deposit_paid',
+      paymentStatus: 'paid',
+      fulfillmentStatus: 'date_reserved',
+      depositPaidAt: '2030-01-01T10:05:00Z',
+      paymentMethods: [],
+    }));
+    cancelQuoteMock.mockResolvedValue({
+      quoteId, quoteStatus: 'cancelled', canceller: 'customer', policyVersion: 1, cancelledAt: '2030-01-02T10:00:00Z',
+      leadDays: 8, inProgress: false, retainedBasisPoints: 5000, depositCollectedMinor: 200704, balanceCollectedMinor: 0,
+      retainedMinor: 100352, refundDueMinor: 100352, currency: 'USD', refundStatus: 'awaiting_operator', alreadyCancelled: false,
+    });
+    await renderTracking(`/domo-del-pululahua/cotizaciones/${quoteId}`);
+    await waitForExpectation(() => expect(container.textContent).toContain('Cancelar cotización'));
+    expect(cancelQuoteMock).not.toHaveBeenCalled();
+
+    const openButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Cancelar cotización');
+    if (!openButton) throw new Error('missing cancel button');
+    await act(async () => { openButton.click(); });
+    await waitForExpectation(() => expect(document.body.textContent).toContain('¿Cancelar esta cotización?'));
+    expect(cancelQuoteMock).not.toHaveBeenCalled();
+
+    const confirmButton = Array.from(document.body.querySelectorAll('button')).find((button) => button.textContent === 'Confirmar cancelación');
+    if (!confirmButton) throw new Error('missing confirm button');
+    getQuoteMock.mockResolvedValue(quoteFixture({ quoteStatus: 'cancelled', paymentStatus: 'paid', fulfillmentStatus: 'cancelled', paymentMethods: [] }));
+    await act(async () => { confirmButton.click(); });
+
+    await waitForExpectation(() => expect(cancelQuoteMock).toHaveBeenCalledWith(quoteId, 'secure-lookup-token', ''));
+    await waitForExpectation(() => expect(container.textContent).toContain('Cotización cancelada'));
+    expect(container.textContent).toContain('Retenido según política');
+    expect(container.textContent).toContain('Un operador emitirá la solicitud de reembolso');
+    expect(container.textContent).toContain('Cotización: cancelled');
+  });
+  it('shows the recorded cancellation outcome when a cancelled quote is reopened', async () => {
+    getQuoteMock.mockResolvedValue(quoteFixture({
+      quoteStatus: 'cancelled', paymentStatus: 'paid', fulfillmentStatus: 'cancelled', paymentMethods: [],
+    }));
+    cancelQuoteMock.mockResolvedValue({
+      quoteId, quoteStatus: 'cancelled', canceller: 'customer', policyVersion: 1, cancelledAt: '2030-01-02T10:00:00Z',
+      leadDays: 8, inProgress: false, retainedBasisPoints: 5000, depositCollectedMinor: 200704, balanceCollectedMinor: 0,
+      retainedMinor: 100352, refundDueMinor: 100352, currency: 'USD', refundStatus: 'awaiting_operator', alreadyCancelled: true,
+    });
+    await renderTracking(`/domo-del-pululahua/cotizaciones/${quoteId}`);
+    // The page replays the holder's cancellation (idempotent) to recover the record.
+    await waitForExpectation(() => expect(cancelQuoteMock).toHaveBeenCalledWith(quoteId, 'secure-lookup-token', undefined));
+    await waitForExpectation(() => expect(container.textContent).toContain('Retenido según política'));
+    expect(container.textContent).toContain('Esta cotización fue cancelada y la fecha quedó liberada');
+    expect(container.textContent).not.toContain('No está reservada y el depósito no está pagado');
+    expect(Array.from(container.querySelectorAll('button')).some((button) => button.textContent === 'Cancelar cotización')).toBe(false);
   });
 });

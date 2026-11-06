@@ -88,7 +88,7 @@ allowedClaimTransition fromStatus toStatus =
   where
     states = Set.fromList
       ["draft", "submitted", "under_review", "more_evidence_requested",
-       "approved", "rejected", "withdrawn"]
+       "approved", "rejected", "withdrawn", "revoked"]
     transitions = Set.fromList
       [ ("draft", "submitted"), ("draft", "withdrawn")
       , ("submitted", "under_review"), ("submitted", "withdrawn")
@@ -96,6 +96,9 @@ allowedClaimTransition fromStatus toStatus =
       , ("under_review", "more_evidence_requested"), ("under_review", "withdrawn")
       , ("more_evidence_requested", "submitted"), ("more_evidence_requested", "withdrawn")
       , ("rejected", "submitted")
+      -- AUTHORITY-097: an approved claim can be revoked by a distinct
+      -- administrator with a stated reason; revocation is terminal.
+      , ("approved", "revoked")
       ]
 
 allowedClassifiedTransition :: ClassifiedStatus -> ClassifiedStatus -> Bool
