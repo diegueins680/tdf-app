@@ -15502,6 +15502,80 @@
       }
     },
     {
+      "id": "SYS-ROUTE-REQUIREMENTS-001",
+      "title": "Every mutating compiled route is attributed to requirements or listed as unspecified",
+      "statement": "Each POST, PUT, PATCH and DELETE operation in the compiled API surface must have exactly one entry in formal/system/route-requirements.json, naming the requirements that cover it or marking it unspecified, and CI must fail when a mutating route is added, removed or renamed without updating the ledger.",
+      "domain": "SYS",
+      "authority": "Formal audit 2026-10-31 finding F-05 (407 of 508 mutating routes unmapped by a heuristic; the exact number to be fixed by a per-route mapping); formal/system/audit-2026-10-31-phase1.md section 42.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "The ledger's route set equals the mutating operations of formal/system/compiled-api-surface.json, without duplicates. An entry is named (a requirement names METHOD and path, parameters compared by position), path-named (a requirement names the path and it is the only mutating method on it), reviewed (requirements plus a written note) or unspecified (no requirements). Named and path-named entries are recomputed from requirements.json on every check, so they cannot drift from the text; a reviewed entry is refused once the text names the route. Every listed requirement exists, and the summary counts match the entries.",
+      "actors": [
+        "Maintainer adding or changing a route",
+        "CI",
+        "Reviewer attributing a route"
+      ],
+      "preconditions": [
+        "Current compiled API surface snapshot",
+        "formal/system/requirements.json"
+      ],
+      "inputs": [
+        "formal/system/compiled-api-surface.json",
+        "formal/system/requirements.json",
+        "formal/system/route-requirements.json",
+        "--write option"
+      ],
+      "state": {
+        "initial": "Ledger and surface on disk",
+        "terminal": [
+          "Ledger accepted",
+          "Check failed with the offending routes"
+        ]
+      },
+      "allowedTransitions": [
+        "Regenerate named and path-named entries from requirement text",
+        "Keep reviewed entries across regeneration"
+      ],
+      "forbiddenTransitions": [
+        "Accept a mutating route missing from the ledger",
+        "Accept a stale or duplicate entry",
+        "Accept coverage the requirement text does not support, or a reviewed entry without a note",
+        "Count an attribution as conformance"
+      ],
+      "effects": [
+        "Read-only check; --write rewrites only the ledger file"
+      ],
+      "authorization": "Local tool; no network or credentials.",
+      "privacy": "Route paths and requirement identifiers only.",
+      "concurrency": "Single sequential run.",
+      "idempotency": "--write on an unchanged surface, requirements and ledger reproduces the ledger byte for byte.",
+      "failure": "Each inconsistency is printed and the exit status is 1.",
+      "recovery": "Run with --write, then review entries that remain unspecified or add a reviewed attribution with a note.",
+      "observability": "The ledger summary counts named, path-named, reviewed and unspecified routes.",
+      "implementation": [
+        "scripts/check-route-requirements.py",
+        "formal/system/route-requirements.json"
+      ],
+      "tests": [
+        "scripts/test-route-requirements.py"
+      ],
+      "formalModels": [],
+      "verification": "8 unit tests: build and bases on a synthetic surface, positional parameter matching, the two-method path rule, a missing new route, a stale route, requirement text changes, unsupported coverage, reviewed entries (note, unknown requirement, kept by --write), duplicates and summary drift, and the repository ledger being current. CI runs the check and the tests in the formal workflow.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 42",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Exact over the compiled snapshot; attribution comes from requirement text, not from handler analysis.",
+      "ambiguity": [
+        "The compiled description carries no handler names, so a route is attributed by the requirement text that names it, not by the handler that serves it.",
+        "A requirement that names a route is not evidence that the handler conforms to it.",
+        "Read-only GET routes are out of scope."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Complete and gated attribution ledger; 496 of 513 mutating routes remain unspecified debt."
+      }
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
@@ -16199,7 +16273,7 @@
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
+    ".github/workflows/event-operations-formal.yml": "9bb9d7f076c80fb6af5cd99923f3b33cc02a6b4b837999892d3afcef4cc18a22",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -16564,6 +16638,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "dc70c8d4605ed428372d2282ba12b4aa81532400ebe8d31aac7c790eebe70f01",
+    "formal/system/route-requirements.json": "2db3b39b59d3b3bd18d9ce088e21035a5430d8685ec4f9248016cd7a5a90430c",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -16696,6 +16771,7 @@
     "scripts/check-mobile-gitlink-ancestry.sh": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+    "scripts/check-route-requirements.py": "283e83466e44b24f161206224c322d5bc054bc55fafec1da7bc82643e901aba5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
     "scripts/ci-change-scope.mjs": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
@@ -16875,6 +16951,7 @@
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
+    "scripts/test-route-requirements.py": "c6251ecb1102099fb298739b461bb86e917842fcac7246c229c8cec853a1d32c",
     "scripts/test-session-invoice-issue.sh": "636fc8c32e54ec4c895368f9c3bf7bac8cfd5bacb9b28ee27a677e8961ebae09",
     "scripts/test-social-designation-postgres.sh": "e83d08fc7e50b5fd5b8d1adb4058fec1348a7f4a73492ad33e30cf2839f78e86",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
@@ -31164,6 +31241,24 @@
         "relationship": "tests"
       }
     ],
+    "scripts/check-route-requirements.py": [
+      {
+        "requirement": "SYS-ROUTE-REQUIREMENTS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/route-requirements.json": [
+      {
+        "requirement": "SYS-ROUTE-REQUIREMENTS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-route-requirements.py": [
+      {
+        "requirement": "SYS-ROUTE-REQUIREMENTS-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Invoice/SessionIssue.hs": [
       {
         "requirement": "PAY-INVOICE-ISSUE-001",
@@ -31838,7 +31933,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
+      "sha256": "9bb9d7f076c80fb6af5cd99923f3b33cc02a6b4b837999892d3afcef4cc18a22",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34641,6 +34736,18 @@
       "requirements": [
         {
           "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fbfd163470f37a47",
+      "path": "scripts/check-route-requirements.py",
+      "sha256": "283e83466e44b24f161206224c322d5bc054bc55fafec1da7bc82643e901aba5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-ROUTE-REQUIREMENTS-001",
           "relationship": "implementation"
         }
       ]
@@ -38556,6 +38663,18 @@
         },
         {
           "requirement": "SYS-INVENTORY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5067a6940763ffc3",
+      "path": "scripts/test-route-requirements.py",
+      "sha256": "c6251ecb1102099fb298739b461bb86e917842fcac7246c229c8cec853a1d32c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-ROUTE-REQUIREMENTS-001",
           "relationship": "tests"
         }
       ]
@@ -64837,7 +64956,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "410669a0ea357d4ac23a9da56b1720b899b274a46880672c23fbd37b84616079",
+      "sourceSha256": "ca46e8eb9424d921b15231bc7782e94ac1dfafaad5fff0e36590ed74bbe8029c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -64865,7 +64984,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "410669a0ea357d4ac23a9da56b1720b899b274a46880672c23fbd37b84616079",
+      "sourceSha256": "ca46e8eb9424d921b15231bc7782e94ac1dfafaad5fff0e36590ed74bbe8029c",
       "definition": {
         "states": [
           "absent",
@@ -64895,7 +65014,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "410669a0ea357d4ac23a9da56b1720b899b274a46880672c23fbd37b84616079",
+      "sourceSha256": "ca46e8eb9424d921b15231bc7782e94ac1dfafaad5fff0e36590ed74bbe8029c",
       "definition": {
         "export": [
           "queued",
@@ -87497,7 +87616,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 190,
+    "PARTIAL": 191,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
