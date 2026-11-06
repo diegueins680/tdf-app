@@ -1,0 +1,16 @@
+{
+  "runtime-http.json": "9a9af6964a3cc3c7cdb016981eb871a4d624c039c89a0e211c8e1dc833aabfaf",
+  "compiled-selected-tests.json": "439f773c77876c9da1903777f174706e99e9e09404c8f23b546bc6e04b265f32",
+  "native-source-before.json": "1d6641cc00d803c07b6b2222b8fcac6c5a19ab6172641184084c92aa82192f20",
+  "http-harness.py": "0231299a3306f26f88145374275864fc5a2b8adffb221ade8c3cecea31e58959",
+  "fixture.mjs": "10bb84c6af325d2d4ff707280f4fe24c2f4a1ee3d8c4461a850ff9843774c3df",
+  "safety-preflight.json": "0daf87928fab72f904610b5cdb2b70756a0b1fb44075b3bdc1218f641c35ddbe",
+  "harness-review-manifest.json": "e8f230e21b6385d72ca3f5f4dba85d9f567466b3a9053eadc770024e97ded580",
+  "http-source-before.json": "a600257ca9d396667915b4891e88fca6d8dc1ee9f4fd28c18a2319d716c46378",
+  "stack-build.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "execution-logs.tar.gz": "6d43f5d5f5e7ae49d075b66ea04311c543ab89fc85f29b8c912be2093efb91f3",
+  "proof-inputs.tar.gz": "9c2eecfa5e4ffbb531603bccc82f3524367c04781ebb1aeeb382c8988c395a0a",
+  "archive-member-hashes.json": "8f5a2f64b7fcf3f9e3af6b24d671b0722a3be9578363664a2a6a1a6e6b6f5e6f",
+  "qualification-summary.json": "41c6b7ffc6d59d866378c2473429ae4e2c7e6359203f6114beca3fb55bfc1b4a",
+  "applied-context-assurance.json": "c5c52865009e1bad79771b1e10852be030267ac38b5b5c51cb5a7317e6fb1824"
+}
