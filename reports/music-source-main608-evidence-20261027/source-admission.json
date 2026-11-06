@@ -1,0 +1,10 @@
+{
+  "base": "301810ae3861ea36b1fa790beee940bfe2461a02",
+  "head": "d80eb182052de02ac94cd9de21e85e44bfa4bf5b",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    "scripts/test-music-source-projection.mjs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}
