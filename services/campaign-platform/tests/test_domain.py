@@ -120,6 +120,21 @@ class CampaignTests(unittest.TestCase):
    with self.assertRaises(Denied):self.store.execution_guard(d,piece)
    self.assertEqual(piece['tdf_approval_version'],1)
    self.assertEqual(d.execute('SELECT state FROM jobs WHERE piece=?',(pid,)).fetchone()[0],'blocked')
+ def test_blocked_shared_review_cannot_reauthorize_an_existing_provider_session(self):
+  with self.store.db(True) as d:d.execute('UPDATE accounts SET owner=3,scope="tdf" WHERE id=?',(self.account,))
+  pid=self.piece();self.approve();self.store.status(self.a,self.cid,'active')
+  class NoProvider:
+   def publish(*args):raise AssertionError('No provider operation in partial-session fixture')
+  run_one(self.store,NoProvider(),lambda a:'')
+  with self.store.db(True) as d:
+   d.execute('INSERT INTO provider_sessions VALUES(?,?,?)',(pid,json.dumps({'stage':'upload_initialized','fixture':True}),time.time()))
+   before=dict(d.execute('SELECT * FROM jobs WHERE piece=?',(pid,)).fetchone())
+  self.assertEqual(self.store.tdf_review(self.admin),[])
+  with self.assertRaises(Denied) as denied:self.store.tdf_review(self.admin,pid,1)
+  self.assertEqual(denied.exception.status,409)
+  with self.store.db() as d:
+   self.assertEqual(dict(d.execute('SELECT * FROM jobs WHERE piece=?',(pid,)).fetchone()),before)
+   self.assertIsNone(d.execute('SELECT tdf_approval_version FROM pieces WHERE id=?',(pid,)).fetchone()[0])
  def test_other_person_account_cannot_be_selected(self):
   with self.store.db(True) as d:d.execute('UPDATE accounts SET owner=2 WHERE id=?',(self.account,))
   with self.assertRaises(Denied):self.piece()
