@@ -17680,7 +17680,7 @@
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
-    "tdf-hq/src/TDF/StorageVault.hs": "ea59538bd391781375f1d80f0a08663366635d7ba71a97f4b88d899321e83a9d",
+    "tdf-hq/src/TDF/StorageVault.hs": "4f42486eaa00362ce4db7abf91f8fbb8fde121d9fe3f7df0fda609fb6a241671",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
@@ -56568,7 +56568,7 @@
     {
       "id": "SURFACE-094697e0ab92272f",
       "path": "tdf-hq/src/TDF/StorageVault.hs",
-      "sha256": "ea59538bd391781375f1d80f0a08663366635d7ba71a97f4b88d899321e83a9d",
+      "sha256": "4f42486eaa00362ce4db7abf91f8fbb8fde121d9fe3f7df0fda609fb6a241671",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

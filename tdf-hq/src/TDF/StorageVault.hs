@@ -8,6 +8,7 @@ module TDF.StorageVault
   ) where
 
 import Control.Monad (unless, when)
+import Control.Applicative ((<|>))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import qualified Control.Exception.Safe as Safe
@@ -211,8 +212,14 @@ refreshProvider :: Manager -> Credential -> IO (Either ServerError (Credential, 
 refreshProvider _ (Credential _ Nothing) = pure (Left (failure err409 "storage_reconnect_required"))
 refreshProvider manager (Credential _ (Just refresh)) = do
   result <- Safe.tryAny $ do
-    client <- lookupEnv "DRIVE_CLIENT_ID"
-    secret <- lookupEnv "DRIVE_CLIENT_SECRET"
+    driveClient <- lookupEnv "DRIVE_CLIENT_ID"
+    googleClient <- lookupEnv "GOOGLE_CLIENT_ID"
+    driveSecret <- lookupEnv "DRIVE_CLIENT_SECRET"
+    googleSecret <- lookupEnv "GOOGLE_CLIENT_SECRET"
+    -- Match the OAuth application's exchange configuration. This fallback is
+    -- only client metadata; a personal refresh never uses a service token.
+    let client = driveClient <|> googleClient
+        secret = driveSecret <|> googleSecret
     case (client,secret) of
       (Just cid,Just cs) | not (null cid || null cs) -> do
         request <- parseRequest "https://oauth2.googleapis.com/token"
