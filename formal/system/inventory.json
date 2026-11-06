@@ -186,6 +186,7 @@
       "scripts/__tests__/music-test-database.test.mjs",
       "scripts/__tests__/music-track-search-model.test.mjs",
       "scripts/__tests__/music-worker-build.test.mjs",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -208,6 +209,7 @@
       "scripts/__tests__/startup-gates-postgres.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
+      "scripts/__tests__/test-child-completion.test.mjs",
       "scripts/__tests__/test-process-session.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
@@ -329,6 +331,7 @@
       "scripts/lib/requirement_declarations.py",
       "scripts/lib/sri-invoice.mjs",
       "scripts/lib/studio-audit-safety.mjs",
+      "scripts/lib/test-child-completion.mjs",
       "scripts/lib/test-process-session.mjs",
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
@@ -2829,7 +2832,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "1a1d0607772d62318e98ffa9d6dd792708978263e902d00237e5417ae512ece8",
+      "sha256": "52f94697ac8910e69878eff3d5d2b232af77ae627a40e3311fc09da9cc526436",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3787,6 +3790,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6545235ef8b425c",
+      "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c8ab8af4db77fc7",
       "path": "scripts/__tests__/music-worker-timing.test.mjs",
       "sha256": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
@@ -3916,6 +3925,12 @@
       "id": "SURFACE-2814c9b72c5f2d05",
       "path": "scripts/__tests__/studio-internship-audit.test.mjs",
       "sha256": "630716fa1e50aa604476b1159a3ac8daed37b79c7dc9ebd557a6af25f2a33a57",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a1dd9455f7a2ce96",
+      "path": "scripts/__tests__/test-child-completion.test.mjs",
+      "sha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4645,6 +4660,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0ebd44c86ad332c6",
+      "path": "scripts/lib/test-child-completion.mjs",
+      "sha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cf6df3f57a9edc7c",
       "path": "scripts/lib/test-process-session.mjs",
       "sha256": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
@@ -4833,7 +4854,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "db385d5a530ea68ccede0322733a60a003acd2046bebb3219a6890ebf4f538ad",
+      "sha256": "9cd9e22d3154617abde56e0d3823781444b87a506f02e76a357749b2cdc5cfb9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4911,7 +4932,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5907,7 +5928,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
+      "sha256": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27996,6 +28017,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-worker-completion-observation.md",
+      "sha256": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-worker-heartbeat-shutdown.md",
+      "sha256": "94e3d66490bc334092ae4ae8160ae688be56b9128621c20dce1f0dc393022a28",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-aux-write.md",
       "sha256": "2d8dee259c38886c7de44bb20df7085d406984d16647b2c41659792806e8f391",
       "authority": "inferred",
@@ -28179,7 +28214,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6951b7226460bbc31fd750834b372651aae0a00db471a59891aa62cca89295be",
+      "sha256": "81f0d9a0df9d9bfdaf004cdac524f87751b2559b5bd5e6941dd065c82e71f9db",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
