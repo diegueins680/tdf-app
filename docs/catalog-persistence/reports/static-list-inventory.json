@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T16:55:12.660Z",
+  "generatedAt": "2026-11-06T17:41:43.257Z",
   "repositoryRoot": ".",
   "filesScanned": 2616,
   "candidateCount": 1403,
@@ -42116,7 +42116,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 290,
+      "consumerCount": 292,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42192,6 +42192,8 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
@@ -42217,9 +42219,7 @@
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-        "tdf-hq-ui/src/pages/OrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/OrdersPage.tsx",
-        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx"
+        "tdf-hq-ui/src/pages/OrdersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/directory.tsx",
@@ -75317,7 +75317,7 @@
       "domain": "campaigns-promotion",
       "kind": "object-registry",
       "name": "plan",
-      "line": 65,
+      "line": 66,
       "values": [
         "id",
         "artistId",
@@ -75329,7 +75329,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        65
+        66
       ],
       "consumerCount": 282,
       "backendConsumers": [
@@ -75562,7 +75562,7 @@
       "domain": "campaigns-promotion",
       "kind": "object-registry",
       "name": "plan",
-      "line": 174,
+      "line": 181,
       "values": [
         "campaignId",
         "objective",
@@ -75573,7 +75573,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        174
+        181
       ],
       "consumerCount": 224,
       "backendConsumers": [
@@ -75786,7 +75786,7 @@
       "domain": "campaigns-promotion",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 245,
+      "line": 252,
       "values": [
         "draft",
         "prepared",
@@ -75796,7 +75796,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        245
+        252
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -83322,7 +83322,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 440,
+      "consumerCount": 441,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -172103,7 +172103,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 440,
+      "consumerCount": 441,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",

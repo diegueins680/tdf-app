@@ -17473,8 +17473,8 @@
     "tdf-hq-ui/src/pages/TrialLessonsPage.tsx": "4eefae7511a9e5a78e7d111e4b9543d3e97caadfc041eeffe98da75ef6178033",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "430333d10523c16fae08cd4c186c67251ae6c9bd7731e60caadd7e9d6f2c4496",
-    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "729adf5aba98a03fbf76a95a7c6dcdfeb9d85b7ac6116c8a2ebfc7bcb1c54a26",
-    "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "27cb3cad937544a930f8843a8b99c722b9bb381b5f34a6061ee13de0023567d3",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "b4b23986afd701b8e2247f1483a1719b4528084d00399a031b861cadf75cdc6f",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "53d1ee99d8f1a42bb346ef12e29163428562fe05f516503cf431a38b74246306",
     "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
     "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
@@ -47392,7 +47392,7 @@
     {
       "id": "SURFACE-d3678204a317aed3",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-      "sha256": "729adf5aba98a03fbf76a95a7c6dcdfeb9d85b7ac6116c8a2ebfc7bcb1c54a26",
+      "sha256": "b4b23986afd701b8e2247f1483a1719b4528084d00399a031b861cadf75cdc6f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47404,7 +47404,7 @@
     {
       "id": "SURFACE-1e42b51a3ed57a58",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-      "sha256": "27cb3cad937544a930f8843a8b99c722b9bb381b5f34a6061ee13de0023567d3",
+      "sha256": "53d1ee99d8f1a42bb346ef12e29163428562fe05f516503cf431a38b74246306",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

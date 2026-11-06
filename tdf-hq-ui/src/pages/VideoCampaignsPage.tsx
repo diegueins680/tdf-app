@@ -7,6 +7,7 @@ import SessionVideoPreview from '../components/SessionVideoPreview';
 import { Fans } from '../api/fans';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { VideoCampaigns } from '../api/videoCampaigns';
+import { ApiError } from '../api/client';
 import { getActiveSession, useSession, type SessionUser } from '../session/SessionContext';
 import { getAuthSessionEpoch } from '../session/authEvents';
 import { hasStrictAdminAccess } from '../utils/accessControl';
@@ -77,6 +78,10 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
       ? Fans.getPublicArtist(String(artistId)).then((p) => [p]) : Fans.getMyArtistProfile().then((p) => [p]), retry: false });
   const campaigns = useQuery({ queryKey: ['video-campaigns', session.partyId, artistId],
     queryFn: () => VideoCampaigns.list(artistId), enabled: Number.isSafeInteger(artistId) && artistId > 0 });
+  const accessDenied = campaigns.error instanceof ApiError
+    && (campaigns.error.status === 401 || campaigns.error.status === 403 || campaigns.error.status === 404);
+  const savedCampaigns = campaigns.data;
+  const canEdit = savedCampaigns !== undefined && !accessDenied;
   const metrics = useQuery({ queryKey: ['video-campaign-metrics', session.partyId, artistId, active?.id],
     queryFn: () => VideoCampaigns.metrics(artistId, active!.id), enabled: Boolean(active?.revision), retry: false });
   const artist = artists.data?.find((a) => a.apArtistId === artistId);
@@ -93,12 +98,14 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
       <TextField label="ID del artista" type="number" value={artistId} onChange={(e) => selectArtist(Number(e.target.value))}
         helperText="También permite seleccionar un artista que todavía no tiene perfil público. El servidor verifica tu acceso." />
     </>}
-    {campaigns.isError && <Alert severity="error">No pudimos cargar tus campañas.
+    {campaigns.isError && <Alert severity={canEdit ? 'warning' : 'error'}>{canEdit
+      ? 'No pudimos actualizar tus campañas. Tus cambios en el editor se conservan; reintenta la actualización.'
+      : 'No pudimos cargar tus campañas.'}
       <Button onClick={() => { void artists.refetch(); void campaigns.refetch(); }}>Reintentar</Button></Alert>}
     {(!Number.isSafeInteger(artistId) || artistId <= 0) && <Alert severity="error">Escribe un ID de artista válido.</Alert>}
     {Number.isSafeInteger(artistId) && artistId > 0 && campaigns.isPending && <CircularProgress aria-label="Cargando campañas" />}
     {importing && <CircularProgress aria-label="Leyendo plan" />}
-    {campaigns.isSuccess && <>
+    {canEdit && <>
       {!artist && <Alert severity="info">Tienes acceso al artista #{artistId}. Sus datos públicos no están disponibles.
         Puedes preparar sus campañas; guardar un borrador no modifica la visibilidad del perfil.</Alert>}
       {importConflict && <Alert severity="warning">
@@ -120,8 +127,8 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
         <Button component="label" disabled={importing}>Importar plan como copia nueva<input aria-label="Archivo del plan para copia nueva" hidden disabled={importing} type="file" accept="application/json,.json" onChange={(e) => {
           const file = e.target.files?.[0]; e.target.value = ''; void importPlan(file, true);
         }} /></Button>
-        {campaigns.data.length === 0 && <Typography>Aún no tienes campañas guardadas.</Typography>}
-        {campaigns.data.map((c) => <Card key={c.id}><CardContent><Stack spacing={1}>
+        {savedCampaigns.length === 0 && <Typography>Aún no tienes campañas guardadas.</Typography>}
+        {savedCampaigns.map((c) => <Card key={c.id}><CardContent><Stack spacing={1}>
           <Typography variant="h6">{c.content.title}</Typography><Typography>{c.content.status === 'ready' ? 'Lista para revisar' : 'Borrador'}</Typography>
           <Button disabled={importing} onClick={() => setActive(c)}>Continuar</Button>
           <Button disabled={importing} onClick={() => setActive(freshCopy(c))}>Duplicar</Button>

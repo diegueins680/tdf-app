@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { SessionUser } from '../session/SessionContext';
@@ -20,16 +20,17 @@ jest.unstable_mockModule('../api/fans', () => ({ Fans: {
   getPublicArtist, listArtists,
 } }));
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({ default: () => null }));
-jest.unstable_mockModule('../api/client', () => ({ get: async () => ({}), put: async () => ({}) }));
+class ApiError extends Error { constructor(message: string, public status: number) { super(message); } }
+jest.unstable_mockModule('../api/client', () => ({ ApiError, get: async () => ({}), put: async () => ({}) }));
 const { default: VideoCampaignsPage } = await import('./VideoCampaignsPage');
-const show = (path = '/') => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+const show = (path = '/', client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) => render(<QueryClientProvider client={client}>
   <MemoryRouter initialEntries={[path]}><VideoCampaignsPage /></MemoryRouter></QueryClientProvider>);
 
 beforeEach(() => {
   jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
   persisted = [];
   session = { partyId: 51, username: 'artist', displayName: 'Artist', roles: ['Artist'] };
-  list.mockImplementation(async () => persisted);
+  list.mockReset().mockImplementation(async () => persisted);
   getPublicArtist.mockReset().mockResolvedValue({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' });
   listArtists.mockReset().mockResolvedValue([]);
   feature.mockReset().mockResolvedValue(undefined);
@@ -68,6 +69,46 @@ it('preserves the draft and reports a failed save so it can be retried', async (
   expect(screen.getByLabelText('Título de la sesión')).toHaveValue('Keep my edit');
   fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+});
+
+it.each([false, true])('retains editor edits, campaign ID and revision through failed background refreshes (saved=%s)', async (existing) => {
+  if (existing) persisted = [completeCampaign()];
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  show('/', client);
+  fireEvent.click(await screen.findByRole('button', { name: existing ? 'Continuar' : 'Crear campaña' }));
+  fireEvent.change(screen.getByLabelText('Título de la sesión'), { target: { value: 'Cambio sin guardar' } });
+  list.mockRejectedValue(new Error('Temporary network failure'));
+  await act(async () => { await client.refetchQueries({ queryKey: ['video-campaigns'] }); });
+  expect(await screen.findByText(/Tus cambios en el editor se conservan/)).toBeInTheDocument();
+  expect(screen.getByLabelText('Título de la sesión')).toHaveValue('Cambio sin guardar');
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
+  await waitFor(() => expect(list).toHaveBeenCalledTimes(3));
+  expect(screen.getByLabelText('Título de la sesión')).toHaveValue('Cambio sin guardar');
+  fireEvent.change(screen.getByLabelText('Título de la sesión'), { target: { value: 'Siguiente cambio' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+  expect(save.mock.calls[0]?.[2]).toBe(existing ? 3 : 0);
+  expect(save.mock.calls[1]?.[1]).toBe(save.mock.calls[0]?.[1]);
+  expect(save.mock.calls[1]?.[2]).toBe(existing ? 4 : 1);
+  expect(save.mock.calls[1]?.[3].title).toBe('Siguiente cambio');
+  list.mockImplementation(async () => persisted);
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+  await waitFor(() => expect(screen.queryByText(/Tus cambios en el editor se conservan/)).not.toBeInTheDocument());
+  expect(screen.getByLabelText('Título de la sesión')).toHaveValue('Siguiente cambio');
+});
+
+it.each([401, 403, 404])('hides the cached workspace when a refresh explicitly denies access (%s)', async (status) => {
+  persisted = [completeCampaign()];
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  show('/', client);
+  fireEvent.click(await screen.findByRole('button', { name: 'Continuar' }));
+  list.mockRejectedValue(new ApiError('Access denied', status));
+  await act(async () => { await client.refetchQueries({ queryKey: ['video-campaigns'] }); });
+  expect(await screen.findByText(/No pudimos cargar tus campañas/)).toBeInTheDocument();
+  expect(screen.queryByLabelText('Título de la sesión')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Crear campaña' })).not.toBeInTheDocument();
+  expect(save).not.toHaveBeenCalled();
 });
 
 it('prepares a newly selected or reselected channel without replacing the other channel edits', async () => {

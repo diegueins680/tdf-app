@@ -245,5 +245,43 @@
     "scope": "Focused component checks and lint. Actual Drive playback depends on the supplied file access; no real artist original was available. Hosted checks and fresh review required on the new head.",
     "deployment": false,
     "activation": false
+  },
+  "backgroundRefreshFollowup": {
+    "parentRevision": "c1300773d24205759a432fad2fcedcf44c880d30",
+    "behavior": "Keep a mounted editor when cached campaign data survives a transient refresh failure. Hide the cached workspace on explicit HTTP401/403/404. Preserve unsaved edits, campaign UUID and current saved revision across failed refetches triggered by focus or saving.",
+    "checks": [
+      {
+        "log": "refresh-regression-qualified-tests.log",
+        "sha256": "9b0efc4ae0f0963b7e1673d4ea2b1b15e6bd8c7796a4188b7ee482bc73228c3d",
+        "result": "63 tests PASS; new and existing editor preservation, repeated save UUID/revision and revoked access controls"
+      },
+      {
+        "log": "refresh-regression-build.log",
+        "sha256": "f71d20c6fbcc286eb1338c64966302b1ccf3b6396c77d804f5dff3bf8ab8f522",
+        "result": "TypeScript/build and initial bundle budget PASS"
+      },
+      {
+        "log": "refresh-regression-qualified-lint.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "result": "Focused lint PASS"
+      },
+      {
+        "log": "refresh-regression-browser.log",
+        "sha256": "cb1c77b811086e42982831e1d2dccb4910d2049be1ac63627a3bbac0bb1022b0",
+        "result": "20 desktop/Android-emulated browser journeys PASS"
+      },
+      {
+        "log": "refresh-catalog.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "result": "1403 reviewed candidates;0 unreviewed;PASS"
+      }
+    ],
+    "sourceSha256": {
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "53d1ee99d8f1a42bb346ef12e29163428562fe05f516503cf431a38b74246306",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "b4b23986afd701b8e2247f1483a1719b4528084d00399a031b861cadf75cdc6f"
+    },
+    "scope": "Browser APIs and publication URLs are synthetic. No physical Android device or connected provider publication. Initial regression run failed because mock call history was not reset between tests; reset isolation and frozen-source repeat passed. Hosted final-head checks/fresh approval remain required.",
+    "deployment": false,
+    "activation": false
   }
 }
