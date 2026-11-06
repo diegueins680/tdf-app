@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001.
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003.
 
 ## Contract
 
@@ -178,3 +178,22 @@ the row says accepted), `NoUnrecordedMail` (every accepted message has a row),
 
 Not covered: a transport that accepts the message and then raises (the row is
 then marked failed although mail went out), and delivery beyond SMTP acceptance.
+
+## Merchandise money (PAY-CHECKOUT-003)
+
+`merch_money_arithmetic.py` (Z3 4.13.3, pinned) assumes exactly the guards of
+`TDF.Commerce.Merch.calculateMerchMoney` on Int64 inputs and proves over
+unbounded integers that:
+
+- the commission is the floor of `(subtotal - discount) * bps / 10000`, lies within
+  `0..subtotal - discount` and never exceeds the exact share;
+- commission, seller net and payable total all fit Int64 (total at least 1);
+- `commission + processorFee + sellerNet = total`;
+- in `checkedMerchSubtotals`, every line amount of an accepted cart lies within the
+  accepted sum, so it fits Int64.
+
+Witnesses show an ordinary order and a full-commission order are accepted. Controls
+drop one guard each (rate above 10000, discount above subtotal, no seller-net guard,
+no total bound) and find the value each lemma excludes. The lemmas are about the
+function's arithmetic; that the handler persists these values unchanged is covered
+by `tdf-hq/test` and the `2026-10-04_merch_commission_exact` constraints, not here.

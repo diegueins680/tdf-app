@@ -2120,8 +2120,10 @@
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/test-checkout-money-verifier.py"
       ],
-      "formalModels": [],
-      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "formalModels": [
+        "formal/payments/merch_money_arithmetic.py"
+      ],
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration. Z3 (formal/payments/merch_money_arithmetic.py, pinned 4.13.3, run in the formal workflow): under the exact calculateMerchMoney guards, commission is the floor share within 0..base, stored fields fit Int64, commission + fee + seller net = total, and accepted cart lines fit within the accepted sum; four controls show each guard is needed.",
       "evidence": "merch-money-controls.json; merch-commission-postgres.log",
       "critical": true,
       "status": "specified and implemented",

@@ -2121,8 +2121,10 @@
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/test-checkout-money-verifier.py"
       ],
-      "formalModels": [],
-      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "formalModels": [
+        "formal/payments/merch_money_arithmetic.py"
+      ],
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration. Z3 (formal/payments/merch_money_arithmetic.py, pinned 4.13.3, run in the formal workflow): under the exact calculateMerchMoney guards, commission is the floor share within 0..base, stored fields fit Int64, commission + fee + seller net = total, and accepted cart lines fit within the accepted sum; four controls show each guard is needed.",
       "evidence": "merch-money-controls.json; merch-commission-postgres.log",
       "critical": true,
       "status": "specified and implemented",
@@ -16285,7 +16287,7 @@
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
     ".github/workflows/ci.yml": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "9bb9d7f076c80fb6af5cd99923f3b33cc02a6b4b837999892d3afcef4cc18a22",
+    ".github/workflows/event-operations-formal.yml": "817ca2158d1d7d51dc263216ca2ebbe44a63a36cc1e25df40479ba35aca89e4e",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -16638,6 +16640,7 @@
     "formal/payments/StripeIntentOutcomeLegacyUnassumed.cfg": "0318b9637e5ccb2bf641b0e7816ee64e3b944e7662a9870e6ec8a477871d2dbf",
     "formal/payments/domo_cancellation_refund.py": "6c0c8bdca1c70caff40c8f46f645aa482cc943ee9f1ac3ec6cef333c41b4bc40",
     "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
+    "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -20515,6 +20518,12 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
+      }
+    ],
+    "formal/payments/merch_money_arithmetic.py": [
+      {
+        "requirement": "PAY-CHECKOUT-003",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": [
@@ -31975,7 +31984,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "9bb9d7f076c80fb6af5cd99923f3b33cc02a6b4b837999892d3afcef4cc18a22",
+      "sha256": "817ca2158d1d7d51dc263216ca2ebbe44a63a36cc1e25df40479ba35aca89e4e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63829,7 +63838,6 @@
     "ID-SESSION-004",
     "DEPLOY-BUILD-001",
     "PAY-CHECKOUT-001",
-    "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
@@ -64996,7 +65004,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "42a9ec02a15808f8140ad27fa5a64623daa432501b36288668df1f387880ea19",
+      "sourceSha256": "36783d072ad679f9d70fdc1963125166d8f10182a12dd99ffcdc6c6f10c577bb",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65024,7 +65032,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "42a9ec02a15808f8140ad27fa5a64623daa432501b36288668df1f387880ea19",
+      "sourceSha256": "36783d072ad679f9d70fdc1963125166d8f10182a12dd99ffcdc6c6f10c577bb",
       "definition": {
         "states": [
           "absent",
@@ -65054,7 +65062,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "42a9ec02a15808f8140ad27fa5a64623daa432501b36288668df1f387880ea19",
+      "sourceSha256": "36783d072ad679f9d70fdc1963125166d8f10182a12dd99ffcdc6c6f10c577bb",
       "definition": {
         "export": [
           "queued",
