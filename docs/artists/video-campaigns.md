@@ -3,14 +3,20 @@
 `/mi-artista/campanas` is a responsive artist workspace for video links, organic
 Instagram/TikTok copy, relative calendars and manual publication records. The
 artist profile editor links to it through **Lanzar video**. Administrators can
-select an existing artist; ordinary artists cannot select another identity.
+select an existing artist; another identity requires its existing resource grant.
+A current authorized manager can enter from that artist's public profile through
+**Crear campaña**, using its canonical ID without impersonating the artist.
 
 Drafts persist in PostgreSQL, rather than browser storage. An explicit UUID and
 expected revision make a lost-save retry idempotent and reject stale overwrites.
 The authorization guard rechecks and locks the real session, roles and modules
-inside the same transaction as the campaign operation. There is no delegated
-manager access in this version: only the artist's own account or a strict
-administrator with the Admin module can manage a campaign.
+inside the same transaction as the campaign operation. A current authorized
+directory manager can also manage the canonical artist, band or project through
+active private-view and edit grants. Manager and profile rows stay locked through
+the operation; names and pending claims grant nothing. Public featuring additionally
+requires publication capability and a published, allowed public/unlisted directory
+profile. Self artist and strict administrator retain their existing authority.
+Preparing a campaign creates no account or permission grant.
 
 Apply `2026-10-20_video_campaigns` through the registered production migration
 lane before deploying the API. The migration creates two tables and an index;
@@ -26,7 +32,7 @@ while retaining draft data if the release must be reversed.
 3. Choose Instagram, TikTok or both and generate an editable 14-day relative
    calendar (D−2 through D+11). An optional proposed date is stored only as draft
    metadata. There is no scheduler attached to this field.
-4. Add the prepared audiovisual files, cuts and copy. Save to continue later.
+4. Add the prepared audiovisual files and copy. Expand advanced options to edit source cuts and manual publication records. Save to continue later.
 5. Review the real video preview and download the JSON plan or copy per-piece
    text and attributed links. An imported plan must name the selected artist.
 6. After operator review, publish manually on each platform and record the
@@ -67,6 +73,11 @@ not current follower totals. Request-supplied attribution is not proof of
 causality, cross-device attribution or complete measurement of delayed returns.
 Anonymous views use existing configured PostHog; provider reach/plays are not
 invented and are not included in these backend counters.
+Public HTML video files additionally emit observed play-start and ended events
+through the existing configured analytics client, with allowlisted campaign
+attribution and no media URLs. Editor previews and iframe load events do not
+emit playback events. Starts can repeat after pause/resume and are not unique
+listeners; these events are separate from server-verified account/follow counts.
 
 Metrics also return an additive `byPiece` array with source, piece, registrations
 and follows. The dashboard presents these verified TDF creations separately
@@ -140,3 +151,7 @@ authorization uses the existing transaction guard; SQLite helper tests do not
 prove its PostgreSQL locking behavior. Web tests cover save/resume, failed-save
 recovery, anonymous exclusion, attribution continuity and validation. The real
 production rollout and authenticated save require operator deployment access.
+
+## Manager verification boundary
+
+`node scripts/verify-video-campaign-access.mjs` enumerates a finite Boolean manager policy with 16,384 cases and 13 removed-guard controls. It also checks presence of the actual SQL identity, capability and lock clauses. This is not a SQL interpreter, authentication proof or complete interleaving refinement. `VideoCampaignsSpec` can execute the actual compiled helper against temporary tables inside a validated loopback `_test` database through `TDF_VIDEO_CAMPAIGN_MANAGER_TEST_DB`; it checks artist/actor isolation, revocation, private access, profile kind/state/moderation and separate publication capability. Missing external test configuration remains an explicit pending case.

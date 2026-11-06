@@ -17,13 +17,12 @@ const steps = ['Video', 'Objetivo y redes', 'Piezas y calendario', 'Revisión'];
 
 export default function VideoCampaignsPage() {
   const { session, loading } = useSession();
+  const [params] = useSearchParams();
+  const target = Number(params.get('artistId'));
+  const returnPath = Number.isSafeInteger(target) && target > 0 ? `/mi-artista/campanas?artistId=${target}` : '/mi-artista/campanas';
   if (loading) return <CircularProgress aria-label="Cargando sesión" />;
   if (!session) return <Stack spacing={2}><Typography variant="h4">Lanza tu video</Typography>
-    <Button component={RouterLink} to="/login?redirect=%2Fmi-artista%2Fcampanas">Iniciar sesión</Button></Stack>;
-  const allowed = session.roles.some((r) => ['artist', 'artista'].includes(r.toLowerCase()))
-    || hasStrictAdminAccess(session.roles, session.modules);
-  if (!allowed) return <Alert severity="info">Activa tu perfil de artista para preparar campañas.
-    <Button component={RouterLink} to="/artista/crear">Crear perfil</Button></Alert>;
+    <Button component={RouterLink} to={`/login?${new URLSearchParams({ redirect: returnPath })}`}>Iniciar sesión</Button></Stack>;
   return <CampaignWorkspace key={`${session.partyId}:${getAuthSessionEpoch()}`} session={session} />;
 }
 
@@ -31,7 +30,7 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
   const [params] = useSearchParams();
   const admin = hasStrictAdminAccess(session.roles, session.modules);
   const supplied = Number(params.get('artistId'));
-  const initialArtist = admin && Number.isSafeInteger(supplied) && supplied > 0 ? supplied : session.partyId ?? 0;
+  const initialArtist = Number.isSafeInteger(supplied) && supplied > 0 ? supplied : session.partyId ?? 0;
   const [artistId, setArtistId] = useState(initialArtist);
   const [active, setActive] = useState<VideoCampaign | null>(null);
   const [creating, setCreating] = useState(false);
@@ -50,8 +49,9 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
       setImportError('');
     } catch (e) { setImportError(e instanceof Error ? e.message : 'El plan no es válido.'); }
   };
-  const artists = useQuery({ queryKey: ['video-campaign-artists', session.partyId],
-    queryFn: () => admin ? Fans.listArtists() : Fans.getMyArtistProfile().then((p) => [p]) });
+  const artists = useQuery({ queryKey: ['video-campaign-artists', session.partyId, artistId],
+    queryFn: () => admin ? Fans.listArtists() : artistId !== session.partyId
+      ? Fans.getPublicArtist(String(artistId)).then((p) => [p]) : Fans.getMyArtistProfile().then((p) => [p]) });
   const campaigns = useQuery({ queryKey: ['video-campaigns', session.partyId, artistId],
     queryFn: () => VideoCampaigns.list(artistId), enabled: artistId > 0 });
   const metrics = useQuery({ queryKey: ['video-campaign-metrics', session.partyId, artistId, active?.id],
@@ -81,7 +81,7 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
             content: { ...c.content, status: 'draft', rightsConfirmed: false, technicalReviewed: false, proposedLaunchDate: '', title: `${c.content.title.slice(0, 190)} (copia)`,
               pieces: c.content.pieces.map((p) => ({ ...p, status: 'draft', publishedUrl: '' })) } }); }}>Duplicar</Button>
         </Stack></CardContent></Card>)}</>}
-      {active && <Alert severity={metrics.isError ? 'warning' : 'info'}>{metrics.data
+      {active && active.revision > 0 && <Alert severity={metrics.isError ? 'warning' : 'info'}>{metrics.data
         ? `Registros atribuidos: ${metrics.data.registrations} · Nuevos seguidores atribuidos: ${metrics.data.follows}`
         : metrics.isError ? 'No pudimos cargar las conversiones.' : 'Cargando conversiones…'}</Alert>}
       {metrics.data?.byPiece?.map((p) => <Typography key={`${p.source}:${p.piece}`}>
@@ -153,7 +153,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
       <TextField label="Enlace HTTPS del video completo" value={doc.videoUrl} onChange={(e) => patch({ videoUrl: e.target.value })}
         helperText="Puedes usar tu propio almacenamiento. No modificamos los permisos del enlace." />
       {revision > 0 ? <GoogleDriveUploadWidget label="Subir video original" accept="video/*" multiple={false}
-        visibility="private" recoveryScope={`video-campaign:${artistId}:${id}`} formRecoveryAvailable
+        visibility="private" recoveryScope={`video-campaign:${artistId}:${id}`} formRecoveryAvailable={false}
         helperText="Se conserva privado. Reanuda seleccionando el mismo original; la cuota y el destino los controla tu cuenta. Para una sesión pública, revisa después el enlace y sus permisos."
         onComplete={(files) => {
           if (!current()) return;
@@ -185,6 +185,9 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
         <TextField label="Día relativo al estreno" type="number" value={p.day} onChange={(e) => patchPiece(p.id, { day: Number(e.target.value) })} />
         <TextField multiline minRows={3} label="Texto de la publicación" value={p.caption} onChange={(e) => patchPiece(p.id, { caption: e.target.value })} />
         <TextField label="Enlace de la pieza audiovisual" value={p.assetUrl} onChange={(e) => patchPiece(p.id, { assetUrl: e.target.value })} />
+        <Box component="details">
+        <Box component="summary" sx={{ cursor: 'pointer' }}>Opciones avanzadas: cortes y registro manual</Box>
+        <Stack spacing={2} sx={{ pt: 2 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField label="Inicio del corte (segundos)" type="number" value={p.sourceStart} onChange={(e) => patchPiece(p.id, { sourceStart: Number(e.target.value) })} />
           <TextField label="Fin del corte (segundos)" type="number" value={p.sourceEnd} onChange={(e) => patchPiece(p.id, { sourceEnd: Number(e.target.value) })} />
@@ -195,6 +198,8 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
         </TextField>
         {p.status === 'published_manual' && <TextField label="URL de la publicación manual" value={p.publishedUrl} onChange={(e) => patchPiece(p.id, { publishedUrl: e.target.value })} />}
         <TextField label="Enlace de seguimiento para esta pieza" value={campaignLink(artistId, id, p)} slotProps={{ input: { readOnly: true } }} />
+        </Stack>
+        </Box>
         <Button onClick={() => { void navigator.clipboard.writeText(`${p.caption}\n${campaignLink(artistId, id, p)}`)
           .then(() => setNotice('Texto y enlace copiados.'))
           .catch(() => setError('No pudimos copiar. Puedes seleccionar el texto o descargar el plan.')); }}>Copiar texto y enlace</Button>

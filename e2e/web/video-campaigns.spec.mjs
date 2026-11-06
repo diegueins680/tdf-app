@@ -1,19 +1,20 @@
 import { expect, test } from '@playwright/test';
 
 // Browser/API fixtures only: no real accounts, storage, provider connections or publication.
-test('artist can retry a draft save, reload and review manual publication @mobile-flow', async ({ page, baseURL }, info) => {
+async function fixture(page, baseURL, manager = false, permitted = true) {
   const rows = new Map(); const saves = []; let reject = true;
-  const artist = { apArtistId: 42, apDisplayName: 'Artista de prueba', apSlug: 'artista-de-prueba' };
+  const artist = { apArtistId: 42, apDisplayName: 'Artista de prueba', apSlug: 'artista-de-prueba', apFollowerCount: 0, apHasUserAccount: false, apGenreIds: [] };
   await page.route('**/*', async (route) => {
     const request = route.request(); const url = new URL(request.url());
     const path = url.pathname.replace(/^\/core-api/, '');
     if (['fetch', 'xhr'].includes(request.resourceType())) {
       if (path === '/session') return route.fulfill({ json: {
-        username: 'synthetic-42', partyId: 42, displayName: 'Artista de prueba', roles: ['Artist'], modules: [],
+        username: 'synthetic-viewer', partyId: manager ? 99 : 42, displayName: 'Cuenta de prueba', roles: manager ? ['Customer'] : ['Artist'], modules: [],
         preferences: { locale: 'es', currency: 'USD', timeZone: 'America/Guayaquil' },
       } });
-      if (path === '/fans/me/artist-profile') return route.fulfill({ json: artist });
+      if (['/fans/me/artist-profile', '/artists/42/public', '/artists/artista-de-prueba/public'].includes(path)) return route.fulfill({ json: artist });
       if (path.startsWith('/artists/video-campaigns')) {
+        if (!permitted) return route.fulfill({ status: 403, json: { error: 'No artist grant' } });
         if (request.method() === 'GET' && path.endsWith('/metrics')) return route.fulfill({ json: { registrations: 0, follows: 0, byPiece: [] } });
         if (request.method() === 'GET') return route.fulfill({ json: [...rows.values()] });
         saves.push({ path, method: request.method(), payload: request.postDataJSON() });
@@ -30,8 +31,17 @@ test('artist can retry a draft save, reload and review manual publication @mobil
     if (url.origin !== new URL(baseURL).origin) return route.abort('blockedbyclient');
     return route.continue();
   });
-  await page.goto('/mi-artista/campanas');
-  await expect(page.locator('audio')).toHaveCount(0);
+  return { rows, saves };
+}
+
+for (const manager of [false, true]) test(`${manager ? 'authorized band manager' : 'artist'} can retry a draft save, reload and review manual publication @mobile-flow`, async ({ page, baseURL }, info) => {
+  const { rows, saves } = await fixture(page, baseURL, manager);
+  if (manager) {
+    await page.goto('/a/artista-de-prueba');
+    await page.getByRole('link', { name: 'Crear campaña', exact: true }).click();
+  } else await page.goto('/mi-artista/campanas');
+  await expect(page.getByTestId('radio-floating-panel')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Reproducir radio', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Crear campaña', exact: true }).click();
   await page.getByLabel('Título de la sesión').fill('Sesión de prueba');
   await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click();
@@ -56,4 +66,13 @@ test('artist can retry a draft save, reload and review manual publication @mobil
   await expect(page.getByRole('button', { name: 'Publicar video en el perfil de TDF' })).toHaveCount(0);
   expect(saves.every((r) => r.method === 'PUT' && r.payload.document.status === 'draft')).toBe(true);
   await page.screenshot({ path: info.outputPath('launch-review.png'), fullPage: true });
+});
+
+
+test('unassigned manager cannot open or write an artist campaign @mobile-flow', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL, true, false);
+  await page.goto('/mi-artista/campanas?artistId=42');
+  await expect(page.getByRole('alert').filter({ hasText: 'No pudimos cargar tus campañas.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Crear campaña', exact: true })).toHaveCount(0);
+  expect(state.saves).toEqual([]);
 });

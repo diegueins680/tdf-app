@@ -3,14 +3,19 @@ module TDF.VideoCampaignsSpec (spec) where
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ask, runReaderT)
+import Control.Monad.Logger (runNoLoggingT)
+import qualified Data.ByteString.Char8 as BS
 import Data.Aeson (Value, object, (.=))
 import Data.Either (isLeft)
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
-import Database.Persist.Sql (rawExecute, toSqlKey)
+import Database.Persist.Sql (rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Postgresql (withPostgresqlPool)
 import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
+import System.Environment (lookupEnv)
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 import TDF.Auth (AuthedUser(..), ModuleAccess(..))
 import TDF.Models (RoleEnum(..))
 import qualified TDF.VideoCampaigns as C
@@ -27,6 +32,44 @@ draft = object
 
 spec :: Spec
 spec = do
+  describe "video campaign current directory grants" $ do
+    it "isolates artist, actor, revocation, moderation and publication capability in PostgreSQL" $ do
+      configured <- lookupEnv "TDF_VIDEO_CAMPAIGN_MANAGER_TEST_DB"
+      case configured of
+        Nothing -> pendingWith "Set TDF_VIDEO_CAMPAIGN_MANAGER_TEST_DB to an isolated loopback _test database"
+        Just url -> do
+          isDisposablePostgresUrl False url `shouldBe` True
+          outcomes <- runNoLoggingT $ withPostgresqlPool (BS.pack url) 1 $ \pool -> liftIO $ runSqlPool (do
+            rawExecute "CREATE TEMP TABLE directory_profile(id integer PRIMARY KEY,subject_party_id bigint,profile_kind text,profile_status text,moderation_status text,visibility text) ON COMMIT DROP" []
+            rawExecute "CREATE TEMP TABLE directory_profile_manager(profile_id integer,account_party_id bigint,active boolean,can_view_private boolean,can_edit boolean,can_publish boolean) ON COMMIT DROP" []
+            rawExecute "INSERT INTO directory_profile VALUES(1,51,'band','published','allowed','public'),(2,52,'artist','published','allowed','public')" []
+            rawExecute "INSERT INTO directory_profile_manager VALUES(1,42,true,true,true,false),(2,99,true,true,true,true)" []
+            let allowed actorId artistId publish = C.campaignManagerAccess (toSqlKey actorId) (toSqlKey artistId) publish
+            a <- allowed 42 51 False
+            b <- allowed 42 51 True
+            c <- allowed 42 52 False
+            d <- allowed 99 51 False
+            rawExecute "UPDATE directory_profile_manager SET can_publish=true WHERE profile_id=1" []
+            e <- allowed 42 51 True
+            rawExecute "UPDATE directory_profile SET subject_party_id=53 WHERE id=1" []
+            f <- allowed 42 51 False
+            rawExecute "UPDATE directory_profile SET subject_party_id=51 WHERE id=1" []
+            rawExecute "UPDATE directory_profile_manager SET active=false WHERE profile_id=1" []
+            g <- allowed 42 51 False
+            rawExecute "UPDATE directory_profile_manager SET active=true WHERE profile_id=1" []
+            rawExecute "UPDATE directory_profile SET profile_kind='person' WHERE id=1" []
+            h <- allowed 42 51 False
+            rawExecute "UPDATE directory_profile SET profile_kind='band',moderation_status='blocked' WHERE id=1" []
+            i <- allowed 42 51 False
+            rawExecute "UPDATE directory_profile SET moderation_status='allowed',profile_status='suspended' WHERE id=1" []
+            j <- allowed 42 51 False
+            rawExecute "UPDATE directory_profile SET profile_status='published',visibility='private' WHERE id=1" []
+            k <- allowed 42 51 False
+            l <- allowed 42 51 True
+            rawExecute "UPDATE directory_profile_manager SET can_view_private=false WHERE profile_id=1" []
+            m <- allowed 42 51 False
+            pure [a,b,c,d,e,f,g,h,i,j,k,l,m]) pool
+          outcomes `shouldBe` [True,False,False,False,True,False,False,False,False,False,True,False,False]
   describe "video campaign ownership" $ do
     it "allows the persisted artist's own party" $
       C.campaignScope (actor [Artist]) Nothing `shouldBe` Right (toSqlKey 42)

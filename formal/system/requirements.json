@@ -16191,12 +16191,13 @@
     {
       "id": "MEDIA-VIDEO-CAMPAIGN-001",
       "title": "Artists prepare durable organic video launch campaigns",
-      "statement": "An authenticated artist can save, resume, duplicate and export private video campaign drafts for their own artist identity. Strict administrators with the Admin module may select another existing artist. Saving, preparing for review and exporting never publish, schedule provider actions or spend money.",
+      "statement": "An authenticated artist can save, resume, duplicate and export private video campaign drafts for their own artist identity. Strict administrators with the Admin module and current resource managers may select another existing artist; manager access requires the canonical subject association and current private-view/edit grants, and public featuring additionally requires publication capability and eligible profile state. Saving, preparing for review and exporting never publish, schedule provider actions or spend money.",
       "domain": "MEDIA",
       "actors": [
         "Artist",
         "Strict administrator",
-        "Prospective follower"
+        "Prospective follower",
+        "Currently authorized directory manager"
       ],
       "preconditions": [
         "Artist profile exists. Current session and authoritative role/module grants remain valid. Additive campaign migration is applied."
@@ -16227,7 +16228,7 @@
         "An explicit command on a locked review-ready revision updates only the public TDF featured-video field; no external platform publication occurs."
       ],
       "forbiddenTransitions": [
-        "An artist edits another artist campaign.",
+        "A caller without current artist ownership, strict administrator capability or the corresponding live directory grant manages another artist campaign.",
         "Stale revisions overwrite newer edits.",
         "Saving or exporting starts a provider publication or paid advertisement.",
         "Unauthenticated or unverified conversions inflate account/follow counters."
@@ -16237,7 +16238,7 @@
         "An exported plan contains per-piece attribution links.",
         "An explicitly approved command can expose the selected video on the artist public TDF profile."
       ],
-      "authorization": "Current-session and current-authority locks cover campaign reads/writes; self artist or strict administrator only. Conversion writes use the real current viewer session and validate real account/follow creation.",
+      "authorization": "Current-session/current-role locks cover all management. Self artist or strict administrator is checked first; otherwise the current canonical directory subject, manager actor, active private-view/edit grants and eligible profile state are rechecked under manager/profile shared locks in the same transaction. Featuring additionally requires can_publish, published/allowed profile visibility, saved rights/technical checks and the exact campaign revision.",
       "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration.",
       "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
       "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
@@ -16262,7 +16263,9 @@
         "tdf-hq-ui/src/utils/artistFollowIntent.ts",
         "tdf-hq/assets/feature-registry.json",
         "tdf-hq/docs/openapi/api.yaml",
-        "tdf-hq-ui/src/utils/radioRouteVisibility.ts"
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "scripts/verify-video-campaign-access.mjs",
+        "scripts/quality-repo.sh"
       ],
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
@@ -16274,16 +16277,21 @@
         "e2e/web/video-campaigns.spec.mjs",
         "e2e/web/artist-follow.spec.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
-        "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts"
+        "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "scripts/__tests__/video-campaign-access.test.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "scripts/verify-video-campaign-access.mjs"
+      ],
       "status": "specified and implemented",
       "confidence": "medium",
       "critical": false,
       "ambiguity": [
         "Production deployment and an authenticated campaign save are not verified.",
         "Video encoding and provider publishing are not background services in this implementation.",
-        "One-hour authenticated attribution is first accepted piece and does not prove causality or cross-device returns."
+        "One-hour authenticated attribution is first accepted piece and does not prove causality or cross-device returns.",
+        "The finite manager abstraction and SQL examples do not prove full HTTP authorization interleavings or production deployment."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -16292,7 +16300,7 @@
       "authority": "Approved Liquid Paper Girl launch prompt and repository authorization/storage boundaries.",
       "property": "Artist-scoped drafts are durable and publishing remains explicitly separate from preparation.",
       "contract": "docs/artists/video-campaigns.md",
-      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused.",
+      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused. Finite 16,384-case manager predicate and 13 guard-removal controls, source-presence binding and actual PostgreSQL directory-grant examples; not full implementation/interleaving refinement.",
       "evidence": "PR #599, paired Mobile contract PR and current-revision test receipts. Historical media measurements are retained but original and derivative bytes are unavailable in this run."
     }
   ]

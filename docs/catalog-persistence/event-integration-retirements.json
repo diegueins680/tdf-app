@@ -692,7 +692,7 @@
         "valueCount": 245,
         "sourceParents": [
           "e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324",
-          "77ce5ecf8"
+          "77ce5ecf840723b71308705594242e333fc669f9"
         ],
         "justification": "Preserve every object of the protected 244-entry storage manifest and all SQL; append only the original draft-only campaign migration with its original introduction ancestor. No deployment, provider activation or release waiver."
       },

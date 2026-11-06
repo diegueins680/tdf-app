@@ -1,4 +1,7 @@
-import { Box, Button, Stack } from '@mui/material';
+import { useState } from 'react';
+import { Alert, Box, Button, Stack } from '@mui/material';
+import { getAnalyticsClient } from '../analytics/posthog';
+import { videoAttribution } from '../features/campaigns/videoAttribution';
 import { safeVideoUrl } from '../features/campaigns/videoCampaign';
 
 export function sessionVideoTarget(value: string): { kind: 'iframe' | 'video' | 'link'; url: string } | null {
@@ -18,7 +21,8 @@ export function sessionVideoTarget(value: string): { kind: 'iframe' | 'video' | 
   return { kind: 'link', url: value };
 }
 
-export default function SessionVideoPreview({ url, title }: { url: string; title: string }) {
+export default function SessionVideoPreview({ url, title, trackPublicPlayback = false }: { url: string; title: string; trackPublicPlayback?: boolean }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const target = sessionVideoTarget(url);
   if (!target) return null;
   return <Stack spacing={1}>
@@ -26,7 +30,11 @@ export default function SessionVideoPreview({ url, title }: { url: string; title
       allow="fullscreen; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"
       sx={{ width: '100%', aspectRatio: '16 / 9', border: 0, borderRadius: 2 }} />}
     {target.kind === 'video' && <Box component="video" controls preload="metadata" aria-label={title}
-      src={target.url} sx={{ width: '100%', maxHeight: 600, borderRadius: 2 }} />}
-    <Button component="a" href={target.url} target="_blank" rel="noopener noreferrer">Abrir video completo</Button>
+      src={target.url} onError={() => setFailedUrl(url)}
+      onPlay={() => { if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_started', { ...videoAttribution(window.location.search), player: 'file' }); }}
+      onEnded={() => { if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_ended', { ...videoAttribution(window.location.search), player: 'file' }); }}
+      sx={{ width: '100%', maxHeight: 600, borderRadius: 2 }} />}
+    {failedUrl === url && <Alert severity="warning">No se pudo reproducir el archivo. Abre el original y revisa su disponibilidad y permisos.</Alert>}
+    <Button component="a" href={url} target="_blank" rel="noopener noreferrer">Abrir video completo</Button>
   </Stack>;
 }

@@ -8,7 +8,7 @@
 -- Artist campaign planning; this module has no provider client, worker or ad budget.
 module TDF.VideoCampaigns
   ( VideoCampaignAPI, CampaignWrite(..), CampaignDTO(..), campaignServer
-  , campaignScope, validateDocument, publicationVideo, saveCampaign, listCampaigns
+  , campaignScope, campaignManagerAccess, validateDocument, publicationVideo, saveCampaign, listCampaigns
   ) where
 
 import Control.Monad (unless, when)
@@ -82,6 +82,16 @@ campaignScope user target
     actor = auPartyId user
     roles = auRoles user
     requested = fromMaybe (fromSqlKey actor) target
+
+-- Reuse the current canonical directory grant; names and pending claims grant nothing.
+-- Hold both rows until the campaign operation commits, so revocation cannot race it.
+campaignManagerAccess :: PartyId -> PartyId -> Bool -> SqlPersistT IO Bool
+campaignManagerAccess actor artist publishing = do
+  rows <- rawSql
+    "SELECT 1 FROM directory_profile_manager manager JOIN directory_profile profile ON profile.id=manager.profile_id WHERE manager.account_party_id=? AND profile.subject_party_id=? AND manager.active AND manager.can_view_private AND manager.can_edit AND profile.profile_kind IN ('artist','band','project') AND profile.profile_status NOT IN ('archived','suspended','merged') AND profile.moderation_status<>'blocked' AND (?=FALSE OR (manager.can_publish AND profile.profile_status='published' AND profile.moderation_status='allowed' AND profile.visibility IN ('public','unlisted'))) ORDER BY profile.id FOR SHARE OF manager,profile"
+    [toPersistValue actor, toPersistValue artist, PersistBool publishing]
+    :: SqlPersistT IO [Single Int64]
+  pure (not (null rows))
 
 -- URLs are stored, never fetched by this API. Embedded private/network URLs are rejected.
 safeMediaUrl :: Text -> Bool
@@ -214,13 +224,24 @@ campaignServer user target = list :<|> (\key ->
   save key :<|> metrics key :<|> convert key :<|> feature key)
   where
     query :: (PartyId -> SqlPersistT IO (Either ServerError a)) -> ReaderT Env Handler a
-    query action = do
-      artist <- either throwError pure (campaignScope user target)
+    query = queryWith False
+    queryWith :: Bool -> (PartyId -> SqlPersistT IO (Either ServerError a)) -> ReaderT Env Handler a
+    queryWith publishing action = do
+      let requested = fromMaybe (fromSqlKey (auPartyId user)) target
+          artist = toSqlKey requested
+          perform = do
+            profile <- getBy (UniqueArtistProfile artist)
+            if isJust profile then action artist else pure (Left err404)
+      when (requested <= 0) $ throwError err400
       pool <- asks envPool
-      result <- liftIO $ flip runSqlPool pool $
-        withCurrentAuthorization (\live -> () <$ campaignScope live target) user $ do
-          profile <- getBy (UniqueArtistProfile artist)
-          if isJust profile then action artist else pure (Left err404)
+      result <- liftIO $ flip runSqlPool pool $ do
+        direct <- withCurrentAuthorization (\live -> () <$ campaignScope live target) user perform
+        case direct of
+          Left rejected | errHTTPCode rejected == 403 ->
+            withCurrentAuthorization (const (Right ())) user $ do
+              allowed <- campaignManagerAccess (auPartyId user) artist publishing
+              if allowed then perform else pure (Left err403)
+          _ -> pure direct
       either throwError (either throwError pure) result
     list = query listCampaigns
     save key payload = do
@@ -284,7 +305,7 @@ campaignServer user target = list :<|> (\key ->
     feature key CampaignFeature{..} = do
       unless (isJust (UUID.fromText key) && featureRevision > 0) $ throwError err400
       now <- liftIO getCurrentTime
-      query $ \artist -> do
+      queryWith True $ \artist -> do
         -- Pin the reviewed document until the public profile field update commits.
         rows <- rawSql
           "SELECT ?? FROM video_campaign WHERE artist_party_id=? AND campaign_key=? FOR SHARE"

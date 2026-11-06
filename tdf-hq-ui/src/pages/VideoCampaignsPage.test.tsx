@@ -15,12 +15,13 @@ jest.unstable_mockModule('../api/videoCampaigns', () => ({ VideoCampaigns: { lis
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session, loading: false }), getActiveSession: () => session }));
 jest.unstable_mockModule('../api/fans', () => ({ Fans: {
   getMyArtistProfile: async () => ({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' }),
+  getPublicArtist: async () => ({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' }),
 } }));
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({ default: () => null }));
 jest.unstable_mockModule('../api/client', () => ({ get: async () => ({}), put: async () => ({}) }));
 const { default: VideoCampaignsPage } = await import('./VideoCampaignsPage');
-const show = () => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-  <MemoryRouter><VideoCampaignsPage /></MemoryRouter></QueryClientProvider>);
+const show = (path = '/') => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+  <MemoryRouter initialEntries={[path]}><VideoCampaignsPage /></MemoryRouter></QueryClientProvider>);
 
 beforeEach(() => {
   jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
@@ -132,4 +133,24 @@ it('requires saved rights and technical review and invalidates them after edits'
   fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
   expect(screen.getByLabelText('Confirmo los permisos de música, imagen y video para publicar en TDF')).not.toBeChecked();
   expect(screen.queryByRole('button', { name: 'Publicar video en el perfil de TDF' })).not.toBeInTheDocument();
+});
+
+it('uses the authorized canonical artist target for an ordinary band manager', async () => {
+  session = { partyId: 99, username: 'manager', displayName: 'Manager', roles: ['Customer'] };
+  show('/mi-artista/campanas?artistId=51');
+  fireEvent.click(await screen.findByRole('button', { name: 'Crear campaña' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+  expect(await screen.findByText(/Borrador guardado/)).toBeInTheDocument();
+  expect(save.mock.calls[0]?.[0]).toBe(51);
+  expect(session.partyId).toBe(99);
+  expect(session.roles).toEqual(['Customer']);
+});
+
+it('keeps the editor unavailable when the backend denies an artist target', async () => {
+  session = { partyId: 99, username: 'manager', displayName: 'Manager', roles: ['Customer'] };
+  list.mockRejectedValueOnce(new Error('No artist grant'));
+  show('/mi-artista/campanas?artistId=51');
+  expect(await screen.findByText(/No pudimos cargar tus campañas/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Crear campaña' })).not.toBeInTheDocument();
+  expect(save).not.toHaveBeenCalled();
 });

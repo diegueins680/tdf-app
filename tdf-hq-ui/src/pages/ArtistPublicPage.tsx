@@ -43,6 +43,7 @@ import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
 import { recordVideoConversion, videoAttribution } from '../features/campaigns/videoAttribution';
+import { VideoCampaigns } from '../api/videoCampaigns';
 import { safeArtistId, buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 export { buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 import { useTranslation } from 'react-i18next';
@@ -193,6 +194,11 @@ export default function ArtistPublicPage() {
   });
 
   const artistId = artistQuery.data?.apArtistId ?? null;
+  const campaignAccess = useQuery({
+    queryKey: ['artist-launch-access', viewerId, artistId],
+    queryFn: () => VideoCampaigns.list(artistId!),
+    enabled: Boolean(hasToken && artistId), retry: false,
+  });
   const profileLink = useMemo(() => {
     const artist = artistQuery.data;
     if (!artist) return null;
@@ -483,6 +489,11 @@ export default function ArtistPublicPage() {
                     Editar perfil
                   </Button>
                 )}
+                {hasToken && campaignAccess.isSuccess && Array.isArray(campaignAccess.data) && (
+                  <Button component={RouterLink} to={`/mi-artista/campanas?artistId=${artist.apArtistId}`} variant="outlined">
+                    Crear campaña
+                  </Button>
+                )}
                 <Button
                   variant="outlined"
                   color="primary"
@@ -502,7 +513,7 @@ export default function ArtistPublicPage() {
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           {artist.apFeaturedVideoUrl && <Box sx={{ mb: 3 }}>
             <Typography variant="h5" component="h2">Sesión destacada</Typography>
-            <SessionVideoPreview url={artist.apFeaturedVideoUrl} title={`${artist.apDisplayName} · Sesión en vivo`} />
+            <SessionVideoPreview url={artist.apFeaturedVideoUrl} title={`${artist.apDisplayName} · Sesión en vivo`} trackPublicPlayback />
           </Box>}
           <Stack spacing={2.5}>
             {resumeFollow && !isFollowing && (
