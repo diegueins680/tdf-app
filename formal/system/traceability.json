@@ -16374,7 +16374,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
-    ".github/workflows/ci.yml": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
+    ".github/workflows/ci.yml": "7adbcaa1fdd69b2639c0f6a17d55b5cf38a37631b2499ef834f3789e658266e9",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -32039,7 +32039,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "c2dac93694c9ffc541739c9d58a1eb0cc78e54f4d606e90d600f76cae6860059",
+      "sha256": "7adbcaa1fdd69b2639c0f6a17d55b5cf38a37631b2499ef834f3789e658266e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
