@@ -1,0 +1,52 @@
+{
+  "baseline": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "actualStackExit": 1,
+  "actualCases": 7,
+  "actualFailures": 7,
+  "actualObservedExpiredWaits": [
+    [
+      "TICKET",
+      "4",
+      "2026-10-29 05:52:00.018686",
+      "2026-10-29 05:52:00.025508"
+    ],
+    [
+      "TICKET",
+      "5",
+      "2026-10-29 05:52:05.11821",
+      "2026-10-29 05:52:05.131741"
+    ],
+    [
+      "TICKET",
+      "6",
+      "2026-10-29 05:52:10.243022",
+      "2026-10-29 05:52:10.245978"
+    ],
+    [
+      "TICKET",
+      "7",
+      "2026-10-29 05:52:15.299506",
+      "2026-10-29 05:52:15.318795"
+    ],
+    [
+      "TICKET",
+      "8",
+      "2026-10-29 05:52:20.37218",
+      "2026-10-29 05:52:20.39589"
+    ],
+    [
+      "CANONICAL",
+      "9",
+      "2026-10-29 05:52:25.523143",
+      "2026-10-29 05:52:25.531249"
+    ],
+    [
+      "CANONICAL",
+      "10",
+      "2026-10-29 05:52:30.658207",
+      "2026-10-29 05:52:30.681422"
+    ]
+  ],
+  "scope": "5legacy Event/Tier/Promo cases createpaid0/sold3/tickets3;2canonical finalTier/Promo cases createorder/stock1, last also redemption1. No external charge/provider. Exact main implementation unmodified; only7newtests.",
+  "businessAuthority": "User29Oct requires validity when inventory reserved."
+}
