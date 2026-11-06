@@ -21440,7 +21440,7 @@ uploadToDrive manager actor accessToken file mimeTypeTxt mName mFolder mIdempote
       body = BL.intercalate "\r\n" [metaPart, filePart, closing, ""]
 
   req0 <- parseRequest $
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" <>
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&ignoreDefaultVisibility=true" <>
     "&fields=id,webViewLink,webContentLink,resourceKey,appProperties,sha256Checksum,size&supportsAllDrives=true"
   let bearer = "Bearer " <> TE.encodeUtf8 accessToken
       req = req0

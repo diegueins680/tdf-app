@@ -16321,7 +16321,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "fcb9345287345c6cc1628b0ccb991e2fe1092f5eefdc6b81823cc34d89a759f9",
+      "sha256": "0607c265aadef694eb741b948713146e20e260093e0d97e9a727d62e0e61398e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17089,7 +17089,7 @@
     {
       "id": "SURFACE-93ad4526d09f9815",
       "path": "tdf-hq/test/TDF/DriveReplaySpec.hs",
-      "sha256": "006a2eec086a2d350f9da2e7806eab0fd8846f195b84402557f6d71528e41ecb",
+      "sha256": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21081,7 +21081,7 @@
     },
     {
       "path": "docs/content-storage/rollout.md",
-      "sha256": "4e972882d1e8f704b1f25a0cf99f4b3c87920504898ac51a3e4d87faf516d7d4",
+      "sha256": "d08dbc281afe1751f5ff9bd56689ce3a131fcda5b7d375cc0959e6bb102626f6",
       "authority": "inferred",
       "authorityBasis": "Status: implementation candidate; production activation blocked by the open",
       "kind": "requirement-candidate"

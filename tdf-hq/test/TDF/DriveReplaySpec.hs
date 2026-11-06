@@ -65,6 +65,24 @@ spec = describe "Drive replay payload binding (no provider network)" $ do
       trace `shouldReturn` (firstUploadTrace <> replayTrace)
       wire >>= (\bytes -> bytes `shouldSatisfy` BS.isInfixOf "SYNTHETIC_PAYLOAD_A")
 
+  it "keeps default-private retries free of public-permission mutations" $
+    withFixture False False $ \manager trace _ directory _ -> do
+      first <- sendWithVisibility Nothing 101 manager directory "first.tmp" "private.bin" "application/octet-stream" "PRIVATE_PAYLOAD"
+      second <- sendWithVisibility Nothing 101 manager directory "retry.tmp" "private.bin" "application/octet-stream" "PRIVATE_PAYLOAD"
+      duFileId first `shouldBe` fileId
+      duFileId second `shouldBe` fileId
+      duPublicUrl first `shouldBe` Nothing
+      duPublicUrl second `shouldBe` Nothing
+      trace `shouldReturn` [listHop,createHop,metaHop,listHop,metaHop]
+
+  it "rejects a private retry key being repurposed to grant public access" $
+    withFixture False False $ \manager trace _ directory _ -> do
+      _ <- sendWithVisibility Nothing 101 manager directory "first.tmp" "private.bin" "application/octet-stream" "PRIVATE_PAYLOAD"
+      outcome <- trySynchronous (send manager directory "retry.tmp" "private.bin" "application/octet-stream" "PRIVATE_PAYLOAD")
+        :: IO (Either SomeException DriveUploadDTO)
+      trace `shouldReturn` [listHop,createHop,metaHop,listHop]
+      expectConflict outcome
+
   mapM_ (\(label, name, mime, bytes) ->
     it ("rejects a reused key with different " <> label <> " before provider mutation") $
       withFixture False False $ \manager trace wire directory _ -> do
@@ -159,13 +177,16 @@ send :: HC.Manager -> FilePath -> FilePath -> Text -> Text -> BS.ByteString -> I
 send = sendAs 101
 
 sendAs :: Int64 -> HC.Manager -> FilePath -> FilePath -> Text -> Text -> BS.ByteString -> IO DriveUploadDTO
-sendAs actor manager directory localName remoteName mime bytes = do
+sendAs = sendWithVisibility (Just "public")
+
+sendWithVisibility :: Maybe Text -> Int64 -> HC.Manager -> FilePath -> FilePath -> Text -> Text -> BS.ByteString -> IO DriveUploadDTO
+sendWithVisibility visibility actor manager directory localName remoteName mime bytes = do
   let localPath = directory </> localName
   BS.writeFile localPath bytes
   uploadToDrive manager (toSqlKey actor) fixtureToken
     FileData { fdInputName = "file", fdFileName = remoteName
              , fdFileCType = mime, fdPayload = localPath }
-    mime (Just remoteName) (Just "syntheticFolder") (Just fixtureKey) Nothing Nothing
+    mime (Just remoteName) (Just "syntheticFolder") (Just fixtureKey) visibility Nothing
 
 expectConflict :: Either SomeException DriveUploadDTO -> Expectation
 expectConflict outcome = case outcome of
@@ -225,6 +246,8 @@ withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-driv
                   <> if legacyReplay then [] else ["appProperties" A..= properties]
             pure (BL.toStrict (A.encode (A.object ["files" A..= [A.object fields]])))
         else if hop == createHop then do
+          unless (lookup "ignoreDefaultVisibility" (parseQuery (HC.queryString request)) == Just (Just "true")) $
+            throwIO (userError "Creation must bypass broad domain default visibility")
           writeIORef created True
           pure "{\"id\":\"syntheticDriveFileA\"}"
         else pure "{}"

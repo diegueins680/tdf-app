@@ -56,6 +56,11 @@ contract reconciliation remain blocked; do not point root at an unpublished SHA.
 - Test owner A, unrelated B, a permitted domain reader, revoked grant and revoked
   TDF session over the actual authenticated HTTP route. Private files must fail
   through assets/CDN paths, including guessed names, traversal and root overlap.
+- Google creation requests bypass domain default visibility with
+  `ignoreDefaultVisibility=true`; parent permissions still apply, so private
+  selected folders remain rejected and full owner-only ACL checks remain required.
+  Verify this using a Workspace domain with broad default visibility before activation.
+  Provider contract: https://developers.google.com/workspace/drive/api/reference/rest/v3/files/create
 - Verify Google account consent, refresh, disconnect/revocation and explicit
   public permissions using an isolated provider account. Never reuse shared TDF
   credentials or folders for a personal destination. A private file's inherited
