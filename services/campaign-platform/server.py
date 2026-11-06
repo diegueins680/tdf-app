@@ -34,6 +34,7 @@ def upstream_actor(headers,config):
   with urllib.request.urlopen(req,timeout=10) as r:data=json.loads(r.read(64000))
  except urllib.error.HTTPError as e:raise Denied('Tu sesión de TDF no está disponible. Vuelve a iniciar sesión.',401 if e.code in (401,403) else 503) from None
  except (OSError,ValueError):raise Denied('No se pudo comprobar tu sesión de TDF.',503) from None
+ if not isinstance(data,dict):raise Denied('Tu sesión de TDF no está disponible. Vuelve a iniciar sesión.',401)
  identity=data.get('partyId')
  if not isinstance(identity,int) or isinstance(identity,bool) or identity<=0:raise Denied('Respuesta de sesión inválida.',401)
  return {'id':identity,'name':str(data.get('displayName') or data.get('username') or 'Usuario'),'admin':'Admin' in data.get('roles',[])}

@@ -1,10 +1,10 @@
-import concurrent.futures, contextlib, hashlib, http.client, json, tempfile, threading, unittest, urllib.request, urllib.error
+import concurrent.futures, contextlib, hashlib, http.client, io, json, tempfile, threading, unittest, urllib.request, urllib.error
 from pathlib import Path
 from unittest.mock import patch
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from server import Handler, Server, PREFIX, upstream_actor
-from domain import Store, uid
+from domain import Store, Denied, uid
 from providers import Providers, Vault
 from cryptography.fernet import Fernet
 
@@ -112,6 +112,41 @@ class HttpBoundaryTests(unittest.TestCase):
      self.assertEqual(self.req('/assets/'+aid)[1],b'jpg')
   with self.store.db() as db:self.assertEqual(db.execute('SELECT sum(reserved) FROM assets WHERE campaign=?',(cid,)).fetchone()[0],6)
  def test_unauthenticated_session_denied(self):self.assertEqual(self.req('/session',who='bad')[0],401)
+ def core_session(self,payload,headers):
+  # Exercise the real adapter and HTTP handler; only Core's response is synthetic.
+  self.patch.stop();self.config['AUTH_URL']='https://core.persona.test/session'
+  def response(request,timeout):
+   self.assertEqual(request.full_url,self.config['AUTH_URL']);self.assertEqual(timeout,10)
+   for name,value in headers.items():self.assertEqual(request.get_header(name),value)
+   return io.BytesIO(json.dumps(payload).encode())
+  with patch('server.urllib.request.urlopen',side_effect=response):
+   connection=http.client.HTTPConnection('127.0.0.1',self.server.server_port,timeout=5)
+   try:
+    connection.request('GET',PREFIX+'/session',headers=headers);reply=connection.getresponse()
+    return reply.status,json.loads(reply.read())
+   finally:connection.close()
+ def test_null_core_session_returns_401_without_creating_an_actor(self):
+  for headers in ({'Cookie':'tdf_session=synthetic-expired'},{'Authorization':'Bearer synthetic-revoked'}):
+   with self.subTest(headers=headers):
+    status,body=self.core_session(None,headers)
+    self.assertEqual(status,401);self.assertIn('iniciar sesión',body['error'])
+  with self.store.db() as d:self.assertEqual(d.execute('SELECT count(*) FROM users').fetchone()[0],0)
+ def test_nonobject_core_session_rejects_then_accepts_a_valid_recovered_actor(self):
+  headers={'Cookie':'tdf_session=synthetic-only'}
+  for payload in ([],['Admin'],'session',0,False):
+   with self.subTest(payload=payload):self.assertEqual(self.core_session(payload,headers)[0],401)
+  with self.store.db() as d:self.assertEqual(d.execute('SELECT count(*) FROM users').fetchone()[0],0)
+  status,body=self.core_session({'partyId':7,'displayName':'Recovered synthetic listener','roles':['Customer']},headers)
+  self.assertEqual(status,200);self.assertEqual(body['user'],{'id':7,'name':'Recovered synthetic listener','admin':False})
+  with self.store.db() as d:self.assertEqual(d.execute('SELECT count(*) FROM users WHERE id=7').fetchone()[0],1)
+ def test_upstream_failure_remains_distinct_from_an_absent_session(self):
+  for code,expected in ((401,401),(403,401),(500,503)):
+   with self.subTest(code=code),patch('server.urllib.request.urlopen',side_effect=urllib.error.HTTPError('https://core.persona.test/session',code,'synthetic',{},None)):
+    with self.assertRaises(Denied) as error:upstream_actor({'Cookie':'synthetic'},self.config)
+    self.assertEqual(error.exception.status,expected)
+  with patch('server.urllib.request.urlopen',return_value=io.BytesIO(b'not-json')):
+   with self.assertRaises(Denied) as error:upstream_actor({'Cookie':'synthetic'},self.config)
+   self.assertEqual(error.exception.status,503)
  def test_sandbox_prefix_and_designated_admin_are_enforced_over_http(self):
   state=Path(self.tmp.name)/'tdf-campaign-platform-sandbox';state.mkdir()
   self.config.update(STATE_DIR=str(state),PUBLIC_BASE='https://api.tdfrecords.net/campaign-platform-sandbox',TIKTOK_MODE='sandbox',TIKTOK_CLIENT_AUDITED=False,TIKTOK_SANDBOX_ADMIN_ID=1,TIKTOK_SANDBOX_USERNAME='artista')

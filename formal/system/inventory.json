@@ -7020,7 +7020,7 @@
     {
       "id": "SURFACE-046f5b5bc5783c06",
       "path": "services/campaign-platform/server.py",
-      "sha256": "c820ea7972d2e089c95dae642ae9fab3b9a07c309bdc86bd1f9e892e7f2e1aa8",
+      "sha256": "ddddea97c6a601ef1833585b6b00c9a90cdaaf77724b6e303cc8a9defa0a5df9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7098,7 +7098,7 @@
     {
       "id": "SURFACE-682ec32ac659d8cb",
       "path": "services/campaign-platform/tests/test_http.py",
-      "sha256": "17449bc6a0b7965bef8b404c9e21ceb6da34f7abc85eef02d89fc2d2d5f19b1d",
+      "sha256": "86cf231e96ae998d3367502e0a309e486f7ec9f4543320fef1f83947cd11721c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29833,7 +29833,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "59919f19a08f7ee69bd4a13a471f678da2b691a50ec412008c95fcda90ba078c",
+      "sha256": "d9a74294b939901217f7538ba272924a99f86bbec0280c9eb03e9951d488a613",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
