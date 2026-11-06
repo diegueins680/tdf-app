@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "status": "HOSTED_PRODUCT_CI_PASS_EXACT_HEAD_APPROVED_NORMAL_AUTO_MERGE_WAITING_FIFO_NOT_DEPLOYED",
+  "observedAt": "2026-10-27T02:36:02.510467+00:00",
+  "featureHead": "518c860f449912aa9eaf9d65d4e8698d870058d4",
+  "testedMerge": "c12825694ccf560e5dc7f1e8b5fee7d69f1f2a11",
+  "featureAndMergeTree": "a7cced8d66eaf72d64d0a486d912102a41a2fcba",
+  "testedMergeParents": [
+    "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+    "518c860f449912aa9eaf9d65d4e8698d870058d4"
+  ],
+  "sourceBoundary": "Synthetic merge created before retargetmain4b81; entireGit tree equals518, no extra old-source delta. Clean compiled API sourcec128 independently bound by actual CI canonical build; not a published binary artifact.",
+  "productCI": {
+    "run": 40434617199,
+    "conclusion": "success",
+    "native": {
+      "passed": 54,
+      "skipped": 0,
+      "retries": 0,
+      "projects": 7,
+      "decoder": 42,
+      "denial": 7,
+      "mocked": 5
+    },
+    "ui": {
+      "tests": 3600,
+      "suites": 313,
+      "lintTypecheckBuild": "PASS",
+      "initialGzipJsBytes": 337196
+    },
+    "persona": {
+      "corePass": 580,
+      "existingSkips": 22,
+      "deletionOffPass": 10,
+      "discoveryPass": 25
+    },
+    "backend": {
+      "status": "PASS",
+      "job": 121960721739,
+      "compiledApiSource": "c12825694ccf560e5dc7f1e8b5fee7d69f1f2a11",
+      "sourceTreeEqualsCandidate": true,
+      "sourceWorktreeDirty": false,
+      "linuxBinarySha256": "ecbf0e369a4aae4fe3757df6abd2ba25615e0cbe3d1b948b41504883ad097511",
+      "binaryArtifactPublished": false,
+      "operations": 906,
+      "rawMounts": 2,
+      "undocumentedPriorGaps": 399,
+      "unmounted": 25,
+      "statusDifferences": 8,
+      "compiledApiArtifact": 12705820605,
+      "declarationObservation": "Not system/API conformance approval; actual CI independently binds canonical build to the observed source."
+    }
+  },
+  "requiredChecks": {
+    "appBoundPass": 19,
+    "fifoPending": 1,
+    "admittedPR": 627,
+    "gatesChanged": false
+  },
+  "approval": {
+    "id": 5661482742,
+    "commit": "518c860f449912aa9eaf9d65d4e8698d870058d4",
+    "author": "tdfrecords",
+    "submittedAt": "2026-10-27T02:16:27Z"
+  },
+  "reviewThreads": 0,
+  "reviewRequests": [],
+  "reviewRequestChronology": "Approval arrived02:16:27 before rootrequest02:19:42. Root verified exactcommit and cleared redundantrequest; approval remainsvalid.",
+  "autoMerge": {
+    "enabled": true,
+    "method": "MERGE",
+    "at": "2026-10-27T02:34:22Z",
+    "merged": false,
+    "expectedHeadPinnedWhenEnabling": true,
+    "serverGuards": "Strictup-to-date/20requiredchecks/freshindependentreview/conversationresolution/adminenforcement/FIFO unchanged."
+  },
+  "mainAtObservation": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "admission": "19 app15368-boundrequiredchecks pass; main-integration-admission remainsFIFO627pending. No protection/gate/review waived. Earlier Repositorychanged guard failures preserved; later controllersuccess is separate. OptionalVercel quota failure retained.",
+  "preview": {
+    "status": "PASS_UNAVAILABLE_UI_ONLY",
+    "url": "https://591066b7.tdf-app.pages.dev",
+    "entrySha256": "f39de23be6f2aa850c9fce2e0b7ac366ce5bdc270fdd64e8cf4ee572343b2878",
+    "browser": "Chromiumdesktop1440andphone390; no physicalphone claim",
+    "musicResponses": 0,
+    "activeAudio": 0,
+    "methodBoundary": "Read-onlyGET/HEAD; allothermethodsaborted; no Play/login/upload/credentials/fixtureAPIresponses",
+    "originBoundary": "Separate directGET previewOrigin400Unsupportedorigin; productionOrigin404. No live search-to-playback/directoryAPIjourney or flag-only cause inferred. Trusted-origin policy retained.",
+    "entryIdentity": "Fetchedentry embeds518commit; not wholedeployment build-source attestation"
+  },
+  "formal": "TESTED hostedfixtures; boundedmodel remains MODEL_CHECKED_WITH_BOUNDS, refinementUNPROVEN; no whole-systemPROVEN claim.",
+  "scope": "Native54singleattempt across7projects=42actualdecoderfixture+7denialfixture+5mocksmoke; syntheticAPI/catalog/auth/media. Persona580pass22existingSKIP+10rollout+25discovery; skips explicit. No physicaldevice/CDNrights/productionupload or entireWCAG assurance.",
+  "performanceSLOsMeasured": false,
+  "productionDeployment": false,
+  "missionComplete": false,
+  "historicalFailurePolicy": "Originalb8apersona10fail/native2WebKitfail, earlierENOSPC and all prior evidence remain failed/history; new518tree supplies separate correction evidence. Successfulbackendlog includes serialized intentionalnegativecontrols/counterexamples; these are not productCIjob failures.",
+  "archive": {
+    "path": "qualification-evidence.tar.gz",
+    "members": 59,
+    "bytes": 5131507,
+    "sha256": "6a95ddf21cf5ce112aee3c32a55d5e0a2a4d1c071b75a49969c27af29c544546"
+  },
+  "privatePersonaArchive": {
+    "path": "persona-artifact.zip",
+    "bytes": 66957373,
+    "sha256": "01395d5f6f16de8557dbd694fdcb2a32a3349a2ac8ba3885aa4894edc0bcc185",
+    "copied": false,
+    "scope": "Privatelyretained; decodedJSON/logs/manifest archived instead"
+  },
+  "scopedSecurityReview": {
+    "status": "PASS_SCOPED_PATTERNS",
+    "findings": 0,
+    "files": 59,
+    "nestedZipMembersReviewed": true,
+    "limitations": "Known high-confidence patterns only, not all-secret proof. Successfulbackendlog intentional serializednegativecontrols retained, not actualjob failures."
+  },
+  "priorEvidenceLeavesPreserved": 66,
+  "evidencePublication": "Separate docs branch stackedon640; never merged into reviewed featurebranch; retargetmain only after actualprotected640merge."
+}
