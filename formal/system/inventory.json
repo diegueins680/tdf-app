@@ -5920,7 +5920,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "a72edf2babc837d43d092af5a5ad2ed91f562c984e952d6f44a5a484a6d4b3bf",
+      "sha256": "4f59572564da6fc55fdad84d33b97323b24ee1a69d19d62246c82a5a28902abe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8380,7 +8380,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "aed5581640a362cd6d65acbdd9c60e623b66bee5eb7471697e2c357ebd418cbf",
+      "sha256": "06a40e87f3239483b934eea031b22a441a49dcf6f72397cd455aa99ed2293171",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11176,7 +11176,7 @@
     {
       "id": "SURFACE-818df6bbb0d7fdd5",
       "path": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-      "sha256": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
+      "sha256": "4a40354532076663a34b44552e613ad2caaa540e1a62a570ea4541c962dd9366",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11194,13 +11194,13 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "42e00969e1ee7b6dd6f9396cba965cbab2512f1563edb04cacab551eea332b9f",
+      "sha256": "85d4e8f580336b05d95c5299425b211f34b6c837405a5da1380260f5ba95f03f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "90da24e18e2f8651a3a5efd02341cb8832e538f98c32c16ee160dc272e2f8746",
+      "sha256": "e217a2c81913c48b1a0582ddb293ffc51e0e473d654814f49e091825dbf8d6ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11224,7 +11224,7 @@
     {
       "id": "SURFACE-d6d70a73f7318a52",
       "path": "tdf-hq-ui/src/player/assetAccess.ts",
-      "sha256": "09437cd4110fbb22e86516035990c8ab07251a89c3aa56802a988ce514e1541f",
+      "sha256": "2a294c24902571c0e5ba0c8728f2e331c2122abce9fedc5735f1107de0daf358",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22740,7 +22740,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "9ac2209c2abc02243d8570d2d26c07df28f0a2078c9e2171369a2f8c74acc67f",
+      "sha256": "f54427b660f3fcb2c26c58a1229b55917d3293f63ced99b9861851b5dda72168",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22768,7 +22768,7 @@
     },
     {
       "path": "docs/music-releases/universal-player-state.md",
-      "sha256": "8a0823003b574231c8ced0a6e3f9c79fab905391a672e5a63663472cfafd1ed6",
+      "sha256": "f8f28aa9710478aa37de616b5c1fcf19785715c9ae3cf763d7d3a00f60fe2641",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

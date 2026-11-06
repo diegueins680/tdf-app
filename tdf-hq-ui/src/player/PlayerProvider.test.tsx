@@ -975,8 +975,8 @@ it.each(['progress', 'pause'])('does not skip media after actual %s cancels the 
   }
 });
 
- it('preserves explicit pause through a silent external load and subsequent artist navigation', async () => {
-  render(<PlayerProvider><Probe /></PlayerProvider>);
+it('preserves explicit pause through a silent external load and subsequent artist navigation', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
   await act(async () => player.playTrack(track('initial')));
   act(() => player.pause());
   const attempts = jest.mocked(HTMLMediaElement.prototype.play).mock.calls.length;
@@ -985,6 +985,8 @@ it.each(['progress', 'pause'])('does not skip media after actual %s cancels the 
   })));
   act(() => player.beginArtist('next-profile'));
   await act(async () => player.loadArtist('next-profile', [track('next-profile')]));
+  jest.mocked(Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'paused')!.get!).mockReturnValue(true);
+  act(() => view.container.querySelector('audio')!.dispatchEvent(new Event('canplay')));
   expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(attempts);
   expect(player.status).toBe('paused');
 });

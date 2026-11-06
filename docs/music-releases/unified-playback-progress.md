@@ -8,8 +8,9 @@ notes below. It is **not a production-delivery claim**.
 The candidate normally composes historical #670, #695 and protected main through
 #633/#630. One native engine now handles artist queues, radio, search, releases,
 and direct StreamingPlayer audio/video. External provider pages open separately;
-TDF does not extract their streams. Explicit pause also survives delayed ended
-notifications and queue stepping. The source watchdog cannot be extended by
+TDF does not extract their streams. Explicit pause survives delayed ended notifications, queue stepping, silent
+loads and same-listener reloads. Pending authorization exposes Pause immediately,
+and rapid commands retire the old generation before React commits a selection. The source watchdog cannot be extended by
 repeated waiting or nonadvancing clock events. Saved radio volume migrates into
 the shared transport without replacing an existing global preference.
 
@@ -21,7 +22,11 @@ limits are in [universal-player-state.md](universal-player-state.md).
 
 Executed local qualification:
 
-- UI: 354 suites / 4,022 tests; application types and production build pass.
+- UI: the earlier full run passed 354 suites / 4,022 tests. The final integration
+  run passed 353 suites / 4,027 tests with one newly added native-readiness fixture
+  assertion failing; after modeling its paused/canplay event, all76 provider tests
+  pass. Final whole-suite hosted qualification remains required. Application types,
+  changed-source lint and production build pass.
 - Backend: canonical Stack build; 4,215 examples, zero failures, 22 declared
   external-runner pending cases. The later protected cache integration requires
   its fresh combined build and tests; old results retain their source scope.
@@ -34,8 +39,8 @@ Executed local qualification:
 - Twelve probe tests include unsafe-address/redirect rejection, bounded media,
   native sample decoding and IPv4-translation address refusal. The latter fixed
   a concrete acceptance counterexample during review.
-- Thirty-nine native Chromium/phone/Firefox journeys pass, followed by all three
-  corrected radio-navigation journeys. The updated assertions target the shared
+- All42 native Chromium desktop/phone-viewport/Firefox journeys pass together on
+  the final player implementation. The updated assertions target the shared
   transport while retaining decoder identity, clock, volume and interruption
   checks. WebKit installation refuses this macOS12 host; no local WebKit or
   physical-device pass is claimed.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T17:05:48.443Z",
+  "generatedAt": "2026-11-06T22:25:21.223Z",
   "repositoryRoot": ".",
   "filesScanned": 2620,
   "candidateCount": 1396,
@@ -19451,7 +19451,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 22,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_dry_run.sql",
@@ -19468,6 +19468,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/session/logoutIntent.ts"
       ],
       "mobileConsumers": [
@@ -19887,7 +19888,7 @@
       "lines": [
         5
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
         "tdf-hq/sql/2026-11-06_music_media_health.sql",
@@ -19919,6 +19920,7 @@
         "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
         "tdf-hq-ui/src/player/MediaHealthPanel.tsx",
         "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
         "tdf-hq-ui/src/utils/sessionPersonalData.test.ts"
       ],
@@ -30507,7 +30509,7 @@
       "lines": [
         59
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -30584,6 +30586,7 @@
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/utils/marketplace.test.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/providerPaymentResume.test.ts"
@@ -68762,7 +68765,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -68839,6 +68842,7 @@
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
         "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/utils/marketplace.test.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/providerPaymentResume.test.ts"
@@ -72427,7 +72431,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 530,
+      "consumerCount": 531,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -90019,7 +90023,7 @@
       "lines": [
         14713
       ],
-      "consumerCount": 376,
+      "consumerCount": 377,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -144800,7 +144804,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 140,
+      "consumerCount": 141,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -144881,6 +144885,7 @@
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/utils/marketplace.test.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",

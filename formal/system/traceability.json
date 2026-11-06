@@ -17214,7 +17214,7 @@
     "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
     "scripts/test-event-memory-source-browser.mjs": "5b25aaed221efa05e59d42f8281467ba99ac656dd859d58fa7c3ae99d0f5a4b9",
-    "scripts/test-event-memory-source-moderation.sh": "a72edf2babc837d43d092af5a5ad2ed91f562c984e952d6f44a5a484a6d4b3bf",
+    "scripts/test-event-memory-source-moderation.sh": "4f59572564da6fc55fdad84d33b97323b24ee1a69d19d62246c82a5a28902abe",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -17444,7 +17444,7 @@
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "7780e0a0a3338b7e786d1e0dd37c7bd3a6f368a66c124ddbd5cca70c531b4d44",
     "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": "8c777a3db79c4c3185afd93df48a8ed42df8373a568252360ea5fb64ccf88727",
-    "tdf-hq-ui/src/components/RadioWidget.tsx": "aed5581640a362cd6d65acbdd9c60e623b66bee5eb7471697e2c357ebd418cbf",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "06a40e87f3239483b934eea031b22a441a49dcf6f72397cd455aa99ed2293171",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
@@ -17676,15 +17676,15 @@
     "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx": "8b593ffde9d471f5508261d691744415347d20a4f8485aa8cb37db49c90585d8",
     "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts": "e4b80a9b0159492de946ff5457b65c3ef209c6b1d58a2c0fbef18267928fd20b",
     "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx": "46245cbccdd883ef0cdc28565ba715b4c0b5f1586551c67e7e955c635a3b7c9e",
-    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
+    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "4a40354532076663a34b44552e613ad2caaa540e1a62a570ea4541c962dd9366",
     "tdf-hq-ui/src/player/MediaHealthPanel.tsx": "55c70bf217ef7797d8d7057b166d1ed27e73546fff2f5ae321b07481af54f3ca",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
-    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "42e00969e1ee7b6dd6f9396cba965cbab2512f1563edb04cacab551eea332b9f",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "90da24e18e2f8651a3a5efd02341cb8832e538f98c32c16ee160dc272e2f8746",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "85d4e8f580336b05d95c5299425b211f34b6c837405a5da1380260f5ba95f03f",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "e217a2c81913c48b1a0582ddb293ffc51e0e473d654814f49e091825dbf8d6ed",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
-    "tdf-hq-ui/src/player/assetAccess.ts": "09437cd4110fbb22e86516035990c8ab07251a89c3aa56802a988ce514e1541f",
+    "tdf-hq-ui/src/player/assetAccess.ts": "2a294c24902571c0e5ba0c8728f2e331c2122abce9fedc5735f1107de0daf358",
     "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
     "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
     "tdf-hq-ui/src/player/queue.test.ts": "736c8b5550f3e3a8d7ad51e548e1fda55d6a899ee19058bf1d6f5fe4b6d9493e",
@@ -38217,7 +38217,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "a72edf2babc837d43d092af5a5ad2ed91f562c984e952d6f44a5a484a6d4b3bf",
+      "sha256": "4f59572564da6fc55fdad84d33b97323b24ee1a69d19d62246c82a5a28902abe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42768,7 +42768,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "aed5581640a362cd6d65acbdd9c60e623b66bee5eb7471697e2c357ebd418cbf",
+      "sha256": "06a40e87f3239483b934eea031b22a441a49dcf6f72397cd455aa99ed2293171",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47898,7 +47898,7 @@
     {
       "id": "SURFACE-818df6bbb0d7fdd5",
       "path": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-      "sha256": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
+      "sha256": "4a40354532076663a34b44552e613ad2caaa540e1a62a570ea4541c962dd9366",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47938,7 +47938,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "42e00969e1ee7b6dd6f9396cba965cbab2512f1563edb04cacab551eea332b9f",
+      "sha256": "85d4e8f580336b05d95c5299425b211f34b6c837405a5da1380260f5ba95f03f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47962,7 +47962,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "90da24e18e2f8651a3a5efd02341cb8832e538f98c32c16ee160dc272e2f8746",
+      "sha256": "e217a2c81913c48b1a0582ddb293ffc51e0e473d654814f49e091825dbf8d6ed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48022,7 +48022,7 @@
     {
       "id": "SURFACE-d6d70a73f7318a52",
       "path": "tdf-hq-ui/src/player/assetAccess.ts",
-      "sha256": "09437cd4110fbb22e86516035990c8ab07251a89c3aa56802a988ce514e1541f",
+      "sha256": "2a294c24902571c0e5ba0c8728f2e331c2122abce9fedc5735f1107de0daf358",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
