@@ -15660,12 +15660,13 @@
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
-        "scripts/test-session-invoice-issue.sh"
+        "scripts/test-session-invoice-issue.sh",
+        "scripts/__tests__/disposable-postgres-url.test.mjs"
       ],
       "formalModels": [
         "formal/payments/SessionInvoiceIssue.tla"
       ],
-      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. Added PostgreSQL validation recipe: scripts/test-session-invoice-issue.sh selects the two real SessionIssueSpec cases for the advisory-lock query API and concurrent new-key reservation, rejects pending examples and zero successful examples, and is wired into backend CI. These two PostgreSQL cases were not executed during the 2026-11-06 consolidation; fresh hosted execution remains required. SessionInvoiceIssue.tla encodes OneRunPerKey and NoBlindDuplicate; scripts/verify-inductive-proofs.sh configures TLC exploration, Apalache induction and the split-check/reservation negative control. Owner-reported model results have not been independently replayed in this consolidation; no current TLC/Apalache pass is claimed. The model-to-implementation correspondence is by review, not mechanical refinement.",
+      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. Added PostgreSQL validation recipe: scripts/test-session-invoice-issue.sh selects the two real SessionIssueSpec cases for the advisory-lock query API and concurrent new-key reservation, rejects pending examples and zero successful examples, and is wired into backend CI. The runner creates a unique owned database without an initial drop, installs cleanup only after successful creation, validates local/CI routing and port, rejects libpq routing overrides, and passes credentials only through environment variables; isolated PATH-stub regressions exercise those guards and cleanup, not PostgreSQL semantics. These two PostgreSQL cases were not executed during the 2026-11-06 consolidation; fresh hosted execution remains required. SessionInvoiceIssue.tla encodes OneRunPerKey and NoBlindDuplicate; scripts/verify-inductive-proofs.sh configures TLC exploration, Apalache induction and the split-check/reservation negative control. Owner-reported model results have not been independently replayed in this consolidation; no current TLC/Apalache pass is claimed. The model-to-implementation correspondence is by review, not mechanical refinement.",
       "evidence": "formal/system/audit-2026-10-31-phase1.md sections 40 and 43; formal/payments/README.md",
       "critical": true,
       "status": "specified and implemented",
@@ -16804,7 +16805,7 @@
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
-    "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
+    "scripts/__tests__/disposable-postgres-url.test.mjs": "3fd9fbb8a587471a248c4b3bf7a2895ca1c81bbb588b8b20f832bda7cca766ac",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-planning-ux-model.test.mjs": "cabef2dc377be8160232951cdfb2c4eaa1b16f99ed104c409dd2649859ec01af",
@@ -17060,7 +17061,7 @@
     "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-route-requirements.py": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
-    "scripts/test-session-invoice-issue.sh": "897cd5b6df9ef95c386f02705a5319e2ff4b3742530864ba68a469efc7d2642b",
+    "scripts/test-session-invoice-issue.sh": "a86f4b37dea0b116cb61f03e00a3ea4c7f4b1bb812e8eaecb2ead67d730b3f17",
     "scripts/test-social-designation-postgres.sh": "e83d08fc7e50b5fd5b8d1adb4058fec1348a7f4a73492ad33e30cf2839f78e86",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -21911,6 +21912,10 @@
       },
       {
         "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
         "relationship": "tests"
       }
     ],
@@ -33583,7 +33588,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
+      "sha256": "3fd9fbb8a587471a248c4b3bf7a2895ca1c81bbb588b8b20f832bda7cca766ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33592,6 +33597,10 @@
         },
         {
           "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "tests"
         }
       ]
@@ -38904,7 +38913,7 @@
     {
       "id": "SURFACE-7b01e95a2191ef5a",
       "path": "scripts/test-session-invoice-issue.sh",
-      "sha256": "897cd5b6df9ef95c386f02705a5319e2ff4b3742530864ba68a469efc7d2642b",
+      "sha256": "a86f4b37dea0b116cb61f03e00a3ea4c7f4b1bb812e8eaecb2ead67d730b3f17",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65208,7 +65217,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3d73e8808ac7364cad6d0234fac60b34c6b39f3d0d0576988d9e3197272cac2b",
+      "sourceSha256": "e6af6a5ffed9d0585bf935d9fc1a3693aad6f0dab3b4f78e711ad41b96635bfa",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -65236,7 +65245,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3d73e8808ac7364cad6d0234fac60b34c6b39f3d0d0576988d9e3197272cac2b",
+      "sourceSha256": "e6af6a5ffed9d0585bf935d9fc1a3693aad6f0dab3b4f78e711ad41b96635bfa",
       "definition": {
         "states": [
           "absent",
@@ -65266,7 +65275,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3d73e8808ac7364cad6d0234fac60b34c6b39f3d0d0576988d9e3197272cac2b",
+      "sourceSha256": "e6af6a5ffed9d0585bf935d9fc1a3693aad6f0dab3b4f78e711ad41b96635bfa",
       "definition": {
         "export": [
           "queued",
