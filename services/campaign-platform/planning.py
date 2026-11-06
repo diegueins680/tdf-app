@@ -47,7 +47,7 @@ def plan(store,config,job):
  from media import queue_render
  rendered=queue_render(store,actor,cid,{'source':source['id'],'segments':chosen})
  artist=str(facts.get('artist') or campaign['name']);credits=str(facts.get('credits','')).strip();date=str(facts.get('recording_date','')).strip();context=('Grabada el '+date+'. ') if date else '';suffix=('\n\n'+credits) if credits else '';destination=campaign['destination']
- angles=['La interpretación de cerca','El diálogo entre músicos','El trabajo detrás de la sesión'];hooks=['Escucha de cerca.','Sigue el cambio.','Vuelve a este momento.','Una razón para quedarte.','Dale espacio a la música.','La sesión continúa.'];piece_ids=[]
+ angles=['La interpretación de cerca','El diálogo entre músicos','El trabajo detrás de la sesión'];hooks=['Escucha de cerca.','Sigue el cambio.','Vuelve a este momento.','Una razón para quedarte.','Dale espacio a la música.','La sesión continúa.'];piece_ids=[];graphic_pieces=[]
  schedule=[(0,'youtube','video','Sesión completa'),(0,'instagram','story','S01'),(0,'instagram','story','S02'),(0,'instagram','story','S03'),(0,'youtube','community','Lanzamiento'),(1,'instagram','reel','CL01'),(2,'instagram','story','S04'),(3,'youtube','short','CL02'),(4,'instagram','carousel','Carrusel'),(5,'instagram','story','S05'),(6,'instagram','reel','CL03'),(7,'youtube','community','Momento destacado'),(8,'instagram','story','S06'),(9,'tiktok','video','CL04'),(10,'instagram','story','S07'),(11,'youtube','short','CL05'),(12,'instagram','story','S08'),(13,'instagram','reel','CL06'),(13,'youtube','community','Vuelve a la sesión')]
  # Existing master publication may be imported manually; this creates a review draft, never a duplicate live post.
  for day,platform,fmt,name in schedule:
@@ -57,13 +57,19 @@ def plan(store,config,job):
   if platform=='youtube' and fmt=='short':copy+='\nAbre el video relacionado, una vez configurado y verificado.'
   if platform=='tiktok':copy+='\nConfigura y verifica la ruta real desde tu perfil antes de publicar.'
   piece=store.piece(actor,cid,{'name':name,'platform':platform,'format':fmt,'copy':copy+suffix,'asset':source['id'] if name=='Sesión completa' else None,'destination':destination,'due_at':(datetime.datetime.fromtimestamp(data['start_at'],ZoneInfo(campaign['timezone']))+datetime.timedelta(days=day)).timestamp(),'settings':{'draft_from_template':True,'selection_review_required':True,'render_job':rendered['job'] if name.startswith('CL') else None}});piece_ids.append(piece)
+  if fmt in ('story','carousel'):graphic_pieces.append((piece,name,fmt))
  from graphics import generate
  graphics=generate(store,config,cid,actor,source['id'],artist,chosen)
  with store.db(True) as d:
-  for name,aid in graphics.items():
-   if name.startswith('S'):d.execute('UPDATE pieces SET asset=? WHERE campaign=? AND name=? AND status="draft"',(aid,cid,name))
   carousel=[aid for name,aid in graphics.items() if name.startswith('CAR')]
-  d.execute('UPDATE pieces SET asset=?,settings=? WHERE campaign=? AND format="carousel" AND status="draft"',(carousel[0],json.dumps({'children':carousel,'review_required':True}),cid))
+  for piece,name,fmt in graphic_pieces:
+   # Only this plan's unchanged, unapproved drafts may receive its graphics.
+   row=d.execute('SELECT settings FROM pieces WHERE id=? AND campaign=? AND version=1 AND status="draft" AND approved_version IS NULL AND external_id IS NULL',(piece,cid)).fetchone()
+   if not row:continue
+   if fmt=='story' and name in graphics:d.execute('UPDATE pieces SET asset=? WHERE id=?',(graphics[name],piece))
+   elif fmt=='carousel' and carousel:
+    settings=json.loads(row['settings']);settings.update(children=carousel,review_required=True)
+    d.execute('UPDATE pieces SET asset=?,settings=? WHERE id=?',(carousel[0],json.dumps(settings),piece))
  report={'idea':'Quédate con la música','audience':'Hipótesis: personas que conectan con la interpretación observada y con las audiencias verificadas del artista. Ajustar con datos reales.','angles':angles,'selection':chosen,'selection_basis':'Picos de energía RMS en seis partes del máster. No equivale a evaluación musical ni garantiza frases completas; revisar entradas, salidas y encuadres.','pieces':piece_ids,'render_job':rendered['job'],'rights_review_required':True,'captions':'Pendientes de transcripción y revisión; no se inventaron letras.','graphics':graphics,'metrics_checkpoints_hours':[24,72,168,336],'approved':False}
  with store.db(True) as d:store.audit(d,None,'plan.generated',cid,job['id'],report);store.notice(d,campaign['owner'],'Plan y selección propuestos. Revisa la música, completa los gráficos, conecta las cuentas y confirma los destinos antes de aprobar.',cid,'info')
  return report
