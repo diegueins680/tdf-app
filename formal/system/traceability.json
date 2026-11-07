@@ -16836,6 +16836,83 @@
         "classification": "PARTIAL",
         "reason": "Finite direct CSV-helper tests; full implementation refinement, deployed integration and external consumers unproven."
       }
+    },
+    {
+      "id": "UI-CSV-STRING-PREFIX-001",
+      "title": "Use one typed CSV string-cell encoding policy for finance and merchandise",
+      "domain": "SEC",
+      "critical": true,
+      "statement": "The two CSV exports share a serializer that prefixes dangerous string prefixes while retaining typed negative monetary numbers, booleans, empty optional cells, CSV quoting/newlines and existing amount-unit/column contracts.",
+      "authority": "Owner execution mandate to repair concrete export security findings; existing merchandise apostrophe policy; scoped typed representation contract.",
+      "source": "formal/system/csv-export-text.md",
+      "contract": "formal/system/csv-export-text.md",
+      "property": "For string cells beginning with optional whitespace then ASCII/fullwidth =,+,-,@ or a leading whitespace prefix containing tab/CR/LF, prepend one apostrophe; for number/boolean/null/undefined cells do not add that prefix; always quote and double embedded quotes.",
+      "preconditions": [
+        "Existing authorization, validated DTO money/currency and precision guards remain authoritative",
+        "The serializer receives typed scalar cells; it does not infer string contents as numeric values",
+        "Spreadsheet import/re-save behavior is outside the verified boundary"
+      ],
+      "allowedTransitions": [
+        "Encode dangerous user-influenced string cells as explicitly prefixed text",
+        "Preserve raw typed negative cents and percentages",
+        "Keep the existing finance rows/currencies/24 columns and merchandise BOM/CRLF/authorized finance columns"
+      ],
+      "forbiddenTransitions": [
+        "Treat a negative number as a formula-like string",
+        "Remove CSV quoting, drop rows or coerce currency/amounts to conceal a failure",
+        "Claim universal spreadsheet or downstream re-save safety from finite encoding tests"
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/utils/csv.ts",
+        "tdf-hq-ui/src/utils/merch.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/csv.test.ts",
+        "tdf-hq-ui/src/utils/merch.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Scoped direct scalar tests plus mounted export Blob regression and old-source counterexamples; no spreadsheet execution, native/PG/formal model or whole-program proof.",
+      "evidence": "formal/system/csv-export-text.md; exact-source private execution records supplied separately",
+      "status": "specified and implemented",
+      "confidence": "Finite source-bound encoding/download controls only; deployment and external consumers unproven.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite scalar and mounted-download regressions; full implementation refinement and downstream spreadsheet behavior unproven."
+      },
+      "actors": [
+        "Authorized event finance reader",
+        "Authorized merchandise order-export reader",
+        "Downstream CSV consumer"
+      ],
+      "inputs": [
+        "Typed scalar cells from existing authorized DTOs",
+        "Original finance row/currency schema and merchandise column selection"
+      ],
+      "state": {
+        "read": "Original validated DTO cells before CSV encoding",
+        "terminal": [
+          "Quoted cell with explicit string prefix when required",
+          "Quoted typed number or boolean without a text prefix",
+          "Empty cell for absent optional value"
+        ]
+      },
+      "effects": [
+        "Read-only CSV representation; no persisted data, provider or financial writes"
+      ],
+      "authorization": "Existing backend event/order scope and authorized finance columns remain unchanged; the serializer grants no access.",
+      "privacy": "Existing export fields and column selection remain unchanged; tests use synthetic data and no new customer information is exported.",
+      "concurrency": "Pure per-cell encoding of the supplied observation; no multi-query snapshot or external consumer concurrency guarantee.",
+      "idempotency": "Equal typed raw inputs produce equal encoded cells. An already encoded CSV field is not a raw input and is not reapplied.",
+      "failure": "Preserve existing query/loading/precision/export error handling. No unsafe-value substitution, silent row drop, provider retry or assertion suppression.",
+      "recovery": "Repeat an authorized export from original typed DTOs; do not rewrite source records or infer currency conversion.",
+      "observability": "Source-bound old-product negative controls and actual mounted Blob/scalar test logs; no new production telemetry containing report cells.",
+      "ambiguity": [
+        "Spreadsheet import settings and re-save transformations are outside the encoded-cell policy.",
+        "No universal Excel or downstream formula-execution safety guarantee is claimed.",
+        "Production deployment and external CSV consumer acceptance remain unverified."
+      ]
     }
   ],
   "sourceFingerprints": {
@@ -17988,8 +18065,8 @@
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "4aa48c983379b1aaabad90543eea2fd8510bf28a99aa0722c3b97d8282567fe7",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "3417cb970648efc1d1634a24792e9b69aeb441d9d1eb76ea7de7e7b135ef6985",
-    "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
-    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "bb4ae7f8482085191592cf9878f9ee547ae5f088c1f26c32486c77c28dc5f82c",
+    "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "1efa630fec048dd5b151adfa9e60563e1cd644da0859c3b9aba8a711cfdb597f",
     "tdf-hq-ui/src/pages/SocialInboxPage.tsx": "df7168e2986e8eab0e85a8ce46a3bfa29fcbc033c95ae43fefef228d47e1bb18",
     "tdf-hq-ui/src/pages/SocialPage.tsx": "eb1162e3cc9418ef3aef29a2a85842aaaaa96f32079062d48a88522912fc4d9d",
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
@@ -18069,6 +18146,8 @@
     "tdf-hq-ui/src/utils/checkoutStripe.ts": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts": "b4a6a6e54eef828d5795ca8ffd8d30db2599429eaf6ecdfafa3bfbff2894763b",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": "e1363bf4bc181a089249899b5ab81cdcaae74ff61fcefa1c9d1b1bcfcc86e7dc",
+    "tdf-hq-ui/src/utils/csv.test.ts": "4fb5e4404dd09e5883c0628b01d25235e6c5296a4c514ce7ca4b8e7e888809ba",
+    "tdf-hq-ui/src/utils/csv.ts": "321c70afb70e94a14be92453214b6897d854235ee93312e5c32aadbfb90052d0",
     "tdf-hq-ui/src/utils/dateTime.test.ts": "5e479a281af5c04429783198977cc0592c08639d49d023b5227c6e13e6c6c855",
     "tdf-hq-ui/src/utils/dateTime.ts": "a75595587356dd2dd3561264d04ea323aa2589f1e739645b103b5799a6ce9677",
     "tdf-hq-ui/src/utils/directoryPreviewImage.ts": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
@@ -18088,6 +18167,8 @@
     "tdf-hq-ui/src/utils/loginRouting.test.ts": "8fabb75d7f986e9d7bf8f24b2a6a71f786e08fcae9718b8d22ede42eaf89f617",
     "tdf-hq-ui/src/utils/loginRouting.ts": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
     "tdf-hq-ui/src/utils/markdownMentions.ts": "de382e370625d8f4da61c55d8352f87afb69a1aab083adf998ee26941e93e79d",
+    "tdf-hq-ui/src/utils/merch.test.ts": "7061e6d370f1b6e6437b0ec957e8b3d9f045799277906ddca6f10571cb86a6e8",
+    "tdf-hq-ui/src/utils/merch.ts": "b77f4e6d442647662a15729ebacce0aa165ae7b330dcb961bd8042a1b44e0faa",
     "tdf-hq-ui/src/utils/musicMoney.test.ts": "de331c2360c09762bc1a2db6782135efd75a2995f84db6991409d825c4281c00",
     "tdf-hq-ui/src/utils/musicMoney.ts": "c64997fe823f1aa0b583d73ca115482b8c9593802c69b9c1b1ecccb846f6230c",
     "tdf-hq-ui/src/utils/musicPreviewRange.test.ts": "90c8840b4c1e8bdf2c9641efa7e5e75ba8182bbfc511c002f336361d065e4a7f",
@@ -25929,6 +26010,10 @@
       {
         "requirement": "UI-EVENT-FINANCE-PRECISION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UI-CSV-STRING-PREFIX-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/externalTicketing.ts": [
@@ -32045,6 +32130,10 @@
       {
         "requirement": "UI-EVENT-FINANCE-PRECISION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UI-CSV-STRING-PREFIX-001",
+        "relationship": "tests"
       }
     ],
     "scripts/check-browser-vendor.mjs": [
@@ -33278,6 +33367,30 @@
     "tdf-hq-ui/src/components/SessionVideoPreview.campaign.test.tsx": [
       {
         "requirement": "ART-VIDEO-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/csv.ts": [
+      {
+        "requirement": "UI-CSV-STRING-PREFIX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/merch.ts": [
+      {
+        "requirement": "UI-CSV-STRING-PREFIX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/csv.test.ts": [
+      {
+        "requirement": "UI-CSV-STRING-PREFIX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/merch.test.ts": [
+      {
+        "requirement": "UI-CSV-STRING-PREFIX-001",
         "relationship": "tests"
       }
     ]
@@ -49253,11 +49366,15 @@
     {
       "id": "SURFACE-cc037b60c52e8931",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
-      "sha256": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
+      "sha256": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UI-CSV-STRING-PREFIX-001",
           "relationship": "tests"
         }
       ]
@@ -49265,7 +49382,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "bb4ae7f8482085191592cf9878f9ee547ae5f088c1f26c32486c77c28dc5f82c",
+      "sha256": "1efa630fec048dd5b151adfa9e60563e1cd644da0859c3b9aba8a711cfdb597f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49286,6 +49403,10 @@
         },
         {
           "requirement": "UI-EVENT-FINANCE-PRECISION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UI-CSV-STRING-PREFIX-001",
           "relationship": "implementation"
         }
       ]
@@ -50689,6 +50810,30 @@
       ]
     },
     {
+      "id": "SURFACE-03eaa56d694927b9",
+      "path": "tdf-hq-ui/src/utils/csv.test.ts",
+      "sha256": "4fb5e4404dd09e5883c0628b01d25235e6c5296a4c514ce7ca4b8e7e888809ba",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UI-CSV-STRING-PREFIX-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7f8a0a5efb475574",
+      "path": "tdf-hq-ui/src/utils/csv.ts",
+      "sha256": "321c70afb70e94a14be92453214b6897d854235ee93312e5c32aadbfb90052d0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UI-CSV-STRING-PREFIX-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d2543ceda1770fa1",
       "path": "tdf-hq-ui/src/utils/dateOnly.test.ts",
       "sha256": "e5285b0f551aefa67661f1c7754b7240c52bd875c17fd556c0b97fc3a5a42772",
@@ -51149,16 +51294,26 @@
     {
       "id": "SURFACE-a2fad7ff00e326b8",
       "path": "tdf-hq-ui/src/utils/merch.test.ts",
-      "sha256": "aa36c7718e348724f3c0e5a3a85ada4fa578847453f2f2f2ee6ced54c799b796",
+      "sha256": "7061e6d370f1b6e6437b0ec957e8b3d9f045799277906ddca6f10571cb86a6e8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UI-CSV-STRING-PREFIX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-69214ab4dd4d9619",
       "path": "tdf-hq-ui/src/utils/merch.ts",
-      "sha256": "12e98763ecfb00e7992e7b6e5a8c4811c452d26865c62253cd37a58126571fe9",
+      "sha256": "b77f4e6d442647662a15729ebacce0aa165ae7b330dcb961bd8042a1b44e0faa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UI-CSV-STRING-PREFIX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-87b80f419fbdfd01",
@@ -65729,8 +65884,6 @@
     "SURFACE-f50e70c61acf715a",
     "SURFACE-44b4ddc7967ef10c",
     "SURFACE-53029e148324c052",
-    "SURFACE-a2fad7ff00e326b8",
-    "SURFACE-69214ab4dd4d9619",
     "SURFACE-5a3beef41d31c8b4",
     "SURFACE-0dcdaef1ce64e51a",
     "SURFACE-d1b051c0b8940563",
@@ -66642,7 +66795,8 @@
     "CONTRACT-STORE-001",
     "ID-PARTY-REFERENCE-REGISTRY-001",
     "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
-    "UI-EVENT-FINANCE-CSV-CURRENCY-001"
+    "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+    "UI-CSV-STRING-PREFIX-001"
   ],
   "stateMachines": [
     {
@@ -67759,7 +67913,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "99731649683c37afcd81ffab6b4301cb885b22c4c14f3a602ff1f5fda2940322",
+      "sourceSha256": "6f5925ca0cf5b023897f2f4f0e8aa71e65e56286e5bd75fa422374e6246f8412",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -67787,7 +67941,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "99731649683c37afcd81ffab6b4301cb885b22c4c14f3a602ff1f5fda2940322",
+      "sourceSha256": "6f5925ca0cf5b023897f2f4f0e8aa71e65e56286e5bd75fa422374e6246f8412",
       "definition": {
         "states": [
           "absent",
@@ -67817,7 +67971,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "99731649683c37afcd81ffab6b4301cb885b22c4c14f3a602ff1f5fda2940322",
+      "sourceSha256": "6f5925ca0cf5b023897f2f4f0e8aa71e65e56286e5bd75fa422374e6246f8412",
       "definition": {
         "export": [
           "queued",
@@ -90770,7 +90924,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 196,
+    "PARTIAL": 197,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
