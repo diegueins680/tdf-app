@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 302,
+    "named": 355,
     "path-named": 1,
-    "reviewed": 68,
-    "unspecified": 145,
-    "covered": 371
+    "reviewed": 77,
+    "unspecified": 83,
+    "covered": 433
   },
   "routes": [
     {
@@ -484,8 +484,10 @@
     {
       "method": "POST",
       "path": "/ads/ads",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
@@ -498,44 +500,58 @@
     {
       "method": "POST",
       "path": "/ads/automations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/automations/{automationId}/enroll",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/automations/{automationId}/enrollments/{enrollmentId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/automations/{automationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/campaigns",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/inquiry",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-PUBLIC-INQUIRY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/{adId}/examples",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
@@ -556,86 +572,117 @@
     {
       "method": "POST",
       "path": "/artists/me/activate",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/artists/me/photo",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/artists/me/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/artists/me/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/artists/video-campaigns/{campaignKey}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-VIDEO-CAMPAIGN-001"
+      ],
+      "note": "MEDIA-VIDEO-CAMPAIGN-001 specifies compare-and-swap revisions, the artist, strict-admin or manager scope re-validated under session locks, verified conversions and the explicit feature command."
     },
     {
       "method": "POST",
       "path": "/artists/video-campaigns/{campaignKey}/conversion",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-VIDEO-CAMPAIGN-001"
+      ],
+      "note": "MEDIA-VIDEO-CAMPAIGN-001 specifies compare-and-swap revisions, the artist, strict-admin or manager scope re-validated under session locks, verified conversions and the explicit feature command."
     },
     {
       "method": "POST",
       "path": "/artists/video-campaigns/{campaignKey}/feature",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-VIDEO-CAMPAIGN-001"
+      ],
+      "note": "MEDIA-VIDEO-CAMPAIGN-001 specifies compare-and-swap revisions, the artist, strict-admin or manager scope re-validated under session locks, verified conversions and the explicit feature command."
     },
     {
       "method": "POST",
       "path": "/assets",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/upload",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/assets/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/assets/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/{id}/checkin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-LOAN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/{id}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-LOAN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/{id}/qr",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
@@ -920,44 +967,60 @@
     {
       "method": "POST",
       "path": "/ddex/documents",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "REC-DDEX-001"
+      ],
+      "note": "REC-DDEX-001 specifies private content-addressed intake and synchronous structural validation that commits one complete run with its issues and document state or nothing, never implying official approval."
     },
     {
       "method": "POST",
       "path": "/ddex/documents/{id}/import-plans",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ddex/documents/{id}/validation-runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "REC-DDEX-001"
+      ],
+      "note": "REC-DDEX-001 specifies private content-addressed intake and synchronous structural validation that commits one complete run with its issues and document state or nothing, never implying official approval."
     },
     {
       "method": "POST",
       "path": "/ddex/exports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/ddex/import-plans/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ddex/import-plans/{id}/commit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ddex/partners",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "PATCH",
@@ -1741,38 +1804,50 @@
     {
       "method": "POST",
       "path": "/label/project-notes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/label/project-notes/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/label/project-notes/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/label/tracks",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/label/tracks/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/label/tracks/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "POST",
@@ -2815,44 +2890,59 @@
     {
       "method": "DELETE",
       "path": "/radio/presence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-PRESENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/presence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-PRESENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/active",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/import",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/now-playing",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/refresh-metadata",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/transmissions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies the 503 without persistence until a reviewed provider binding exists."
     },
     {
       "method": "POST",
@@ -2905,80 +2995,108 @@
     {
       "method": "POST",
       "path": "/service-marketplace/ads",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SVCMKT-PROVIDER-ADS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/service-marketplace/ads/{adId}/slots",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SVCMKT-PROVIDER-ADS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/service-marketplace/bookings",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SYS-ESCROW-001"
+      ],
+      "note": "SYS-ESCROW-001 specifies the fail-closed 503 with no persistence and no handler IO until verified escrow exists."
     },
     {
       "method": "POST",
       "path": "/service-marketplace/bookings/{bookingId}/complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SVCMKT-BOOKING-COMPLETE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/service-marketplace/bookings/{bookingId}/escrow/release",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SYS-ESCROW-002"
+      ],
+      "note": "SYS-ESCROW-002 specifies the fail-closed 503 for escrow release."
     },
     {
       "method": "POST",
       "path": "/services/storefront/order",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PUBLIC-ORDER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/manual-payment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/revision",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PUBLIC-ORDER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/stripe/payment-intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PUBLIC-ORDER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/paypal/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYPAL-WEBHOOK-001"
+      ]
     },
     {
       "method": "POST",
@@ -2991,44 +3109,59 @@
     {
       "method": "POST",
       "path": "/session/currency-conversions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/session/experiments/{experimentId}/exposure",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/session/logout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-LOGOUT-001"
+      ],
+      "note": "AUTH-LOGOUT-001 is the web client contract; the server route deactivates every token presented in either header, answers 204 with a cleared cookie for any caller and is idempotent (handler-session)."
     },
     {
       "method": "POST",
       "path": "/session/onboarding/complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/session/onboarding/intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/session/onboarding/reconcile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/session/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",

@@ -14,6 +14,8 @@ module TDF.Auth
   , hasSocialInboxAccess
   , hasModuleAccess
   , validateModuleAccess
+  , hasCoherentRoleGrants
+  , hasValidAuthPartyId
   , secretTokenMatches
   , moduleName
   , moduleRegistryCode

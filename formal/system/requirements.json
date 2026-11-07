@@ -21498,6 +21498,1180 @@
       "historicalStatus": null
     },
     {
+      "id": "ADS-ADMIN-CATALOG-001",
+      "title": "Advertising campaign, creative and example administration",
+      "statement": "Administrators create or update campaigns and ad creatives and attach conversation examples. Routes: POST /ads/campaigns; POST /ads/ads; POST /ads/{adId}/examples.",
+      "domain": "ADS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "Campaigns need a name of at most 160 characters, a non-negative budget, an end date not before the start and a known status (400); creatives need a valid landing URL, a bounded external id and an existing campaign (404); examples need a non-empty question and answer (400) on an existing ad (404). Rows are inserted or, when an id is given, updated.",
+      "actors": [
+        "Administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /ads/campaigns",
+        "POST /ads/ads",
+        "POST /ads/{adId}/examples"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "campaign",
+        "ad_creative",
+        "ad_conversation_example"
+      ],
+      "authorization": "requireModule ModuleAdmin (403): valid party, unique and coherent role grants, Admin module.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Read then update without a lock; last writer wins.",
+      "idempotency": "None: repeated creates duplicate rows.",
+      "failure": "400 invalid; 403 module; 404 campaign or ad.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Example messages and tags have no length cap."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ADS-AUTOMATION-001",
+      "title": "WhatsApp campaign automation installation, enrollment and status",
+      "statement": "Administrators install a templated WhatsApp automation, enroll consenting contacts and move the automation and its enrollments between states; sending happens in the background runner. Routes: POST /ads/automations; POST /ads/automations/{automationId}/enroll; POST /ads/automations/{automationId}/status; POST /ads/automations/{automationId}/enrollments/{enrollmentId}/status.",
+      "domain": "ADS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "Installation needs a known template and a daily limit of 1..100 (400) and returns the existing automation for a template already installed; otherwise it inserts the campaign (draft, whatsapp), the automation and its steps in one transaction. Enrollment needs 1..200 party ids (400) and an automation that is not completed; each party is accepted only with a contact, a valid WhatsApp phone, active consent and no prior enrollment, and rejections are returned in the body. Activation needs templatesApproved, at least one scheduled enrollment and one active step (400); completion stops every scheduled enrollment. Enrollment status moves between scheduled, converted and stopped (400 otherwise).",
+      "actors": [
+        "Administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /ads/automations",
+        "POST /ads/automations/{automationId}/enroll",
+        "POST /ads/automations/{automationId}/status",
+        "POST /ads/automations/{automationId}/enrollments/{enrollmentId}/status"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "campaign",
+        "campaign_automation",
+        "campaign_automation_step",
+        "campaign_enrollment"
+      ],
+      "authorization": "requireModule ModuleAdmin (403): valid party, unique and coherent role grants, Admin module. Consent per PRIV-WHATSAPP-001 is checked at enrollment.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No row locks; installation and enrollment race into UNIQUE(template_key) and UNIQUE(automation, party), which answer 500 and roll back the batch.",
+      "idempotency": "Installation is idempotent per template; enrollment is deduplicated by the unique constraint; status changes are harmless to repeat.",
+      "failure": "400 invalid, unknown automation or state; 403 module; 500 on unique races.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Unknown automations and enrollments answer 400 rather than 404.",
+        "Concurrent installs or enrollments answer 500 instead of 409 or a per-party rejection.",
+        "Activation counts and the update are not serialized against concurrent enrollment changes."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ADS-PUBLIC-INQUIRY-001",
+      "title": "Public advertising inquiry with auto-reply",
+      "statement": "A visitor sends an inquiry under an idempotency key; the server creates a lead and answers once by WhatsApp and email. Routes: POST /ads/inquiry.",
+      "domain": "ADS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "The request needs Idempotency-Key header (16..128 characters, 400 otherwise) in [A-Za-z0-9_-], a name of at most 160 characters, a plausible email or a normalizable phone, a bounded course, channel and message (400). Under pg_advisory_xact_lock on the key an identical payload replays the saved response and a different one answers 409; a fresh request inserts a new party, a lead_interest (ad_inquiry, Open) and the identity_ads_request row, then sends a WhatsApp text and an email once and records the dispatch state.",
+      "actors": [
+        "Anonymous visitor"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /ads/inquiry"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party",
+        "lead_interest",
+        "identity_ads_request",
+        "WhatsApp message",
+        "email"
+      ],
+      "authorization": "None beyond the key (public-intake).",
+      "privacy": "Stores visitor contact details and sends them an automatic reply.",
+      "concurrency": "Advisory lock on the key plus the primary key on request_key.",
+      "idempotency": "Exactly one creation and one dispatch per key; retries replay.",
+      "failure": "400 invalid; 409 different payload under the same key; 500 undecodable saved response.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Every inquiry creates a new party even when the email or phone already exists."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SVCMKT-PROVIDER-ADS-001",
+      "title": "Service marketplace provider ads and slots",
+      "statement": "An authenticated party publishes a provider ad and opens time slots on it. Routes: POST /service-marketplace/ads; POST /service-marketplace/ads/{adId}/slots.",
+      "domain": "SVCMKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "An ad needs a role tag and headline, a positive fee, a supported currency, a slot length of at least 15 minutes (400) and an existing (404), active (409) service catalog; it is inserted with the caller as provider. A slot needs an ad owned by the caller (403), a valid window whose length equals the ad's slot minutes (400), and is inserted open. Both transactions run under runDB so their refusals answer their own status.",
+      "actors": [
+        "Authenticated provider"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /service-marketplace/ads",
+        "POST /service-marketplace/ads/{adId}/slots"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "service_ad",
+        "service_ad_slot"
+      ],
+      "authorization": "Any authenticated account may create an ad; slots require ad ownership.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No locks; no overlap check between slots.",
+      "idempotency": "None: a duplicate headline per provider or an identical slot window hits a unique constraint (500).",
+      "failure": "400 invalid; 403 not the owner; 404 catalog or ad; 409 inactive catalog.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Any account, including Fan or Customer, may publish a provider ad; siblings use module gates.",
+        "Duplicate headlines and identical slots answer 500 instead of 409.",
+        "Slots are not checked for overlap."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SVCMKT-BOOKING-COMPLETE-001",
+      "title": "Service marketplace booking completion",
+      "statement": "The escrow provider or an administrator marks a marketplace booking complete and its service order performed; no money moves because escrow release is disabled. Routes: POST /service-marketplace/bookings/{bookingId}/complete.",
+      "domain": "SVCMKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "The route needs a positive id (400), the booking and its escrow row (404), the escrow held and the booking Confirmed or InProgress (409) and a caller who is the escrow provider or holds the Admin role (403); it sets the booking Completed and the service order performed in one transaction (runDB).",
+      "actors": [
+        "Escrow provider",
+        "Administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /service-marketplace/bookings/{bookingId}/complete"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "booking status",
+        "service_order status",
+        "resource allocation by trigger"
+      ],
+      "authorization": "Escrow provider party or Admin role (role only, no module).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Read, check and write without a lock or conditional update.",
+      "idempotency": "Repeating is harmless; a concurrent cancellation can be overwritten.",
+      "failure": "400 invalid; 403 not provider or admin; 404 booking or escrow; 409 state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The provider completes their own booking; with escrow release disabled this moves no money.",
+        "The Admin check is role-only, unlike the module gates of sibling routes."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "STORE-PUBLIC-ORDER-001",
+      "title": "Public service storefront orders and revisions",
+      "statement": "A visitor orders a mixing or mastering package under an idempotency key and later requests revisions with the returned lookup token; the Stripe rail is disabled. Routes: POST /services/storefront/order; POST /services/storefront/order/{orderId}/revision; POST /services/storefront/order/{orderId}/stripe/payment-intent.",
+      "domain": "STORE",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "Order creation needs Idempotency-Key header (16..128 characters, 400 otherwise), the domain enabled (503), a buyer name of at most 200 characters and a plausible email (400), an active package (404) with a positive USD price and a song count in range (400); in one transaction it inserts the order (awaiting_payment, lookup hash, key, request hash), the canonical checkout and lines and a status-change row. The same key replays an identical request and answers 409 for a different one. Revisions need X-Order-Lookup-Token compared in constant time with the stored hash (404 otherwise), feedback of 1..5000 characters (400), the order in v1_delivered or revisions and fewer than 50 revisions (409). The Stripe route answers 503 without reading the order.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /services/storefront/order",
+        "POST /services/storefront/order/{orderId}/revision",
+        "POST /services/storefront/order/{orderId}/stripe/payment-intent"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "service_storefront_order",
+        "commerce_checkout_session and lines",
+        "service_storefront_order_status_change",
+        "service_storefront_revision"
+      ],
+      "authorization": "Creation: none (public-intake). Revisions: lookup token.",
+      "privacy": "Stores buyer name and email from anonymous input.",
+      "concurrency": "insertUnique on the create key; revision numbers are read then inserted without a lock.",
+      "idempotency": "Creation replays by key and hash; a replay does not return the lookup token again.",
+      "failure": "400 invalid; 404 package or token; 409 hash or state; 503 domain disabled or Stripe.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/test-service-storefront-checkout-runtime-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A replay of the creation does not return the lookup token, so a client that lost the first response cannot recover it.",
+        "Concurrent revisions race into UNIQUE(order, revision_number) and answer 500.",
+        "The disabled Stripe route never verifies the lookup token."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "STORE-PAYMENT-RAILS-001",
+      "title": "Storefront payment rails, manual payment and PayPal capture",
+      "statement": "A buyer holding the lookup token starts a Datafast or PayPal payment, selects a manual method or captures the PayPal order; captured money is admitted or reconciled in the same transaction. Routes: POST /services/storefront/order/{orderId}/datafast/checkout; POST /services/storefront/order/{orderId}/paypal/create; POST /services/storefront/order/{orderId}/manual-payment; POST /services/storefront/paypal/capture.",
+      "domain": "STORE",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "Every route needs X-Order-Lookup-Token compared in constant time with the stored hash (404 otherwise). beginCanonicalPaymentAttempt: the order needs a checkout (409), a checkout environment equal to the provider environment and the mixing_mastering domain and provider enabled (503). Datafast and PayPal creation need the order in awaiting_payment, pending_payment, payment_failed or the provider pending state (400), reuse a stored provider id, otherwise call the provider, record failures, bind the resource (502 on failure) and move the order to the provider pending state. Manual selection accepts bank_transfer, cash or pos (400) on an order awaiting payment or manual confirmation (409) and records the manual attempt. Capture needs the bound PayPal order (400), replays a confirmed order without a provider call, validates amount, currency and merchant (reconciliation exception and 502 on mismatch) and admits money with recordVerifiedPaymentOrReconcile in one transaction with the binding; only a newly paid checkout moves the order to paid.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /services/storefront/order/{orderId}/datafast/checkout",
+        "POST /services/storefront/order/{orderId}/paypal/create",
+        "POST /services/storefront/order/{orderId}/manual-payment",
+        "POST /services/storefront/paypal/capture"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_payment_attempt and intent",
+        "commerce_provider_binding",
+        "checkout payment or reconciliation exception",
+        "service_storefront_order status",
+        "provider calls"
+      ],
+      "authorization": "Lookup token possession.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No order lock; the commerce store's unique succeeded-attempt and capture indexes and the money-immutable trigger bound duplicates.",
+      "idempotency": "Creation without a key: two concurrent calls can create two provider resources; capture replays once paid.",
+      "failure": "400 state or order id; 404 token; 409 checkout; 502 provider or binding; 503 environment or provider.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two concurrent first creations can both create a provider checkout; the second id overwrites the first."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "STORE-PAYPAL-WEBHOOK-001",
+      "title": "Storefront PayPal webhook",
+      "statement": "PayPal capture, refund and reversal events are authenticated against PayPal, stored once and applied through the provider inbox; a rejected admission records a reconciliation exception. Routes: POST /services/storefront/paypal/webhook.",
+      "domain": "STORE",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
+      "source": "formal/system/ads-storefront-routes.md",
+      "contract": "formal/system/ads-storefront-routes.md",
+      "property": "All five transmission headers, a SHA256withRSA algorithm, an approved HTTPS PayPal certificate URL for the environment and a transmission time inside the event window are required (400); the envelope is at most 1 MiB (400); the capability must be enabled (503); the raw body is verified with PayPal's verify-webhook-signature and anything but SUCCESS answers 401. The event is stored once per provider, environment, merchant and event id and claimed through the inbox lease (processed or ignored replays answer 200, a busy lease 503). Captures are matched to their binding, validated for order, merchant, amount and currency (mismatch: exception and dead letter), late captures on expired or terminal checkouts record payment_after exceptions, and admitted money marks a newly paid storefront order paid or finalizes a ticket order; refunds and reversals record exceptions or complete ticket refunds.",
+      "actors": [
+        "PayPal"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /services/storefront/paypal/webhook"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_provider_event",
+        "commerce_provider_binding",
+        "checkout payment",
+        "commerce_reconciliation_exception",
+        "service_storefront_order",
+        "event ticket finalization"
+      ],
+      "authorization": "Signed provider callback (AUTH-PUBLIC-001).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Inbox lease with attempt fencing (PAY-PROVIDER-INBOX-001); checkout FOR UPDATE on late captures.",
+      "idempotency": "Exactly-once per provider event id.",
+      "failure": "400 headers or envelope; 401 signature; 503 capability, lease or retryable database failure.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ads-storefront-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ART-SELF-SERVICE-001",
+      "title": "Artist self-activation and own profile edits",
+      "statement": "A signed-in party activates the Artist role for itself through the self-service policy and edits its own artist profile and photo. Routes: POST /artists/me/activate; POST /artists/me/profile; PUT /artists/me/profile; POST /artists/me/photo.",
+      "domain": "ART",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/artists-assets-label-routes.md.",
+      "source": "formal/system/artists-assets-label-routes.md",
+      "contract": "formal/system/artists-assets-label-routes.md",
+      "property": "Activation needs a coherent auth scope (403) and exactly one active credential; under FOR UPDATE on the party it applies the artist.self-service.artist policy (role grant with audit unless the party is an Admin), creates the profile row if absent and auto-approves pending artist.onboarding access requests, all in one transaction; every policy refusal answers 403. Profile edits need the Artist or Admin role (403); the artist id in the body is replaced by the caller; slug, URLs and genres are validated (400); the row is upserted and genre memberships replaced. The photo route reads the current profile and re-submits it with the new hero URL.",
+      "actors": [
+        "Artist"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /artists/me/activate",
+        "POST /artists/me/profile",
+        "PUT /artists/me/profile",
+        "POST /artists/me/photo"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party_security_role and security_audit_event",
+        "artist_profile",
+        "artist_profile_genre_membership",
+        "feature_access_request"
+      ],
+      "authorization": "Self only: coherent scope for activation; Artist, Artista or Admin role for edits.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Activation serializes on the party row; edits are last-writer-wins full replacements without a lock; the photo route reads then writes across two transactions.",
+      "idempotency": "Activation is idempotent; edits replay by content; the photo route can lose a concurrent edit.",
+      "failure": "400 invalid; 403 scope, role or policy; 500 duplicate slug.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/artists-assets-label-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Duplicate slugs hit the unique index and answer 500 instead of 409.",
+        "Policy misconfiguration (missing or inactive policy) answers 403 rather than 503.",
+        "The photo route can overwrite a concurrent profile edit."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "INV-ASSET-ADMIN-001",
+      "title": "Inventory asset administration, photo upload and QR rotation",
+      "statement": "Operations staff create, edit, retire and delete assets, upload asset photos and rotate QR tokens. Routes: POST /assets; POST /assets/upload; PATCH /assets/{id}; DELETE /assets/{id}; POST /assets/{id}/qr.",
+      "domain": "INV",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/artists-assets-label-routes.md.",
+      "source": "formal/system/artists-assets-label-routes.md",
+      "contract": "formal/system/artists-assets-label-routes.md",
+      "property": "Every route needs operations access. Creation validates name, category and photo URL (400). Uploads accept one image part (jpeg, png, webp, gif) whose extension matches the declared type, 1 byte..10 MiB (400), and write it under the public assets root at inventory/{uuid}-{name} without a database row. Patches need at least one field (400), a known room (400), refuse a status change while a checkout is open and booked without one (409). Delete refuses an asset with any checkout history (409). QR rotation replaces the token unconditionally.",
+      "actors": [
+        "Operations staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /assets",
+        "POST /assets/upload",
+        "PATCH /assets/{id}",
+        "DELETE /assets/{id}",
+        "POST /assets/{id}/qr"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "asset",
+        "file under assetsRoot/inventory",
+        "asset.qr_code"
+      ],
+      "authorization": "ensureInventoryAccess: ModuleOps or ModuleAdmin with coherent grants (403).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Check then write without row locks; a delete racing a checkout hits the FK and answers 500.",
+      "idempotency": "Creation and upload are unkeyed; patch is idempotent by content; QR rotation is never idempotent.",
+      "failure": "400 invalid; 403 access; 404 asset; 409 checkout state or history.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/API/Inventory.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/artists-assets-label-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Uploads trust the declared MIME type (no content sniffing), land in the public root, have no database record and are never cleaned up.",
+        "QR rotation invalidates printed codes with no confirmation or audit.",
+        "A delete racing a checkout answers 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "INV-ASSET-LOAN-001",
+      "title": "Staff asset checkout and check-in",
+      "statement": "Operations staff check an asset out to a party, room or session and check it back in. Routes: POST /assets/{id}/checkout; POST /assets/{id}/checkin.",
+      "domain": "INV",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/artists-assets-label-routes.md.",
+      "source": "formal/system/artists-assets-label-routes.md",
+      "contract": "formal/system/artists-assets-label-routes.md",
+      "property": "Checkout validates the target kind and fields, disposition, holder contact, terms, payment fields, a due date not in the past and a managed photo URL (400), refuses an open checkout or an inactive asset (409) and inserts the checkout with the asset status (Booked, or Retired for a sale) in one transaction. Check-in needs a condition, note or photo (400), exactly one open checkout (409) and not a sale (409), and closes it with the asset back to Active.",
+      "actors": [
+        "Operations staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /assets/{id}/checkout",
+        "POST /assets/{id}/checkin"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "asset_checkout",
+        "asset status"
+      ],
+      "authorization": "ensureInventoryAccess (403).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "The open-checkout check runs outside the insert transaction with no lock or partial unique index, so two concurrent checkouts can both succeed and every later reader answers 409.",
+      "idempotency": "Not keyed; a second check-in overwrites returned_at.",
+      "failure": "400 invalid; 403 access; 404 asset; 409 state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/artists-assets-label-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Concurrent checkouts can leave two open rows (same finding as the public QR twin)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "LABEL-NOTES-TRACKS-001",
+      "title": "Label tracks and project notes",
+      "statement": "Artists and administrators keep label tracks; administrators and the webmaster keep versioned project notes. Routes: POST /label/tracks; PATCH /label/tracks/{id}; DELETE /label/tracks/{id}; POST /label/project-notes; PATCH /label/project-notes/{id}; DELETE /label/project-notes/{id}.",
+      "domain": "LABEL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/artists-assets-label-routes.md.",
+      "source": "formal/system/artists-assets-label-routes.md",
+      "contract": "formal/system/artists-assets-label-routes.md",
+      "property": "Tracks need the Admin, Artist or Artista role (403); an artist may own only itself (403), an administrator may name any owner; title 1..160 and note up to 1000 safe characters (400); updates need a field and a status of open or done (400) on an owned track (403); delete is a hard delete. Project notes need the Admin or Webmaster role (403) and text up to 1000 characters (400); updates need text or completed and expectedVersion (400) and are compare-and-set (409 on a stale version, 410 when inactive); delete deactivates with a version bump (410 when already inactive).",
+      "actors": [
+        "Artist",
+        "Administrator",
+        "Webmaster"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /label/tracks",
+        "PATCH /label/tracks/{id}",
+        "DELETE /label/tracks/{id}",
+        "POST /label/project-notes",
+        "PATCH /label/project-notes/{id}",
+        "DELETE /label/project-notes/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "label_track",
+        "label_project_note"
+      ],
+      "authorization": "Roles only, no module check; track ownership for artists.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Note updates are compare-and-set; track updates and note deletes read then write without a lock.",
+      "idempotency": "Note updates replay as 409; track creation is unkeyed.",
+      "failure": "400 invalid; 403 role or ownership; 404 missing; 409 stale version; 410 inactive.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API/Label.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/artists-assets-label-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "An administrator naming an unknown or archived owner answers 500 (FK and archive guard).",
+        "Track updates have no version check; note deletes take no expectedVersion unlike their PATCH.",
+        "Label routes are gated by request-captured roles with no module check."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DDEX-PARTNERS-PLANNING-001",
+      "title": "DDEX partner registration and disabled planning, commit and export",
+      "statement": "Catalog importers register delivery partners; import planning, plan resolution, commit and export are feature-disabled and answer 503 without writing. Routes: POST /ddex/partners; POST /ddex/documents/{id}/import-plans; PATCH /ddex/import-plans/{id}; POST /ddex/import-plans/{id}/commit; POST /ddex/exports.",
+      "domain": "DDEX",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ddex-radio-session-routes.md.",
+      "source": "formal/system/ddex-radio-session-routes.md",
+      "contract": "formal/system/ddex-radio-session-routes.md",
+      "property": "Partner creation needs catalog.import, a non-empty unique list of canonical version ids (400) that are active and detection-enabled (422) and inserts the partner with its version rows in one transaction. Import planning needs an existing document (404) and then answers 503; resolution and commit answer 503 after parsing the body; export needs catalog.export, a canonical version id (400) and a partner that is active and export-enabled for it (422) and then answers 503.",
+      "actors": [
+        "Catalog importer",
+        "Catalog exporter"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /ddex/partners",
+        "POST /ddex/documents/{id}/import-plans",
+        "PATCH /ddex/import-plans/{id}",
+        "POST /ddex/import-plans/{id}/commit",
+        "POST /ddex/exports"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "ddex_partner",
+        "ddex_partner_standard_version"
+      ],
+      "authorization": "requireDdexCapability: ModuleCatalog plus a live security_permission grant for catalog.import or catalog.export (403); not ownership-scoped.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Plain insert; a duplicate partner name hits UniqueDdexPartnerName (500).",
+      "idempotency": "None.",
+      "failure": "400 invalid; 403 capability; 404 document; 422 versions or partner; 503 disabled.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/DDEX.hs",
+        "tdf-hq/src/TDF/DDEX/DB.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ddex-radio-session-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Duplicate partner names answer 500 instead of 409; an empty name is accepted.",
+        "Partner creation is gated by the import capability alone.",
+        "No distinct-approver rule exists yet for the disabled import commit."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "RADIO-CATALOG-001",
+      "title": "Shared radio stream catalog and server-side stream fetches",
+      "statement": "Staff save active streams, import public station lists, refresh ICY metadata and read the current title of a stream; the server fetches only public HTTP(S) hosts. Routes: POST /radio/streams/active; POST /radio/streams/import; POST /radio/streams/refresh-metadata; POST /radio/streams/now-playing.",
+      "domain": "RADIO",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ddex-radio-session-routes.md.",
+      "source": "formal/system/ddex-radio-session-routes.md",
+      "contract": "formal/system/ddex-radio-session-routes.md",
+      "property": "Every route needs a staff module grant under a coherent role set (validateRadioCatalogAccess, 403). Stream URLs must be public HTTP(S) without userinfo, fragment or private hosts (400); legacy UUID-path URLs answer 503 on save. Save upserts the stream by URL with an active country and published genre (400). Import takes up to 8 public source URLs (default four hard-coded lists) and a limit of 1..800 (400), fetches each source, parses stations and upserts them with observation rows in one transaction, counting failed sources. Refresh fetches up to 400 active streams with a 5-second timeout and updates name, genre and last check per stream. Now-playing fetches two ICY metadata blocks and answers 502 on failure.",
+      "actors": [
+        "Staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /radio/streams/active",
+        "POST /radio/streams/import",
+        "POST /radio/streams/refresh-metadata",
+        "POST /radio/streams/now-playing"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "radio_stream",
+        "radio_stream_*_observation rows",
+        "outbound HTTP fetches"
+      ],
+      "authorization": "Any role with at least one module grant; accounts without modules (Fan, Promoter, Agency) are refused.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "getBy then insert without a lock or ON CONFLICT: concurrent inserts of a new URL answer 500; refresh updates are last-writer-wins.",
+      "idempotency": "Saves and imports merge by URL; refreshes and now-playing are reads with side effects.",
+      "failure": "400 invalid; 403 access; 500 unique race; 502 fetch failure; 503 legacy URL.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerRadio.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "validateRadioCatalogAccess and validateRadioStreamUrl are tested in tdf-hq/test/TDF/ServerSpec.hs; the rest is read from the handlers.",
+      "evidence": "formal/system/ddex-radio-session-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Host validation is lexical: redirects and DNS rebinding are not re-checked, so a public source can redirect the server to a private address.",
+        "Source and metadata bodies are read without a size cap.",
+        "Concurrent inserts of the same URL answer 500 instead of merging.",
+        "now-playing does not apply the legacy-URL 503 guard its siblings apply."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "RADIO-PRESENCE-001",
+      "title": "Own radio listening presence",
+      "statement": "A signed-in party publishes or clears what it is listening to. Routes: POST /radio/presence; DELETE /radio/presence.",
+      "domain": "RADIO",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ddex-radio-session-routes.md.",
+      "source": "formal/system/ddex-radio-session-routes.md",
+      "contract": "formal/system/ddex-radio-session-routes.md",
+      "property": "Upsert validates the stream URL (400, 503 for legacy URLs) and station fields of at most 160 characters (400) and inserts or updates the caller's row; delete removes it and always answers 204.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /radio/presence",
+        "DELETE /radio/presence"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party_radio_presence"
+      ],
+      "authorization": "Own row only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "getBy then insert without a lock; two concurrent first upserts by the same party answer 500.",
+      "idempotency": "Idempotent by content.",
+      "failure": "400 invalid; 500 first-insert race; 503 legacy URL.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerRadio.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ddex-radio-session-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A party's concurrent first upserts race into the unique row (500)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SESSION-PREFERENCES-001",
+      "title": "Session locale preferences and currency conversion audit",
+      "statement": "A signed-in party stores its locale, timezone, currency and country and records client-side currency conversions. Routes: PUT /session/preferences; POST /session/currency-conversions.",
+      "domain": "SESSION",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ddex-radio-session-routes.md.",
+      "source": "formal/system/ddex-radio-session-routes.md",
+      "contract": "formal/system/ddex-radio-session-routes.md",
+      "property": "Both resolve the session from the Authorization or Cookie header (401). Preferences need a UTC or IANA timezone and active, deployment-enabled locale and currency and an active country (400) and are upserted with ON CONFLICT. Conversions need supported currencies, a positive finite rate up to 1e9 and a rate source of at most 80 characters (400) and append an audit row.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /session/preferences",
+        "POST /session/currency-conversions"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "user_locale_preferences",
+        "currency_conversion_audit"
+      ],
+      "authorization": "Own row only (handler-session).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Atomic upsert; audit append.",
+      "idempotency": "Preferences are idempotent; every conversion call appends a row.",
+      "failure": "400 invalid; 401 no session.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ddex-radio-session-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Conversion audit rows are unthrottled and accept any minor-unit amounts, including negatives."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SESSION-ONBOARDING-001",
+      "title": "Onboarding intent, completion, reconciliation and experiment exposure",
+      "statement": "A signed-in party records its onboarding intent; completion is granted only on server evidence of a first value; exposure to the single-feature onboarding experiment is recorded once. Routes: PUT /session/onboarding/intent; POST /session/onboarding/complete; POST /session/onboarding/reconcile; POST /session/experiments/{experimentId}/exposure.",
+      "domain": "SESSION",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ddex-radio-session-routes.md.",
+      "source": "formal/system/ddex-radio-session-routes.md",
+      "contract": "formal/system/ddex-radio-session-routes.md",
+      "property": "All resolve the session (401). Intent must be one of the six known values (400) and is upserted. Completion accepts an optional firstValue (400 otherwise), ignores accounts without a progress row or already completed, infers the earliest first value from server evidence inside the 24-hour window and completes through a conditional update (completed_at IS NULL) so only one request reports newlyCompleted; without a firstValue and still eligible it completes directly. Reconciliation is the same without the evidence-free branch. Exposure accepts only single-feature-onboarding-v1 (404), does nothing while the experiment is off, assigns a variant once per party under the progress-row lock and marks exposure with a conditional update.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /session/onboarding/intent",
+        "POST /session/onboarding/complete",
+        "POST /session/onboarding/reconcile",
+        "POST /session/experiments/{experimentId}/exposure"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "user_onboarding_progress",
+        "user_experiment_assignment"
+      ],
+      "authorization": "Own rows only (handler-session).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Conditional updates and unique assignment per party and experiment version.",
+      "idempotency": "Every route is idempotent; only one request observes newlyCompleted or newlyExposed.",
+      "failure": "400 invalid; 401 no session; 404 unknown experiment.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/ddex-radio-session-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A supplied firstValue without server evidence leaves the account uncompleted by design."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",

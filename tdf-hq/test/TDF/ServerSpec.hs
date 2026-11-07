@@ -79,7 +79,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (err400, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
+import Servant (err400, err409, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -245,6 +245,7 @@ import TDF.Server
     , validateOptionalMarketplacePaymentProviderUpdate
     , validateMarketplaceStripeAdminUpdate
     , publicBookingSqlConflict
+    , publicBookingTransactionFailure
     , validatePublicManualPaymentSelection
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationStoredName
@@ -10077,6 +10078,15 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right Nothing
             validateMarketplaceOrderUpdateStatus (Just "awaiting_payment") `shouldSatisfy` isLeft
 
+    describe "validateRadioCatalogAccess" $ do
+        it "refuses accounts without any module grant and admits staff" $ do
+            either errHTTPCode (const 0) (Radio.validateRadioCatalogAccess (mkUser [Fan])) `shouldBe` 403
+            either errHTTPCode (const 0) (Radio.validateRadioCatalogAccess (mkUser [Promotor])) `shouldBe` 403
+            Radio.validateRadioCatalogAccess (mkUser [Reception]) `shouldBe` Right ()
+            Radio.validateRadioCatalogAccess (mkUser [Admin]) `shouldBe` Right ()
+        it "refuses incoherent role grants" $
+            either errHTTPCode (const 0) (Radio.validateRadioCatalogAccess (mkUser [Admin, Admin])) `shouldBe` 403
+
     describe "publicBookingSqlConflict" $ do
         it "maps calendar, lifecycle and serialization failures to 409 and leaves the rest" $ do
             let withState st = SqlError st FatalError "" "" ""
@@ -10085,6 +10095,16 @@ spec = describe "TDF.Server helpers" $ do
             fmap errHTTPCode (publicBookingSqlConflict (withState "40001")) `shouldBe` Just 409
             fmap errHTTPCode (publicBookingSqlConflict (withState "40P01")) `shouldBe` Just 409
             fmap errHTTPCode (publicBookingSqlConflict (withState "23505")) `shouldBe` Nothing
+
+    describe "publicBookingTransactionFailure" $ do
+        it "returns a ServerError thrown inside the transaction as the response" $
+            fmap errHTTPCode (publicBookingTransactionFailure (toException (err409 :: ServerError)))
+                `shouldBe` Just 409
+        it "keeps the SQL conflict mapping and lets other exceptions propagate" $ do
+            fmap errHTTPCode (publicBookingTransactionFailure (toException (SqlError "40001" FatalError "" "" "")))
+                `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingTransactionFailure (toException (userError "boom")))
+                `shouldBe` Nothing
 
     describe "validatePublicManualPaymentSelection" $ do
         it "refuses bank transfer on a paid deposit like the online rails do" $

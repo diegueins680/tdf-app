@@ -9622,8 +9622,7 @@ serviceMarketplaceServer user =
 
 listServiceAds :: AppM [Api.ServiceAdDTO]
 listServiceAds = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     ads <- selectList [ServiceAdActive ==. True] [Desc ServiceAdCreatedAt]
     let providerIds = map (serviceAdProviderPartyId . entityVal) ads
     providers <- if null providerIds then pure [] else selectList [PartyId <-. providerIds] []
@@ -9684,9 +9683,8 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
-  pool <- asks envPool
   let catalogKey = toSqlKey catalogId
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     mCatalog <- get catalogKey
     case validateServiceMarketplaceCatalog mCatalog of
       Left serverErr -> liftIO $ throwIO serverErr
@@ -9703,7 +9701,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
         , serviceAdActive = True
         , serviceAdCreatedAt = now
         }
-  dto <- liftIO $ flip runSqlPool pool $ do
+  dto <- runDB $ do
     adId <- insert record
     ent <- getJustEntity adId
     mProvider <- get (auPartyId user)
@@ -9714,16 +9712,14 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
 
 listServiceAdSlots :: Int64 -> AppM [Api.ServiceAdSlotDTO]
 listServiceAdSlots adId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity adKey _ <- resolveServiceAdEntity adId
     slots <- selectList [ServiceAdSlotAdId ==. adKey] [Asc ServiceAdSlotStartsAt]
     pure (map toServiceAdSlotDTO slots)
 
 createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
 createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     ad@(Entity adKey _) <- resolveServiceAdEntity adId
     when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $
       liftIO $ throwIO err403
@@ -9749,8 +9745,7 @@ createServiceMarketplaceBooking _ _ =
 
 completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 completeServiceMarketplaceBooking user rawBookingId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity bookingKey booking <- resolveServiceMarketplaceBookingEntity rawBookingId
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     escrow <- either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
@@ -11548,11 +11543,9 @@ createServiceBookingCheckoutTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception >>= publicBookingSqlConflict of
-        Just conflict -> pure (Left conflict)
-        Nothing -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -11793,6 +11786,20 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
 -- generic 500: the calendar exclusion (23P01), the lifecycle and snapshot
 -- triggers (23514) and serialization or deadlock aborts (40001, 40P01), the
 -- same set the staff path maps in runBookingTransaction.
+-- | Every refusal a public booking transaction can raise: a ServerError thrown
+-- with throwIO inside the transaction (servant's runHandler does not catch
+-- those, so without this mapping they answered a generic 500), or a SQL
+-- conflict the calendar turns into 409. Asynchronous exceptions and anything
+-- else propagate.
+publicBookingTransactionFailure :: SomeException -> Maybe ServerError
+publicBookingTransactionFailure exception =
+  case fromException exception :: Maybe SomeAsyncException of
+    Just _ -> Nothing
+    Nothing ->
+      case fromException exception of
+        Just serverErr -> Just serverErr
+        Nothing -> fromException exception >>= publicBookingSqlConflict
+
 publicBookingSqlConflict :: SqlError -> Maybe ServerError
 publicBookingSqlConflict sqlError
   | sqlState sqlError == "23P01" =
@@ -11832,11 +11839,9 @@ createPublicTentativeBookingTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking, Bool))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception >>= publicBookingSqlConflict of
-        Just conflict -> pure (Left conflict)
-        Nothing -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
