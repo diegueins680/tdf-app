@@ -16848,6 +16848,72 @@
           "tdf-mobile/__tests__/ArtistPublicUrl.test.ts"
         ]
       }
+    },
+    {
+      "id": "SYS-NATIVE-RESOLVER-001",
+      "title": "Lock optional native resolver dependencies and refuse runtime installation during verification",
+      "statement": "The canonical test resolver must load from a complete lock-based install with runtime package downloads disabled. Its published exact optional binding declarations must have matching locked package records.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Use the committed npm v3 workspace lock and canonical npmrc; installed unrs-resolver matches its locked version.",
+        "Trust npm registry metadata and archive SRI; native code and the platform runtime remain assumptions."
+      ],
+      "inputs": [
+        "package-lock.json",
+        "node_modules/unrs-resolver/package.json"
+      ],
+      "state": {
+        "boundary": "formal/system/native-resolver-lock.md"
+      },
+      "allowedTransitions": [
+        "Refresh the same pinned module through npm, preserving existing package records and manifests while restoring missing optional dependency records."
+      ],
+      "forbiddenTransitions": [
+        "Omit or mismatch an exact optional binding lock record.",
+        "Allow the canonical UI verifier or Safe Install to lazily download missing native packages during tests.",
+        "Treat structural lock checks as executed compatibility on all recorded platforms."
+      ],
+      "effects": [
+        "Fail repository checks on incomplete resolver lock evidence; fail UI verification before running suites when the host resolver cannot load without runtime downloads."
+      ],
+      "authorization": "This test-tool repair authorizes no product, provider or deployment operations.",
+      "privacy": "Registry requests contain public package identities only; test probes require no application data or credentials.",
+      "concurrency": "Probe in a fresh process against the immutable candidate; installations and missing-binary controls use isolated owned workspaces.",
+      "idempotency": "Structural verification is deterministic for fixed files; runtime load depends on the documented platform.",
+      "failure": "Reject missing declarations, pins, archive integrity or native initialization without lazy installation.",
+      "recovery": "Restore the npm-generated reviewed lock records and reinstall; do not add manual native copies to claim a canonical install pass.",
+      "observability": "Retain old-lock install/load counterexample, corrected clean-install/load result, missing-binary fault and restoration, source hashes and platform limits.",
+      "source": "Canonical npm ci CI recipes and confirmed successful pristine install followed by failed native resolver initialization without runtime fallback; user reliability and verification mission.",
+      "contract": "formal/system/native-resolver-lock.md",
+      "implementation": [
+        "package-lock.json",
+        "scripts/check-native-resolver-lock.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/quality-ui.sh",
+        ".github/workflows/ci-safe-install.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/native-resolver-lock.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite lock controls and actual host startup/failure probes; no complete transitive graph or supply-chain proof.",
+      "ambiguity": [
+        "Other native platforms require actual execution evidence; recorded platform entries alone do not establish compatibility."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Structural/host controls implemented; candidate-specific clean-install, fault and hosted evidence are separately recorded."
+      },
+      "authority": "Engineering invariant derived from the authorized correctness mission and canonical install recipe; required GitHub approval remains separate.",
+      "property": "Every installed resolver exact optional binding is present with matching version and archive integrity in the lock; canonical verification refuses runtime binding downloads.",
+      "verification": "Deterministic negative fixtures, clean npmci and native probe with fallback disabled, reversible missing-binary fault; no mathematical proof.",
+      "evidence": "scripts/__tests__/native-resolver-lock.test.mjs; candidate-source install/probe receipts separately recorded."
     }
   ]
 }
