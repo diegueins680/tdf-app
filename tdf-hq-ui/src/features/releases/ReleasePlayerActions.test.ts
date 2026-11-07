@@ -1,12 +1,13 @@
 import { jest } from '@jest/globals';
 import type { ArtistReleaseDTO } from '../../api/types';
-import {
+jest.unstable_mockModule('../../config/artistMediaRecoveryRollout', () => ({ isArtistMediaRecoveryEnabled: () => true }));
+const {
   buildReleaseStreamUpdatePayload,
   dispatchReleaseToRadio,
   getReleasePlaybackUrls,
   resolveReleaseAudioUrl,
   resolveReleasePlaybackAction,
-} from './ReleasePlayerActions';
+} = await import('./ReleasePlayerActions');
 
 const FIXTURE_ARTIST_ID = 7;
 const FIXTURE_RELEASE_ID = 42;

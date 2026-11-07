@@ -6,12 +6,15 @@ import type { ReactNode } from 'react';
 import { useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+const recoveryRollout = { enabled: true };
+jest.unstable_mockModule('../config/artistMediaRecoveryRollout', () => ({ isArtistMediaRecoveryEnabled: () => recoveryRollout.enabled }));
 jest.unstable_mockModule('./analytics', () => ({ installPlayerAnalyticsBridge: () => () => undefined }));
 jest.unstable_mockModule('./assetAccess', () => ({ authorizePlayerAsset: jest.fn() }));
 jest.unstable_mockModule('../utils/logger', () => ({ logger: { warn: jest.fn() } }));
 const { PlayerProvider, usePlayer } = await import('./PlayerProvider');
 const { authorizePlayerAsset } = await import('./assetAccess');
 const { default: GlobalPlayer } = await import('./GlobalPlayer');
+const { dispatchReleaseToRadio } = await import('../features/releases/ReleasePlayerActions');
 
 const track = (id: string): PlayerTrack => ({ id, title: id, artist: 'Synthetic', releaseId: 'release',
   sources: [{ url: `https://media.invalid/${id}.m4a`, quality: 'high', mediaType: 'audio/mp4' }] });
@@ -20,6 +23,7 @@ let player: ReturnType<typeof usePlayer>;
 function Probe() { player = usePlayer(); return <div>{player.status}</div>; }
 
 beforeEach(() => {
+  recoveryRollout.enabled = true;
   localStorage.clear();
   jest.mocked(authorizePlayerAsset).mockReset();
   jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockImplementation(function (this: HTMLMediaElement) { return this.src; });
@@ -989,4 +993,80 @@ it('preserves explicit pause through a silent external load and subsequent artis
   act(() => { view.container.querySelector('audio')!.dispatchEvent(new Event('canplay')); });
   expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(attempts);
   expect(player.status).toBe('paused');
+});
+
+
+describe('backend-compatible artist media rollout', () => {
+  const release = { arReleaseId: 42, arArtistId: 17, arTitle: 'Synthetic public legacy',
+    arReleaseDate: null, arDescription: null, arCoverImageUrl: null,
+    arSpotifyUrl: 'https://media.invalid/public-legacy.mp3', arYoutubeUrl: null };
+  it.each(['absent', 'false'])('retains current-main direct playback for %s rollout and an old backend', async () => {
+    recoveryRollout.enabled = false;
+    jest.mocked(authorizePlayerAsset).mockRejectedValue({ status: 404 });
+    const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+    await act(async () => { dispatchReleaseToRadio(release, release.arSpotifyUrl); });
+    expect(authorizePlayerAsset).not.toHaveBeenCalled();
+    expect(player.currentTrack?.sources[0]?.legacySourceId).toBeUndefined();
+    expect(player.status).toBe('playing');
+    expect(view.container.querySelector('audio')?.src).toBe(release.arSpotifyUrl);
+    expect(view.container.querySelectorAll('audio')).toHaveLength(1);
+  });
+  it.each([401, 403, 404])('never downgrades an enabled legacy access denial %s to its stale URL', async (status) => {
+    recoveryRollout.enabled = true;
+    jest.mocked(authorizePlayerAsset).mockRejectedValue({ status });
+    const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+    await act(async () => { dispatchReleaseToRadio(release, release.arSpotifyUrl); });
+    expect(authorizePlayerAsset).toHaveBeenCalledWith('legacy:42:spotify', expect.any(AbortSignal));
+    expect(player.currentTrack?.sources[0]?.legacySourceId).toBe('42:spotify');
+    expect(player.status).toBe('unavailable');
+    expect(view.container.querySelector('audio')?.getAttribute('src')).not.toBe(release.arSpotifyUrl);
+  });
+  it.each([401, 403, 404])('keeps a persisted explicit legacy identity protected with rollout off and denial %s', async (status) => {
+    recoveryRollout.enabled = false;
+    const stored = { ...track('persisted-legacy'), sources: [{ ...track('persisted-legacy').sources[0]!, legacySourceId: '42:spotify' }] };
+    localStorage.setItem('tdf-global-player/v1', JSON.stringify({ ownerPartyId: null,
+      queue: { tracks: [stored], currentIndex: 0, shuffle: false, repeat: 'off' },
+      volume: 0.8, muted: false, quality: 'auto', positions: {}, pausedByUser: false }));
+    jest.mocked(authorizePlayerAsset).mockRejectedValue({ status });
+    const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+    await waitFor(() => expect(authorizePlayerAsset).toHaveBeenCalled());
+    expect(authorizePlayerAsset).toHaveBeenCalledWith('legacy:42:spotify', expect.any(AbortSignal));
+    expect(player.currentTrack?.sources[0]?.legacySourceId).toBe('42:spotify');
+    expect(player.status).toBe('unavailable');
+    expect(view.container.querySelector('audio')?.getAttribute('src')).not.toBe(stored.sources[0]!.url);
+  });
+});
+
+
+describe('explicit malformed media identity never becomes a public URL', () => {
+  const malformedIdentities: [string, unknown][] = [
+    ['assetId', ''], ['assetId', ' '], ['assetId', null], ['assetId', 0],
+    ['legacySourceId', ''], ['legacySourceId', ' '], ['legacySourceId', null], ['legacySourceId', 0],
+  ];
+  it.each(malformedIdentities)('does not downgrade a selected %s=%p identity with rollout off', async (field, value) => {
+    recoveryRollout.enabled = false;
+    const malformed = { ...track('malformed'), sources: [
+      { ...track('malformed').sources[0]!, [field]: value },
+      { ...track('public-downgrade').sources[0]! },
+    ] } as PlayerTrack;
+    const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+    await act(async () => { player.playTrack(malformed); });
+    expect(player.status).toBe('unavailable');
+    expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+    expect(authorizePlayerAsset).not.toHaveBeenCalled();
+  });
+  it.each(malformedIdentities)('does not downgrade a persisted %s=%p identity with rollout off', async (field, value) => {
+    recoveryRollout.enabled = false;
+    const malformed = { ...track('persisted-malformed'), sources: [
+      { ...track('persisted-malformed').sources[0]!, [field]: value },
+      { ...track('public-downgrade').sources[0]! },
+    ] } as PlayerTrack;
+    localStorage.setItem('tdf-global-player/v1', JSON.stringify({ ownerPartyId: null,
+      queue: { tracks: [malformed], currentIndex: 0, shuffle: false, repeat: 'off' },
+      volume: 0.8, muted: false, quality: 'auto', positions: {} }));
+    const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+    await waitFor(() => expect(player.status).toBe('unavailable'));
+    expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+    expect(authorizePlayerAsset).not.toHaveBeenCalled();
+  });
 });

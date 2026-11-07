@@ -242,3 +242,23 @@ and traceability are reconciled, with no Mobile pin or authorization change.
 The forward legacy-source compatibility view retains supported HTTP, relative and scheme-less browser URLs behind current artist authorization. Server probes remain HTTPS-only and never resolve relative URLs against a server origin; such sources can retain an inconclusive diagnostic while browser playback remains eligible. The current249-entry manifest preserves the complete246-entry protected-main prefix and appends the three original player entries. The fresh combined249-migration schema application/replay/startup check passes.
 
 Protected main46edd832 was normally composed after the player qualification. Its delta changes no Haskell application/test source, frontend source, migration manifest or Mobile pin. Route attribution now names the two new music writes while preserving the preexisting unspecified-route debt. The updated child-process helper passes its controls and all23 actual PostgreSQL worker scenarios; storage uses a transport fault injector. Repository quality and strict catalog checks pass after this composition. New-head hosted checks and independent review remain separate requirements.
+
+
+## Compatible staged initiation — 2026-11-07
+
+The new artist aggregate, featured-track/health controls and legacy-source-bound
+release events require the exact public setting
+`VITE_ARTIST_MEDIA_RECOVERY_ENABLED=true`. It defaults off. Off retains the
+canonical existing release-card URL-only event and leaves the current queue
+alone when opening an artist; it does not mount the new aggregate/health hooks.
+The existing player engine remains the only global audio engine.
+
+This setting selects new initiation paths, not permissions or capability inferred
+from a resource response. Any already-declared asset/legacy identity, including
+restored queue data, remains protected regardless of the setting. Malformed
+identities become unavailable;401/403/404 never permit loading a stale raw URL.
+Once enabled, backend access and source-health policies remain authoritative.
+Staged compatible code integration does not initiate activation or require a new
+deployment approval; enabling new flows still needs their normal backend/schema
+rollout. Historical runtime/CI/production observations above retain their source
+identities and are not claimed as final-head execution.

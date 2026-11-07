@@ -157,8 +157,19 @@ const orderedSources = (track: PlayerTrack | null, selectedQuality: PlayerQualit
   const requested = selectedQuality === 'auto' ? automaticQuality() : selectedQuality;
   // Asset-bound tracks may only fall back to another freshly authorized asset.
   // A stale direct URL must not downgrade a protected recording after denial.
-  const sources = track.sources.some((item) => Boolean(item.assetId) || Boolean(item.legacySourceId))
-    ? track.sources.filter((item) => Boolean(item.assetId) || Boolean(item.legacySourceId)) : track.sources;
+  const declaresIdentity = (item: PlayerSource) =>
+    Object.prototype.hasOwnProperty.call(item, 'assetId') || Object.prototype.hasOwnProperty.call(item, 'legacySourceId');
+  const validDeclaredIdentity = (item: PlayerSource) => {
+    const assetDeclared = Object.prototype.hasOwnProperty.call(item, 'assetId');
+    const legacyDeclared = Object.prototype.hasOwnProperty.call(item, 'legacySourceId');
+    return (assetDeclared || legacyDeclared)
+      && (!assetDeclared || (typeof item.assetId === 'string' && item.assetId.trim().length > 0))
+      && (!legacyDeclared || (typeof item.legacySourceId === 'string' && item.legacySourceId.trim().length > 0));
+  };
+  // An explicit but malformed protected identity is not permission to use a
+  // stale URL, including after restoring a queue while rollout is disabled.
+  const sources = track.sources.some(declaresIdentity)
+    ? track.sources.filter(validDeclaredIdentity) : track.sources;
   const seen = new Set<string>();
   const unique = sources.filter((item) => {
     const key = item.assetId ?? (item.legacySourceId ? `legacy:${item.legacySourceId}` : item.url);

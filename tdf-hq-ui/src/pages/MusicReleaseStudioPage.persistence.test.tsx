@@ -8,6 +8,11 @@ import type { MusicReleaseVersion } from '../api/musicReleases';
 // component-correctness budget, not an API latency or autosave debounce limit.
 jest.setTimeout(15_000);
 
+const rollout = { enabled: true };
+const mediaHealthMount = jest.fn(() => null);
+jest.unstable_mockModule('../config/artistMediaRecoveryRollout', () => ({ isArtistMediaRecoveryEnabled: () => rollout.enabled }));
+jest.unstable_mockModule('../player/MediaHealthPanel', () => ({ default: mediaHealthMount }));
+
 const version = {
   id: 'version', releaseId: 'release', versionNumber: 1, state: 'draft', title: 'Borrador',
   displayArtist: 'Artista sintético', titleLanguage: 'es', explicitContent: 'unknown',
@@ -31,6 +36,8 @@ jest.unstable_mockModule('../api/musicReleases', () => ({ musicReleases: {
 const { default: Studio } = await import('./MusicReleaseStudioPage');
 
 beforeEach(() => {
+  rollout.enabled = true;
+  mediaHealthMount.mockClear();
   version.availability = [];
   version.assets = [];
   version.tracks = [];
@@ -183,4 +190,28 @@ it('does not upload a cover if the draft could not be saved', async () => {
     await screen.findByText('Conflicto de versión');
     expect(uploadAsset).not.toHaveBeenCalled();
   } finally { close(); }
+});
+
+
+async function openStudioIndex() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: Infinity } } });
+  client.setQueryData(['music-releases', 'mine', 101], []);
+  const view = render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/label/releases']}>
+    <Routes><Route path="/label/releases" element={<Studio />} /></Routes>
+  </MemoryRouter></QueryClientProvider>);
+  await screen.findByRole('heading', { name: 'Estudio de lanzamientos' });
+  return () => { view.unmount(); client.clear(); };
+}
+
+it.each(['absent', 'false'])('keeps new backend media-health hooks unmounted for %s rollout', async () => {
+  rollout.enabled = false;
+  const close = await openStudioIndex();
+  try {
+    expect(mediaHealthMount).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Estudio de lanzamientos' })).toBeTruthy();
+  } finally { close(); }
+});
+it('mounts the original media-health integration only for enabled rollout', async () => {
+  const close = await openStudioIndex();
+  try { expect(mediaHealthMount).toHaveBeenCalled(); } finally { close(); }
 });
