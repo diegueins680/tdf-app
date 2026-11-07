@@ -60,16 +60,16 @@ rollback. `--contract-only` checks the shipped handler query/bindings, public
 projection and expected-owner guard with guard-removal negative controls; this
 mode is not a PostgreSQL, compiled-handler or HTTP-authentication pass.
 
-Local Stack and PostgreSQL binaries are unavailable. Required CI compiles the
+At the original source checkpoint local Stack and PostgreSQL binaries were unavailable. Its required CI compiles the
 backend and executes the database runner. Client checks and their exact counts
 are recorded in PR #670; current-head native/HTTP qualification remains required.
 
-## Mobile contract publication blocker
+## Historical Mobile contract publication blocker
 
 Both clients were generated from the same OpenAPI contract and their bytes match.
-The generated Mobile file type-checks in isolation. However, the connected GitHub
-integration returns 403 `Resource not accessible by integration` for writes to
-`diegueins680/tdf-mobile`, and local Git has no credentials for that repository.
+The generated Mobile file type-checks in isolation. However, that historical connected GitHub
+integration returned 403 `Resource not accessible by integration` for writes to
+`diegueins680/tdf-mobile`, and local Git then had no credentials for that repository.
 The existing published Mobile pin is retained. The reproducible companion patch is
 `pending-contracts/artist-featured-track-mobile.patch` (base
 `7586be92f447faaf05d1f7d7073af6321ad1496a`); the source contract can also regenerate it.
@@ -93,3 +93,35 @@ plays, and all counts remain stable during a later observation window. The audio
 element identity check remains. This amended native case requires hosted rerun.
 The same older candidate's repository job failed its synthetic Docker cleanup
 check; no passing repository-wide or deployed claim is made for that execution.
+
+
+## Current protected-main composition — 2026-11-07
+
+The new candidate normally preserves protected main at `6033b84` and the published
+#592 URI repair history. Root-compatible Mobile pin `2c72f222` is the actual
+protected Mobile main snapshot: its complete 933-operation generated types match
+the root's canonical client, while retaining the qualified 0.5.1 decoder. The
+historical 403 is not a current permissions blocker. #592 protected root
+integration remains a distinct dependency; its work is not counted delivered by
+this candidate. Fresh root CI and genuine review are still required.
+
+The original 249 manifest objects and SQL bytes remain. A separate forward 250
+installs the canonical archived-reference guard on
+`music_artist_featured_track.artist_party_id`, under a lock acquired before FK
+and helper checks. No fake model-reference row, media grant or source-ownership
+rule is introduced. Populated rollback raises 55000 before dropping protection;
+empty rollback removes only this trigger and preserves the preference table.
+
+The existing owned PostgreSQL runner retains all 36 original assertion calls and
+executes eight additional guard/protocol controls, including unchanged archived
+history, replay, refusal/retention and missing-FK/helper negatives. The old 249
+schema fails the same archived-insert oracle. Canonical no-worker full 250
+apply/replay/schema checks pass locally; a missing guard passes the old verifier
+but fails the new one and passes after reviewed reinstallation. This is actual
+isolated PostgreSQL 16.13 evidence, not production or compiled HTTP qualification.
+
+The new frontend initiation paths default off. Enable the exact public rollout
+setting only when the ordinary backend/schema rollout supports them; it grants
+no permissions and creates no additional approval rule for compatible staged
+code integration. Once an asset/legacy identity is selected, denied access never
+falls back to its raw URL, irrespective of rollout selection.

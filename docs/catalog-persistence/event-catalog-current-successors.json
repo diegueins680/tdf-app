@@ -382,12 +382,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "7d6645cb45f6283defdc",
+      "currentId": "a3168fef11a2247fd9f4",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 249,
-      "change": "Preserve the exact 246-entry protected main 7fd0c0d manifest and its complete video/storage review graph. Append the original featured-track and health migrations and the forward browser-URL compatibility view, without rewriting earlier SQL. Preserve the prior player review independently. This execution registry grants no production execution authority.",
+      "valueCount": 250,
+      "change": "Preserve every original249migration object/SQL byte and complete review graph; append only the lock-first canonical archive guard for the raw featured-preference Party FK, introduced in6d7bf89fc. Populated rollback refuses before protection is dropped; canonical schema verification also rejects a missing guard. The231model registry is unchanged and actual-FK discovery already protects merge refusal. No production execution, media grant, deployment or release authorization.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -538,7 +538,8 @@
         "be0b1503a04f9fa295ee",
         "969410f2f45854cc54fc",
         "806180f5957fc4a7520f",
-        "4b9923e0291fcb70bfb4"
+        "4b9923e0291fcb70bfb4",
+        "7d6645cb45f6283defdc"
       ],
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",

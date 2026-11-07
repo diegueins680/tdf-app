@@ -1,12 +1,15 @@
+import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, jest } from '@jest/globals';
+const capture = jest.fn();
 const playerPause = jest.fn();
+jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture }) }));
 jest.unstable_mockModule('../player/PlayerProvider', () => ({ useOptionalPlayer: () => ({ pause: playerPause }) }));
 const { default: SessionVideoPreview } = await import('./SessionVideoPreview');
 const { PLAYER_TAKEOVER_EVENT } = await import('../player/types');
 
 describe('inline video playback boundary', () => {
-  beforeEach(() => { playerPause.mockClear(); jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {}); });
+  beforeEach(() => { capture.mockClear(); playerPause.mockClear(); jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {}); });
   afterEach(() => { jest.restoreAllMocks(); });
   it('loads no external frame before intent and stops/removes the old source on navigation', () => {
     const { container, rerender } = render(<SessionVideoPreview url="https://youtu.be/uRNyIMLiqU8" title="Session" />);
@@ -46,24 +49,55 @@ describe('inline video playback boundary', () => {
 });
 
 
-describe('global audio coordination preserves current video behavior', () => {
-  beforeEach(() => { playerPause.mockClear(); jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {}); });
+describe('source playback contracts with protected-main explicit intent', () => {
+  beforeEach(() => { capture.mockClear(); playerPause.mockClear(); jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {}); });
   afterEach(() => { jest.restoreAllMocks(); });
-
-it('keeps the current video intent boundary and pauses global audio on actual file play', () => {
-  const view = render(<SessionVideoPreview url="https://media.example.org/real.mp4" title="Session" />);
-  expect(view.container.querySelector('video')).toBeNull();
+it('records observable public file playback without exposing media URLs', () => {
+  render(<SessionVideoPreview url="https://media.example.com/session.mp4" title="Session" trackPublicPlayback />);
   fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
-  fireEvent.play(view.container.querySelector('video')!);
-  expect(playerPause).toHaveBeenCalledTimes(1);
+  const video = screen.getByLabelText('Session');
+  fireEvent.play(video); fireEvent.ended(video);
+  expect(capture.mock.calls.map((row) => row[0])).toEqual(['video_campaign_play_started', 'video_campaign_play_ended']);
+  expect(JSON.stringify(capture.mock.calls)).not.toContain('media.example.com');
+  fireEvent.error(video);
+  expect(screen.getByRole('alert')).toHaveTextContent('No pudimos reproducir');
+  expect(screen.getByRole('link')).toHaveAttribute('href', 'https://media.example.com/session.mp4');
 });
-it('pauses the existing inline file on player takeover without replacing its source', () => {
-  const view = render(<SessionVideoPreview url="https://media.example.org/real.mp4" title="Session" />);
+
+it('does not count private editor previews or provider frame loads as playback', () => {
+  const { rerender } = render(<SessionVideoPreview url="https://media.example.com/session.mp4" title="Preview" />);
   fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
-  const video = view.container.querySelector('video');
-  fireEvent(window, new Event(PLAYER_TAKEOVER_EVENT));
-  expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1);
-  expect(view.container.querySelector('video')).toBe(video);
+  fireEvent.play(screen.getByLabelText('Preview'));
+  rerender(<SessionVideoPreview url="https://youtu.be/msDxB2NU3c4" title="Provider" trackPublicPlayback />);
+  fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
+  fireEvent.load(screen.getByTitle('Provider'));
+  expect(capture).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['?resourcekey=0-example_key&usp=sharing', '?resourcekey=0-example_key'],
+  ['?resourcekey=key%2Bvalue%26other%3Dvalue&usp=sharing', '?resourcekey=key%2Bvalue%26other%3Dvalue'],
+  ['?usp=sharing', ''],
+  ['?resourcekey=', ''],
+])('preserves only a supplied Drive resource key in the preview (%s)', (sourceQuery, previewQuery) => {
+  const source = `https://drive.google.com/file/d/synthetic-file/view${sourceQuery}`;
+  render(<SessionVideoPreview url={source} title="Drive session" trackPublicPlayback />);
+  fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
+  expect(screen.getByTitle('Drive session')).toHaveAttribute('src',
+    `https://drive.google.com/file/d/synthetic-file/preview${previewQuery}`);
+  expect(screen.getByRole('link')).toHaveAttribute('href', source);
+  fireEvent.load(screen.getByTitle('Drive session'));
+  expect(capture).not.toHaveBeenCalled();
+});
+
+it('hands native video playback to and from the global transport without overlapping audio', () => {
+  const pause = jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
+  render(<SessionVideoPreview url="https://media.example.com/session.mp4" title="Video handoff" />);
+  fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
+  fireEvent.play(screen.getByLabelText('Video handoff'));
+  expect(playerPause).toHaveBeenCalledTimes(1);
+  window.dispatchEvent(new CustomEvent(PLAYER_TAKEOVER_EVENT));
+  expect(pause).toHaveBeenCalledTimes(1);
 });
 
 });
