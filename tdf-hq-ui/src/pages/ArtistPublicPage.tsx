@@ -3,6 +3,7 @@ import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/a
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { loadArtistCatalog } from '../api/artistCatalog';
 import MarkdownText from '../components/MarkdownText';
+import ArtistVideoLibrary from '../components/ArtistVideoLibrary';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -35,7 +36,6 @@ import { getActiveSession, useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import ArtistProfileImage from '../components/ArtistProfileImage';
 import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
-import SessionVideoPreview from '../components/SessionVideoPreview';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
@@ -461,7 +461,7 @@ export default function ArtistPublicPage() {
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to={buildArtistFollowAuthPath(profileLink, artistId, location.search)}
+                    to={buildArtistFollowAuthPath(profileLink, artistId, { search: location.search, hash: location.hash })}
                     startIcon={<FavoriteBorderIcon />}
                     sx={{ textTransform: 'none' }}
                   >
@@ -511,11 +511,12 @@ export default function ArtistPublicPage() {
         </section>
 
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-          {artist.apFeaturedVideoUrl && <Box sx={{ mb: 3 }}>
-            <Typography variant="h5" component="h2">Sesión destacada</Typography>
-            <SessionVideoPreview url={artist.apFeaturedVideoUrl} title={`${artist.apDisplayName} · Sesión en vivo`} trackPublicPlayback />
-          </Box>}
           <Stack spacing={2.5}>
+            {!hasToken && (
+              <Typography variant="body2" color="text.secondary">
+                {t('artistFollow.benefit', { artist: artist.apDisplayName })}
+              </Typography>
+            )}
             {resumeFollow && !isFollowing && (
               <Alert severity="info">{t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}</Alert>
             )}
@@ -556,6 +557,7 @@ export default function ArtistPublicPage() {
               </Alert>
             )}
 
+            <ArtistVideoLibrary artistId={artist.apArtistId} featuredUrl={artist.apFeaturedVideoUrl} featuredPoster={artist.apHeroImageUrl} artistName={artist.apDisplayName} requestedVideo={new URLSearchParams(location.search).get('video')} />
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography component="h2" variant="h6" fontWeight={800}>

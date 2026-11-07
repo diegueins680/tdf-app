@@ -2,19 +2,20 @@ import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
 
 // Browser integration with synthetic API fixtures, NOT real-server/authentication E2E.
-async function fixture(page, baseURL, authenticated, withVideo = false) {
+async function fixture(page, baseURL, authenticated, withVideo = false, artistId = 17) {
   const origin = new URL(baseURL).origin;
-  const state = { authenticated, followed: false, failNextFollow: false, failNextLogin: false, failNextSignup: false, authAttempts: [], writes: [], external: [] };
+  const state = { authenticated, followed: false, failNextFollow: false, failNextLogin: false, failNextSignup: false, videosUnavailable: false, authAttempts: [], writes: [], external: [] };
   const artist = {
-    apArtistId: 17, apDisplayName: 'Artista Sintética', apSlug: 'artista-sintetica',
+    apArtistId: artistId, apDisplayName: 'Artista Sintética', apSlug: 'artista-sintetica',
     apBio: 'Perfil ficticio de verificación local.', apFollowerCount: 0,
     apHasUserAccount: true, apGenreIds: [], apCity: 'Quito',
     ...(withVideo ? { apFeaturedVideoUrl: 'https://youtu.be/uRNyIMLiqU8' } : {}),
   };
-  const follow = { ffArtistId: 17, ffArtistName: artist.apDisplayName, ffStartedAt: '2026-09-14T12:00:00Z' };
+  const follow = { ffArtistId: artistId, ffArtistName: artist.apDisplayName, ffStartedAt: '2026-09-14T12:00:00Z' };
   await page.route('**/*', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
+    if (withVideo && url.pathname === '/campaign-platform/public/videos' && state.videosUnavailable) return route.fulfill({ status: 503, json: { error: 'Synthetic video library outage' } });
     if (withVideo && url.pathname === '/campaign-platform/public/videos') return route.fulfill({ json: [{
       id: 'a'.repeat(32), title: 'Sesión compartida de prueba', description: 'Créditos de prueba',
       url: 'https://youtu.be/uRNyIMLiqU8', poster: '',
@@ -41,9 +42,9 @@ async function fixture(page, baseURL, authenticated, withVideo = false) {
         preferences: { locale: 'es', currency: 'USD', timeZone: 'America/Guayaquil' } } })
       : route.fulfill({ status: 401, json: { error: 'unauthenticated' } });
     if (path === '/artists/artista-sintetica/public') return route.fulfill({ json: artist });
-    if (path === '/fans/artists/17/releases') return route.fulfill({ json: [] });
+    if (path === `/fans/artists/${artistId}/releases`) return route.fulfill({ json: [] });
     if (path === '/fans/me/follows' && request.method() === 'GET') return route.fulfill({ json: state.followed ? [follow] : [] });
-    if (path === '/fans/me/follows/17' && request.method() === 'POST') {
+    if (path === `/fans/me/follows/${artistId}` && request.method() === 'POST') {
       state.writes.push(path);
       if (state.failNextFollow) {
         state.failNextFollow = false;
@@ -61,6 +62,43 @@ async function fixture(page, baseURL, authenticated, withVideo = false) {
   return state;
 }
 
+test('session return uses the resolved canonical artist identity @mobile-flow @critical', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL, false, true, 535);
+  await page.goto('/a/artista-sintetica?video=youtube%3AuRNyIMLiqU8#artist-session');
+  const cta = page.getByRole('link', { name: 'Crear cuenta o ingresar para seguir', exact: true });
+  const authUrl = new URL(await cta.getAttribute('href'), baseURL);
+  const target = new URL(authUrl.searchParams.get('redirect'), baseURL);
+  expect(target.pathname).toBe('/a/artista-sintetica');
+  expect(target.searchParams.get('artistId')).toBe('535');
+  expect(target.searchParams.get('video')).toBe('youtube:uRNyIMLiqU8');
+  expect(target.hash).toBe('#artist-session');
+  expect(state.authAttempts).toHaveLength(0);
+  expect(state.writes).toHaveLength(0);
+});
+
+test('video library recovery keeps the selected session and never follows @mobile-flow @critical', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL, false, true);
+  state.videosUnavailable = true;
+  await page.route('**/artists/artista-sintetica/public', route => route.fulfill({ json: {
+    apArtistId: 17, apDisplayName: 'Artista Sintética', apSlug: 'artista-sintetica',
+    apFeaturedVideoUrl: 'https://youtu.be/pUtIlM8Bic4', apFollowerCount: 0,
+    apHasUserAccount: true, apGenreIds: [],
+  } }));
+  const destination = '/a/artista-sintetica?video=youtube%3AuRNyIMLiqU8#artist-session';
+  await page.goto(destination);
+  const unavailable = page.getByRole('alert').filter({ hasText: 'No pudimos encontrar esta sesión' });
+  await expect(unavailable).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ver video aquí', exact: true })).toHaveCount(0);
+  state.videosUnavailable = false;
+  await unavailable.getByRole('button', { name: 'Reintentar', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Sesión compartida de prueba' })).toBeVisible();
+  await page.getByRole('button', { name: 'Ver video aquí', exact: true }).click();
+  await expect(page.locator('iframe[title="Sesión compartida de prueba"]')).toHaveAttribute('src', /\/embed\/uRNyIMLiqU8/);
+  expect(new URL(page.url()).search).toBe(new URL(destination, baseURL).search);
+  expect(state.authAttempts).toHaveLength(0);
+  expect(state.writes).toHaveLength(0);
+});
+
 test('artist follow guest return stays local and never mutates @critical', async ({ page, baseURL }, testInfo) => {
   const state = await fixture(page, baseURL, false);
   await page.goto('/a/artista-sintetica', { waitUntil: 'domcontentloaded' });
@@ -73,6 +111,67 @@ test('artist follow guest return stays local and never mutates @critical', async
   expect(state.writes).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath('artist-follow-guest.png'), fullPage: true });
 });
+
+for (const mode of ['signup', 'login']) {
+  test(`shared artist session survives failed ${mode}, retry and confirmed follow @mobile-flow @critical`, async ({ page, baseURL }, testInfo) => {
+    const state = await fixture(page, baseURL, false, true);
+    state[mode === 'signup' ? 'failNextSignup' : 'failNextLogin'] = true;
+    const destination = '/a/artista-sintetica?video=youtube%3AuRNyIMLiqU8&utm_source=instagram#artist-session';
+    await page.goto(destination, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Puedes ver sus videos sin crear una cuenta.', { exact: false })).toBeVisible();
+    await page.getByRole('button', { name: 'Ver video aquí', exact: true }).click();
+    await expect(page.locator('iframe[title="Sesión compartida de prueba"]')).toHaveAttribute('src', /\/embed\/uRNyIMLiqU8/);
+    expect(state.authAttempts).toHaveLength(0);
+    expect(state.writes).toHaveLength(0);
+    await page.getByRole('link', { name: 'Crear cuenta o ingresar para seguir', exact: true }).click();
+    let authUrl = page.url();
+    const target = new URL(new URL(authUrl).searchParams.get('redirect'), baseURL);
+    expect(target.searchParams.get('video')).toBe('youtube:uRNyIMLiqU8');
+    expect(target.searchParams.get('utm_source')).toBe('instagram');
+    expect(target.hash).toBe('#artist-session');
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    let submit;
+    if (mode === 'signup') {
+      await dialog.getByLabel('Correo').fill('synthetic@example.test');
+      await dialog.getByLabel('Contraseña', { exact: false }).first().fill('synthetic-password-123');
+      submit = dialog.getByRole('button', { name: 'Crear e ingresar', exact: true });
+    } else {
+      await dialog.getByRole('button', { name: 'Ya tengo una cuenta', exact: true }).click();
+      await page.getByLabel('Usuario o correo').fill('synthetic@example.test');
+      await page.getByLabel('Contraseña', { exact: false }).first().fill('synthetic-password-123');
+      submit = page.getByRole('button', { name: 'Ingresar', exact: true });
+    }
+    authUrl = page.url();
+    await submit.click();
+    await expect.poll(() => state.authAttempts.length).toBe(1);
+    await expect(submit).toBeEnabled();
+    await expect(page.getByRole('alert').first()).toBeVisible();
+    expect(page.url()).toBe(authUrl);
+    expect(state.writes).toHaveLength(0);
+    await submit.click();
+    await expect(page.getByRole('button', { name: 'Seguir ahora', exact: true })).toBeEnabled();
+    expect(state.authAttempts).toHaveLength(2);
+    expect(new URL(page.url()).searchParams.get('video')).toBe('youtube:uRNyIMLiqU8');
+    expect(new URL(page.url()).hash).toBe('#artist-session');
+    expect(state.writes).toHaveLength(0);
+    state.failNextFollow = true;
+    await page.getByRole('button', { name: 'Seguir ahora', exact: true }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'No pudimos confirmar el cambio de seguimiento.' })).toBeVisible();
+    expect(new URL(page.url()).searchParams.get('resume')).toBe('follow');
+    await page.getByRole('button', { name: 'Seguir ahora', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Dejar de seguir a Artista Sintética' })).toBeEnabled();
+    expect(new URL(page.url()).searchParams.has('resume')).toBe(false);
+    expect(new URL(page.url()).searchParams.get('video')).toBe('youtube:uRNyIMLiqU8');
+    expect(new URL(page.url()).searchParams.get('utm_source')).toBe('instagram');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('button', { name: 'Dejar de seguir a Artista Sintética' })).toBeEnabled();
+    expect(state.writes).toHaveLength(2);
+    await expect(page.getByRole('heading', { name: 'Sesión compartida de prueba' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`artist-session-${mode}-confirmed.png`), fullPage: true });
+  });
+}
 
 test('artist follow requires keyboard consent and keeps intent on failure @critical', async ({ page, baseURL }, testInfo) => {
   const state = await fixture(page, baseURL, true);
