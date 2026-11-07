@@ -1,5 +1,5 @@
 {
-  "baseMain": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+  "baseMain": "47e270802a782631dd858ad8f45e8474c05e5a74",
   "qualifiedFullPlayerSource": "0dad14c4300bb618908e491c3e15a921389f1e84",
   "frontendAndBrowserChanges": [
     "tdf-hq-ui/src/api/generated/types.ts"
@@ -10,5 +10,9 @@
   "equivalentBackendTreesBeforeMainReconciliation": {
     "tdf-hq": "9ef8cc7b0af172634a9d7a58ddfd53d5a0006d29",
     "scripts": "92bf9a86eb69ad1b58aba4e52c6b6c7c668de8fa"
-  }
+  },
+  "reconciledPlayerSource": "4b7824841fcbf2f3bcb7e95adb5ceb93f60ec22d",
+  "migrationCount": 251,
+  "mobileMergeSource": "d238ca8e90abcf9e325ca5ea19bb5b014014439d",
+  "privacyCounterexample": "With actual directory schema, legacy grant returned 404 after artist visibility became private; pre-fix featured read returned 200 with saved reference. Setup failures retained separately."
 }

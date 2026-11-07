@@ -1,6 +1,6 @@
 # Music source health: backend delivery stage
 
-This candidate delivers server prerequisites for universal playback. Frontend runtime and browser tests match protected main f615c862b; only generated declarations change. The unified engine and its idle/resolving/ready/playing/paused/recovering/exhausted/error model remain in PR #670. This stage does not claim that production has the new player.
+This candidate delivers server prerequisites for universal playback. Frontend runtime and browser tests match protected main 47e270802; only generated declarations change. The unified engine and its idle/resolving/ready/playing/paused/recovering/exhausted/error model remain in PR #670. This stage does not claim that production has the new player.
 
 The database stores pending, valid, temporary and invalid observations by source kind, identity and version. Ingestion queues new sources; the trusted derivative pipeline records validated output. A resumable worker inserts at most 100 missing identities and claims one due source per loop. Claims use 90-second leases and current-version fencing; expired workers cannot commit over replacement sources or claims.
 

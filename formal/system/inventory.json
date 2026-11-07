@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "20daa1bd73dc231fc6fee6b288c4f46495f2c8dc",
+  "mobileRevision": "d238ca8e90abcf9e325ca5ea19bb5b014014439d",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -36,6 +36,7 @@
       "e2e/web/booking-catalog-recovery.spec.mjs",
       "e2e/web/booking-timezone.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
+      "e2e/web/chat-mobile-follow.spec.mjs",
       "e2e/web/chat-notification-navigation.spec.mjs",
       "e2e/web/checkout-readiness.spec.mjs",
       "e2e/web/community-discovery.spec.mjs",
@@ -299,6 +300,7 @@
       "scripts/fetch-ddex-ern432-schema.sh",
       "scripts/fixtures/artist-merch-mobile.mjs",
       "scripts/fixtures/merch-reputation-mobile.mjs",
+      "scripts/generate-app-icons.mjs",
       "scripts/generate-feature-audit-reports.mjs",
       "scripts/generate-identity-party-reference-view.mjs",
       "scripts/generate-mobile-feature-registry.mjs",
@@ -2166,6 +2168,8 @@
       "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql",
       "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
       "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+      "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
+      "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql",
       "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
@@ -3073,7 +3077,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "894858b4d3c8db474c85d5500ccc13740d38b9f4cfe640484b0b0658d2f05bef",
+      "sha256": "c83d359323f26012dc175a92735532016ecd57a2fc9072cefd57a05d33647254",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3197,9 +3201,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-36d988b722d46f36",
+      "path": "e2e/web/chat-mobile-follow.spec.mjs",
+      "sha256": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2b332f1e11171387",
       "path": "e2e/web/chat-notification-navigation.spec.mjs",
-      "sha256": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
+      "sha256": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3337,7 +3347,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78",
+      "sha256": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3709,7 +3719,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "70d4c8252a3dc2bb00016f596a56a7244c4fe5919c3ed10d70b3a772669b0cb9",
+      "sha256": "8eea6bb0b32f1291ff5b56b8dc2a073e3dd2fa9a3672948bcca42c108d33b35f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4153,7 +4163,7 @@
     {
       "id": "SURFACE-d6545235ef8b425c",
       "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
-      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "sha256": "f062c74466f16174217984005a9eaca71e00dd31d3613bfb46eca6682c3a39ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4703,6 +4713,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-42dfae51eec6762d",
+      "path": "scripts/generate-app-icons.mjs",
+      "sha256": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d046bc8ebef81bf4",
       "path": "scripts/generate-feature-audit-reports.mjs",
       "sha256": "b847760d68f69f6ef071fe8123390a3bf630b333f0aebacd4cc8d20e18f16f24",
@@ -5059,7 +5075,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "b0a966308df26779ea031b0760fb0ffa5e809cdca40c906ade5dd7642b96b28a",
+      "sha256": "3c62286d04d7afe8820c9b2407811f010151a5d6367b79ae3ac59631cb368116",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5095,7 +5111,7 @@
     {
       "id": "SURFACE-0ebd44c86ad332c6",
       "path": "scripts/lib/test-child-completion.mjs",
-      "sha256": "73f6d1e064be16aed833091c25a0dcf526b9e59dd6c19dc4a5712f5afe7c1da0",
+      "sha256": "b2254b43a28ad96b7c522a18fd57fa17479bfd783513f1f4bd056bc6c4fbf039",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5263,7 +5279,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "484ea2df389ea6d79307166fb0cb5cd5c067af08452a16d487b16a13902f4ecd",
+      "sha256": "05b41128cbd98c9786ab3b0841abe0bf35e4decd9d255e46c3442a3a182832db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5377,7 +5393,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
+      "sha256": "d4d7017b8d9ccc69e696acb8b80e3a44fe8b8c8f3a1224afbf30c12c46dbcc2f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5839,7 +5855,7 @@
     {
       "id": "SURFACE-20a85e843838a8c5",
       "path": "scripts/test-artist-featured-track.mjs",
-      "sha256": "4141553de9789a99da75bb81e67324f324bb8053a1c226ba992434de6b7d5ce9",
+      "sha256": "9869559e38353964bd5a0757b7f341d7d83c009a92c929ab583ed89201282758",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6085,7 +6101,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "1c95de4b651c0b41f47bf254d6a3e0dbb9b5d599465dafdce0f29c7a0d416edc",
+      "sha256": "8361ec320e36e51aa6eb4301ed1b455dd8fefebeadcc85e547e25332b7be6f48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6409,13 +6425,13 @@
     {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
-      "sha256": "5784ac3184ba8e7185b38d1aea8e4b8f52a264ecc3a89f5beaf35956ae18dca7",
+      "sha256": "4de497fa218a19b4cd1101f35cadcbe63e8676b12917b4f053a08f07df1c656e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6508907c85e1859b",
       "path": "scripts/test-music-release-api-e2e.sh",
-      "sha256": "42f759b6078704124a73f673c66b6bdfaf4f51fe8c886cf0d9e7fd836166b6ee",
+      "sha256": "2b9370fcca6f4ee2208ea21eebc0bfe457639f8411d8cc421d08c6f19ee8c4c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6439,7 +6455,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "ecc0d5ee612ca12e9ce2168bd489a2d1e0c24f9277fbcf76f42b29dc663d19c4",
+      "sha256": "9dab132988cd53ea2f568bc0822fad5db32fc14934f6b164d530c47d40d56994",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6499,7 +6515,7 @@
     {
       "id": "SURFACE-b6c843c3e1881f94",
       "path": "scripts/test-payment-arithmetic-verifier.py",
-      "sha256": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+      "sha256": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6547,7 +6563,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+      "sha256": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6829,7 +6845,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+      "sha256": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6889,7 +6905,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+      "sha256": "f42ff320583223be02b63438108ef11eb55ff8a385d169fa3435248097b53686",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6967,7 +6983,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+      "sha256": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7429,7 +7445,7 @@
     {
       "id": "SURFACE-a2ada5ea1a6d219a",
       "path": "tdf-hq-ui/public/manifest.json",
-      "sha256": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7",
+      "sha256": "d7b67201a7e31dc945d4fc7febf86e2a66aa00cc5b6ad91bf045772cf2e1b7cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10375,13 +10391,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
+      "sha256": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "554957039d5b90e5368a42c627ce91b4d39dcf7b5cec55816b91f1e8f4de423b",
+      "sha256": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15857,6 +15873,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-44a78052cff9ff41",
+      "path": "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
+      "sha256": "bfbb511663f6606bfa37cea7156bbddfe81227b22cd0884efdf4e6f830a92cfc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ecbeadaa704312ff",
+      "path": "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql",
+      "sha256": "d0fd69ee72fed44695d682a753bc5fc4cd0ce1636cabb19fcaf44c9e2e481a37",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-04b1246727e2f5e4",
       "path": "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
       "sha256": "e28257cbb4288c0185272133c1474dc744f67a8d6f0226a0920dc0be512e0cc6",
@@ -17059,7 +17087,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "11b4261396720d624f35a2c3a4e3e88319d8f0c73ceb94faa4c4e514b0b8f4f6",
+      "sha256": "c93b83a1f46c10e28865f9f2205d8e7851ac5dcbc072bae5e63645164f63bbd1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17143,7 +17171,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "3d19610d2adc4a4d435872fd7594359febaffd7c20238d966b290d67a8b93b95",
+      "sha256": "e77a10316cbaee7320f4af31e96c8399faba4d87a7aefcfdb1e80dbda98a25b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18055,7 +18083,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
+      "sha256": "cf44ce65b86c21a325c39ed22b6959ee646f68c5a0d72f1c68ba6eb9427961ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23155,7 +23183,7 @@
     },
     {
       "path": "docs/music-releases/artist-featured-track.md",
-      "sha256": "cef333e866e8e1f368316884a12f40e8dad3dacfd4096bc8d94286d33a0d9c87",
+      "sha256": "a25957f811e64ec6e0d2134211b1c51c816a10a535dd9e8f01560dc438601ca7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23393,7 +23421,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "2962d1c92b81f7822290f95ce8c95379dc90cba75b812f37da0f9548b6f079c1",
+      "sha256": "a11ca4912bd5804a352eadfaa2b3a42e7e462eabba6d44ac64c7006a2c99423f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23421,7 +23449,7 @@
     },
     {
       "path": "docs/music-releases/universal-player-state.md",
-      "sha256": "1bfa99e59af46b3b00c82655ca7038657259d25a930573fbe48085bcde0a4e0d",
+      "sha256": "4016c0d99f00f21d015e17df6fbf60f55284d3cede38079963bf0227aa20ee72",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29385,7 +29413,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "daede6c26a448b034729db6a263acc506a4788f3c25e1c1a1f681a5217455e00",
+      "sha256": "f17d2e0a91caa999a1717b45d3b3548a58cc1bd2a38bcdef4226548454daab80",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -29405,8 +29433,15 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/app-brand-icons.md",
+      "sha256": "a51e898bd9a84f849dc75a75ca0ecc23fbc693b3f709be9bdee621d9e194c9e8",
+      "authority": "inferred",
+      "authorityBasis": "Status: approved by the product owner on 2026-10-29 for this visual correction.",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/assurance-report.md",
-      "sha256": "4349c7c347ca316e62a8068867c9d63390834b8360702f45c80200a9fb865ee1",
+      "sha256": "1e4474ed41bc00682d9459c32c748d05f891fbe8950ef199463ce42f807bfbeb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29434,7 +29469,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "5c7c7a228ad56bafd07f331eb40c7a4dbcbaede0cd117cb626aa6bdb9f0d47a1",
+      "sha256": "110491315eee899949c31a958e2c57d2d0fe2faccce46a3506e6e616a720e694",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29588,14 +29623,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "fecc3f6a7bb2da3cb62767f0a22b190b4cd04a00a16e2e62ed7d8286258cf12f",
+      "sha256": "1c0ebc90035f3f4cefe817c052bfaf6e2710a0d23052abfeb24b4c62d12815de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "80e14859fa727ff124a8b6ee6246b12fdfc7c4b48267054ae32361a641472dbd",
+      "sha256": "03daf0b423977b5c66861f129f7e4e745b875e55dfeba33e1e64f12523ac5cbe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29617,6 +29652,13 @@
     {
       "path": "formal/system/event-finance-browser-precision.md",
       "sha256": "1fb729d2150589ce5074884f77f9747b5b79ca6ad717ba7e6c72c733e24a65c5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/event-finance-report-currency.md",
+      "sha256": "69015488aae669c32821e6be4ef88524e10d486e284adb97258c2b8de0490b9f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30113,7 +30155,7 @@
     },
     {
       "path": "formal/system/payment-arithmetic.md",
-      "sha256": "12a4062aaf08facfbb3ecdb71ddc105b71a72009f1bdf607db4aac0bf48274c0",
+      "sha256": "49d57299ce6abd59eb2ad54e4d314fdb9cbc223dacfa9eacd63d2159919c20c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30169,7 +30211,7 @@
     },
     {
       "path": "formal/system/proof-certificates.md",
-      "sha256": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
+      "sha256": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30211,7 +30253,7 @@
     },
     {
       "path": "formal/system/receipt-admission.md",
-      "sha256": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
+      "sha256": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30253,14 +30295,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "578b97292ec03942925c4e090d9d1ec1d17cb638ad3e5a9df1397b0351840064",
+      "sha256": "867336abfa8d87a1c46c828d3d63ebf918f9bb578b2575e64753a74c381d2575",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "67e8b2e4fc1d6d9cb1589942a30134b484c28aeb86655aa3081fd90fd9444e51",
+      "sha256": "e80a93b4baf24c1ad660c241c9135a507f6712cb48bbdccac2ee2091822f3892",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

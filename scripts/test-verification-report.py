@@ -216,7 +216,7 @@ class AssuranceTests(unittest.TestCase):
             categories = result['metrics']['obligationsByCategory']
             self.assertEqual(categories['source-derived-authorization-SMT'],
                              {'PROVEN': 0, 'REFUTED': 1, 'UNPROVEN': 2, 'NOT_APPLICABLE': 0})
-            self.assertEqual(categories['source-derived-SMT']['PROVEN'], 4)
+            self.assertEqual(categories['source-derived-SMT']['PROVEN'], 6)
             self.assertEqual(categories['source-derived-recovery-SMT']['PROVEN'], 4)
             self.assertTrue(all(row['status'] == 'UNPROVEN' for row in result['supportingAlgebraLemmas']))
             self.assertFalse(result['execution']['passed'])
@@ -262,7 +262,7 @@ class AssuranceTests(unittest.TestCase):
                     self.assertEqual(report.run(output, False), 1)
                 result = json.loads((output/'report.json').read_text())
                 self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-SMT'],
-                                 {'PROVEN': 0, 'REFUTED': 0, 'UNPROVEN': 4, 'NOT_APPLICABLE': 0})
+                                 {'PROVEN': 0, 'REFUTED': 0, 'UNPROVEN': 6, 'NOT_APPLICABLE': 0})
                 self.assertFalse(result['release']['executionAllowed'])
                 self.assertFalse((output/'arithmetic-counterexample-replay.json').exists())
 
@@ -283,7 +283,7 @@ class AssuranceTests(unittest.TestCase):
             self.assertEqual(report.run(output, False), 1)
             result = json.loads((output/'report.json').read_text())
             self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-SMT'],
-                             {'PROVEN': 0, 'REFUTED': 0, 'UNPROVEN': 4, 'NOT_APPLICABLE': 0})
+                             {'PROVEN': 0, 'REFUTED': 0, 'UNPROVEN': 6, 'NOT_APPLICABLE': 0})
             replay = json.loads((output/'arithmetic-counterexample-replay.json').read_text())
             self.assertEqual(next(r['result'] for r in replay if r['id'] == 'capture-safety'), 'unsat')
 
@@ -380,7 +380,7 @@ class AssuranceTests(unittest.TestCase):
                 (directory/name).write_bytes(content)
                 artifacts.append({'id': identity, 'file': name, 'expected': expected,
                                   'actual': expected, 'sha256': report.sha(content)})
-            self.assertEqual(len(report.replay_arithmetic(directory, artifacts)), 10)
+            self.assertEqual(len(report.replay_arithmetic(directory, artifacts)), 16)
             for artifact in artifacts:
                 if artifact['expected'] != 'unsat':
                     continue
@@ -412,7 +412,7 @@ class AssuranceTests(unittest.TestCase):
         self.assertTrue(all(r['status'] == 'UNPROVEN' for r in result['requirements']))
         self.assertTrue(all(o['status'] == 'UNPROVEN' for o in result['obligations']
                             if o['category'] in ('implementation', 'refinement')))
-        self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-SMT']['PROVEN'], 4)
+        self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-SMT']['PROVEN'], 6)
         self.assertFalse(result['release']['executionAllowed'])
         self.assertEqual(result['release']['acceptedRisks'], [])
         self.assertEqual(set(result['release']['criticalUnprovenRequirements']),
@@ -508,6 +508,33 @@ class AssuranceTests(unittest.TestCase):
             self.assertEqual(matrix['metrics']['obligationsByCategory']['source-derived-SMT']['PROVEN'], 0)
             self.assertFalse(matrix['release']['executionAllowed'])
 
+    def test_caller_counterexample_gets_its_own_refuted_obligation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root/'scripts').mkdir()
+            script = root/'scripts/verify-payment-arithmetic.py'
+            shutil.copyfile(ROOT/'scripts/verify-payment-arithmetic.py', script)
+            source = root/'tdf-hq/src/TDF/Commerce/StateMachine.hs'
+            source.parent.mkdir(parents=True)
+            source.write_text((ROOT/'tdf-hq/src/TDF/Commerce/StateMachine.hs').read_text().replace(
+                '[ paymentAuthorizedMinor lifecycle\n      , paymentCapturedMinor lifecycle',
+                '[ paymentCapturedMinor lifecycle'))
+            output = root/'counterexample'
+            run = subprocess.run([sys.executable, str(script), '--output', str(output)],
+                                 capture_output=True, timeout=180)
+            self.assertEqual(run.returncode, 1)
+            receipt = json.loads((output/'result.json').read_text())
+            replay = report.replay_smt(output, receipt['artifacts'], report.ARITHMETIC_EXPECTATIONS,
+                                       complete=False)
+            refuted = [r['id'] for r in replay if r['expected'] == 'unsat' and r['result'] == 'sat']
+            self.assertEqual(refuted, ['capture-caller-precondition'])
+            result = report.build_report(self.requirements, self.provenance, False, 'counterexample', refuted)
+            obligation = next(o for o in result['obligations'] if o['id'] == 'SYS-MONEY-001:caller-precondition')
+            self.assertEqual(obligation['status'], 'REFUTED')
+            self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-SMT'],
+                             {'PROVEN': 0, 'REFUTED': 1, 'UNPROVEN': 5, 'NOT_APPLICABLE': 0})
+            self.assertFalse(result['release']['executionAllowed'])
+
     def test_export_replays_all_claims_and_refuses_reuse(self):
         import z3
         with tempfile.TemporaryDirectory() as tmp:
@@ -516,8 +543,8 @@ class AssuranceTests(unittest.TestCase):
             run = subprocess.run(command, capture_output=True, timeout=180)
             self.assertEqual(run.returncode, 0, run.stderr.decode())
             receipt = json.loads((target/'result.json').read_text())
-            self.assertEqual(len(receipt['artifacts']), 10)
-            self.assertEqual(len(report.replay_arithmetic(target, receipt['artifacts'])), 10)
+            self.assertEqual(len(receipt['artifacts']), 16)
+            self.assertEqual(len(report.replay_arithmetic(target, receipt['artifacts'])), 16)
             for artifact in receipt['artifacts']:
                 data = (target/artifact['file']).read_bytes()
                 self.assertEqual(report.sha(data), artifact['sha256'])
