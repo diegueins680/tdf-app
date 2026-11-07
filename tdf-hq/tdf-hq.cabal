@@ -277,6 +277,9 @@ library
     TDF.Commerce.DepositPolicy
     TDF.Commerce.DomoCancellation
     TDF.Commerce.DomoCancellationStore
+    TDF.Commerce.DomoRefundStore
+    TDF.Routes.DomoRefunds
+    TDF.Server.DomoRefunds
     TDF.Profiles.ArtistVisibility
     TDF.Social.AccountOwnership
     TDF.Social.AccountOwnershipStore

@@ -404,6 +404,7 @@ spec = do
   notificationIdentitySpec
   RefundSafety.spec
   RefundRecovery.spec
+  DomoCancellationRuntime.spec
   configured <- runIO (lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL")
   case configured of
     Nothing -> pure ()

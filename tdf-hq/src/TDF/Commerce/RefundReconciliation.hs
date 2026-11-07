@@ -9,9 +9,11 @@ module TDF.Commerce.RefundReconciliation
   , readRefundRecovery
   , queryReady
   , reconcileKnownRefund
+  , reconcileKnownRefundGuarded
   ) where
 
 import Control.Exception.Safe (tryAny)
+import Control.Monad (unless)
 import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -64,7 +66,16 @@ reconcileKnownRefund
   -> (RefundQueryBinding -> IO Bool)
   -> (RefundQueryBinding -> IO (Either RefundRecoveryError RefundQueryOutcome))
   -> IO (Either RefundRecoveryError RefundRecoveryView)
-reconcileKnownRefund pool ref actor configured query
+reconcileKnownRefund = reconcileKnownRefundGuarded (pure True)
+
+-- The guard is reevaluated under the same transaction as admission/completion;
+-- callers may lock current sessions and roles here without holding them over HTTP.
+reconcileKnownRefundGuarded
+  :: SqlPersistT IO Bool -> ConnectionPool -> Refund.RefundReference -> Int64
+  -> (RefundQueryBinding -> IO Bool)
+  -> (RefundQueryBinding -> IO (Either RefundRecoveryError RefundQueryOutcome))
+  -> IO (Either RefundRecoveryError RefundRecoveryView)
+reconcileKnownRefundGuarded authorized pool ref actor configured query
   | actor <= 0 = pure (Left RefundRecoveryUnavailable)
   | otherwise = safely $ do
       initial <- runBounded (loadTarget ref) pool
@@ -85,6 +96,8 @@ reconcileKnownRefund pool ref actor configured query
                   (either (const (Left RefundRecoveryQueryFailed)) id response)) pool
   where
     prepare binding correlation = do
+      allowed <- authorized
+      unless allowed $ fail "Refund authority revoked"
       lockRefund ref
       target <- loadTarget ref
       case target of
@@ -101,6 +114,8 @@ reconcileKnownRefund pool ref actor configured query
                   audit record actor correlation "requested"
                   pure (Right current)
     apply (_, binding) correlation configReady now response = do
+      allowed <- authorized
+      unless allowed $ fail "Refund authority revoked"
       lockRefund ref
       current <- loadTarget ref
       case current of
@@ -154,7 +169,7 @@ loadTarget ref = do
         \ JOIN commerce_payment_attempt attempt ON attempt.id=binding.payment_attempt_id\
         \ JOIN commerce_checkout_session checkout ON checkout.id=attempt.checkout_id\
         \ WHERE checkout.id=?::uuid AND attempt.id=?::uuid\
-        \ AND checkout.domain_type IN ('mixing_mastering','event_ticket_order') AND attempt.status='succeeded'\
+        \ AND checkout.domain_type IN ('mixing_mastering','event_ticket_order','domo_event_quote') AND attempt.status='succeeded'\
         \ AND binding.resource_type='capture' AND binding.provider='paypal'\
         \ AND binding.provider=attempt.provider AND binding.environment=attempt.environment\
         \ AND binding.merchant_account_ref=attempt.merchant_account_ref\
@@ -162,11 +177,17 @@ loadTarget ref = do
         \ AND binding.currency=attempt.currency AND checkout.currency=attempt.currency\
         \ AND checkout.environment=attempt.environment\
         \ AND attempt.provider=? AND attempt.environment=? AND attempt.merchant_account_ref=?\
-        \ AND attempt.currency=?"
+        \ AND attempt.currency=?\
+        \ AND (checkout.domain_type<>'domo_event_quote' OR EXISTS (\
+        \ SELECT 1 FROM domo_quote_cancellation c JOIN domo_event_quote_runtime q ON q.id=c.domo_quote_id\
+        \ WHERE c.refund_id=?::uuid AND q.checkout_id=checkout.id AND q.quote_status='cancelled'\
+        \ AND c.refund_due_minor=? AND c.currency=?))"
         [ PersistText (Checkout.checkoutReferenceId (Refund.rrCheckout record))
         , PersistText (Checkout.paymentAttemptReferenceId (Refund.rrPaymentAttempt record))
         , PersistText (Refund.rrProvider record), PersistText (Refund.rrEnvironment record)
         , PersistText (Refund.rrMerchantRef record), PersistText (Refund.rrCurrency record)
+        , PersistText (Refund.refundReferenceId ref),PersistInt64 (Refund.rrAmountMinor record)
+        , PersistText (Refund.rrCurrency record)
         ] :: SqlPersistT IO [Single Text]
       pure $ case (captures, Refund.rrProviderRefundId record, Refund.rrEnvironment record) of
         ([Single capture], Just refundId, environment)
@@ -233,6 +254,7 @@ completeDomainRefund verified = do
   case domains of
     [Single "event_ticket_order"] -> Right <$> TicketRefund.completeTicketRefund verified
     [Single "mixing_mastering"] -> Refund.recordVerifiedRefund verified
+    [Single "domo_event_quote"] -> Refund.recordVerifiedRefund verified
     _ -> pure (Left "Unsupported refund domain")
 
 audit :: Refund.RefundRecord -> Int64 -> Text -> Text -> SqlPersistT IO ()

@@ -1,0 +1,180 @@
+# Devoluciones por cancelación del Domo
+
+Origen histórico: PR #691, base `593b1f286b75e31338d28a03f94be05a08b3777c`.
+La PR #691 ya se integró; esta reconciliación conserva sus correcciones y el
+main protegido `f615c862b1a7d50406cc0506d21d7650e607fa5f`.
+No autoriza activar proveedores, aplicar migraciones en producción ni devolver dinero real.
+Conserva AUTHORITY-093, PAY-DOMO-CANCEL-001 y sus importes/versiones aprobados.
+
+## Circuito operativo
+
+1. El cliente cancela usando el token privado de su cotización, o un administrador
+   cancela por el cliente/TDF. Se guardan política, anticipo/saldo cobrado, retención
+   e importe debido. Se libera la fecha. La deuda de devolución permanece abierta.
+2. Si canceló el cliente, `POST /admin/domo/quotes/{quoteId}/cancel` crea la solicitud
+   por el importe ya registrado. Este paso no liquida la deuda ni la conciliación.
+3. Otra persona con administración estricta y acceso al módulo Admin llama
+   `POST /admin/domo/quotes/{quoteId}/refund/approve`. No contacta al proveedor.
+4. `POST .../refund/execute` consume una única autorización persistente. El
+   solicitante no puede ejecutarla. Un reintento devuelve el estado guardado.
+5. Se verifica el resultado efectivo y se contabiliza la devolución. Solo entonces
+   se cierra la excepción `domo_cancellation_refund_due`, en la misma transacción
+   que el asiento balanceado y la nota de crédito canónica.
+
+Todos los endpoints administrativos usan bearer auth. Se revalidan sesión,
+roles y permisos actuales bajo bloqueo antes de escribir; no se mantienen
+bloqueos de base de datos mientras se espera HTTP. `GET .../refund` consulta
+el estado y, para devoluciones manuales, la referencia segura del comprobante
+y las identidades/fechas de registro y confirmación. La página privada de la cotización restaura los importes y el estado
+persistido al recargar. Aprobación/procesamiento nunca se presentan como devolución.
+
+## Proveedores disponibles en esta implementación
+
+| Proveedor del cobro original | Ejecución de esta ruta | Confirmación |
+| --- | --- | --- |
+| PayPal | Adaptador compartido, un POST por devolución; requiere captura original exacta | GET autenticado del refund conocido, con captura, entorno, comercio, moneda e importe exactos y estado COMPLETED |
+| Datafast | Intervención manual; esta ruta no tiene un adaptador automático habilitado | Comprobante inmutable y revisión por otra persona |
+| Otros proveedores ya registrados en un checkout elegible | Intervención manual; no se activa automáticamente ningún adaptador | Mismo circuito de evidencia independiente |
+
+Esta tabla describe los adaptadores cualificados del repositorio, no una
+limitación comercial de las APIs externas. No reutiliza las aprobaciones de
+servicios, entradas o mercancía: sus contratos vinculan otros tipos de pedido.
+Se reutilizan RefundStore, su reserva de fondos y barrera de ejecución,
+el transporte PayPal acotado y RefundReconciliation con autorización actual.
+El asiento del Domo revierte `revenue.domo_event_quote`, no ingresos del estudio.
+
+PayPal requiere `checkout.paypal.refunds` habilitado explícitamente incluso en
+sandbox, `PAYPAL_REFUND_RECONCILIATION_ENABLED=true`, credenciales del entorno y
+comercio originales, la bandera de consulta y las capacidades cualificadas de
+`RefundReconciliation.queryReady`. Obtener OAuth ocurre antes de consumir el
+permiso de POST. La respuesta del POST, incluso COMPLETED, conserva estado
+processing hasta una lectura autenticada mediante `POST .../refund/reconcile`.
+
+Un timeout, rechazo, estado pendiente, identidad desconocida o evidencia distinta
+mantiene los fondos reservados y la excepción abierta. No hay otro POST automático
+ni liberación de reserva por transcurso del tiempo. Si no se conoce el refund ID,
+un operador investiga el registro del proveedor usando el ID canónico como
+PayPal-Request-Id. Puede registrar el ID encontrado mediante
+`POST .../refund/provider-reference` con `{"providerRefundId":"ID-ENCONTRADO"}`;
+esto solo vincula un candidato inmutable para consulta. Después debe usar
+`reconcile`, que valida la evidencia completa. No se inventa evidencia ni se
+vuelve a enviar dinero.
+
+## Comprobantes manuales
+
+La bandera `domo.refund_manual` nace apagada en ambos entornos. Su activación
+requiere un equipo que ejecute la devolución externa y revise el comprobante.
+`execute` registra el traspaso manual; no hace transferencias ni marca dinero devuelto.
+
+Después de devolver el dinero externamente, una persona distinta del solicitante
+registra `POST .../refund/manual-evidence` con:
+
+```json
+{
+  "externalReference": "REFERENCIA-DEL-PAGO-DEVUELTO",
+  "evidenceReference": "secure-receipt:IDENTIFICADOR-INTERNO",
+  "amountMinor": 100352,
+  "currency": "USD",
+  "occurredAt": "2026-11-02T17:00:00Z"
+}
+```
+
+Debe coincidir exactamente con la solicitud aprobada. Se conserva la referencia
+segura del comprobante, no datos bancarios o credenciales. Otra persona distinta
+del registrador y del solicitante verifica el movimiento real y llama
+`POST .../refund/confirm-manual`. Un comprobante externo no puede reutilizarse
+para otra devolución del mismo proveedor, comercio y entorno. Los reintentos y
+confirmaciones concurrentes no duplican el asiento ni la nota de crédito.
+Este circuito exige una verificación humana real: el backend no puede comprobar
+por sí solo un documento de un proveedor sin adaptador de consulta.
+
+## Migración y recuperación
+
+La migración es aditiva. La vista de obligaciones pendientes ahora incluye
+solicitudes/aprobaciones/procesamientos/errores hasta el éxito efectivo. Reabre
+solo excepciones de cancelación cerradas prematuramente por el código propuesto;
+conserva las notas y audita la reapertura; también hace visibles las solicitudes
+antiguas sin excepción de cola. No cambia importes ni estados financieros.
+Un guardián SQL impide que la administración genérica resuelva o ignore la deuda
+antes de su confirmación efectiva. Su rollback rechaza borrar historial.
+La política de cancelación aprobada y sus migraciones originales no se reescriben.
+
+La admisión de capturas y la cancelación comparten los bloqueos de cotización y
+checkout. Una captura persistida en created ya bloquea la rama de cancelación sin
+cobro antes de que responda HTTP. Un resultado de captura desconocido exige
+conciliación, no un nuevo intento con otra clave.
+
+## Validación
+
+- `npm run typecheck:ui`
+- `npm run test --workspace=tdf-hq-ui -- --runTestsByPath src/__tests__/DomoQuoteCheckoutPage.test.tsx`
+- `python3 formal/payments/domo_refund_lifecycle.py` y la misma orden con `-O`.
+- `stack test`, con la versión fijada en `tdf-hq/stack.yaml`.
+- `sh scripts/test-provider-retry-runtime.sh` en una base PostgreSQL nueva y aislada.
+  Incluye las pruebas del Domo, los otros dominios y el esquema completo revisado.
+- `node scripts/inspect-compiled-api.mjs --binary ... --output ...` compara las
+  rutas compiladas con la declaración y el OpenAPI actualizado.
+
+Las pruebas de proveedor inyectan conexiones HTTP con respuestas sintéticas;
+no utilizan cuentas reales, ni siquiera para consultas. El modelo explícito es
+acotado y tiene controles que detectan reejecución y cierre prematuro. No demuestra
+refinamiento de todo el sistema; las pruebas de runtime cubren Haskell y SQL.
+
+## Otras observaciones de #691
+
+Este cambio atiende la aprobación/ejecución ausente, el cierre anticipado,
+la carrera captura/cancelación, la restauración del resumen y el reporte de fallo
+oculto por `errexit`, y hace determinista el encabezado no hexadecimal de
+la prueba Meta. El generador CORS ya exigía una letra en la base inspeccionada;
+no se modificó. Las observaciones históricas de #691 sobre validación SQL del depósito, tip
+idempotente y propiedad de cuentas sociales están integradas en el main actual;
+sus módulos y pruebas se conservan. No se atribuyen esas correcciones al nuevo
+circuito de reembolsos.
+
+## Dependencia del contrato móvil
+
+El contrato añade siete operaciones administrativas de devolución y exige un
+cliente generado desde la declaración Haskell compilada de la composición actual.
+`docs/payments/domo-mobile-generated-client.patch` conserva el artefacto histórico
+sobre `f4c7aba45dc153db8809dbe194bc826ff615ef88`; no es un parche apto para
+aplicar sin reconciliación al cliente actual. El error histórico de escritura
+`403 Resource not accessible by integration` describe aquel proveedor y fecha,
+no la autoridad actual de la CLI.
+
+El nuevo cliente compatible debe preservar los contratos canónicos actuales y la
+corrección URI de #592, además de los contratos futuros que ya existan en el main
+móvil. El gitlink de Root debe seleccionar exactamente el contexto de su propia
+API; la comprobación existente exige que esa revisión sea alcanzable desde el
+main móvil mediante una integración legítima. No se relajan la generación, la
+comparación de deriva ni la regla de ascendencia. La publicación como borrador
+no acredita que la dependencia móvil esté entregada ni autoriza una integración
+protegida antes de sus comprobaciones y revisión independiente.
+
+## Reconciliación y alcance de la verificación de 2026-11-07
+
+El manifiesto conserva exactamente las 246 entradas del main protegido y añade
+la migración original del circuito como entrada 247, con su introducción y su
+rollback originales. Los números son posiciones del manifiesto; sus IDs y rutas
+no cambian. Los recibos de 26 casos Domo, 344 casos de proveedor y 236 migraciones
+pertenecen a la fuente histórica y no se presentan como ejecución de esta unión.
+
+La barrera de admisión conserva ambos predicados de origen/main y vincula la
+cotización al checkout esperado después del límite de guardado, antes de crear
+intentos o contactar al proveedor. Cancelación y captura toman primero el registro
+de runtime y después el checkout; los escenarios de concurrencia observan la
+relación real de bloqueo, sin depender del orden de bloqueo de un plan JOIN.
+
+Un estado de captura `failed` sin resultado autoritativo continúa siendo incierto.
+La antigua prueba positiva basada solo en ese estado se sustituye por un rechazo
+HTTP 409 con conservación de la reserva, deuda y contabilidad. Una cotización
+separada sin intento de pago conserva la prueba legítima de cancelación sin cobro.
+No se fabrica un estado de cancelación confirmado por proveedor. El contador de
+transporte inyectado corresponde al ejecutor de reembolso; la ruta pública de
+cancelación realiza únicamente la transacción de base de datos.
+
+Las comprobaciones locales nuevas se registran con sus fuentes y resultados
+reales. La compilación, el esquema completo, los casos financieros/concurrentes,
+el contrato móvil y las comprobaciones obligatorias alojadas deben constar por
+separado; ningún resultado histórico los sustituye. Las proyecciones condicionales
+de autorización y expiración de recuperación de cuenta no prueban refinamiento
+de estos nuevos endpoints ni la recuperación financiera del reembolso.

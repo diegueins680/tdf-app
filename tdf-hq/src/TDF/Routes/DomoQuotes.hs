@@ -109,6 +109,7 @@ data PublicDomoQuoteDTO = PublicDomoQuoteDTO
   , holdExpiresAt     :: UTCTime
   , termsAcceptedAt   :: Maybe UTCTime
   , depositPaidAt     :: Maybe UTCTime
+  , cancellation      :: Maybe PublicDomoCancellationDTO
   , paymentMethods    :: [Text]
   } deriving (Eq, Show, Generic)
 

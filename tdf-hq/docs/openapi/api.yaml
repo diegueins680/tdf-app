@@ -8989,6 +8989,147 @@ paths:
         '404': { description: Quote not found }
         '409': { description: Quote cannot be cancelled or the refund request was refused }
         '503': { description: No approved cancellation policy exists }
+  /admin/domo/quotes/{quoteId}/refund:
+    get:
+      tags: [Admin]
+      operationId: getDomoRefund
+      summary: Read the bound cancellation refund
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/approve:
+    post:
+      tags: [Admin]
+      operationId: approveDomoRefund
+      summary: Approve independently without contacting the provider
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/execute:
+    post:
+      tags: [Admin]
+      operationId: executeDomoRefund
+      summary: Claim one execution permit; automatic PayPal POST or manual handoff
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/reconcile:
+    post:
+      tags: [Admin]
+      operationId: reconcileDomoRefund
+      summary: Query a known PayPal refund; exact completion alone settles the obligation
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/manual-evidence:
+    post:
+      tags: [Admin]
+      operationId: recordDomoManualRefundEvidence
+      summary: Record immutable evidence of a manual refund without completing it
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DomoManualRefundEvidence' } } }
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/confirm-manual:
+    post:
+      tags: [Admin]
+      operationId: confirmDomoManualRefund
+      summary: Independently verify the recorded receipt and post the canonical refund
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/provider-reference:
+    post:
+      tags: [Admin]
+      operationId: bindDomoRefundProviderReference
+      summary: Record an operator-discovered PayPal refund ID for exact authenticated readback
+      description: Current strict administrator distinct from the requester. A query candidate is not evidence of returned money. The original processing fence and existing provider identity are retained; this route never issues a refund POST.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DomoRefundProviderReference' } } }
+      responses:
+        '200': { description: Current processing refund and its immutable query candidate, content: { application/json: { schema: { type: object } } } }
+        '400': { description: Malformed identifier }
+        '401': { description: Current authenticated session required }
+        '403': { description: Strict administrator and Admin module access required }
+        '409': { description: Provider identity, binding or refund state conflicts }
   /fans/me/notifications:
     get:
       tags: [Notifications]
@@ -12199,7 +12340,7 @@ components:
         retainedMinor: { type: integer, format: int64, minimum: 0 }
         refundDueMinor: { type: integer, format: int64, minimum: 0, description: retainedMinor + refundDueMinor equals the collected money }
         currency: { type: string, pattern: '^[A-Z]{3}$' }
-        refundStatus: { type: string, enum: [none, awaiting_operator, requested] }
+        refundStatus: { type: string, enum: [none, awaiting_operator, requested, approved, processing, succeeded, failed, cancelled] }
         alreadyCancelled: { type: boolean, description: True when the quote was cancelled earlier and the stored record is returned }
     DomoQuoteCancelRequest:
       type: object
@@ -12208,6 +12349,22 @@ components:
       properties:
         canceller: { type: string, enum: [customer, tdf] }
         note: { type: string, maxLength: 500 }
+    DomoRefundProviderReference:
+      type: object
+      additionalProperties: false
+      required: [providerRefundId]
+      properties:
+        providerRefundId: { type: string, minLength: 1, maxLength: 256, pattern: '^[A-Za-z0-9_.-]+$' }
+    DomoManualRefundEvidence:
+      type: object
+      additionalProperties: false
+      required: [externalReference, evidenceReference, amountMinor, currency, occurredAt]
+      properties:
+        externalReference: { type: string, maxLength: 256, pattern: '^[A-Za-z0-9_.-]+$' }
+        evidenceReference: { type: string, minLength: 16, maxLength: 256, description: Secure internal reference to the actual receipt; never a credential or raw bank document }
+        amountMinor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        occurredAt: { type: string, format: date-time }
     PublicDomoQuoteLine:
       type: object
       additionalProperties: false
@@ -12256,6 +12413,9 @@ components:
         holdExpiresAt: { type: string, format: date-time }
         termsAcceptedAt: { type: string, format: date-time, nullable: true }
         depositPaidAt: { type: string, format: date-time, nullable: true }
+        cancellation:
+          nullable: true
+          allOf: [{ $ref: '#/components/schemas/PublicDomoCancellation' }]
         paymentMethods:
           type: array
           items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }

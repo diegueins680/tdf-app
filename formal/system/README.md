@@ -39,6 +39,9 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [uri-decoder.md](uri-decoder.md): patched Mobile decoder, actual CommonJS
+  consumer compatibility, negative controls and corrected reachability scope.
+
 - [event report link access](../../docs/events/report-link-access.md): server-only provisional closeout, capability checks, revocation and private response handling.
 
 - [payment-intent-expiry.md](payment-intent-expiry.md): database-time admission

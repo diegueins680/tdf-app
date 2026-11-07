@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b"
+    "tdf-hq/tdf-hq.cabal": "028247e5430b87363fcc9bc0c867a480466268dae77797ca922955c134e11671"
   },
   "obligations": [
     {
@@ -393,6 +393,15 @@
       "change": "Compose protected main video-campaign registrations with the two Datafast library modules and DatafastConfigSpec test registration.",
       "semanticReview": "Removing exactly the three Datafast module-registration lines reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match both parents. Both original context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "028247e5430b87363fcc9bc0c867a480466268dae77797ca922955c134e11671",
+      "change": "Register TDF.Commerce.DomoRefundStore, TDF.Routes.DomoRefunds and TDF.Server.DomoRefunds; exactly three new library module-registration lines.",
+      "semanticReview": "Independent root review removes exactly these three registrations to reproduce protected Main Cabal bytes. Every other controlled authorization/recovery/Stack/model/SQL source, seven obligation objects and all prior review histories remain unchanged. No compiler flag, dependency, language option, existing module or predicate translation changes.",
+      "qualification": "Reviewed source-context correspondence only; the new Domo routes, transaction guards and financial behavior require separate actual tests. Fresh conditional solver/replay/control execution remains required; no whole endpoint, refinement, provider or release claim."
     }
   ]
 }
