@@ -5787,7 +5787,7 @@
       "id": "PRIV-ERROR-001",
       "title": "Private failure details and cancellation stay outside response diagnostics",
       "domain": "PRIV",
-      "statement": "Unexpected request, activity and Radio-fetch failures must not render exception payloads; cancellation must propagate and an HTTP response must not be started twice. CORS grants remain with the configured request-aware middleware.",
+      "statement": "Unexpected request, activity and Radio-fetch failures must not render exception payloads; a ServerError a handler raised as an IO exception is answered as that error (status, headers and body it authored), never as the generic 500; cancellation must propagate and an HTTP response must not be started twice. CORS grants remain with the configured request-aware middleware.",
       "authority": "AUTHORITY-041; explicit privacy, failure and concurrency requirements of the consolidated audit",
       "source": "formal/system/request-failure-boundary.md",
       "contract": "formal/system/request-failure-boundary.md",
@@ -5865,7 +5865,7 @@
         "classification": "PARTIAL",
         "reason": "Scoped runtime repair and source mutations do not establish whole-server or deployed conformance."
       },
-      "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
+      "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission. A thrown ServerError is the handler's own response.",
       "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
       "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
     },

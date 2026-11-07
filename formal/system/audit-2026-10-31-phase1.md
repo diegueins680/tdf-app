@@ -590,3 +590,9 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
   - dinero: la ruta del worker de proveedores alojados (`ProviderReconciliation`) admite dinero con `recordVerifiedPayment` y manda a dead-letter un rechazo sin excepción de conciliación (literalmente fuera de `PAY-CAPTURE-RECON-001`); pagos, facturas y compras de paquetes heredados registran dinero o derechos sin checkout canónico ni idempotencia;
   - secretos: los tokens OAuth de Google Calendar se guardan en claro;
   - operaciones: las rutas de siembra son más débiles que `/admin/seed` y dependen de marcadores de plataforma para rechazarse en producción; la publicación de CMS no comprueba el estado actual de la fila.
+
+## 53. Clase de defecto transversal: `ServerError` lanzado como excepción respondía 500 (2026-11-07)
+
+- **Hallazgo:** `runHandler` de servant-server 0.20.3 no captura un `ServerError` lanzado con `throwIO` (verificado empíricamente en §51). Con 447 usos de `runSqlPool` crudo en el backend, varios manejadores lanzan sus rechazos así dentro de la transacción; solo `runDB` los envolvía con `tryServerError`. Los casos encontrados por lectura (§50–§51: marketplace de servicios, reservas públicas) se corrigieron uno a uno, pero la clase persistía.
+- **Corrección sistémica:** `requestExceptionBoundary` (`TDF.App.FailureBoundary`) responde un `ServerError` que llegue como excepción con su propio estado, cabeceras y cuerpo (lo mismo que `throwError`), y sigue reduciendo cualquier otra excepción al 500 fijo sin volcar su texto. `PRIV-ERROR-001` incorpora la regla; prueba en `FailureBoundarySpec` (14 ejemplos).
+- **Alcance:** cualquier rechazo autorizado por el manejador (400/401/403/404/409/422/503) lanzado fuera de `runDB` llega ahora al cliente con su estado real; la corrección no toca los manejadores ni cambia los cuerpos que ya autoraban.

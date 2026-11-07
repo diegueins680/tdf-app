@@ -5788,7 +5788,7 @@
       "id": "PRIV-ERROR-001",
       "title": "Private failure details and cancellation stay outside response diagnostics",
       "domain": "PRIV",
-      "statement": "Unexpected request, activity and Radio-fetch failures must not render exception payloads; cancellation must propagate and an HTTP response must not be started twice. CORS grants remain with the configured request-aware middleware.",
+      "statement": "Unexpected request, activity and Radio-fetch failures must not render exception payloads; a ServerError a handler raised as an IO exception is answered as that error (status, headers and body it authored), never as the generic 500; cancellation must propagate and an HTTP response must not be started twice. CORS grants remain with the configured request-aware middleware.",
       "authority": "AUTHORITY-041; explicit privacy, failure and concurrency requirements of the consolidated audit",
       "source": "formal/system/request-failure-boundary.md",
       "contract": "formal/system/request-failure-boundary.md",
@@ -5866,7 +5866,7 @@
         "classification": "PARTIAL",
         "reason": "Scoped runtime repair and source mutations do not establish whole-server or deployed conformance."
       },
-      "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
+      "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission. A thrown ServerError is the handler's own response.",
       "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
       "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
     },
@@ -27634,7 +27634,7 @@
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "2f0395f784b9600abf35a5b0eacce472c63f50c0ccfa55a6e7fec5189e560dd0",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
-    "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
+    "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
@@ -27837,7 +27837,7 @@
     "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "7edf9284071eab5ada05ab4ff80027b2c3fa0e74aac5626043bdb6fa76ff47f0",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
-    "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+    "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
@@ -68392,7 +68392,7 @@
     {
       "id": "SURFACE-4893f1464484dd6a",
       "path": "tdf-hq/src/TDF/App/FailureBoundary.hs",
-      "sha256": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
+      "sha256": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73139,7 +73139,7 @@
     {
       "id": "SURFACE-d7524ac1e833fed0",
       "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
-      "sha256": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+      "sha256": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81120,7 +81120,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a78938c7f94a2532dc49e617d1ffafc3397bf5f4fdc7bd67dbd2f9de81b2cc9d",
+      "sourceSha256": "b4b8ab8bfb3b3a0c7936723aa6b5d28ecedcd22d550019c212c282f9acdaad43",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -81148,7 +81148,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a78938c7f94a2532dc49e617d1ffafc3397bf5f4fdc7bd67dbd2f9de81b2cc9d",
+      "sourceSha256": "b4b8ab8bfb3b3a0c7936723aa6b5d28ecedcd22d550019c212c282f9acdaad43",
       "definition": {
         "states": [
           "absent",
@@ -81178,7 +81178,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a78938c7f94a2532dc49e617d1ffafc3397bf5f4fdc7bd67dbd2f9de81b2cc9d",
+      "sourceSha256": "b4b8ab8bfb3b3a0c7936723aa6b5d28ecedcd22d550019c212c282f9acdaad43",
       "definition": {
         "export": [
           "queued",
