@@ -1792,7 +1792,7 @@ export interface paths {
         get?: never;
         /**
          * Atomically save and optionally materialize a source-backed event candidate
-         * @description Client owns its provider/run namespace. Server overrides candidate provider, run ID and source ID. Publication requires a separate operator grant and existing publication checks. Materialization failure rolls back all writes. Replays use existing dedupe, preserving manual event edits. No pilot approval or general administration is exposed.
+         * @description Client owns its provider/run namespace. Server overrides candidate provider, run ID and source ID. Publication requires a separate operator grant and existing publication checks. Materialization failure rolls back all writes. Existing event targets require both the current curator and current service namespace; shared audit identity grants no cross-client authority. Replays preserve manual event edits. A changed curator must use a new run key. No pilot approval or general administration is exposed.
          */
         put: operations["importEventWatchCandidate"];
         post?: never;
@@ -23536,7 +23536,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Publication or country scope denied */
+            /** @description Publication */
             403: {
                 headers: {
                     [name: string]: unknown;
