@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "0f57163cc9c489e22738cac3ff7985d8ca4b647c",
+  "mobileRevision": "471289de1327f731d54374d1af27f2f98b1fc426",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -2832,14 +2832,16 @@
       ],
       "tests": [
         "scripts/__tests__/dependency-security.test.mjs",
-        "tdf-hq-ui/src/api/socialV2.test.ts"
+        "tdf-hq-ui/src/api/socialV2.test.ts",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "High for scoped deterministic version rejection; partial dependency reachability assessment.",
       "ambiguity": [
         "No universal reachability or transitive supply-chain proof.",
-        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open."
+        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open.",
+        "Other unresolved high/moderate dependency advisories and release exposure remain open."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -16927,6 +16929,77 @@
       "property": "Every installed resolver exact optional binding is present with matching version and archive integrity in the lock; canonical verification refuses runtime binding downloads.",
       "verification": "Deterministic negative fixtures, clean npmci and native probe with fallback disabled, reversible missing-binary fault; no mathematical proof.",
       "evidence": "scripts/__tests__/native-resolver-lock.test.mjs; candidate-source install/probe receipts separately recorded."
+    },
+    {
+      "id": "SYS-URI-DECODE-001",
+      "title": "Patched URI decoding preserves the installed CommonJS caller",
+      "statement": "The exact pinned Mobile query-string7 decoder must use integrity-pinned upstream0.5.1 through a callable adapter, preserving literal-plus normalization, valid Unicode, non-string rejection and one-level percent decoding; the named repeated-invalid-byte and distinct-percent-run regression oracles must reject their respective affected0.2.2 and0.5.0 implementations.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Mobile user",
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Install the committed Mobile npm v3 lock under the supported Node20.19.4 toolchain; use the exact root gitlink."
+      ],
+      "inputs": [
+        "URI component string",
+        "Malformed percent-encoded bytes",
+        "Non-string input",
+        "Committed dependency lock and local adapter"
+      ],
+      "state": {
+        "boundary": "Stateless synchronous codec; immutable module resolution; no persistence or lifecycle mutation."
+      },
+      "allowedTransitions": [
+        "Replace the affected dependency with the pinned upstream algorithm and reviewed caller adapter after client qualification."
+      ],
+      "forbiddenTransitions": [
+        "Implicitly dispatch the ES module namespace as a function",
+        "Fallback to the legacy vulnerable decoder",
+        "Claim a universal complexity or current incoming-link exploit proof from scoped tests"
+      ],
+      "effects": [
+        "Return a decoded string preserving the caller contract; perform no network or database action."
+      ],
+      "authorization": "Pure decoding grants no capability and performs no authenticated action. Dependency repair does not authorize Mobile distribution or importing newer Mobile-main product behavior.",
+      "privacy": "Neither the adapter nor its evidence collection logs real URI payloads; regression inputs are synthetic.",
+      "concurrency": "Synchronous calls per JavaScript runtime; instrumentation is confined to serialized tests and always restored.",
+      "idempotency": "The same input and pinned decoder yield the same output without persistent effects.",
+      "failure": "Non-string values raise TypeError; no silent legacy fallback. The instrumented budgets are finite executable test oracles, not production timeouts, input-size limits or universal complexity bounds.",
+      "recovery": "Retain the matched reviewed adapter/upstream pair and reproducible lock; repair compatibility rather than restoring the affected algorithm.",
+      "observability": "Record exact Mobile/root revisions, lock integrity, clean-install result, client gates, scoped negative-control results and bundle evidence.",
+      "source": "User audit sections10,18,21-25; upstream GHSA-vcc3-ghjq-m6fr; npm override documentation; fresh inspection of installed Expo6.0.24 and React Navigation parser sources.",
+      "contract": "formal/system/uri-decoder.md",
+      "implementation": [
+        "tdf-mobile/package.json",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/vendor/decode-uri-component/package.json",
+        "tdf-mobile/vendor/decode-uri-component/index.cjs",
+        "tdf-mobile/jest.config.js"
+      ],
+      "tests": [
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped actual-consumer and finite regression obligations; candidate0.5.1 evidence must be recorded at its exact revision. No universal decoder, advisory-free app, attack-path or device proof.",
+      "ambiguity": [
+        "Device/store distribution remains separately qualified.",
+        "Source inspection does not prove every possible future or dynamic parser call is unreachable."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "PARTIAL canonical obligation. Original Mobile7d9481d and baseline6fb0.5.0 codec/client/bundle observations retain historical source identity; fresh audit GHSA-qr28-fpjm-wq7f invalidates security clearance for that algorithm. Candidate0.5.1 requires fresh exact-source codec, client, audit and bundle evidence. Global dependency security and device/store distribution remain separate."
+      },
+      "authority": "approved",
+      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves input and makes1..8N+8 built-in decode calls; actual0.2.2 violates that oracle atN=32. For N in{32,64}, the distinct runs %00%<two-digit hex>x followed by%zz decode to the exact expected string while summed UTF16 receiver lengths across synchronous String.replace calls are positive and <=4 times input length; actual0.5.0 violates the same budget atN=32. The installed query-string7 caller stays callable, and covered produced percent text is decoded only once. These finite families do not establish universal complexity.",
+      "verification": "Actual-consumer Jest and seeded Unicode tests; original0.2.2 call-budget and unadapted-namespace controls;0.5.0 distinct-run replacement-work negative control; one-level percent/BOM/truncated-byte cases; fresh exact-source clean locked install, client gates, audit and native bundles. Historical executions do not qualify changed source.",
+      "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
     }
   ],
   "sourceFingerprints": {
@@ -18542,7 +18615,7 @@
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs": "24df855e975e3512b11056f3513864c31a3451ad98c0a615b89d5a2c5222a473",
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
-    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "9d69e8c2da4d5b6c7a8c36c74a4f9fa3105fda97b821dbaa4250f94635afd3d9",
+    "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "6ce26002dfd7222e65aa02306c49e5cab6eade6092be9f9d7a1c3488d04cfec5",
     "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs": "149e170bc2b0d686ef3ea666fafafe41211206136b80bcaba9b5de63b0b49a3f",
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -18694,9 +18767,12 @@
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "tdf-mobile/ios/Podfile.lock": "0f43d338ff4431521b63dc5531568a282afe04815e6ded97c7ffb5188902d798",
-    "tdf-mobile/package-lock.json": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
-    "tdf-mobile/package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+    "tdf-mobile/jest.config.js": "b8a9bb07eccf8b0264cde1f9f2f4b1db7e11a9586e3db480c66f09d6bf90813d",
+    "tdf-mobile/package-lock.json": "bf72d22e7893c2736a55be44f390a4a0209771ceed95025a7f765e4c6408d4d1",
+    "tdf-mobile/package.json": "80a86ed8d138c9e66e33ba42ef90ab19e61a4e591ceec7dcac95f1b1a2166a80",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
+    "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs": "3b8ba0a765e1089d11bba9a919d0d8789ecd9a6833ea078d8d9114e1db093863",
+    "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js": "9401353df38f8010ad7035fe8d666bce6a4902bc1cff809afc4ab23fa2e0bdaa",
     "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
     "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
     "tdf-mobile/scripts/tests/test_android_release.py": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
@@ -18705,7 +18781,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "157a680d2edbd9895297be8adf4b70bedad1ae723a53482594970bb41efc84bb",
+    "tdf-mobile/src/api/generated/types.ts": "f5b834f8d1d569bf6a64174961a74580f69326e196dad05781efca94f5f438ad",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -18721,6 +18797,7 @@
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/i18n/index.ts": "42437bc42384674d3611d372c648f7d4ff220659c15f364ed58339b725411952",
+    "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts": "808e5ef62fe27e73c4a5651cf755fbcd1bb3c829f507a62ffcb2c4acbaeb34ea",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
     "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
     "tdf-mobile/src/lib/eventSharing.test.ts": "24ee454071d2e4cb8191a20270e3ba52bd1f6ef8a4a9f7b981361d77e20236ac",
@@ -18742,6 +18819,8 @@
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
     "tdf-mobile/src/providers/FirstRunProvider.tsx": "b2d91da63d9cb764a8359e5f56100d98d54f93a1443d000952630cb85f0ca56f",
     "tdf-mobile/src/types/index.ts": "98702db8016ac964ad114836554da03d755ca2b11ffa15a6e4a50219994401a3",
+    "tdf-mobile/vendor/decode-uri-component/index.cjs": "d37c0eb2888700a268e79c7f49f1789f40625076bb0325705aaaf3e16bc09fac",
+    "tdf-mobile/vendor/decode-uri-component/package.json": "4046c5d32cb9956f3effd5c446bfe4f7d70f69e6f71d2f9b0ddf19191e5e6e6b",
     "test/fixtures/music-worker/curl.mjs": "1b816316017ca5081325de224176d3f48deb3d60d6ae46db230f052df8c3bb46",
     "test/fixtures/music-worker/ddex-package.mjs": "438d5f66b36297be5ba4bc77d275625ec8c6e228ddb18e22988060af609660a4",
     "test/fixtures/music-worker/ddex-render.mjs": "529eb232ca7550638a0d88d8f64cfcff8ca1fbdec46b338b02e121d887596bc2",
@@ -22006,6 +22085,10 @@
       {
         "requirement": "SYS-DEPENDENCY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-URI-DECODE-001",
+        "relationship": "implementation"
       }
     ],
     "package.json": [
@@ -22029,6 +22112,10 @@
       },
       {
         "requirement": "ART-VIDEO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-URI-DECODE-001",
         "relationship": "implementation"
       }
     ],
@@ -22055,6 +22142,16 @@
     "tdf-hq-ui/src/api/socialV2.test.ts": [
       {
         "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-URI-DECODE-001",
         "relationship": "tests"
       }
     ],
@@ -33519,6 +33616,36 @@
     "scripts/__tests__/native-resolver-lock.test.mjs": [
       {
         "requirement": "SYS-NATIVE-RESOLVER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/vendor/decode-uri-component/package.json": [
+      {
+        "requirement": "SYS-URI-DECODE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/vendor/decode-uri-component/index.cjs": [
+      {
+        "requirement": "SYS-URI-DECODE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/jest.config.js": [
+      {
+        "requirement": "SYS-URI-DECODE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs": [
+      {
+        "requirement": "SYS-URI-DECODE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js": [
+      {
+        "requirement": "SYS-URI-DECODE-001",
         "relationship": "tests"
       }
     ]
@@ -60326,7 +60453,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "9d69e8c2da4d5b6c7a8c36c74a4f9fa3105fda97b821dbaa4250f94635afd3d9",
+      "sha256": "6ce26002dfd7222e65aa02306c49e5cab6eade6092be9f9d7a1c3488d04cfec5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63790,9 +63917,14 @@
     {
       "id": "SURFACE-724d67db609973ab",
       "path": "tdf-mobile/jest.config.js",
-      "sha256": "eddb3b1783f7b56c7470c9c29b98dca2946dab618ad0d69b6c2b38471dffa413",
+      "sha256": "b8a9bb07eccf8b0264cde1f9f2f4b1db7e11a9586e3db480c66f09d6bf90813d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-URI-DECODE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8254ab3be0263414",
@@ -63811,11 +63943,15 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+      "sha256": "bf72d22e7893c2736a55be44f390a4a0209771ceed95025a7f765e4c6408d4d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-URI-DECODE-001",
           "relationship": "implementation"
         }
       ]
@@ -63823,7 +63959,7 @@
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "80a86ed8d138c9e66e33ba42ef90ab19e61a4e591ceec7dcac95f1b1a2166a80",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63832,6 +63968,10 @@
         },
         {
           "requirement": "ART-VIDEO-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-URI-DECODE-001",
           "relationship": "implementation"
         }
       ]
@@ -63889,6 +64029,30 @@
       "sha256": "ffc92945ac0a97d84202b2c4d2744d075fd5def7c0a17bbd190dfded0893fb8f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-2725976c616ae240",
+      "path": "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+      "sha256": "3b8ba0a765e1089d11bba9a919d0d8789ecd9a6833ea078d8d9114e1db093863",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-URI-DECODE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-926ccaa13a8c5894",
+      "path": "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js",
+      "sha256": "9401353df38f8010ad7035fe8d666bce6a4902bc1cff809afc4ab23fa2e0bdaa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-URI-DECODE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8eb9b23c4fa6e14c",
@@ -64127,7 +64291,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "157a680d2edbd9895297be8adf4b70bedad1ae723a53482594970bb41efc84bb",
+      "sha256": "f5b834f8d1d569bf6a64174961a74580f69326e196dad05781efca94f5f438ad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64761,6 +64925,22 @@
       ]
     },
     {
+      "id": "SURFACE-356eac9f42f687b8",
+      "path": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+      "sha256": "808e5ef62fe27e73c4a5651cf755fbcd1bb3c829f507a62ffcb2c4acbaeb34ea",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-URI-DECODE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a24ed6b998974bde",
       "path": "tdf-mobile/src/lib/api.ts",
       "sha256": "4395c833e024308d1f59287254bdd3d0345bb61a60507ea8f3fd2eac18920955",
@@ -65356,6 +65536,30 @@
       "sha256": "235a3431fcf05ff379c5027fcc07a65ad7b34128bee3bf85bb4725c31e1d69c5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-9c0085c076f97ad3",
+      "path": "tdf-mobile/vendor/decode-uri-component/index.cjs",
+      "sha256": "d37c0eb2888700a268e79c7f49f1789f40625076bb0325705aaaf3e16bc09fac",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-URI-DECODE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-96f4d37d77970170",
+      "path": "tdf-mobile/vendor/decode-uri-component/package.json",
+      "sha256": "4046c5d32cb9956f3effd5c446bfe4f7d70f69e6f71d2f9b0ddf19191e5e6e6b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-URI-DECODE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5ed14294f19f41c9",
@@ -66856,7 +67060,6 @@
     "SURFACE-d916f47088369748",
     "SURFACE-c8f4d1345a7f1800",
     "SURFACE-9f3baf48c55d783c",
-    "SURFACE-724d67db609973ab",
     "SURFACE-8254ab3be0263414",
     "SURFACE-635d2beee7db16c2",
     "SURFACE-49be021610567519",
@@ -68188,7 +68391,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0cf919eab8b67b372db88a8658568172e309b6f1f1b55b79d555f4d45f75ae6a",
+      "sourceSha256": "0c84f94abe208a3a2115490cf914b7785ca94baed191904efc4e2b6e3f1304b5",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -68216,7 +68419,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0cf919eab8b67b372db88a8658568172e309b6f1f1b55b79d555f4d45f75ae6a",
+      "sourceSha256": "0c84f94abe208a3a2115490cf914b7785ca94baed191904efc4e2b6e3f1304b5",
       "definition": {
         "states": [
           "absent",
@@ -68246,7 +68449,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0cf919eab8b67b372db88a8658568172e309b6f1f1b55b79d555f4d45f75ae6a",
+      "sourceSha256": "0c84f94abe208a3a2115490cf914b7785ca94baed191904efc4e2b6e3f1304b5",
       "definition": {
         "export": [
           "queued",
@@ -91343,7 +91546,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 197,
+    "PARTIAL": 198,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
