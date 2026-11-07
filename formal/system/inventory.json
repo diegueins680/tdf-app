@@ -6099,7 +6099,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "1c95de4b651c0b41f47bf254d6a3e0dbb9b5d599465dafdce0f29c7a0d416edc",
+      "sha256": "8361ec320e36e51aa6eb4301ed1b455dd8fefebeadcc85e547e25332b7be6f48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
