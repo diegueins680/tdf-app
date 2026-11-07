@@ -1,0 +1,23 @@
+'use strict';
+// Reuse campaign uploads and quota. This library never schedules a social publication.
+async function videoLibrary(campaign) {
+  const dialog=el('dialog'),root=el('section'),heading=el('h2','Videos del artista');
+  const close=action('Cerrar',()=>dialog.close());root.append(heading,close,el('p','Añade un enlace oficial o un MP4/WebM terminado en los archivos de esta campaña. Los originales se conservan.'));
+  const form=el('form'),fields={};
+  function input(name,label,type='text'){const l=el('label',label),e=el('input',undefined,{name,type});l.append(e);form.append(l);fields[name]=e;return e;}
+  input('profile','Enlace o identificador del perfil de artista').value=String(session.user.id);
+  input('title','Título').required=true;
+  input('source_url','Enlace de YouTube, Vimeo, Instagram o TikTok','url');
+  const assets=el('select',undefined,{name:'asset'}),assetLabel=el('label','O archivo de esta campaña');assets.append(el('option','Seleccionar archivo',{value:''}));
+  for(const a of campaign.assets.filter(a=>a.status==='ready'&&/\.(mp4|webm)$/i.test(a.name)))assets.append(el('option',a.name,{value:a.id}));
+  assetLabel.append(assets);form.append(assetLabel);fields.asset=assets;
+  const description=el('textarea',undefined,{name:'description',rows:5}),descriptionLabel=el('label','Descripción y créditos');descriptionLabel.append(description);form.append(descriptionLabel);fields.description=description;
+  input('poster','Imagen pública de la sesión (HTTPS)','url');
+  const scope=el('select',undefined,{name:'scope'});scope.append(el('option','Perfil del artista',{value:'own'}),el('option','Publicar como TDF · aprobación de administrador',{value:'tdf'}));form.append(scope);fields.scope=scope;
+  let editing=null,artistId=null;
+  const result=el('div'),save=el('button','Guardar borrador',{type:'submit'});form.append(save);root.append(form,result);dialog.append(root);document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
+  async function resolveArtist(){const raw=fields.profile.value.trim();let slug=raw;try{const u=new URL(raw);if(!['www.tdfrecords.net','tdfrecords.net'].includes(u.hostname))throw Error('Usa un perfil de TDF.');slug=u.pathname.match(/^\/(?:a|artista)\/([^/]+)\/?$/)?.[1];}catch(e){if(raw.startsWith('http'))throw e;}if(!slug||!/^[\w-]+$/.test(slug))throw Error('Enlace de artista inválido.');const r=await fetch('https://api.tdfrecords.net/artists/'+encodeURIComponent(slug)+'/public',{credentials:'include'});if(!r.ok)throw Error('No encontramos ese perfil de artista.');const p=await r.json();artistId=p.apArtistId;return p;}
+  async function list(){result.replaceChildren();const rows=await api('/videos?artist_id='+artistId);for(const row of rows.filter(v=>v.campaign===campaign.id)){const card=el('article',undefined,{class:'card'});card.append(el('h3',row.title),el('p',`Versión ${row.version} · ${row.published_version===row.version?'Publicado en TDF':'Borrador privado'}`));card.append(action('Editar',async()=>{editing=row;for(const key of ['title','description','source_url','asset','poster','scope'])fields[key].value=row[key]||'';save.textContent='Guardar nueva versión';}));const rights=el('input',undefined,{type:'checkbox'}),technical=el('input',undefined,{type:'checkbox'}),rl=el('label',' Tengo los derechos para publicar esta versión.'),tl=el('label',' Revisé reproducción, audio, sincronía e imagen de esta versión.');rl.prepend(rights);tl.prepend(technical);card.append(rl,tl,action('Publicar esta versión en TDF',async()=>{await post('/videos/'+row.id+'/publish',{version:row.version,rights_confirmed:rights.checked,technical_reviewed:technical.checked});await list();}),action('Retirar de la vista pública',async()=>{await post('/videos/'+row.id+'/unpublish',{version:row.version});await list();}));card.append(el('a','Ver perfil público',{href:'https://www.tdfrecords.net/a/'+artistId,target:'_blank',rel:'noopener'}));result.append(card);}}
+  form.addEventListener('submit',event=>{event.preventDefault();perform(async()=>{await resolveArtist();const data=Object.fromEntries(Object.entries(fields).filter(([key])=>key!=='profile').map(([k,v])=>[k,v.value]));data.artist_id=artistId;data.campaign=campaign.id;if(editing)data.version=editing.version;await api('/videos'+(editing?'/'+editing.id:''),{method:editing?'PUT':'POST',body:JSON.stringify(data)});editing=null;save.textContent='Guardar borrador';await list();alert('Borrador guardado. Revisa y publica la versión exacta por separado.');});});
+  root.append(action('Cargar videos del perfil',async()=>{await resolveArtist();await list();}));
+}
