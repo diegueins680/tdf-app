@@ -34,14 +34,14 @@ export default function ArtistVideoLibrary({ artistId, featuredUrl, featuredPost
   return <>
     {selected && <Box component="section" aria-labelledby="artist-session">
       <Typography component="h2" variant="h6" id="artist-session" gutterBottom>{selected.title}</Typography>
-      <SessionVideoPreview url={selected.url} title={selected.title} poster={selected.poster} analyticsContext={{ artistId, videoId: videoSourceKey(selected.url) ?? selected.id }} />
+      <SessionVideoPreview url={selected.url} title={selected.title} poster={selected.poster} trackPublicPlayback analyticsContext={{ artistId, videoId: videoSourceKey(selected.url) ?? selected.id }} />
       {selected.description && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>{selected.description}</Typography>}
       {selectedKey && <Button component="a" href={`/a/${artistId}?video=${encodeURIComponent(selectedKey)}#artist-session`}>Enlace a esta sesión</Button>}
     </Box>}
     {query.isError && <Alert severity="info" action={<Button onClick={() => { void query.refetch(); }}>Reintentar</Button>}>No pudimos cargar los demás videos del artista.</Alert>}
     {items.filter(video => !sameVideo(video.url, selected?.url)).map(video => <Box component="section" key={video.id}>
     <Typography component="h2" variant="h6" gutterBottom>{video.title}</Typography>
-    {video.url !== featuredUrl && <SessionVideoPreview url={video.url} title={video.title} poster={video.poster} analyticsContext={{ artistId, videoId: videoSourceKey(video.url) ?? video.id }} />}
+    {video.url !== featuredUrl && <SessionVideoPreview url={video.url} title={video.title} poster={video.poster} trackPublicPlayback analyticsContext={{ artistId, videoId: videoSourceKey(video.url) ?? video.id }} />}
     {video.description && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>{video.description}</Typography>}
     <Button component="a" href={`/a/${artistId}?video=${encodeURIComponent(video.id)}#artist-session`}>Enlace a esta sesión</Button>
   </Box>)}</>;

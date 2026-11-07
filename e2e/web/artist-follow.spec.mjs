@@ -213,3 +213,51 @@ test('artist follow guest CTA supports the English locale', async ({ page, baseU
   await page.goto('/a/artista-sintetica', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('link', { name: 'Create an account or sign in to follow', exact: true })).toBeVisible();
 });
+
+
+for (const mode of ['signup', 'login']) {
+  test(`campaign link survives failed ${mode}, retry and explicit follow @mobile-flow @critical`, async ({ page, baseURL }) => {
+    const state = await fixture(page, baseURL, false);
+    state[mode === 'signup' ? 'failNextSignup' : 'failNextLogin'] = true;
+    const acquisition = 'utm_source=instagram&utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_content=instagram-2';
+    await page.goto('/a/artista-sintetica?' + acquisition);
+    await page.getByRole('link', { name: 'Crear cuenta o ingresar para seguir', exact: true }).click();
+    const target = new URL(new URL(page.url()).searchParams.get('redirect'), baseURL);
+    expect(target.searchParams.get('utm_content')).toBe('instagram-2');
+    expect(target.searchParams.get('utm_campaign')).toBe('126f208c-2b38-47c1-952b-6ba633122c87');
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    let submit;
+    if (mode === 'signup') {
+      await dialog.getByLabel('Correo').fill('synthetic@example.test');
+      await dialog.getByLabel('Contraseña', { exact: false }).first().fill('synthetic-password-123');
+      submit = dialog.getByRole('button', { name: 'Crear e ingresar', exact: true });
+    } else {
+      await dialog.getByRole('button', { name: 'Ya tengo una cuenta', exact: true }).click();
+      await page.getByLabel('Usuario o correo').fill('synthetic@example.test');
+      await page.getByLabel('Contraseña', { exact: false }).first().fill('synthetic-password-123');
+      submit = page.getByRole('button', { name: 'Ingresar', exact: true });
+    }
+    const authUrl = page.url();
+    await submit.click();
+    await expect.poll(() => state.authAttempts.length).toBe(1);
+    await expect(submit).toBeEnabled();
+    await expect(page.getByRole('alert').first()).toBeVisible();
+    expect(page.url()).toBe(authUrl);
+    expect(state.writes).toHaveLength(0);
+    await submit.click();
+    const confirm = page.getByRole('button', { name: 'Seguir ahora', exact: true });
+    await expect(confirm).toBeEnabled();
+    expect(state.authAttempts).toHaveLength(2);
+    expect(state.writes).toHaveLength(0);
+    state.failNextFollow = true;
+    await confirm.click();
+    await expect(page.getByRole('alert').filter({ hasText: 'No pudimos confirmar el cambio de seguimiento.' })).toBeVisible();
+    await confirm.click();
+    await expect(page.getByRole('button', { name: 'Dejar de seguir a Artista Sintética' })).toBeEnabled();
+    expect(new URL(page.url()).searchParams.get('utm_content')).toBe('instagram-2');
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Dejar de seguir a Artista Sintética' })).toBeEnabled();
+    expect(state.writes).toHaveLength(2);
+  });
+}

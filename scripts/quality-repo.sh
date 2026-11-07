@@ -13,6 +13,8 @@ run_npm() {
 }
 
 echo "▶ Verifying repository-wide invariants"
+node "$ROOT/scripts/verify-video-campaign-access.mjs"
+node --test "$ROOT/scripts/__tests__/video-campaign-access.test.mjs"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-merge-admission.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-checkout-money-verifier.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-privacy-request-ledger.py"

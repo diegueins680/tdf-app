@@ -8,7 +8,17 @@ export function isArtistFollowResume(search: string, artistId: number | null): b
     && params.getAll('artistId').length === 1 && params.get('artistId') === String(artistId);
 }
 
-export function buildArtistFollowAuthPath(profileLink: string | null, artistId: number | null, context: { search?: string; hash?: string } = {}): string {
+export function buildArtistFollowAuthPath(profileLink: string | null, artistId: number | null, contextOrSearch: { search?: string; hash?: string } | string = {}): string {
+  let context: { search?: string; hash?: string };
+  if (typeof contextOrSearch === 'string') {
+    // Preserve the campaign caller's original public-attribution allowlist.
+    const input = new URLSearchParams(contextOrSearch), publicFields = new URLSearchParams();
+    for (const key of ['utm_campaign', 'utm_source', 'utm_medium', 'utm_content']) {
+      const value = input.get(key);
+      if (input.getAll(key).length === 1 && value && /^[a-zA-Z0-9_-]{1,100}$/.test(value)) publicFields.set(key, value);
+    }
+    context = { search: publicFields.toString() };
+  } else context = contextOrSearch;
   let redirect = '/fans';
   if (profileLink && safeArtistId(artistId) && /^\/a\/[^/?#\\]+$/.test(profileLink)) {
     try {

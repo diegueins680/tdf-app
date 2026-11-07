@@ -60,3 +60,14 @@ describe('artist follow authentication continuity', () => {
     expect(isArtistFollowResume('?resume=follow&artistId=1', id)).toBe(false);
   });
 });
+
+it('retains the campaign string caller contract alongside session context callers', () => {
+  const auth = new URL(buildArtistFollowAuthPath('/a/las-lolas', 42, '?utm_campaign=launch_1&utm_source=ig&utm_medium=organic&utm_content=clip&token=secret&artistId=999'), 'https://tdf.local');
+  const target = new URL(auth.searchParams.get('redirect')!, 'https://tdf.local');
+  expect(target.searchParams.get('utm_campaign')).toBe('launch_1');
+  expect(target.searchParams.get('utm_content')).toBe('clip');
+  expect(target.searchParams.get('artistId')).toBe('42');
+  expect(target.searchParams.has('token')).toBe(false);
+  const rejected = new URL(buildArtistFollowAuthPath('/a/las-lolas', 42, '?utm_source=a&utm_source=b&utm_medium=not%20a%20public%20tag&utm_campaign=' + 'a'.repeat(101)), 'https://tdf.local');
+  expect(rejected.searchParams.get('redirect')).toBe('/a/las-lolas?resume=follow&artistId=42');
+});
