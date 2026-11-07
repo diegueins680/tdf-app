@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T02:17:27.855Z",
+  "generatedAt": "2026-11-07T06:32:08.748Z",
   "repositoryRoot": ".",
-  "filesScanned": 2634,
+  "filesScanned": 2637,
   "candidateCount": 1405,
   "byClassification": {
     "dynamic-business-catalog": 920,
@@ -7394,7 +7394,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 717,
+      "consumerCount": 718,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -19115,7 +19115,7 @@
       "lines": [
         649
       ],
-      "consumerCount": 743,
+      "consumerCount": 744,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -27549,7 +27549,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 775,
+      "consumerCount": 776,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32104,7 +32104,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 749,
+      "consumerCount": 750,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -34616,7 +34616,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 514,
+      "consumerCount": 515,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -34864,6 +34864,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/RecordsIngestion.hs",
+        "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs",
         "tdf-hq/src/TDF/WhatsApp/Service.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
@@ -35422,7 +35423,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 749,
+      "consumerCount": 750,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40019,7 +40020,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 726,
+      "consumerCount": 727,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -43110,7 +43111,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 488,
+      "consumerCount": 489,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -43357,6 +43358,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/RecordsIngestion.hs",
+        "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs",
         "tdf-hq/src/TDF/WhatsApp/Service.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
@@ -59379,7 +59381,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 787,
+      "consumerCount": 788,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -67474,7 +67476,7 @@
       "lines": [
         158
       ],
-      "consumerCount": 194,
+      "consumerCount": 195,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -67629,6 +67631,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
@@ -75444,7 +75447,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 794,
+      "consumerCount": 795,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -77121,7 +77124,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 749,
+      "consumerCount": 750,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -85917,7 +85920,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "environment-list",
       "name": "SUPPORTED_CURRENCIES",
-      "line": 174,
+      "line": 175,
       "values": [
         "USD",
         "EUR",
@@ -85930,7 +85933,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        174
+        175
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -85967,7 +85970,7 @@
       "domain": "international-reference-data",
       "kind": "environment-list",
       "name": "SUPPORTED_LOCALES",
-      "line": 176,
+      "line": 177,
       "values": [
         "en",
         "es",
@@ -85978,7 +85981,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        176
+        177
       ],
       "consumerCount": 5,
       "backendConsumers": [
@@ -87371,7 +87374,7 @@
       "lines": [
         11291
       ],
-      "consumerCount": 1010,
+      "consumerCount": 1013,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -95733,7 +95736,7 @@
       "lines": [
         18960
       ],
-      "consumerCount": 1005,
+      "consumerCount": 1008,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -112091,7 +112094,7 @@
       "lines": [
         277
       ],
-      "consumerCount": 195,
+      "consumerCount": 196,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -112247,6 +112250,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
@@ -145711,7 +145715,7 @@
       "lines": [
         562
       ],
-      "consumerCount": 195,
+      "consumerCount": 196,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -145867,6 +145871,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
@@ -147867,7 +147872,7 @@
       "lines": [
         335
       ],
-      "consumerCount": 203,
+      "consumerCount": 204,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -148024,6 +148029,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
@@ -152346,7 +152352,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 195,
+      "consumerCount": 196,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -152502,6 +152508,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
@@ -158153,7 +158160,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2608,
+      "line": 2609,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -158161,7 +158168,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2608
+        2609
       ],
       "consumerCount": 4,
       "backendConsumers": [
@@ -158195,7 +158202,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4930,
+      "line": 4931,
       "values": [
         "confirmed",
         "tentative",
@@ -158204,7 +158211,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4930
+        4931
       ],
       "consumerCount": 59,
       "backendConsumers": [
@@ -158300,7 +158307,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 6260,
+      "line": 6261,
       "values": [
         "note",
         "call",
@@ -158313,7 +158320,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6260
+        6261
       ],
       "consumerCount": 126,
       "backendConsumers": [
@@ -158479,7 +158486,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16742,
+      "line": 16743,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -158487,7 +158494,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16742
+        16743
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -159342,7 +159349,7 @@
       "domain": "studio-services-booking",
       "kind": "haskell-list",
       "name": "paypalWebhookDomainTypes",
-      "line": 1085,
+      "line": 1087,
       "values": [
         "mixing_mastering",
         "marketplace_sale",
@@ -159354,7 +159361,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1085
+        1087
       ],
       "consumerCount": 80,
       "backendConsumers": [
@@ -162597,7 +162604,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 765,
+      "line": 766,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -162609,7 +162616,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        765
+        766
       ],
       "consumerCount": 3,
       "backendConsumers": [
