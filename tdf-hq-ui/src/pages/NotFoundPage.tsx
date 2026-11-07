@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useSession } from '../session/SessionContext';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useSession();
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const fallbackPath = session ? '/inicio' : '/login';
+  const fallbackPath = '/inicio';
 
   const handleBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -43,15 +41,15 @@ export default function NotFoundPage() {
         <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1.2 }}>
           ERROR 404
         </Typography>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography component="h1" variant="h4" fontWeight={700}>
           Página no encontrada
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          No encontramos la ruta <strong>{location.pathname}</strong>. Revisa el enlace o vuelve a una sección conocida.
+          No encontramos la página solicitada. Puedes volver atrás o explorar artistas, música y servicios sin iniciar sesión.
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center">
           <Button variant="contained" onClick={() => navigate(fallbackPath, { replace: true })}>
-            Ir al {session ? 'inicio' : 'login'}
+            Explorar TDF Records
           </Button>
           <Button variant="outlined" onClick={handleBack}>
             Volver
@@ -70,8 +68,8 @@ export default function NotFoundPage() {
             No se pudo copiar la ruta. Puedes copiarla manualmente.
           </Alert>
         )}
-        <Stack direction="row" spacing={2} justifyContent="center">
-          <Button variant="text" onClick={() => navigate('/docs')}>Ver docs</Button>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center">
+          <Button variant="text" onClick={() => navigate('/buscar')}>Buscar artistas y servicios</Button>
           <Button variant="text" onClick={() => navigate('/feedback')}>Enviar feedback</Button>
         </Stack>
       </Stack>

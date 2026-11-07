@@ -9,25 +9,25 @@ preconditions and source bindings are unchanged.
 
 ## Claims and trust boundary
 
-CVC5 1.4.2 independently rechecks **all 41 exact SMT inputs** retained by a fresh
-assurance report: 14 UNSAT contracts/lemmas and 27 SAT witnesses/controls. Solver
+CVC5 1.4.2 independently rechecks **all 47 exact SMT inputs** retained by a fresh
+assurance report: 16 UNSAT contracts/lemmas and 31 SAT witnesses/controls. Solver
 agreement is separate from certificate checking. Neither proves that a trusted
 source translator correctly implements Haskell, SQL or HTTP semantics.
 
-Fourteen UNSAT obligations (twelve distinct inputs) have CPC refutations checked by
+Sixteen UNSAT obligations (fourteen distinct inputs) have CPC refutations checked by
 Ethos 0.2.5 with the matching, pinned CVC5 CPC signatures:
 
 | Suite | Formula IDs | Certificate claim |
 |---|---|---|
 | authorization | strict-admin, module-access, ingestion-admission | Refutation of each negated source-derived predicate contract |
 | authorization | cardinality-nonnegative, cardinality-zero, cardinality-sum | Refutation of each negated supporting algebra lemma |
-| arithmetic | capture-safety, capture-admission, refund-safety, refund-admission | Refutation of each negated source-derived capture/refund contract |
+| arithmetic | capture-safety, capture-admission, capture-caller-precondition, refund-safety, refund-admission, refund-caller-precondition | Refutation of each negated source-derived capture/refund contract |
 | recovery | window-equivalence, schema-correspondence, issuance-admission, issuance-exact | Refutation of each negated source-derived arithmetic contract |
 
-These certificate claims concern the exact SMT domains. Four payment, three
+These certificate claims concern the exact SMT domains. Six payment arithmetic/caller, three
 authorization and four recovery contracts retain their **conditional source-derived** scope.
 Supporting lemmas remain separate. No full implementation or refinement obligation
-changes status. The 122 complete requirements remain UNPROVEN; release remains
+changes status. The 123 complete requirements remain UNPROVEN; release remains
 BLOCKED with no accepted risks.
 
 ## Tool qualification and historical failures
@@ -87,7 +87,7 @@ translation or eliminate the TCB.
 
 
 Capture/refund safety share exactly the same SMT bytes; their admission problems
-also share exactly the same bytes. A fresh run independently checks twelve
+also share exactly the same bytes. A fresh run independently checks fourteen
 unique refutations and reuses those two validated formulas for the other
 obligation IDs. Reuse is keyed by complete input bytes, not names, expected
 results or historical receipts. Each ID retains its own input hash, requirement
@@ -95,7 +95,7 @@ mapping and an explicit `reusedFrom` link to the checked proof. The cache starts
 empty in each run. Altering even one assertion forces a new certificate; real
 checker controls demonstrate that a satisfiable alteration cannot inherit a
 PROVEN label. Input, proof, signature and tool hashes are rechecked before success.
-Metrics distinguish fourteen obligation results from twelve unique checked inputs.
+Metrics distinguish sixteen obligation results from fourteen unique checked inputs.
 
 ## Reproduction and CI
 
@@ -116,8 +116,8 @@ certificate step allows 35 minutes, with a separate eight-minute checker build.
 All step budgets total 97 minutes inside a 110-minute job; assurance uploads
 precede the checker work and retain an incomplete fallback on generation timeout.
 No existing check is removed. It retains SMT/CPC files, solver/checker streams,
-hashes, installation/build receipts and failures. All 41 cross-checks and
-fourteen supported certificate obligations must succeed.
+hashes, installation/build receipts and failures. All 47 cross-checks and
+sixteen supported certificate obligations must succeed.
 Passing this job grants no release permission.
 
 Retained CPC inputs use relative paths and include the exact pinned signatures.

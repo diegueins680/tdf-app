@@ -788,7 +788,7 @@
               "9abc4f655fdb20e98b03"
             ],
             "selectedHistoricalPreservedCount": 1206,
-            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87→88 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
+            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87\u219288 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
           }
         }
       },
@@ -12548,7 +12548,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -14174,7 +14174,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -21452,7 +21452,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
@@ -21467,7 +21467,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -21482,7 +21482,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -33826,6 +33826,22 @@
         "valueCount": 2,
         "consumerCount": 0
       }
+    },
+    {
+      "id": "280d7c369a6f39bd4a13",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the synthetic event fixture could weaken the CSV row-unit and layout regression coverage.",
+      "justification": "Single complete synthetic SocialEventDTO fixture used only by actual CSV helper tests; fields are transport fixture shape, not selectable business values or a currency/event registry. Matches reviewed technical fixture precedents caafb621f3c699640707 and be74b101363c9d782b7d; production authorities remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
+        "line": 29
+      },
+      "reviewBatch": "event-finance-csv-currency-2026-10-30",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }
