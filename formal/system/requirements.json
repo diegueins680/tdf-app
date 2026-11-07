@@ -16494,7 +16494,9 @@
         "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
         ".github/workflows/ci.yml",
         "scripts/production-migrations.json",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
+        "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql"
       ],
       "tests": [
         "scripts/test-artist-featured-track.mjs",
@@ -16506,7 +16508,7 @@
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "verification": "Rendered owner/session regression cases and queue-priority tests; type/build/lint and generated contract comparison; actual SQL/binding guard-removal controls. Full PostgreSQL and compiled-handler/native evidence require hosted CI.",
+      "verification": "Rendered owner/session regression cases and queue-priority tests; type/build/lint and generated contract comparison; actual SQL/binding guard-removal controls. Full PostgreSQL and compiled-handler/native evidence require hosted CI. The existing owned-database featured-track runner applies and replays the separate archive-reference forward, rejects archived inserts/reassignments, allows unchanged historical references, and checks populated rollback refusal before guard removal; empty rollback/reinstall and missing-helper/FK controls remain finite SQL evidence, not deployed endpoint refinement.",
       "evidence": "docs/music-releases/artist-featured-track.md; PR #670 validation.",
       "confidence": "Client execution and source-level backend correspondence only until hosted backend/PostgreSQL qualification.",
       "ambiguity": [
