@@ -18,6 +18,7 @@ interface ImportMetaEnv {
   readonly VITE_DEFAULT_LOCALE?: string;
   readonly VITE_DEFAULT_CURRENCY?: string;
   readonly VITE_DEFAULT_TIMEZONE?: string;
+  readonly VITE_DRIVE_VAULT_REQUIRED?: string;
   readonly VITE_EXCHANGE_RATE_API_BASE?: string;
   readonly VITE_DOMO_TIMEZONE?: string;
   readonly VITE_ADA_USD_RATE?: string;

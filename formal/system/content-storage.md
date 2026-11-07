@@ -35,7 +35,7 @@ Personal Drive persists a Google-generated object ID, authenticated Party,
 provider-account identity and request fingerprint before create. Retry reconciles
 that exact ID; creation is not retried with a second generated ID. Explicit public
 sharing must succeed; private requests do not grant an anyone-reader permission.
-Provider responses are sanitized. Personal revoked consent asks for personal
+Personal private uploads reject caller-selected folders and withhold results unless a complete provider ACL contains only the authenticated Google owner. This response-time check cannot prevent the user changing provider permissions later and needs a real-provider creation/inheritance rehearsal before activation. Provider responses are sanitized. Personal revoked consent asks for personal
 reconnection; shared credential failure is an operator issue, not TDF logout.
 
 OAuth state binds nonce, owner and expiry; refreshes are single-flight per owner,
@@ -68,12 +68,47 @@ cases are not passes. Its API inspector found exactly the five new storage route
 `compiler-observation-20261104.json` records that compiled tree. Header magic is checked for public passive media; full codec,
 malware and playable-content verification is not established.
 
-This delivery is PARTIAL. Before production activation, complete authenticated
-receipt/attachment reader integration, server-side encrypted delegated credential lifecycle, canonical content and
-manifest accounting/provider routing, coordinated backup/restore and exact-image
-HTTP/provider rehearsals. The existing browser credential store is owner-scoped
-but still localStorage, not an encrypted BFF vault. Mobile changes cover the
-shared helper; no native destination/consent UI or store build is certified.
+This delivery remains PARTIAL and production activation is blocked. The November 6
+security follow-up is a candidate on top of merged main; it does not repeat PR703
+or Mobile179. The new backend replaces returned provider credentials with nonsecret
+owner-bound TDFConnection handles. Strict client retirement is activated only
+with literal `VITE_DRIVE_VAULT_REQUIRED=true`, after backend/key recovery
+qualification. Default-off staged compatibility retains the existing owner-scoped
+provider descriptor for the current backend proxy and does not meet strict
+vault-retirement acceptance; malformed vault identities never downgrade. AES-256-GCM uses fresh 96-bit nonces, a 128-bit
+tag and authenticated owner/provider/connection binding. The 32-byte key is supplied
+only through `CONTENT_STORAGE_VAULT_KEY` (64 hexadecimal characters), outside the
+DB and frontend. Current-session and connection-row locks cover refresh; reconnect
+and disconnect erase the prior envelope. Provider-wide Google consent revocation
+is separate from disconnecting the TDF connection. Old browser credentials require
+new consent; they are never silently imported into the vault.
+
+Private downloads force and verify complete bytes under current session/object
+locks. Course receipts, follow-ups and payment attachments bind canonical object
+IDs in the domain-write transaction. Another account cannot attach a private file
+merely by pasting its URL. Domain staff readers require a current Admin module
+grant AND a live bound resource; unrelated staff cannot browse arbitrary files.
+Read failures return no body bytes, and successful downloads use attachment,
+no-store and nosniff headers. Clients download authenticated blobs and suppress
+late delivery after a session change. A separate new native account-storage helper must require explicit
+destination/consent/request identity and activation before network I/O. Existing
+corporate inventory upload consumers retain their established adapter. Native destination/consent
+screens, store/device builds and provider reads still need end-to-end qualification.
+
+Managed public static reads consult the completed/public registry. A pre-commit
+rename, unknown object or tombstone does not authorize static serving. The API
+rejects overlapping canonical private/public roots. An independent CDN/static
+mount must not bypass this reader. Upload copy/publish holds the current session
+and upload-row locks; deletion cleans pending staging before acknowledging freed
+capacity and refuses live attachments. Missing physical acknowledgement retains
+occupancy. There is no crash-durability or coordinated-restoration proof yet.
+
+`CONTENT_STORAGE_UPLOADS_ENABLED` defaults disabled and only literal `true`
+admits account uploads. No production flag is changed by this work. Complete the
+historical ownership/size inventory, canonical publication body/manifest provider
+routing, fresh compiled HTTP/handler tests, current protected CI and independent
+review, real-provider consent/revocation/permission checks, persistent-volume
+replacement and coordinated database/files/key recovery before activation.
 
 Do not infer production readiness from a model, generated type, migration test
 or build alone. See `docs/content-storage/rollout.md` for the concrete release

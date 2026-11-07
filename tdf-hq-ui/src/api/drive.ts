@@ -1,6 +1,6 @@
 import { assertNoLogoutIntent } from '../session/logoutIntent';
 import type { DriveUploadDTO } from './types';
-import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
+import type { DriveFileInfo } from '../services/googleDrive';
 import { buildAuthorizationHeader } from './authHeader';
 import { resolveApiBase } from '../config/apiBase';
 import { parseUploadFailure, UploadFailure, type UploadAuthMode } from './uploadFailure';
@@ -70,8 +70,7 @@ export async function uploadToDrive(file: File, options: DriveUploadOptions = {}
 
   const contentLink = dto.duWebContentLink?.startsWith('/storage/files/')
     ? `${base}${dto.duWebContentLink}` : dto.duWebContentLink;
-  const publicUrl = dto.duPublicUrl ?? (options.visibility === undefined && options.destination === undefined
-    ? dto.duWebContentLink ?? (dto.duFileId ? buildPublicContentUrl(dto.duFileId) : undefined) : undefined);
+  const publicUrl = dto.duPublicUrl ?? undefined;
 
   return {
     id: dto.duFileId,

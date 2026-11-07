@@ -1,5 +1,138 @@
 # Storage rollout and recovery
 
+The current repair normally incorporates protected main
+`f615c862b1a7d50406cc0506d21d7650e607fa5f`. Earlier source receipts below retain
+their actual commit identity; they do not qualify this combined candidate.
+Production activation remains blocked. No deployment, provider operation,
+production migration, inventory application or flag change is performed here.
+
+The new backend always encrypts delegated credentials with owner/provider/connection
+bound AES-256-GCM and returns an opaque handle. Before installing that backend,
+configure the server-only `CONTENT_STORAGE_VAULT_KEY` (32 random bytes as 64 hex
+characters) and rehearse coordinated recovery of the key, database and files.
+Missing or replaced keys fail closed; no new backend plaintext fallback exists.
+Keep keys outside public frontend configuration, logs and database backups.
+
+For staged frontend/backend compatibility, `VITE_DRIVE_VAULT_REQUIRED` defaults
+off and only literal `true` activates strict credential retirement. Staged mode
+accepts the pre-existing bounded owner-scoped provider descriptor through the
+same authenticated `/drive/upload` proxy as main. It never accepts unbound
+credentials, mismatched owners, malformed vault identities, mixed opaque/raw
+pairs or stale asynchronous writes. This mode preserves historical browser
+provider secrets and is explicitly NOT vault-retirement acceptance evidence.
+Strict mode retires all raw provider descriptors and requires renewed consent.
+Deploy the configured backend and verify its vault/recovery behavior before
+activating strict frontend mode. An old frontend's local disconnect cannot
+establish revocation of a new server vault connection; complete coordinated
+client rollout and explicit server disconnection testing before security acceptance.
+
+A legacy descriptor disconnect remains local while staged, because the old backend
+has no vault revocation endpoint. Opaque descriptors always use `DELETE /drive/token`;
+a denied revocation never falls back to local success. Pending disconnection checks
+owner, session epoch and the exact stored connection before removing local state.
+Provider-wide consent revocation remains a separate Google settings operation.
+
+`CONTENT_STORAGE_UPLOADS_ENABLED` remains disabled by default; only literal `true`
+admits account uploads and fresh OAuth code exchanges. Existing opaque-handle
+refresh does not use this upload flag; it still requires the current owner,
+session and valid encrypted vault connection. Key/client compatibility and
+coordinated rollout therefore remain separate checks. A client that omits the
+new explicit destination or stable request identity cannot use the new upload
+contract merely because it can store an opaque string. The complete old/new
+frontend/backend upload matrix remains unqualified. The current canonical
+Mainf615 widget already sends destination, visibility and stable request identity;
+the missing-field warning concerns older callers, not that widget. Existing raw
+credentials need renewed consent when moving to the vault backend. No personal
+upload falls back to a corporate account or folder. Native destination/consent
+screens and real-provider qualification remain unfinished. Existing corporate
+inventory upload callers must keep their current adapter; any new explicit
+account-storage helper is separate and unavailable until its own activation.
+
+The immutable canonical main246 migration prefix and original November6 security
+migration are preserved. A new forward identity guard protects the raw credential
+owner and attachment binder references. Apply the full reviewed248-step batch in
+order with original introductions retained; do not rewrite old applied SQL or
+squash introduction ancestors. Two tables are locked before guard shape checks.
+Populated rollback refuses to remove admission while preserving historical rows.
+The model-owned Party-reference registry remains231, rather than inventing ORM rows.
+
+Historical integration403 was a limitation of an earlier connector. Current native
+GitHub CLI authority has successfully published and protected-merged other Mobile
+work. It is not the current blocker. Reconcile this candidate's actual compiled
+API against a root-compatible Mobile snapshot and preserve current Mobile product
+work; the original14318a7 patch is historical. The updated functional patch based
+on compatible1c63 adds only a separately gated account helper and its tests,
+retaining the corporate adapter exactly. Current compatible source `f2be0239`
+was generated from the actual compiled 928-operation context and passed 695 Mobile
+tests, typecheck and release checks. It still needs qualified upstream composition
+and legitimate protected-main reachability, and must not be blindly applied over
+newer contracts. Actual protected upstream ancestry and current independent review/CI
+remain required before integrating a new root pin.
+
+## Required operational evidence
+
+- Review a byte/hash/ownership inventory of every managed root and historical
+  attachment store, and distinguish personal-provider references from TDF bytes.
+  Unknown ownership or unknown size blocks capacity reconciliation; never record
+  zero as an assumption. Existing higher allowances remain intact.
+- Test owner A, unrelated B, a permitted domain reader, revoked grant and revoked
+  TDF session over the actual authenticated HTTP route. Private files must fail
+  through assets/CDN paths, including guessed names, traversal and root overlap.
+- Google creation requests bypass domain default visibility with
+  `ignoreDefaultVisibility=true`; parent permissions still apply, so private
+  selected folders remain rejected and full owner-only ACL checks remain required.
+  Verify this using a Workspace domain with broad default visibility before activation.
+  Provider contract: https://developers.google.com/workspace/drive/api/reference/rest/v3/files/create
+- Verify Google account consent, refresh, disconnect/revocation and explicit
+  public permissions using an isolated provider account. Never reuse shared TDF
+  credentials or folders for a personal destination. A private file's inherited
+  folder permissions are rejected in the personal-private path; complete owner-only ACL verification and real-provider creation tests are required. Do not certify them
+  from a local mock.
+- Rehearse duplicate/concurrent requests, process termination during copy/rename/
+  commit, reconnect during refresh, interrupted deletion, persistent-volume
+  replacement, disk exhaustion and coordinated restore of files/database/key.
+  Compare SHA-256 hashes, manifests, reservations and tombstones after restore.
+- Confirm all public `content/` traffic reaches the manifest-checking API reader.
+  Direct static/CDN mount access bypasses that authorization boundary and blocks
+  activation. Purge pre-existing caches and prove private/staging denial.
+
+Current local validation on built source `ac6d514e`: canonical Stack/GHC9.10.3
+compiled the application and test executable. The complete Hspec run passed 4294
+examples with 23 explicitly pending external-runner cases. The dedicated owned
+PostgreSQL16 security runner passed 10 cases, including actual loopback authenticated
+HTTP assertions. The reviewed 928-operation declaration preserves all 927 existing
+named contracts and adds only bearer-authenticated `DELETE /drive/token`. All 494
+compiled inputs remain unchanged through the metadata/client composition. These
+results do not establish image, provider, native consent UI, restore or production
+acceptance. See `compiler-observation-20261107.json`.
+
+## Historical November6 follow-up (source ca293581)
+
+Prior local follow-up validation: canonical GHC9.10.3 compiled the backend
+and Hspec passed 4,270 examples, zero failures and 22 pending. The dedicated
+PostgreSQL16 runner passed ten security cases including the real loopback HTTP
+owner/foreign-account/resource-reader/session-revocation/static-path assertions.
+An initial run had six replay expectations for implicit public permission; the
+fixtures now choose public explicitly and two added cases reject unintended
+public sharing on private replay. Provider transport remains synthetic.
+
+The compiler-produced API description adds only authenticated
+`DELETE /drive/token` (204); existing declarations are unchanged apart from
+ordinals. Its exact candidate is adopted with provenance in
+`compiler-observation-20261106.json`. Discovery gaps remain tracked obligations.
+Web build, TypeScript, focused lint and directed security/recovery tests passed;
+the final private transport rerun passed seven cases, including redirect denial.
+Thirteen SQL reservation/concurrency/replay/deletion cases, nine finite policy/
+reconciliation checks, twenty browser credential/session cases and ten catalog
+provenance cases passed. The unpublished Mobile companion passed three new
+helper cases, TypeScript and focused lint. Hosted checks and independent review,
+Mobile publication/UI, historical inventory and actual provider/image/restore
+acceptance remain pending. These receipts do not enable production.
+
+The commands and historical receipts below are retained as prior evidence;
+they do not certify the current candidate or production.
+
+
 Status: implementation candidate; production activation blocked by the open
 obligations in `formal/system/content-storage.md`. No production mutation or
 Google provider write is established by this record.
@@ -60,9 +193,12 @@ The PostgreSQL runner creates and drops only its own new nonce `_test` database.
 Never point it at a remote production host. The browser fixture is isolated from
 real providers; its localhost assertions do not establish production behavior.
 
-## Mobile companion
+## Historical Mobile companion receipt (prior to PR703)
 
-`mobile-companion.patch` contains the exact source and regenerated client changes
+The following identifiers and test counts describe the earlier companion only;
+the current patch and published pin are described at the start of this document.
+
+`mobile-companion.patch` contained the exact source and regenerated client changes
 from local Mobile commit `53a381c18c3db51a2810d9f05b3e133d6af9d6e9`, based on
 `bee23755401f1a3cb6c31fbfb7b42f5c6ccc032f`. That main tree equals the root's
 current `f4c7aba45dc153db8809dbe194bc826ff615ef88` pin. The connected integration

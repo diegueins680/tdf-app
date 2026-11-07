@@ -7,6 +7,7 @@ const BAKED_ENV: Record<string, string | undefined> = {
   VITE_API_BASE: import.meta.env?.VITE_API_BASE,
   VITE_CHATKIT_WORKFLOW_ID: import.meta.env?.VITE_CHATKIT_WORKFLOW_ID,
   VITE_DEFAULT_TIMEZONE: import.meta.env?.VITE_DEFAULT_TIMEZONE,
+  VITE_DRIVE_VAULT_REQUIRED: import.meta.env?.VITE_DRIVE_VAULT_REQUIRED,
   VITE_FACEBOOK_APP_ID: import.meta.env?.VITE_FACEBOOK_APP_ID,
   VITE_GOOGLE_CLIENT_ID: import.meta.env?.VITE_GOOGLE_CLIENT_ID,
   VITE_INSTAGRAM_APP_ID: import.meta.env?.VITE_INSTAGRAM_APP_ID,

@@ -9,6 +9,7 @@ import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from './authEvent
 import { reportClientError } from '../analytics/errorReporting';
 import type { LocalePreferences } from '../api/preferences';
 import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';
+import { retireLegacyDriveCredentials } from '../services/storageCredentials';
 
 export interface SessionUser {
   username: string;
@@ -218,7 +219,10 @@ interface SessionProviderProps {
 export const SESSION_BOOTSTRAP_TIMEOUT_MS = 12_000;
 
 export function SessionProvider({ children }: SessionProviderProps) {
-  const [initialStoredState] = useState(readStoredSession);
+  const [initialStoredState] = useState(() => {
+    retireLegacyDriveCredentials();
+    return readStoredSession();
+  });
   const [session, setSession] = useState<SessionUser | null>(initialStoredState.session);
   const [loading, setLoading] = useState(true);
   const [persistScope, setPersistScope] = useState<SessionStorageScope>(initialStoredState.scope);

@@ -15,7 +15,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 const buildAuthUrlMock = jest.fn<(state?: string) => Promise<string>>(() => Promise.resolve(''));
-const clearTokenMock = jest.fn<() => void>();
+const disconnectDriveMock = jest.fn<() => Promise<void>>(() => Promise.resolve());
 const driveConfigErrorMock = jest.fn<() => string | null>(() => null);
 const consumeDriveStateMock = jest.fn<() => string | null>(() => null);
 const ensureAccessTokenMock = jest.fn<() => Promise<Record<string, unknown>>>(() => Promise.resolve({}));
@@ -28,7 +28,7 @@ const storeTokenMock = jest.fn<(token: Record<string, unknown>) => void>();
 
 jest.unstable_mockModule('../services/googleDrive', () => ({
   buildAuthUrl: buildAuthUrlMock,
-  clearToken: clearTokenMock,
+  disconnectDrive: disconnectDriveMock,
   consumeDriveState: consumeDriveStateMock,
   driveConfigError: driveConfigErrorMock,
   ensureAccessToken: ensureAccessTokenMock,
@@ -95,7 +95,7 @@ describe('useGoogleDriveCallback', () => {
   beforeEach(() => {
     sessionLoading = false;
     buildAuthUrlMock.mockReset().mockResolvedValue('https://accounts.google.com/o/oauth2/v2/auth');
-    clearTokenMock.mockReset();
+    disconnectDriveMock.mockReset().mockResolvedValue(undefined);
     driveConfigErrorMock.mockReset().mockReturnValue(null);
     consumeDriveStateMock.mockReset().mockReturnValue(null);
     ensureAccessTokenMock.mockReset().mockResolvedValue({});

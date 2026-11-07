@@ -1,3 +1,4 @@
+import PrivateAttachmentLink from '../components/PrivateAttachmentLink';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -22,7 +23,6 @@ import {
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PaymentCreate, PaymentDTO } from '../api/types';
@@ -630,16 +630,14 @@ export default function PaymentsPage() {
                             <TableCell>{pay.payReference ?? '-'}</TableCell>
                             <TableCell>
                               {pay.payAttachment ? (
-                                <Button
-                                  size="small"
-                                  startIcon={<DescriptionIcon fontSize="small" />}
-                                  component="a"
+                                <PrivateAttachmentLink
+                                  fileName="comprobante"
                                   href={pay.payAttachment}
                                   target="_blank"
                                   rel="noreferrer"
                                 >
                                   Ver
-                                </Button>
+                                </PrivateAttachmentLink>
                               ) : (
                                 <Typography variant="body2" color="text.secondary">
                                   —
@@ -667,9 +665,9 @@ export default function PaymentsPage() {
                           <Box key={p.payId}>
                             <Typography variant="body2">
                               #{p.payId} - {p.payPeriod ?? p.payPaidAt} -{' '}
-                              <a href={p.payAttachment ?? '#'} target="_blank" rel="noreferrer">
+                              <PrivateAttachmentLink href={p.payAttachment ?? '#'} fileName="comprobante" target="_blank" rel="noreferrer">
                                 {p.payAttachment}
-                              </a>
+                              </PrivateAttachmentLink>
                             </Typography>
                           </Box>
                         ))}

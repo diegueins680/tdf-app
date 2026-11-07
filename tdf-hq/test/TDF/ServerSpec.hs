@@ -7393,7 +7393,7 @@ spec = describe "TDF.Server helpers" $ do
     describe "Drive storage failure isolation" $ do
         it "defaults explicit personal destinations to private without changing legacy sharing" $ do
             resolveDriveUploadVisibility (Just "google_drive") Nothing `shouldBe` Just "private"
-            resolveDriveUploadVisibility Nothing Nothing `shouldBe` Nothing
+            resolveDriveUploadVisibility Nothing Nothing `shouldBe` Just "private"
 
         it "refuses missing personal credentials instead of selecting TDF credentials" $
             case resolveDriveUploadAuthority (Just "user") Nothing of
