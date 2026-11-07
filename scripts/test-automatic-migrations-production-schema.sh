@@ -114,7 +114,8 @@ done
 # access function. Restore the later health wrapper too; otherwise this fixture
 # correctly remains in the rolled-back health state despite its retained ledger.
 psql "${database_url}" -X -v ON_ERROR_STOP=1 \
-  -f "${repo_root}/tdf-hq/sql/2026-11-06_music_media_health.sql" >/dev/null
+  -f "${repo_root}/tdf-hq/sql/2026-11-06_music_media_health.sql" \
+  -f "${repo_root}/tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql" >/dev/null
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 echo "PASS historical rollback detection and current media policy restoration"

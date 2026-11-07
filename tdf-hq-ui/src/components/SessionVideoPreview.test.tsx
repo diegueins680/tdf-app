@@ -1,11 +1,14 @@
 import { jest } from '@jest/globals';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { PLAYER_TAKEOVER_EVENT } from '../player/types';
 
 const capture = jest.fn();
+const pausePlayer = jest.fn();
+jest.unstable_mockModule('../player/PlayerProvider', () => ({ useOptionalPlayer: () => ({ pause: pausePlayer }) }));
 jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture }) }));
 const { default: SessionVideoPreview } = await import('./SessionVideoPreview');
-afterEach(() => { cleanup(); capture.mockClear(); });
+afterEach(() => { cleanup(); capture.mockClear(); pausePlayer.mockClear(); jest.restoreAllMocks(); });
 
 it('records observable public file playback without exposing media URLs', () => {
   render(<SessionVideoPreview url="https://media.example.com/session.mp4" title="Session" trackPublicPlayback />);
@@ -39,4 +42,13 @@ it.each([
   expect(screen.getByRole('link')).toHaveAttribute('href', source);
   fireEvent.load(screen.getByTitle('Drive session'));
   expect(capture).not.toHaveBeenCalled();
+});
+
+it('hands native video playback to and from the global transport without overlapping audio', () => {
+  const pause = jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
+  render(<SessionVideoPreview url="https://media.example.com/session.mp4" title="Video handoff" />);
+  fireEvent.play(screen.getByLabelText('Video handoff'));
+  expect(pausePlayer).toHaveBeenCalledTimes(1);
+  window.dispatchEvent(new CustomEvent(PLAYER_TAKEOVER_EVENT));
+  expect(pause).toHaveBeenCalledTimes(1);
 });

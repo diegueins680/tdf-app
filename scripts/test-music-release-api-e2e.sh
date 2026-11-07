@@ -194,7 +194,8 @@ for migration in \
   2026-10-15_music_payment_outcome_consistency.sql \
   2026-10-15_music_exact_minor_units.sql \
   2026-10-30_artist_featured_track.sql \
-  2026-11-06_music_media_health.sql
+  2026-11-06_music_media_health.sql \
+  2026-11-06_music_legacy_source_compatibility.sql
 do
   psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" \
     < "$TDF_MUSIC_ROOT/tdf-hq/sql/$migration"

@@ -1263,6 +1263,11 @@
       "id": "2026-11-06_music_media_health",
       "path": "tdf-hq/sql/2026-11-06_music_media_health.sql",
       "introducedBy": "46fd778c0e7e12bb7157b8f8021c1bb7e6d3effd"
+    },
+    {
+      "id": "2026-11-06_music_legacy_source_compatibility",
+      "path": "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
+      "introducedBy": "51a4813e992c9466f85e8fc7d701bf3369c2dbf5"
     }
   ]
 }

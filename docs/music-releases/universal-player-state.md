@@ -76,3 +76,5 @@ of uninterrupted playback is possible when all sources or the network fail.
 Tests exercise concrete races, native media and database behaviors; they are not
 a mathematical proof or a claim that this candidate is deployed. Physical-device,
 provider-account and full catalog provenance qualification remain separate.
+
+Native session-video previews coordinate a handoff: playing a preview pauses the global transport, and a new global play command retires the preview. External provider frames remain outside the native engine guarantee. Legacy browser URL forms retain stable source authorization; relative and HTTP URLs are never fetched by the HTTPS-only server probe.

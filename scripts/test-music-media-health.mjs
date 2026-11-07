@@ -39,6 +39,7 @@ try {
   const asset = sql(`SELECT id FROM music_asset WHERE release_version_id='${version}' AND asset_role='stream_audio' LIMIT 1`);
   assert.equal(sql(`SELECT music_public_asset_accessible('${asset}',NULL)`),'t');
   apply('2026-11-06_music_media_health.sql'); apply('2026-11-06_music_media_health.sql');
+  apply('2026-11-06_music_legacy_source_compatibility.sql'); apply('2026-11-06_music_legacy_source_compatibility.sql');
   assert.equal(sql('SELECT music_media_reconcile(1)'),'1');
   assert.equal(sql('SELECT count(*) FROM music_media_health'),'1');
   sql('SELECT music_media_reconcile(100)');
@@ -77,6 +78,18 @@ try {
   const newer=token();assert.equal(claim(newer).id,id);
   assert.equal(observe(t,'valid','decodable'),'f','Expired worker cannot commit over a new lease');
   assert.equal(observe(newer,'valid','decodable'),'t');
+  for (const url of ['http://media.example/audio.mp3','/uploads/authorized.mp3','media.example/audio.mp3','//media.example/audio.mp3']) {
+    sql(`UPDATE artist_release SET spotify_url='${url}' WHERE id=${legacy}`);
+    assert.equal(eligible('legacy',id),true,'Supported browser URL retains an authorized source: '+url);
+    const expected = url.startsWith('/') || url.startsWith('http:') ? url : 'https://'+url;
+    assert.equal(sql(`SELECT locator->>'url' FROM music_media_source WHERE source_kind='legacy' AND source_id='${id}'`),expected);
+  }
+  for (const url of ['javascript:alert(1)','data:audio/mpeg,unsafe','https://user:secret@media.example/a.mp3','https://youtube.com/watch?v=provider']) {
+    sql(`UPDATE artist_release SET spotify_url='${url}' WHERE id=${legacy}`);
+    assert.equal(eligible('legacy',id),false,'Unsafe/provider URL never becomes native candidate');
+  }
+  sql(`UPDATE artist_release SET spotify_url='https://media.example/after.mp3' WHERE id=${legacy}`);
+  due('legacy',id);t=token();claim(t);observe(t,'valid','decodable');
   apply('2026-11-06_music_media_health_rollback.sql');
   assert.equal(health('legacy',id).status,'valid','Application recovery retains diagnosis');
   console.log('PASS PostgreSQL media health: ingestion, bounded resumable reconciliation, confirmation, temporary failures, source replacement, deduplication, lease fencing, restoration and publication gate');

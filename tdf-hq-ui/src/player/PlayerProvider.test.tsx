@@ -986,7 +986,7 @@ it('preserves explicit pause through a silent external load and subsequent artis
   act(() => player.beginArtist('next-profile'));
   await act(async () => player.loadArtist('next-profile', [track('next-profile')]));
   jest.mocked(Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'paused')!.get!).mockReturnValue(true);
-  await act(() => { view.container.querySelector('audio')!.dispatchEvent(new Event('canplay')); });
+  act(() => { view.container.querySelector('audio')!.dispatchEvent(new Event('canplay')); });
   expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(attempts);
   expect(player.status).toBe('paused');
 });

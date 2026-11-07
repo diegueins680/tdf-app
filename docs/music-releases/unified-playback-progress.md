@@ -6,7 +6,7 @@ This checkpoint supersedes the implementation gaps described in the historical
 notes below. It is **not a production-delivery claim**.
 
 The candidate normally composes historical #670, #695 and protected main through
-#633/#630. One native engine now handles artist queues, radio, search, releases,
+#633/#630 and the protected #599 video contracts. One native engine now handles artist queues, radio, search, releases,
 and direct StreamingPlayer audio/video. External provider pages open separately;
 TDF does not extract their streams. Explicit pause survives delayed ended notifications, queue stepping, silent
 loads and same-listener reloads. Pending authorization exposes Pause immediately,
@@ -22,20 +22,19 @@ limits are in [universal-player-state.md](universal-player-state.md).
 
 Executed local qualification:
 
-- UI: the earlier full run passed 354 suites / 4,022 tests. The final integration
-  run passed 353 suites / 4,027 tests with one newly added native-readiness fixture
-  assertion failing; after modeling its paused/canplay event, all76 provider tests
-  pass. Final whole-suite hosted qualification remains required. Application types,
-  changed-source lint and production build pass.
-- Backend: integrated canonical Stack build passes; 4,263 examples, zero
-  failures, 22 declared external-runner pending cases, including the protected
-  credential-cache and current-main integration.
+- UI: the fresh combined run passes358 suites /4,075 tests. TypeScript,
+  changed-source lint and production build pass; hosted qualification remains
+  a separate required check.
+- Backend: the latest combined Stack build passes; 4,275 examples, zero
+  failures, 23 declared external-runner pending cases, including the protected
+  credential-cache and video-main integration.
 - Actual HTTP/PostgreSQL workflow passes publication, territorial delivery,
   entitlements, correction, takedown, and the new authentication, owner/team/admin,
   diagnostic, suppression and restoration checks. Storage responses in this
   fixture are synthetic; it is not a real object-store upload pass.
-- All 246 migrations apply/replay in the complete canonical schema; historical
-  rollback detection, health-policy restoration and guard-removal controls pass.
+- All249 migrations apply/replay in the complete canonical schema; historical
+  rollback detection, health/compatibility policy restoration and guard-removal
+  controls pass.
 - Twelve probe tests include unsafe-address/redirect rejection, bounded media,
   native sample decoding and IPv4-translation address refusal. The latter fixed
   a concrete acceptance counterexample during review.
@@ -46,8 +45,9 @@ Executed local qualification:
   physical-device pass is claimed.
 
 Companion [Mobile #181](https://github.com/diegueins680/TDF-mobile/pull/181)
-publishes matching generated clients at b88e923. It stays draft because Mobile
-main separately added video declarations in #180; do not overwrite that work.
+publishes matching combined generated clients at c6034ff. It normally merges Mobile main, retaining #180 video declarations and the
+feature registry, and passes hosted validate. Independent approval and protected merge completed
+at b41ed57; the root pins the exact merged ancestor c6034ff.
 The root pins the exact published companion rather than silently changing Mobile
 main. Full Mobile runtime/device behavior is outside this client-only change.
 
@@ -238,3 +238,5 @@ The normal dependency merge also includes catalogue3c995310 and its qualified
 cleanup repair, preserving both histories. Shared requirement objects match;
 only the incoming cleanup requirement is added. Generated discovery counters
 and traceability are reconciled, with no Mobile pin or authorization change.
+
+The forward legacy-source compatibility view retains supported HTTP, relative and scheme-less browser URLs behind current artist authorization. Server probes remain HTTPS-only and never resolve relative URLs against a server origin; such sources can retain an inconclusive diagnostic while browser playback remains eligible. The current249-entry manifest preserves the complete246-entry protected-main prefix and appends the three original player entries. The fresh combined249-migration schema application/replay/startup check passes.

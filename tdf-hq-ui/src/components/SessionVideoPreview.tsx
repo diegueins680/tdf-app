@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useOptionalPlayer } from '../player/PlayerProvider';
+import { PLAYER_TAKEOVER_EVENT } from '../player/types';
 import { Alert, Box, Button, Stack } from '@mui/material';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { videoAttribution } from '../features/campaigns/videoAttribution';
@@ -27,6 +29,13 @@ export function sessionVideoTarget(value: string): { kind: 'iframe' | 'video' | 
 }
 
 export default function SessionVideoPreview({ url, title, trackPublicPlayback = false }: { url: string; title: string; trackPublicPlayback?: boolean }) {
+  const player = useOptionalPlayer();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const retireVideo = () => videoRef.current?.pause();
+    window.addEventListener(PLAYER_TAKEOVER_EVENT, retireVideo);
+    return () => window.removeEventListener(PLAYER_TAKEOVER_EVENT, retireVideo);
+  }, []);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const target = sessionVideoTarget(url);
   if (!target) return null;
@@ -34,9 +43,9 @@ export default function SessionVideoPreview({ url, title, trackPublicPlayback = 
     {target.kind === 'iframe' && <Box component="iframe" title={title} src={target.url} loading="lazy"
       allow="fullscreen; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"
       sx={{ width: '100%', aspectRatio: '16 / 9', border: 0, borderRadius: 2 }} />}
-    {target.kind === 'video' && <Box component="video" controls preload="metadata" aria-label={title}
+    {target.kind === 'video' && <Box component="video" ref={videoRef} controls preload="metadata" aria-label={title}
       src={target.url} onError={() => setFailedUrl(url)}
-      onPlay={() => { if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_started', { ...videoAttribution(window.location.search), player: 'file' }); }}
+      onPlay={() => { player?.pause(); if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_started', { ...videoAttribution(window.location.search), player: 'file' }); }}
       onEnded={() => { if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_ended', { ...videoAttribution(window.location.search), player: 'file' }); }}
       sx={{ width: '100%', maxHeight: 600, borderRadius: 2 }} />}
     {failedUrl === url && <Alert severity="warning">No se pudo reproducir el archivo. Abre el original y revisa su disponibilidad y permisos.</Alert>}
