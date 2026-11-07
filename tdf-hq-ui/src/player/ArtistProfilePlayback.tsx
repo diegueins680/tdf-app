@@ -26,7 +26,7 @@ export function legacyArtistTracks(releases: ArtistReleaseDTO[], artistId: numbe
     const sources = (['spotify', 'youtube'] as const).flatMap((slot) => {
       const url = slot === 'spotify' ? release.arSpotifyUrl : release.arYoutubeUrl;
       const action = resolveReleasePlaybackAction({ ...release, arSpotifyUrl: url, arYoutubeUrl: null }, {});
-      if (action?.kind !== 'native' || !action.url.startsWith('https://')) return [];
+      if (action?.kind !== 'native') return [];
       return [{ url: action.url, legacySourceId: `${release.arReleaseId}:${slot}`,
         quality: 'high' as const, mediaType: 'audio/mpeg' }];
     });
