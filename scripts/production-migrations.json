@@ -1258,6 +1258,11 @@
       "id": "2026-10-13_apple_sign_in_policy",
       "path": "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
       "introducedBy": "161cb8666ed1e96520850df2f985dd14f4bfebdf"
+    },
+    {
+      "id": "2026-11-07_apple_provider_identity_issuer",
+      "path": "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
+      "introducedBy": "7c1525edf0f02fe53f985c24862940b91c11cdfa"
     }
   ]
 }

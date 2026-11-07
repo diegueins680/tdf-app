@@ -16996,7 +16996,9 @@
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/lib/appleSignIn.ts",
         "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
-        "tdf-mobile/src/localization/onboardingCopy.ts"
+        "tdf-mobile/src/localization/onboardingCopy.ts",
+        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
+        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/AppleSignInSpec.hs",
@@ -17009,17 +17011,19 @@
         "tdf-mobile/scripts/tests/test_ios_signing.py",
         "scripts/verify-request-failures.py",
         "scripts/verify-cors-boundary.py",
-        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs"
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "confidence": "Synthetic verification tests and bounded fetch/cancellation controls; actual current native/DB/API and paired Mobile qualification tracked separately. Physical-device and Apple Developer capability verification remain release validation.",
+      "confidence": "Source-bound compiled verifier/request/session-window/DTO/configuration cases and owned PostgreSQL lifecycle/issuer migration controls. Production provider configuration and physical-device/capability checks remain unverified release validation; no whole-system proof.",
       "ambiguity": [
-        "Services ID audiences for web are configurable but not exercised."
+        "Services ID audiences for web are configurable but not exercised.",
+        "Inherited known-kid cache entries have no residence TTL; signature and token expiry are rechecked, but this repair does not prove prompt provider key-revocation freshness."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unit tests pass; the Apple capability, production audience configuration and a physical device test are owner gates."
+        "reason": "PARTIAL: synthetic compiled verifier and owned-database lifecycle/issuer controls cover the enumerated boundary; no production Apple request, provisioning or physical-device acceptance was exercised."
       },
       "critical": true,
       "property": "NoSessionWithoutVerifiedAppleToken and ExplicitConsentBeforeCreation",
