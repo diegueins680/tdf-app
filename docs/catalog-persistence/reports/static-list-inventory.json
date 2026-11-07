@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T01:02:58.462Z",
+  "generatedAt": "2026-11-07T02:17:27.855Z",
   "repositoryRoot": ".",
-  "filesScanned": 2633,
+  "filesScanned": 2634,
   "candidateCount": 1405,
   "byClassification": {
     "dynamic-business-catalog": 920,
@@ -4480,7 +4480,7 @@
       "lines": [
         566
       ],
-      "consumerCount": 282,
+      "consumerCount": 283,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -4622,6 +4622,7 @@
         "scripts/check-admin-guards.py",
         "scripts/check-browser-vendor.mjs",
         "scripts/ci-change-scope.mjs",
+        "scripts/generate-app-icons.mjs",
         "scripts/generate-feature-audit-reports.mjs",
         "scripts/generate-mobile-feature-registry.mjs",
         "scripts/install-flyctl.mjs",
@@ -4643,8 +4644,7 @@
         "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
-        "scripts/test-isolated-application-canary.py",
-        "scripts/test-marketplace-operations-migration.sh"
+        "scripts/test-isolated-application-canary.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/drive.ts",
@@ -8872,7 +8872,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1552,
+      "consumerCount": 1553,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -18323,7 +18323,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 45,
+      "consumerCount": 46,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -18371,6 +18371,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/check-browser-vendor.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/generate-app-icons.mjs",
         "scripts/social/verify-preview.mjs",
         "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
@@ -42827,7 +42828,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 422,
+      "consumerCount": 423,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -42993,7 +42994,7 @@
         "scripts/deploy-stripe-ticketing.sh",
         "scripts/diagnose-social.mjs",
         "scripts/fetch-ddex-ern432-schema.sh",
-        "scripts/generate-identity-party-reference-view.mjs"
+        "scripts/generate-app-icons.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -43399,7 +43400,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 428,
+      "consumerCount": 429,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -67673,7 +67674,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 495,
+      "consumerCount": 496,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -163445,7 +163446,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 610,
+      "consumerCount": 611,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
