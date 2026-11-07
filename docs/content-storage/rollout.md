@@ -39,7 +39,10 @@ session and valid encrypted vault connection. Key/client compatibility and
 coordinated rollout therefore remain separate checks. A client that omits the
 new explicit destination or stable request identity cannot use the new upload
 contract merely because it can store an opaque string. The complete old/new
-frontend/backend upload matrix remains unqualified. No personal
+frontend/backend upload matrix remains unqualified. The current canonical
+Mainf615 widget already sends destination, visibility and stable request identity;
+the missing-field warning concerns older callers, not that widget. Existing raw
+credentials need renewed consent when moving to the vault backend. No personal
 upload falls back to a corporate account or folder. Native destination/consent
 screens and real-provider qualification remain unfinished. Existing corporate
 inventory upload callers must keep their current adapter; any new explicit
@@ -60,7 +63,7 @@ API against a root-compatible Mobile snapshot and preserve current Mobile produc
 work; the original14318a7 patch is historical. The updated functional patch based
 on compatible1c63 adds only a separately gated account helper and its tests,
 retaining the corporate adapter exactly. Current compatible source `f2be0239`
-was generated from the actual compiled928-operation context and passed695 Mobile
+was generated from the actual compiled 928-operation context and passed 695 Mobile
 tests, typecheck and release checks. It still needs qualified upstream composition
 and legitimate protected-main reachability, and must not be blindly applied over
 newer contracts. Actual protected upstream ancestry and current independent review/CI
@@ -94,11 +97,11 @@ remain required before integrating a new root pin.
   activation. Purge pre-existing caches and prove private/staging denial.
 
 Current local validation on built source `ac6d514e`: canonical Stack/GHC9.10.3
-compiled the application and test executable. The complete Hspec run passed4294
-examples with23 explicitly pending external-runner cases. The dedicated owned
-PostgreSQL16 security runner passed10 cases, including actual loopback authenticated
-HTTP assertions. The reviewed928-operation declaration preserves all927 existing
-named contracts and adds only bearer-authenticated `DELETE /drive/token`. All494
+compiled the application and test executable. The complete Hspec run passed 4294
+examples with 23 explicitly pending external-runner cases. The dedicated owned
+PostgreSQL16 security runner passed 10 cases, including actual loopback authenticated
+HTTP assertions. The reviewed 928-operation declaration preserves all 927 existing
+named contracts and adds only bearer-authenticated `DELETE /drive/token`. All 494
 compiled inputs remain unchanged through the metadata/client composition. These
 results do not establish image, provider, native consent UI, restore or production
 acceptance. See `compiler-observation-20261107.json`.
