@@ -788,7 +788,7 @@
               "9abc4f655fdb20e98b03"
             ],
             "selectedHistoricalPreservedCount": 1206,
-            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87→88 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
+            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87\u219288 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
           }
         }
       },
@@ -30687,6 +30687,13 @@
       },
       "currentDecisionId": "2a74f9391e1cb8155c37",
       "executionAllowed": false
+    },
+    "musicWorkerStopTrace20261107": {
+      "base": "6d816fca015ef68e0636d0ddadebb6fa13c3a32f",
+      "newTechnicalStageAssertion": "8a4f1ab7e439ff3e51cd",
+      "oldActiveDecisionsRetained": 1409,
+      "staleRemoved": 0,
+      "scope": "Only one new synthetic protocol fingerprint reviewed; all parent decisions/rationales unchanged."
     }
   },
   "decisions": [
@@ -61085,7 +61092,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -63123,7 +63130,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -70442,7 +70449,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
@@ -70457,7 +70464,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -70472,7 +70479,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -74091,6 +74098,25 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "8a4f1ab7e439ff3e51cd",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "A diagnostic must not expose payloads or convert a failed worker qualification into success.",
+      "justification": "Three fixed labels in a synthetic shutdown-trace protocol assertion: start, term-command result, and wait completion. They describe only bounded observability stages, not business catalog states, permissions or provider capabilities. Numeric owned PID/status are validated; default-off logging and original failing-baseline preservation are tested. No claim that the inherited Linux worker hang is fixed.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-worker-passive-stop-protocol-20261107",
+      "evidence": {
+        "file": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+        "line": 149,
+        "kind": "array",
+        "name": "stage",
+        "valueCount": 3
+      }
     }
   ]
 }
