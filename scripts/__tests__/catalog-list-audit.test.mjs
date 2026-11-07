@@ -814,7 +814,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   const old = JSON.parse(await fromGit('docs/catalog-persistence/catalog-list-decisions.json')).decisions;
   const { active, successors, integration } = await readReconciliation();
   assert.equal(old.length, 1405);
-  assert.equal(active.length, 1406);
+  assert.equal(active.length, 1407);
   const history = new Map();
   const visit = row => {
     if (!row) return;
