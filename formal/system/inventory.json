@@ -300,6 +300,7 @@
       "scripts/fetch-ddex-ern432-schema.sh",
       "scripts/fixtures/artist-merch-mobile.mjs",
       "scripts/fixtures/merch-reputation-mobile.mjs",
+      "scripts/generate-app-icons.mjs",
       "scripts/generate-feature-audit-reports.mjs",
       "scripts/generate-identity-party-reference-view.mjs",
       "scripts/generate-mobile-feature-registry.mjs",
@@ -4698,6 +4699,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-42dfae51eec6762d",
+      "path": "scripts/generate-app-icons.mjs",
+      "sha256": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d046bc8ebef81bf4",
       "path": "scripts/generate-feature-audit-reports.mjs",
       "sha256": "b847760d68f69f6ef071fe8123390a3bf630b333f0aebacd4cc8d20e18f16f24",
@@ -7400,7 +7407,7 @@
     {
       "id": "SURFACE-a2ada5ea1a6d219a",
       "path": "tdf-hq-ui/public/manifest.json",
-      "sha256": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7",
+      "sha256": "d7b67201a7e31dc945d4fc7febf86e2a66aa00cc5b6ad91bf045772cf2e1b7cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29307,6 +29314,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/app-brand-icons.md",
+      "sha256": "a51e898bd9a84f849dc75a75ca0ecc23fbc693b3f709be9bdee621d9e194c9e8",
+      "authority": "inferred",
+      "authorityBasis": "Status: approved by the product owner on 2026-10-29 for this visual correction.",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/assurance-report.md",
       "sha256": "1e4474ed41bc00682d9459c32c748d05f891fbe8950ef199463ce42f807bfbeb",
       "authority": "inferred",
@@ -30155,7 +30169,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bbb5878a693b40d7525b0c0699d154fbaac10af86a92f0784b844c5de255b6d3",
+      "sha256": "0d62aeebcdbfd1ca8a8da59483bde6421157a3484c3190a290006feec62954a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
