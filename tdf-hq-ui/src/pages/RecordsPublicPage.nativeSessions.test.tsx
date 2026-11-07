@@ -158,3 +158,24 @@ test('keeps independent native playback when the YouTube resource is unavailable
     expect(detail.track.sources.every(source => source.url.startsWith('https://media.invalid/native.'))).toBe(true);
   } finally { window.removeEventListener(PLAYER_LOAD_TRACK_EVENT, playback); }
 });
+
+
+test.each(['', `?recording=${id}`])('plays an imported recording card/deep link within its exact native chapter while preserving one discussion: %s', async query => {
+  const imported = item('Imported song', { ...readyNativeMetadata(), isTrack: true, parentId: 'parent-session', startMs: 10000, endMs: 20000 });
+  const playback = jest.fn<(event: Event) => void>();
+  window.addEventListener(PLAYER_LOAD_TRACK_EVENT, playback);
+  try {
+    view(feed({ recordings: [imported] }), query);
+    const article = await screen.findByRole('article', { name: 'Imported song' });
+    if (query) await waitFor(() => expect(document.activeElement).toBe(article));
+    fireEvent.click(screen.getByRole('button', { name: 'Escuchar', exact: true }));
+    const detail = (playback.mock.calls[0]![0] as CustomEvent<LoadPlayerTrackDetail>).detail;
+    expect(detail.track).toMatchObject({ recordingId: id, startMs: 10000, endMs: 20000, durationMs: 10000 });
+    expect(detail.queue).toEqual([detail.track]);
+    const panel = screen.getByTestId('publication-panel');
+    expect(panel.getAttribute('data-kind')).toBe('recording');
+    expect(panel.getAttribute('data-key')).toBe(id);
+    expect(article.contains(panel)).toBe(true);
+    expect(summary).not.toHaveBeenCalled();
+  } finally { window.removeEventListener(PLAYER_LOAD_TRACK_EVENT, playback); }
+});

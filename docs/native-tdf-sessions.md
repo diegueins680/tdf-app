@@ -90,3 +90,23 @@ header: that variant streams HTTP 200 instead of honoring Range. Native media
 elements use the tested requests without `crossorigin`; beginning/end range
 samples returned 206 and matched the uploaded files. CORS-enabled media fetch
 adapters need a server-side fix and separate qualification before adoption.
+
+
+Chapter transition and imported recording boundaries
+
+Imported individual recordings (`tdfNative.isTrack: true`) retain their canonical
+recording publication identity and validated source `startMs`/`endMs`. Their card
+and recording deep link use the same bounded global-player path as chapter
+selection; the full-session URL does not mean playback starts at zero. Invalid
+bounds retain the existing malformed-metadata fallback rather than inventing a
+valid native range.
+
+An internally requested pause is consumed before loading the next source. This
+keeps its delayed native event from cancelling the next chapter's autoplay and
+prevents an unconsumed suppression counter from hiding a later user pause.
+Already-paused elements do not wait for an event that `pause()` will not queue.
+Source generations and abort guards select only the latest continuation; unmount
+removes its pending listener. Explicit user pause cancels intent synchronously.
+These are covered by controlled asynchronous media-event tests and an owned
+synthetic native MP4 browser fixture, not an all-schedules proof or authorization
+to fetch, publish or operate external media.

@@ -274,6 +274,29 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const playAttemptRef = useRef(0);
   const loadedSourceRef = useRef<{ generation: number; trackId: string; url: string; preview?: boolean; quality: PlayerQuality } | null>(null);
   const pendingPositionRef = useRef<{ generation: number; trackId: string; url: string; position: number } | null>(null);
+  const internalPauseEventsRef = useRef(new WeakSet<Event>());
+  const pendingInternalPausesRef = useRef(new Map<HTMLMediaElement, { completion: Promise<void>; cancel: () => void }>());
+  const pauseForSourceTransition = useCallback((media: HTMLMediaElement): Promise<void> => {
+    const pending = pendingInternalPausesRef.current.get(media);
+    if (pending) return pending.completion;
+    if (media.paused) return Promise.resolve();
+    let finish: () => void = () => undefined;
+    const completion = new Promise<void>(resolve => { finish = resolve; });
+    const consume = (event?: Event) => {
+      if (event) internalPauseEventsRef.current.add(event);
+      media.removeEventListener('pause', consume, true);
+      pendingInternalPausesRef.current.delete(media);
+      finish();
+    };
+    pendingInternalPausesRef.current.set(media, { completion, cancel: () => consume() });
+    // Observe this exact native task before the ordinary pause listener. Wait
+    // before load(): aborting a resource must not discard an expected event and
+    // leave a suppression token that could swallow a later user pause.
+    media.addEventListener('pause', consume, { once: true, capture: true });
+    media.pause();
+    return completion;
+  }, []);
+
   const lastContinuousPositionRef = useRef(0);
   const listenedSinceProgressRef = useRef(0);
   const currentTrack = queue.currentIndex >= 0 ? queue.tracks[queue.currentIndex] ?? null : null;
@@ -487,7 +510,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         return;
       }
       if (track?.endMs && position * 1000 >= track.endMs && !audio.paused) {
-        audio.pause();
+        void pauseForSourceTransition(audio);
         handleEnded();
         return;
       }
@@ -519,8 +542,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       const track = queue.tracks[queue.currentIndex];
       if (track) emitPlayerEvent('buffering', track, audio.currentTime);
     };
-    const handlePause = () => {
-      if (!ownsNativeSource() || !audio.paused) return;
+    const handlePause = (event: Event) => {
+      if (internalPauseEventsRef.current.has(event) || !ownsNativeSource() || !audio.paused) return;
       if (nativeVideo && !audio.ended) { autoplayRef.current = false; nativeIntentRef.current = false; }
       setStatus((current) => current === 'error' || current === 'unavailable' || current === 'loading' ? current : 'paused');
     };
@@ -599,16 +622,18 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [audioRef, currentTrack, flushProgress, nativeVideo, next, play, queue, scheduleRecovery, source?.assetId, updateMuted, updateVolume]);
+  }, [audioRef, currentTrack, flushProgress, nativeVideo, next, pauseForSourceTransition, play, queue, scheduleRecovery, source?.assetId, updateMuted, updateVolume]);
 
   useEffect(() => {
     const engines = [legacyAudioRef.current, nativeVideoRef.current];
+    const pendingPauses = pendingInternalPausesRef.current;
     return () => {
       cancelRetry();
       sourceGenerationRef.current += 1;
       playAttemptRef.current += 1;
       loadedSourceRef.current = null;
       autoplayRef.current = false;
+      for (const pending of pendingPauses.values()) pending.cancel();
       for (const audio of engines) {
         if (!audio?.hasAttribute('src')) continue;
         audio.pause(); audio.removeAttribute('src'); audio.load();
@@ -642,16 +667,22 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     setResolvedQuality(null);
     setError(null);
     if (!audio) return;
-    audio.pause();
-    audio.removeAttribute('src');
+    const paused = pauseForSourceTransition(audio);
     if (!currentTrack || !source) {
-      audio.load();
+      void paused.then(() => {
+        if (controller.signal.aborted || generation !== sourceGenerationRef.current) return;
+        audio.removeAttribute('src');
+        audio.load();
+      });
       setStatus(currentTrack ? 'unavailable' : 'idle');
-      return;
+      return () => controller.abort();
     }
     setStatus('loading');
     void (async () => {
       try {
+        await paused;
+        if (controller.signal.aborted || generation !== sourceGenerationRef.current) return;
+        audio.removeAttribute('src');
         let resolved: { source: PlayerSource; url: string } | null = null;
         for (const candidate of candidates) {
           if (generation !== sourceGenerationRef.current || controller.signal.aborted) return;
@@ -720,7 +751,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       removePreparationListener();
       if (pendingPositionRef.current?.generation === generation) pendingPositionRef.current = null;
     };
-  }, [audioRef, cancelRetry, candidates, currentTrack, play, quality, scheduleRecovery, source, sourceRefresh]);
+  }, [audioRef, cancelRetry, candidates, currentTrack, pauseForSourceTransition, play, quality, scheduleRecovery, source, sourceRefresh]);
 
   useEffect(() => {
     const audio = audioRef.current;

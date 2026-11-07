@@ -10,6 +10,7 @@ export interface NativeSession {
   id: string; title: string; artist: string; artistPartyIds: number[]; description?: string;
   publication: NativePublication;
   recordedAt?: string; publishedAt?: string; posterUrl?: string; durationMs: number;
+  startMs?: number; endMs?: number;
   state: 'awaiting_master' | 'processing' | 'ready' | 'failed';
   sourceVideoIds?: string[];
   sources: PlayerSource[]; chapters: SessionChapter[]; credits: { name: string; role: string }[];
@@ -31,10 +32,14 @@ export function nativeMediaUrl(v: unknown): string | undefined {
 export function readNativeSession(resource: RecordsResourceDTO, entity: { id: string; title: string; description?: string }, kind: NativePublicationKind): NativeSession | null {
   if (resource.providerCode !== 'tdf' || resource.availability === 'unavailable' || !text(entity.id)) return null;
   const data = object(resource.providerMetadata?.['tdfNative']);
-  if (data?.['schemaVersion'] !== 1 || data['kind'] !== 'session' || data['isTrack'] === true) return null;
+  if (data?.['schemaVersion'] !== 1 || data['kind'] !== 'session') return null;
   if (!Array.isArray(data['artistPartyIds']) || !data['artistPartyIds'].length
     || !data['artistPartyIds'].every(id => Number.isSafeInteger(id) && Number(id) > 0)
     || !positive(data['durationMs']) || !text(data['artist'])) return null;
+  const isTrack = data['isTrack'] === true;
+  if (isTrack && (kind !== 'recording' || typeof data['startMs'] !== 'number' || !Number.isFinite(data['startMs'])
+    || data['startMs'] < 0 || !positive(data['endMs']) || data['endMs'] <= data['startMs']
+    || data['endMs'] > data['durationMs'])) return null;
   const state = data['state'];
   if (!['awaiting_master', 'processing', 'ready', 'failed'].includes(String(state))) return null;
   const sources: PlayerSource[] = [];
@@ -54,11 +59,14 @@ export function readNativeSession(resource: RecordsResourceDTO, entity: { id: st
       || c['startMs'] < (chapters.at(-1)?.endMs ?? 0) || chapters.some(p => p.id === c['id'])) return null;
     chapters.push({ id: c['id'], title: c['title'], startMs: c['startMs'], endMs: c['endMs'] });
   }
+  if (isTrack && chapters.length > 0) return null;
   const credits = (Array.isArray(data['credits']) ? data['credits'] : []).flatMap(raw => {
     const c = object(raw); return c && text(c['name']) && text(c['role']) ? [{ name: c['name'], role: c['role'] }] : [];
   });
   return { id: entity.id, publication: { kind, entityKey: entity.id }, title: entity.title, description: entity.description, artist: data['artist'],
-    artistPartyIds: data['artistPartyIds'] as number[], durationMs: data['durationMs'],
+    artistPartyIds: data['artistPartyIds'] as number[],
+    durationMs: isTrack ? Number(data['endMs']) - Number(data['startMs']) : data['durationMs'],
+    startMs: isTrack ? Number(data['startMs']) : undefined, endMs: isTrack ? Number(data['endMs']) : undefined,
     state: state as NativeSession['state'], sources, chapters, credits,
     posterUrl: nativeMediaUrl(resource.thumbnailUrl), recordedAt: text(data['recordedAt']) ? data['recordedAt'] : undefined,
     publishedAt: text(data['publishedAt']) ? data['publishedAt'] : undefined };
@@ -88,7 +96,7 @@ export function sessionPlayerTrack(session: NativeSession, chapter?: SessionChap
   return { id: `${releaseId}:${chapter ? `chapter:${encodeURIComponent(chapter.id)}` : 'full'}`,
     recordingId: chapter?.id ?? session.id, releaseId, title: chapter?.title ?? session.title, artist: session.artist,
     artworkUrl: session.posterUrl, durationMs: chapter ? chapter.endMs - chapter.startMs : session.durationMs,
-    startMs: chapter?.startMs, endMs: chapter?.endMs, sources: session.sources,
+    startMs: chapter?.startMs ?? session.startMs, endMs: chapter?.endMs ?? session.endMs, sources: session.sources,
     chapters: chapter ? undefined : session.chapters };
 }
 

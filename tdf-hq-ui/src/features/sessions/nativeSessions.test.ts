@@ -91,3 +91,22 @@ it('retains available and unspecified native delivery independently of provider 
   expect(readNativeSession({ ...resource(), availability: 'available', providerMetadata: { tdfNative: metadata(), embeddable: false } }, entity, 'recording')?.state).toBe('ready');
   expect(readNativeSession(resource(), entity, 'recording')?.state).toBe('ready');
 });
+
+
+it('routes an imported isTrack recording to its exact bounded source range and canonical identity', () => {
+  const data = { ...metadata(), isTrack: true, parentId: 'parent-session', startMs: 10000, endMs: 20000, chapters: [] };
+  const session = readNativeSession(resource(data), entity, 'recording');
+  expect(session).not.toBeNull();
+  expect(session?.publication).toEqual({ kind: 'recording', entityKey: entity.id });
+  expect(sessionPlayerTrack(session!)).toMatchObject({ recordingId: entity.id, startMs: 10000, endMs: 20000, durationMs: 10000 });
+  expect(sessionPlayerTrack(session!).sources).toEqual(data.sources);
+});
+
+it.each([
+  { startMs: -1, endMs: 20000 }, { startMs: 10000, endMs: 10000 },
+  { startMs: 10000, endMs: 31000 }, { startMs: 10000, endMs: NaN },
+  { startMs: '10000', endMs: 20000 }, { startMs: 10000 },
+])('keeps malformed imported track offsets out of native delivery: %j', offsets => {
+  const data = { ...metadata(), isTrack: true, chapters: [], ...offsets };
+  expect(readNativeSession(resource(data), entity, 'recording')).toBeNull();
+});
