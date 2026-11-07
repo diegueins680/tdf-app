@@ -78,6 +78,7 @@ import TDF.Trials.Server
   , validateTeacherStudentLinkInput
   , validateTrialAvailabilityUpsertInput
   , validateTrialScheduleInput
+  , validateStudentUpdateTarget
   , resolveAttendNotesUpdate
   )
 import qualified TDF.Models as Models
@@ -1345,6 +1346,18 @@ spec = do
         Right _ ->
           expectationFailure
             "Expected null subject active default to be rejected, but it decoded successfully"
+
+  describe "validateStudentUpdateTarget" $ do
+    it "lets staff edit only parties that are students" $ do
+      validateStudentUpdateTarget True True False `shouldSatisfy` isRightUnit
+      case validateStudentUpdateTarget True False False of
+        Left err -> errHTTPCode err `shouldBe` 404
+        Right _ -> expectationFailure "Expected a non-student party to be refused to staff"
+    it "lets a teacher edit only students they own" $ do
+      validateStudentUpdateTarget False True True `shouldSatisfy` isRightUnit
+      case validateStudentUpdateTarget False True False of
+        Left err -> errHTTPCode err `shouldBe` 403
+        Right _ -> expectationFailure "Expected an unowned student to be refused to a teacher"
 
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do
@@ -3626,3 +3639,6 @@ laterValidSlot :: PreferredSlot
 laterValidSlot =
   let laterStart = addUTCTime 7200 slotStart
   in PreferredSlot laterStart (addUTCTime 3600 laterStart)
+
+isRightUnit :: Either ServerError () -> Bool
+isRightUnit = either (const False) (const True)

@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 178,
+    "named": 238,
     "path-named": 1,
-    "reviewed": 50,
-    "unspecified": 287,
-    "covered": 229
+    "reviewed": 53,
+    "unspecified": 224,
+    "covered": 292
   },
   "routes": [
     {
@@ -914,140 +914,189 @@
     {
       "method": "PATCH",
       "path": "/directory/admin/claims/{claimId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ID-CLAIM-REVIEW-001"
+      ],
+      "note": "ID-CLAIM-REVIEW-001 specifies Admin role and module, no self-review, serialized decisions with grants and audit, observational identical-state replay and terminal revocation."
     },
     {
       "method": "POST",
       "path": "/directory/admin/merges",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ADMIN-MODERATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/admin/moderation/{caseId}/decisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ADMIN-MODERATION-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/admin/verifications/{verificationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ADMIN-MODERATION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/age-assurance",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-AGE-ASSURANCE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/applications/{applicationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/artist-claim-targets/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-SUBMISSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/claims",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ID-ARTIST-CLAIM-001"
+      ],
+      "note": "ID-ARTIST-CLAIM-001 specifies that directory claim submission requires authentication and uses its actor-scoped idempotency receipt, with no grant changes until review."
     },
     {
       "method": "POST",
       "path": "/directory/classifieds",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-CLASSIFIEDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/classifieds/{classifiedId}/applications",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/classifieds/{classifiedId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-CLASSIFIEDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/contact",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/directory/favorites/{targetKind}/{targetId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-REVIEWS-FAVORITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/favorites/{targetKind}/{targetId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-REVIEWS-FAVORITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/invitations/{invitationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/profiles",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-PROFILE-AUTHORING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/profiles/{profileId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-PROFILE-AUTHORING-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/profiles/{profileId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-PROFILE-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/reports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-SUBMISSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/reviews",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-REVIEWS-FAVORITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/saved-searches",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "DIR-SAVED-SEARCH-001"
+      ],
+      "note": "DIR-SAVED-SEARCH-001 specifies rejection of unsafe filters, no persisted coordinates and preserved actor, request identity and query hashes."
     },
     {
       "method": "POST",
       "path": "/directory/verifications",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-SUBMISSIONS-001"
+      ]
     },
     {
       "method": "POST",
@@ -1440,128 +1489,170 @@
     {
       "method": "POST",
       "path": "/internships/audit-plans",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/audit-plans/{planId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/audit-plans/{planId}/activate",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/audit-plans/{planId}/cases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/audit-plans/{planId}/daily-summaries",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/internships/audit-plans/{planId}/final-summary",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/permissions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/permissions/{permissionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/projects",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/projects/{projectId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/tasks",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/internships/tasks/{taskId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/tasks/{taskId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/test-cases/{testCaseId}/executions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/test-executions/{executionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/time-entries/clock-in",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/time-entries/clock-out",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/todos",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/internships/todos/{todoId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/todos/{todoId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
@@ -3449,116 +3540,154 @@
     {
       "method": "POST",
       "path": "/trials/v1/class-sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/trials/v1/class-sessions/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/class-sessions/{id}/attend",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/interests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/purchases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/signup",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/students",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/trials/v1/students/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/subjects",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-SUBJECT-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/trials/v1/subjects/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-SUBJECT-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/trials/v1/subjects/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-SUBJECT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/teachers/{id}/students",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/trials/v1/teachers/{id}/students/{studentId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/trials/v1/teachers/{id}/subjects",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-assignments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-availability",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/trials/v1/trial-availability/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-requests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-requests/{id}/assign",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "POST",

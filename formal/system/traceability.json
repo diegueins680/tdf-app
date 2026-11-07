@@ -19067,6 +19067,1094 @@
       "historicalStatus": null
     },
     {
+      "id": "SCHOOL-PUBLIC-INTAKE-001",
+      "title": "Public school intake: signup, interests and trial requests",
+      "statement": "Anyone signs up, registers an interest or requests a trial lesson; keyed requests replay instead of duplicating contacts. Routes: POST /trials/v1/signup; POST /trials/v1/interests; POST /trials/v1/trial-requests.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "Signup and trial requests need an Idempotency-Key (16..128 chars); under an advisory lock on (scope, key) an identical payload replays the stored response, a different one is 409, and the contact, lead or request plus the receipt are written in one transaction. Signup creates a Party and a signup lead; a trial request creates a Party and a Requested trial with 1..3 future non-overlapping slots for an active subject that has a free linked teacher (422 otherwise). Interests are written on a shared fallback party without a key.",
+      "actors": [
+        "Anonymous visitor"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/signup",
+        "POST /trials/v1/interests",
+        "POST /trials/v1/trial-requests"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Party, LeadInterest, TrialRequest",
+        "identity_trial_request receipts"
+      ],
+      "authorization": "None (AUTH-PUBLIC-001 registers the routes as public-intake).",
+      "privacy": "Creates personal contact records from public input.",
+      "concurrency": "Advisory lock per (scope, key) for signup and trial requests; interests have no lock or key.",
+      "idempotency": "Signup and trial requests replay by key; interests are not deduplicated.",
+      "failure": "400 invalid or missing key; 409 key reused with another payload; 422 inactive subject or no availability.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/sql/2026-09-18_trial_identity_requests.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/TrialIdentitySpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "scripts/test-trial-identity.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Interests are unauthenticated, unkeyed and unthrottled, and their free-text details may carry PII without a contact owner.",
+        "Signup copies name, email and phone into the lead details text as well as the Party.",
+        "The availability check for a trial request is read-only and can race with scheduling.",
+        "Two first interest callers can both create the fallback party, after which the route answers 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-TRIAL-SCHEDULING-001",
+      "title": "Assigning and scheduling trial lessons; teacher availability",
+      "statement": "School staff assign a teacher to a trial request and schedule it in a room; teachers and staff manage availability slots. Routes: POST /trials/v1/trial-requests/{id}/assign; POST /trials/v1/trial-assignments; POST /trials/v1/trial-availability; DELETE /trials/v1/trial-availability/{id}.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "Assign and schedule need school staff; the teacher must hold the Teacher role and be linked to the subject, the room must be a Room allowed for the subject, and the teacher and room must be free (409). Scheduling upserts the single assignment per request and marks it Scheduled. Availability writes need school access; a non-staff caller may only write their own slots and must be linked to the subject; updating or deleting an existing slot needs its owner or ModuleAdmin.",
+      "actors": [
+        "School staff",
+        "Teacher"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/trial-requests/{id}/assign",
+        "POST /trials/v1/trial-assignments",
+        "POST /trials/v1/trial-availability",
+        "DELETE /trials/v1/trial-availability/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "TrialRequest assignment and status",
+        "TrialAssignment (unique per request)",
+        "TeacherAvailability"
+      ],
+      "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Conflict checks are unlocked reads followed by writes.",
+      "idempotency": "Scheduling upserts; assignment is an unconditional update.",
+      "failure": "400 invalid; 403 access; 404 missing; 409 conflict; 422 role, link or room.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two staff can double-book a teacher or room (no lock around the conflict check).",
+        "Re-assigning a Scheduled request regresses it to Assigned while its assignment row remains.",
+        "Manager and Reception can create availability for others but cannot update or delete it."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-SUBJECT-ADMIN-001",
+      "title": "Subject catalogue administration",
+      "statement": "Admin-module holders create, rename, activate and soft-delete subjects; subject names are unique. Routes: POST /trials/v1/subjects; PATCH /trials/v1/subjects/{id}; DELETE /trials/v1/subjects/{id}.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "ensureModuleAccess ModuleAdmin (Admin or StudioManager). A blank name is 400; a name already used by another subject is 409 (since 2026-11-07; before, the unique index raised 500); delete sets active to false.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/subjects",
+        "PATCH /trials/v1/subjects/{id}",
+        "DELETE /trials/v1/subjects/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Subject rows"
+      ],
+      "authorization": "ensureModuleAccess ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique name; the update check is a read before the write.",
+      "idempotency": "Updates are idempotent by value.",
+      "failure": "400 blank name; 403 module; 404 missing; 409 duplicate name.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "PublicLeadSpec covers the create/update DTO decoding; the 409 on a duplicate name is by insertUnique and a pre-write lookup.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A concurrent create and rename with the same name can still race into the unique index (500)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-CLASS-SESSIONS-001",
+      "title": "Class sessions, attendance and package purchases",
+      "statement": "Teachers and staff create and edit class sessions and mark attendance; staff record class package purchases. Routes: POST /trials/v1/class-sessions; PATCH /trials/v1/class-sessions/{id}; POST /trials/v1/class-sessions/{id}/attend; POST /trials/v1/purchases.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "Sessions need school access; a non-staff caller must be the session teacher, be linked to the subject and own the student (TeacherStudent link or a prior session). Teacher role, room type, room allowance and teacher and room availability are checked (409). Attendance needs staff or the session teacher. Purchases need staff, an existing student, package and seller, a commissioned teacher with the Teacher role, and a trial request matching the student and package subject.",
+      "actors": [
+        "Teacher",
+        "School staff"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/class-sessions",
+        "PATCH /trials/v1/class-sessions/{id}",
+        "POST /trials/v1/class-sessions/{id}/attend",
+        "POST /trials/v1/purchases"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "ClassSession",
+        "ClassPackagePurchase (Open)"
+      ],
+      "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Conflict checks are unlocked.",
+      "idempotency": "None: retries create duplicate sessions and purchases.",
+      "failure": "400 invalid; 403 access; 404 missing; 409 conflict; 422 role or room.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Double booking is possible between the conflict check and the write.",
+        "Purchases take the price from the client, accept inactive packages and have no idempotency key.",
+        "A session's bookingId is not validated against its room, time or student; attended sessions stay editable.",
+        "Attendance does not consume purchased minutes or create a commission."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-TEACHER-STUDENT-001",
+      "title": "Teacher subjects, teacher-student links and student records",
+      "statement": "Teachers (or staff on their behalf) set the subjects they teach and the students they own; students are created with a key and edited by their teacher or by staff. Routes: PUT /trials/v1/teachers/{id}/subjects; POST /trials/v1/teachers/{id}/students; DELETE /trials/v1/teachers/{id}/students/{studentId}; POST /trials/v1/students; PATCH /trials/v1/students/{id}.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "ensureTeacherOrStaff for the teacher routes (self or staff). Setting subjects diffs the links and grants the Teacher security role through the automatic policy; adding a student grants the Student role and upserts the active link; removal deactivates the link. Student creation needs school access and an Idempotency-Key (advisory lock, replay, 409 on a different payload, scope per actor); a non-staff creator is linked to the student. Student edits need, since 2026-11-07, validateStudentUpdateTarget: staff may edit only a party that is a student (Student role, a teacher link or a class session; 404 otherwise) and a teacher only a student they own (403); the email must not belong to another party (409).",
+      "actors": [
+        "Teacher",
+        "School staff"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "PUT /trials/v1/teachers/{id}/subjects",
+        "POST /trials/v1/teachers/{id}/students",
+        "DELETE /trials/v1/teachers/{id}/students/{studentId}",
+        "POST /trials/v1/students",
+        "PATCH /trials/v1/students/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "TeacherSubject, TeacherStudent",
+        "Security role grants by policy",
+        "Party contact fields and notes",
+        "identity_trial_request receipts"
+      ],
+      "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff. Student edits: validateStudentUpdateTarget.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Advisory lock per (scope, key) for creation; the email uniqueness check is unlocked.",
+      "idempotency": "Subjects and student links are set semantics; creation replays by key.",
+      "failure": "400 invalid or missing key; 403 access; 404 missing or not a student; 409 key or email conflict; 503 policy inactive.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/sql/2026-09-18_trial_identity_requests.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/TrialIdentitySpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "scripts/test-trial-identity.sh"
+      ],
+      "formalModels": [],
+      "verification": "TrialIdentitySpec (PostgreSQL): keyed student creation, actor scoping, replay, rollback and the unchanged-shared-email edit; PublicLeadSpec: validateStudentUpdateTarget (staff edits only students, teachers only owned students).",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Before 2026-11-07 staff could change the email and phone of any party, administrators included, through the student edit route.",
+        "Setting subjects grants the Teacher role to any party staff name, including Reception acting on an arbitrary party.",
+        "Adding a student grants the Student role to any existing party.",
+        "Removing a link does not revoke the Student role, and a past class session keeps the teacher's edit rights."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-INTERN-SELF-001",
+      "title": "Intern self-service: profile, todos, time entries and permission requests",
+      "statement": "Interns (and internship administrators) keep their own profile, todos and clock-in/out entries and request permissions. Routes: PATCH /internships/profile; POST /internships/todos; PATCH /internships/todos/{todoId}; DELETE /internships/todos/{todoId}; POST /internships/time-entries/clock-in; POST /internships/time-entries/clock-out; POST /internships/permissions.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/internships-routes.md.",
+      "source": "formal/system/internships-routes.md",
+      "contract": "formal/system/internships-routes.md",
+      "property": "ensureInternAccess (admin role or Intern); every write is for the caller's own party, todos check ownership (403). Clock-in refuses an open entry (409) and clock-out closes the single open entry (404 none, 409 several). Profile hours, skills, areas and dates, todo text (500 chars) and permission category, reason and dates are validated.",
+      "actors": [
+        "Intern",
+        "Internship administrator"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "PATCH /internships/profile",
+        "POST /internships/todos",
+        "PATCH /internships/todos/{todoId}",
+        "DELETE /internships/todos/{todoId}",
+        "POST /internships/time-entries/clock-in",
+        "POST /internships/time-entries/clock-out",
+        "POST /internships/permissions"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "InternProfile, InternTodo, InternTimeEntry, InternPermissionRequest (pending)"
+      ],
+      "authorization": "ensureInternAccess; own rows only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "None: profile upsert and clock-in are check-then-write without locks.",
+      "idempotency": "Todos and clock-out are idempotent by value; permission requests are not deduplicated.",
+      "failure": "400 invalid; 403 not own; 404 missing; 409 clock state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInternships.hs"
+      ],
+      "tests": [
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/internships-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Concurrent clock-ins can create two open entries, after which clock-in and clock-out answer 409 until fixed by hand.",
+        "Two concurrent first profile writes race on the unique profile (500).",
+        "No notification is sent for a permission request."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-INTERN-ADMIN-001",
+      "title": "Internship projects, tasks and permission decisions",
+      "statement": "Internship administrators manage projects and tasks and decide permission requests; interns update status and progress of their own tasks. Routes: POST /internships/projects; PATCH /internships/projects/{projectId}; POST /internships/tasks; PATCH /internships/tasks/{taskId}; DELETE /internships/tasks/{taskId}; PATCH /internships/permissions/{permissionId}.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/internships-routes.md.",
+      "source": "formal/system/internships-routes.md",
+      "contract": "formal/system/internships-routes.md",
+      "property": "Projects and tasks need ensureAdmin; a non-admin task update may change only status and progress of a task assigned to the caller. Fields controlled by an audit plan (status, dates, assignee, project, progress) are 409 while a plan exists, and a task with a plan cannot be deleted. Permission decisions set pending, approved or rejected with notes and stamp the reviewer.",
+      "actors": [
+        "Internship administrator",
+        "Intern"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /internships/projects",
+        "PATCH /internships/projects/{projectId}",
+        "POST /internships/tasks",
+        "PATCH /internships/tasks/{taskId}",
+        "DELETE /internships/tasks/{taskId}",
+        "PATCH /internships/permissions/{permissionId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "InternProject, InternTask",
+        "InternPermissionRequest status and reviewer"
+      ],
+      "authorization": "ensureAdmin: Admin, Manager or StudioManager role only; no ModuleInternships, strict-admin or coherent-grant check (ServerFeedback requires the module for the same operators). Task updates: owner for status and progress.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Project and task updates lock the row; permission decisions have no lock or state machine.",
+      "idempotency": "Updates are idempotent by value; creation is not.",
+      "failure": "400 invalid; 403 role or ownership; 404 missing; 409 audit-controlled field or plan exists.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInternships.hs"
+      ],
+      "tests": [
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/internships-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Admin guards check roles only, so an operator whose internships module was revoked keeps full power here while ServerFeedback refuses them.",
+        "Task creation does not check that the assignee exists or is an intern.",
+        "Permission decisions can move between any states, can be made by the requester, and overwrite without a lock."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-INTERN-AUDIT-001",
+      "title": "Studio internship audit plans, test cases, executions and summaries",
+      "statement": "Administrators prepare, activate and close audit plans with test cases; the assigned intern records executions, daily summaries and a final summary while the plan is active. Routes: POST /internships/audit-plans; PATCH /internships/audit-plans/{planId}; POST /internships/audit-plans/{planId}/activate; POST /internships/audit-plans/{planId}/cases; POST /internships/test-cases/{testCaseId}/executions; PATCH /internships/test-executions/{executionId}; POST /internships/audit-plans/{planId}/daily-summaries; PUT /internships/audit-plans/{planId}/final-summary.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/internships-routes.md.",
+      "source": "formal/system/internships-routes.md",
+      "contract": "formal/system/internships-routes.md",
+      "property": "Plan creation, update, activation and cases need ensureAdmin; a plan is unique per task, created only on an untouched draft task and project (locked), and moves draft -> active (activation needs an Intern assignee and applicable cases) -> completed or cancelled with conditional updates (409 when changed). Executions and summaries need plan access (admin or the assigned intern on an active task; 404 otherwise) and an active plan (409); executions get sequential numbers under a per-case advisory lock, terminal executions are immutable, and updates are optimistic on status and updatedAt. Summaries are written only by the assigned intern (admins get 403); the final summary is one per plan and notifies the team when submitted.",
+      "actors": [
+        "Internship administrator",
+        "Assigned intern"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /internships/audit-plans",
+        "PATCH /internships/audit-plans/{planId}",
+        "POST /internships/audit-plans/{planId}/activate",
+        "POST /internships/audit-plans/{planId}/cases",
+        "POST /internships/test-cases/{testCaseId}/executions",
+        "PATCH /internships/test-executions/{executionId}",
+        "POST /internships/audit-plans/{planId}/daily-summaries",
+        "PUT /internships/audit-plans/{planId}/final-summary"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "InternAuditPlan, InternTestCase, InternTestExecution, InternDailySummary, InternFinalSummary",
+        "Project and task status derived from outcomes",
+        "Notification and outbox rows",
+        "User activity audit rows"
+      ],
+      "authorization": "ensureAdmin: Admin, Manager or StudioManager role only; no ModuleInternships, strict-admin or coherent-grant check (ServerFeedback requires the module for the same operators). Intern routes: ensurePlanAccess and task assignment.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Row locks on project, task and plan; advisory lock per test case; conditional updates on plan and execution status.",
+      "idempotency": "Case stable ids and execution numbers are unique; plan creation per task is unique; summaries are not deduplicated per day.",
+      "failure": "400 invalid; 403 role; 404 plan not visible; 409 state or concurrent change.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInternAudit.hs",
+        "tdf-hq/src/TDF/ServerInternships.hs",
+        "tdf-hq/src/TDF/API/InternAudit.hs"
+      ],
+      "tests": [
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "e2e/web/studio-internship-audit.spec.mjs",
+        "scripts/test-studio-internship-audit-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "scripts/test-studio-internship-audit-api-e2e.mjs drives the real API: plan creation races, cancel/activate races, activation refusals, completion with exception justification and immutability, intern 404/403 boundaries, audit-controlled task and project 409s, concurrent executions and terminal immutability, summary authorization and post-completion refusals.",
+      "evidence": "formal/system/internships-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The completion criteria are evaluated before the plan row lock, so an execution committed in between is not re-checked.",
+        "Audit-trail rows and notifications are written in separate transactions after the effect.",
+        "Any non-submit save of the final summary clears its submission and approval; every submit re-notifies the whole administrator team.",
+        "Daily summaries have no uniqueness per work date."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-AGE-ASSURANCE-001",
+      "title": "Self-attested age assurance",
+      "statement": "A signed-in party attests to being an adult or names a guardian; the record gates publishing and contact for minors. Routes: PUT /directory/age-assurance.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "A minor needs a guardian party different from themself (400); the row is upserted on the caller's party with evidence and verification reset.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /directory/age-assurance"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_age_assurance upsert"
+      ],
+      "authorization": "Own party only.",
+      "privacy": "Stores an age attestation and guardian link per account.",
+      "concurrency": "ON CONFLICT upsert.",
+      "idempotency": "Idempotent.",
+      "failure": "400 invalid guardian; 500 unknown guardian (FK).",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Any account, including one already verified or restricted, can re-attest itself adult and overwrite the row, bypassing guardian gating.",
+        "Guardian existence is enforced only by the foreign key."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-PROFILE-AUTHORING-001",
+      "title": "Directory profile creation, editing and status changes",
+      "statement": "A signed-in party creates a directory profile (becoming its manager); managers with edit change it and managers with publish move it through its states. Routes: POST /directory/profiles; PUT /directory/profiles/{profileId}; PATCH /directory/profiles/{profileId}/status.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Creation validates slug, name, kind, modality, rates, URLs, taxonomy and service areas, creates a party for organizational kinds, inserts the draft profile, the full-capability manager row, audit, completeness and search document in one transaction under an idempotency key. Updates need edit, keep or replace optional fields, bump the version and refuse a personal/organizational kind switch (409). Status changes need publish, refuse suspended and merged targets (403), require an adult, completeness at or above 0.5, allowed status and a location or remote offer to publish, and follow allowedProfileTransition (409).",
+      "actors": [
+        "Profile creator",
+        "Profile manager"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/profiles",
+        "PUT /directory/profiles/{profileId}",
+        "PATCH /directory/profiles/{profileId}/status"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party (organizational kinds), directory_profile, directory_profile_manager, selections, completeness, audit, search document"
+      ],
+      "authorization": "Creation: authentication. Edit: requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Status: publish capability.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Creation keyed; updates and status changes read then write without a lock, version check or conditional status.",
+      "idempotency": "Creation replays by key (RequiredIdempotency header with reserveIdempotency: actor-scoped (actor, operation, key) and a request fingerprint; replay returns the stored result, a different body is 409, keys expire after 24 hours.); updates are last-write-wins; a same-state status change still bumps the version.",
+      "failure": "400 invalid; 403 suspended/merged or not adult; 404 no capability; 409 kind switch, transition or completeness; 500 duplicate slug.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Duplicate slugs surface as 500 instead of 409.",
+        "A party can create many artist profiles with itself as subject, which affects public profile selection by party.",
+        "Edits ignore the profile status, so merged or suspended profiles can be edited and re-slugged.",
+        "Status changes can race (no lock or conditional update)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-CLASSIFIEDS-001",
+      "title": "Classified listings by publishing managers",
+      "statement": "A manager with publish creates classifieds for a profile and moves them through their states; derived listings are never created or transitioned by hand. Routes: POST /directory/classifieds; PATCH /directory/classifieds/{classifiedId}/status.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Creation needs publish and an adult; slug, title, description, modality, budget, an active non-derived category with its required fields, compensation metadata and an expiry at most 90 days are validated; the draft is inserted with a duplicate fingerprint and its search document. Status changes need the author profile's publish capability, refuse derived listings (409), require an adult to publish and follow allowedClassifiedTransition; the database trigger re-validates the transition and sets published and expiry times.",
+      "actors": [
+        "Profile manager with publish"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/classifieds",
+        "PATCH /directory/classifieds/{classifiedId}/status"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "classified, selections, search document",
+        "audit"
+      ],
+      "authorization": "requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Plus requireAdult.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Status transitions are enforced by the database trigger; creation is keyed.",
+      "idempotency": "Creation replays by key; same-state changes are allowed.",
+      "failure": "400 invalid; 403 not adult; 404 no capability; 409 derived, transition or unsupported compensation; 500 duplicate slug.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A body rejected after the key is reserved (for example an expiry over 90 days) burns the key: the corrected replay is 409.",
+        "Duplicate slugs surface as 500.",
+        "No rate limit on creation."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-ENGAGEMENT-001",
+      "title": "Applications, invitations and contact between directory profiles",
+      "statement": "Managers with contact apply to classifieds, invite other profiles and open conversations; participants and directory administrators move applications and invitations through their states. Routes: POST /directory/classifieds/{classifiedId}/applications; PATCH /directory/applications/{applicationId}/status; POST /directory/invitations; PATCH /directory/invitations/{invitationId}/status; POST /directory/contact.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Creation routes need the contact capability on the acting profile and an adult, validate the message and proposal, check eligibility in SQL (published target, not self, completeness preference, no block) and are keyed and rate limited per day (applications 20, invitations 10, contacts 20). Status changes are open to the applicant, author, sender or target managers (and administrators) with role-specific target states (403) and the declared transitions (409); a pending invitation past its expiry is expired lazily; a target blocking an invitation records a profile block. Contact upserts the direct-message thread, writes the conversation context and message, and replays by its idempotency resource.",
+      "actors": [
+        "Profile manager with contact",
+        "Application or invitation participant",
+        "Directory administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/classifieds/{classifiedId}/applications",
+        "PATCH /directory/applications/{applicationId}/status",
+        "POST /directory/invitations",
+        "PATCH /directory/invitations/{invitationId}/status",
+        "POST /directory/contact"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "classified_application, directory_invitation, directory_profile_block",
+        "chat_thread, directory_conversation_context, chat_message",
+        "notification rows and analytics events"
+      ],
+      "authorization": "requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Status changes: applicationParticipantRole / invitationParticipantRole or requireDirectoryAdmin: Admin role and ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Creations keyed and rate limited; status changes have no lock or conditional update.",
+      "idempotency": "Creations replay by key (new keys allow repeated applications and invitations); same-state changes allowed.",
+      "failure": "400 invalid; 403 ineligible or wrong target state; 404 not a participant; 409 transition; 429 daily limit.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Application and invitation status changes can race (two participants can both pass validation).",
+        "Any manager of the applicant profile may transition an application; no capability column is checked.",
+        "Notifications are inserted outside the creating transaction.",
+        "The rate counter is consumed only after eligibility passes.",
+        "Contact inserts go through the social DM write guard; consistency of directory blocks with social consent rules was not checked."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-REVIEWS-FAVORITES-001",
+      "title": "Verified reviews and personal favorites",
+      "statement": "A manager with edit reviews another profile after a verified completed interaction; any party keeps favorites of eligible targets. Routes: POST /directory/reviews; PUT /directory/favorites/{targetKind}/{targetId}; DELETE /directory/favorites/{targetKind}/{targetId}.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Reviews need edit on the author profile and an adult, refuse self-reviews, validate rating 1..5 and body, require a verified completed interaction without a block (409), are unique per interaction, author and subject, keyed and limited to 10 per day; the database trigger checks the interaction. Favorites are keyed by the caller's party and canonical target, accept only public or upcoming targets (404) and are idempotent; removal is unconditional.",
+      "actors": [
+        "Profile manager with edit",
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/reviews",
+        "PUT /directory/favorites/{targetKind}/{targetId}",
+        "DELETE /directory/favorites/{targetKind}/{targetId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_review and notifications",
+        "directory_favorite and audit"
+      ],
+      "authorization": "Reviews: requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Favorites: own party.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Review uniqueness by key and conflict; favorites ON CONFLICT DO NOTHING.",
+      "idempotency": "Reviews replay by key; favorites idempotent.",
+      "failure": "400 invalid; 403 not adult; 404 capability or target; 409 ineligible or duplicate; 429 limit.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-SUBMISSIONS-001",
+      "title": "Artist claim preparation, verification requests and moderation reports",
+      "statement": "Any signed-in party prepares an artist claim target or reports content; a manager with edit requests verification. Routes: PUT /directory/artist-claim-targets/{partyId}; POST /directory/verifications; POST /directory/reports.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Preparing a claim locks the artist party, reuses its canonical artist profile or inserts a private draft directory profile with no manager (404 for non-artists or suspended, archived, merged or blocked targets). Verification requests need edit and insert a submitted verification under a key. Reports validate target kind, reason and details, insert the report and open the single active moderation case per target under a key.",
+      "actors": [
+        "Authenticated party",
+        "Profile manager with edit"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /directory/artist-claim-targets/{partyId}",
+        "POST /directory/verifications",
+        "POST /directory/reports"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_profile draft (claim target)",
+        "directory_verification",
+        "directory_moderation_report and directory_moderation_case",
+        "analytics"
+      ],
+      "authorization": "Claim targets and reports: authentication only. Verifications: requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Claim preparation locks the party; reports and verifications are keyed inserts.",
+      "idempotency": "Claim preparation is naturally idempotent; the others replay by key.",
+      "failure": "400 invalid; 404 ineligible artist or no capability; 500 on a repeated report with the same reason.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "docs/artist-management-claims.md"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Preparing a claim creates a directory identity for any legacy artist, which removes the artist from public search until the twin is published (ART-PUBLIC-VISIBILITY-001 lets the directory identity win).",
+        "Reports are not checked against an existing target; a second report by the same reporter with the same reason violates the unique index (500) although the API promises deduplication.",
+        "Verifications and reports have no rate limit."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-ADMIN-MODERATION-001",
+      "title": "Administrator verification decisions, moderation decisions and profile merges",
+      "statement": "Directory administrators decide verification requests, close moderation cases with an action on the target, and merge one profile into another. Routes: PATCH /directory/admin/verifications/{verificationId}/status; POST /directory/admin/moderation/{caseId}/decisions; POST /directory/admin/merges.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Verification decisions set under_review, verified, rejected, expired or revoked with reviewer, notes and timestamps. Moderation decisions insert the decision, close the case and apply the action (profile pause, remove or suspend; classified pause or remove; review pause or remove; warn is a no-op). Merges run directory_execute_profile_merge: both profiles locked in id order, already-merged sources refused, the operation recorded as executed, the source marked merged with the target as canonical, audit written and the source's classifieds and search documents withdrawn by trigger.",
+      "actors": [
+        "Directory administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PATCH /directory/admin/verifications/{verificationId}/status",
+        "POST /directory/admin/moderation/{caseId}/decisions",
+        "POST /directory/admin/merges"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_verification",
+        "directory_moderation_decision, case status, target status and search documents",
+        "directory_merge_operation, source profile merged, audit"
+      ],
+      "authorization": "requireDirectoryAdmin: Admin role and ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Merges lock both profiles; verification and moderation writes have no lock or state guard.",
+      "idempotency": "Merges replay the stored receipt by key; verification decisions are not keyed; moderation replays re-run the case update and the target mutation.",
+      "failure": "400 invalid; 403 not a directory administrator; 404 missing; 409 empty merge result; 500 for function exceptions.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql"
+      ],
+      "tests": [
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/test-music-directory-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Verification decisions have no self-review guard, no state machine (rejected -> verified allowed) and no audit, although the verified badge is public.",
+        "A moderation decision replay is not observational; closed cases can be re-decided; profile suspension bypasses allowedProfileTransition.",
+        "Merges jump to executed with requester = approver, do not check that source and target share a subject party or kind, do not reconcile the source's managers onto the target, and allow draft or suspended sources; function exceptions surface as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
@@ -20469,6 +21557,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
+    "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
     "docs/catalog-persistence/catalog-list-decisions.json": "8ece14eec24e306c3c24dfaf2d52ac09ccf3501a37d835429a3e57e48788b6f5",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -20836,7 +21925,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "0a529bbda939368c78f53435d3adba1d7fb991d4e0fee72b7259d2e917df216c",
-    "formal/system/route-requirements.json": "496e409013d9ca37387b8a3877cee120d05e5ef3f4c3bf1cb26adb6cbc7b0a83",
+    "formal/system/route-requirements.json": "e1e2c5aab0b7e9c54a37eb06e1f49e0a6c40f453fc031a34b83debaf8c832948",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -21166,6 +22255,7 @@
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
+    "scripts/test-studio-internship-audit-migration.sh": "0898a7f6b32336840a85bf97c29a9aca4bbe7addc9e6360c97ac21169fc7f99e",
     "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
@@ -21173,6 +22263,7 @@
     "scripts/test-ticket-manual-review-concurrency.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
+    "scripts/test-trial-identity.sh": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
     "scripts/test-verification-report.py": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
@@ -21748,6 +22839,7 @@
     "tdf-hq/scripts/create_artists_from_list.sh": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
     "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql": "38bb4dbd9368562c8b78eff933ced68df3bf7c6d65e32d14d7403bf61e6126cb",
     "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
+    "tdf-hq/sql/2026-08-14_music_directory_core.sql": "0918c16a03bf181ce88ca470a9549af5f2942abcdb3b5881d66c7cf8647197ef",
     "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql": "699100a59dc180e12cc0c13d5053a6aab002c9ff891672411ac6ea3d67f771db",
     "tdf-hq/sql/2026-09-11_music_release_platform.sql": "c33f6809232734b64685811d230c3d34d187cbab037b3d509ed58bc3f7e81fc2",
     "tdf-hq/sql/2026-09-11_music_release_platform_rollback.sql": "0edba6b1d000b2d11944a59fe3aaa02b616fef2c9713d7d19abd1192a15d1a95",
@@ -21773,6 +22865,7 @@
     "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql": "0e68b6729957823cdcc98f37a859678a94843489a93b2091f44e65921effdaec",
     "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
     "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql": "e7028f7235ad54eb41ac72856dbc3ec343c08983520b35b6b9136d73f3db1b18",
+    "tdf-hq/sql/2026-09-18_trial_identity_requests.sql": "f334746505b218e4bb4fcd99a361b2e97b814c1797d0cf2dead1b03739401d8b",
     "tdf-hq/sql/2026-09-28_interaction_compatibility.sql": "bc82cacf16a2e4cf9b501436907376f47bc4c6be177feadb9e6c8b8fd0fde38d",
     "tdf-hq/sql/2026-09-28_interaction_integrity.sql": "4bddd12c17e189286b4fa468ede50e27a471f370ced44224118e46fef3e1b019",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
@@ -21898,6 +22991,7 @@
     "tdf-hq/src/TDF/API/Drive.hs": "d8ff95acf253404a8f83d28885b4107b89c60a9ee37da3364737bab07c15ceea",
     "tdf-hq/src/TDF/API/Feedback.hs": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
     "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
+    "tdf-hq/src/TDF/API/InternAudit.hs": "d510447267d5af76265a4967701ce8758cbf243f5d92229fa1eaa027091a0137",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/MusicRelease.hs": "3cb60fb17c91e6d8c5ac46e02c637f88456f047fb34ce6ea3137120881e37072",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
@@ -22027,6 +23121,8 @@
     "tdf-hq/src/TDF/ServerFanClub.hs": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": "e663522c1efc4eae60d077274478c68b14e6edf779c7fe083692339323fb4355",
+    "tdf-hq/src/TDF/ServerInternAudit.hs": "0b7acfef1366bac9dbc8942749cefd922f20d8039d772d5a5b0672719f6ec4a7",
+    "tdf-hq/src/TDF/ServerInternships.hs": "d94b9e0807f968bc1eca088fbce77d882c079f4dd8382534b8efdf966471c1f5",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
@@ -22044,7 +23140,7 @@
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "edfefec16e7943820a62c0f655677db2045a311ee6b324b63b7999b5501e8791",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
-    "tdf-hq/src/TDF/Trials/Server.hs": "3d03e935ad1a83fe73ee42622d55b5eb3d8eb66e7bf858145c3bba74e71042c5",
+    "tdf-hq/src/TDF/Trials/Server.hs": "4088b523b569cf66d035d80b81736d35ed41366bb67df4cd06fca6d16fb7ca9f",
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
@@ -22086,6 +23182,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "ae9916d71034f7c59bee022ddd134150d89997d5b531303df1b4a44bdb4abb41",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
+    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "a745e19b13935fcd7ca3cf51f30810f7353e91a1ff33688b7c153d6a89813887",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "006a2eec086a2d350f9da2e7806eab0fd8846f195b84402557f6d71528e41ecb",
     "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "7edf9284071eab5ada05ab4ff80027b2c3fa0e74aac5626043bdb6fa76ff47f0",
@@ -22129,7 +23226,8 @@
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
-    "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "f74652162b14f0fe4516da6cb4aa45806d75cd9eae289935b6fcd37f35f713bb",
+    "tdf-hq/test/TDF/TrialIdentitySpec.hs": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
+    "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "c08265efc97226e1af07694aeb33a920fe8c4700d00acce96cbf53782cf67697",
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
@@ -23754,6 +24852,34 @@
       {
         "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-AGE-ASSURANCE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-PROFILE-AUTHORING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-CLASSIFIEDS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-ENGAGEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-REVIEWS-FAVORITES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SUBMISSIONS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-ADMIN-MODERATION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/Directory.hs": [
@@ -23783,6 +24909,34 @@
       },
       {
         "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-AGE-ASSURANCE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-PROFILE-AUTHORING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-CLASSIFIEDS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-ENGAGEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-REVIEWS-FAVORITES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SUBMISSIONS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-ADMIN-MODERATION-001",
         "relationship": "implementation"
       }
     ],
@@ -24254,6 +25408,22 @@
       {
         "requirement": "PAY-CHECKOUT-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-PROFILE-AUTHORING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-ENGAGEMENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SUBMISSIONS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-ADMIN-MODERATION-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": [
@@ -24386,6 +25556,10 @@
       {
         "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-ADMIN-MODERATION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql": [
@@ -24411,6 +25585,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-ADMIN-MODERATION-001",
         "relationship": "tests"
       }
     ],
@@ -24673,6 +25851,26 @@
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": [
       {
         "requirement": "ID-SESSION-004",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SCHOOL-TRIAL-SCHEDULING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SCHOOL-SUBJECT-ADMIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SCHOOL-CLASS-SESSIONS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SCHOOL-TEACHER-STUDENT-001",
         "relationship": "tests"
       }
     ],
@@ -26196,6 +27394,26 @@
       {
         "requirement": "PRIV-RAG-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-TRIAL-SCHEDULING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-SUBJECT-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-CLASS-SESSIONS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-TEACHER-STUDENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Courses/Production.hs": [
@@ -26671,6 +27889,26 @@
     "tdf-hq/src/TDF/Trials/API.hs": [
       {
         "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-TRIAL-SCHEDULING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-SUBJECT-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-CLASS-SESSIONS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-TEACHER-STUDENT-001",
         "relationship": "implementation"
       }
     ],
@@ -29728,6 +30966,10 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-account-deletion-api.mjs": [
@@ -29739,6 +30981,18 @@
     "scripts/test-studio-internship-audit-api-e2e.mjs": [
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INTERN-SELF-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INTERN-ADMIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
         "relationship": "tests"
       }
     ],
@@ -32114,6 +33368,10 @@
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-TEACHER-STUDENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Profiles/Artist.hs": [
@@ -33241,6 +34499,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-PROFILE-AUTHORING-001",
         "relationship": "implementation"
       }
     ],
@@ -36486,6 +37748,130 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-09-18_trial_identity_requests.sql": [
+      {
+        "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SCHOOL-TEACHER-STUDENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/TrialIdentitySpec.hs": [
+      {
+        "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SCHOOL-TEACHER-STUDENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-trial-identity.sh": [
+      {
+        "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SCHOOL-TEACHER-STUDENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/ServerInternships.hs": [
+      {
+        "requirement": "OPS-INTERN-SELF-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-INTERN-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/ServerInternAudit.hs": [
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/API/InternAudit.hs": [
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-studio-internship-audit-migration.sh": [
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/sql/2026-08-14_music_directory_core.sql": [
+      {
+        "requirement": "DIR-AGE-ASSURANCE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-PROFILE-AUTHORING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-CLASSIFIEDS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-ENGAGEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-REVIEWS-FAVORITES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SUBMISSIONS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-ADMIN-MODERATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Directory/PolicySpec.hs": [
+      {
+        "requirement": "DIR-AGE-ASSURANCE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-PROFILE-AUTHORING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-CLASSIFIEDS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-ENGAGEMENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-REVIEWS-FAVORITES-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SUBMISSIONS-001",
+        "relationship": "tests"
+      }
+    ],
+    "docs/artist-management-claims.md": [
+      {
+        "requirement": "DIR-SUBMISSIONS-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/src/TDF/Invoice/SessionIssue.hs": [
       {
         "requirement": "PAY-INVOICE-ISSUE-001",
@@ -38510,6 +39896,10 @@
         {
           "requirement": "PRIV-INTAKE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -39782,6 +41172,22 @@
         },
         {
           "requirement": "PAY-CHECKOUT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-PROFILE-AUTHORING-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-ENGAGEMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-SUBMISSIONS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-ADMIN-MODERATION-001",
           "relationship": "tests"
         }
       ]
@@ -44088,6 +45494,10 @@
         {
           "requirement": "DISCOVERY-NAV-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-ADMIN-MODERATION-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -44890,6 +46300,18 @@
         {
           "requirement": "PRIV-INTAKE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INTERN-SELF-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INTERN-ADMIN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -44910,7 +46332,12 @@
       "path": "scripts/test-studio-internship-audit-migration.sh",
       "sha256": "0898a7f6b32336840a85bf97c29a9aca4bbe7addc9e6360c97ac21169fc7f99e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-6ba093cb83a6b757",
@@ -45009,7 +46436,16 @@
       "path": "scripts/test-trial-identity.sh",
       "sha256": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SCHOOL-TEACHER-STUDENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a5f7689f101fcc8c",
@@ -57349,7 +58785,36 @@
       "path": "tdf-hq/sql/2026-08-14_music_directory_core.sql",
       "sha256": "0918c16a03bf181ce88ca470a9549af5f2942abcdb3b5881d66c7cf8647197ef",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DIR-AGE-ASSURANCE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-PROFILE-AUTHORING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-CLASSIFIEDS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-ENGAGEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-REVIEWS-FAVORITES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SUBMISSIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-ADMIN-MODERATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6d5f37b031f682b1",
@@ -58809,7 +60274,16 @@
       "path": "tdf-hq/sql/2026-09-18_trial_identity_requests.sql",
       "sha256": "f334746505b218e4bb4fcd99a361b2e97b814c1797d0cf2dead1b03739401d8b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-TEACHER-STUDENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-13ee54003368e135",
@@ -60195,6 +61669,10 @@
         {
           "requirement": "ID-CLAIM-REVIEW-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-ADMIN-MODERATION-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -60687,6 +62165,10 @@
         {
           "requirement": "DISCOVERY-NAV-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-PROFILE-AUTHORING-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -60770,7 +62252,12 @@
       "path": "tdf-hq/src/TDF/API/InternAudit.hs",
       "sha256": "d510447267d5af76265a4967701ce8758cbf243f5d92229fa1eaa027091a0137",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d0fe32fbd49d7b5b",
@@ -61228,6 +62715,10 @@
         },
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-TEACHER-STUDENT-001",
           "relationship": "implementation"
         }
       ]
@@ -62104,6 +63595,34 @@
         },
         {
           "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-AGE-ASSURANCE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-PROFILE-AUTHORING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-CLASSIFIEDS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-ENGAGEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-REVIEWS-FAVORITES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SUBMISSIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-ADMIN-MODERATION-001",
           "relationship": "implementation"
         }
       ]
@@ -63059,6 +64578,34 @@
         {
           "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-AGE-ASSURANCE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-PROFILE-AUTHORING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-CLASSIFIEDS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-ENGAGEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-REVIEWS-FAVORITES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SUBMISSIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-ADMIN-MODERATION-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -63855,14 +65402,32 @@
       "path": "tdf-hq/src/TDF/ServerInternAudit.hs",
       "sha256": "0b7acfef1366bac9dbc8942749cefd922f20d8039d772d5a5b0672719f6ec4a7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c44b09e0d89d05c3",
       "path": "tdf-hq/src/TDF/ServerInternships.hs",
       "sha256": "d94b9e0807f968bc1eca088fbce77d882c079f4dd8382534b8efdf966471c1f5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-SELF-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-INTERN-ADMIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ddfc2dac302682ac",
@@ -64172,6 +65737,26 @@
         {
           "requirement": "COURSE-SUBJECT-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-TRIAL-SCHEDULING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-SUBJECT-ADMIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-CLASS-SESSIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-TEACHER-STUDENT-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -64204,7 +65789,7 @@
     {
       "id": "SURFACE-f9d35ff622573006",
       "path": "tdf-hq/src/TDF/Trials/Server.hs",
-      "sha256": "3d03e935ad1a83fe73ee42622d55b5eb3d8eb66e7bf858145c3bba74e71042c5",
+      "sha256": "4088b523b569cf66d035d80b81736d35ed41366bb67df4cd06fca6d16fb7ca9f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64217,6 +65802,26 @@
         },
         {
           "requirement": "PRIV-RAG-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-TRIAL-SCHEDULING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-SUBJECT-ADMIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-CLASS-SESSIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SCHOOL-TEACHER-STUDENT-001",
           "relationship": "implementation"
         }
       ]
@@ -65073,7 +66678,32 @@
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
       "sha256": "a745e19b13935fcd7ca3cf51f30810f7353e91a1ff33688b7c153d6a89813887",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DIR-AGE-ASSURANCE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-PROFILE-AUTHORING-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-CLASSIFIEDS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-ENGAGEMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-REVIEWS-FAVORITES-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-SUBMISSIONS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2109051a71e906d5",
@@ -65990,16 +67620,45 @@
       "path": "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "sha256": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SCHOOL-TEACHER-STUDENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-15bc343962df8561",
       "path": "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
-      "sha256": "f74652162b14f0fe4516da6cb4aa45806d75cd9eae289935b6fcd37f35f713bb",
+      "sha256": "c08265efc97226e1af07694aeb33a920fe8c4700d00acce96cbf53782cf67697",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ID-SESSION-004",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SCHOOL-PUBLIC-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SCHOOL-TRIAL-SCHEDULING-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SCHOOL-SUBJECT-ADMIN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SCHOOL-CLASS-SESSIONS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SCHOOL-TEACHER-STUDENT-001",
           "relationship": "tests"
         }
       ]
@@ -70449,8 +72108,6 @@
     "SURFACE-df0467f34f5e71d1",
     "SURFACE-829614625675f708",
     "SURFACE-69baedf792a35920",
-    "SURFACE-5b061ec22f6fb1b6",
-    "SURFACE-75ed4534ce225e0f",
     "SURFACE-a5f7689f101fcc8c",
     "SURFACE-ab7ff3342564dd90",
     "SURFACE-27f5d30ad4a9fccb",
@@ -71042,7 +72699,6 @@
     "SURFACE-0d3fe7c1dcbda105",
     "SURFACE-2342c66594e7b2b6",
     "SURFACE-a63e23a1ff5dde81",
-    "SURFACE-ca9dfc0b40140b2c",
     "SURFACE-6d5f37b031f682b1",
     "SURFACE-e580fb74e784bf7a",
     "SURFACE-dd8b0266532ae823",
@@ -71202,7 +72858,6 @@
     "SURFACE-639124d066a2427c",
     "SURFACE-ddf713b656eaaa6c",
     "SURFACE-a53a46d90c53e586",
-    "SURFACE-bee276476423480a",
     "SURFACE-13ee54003368e135",
     "SURFACE-af14e25f53ba8a02",
     "SURFACE-a9955d8377051a36",
@@ -71257,7 +72912,6 @@
     "SURFACE-afc4cb3bc501dafc",
     "SURFACE-a72004f4d0fc91c5",
     "SURFACE-b0337643e2433350",
-    "SURFACE-46c44f4c44b3bb33",
     "SURFACE-d0fe32fbd49d7b5b",
     "SURFACE-79c03d1ab1ca4d8a",
     "SURFACE-52a1566b009b9389",
@@ -71332,8 +72986,6 @@
     "SURFACE-e4ab6ea991643db1",
     "SURFACE-cb2c54ef31474aee",
     "SURFACE-81312ef85a6b405a",
-    "SURFACE-48a864e76f6a2ed9",
-    "SURFACE-c44b09e0d89d05c3",
     "SURFACE-063a8df8dc4a2bba",
     "SURFACE-3538414933fee775",
     "SURFACE-f53dee8d468f33b8",
@@ -71362,7 +73014,6 @@
     "SURFACE-13ed80492a91c67d",
     "SURFACE-bcc8793e04f6ed01",
     "SURFACE-08cdfc0fab026f48",
-    "SURFACE-e284c62e82e2c450",
     "SURFACE-57276774edbf18b9",
     "SURFACE-2b52b5009371c78c",
     "SURFACE-bb5ffc20a8caf0f6",
@@ -71377,7 +73028,6 @@
     "SURFACE-eef0c0019f0d35ca",
     "SURFACE-3871c8d09b71bf61",
     "SURFACE-6e0e63efd78f6dcd",
-    "SURFACE-6a608596a0a41e90",
     "SURFACE-60c6485e90430e4b",
     "SURFACE-c5f338178ef543f2",
     "SURFACE-1eb89390fb61726d",
@@ -71781,6 +73431,8 @@
     "PAY-MERCH-CHECKOUT-001",
     "PAY-MERCH-REFUND-001",
     "PAY-MERCH-SETTLEMENT-001",
+    "OPS-INTERN-AUDIT-001",
+    "DIR-ADMIN-MODERATION-001",
     "CONTRACT-STORE-001",
     "ID-PARTY-REFERENCE-REGISTRY-001",
     "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
@@ -72901,7 +74553,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bb4a3efc1d70fcfc6644638c866203c53a0910882e454f4d5468a949e20fdead",
+      "sourceSha256": "c0c57eaa23b4e836f0dae57d50105cc77eee99a3821b2e9695a425430b16bfba",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -72929,7 +74581,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bb4a3efc1d70fcfc6644638c866203c53a0910882e454f4d5468a949e20fdead",
+      "sourceSha256": "c0c57eaa23b4e836f0dae57d50105cc77eee99a3821b2e9695a425430b16bfba",
       "definition": {
         "states": [
           "absent",
@@ -72959,7 +74611,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bb4a3efc1d70fcfc6644638c866203c53a0910882e454f4d5468a949e20fdead",
+      "sourceSha256": "c0c57eaa23b4e836f0dae57d50105cc77eee99a3821b2e9695a425430b16bfba",
       "definition": {
         "export": [
           "queued",
@@ -95909,7 +97561,7 @@
   ],
   "conformanceCounts": {
     "FAIL": 0,
-    "IMPLEMENTED BUT UNSPECIFIED": 50,
+    "IMPLEMENTED BUT UNSPECIFIED": 65,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
     "PARTIAL": 198,

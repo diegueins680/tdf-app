@@ -19066,6 +19066,1094 @@
       "historicalStatus": null
     },
     {
+      "id": "SCHOOL-PUBLIC-INTAKE-001",
+      "title": "Public school intake: signup, interests and trial requests",
+      "statement": "Anyone signs up, registers an interest or requests a trial lesson; keyed requests replay instead of duplicating contacts. Routes: POST /trials/v1/signup; POST /trials/v1/interests; POST /trials/v1/trial-requests.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "Signup and trial requests need an Idempotency-Key (16..128 chars); under an advisory lock on (scope, key) an identical payload replays the stored response, a different one is 409, and the contact, lead or request plus the receipt are written in one transaction. Signup creates a Party and a signup lead; a trial request creates a Party and a Requested trial with 1..3 future non-overlapping slots for an active subject that has a free linked teacher (422 otherwise). Interests are written on a shared fallback party without a key.",
+      "actors": [
+        "Anonymous visitor"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/signup",
+        "POST /trials/v1/interests",
+        "POST /trials/v1/trial-requests"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Party, LeadInterest, TrialRequest",
+        "identity_trial_request receipts"
+      ],
+      "authorization": "None (AUTH-PUBLIC-001 registers the routes as public-intake).",
+      "privacy": "Creates personal contact records from public input.",
+      "concurrency": "Advisory lock per (scope, key) for signup and trial requests; interests have no lock or key.",
+      "idempotency": "Signup and trial requests replay by key; interests are not deduplicated.",
+      "failure": "400 invalid or missing key; 409 key reused with another payload; 422 inactive subject or no availability.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/sql/2026-09-18_trial_identity_requests.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/TrialIdentitySpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "scripts/test-trial-identity.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Interests are unauthenticated, unkeyed and unthrottled, and their free-text details may carry PII without a contact owner.",
+        "Signup copies name, email and phone into the lead details text as well as the Party.",
+        "The availability check for a trial request is read-only and can race with scheduling.",
+        "Two first interest callers can both create the fallback party, after which the route answers 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-TRIAL-SCHEDULING-001",
+      "title": "Assigning and scheduling trial lessons; teacher availability",
+      "statement": "School staff assign a teacher to a trial request and schedule it in a room; teachers and staff manage availability slots. Routes: POST /trials/v1/trial-requests/{id}/assign; POST /trials/v1/trial-assignments; POST /trials/v1/trial-availability; DELETE /trials/v1/trial-availability/{id}.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "Assign and schedule need school staff; the teacher must hold the Teacher role and be linked to the subject, the room must be a Room allowed for the subject, and the teacher and room must be free (409). Scheduling upserts the single assignment per request and marks it Scheduled. Availability writes need school access; a non-staff caller may only write their own slots and must be linked to the subject; updating or deleting an existing slot needs its owner or ModuleAdmin.",
+      "actors": [
+        "School staff",
+        "Teacher"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/trial-requests/{id}/assign",
+        "POST /trials/v1/trial-assignments",
+        "POST /trials/v1/trial-availability",
+        "DELETE /trials/v1/trial-availability/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "TrialRequest assignment and status",
+        "TrialAssignment (unique per request)",
+        "TeacherAvailability"
+      ],
+      "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Conflict checks are unlocked reads followed by writes.",
+      "idempotency": "Scheduling upserts; assignment is an unconditional update.",
+      "failure": "400 invalid; 403 access; 404 missing; 409 conflict; 422 role, link or room.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two staff can double-book a teacher or room (no lock around the conflict check).",
+        "Re-assigning a Scheduled request regresses it to Assigned while its assignment row remains.",
+        "Manager and Reception can create availability for others but cannot update or delete it."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-SUBJECT-ADMIN-001",
+      "title": "Subject catalogue administration",
+      "statement": "Admin-module holders create, rename, activate and soft-delete subjects; subject names are unique. Routes: POST /trials/v1/subjects; PATCH /trials/v1/subjects/{id}; DELETE /trials/v1/subjects/{id}.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "ensureModuleAccess ModuleAdmin (Admin or StudioManager). A blank name is 400; a name already used by another subject is 409 (since 2026-11-07; before, the unique index raised 500); delete sets active to false.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/subjects",
+        "PATCH /trials/v1/subjects/{id}",
+        "DELETE /trials/v1/subjects/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Subject rows"
+      ],
+      "authorization": "ensureModuleAccess ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique name; the update check is a read before the write.",
+      "idempotency": "Updates are idempotent by value.",
+      "failure": "400 blank name; 403 module; 404 missing; 409 duplicate name.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "PublicLeadSpec covers the create/update DTO decoding; the 409 on a duplicate name is by insertUnique and a pre-write lookup.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A concurrent create and rename with the same name can still race into the unique index (500)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-CLASS-SESSIONS-001",
+      "title": "Class sessions, attendance and package purchases",
+      "statement": "Teachers and staff create and edit class sessions and mark attendance; staff record class package purchases. Routes: POST /trials/v1/class-sessions; PATCH /trials/v1/class-sessions/{id}; POST /trials/v1/class-sessions/{id}/attend; POST /trials/v1/purchases.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "Sessions need school access; a non-staff caller must be the session teacher, be linked to the subject and own the student (TeacherStudent link or a prior session). Teacher role, room type, room allowance and teacher and room availability are checked (409). Attendance needs staff or the session teacher. Purchases need staff, an existing student, package and seller, a commissioned teacher with the Teacher role, and a trial request matching the student and package subject.",
+      "actors": [
+        "Teacher",
+        "School staff"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /trials/v1/class-sessions",
+        "PATCH /trials/v1/class-sessions/{id}",
+        "POST /trials/v1/class-sessions/{id}/attend",
+        "POST /trials/v1/purchases"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "ClassSession",
+        "ClassPackagePurchase (Open)"
+      ],
+      "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Conflict checks are unlocked.",
+      "idempotency": "None: retries create duplicate sessions and purchases.",
+      "failure": "400 invalid; 403 access; 404 missing; 409 conflict; 422 role or room.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Double booking is possible between the conflict check and the write.",
+        "Purchases take the price from the client, accept inactive packages and have no idempotency key.",
+        "A session's bookingId is not validated against its room, time or student; attended sessions stay editable.",
+        "Attendance does not consume purchased minutes or create a commission."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHOOL-TEACHER-STUDENT-001",
+      "title": "Teacher subjects, teacher-student links and student records",
+      "statement": "Teachers (or staff on their behalf) set the subjects they teach and the students they own; students are created with a key and edited by their teacher or by staff. Routes: PUT /trials/v1/teachers/{id}/subjects; POST /trials/v1/teachers/{id}/students; DELETE /trials/v1/teachers/{id}/students/{studentId}; POST /trials/v1/students; PATCH /trials/v1/students/{id}.",
+      "domain": "SCHOOL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/trials-routes.md.",
+      "source": "formal/system/trials-routes.md",
+      "contract": "formal/system/trials-routes.md",
+      "property": "ensureTeacherOrStaff for the teacher routes (self or staff). Setting subjects diffs the links and grants the Teacher security role through the automatic policy; adding a student grants the Student role and upserts the active link; removal deactivates the link. Student creation needs school access and an Idempotency-Key (advisory lock, replay, 409 on a different payload, scope per actor); a non-staff creator is linked to the student. Student edits need, since 2026-11-07, validateStudentUpdateTarget: staff may edit only a party that is a student (Student role, a teacher link or a class session; 404 otherwise) and a teacher only a student they own (403); the email must not belong to another party (409).",
+      "actors": [
+        "Teacher",
+        "School staff"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "PUT /trials/v1/teachers/{id}/subjects",
+        "POST /trials/v1/teachers/{id}/students",
+        "DELETE /trials/v1/teachers/{id}/students/{studentId}",
+        "POST /trials/v1/students",
+        "PATCH /trials/v1/students/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "TeacherSubject, TeacherStudent",
+        "Security role grants by policy",
+        "Party contact fields and notes",
+        "identity_trial_request receipts"
+      ],
+      "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff. Student edits: validateStudentUpdateTarget.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Advisory lock per (scope, key) for creation; the email uniqueness check is unlocked.",
+      "idempotency": "Subjects and student links are set semantics; creation replays by key.",
+      "failure": "400 invalid or missing key; 403 access; 404 missing or not a student; 409 key or email conflict; 503 policy inactive.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/sql/2026-09-18_trial_identity_requests.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/TrialIdentitySpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "scripts/test-trial-identity.sh"
+      ],
+      "formalModels": [],
+      "verification": "TrialIdentitySpec (PostgreSQL): keyed student creation, actor scoping, replay, rollback and the unchanged-shared-email edit; PublicLeadSpec: validateStudentUpdateTarget (staff edits only students, teachers only owned students).",
+      "evidence": "formal/system/trials-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Before 2026-11-07 staff could change the email and phone of any party, administrators included, through the student edit route.",
+        "Setting subjects grants the Teacher role to any party staff name, including Reception acting on an arbitrary party.",
+        "Adding a student grants the Student role to any existing party.",
+        "Removing a link does not revoke the Student role, and a past class session keeps the teacher's edit rights."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-INTERN-SELF-001",
+      "title": "Intern self-service: profile, todos, time entries and permission requests",
+      "statement": "Interns (and internship administrators) keep their own profile, todos and clock-in/out entries and request permissions. Routes: PATCH /internships/profile; POST /internships/todos; PATCH /internships/todos/{todoId}; DELETE /internships/todos/{todoId}; POST /internships/time-entries/clock-in; POST /internships/time-entries/clock-out; POST /internships/permissions.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/internships-routes.md.",
+      "source": "formal/system/internships-routes.md",
+      "contract": "formal/system/internships-routes.md",
+      "property": "ensureInternAccess (admin role or Intern); every write is for the caller's own party, todos check ownership (403). Clock-in refuses an open entry (409) and clock-out closes the single open entry (404 none, 409 several). Profile hours, skills, areas and dates, todo text (500 chars) and permission category, reason and dates are validated.",
+      "actors": [
+        "Intern",
+        "Internship administrator"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "PATCH /internships/profile",
+        "POST /internships/todos",
+        "PATCH /internships/todos/{todoId}",
+        "DELETE /internships/todos/{todoId}",
+        "POST /internships/time-entries/clock-in",
+        "POST /internships/time-entries/clock-out",
+        "POST /internships/permissions"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "InternProfile, InternTodo, InternTimeEntry, InternPermissionRequest (pending)"
+      ],
+      "authorization": "ensureInternAccess; own rows only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "None: profile upsert and clock-in are check-then-write without locks.",
+      "idempotency": "Todos and clock-out are idempotent by value; permission requests are not deduplicated.",
+      "failure": "400 invalid; 403 not own; 404 missing; 409 clock state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInternships.hs"
+      ],
+      "tests": [
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/internships-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Concurrent clock-ins can create two open entries, after which clock-in and clock-out answer 409 until fixed by hand.",
+        "Two concurrent first profile writes race on the unique profile (500).",
+        "No notification is sent for a permission request."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-INTERN-ADMIN-001",
+      "title": "Internship projects, tasks and permission decisions",
+      "statement": "Internship administrators manage projects and tasks and decide permission requests; interns update status and progress of their own tasks. Routes: POST /internships/projects; PATCH /internships/projects/{projectId}; POST /internships/tasks; PATCH /internships/tasks/{taskId}; DELETE /internships/tasks/{taskId}; PATCH /internships/permissions/{permissionId}.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/internships-routes.md.",
+      "source": "formal/system/internships-routes.md",
+      "contract": "formal/system/internships-routes.md",
+      "property": "Projects and tasks need ensureAdmin; a non-admin task update may change only status and progress of a task assigned to the caller. Fields controlled by an audit plan (status, dates, assignee, project, progress) are 409 while a plan exists, and a task with a plan cannot be deleted. Permission decisions set pending, approved or rejected with notes and stamp the reviewer.",
+      "actors": [
+        "Internship administrator",
+        "Intern"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /internships/projects",
+        "PATCH /internships/projects/{projectId}",
+        "POST /internships/tasks",
+        "PATCH /internships/tasks/{taskId}",
+        "DELETE /internships/tasks/{taskId}",
+        "PATCH /internships/permissions/{permissionId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "InternProject, InternTask",
+        "InternPermissionRequest status and reviewer"
+      ],
+      "authorization": "ensureAdmin: Admin, Manager or StudioManager role only; no ModuleInternships, strict-admin or coherent-grant check (ServerFeedback requires the module for the same operators). Task updates: owner for status and progress.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Project and task updates lock the row; permission decisions have no lock or state machine.",
+      "idempotency": "Updates are idempotent by value; creation is not.",
+      "failure": "400 invalid; 403 role or ownership; 404 missing; 409 audit-controlled field or plan exists.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInternships.hs"
+      ],
+      "tests": [
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/internships-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Admin guards check roles only, so an operator whose internships module was revoked keeps full power here while ServerFeedback refuses them.",
+        "Task creation does not check that the assignee exists or is an intern.",
+        "Permission decisions can move between any states, can be made by the requester, and overwrite without a lock."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-INTERN-AUDIT-001",
+      "title": "Studio internship audit plans, test cases, executions and summaries",
+      "statement": "Administrators prepare, activate and close audit plans with test cases; the assigned intern records executions, daily summaries and a final summary while the plan is active. Routes: POST /internships/audit-plans; PATCH /internships/audit-plans/{planId}; POST /internships/audit-plans/{planId}/activate; POST /internships/audit-plans/{planId}/cases; POST /internships/test-cases/{testCaseId}/executions; PATCH /internships/test-executions/{executionId}; POST /internships/audit-plans/{planId}/daily-summaries; PUT /internships/audit-plans/{planId}/final-summary.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/internships-routes.md.",
+      "source": "formal/system/internships-routes.md",
+      "contract": "formal/system/internships-routes.md",
+      "property": "Plan creation, update, activation and cases need ensureAdmin; a plan is unique per task, created only on an untouched draft task and project (locked), and moves draft -> active (activation needs an Intern assignee and applicable cases) -> completed or cancelled with conditional updates (409 when changed). Executions and summaries need plan access (admin or the assigned intern on an active task; 404 otherwise) and an active plan (409); executions get sequential numbers under a per-case advisory lock, terminal executions are immutable, and updates are optimistic on status and updatedAt. Summaries are written only by the assigned intern (admins get 403); the final summary is one per plan and notifies the team when submitted.",
+      "actors": [
+        "Internship administrator",
+        "Assigned intern"
+      ],
+      "preconditions": [
+        "Authorization rule stated (public routes need nothing)"
+      ],
+      "inputs": [
+        "POST /internships/audit-plans",
+        "PATCH /internships/audit-plans/{planId}",
+        "POST /internships/audit-plans/{planId}/activate",
+        "POST /internships/audit-plans/{planId}/cases",
+        "POST /internships/test-cases/{testCaseId}/executions",
+        "PATCH /internships/test-executions/{executionId}",
+        "POST /internships/audit-plans/{planId}/daily-summaries",
+        "PUT /internships/audit-plans/{planId}/final-summary"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "InternAuditPlan, InternTestCase, InternTestExecution, InternDailySummary, InternFinalSummary",
+        "Project and task status derived from outcomes",
+        "Notification and outbox rows",
+        "User activity audit rows"
+      ],
+      "authorization": "ensureAdmin: Admin, Manager or StudioManager role only; no ModuleInternships, strict-admin or coherent-grant check (ServerFeedback requires the module for the same operators). Intern routes: ensurePlanAccess and task assignment.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Row locks on project, task and plan; advisory lock per test case; conditional updates on plan and execution status.",
+      "idempotency": "Case stable ids and execution numbers are unique; plan creation per task is unique; summaries are not deduplicated per day.",
+      "failure": "400 invalid; 403 role; 404 plan not visible; 409 state or concurrent change.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerInternAudit.hs",
+        "tdf-hq/src/TDF/ServerInternships.hs",
+        "tdf-hq/src/TDF/API/InternAudit.hs"
+      ],
+      "tests": [
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "e2e/web/studio-internship-audit.spec.mjs",
+        "scripts/test-studio-internship-audit-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "scripts/test-studio-internship-audit-api-e2e.mjs drives the real API: plan creation races, cancel/activate races, activation refusals, completion with exception justification and immutability, intern 404/403 boundaries, audit-controlled task and project 409s, concurrent executions and terminal immutability, summary authorization and post-completion refusals.",
+      "evidence": "formal/system/internships-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The completion criteria are evaluated before the plan row lock, so an execution committed in between is not re-checked.",
+        "Audit-trail rows and notifications are written in separate transactions after the effect.",
+        "Any non-submit save of the final summary clears its submission and approval; every submit re-notifies the whole administrator team.",
+        "Daily summaries have no uniqueness per work date."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-AGE-ASSURANCE-001",
+      "title": "Self-attested age assurance",
+      "statement": "A signed-in party attests to being an adult or names a guardian; the record gates publishing and contact for minors. Routes: PUT /directory/age-assurance.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "A minor needs a guardian party different from themself (400); the row is upserted on the caller's party with evidence and verification reset.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /directory/age-assurance"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_age_assurance upsert"
+      ],
+      "authorization": "Own party only.",
+      "privacy": "Stores an age attestation and guardian link per account.",
+      "concurrency": "ON CONFLICT upsert.",
+      "idempotency": "Idempotent.",
+      "failure": "400 invalid guardian; 500 unknown guardian (FK).",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Any account, including one already verified or restricted, can re-attest itself adult and overwrite the row, bypassing guardian gating.",
+        "Guardian existence is enforced only by the foreign key."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-PROFILE-AUTHORING-001",
+      "title": "Directory profile creation, editing and status changes",
+      "statement": "A signed-in party creates a directory profile (becoming its manager); managers with edit change it and managers with publish move it through its states. Routes: POST /directory/profiles; PUT /directory/profiles/{profileId}; PATCH /directory/profiles/{profileId}/status.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Creation validates slug, name, kind, modality, rates, URLs, taxonomy and service areas, creates a party for organizational kinds, inserts the draft profile, the full-capability manager row, audit, completeness and search document in one transaction under an idempotency key. Updates need edit, keep or replace optional fields, bump the version and refuse a personal/organizational kind switch (409). Status changes need publish, refuse suspended and merged targets (403), require an adult, completeness at or above 0.5, allowed status and a location or remote offer to publish, and follow allowedProfileTransition (409).",
+      "actors": [
+        "Profile creator",
+        "Profile manager"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/profiles",
+        "PUT /directory/profiles/{profileId}",
+        "PATCH /directory/profiles/{profileId}/status"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party (organizational kinds), directory_profile, directory_profile_manager, selections, completeness, audit, search document"
+      ],
+      "authorization": "Creation: authentication. Edit: requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Status: publish capability.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Creation keyed; updates and status changes read then write without a lock, version check or conditional status.",
+      "idempotency": "Creation replays by key (RequiredIdempotency header with reserveIdempotency: actor-scoped (actor, operation, key) and a request fingerprint; replay returns the stored result, a different body is 409, keys expire after 24 hours.); updates are last-write-wins; a same-state status change still bumps the version.",
+      "failure": "400 invalid; 403 suspended/merged or not adult; 404 no capability; 409 kind switch, transition or completeness; 500 duplicate slug.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Duplicate slugs surface as 500 instead of 409.",
+        "A party can create many artist profiles with itself as subject, which affects public profile selection by party.",
+        "Edits ignore the profile status, so merged or suspended profiles can be edited and re-slugged.",
+        "Status changes can race (no lock or conditional update)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-CLASSIFIEDS-001",
+      "title": "Classified listings by publishing managers",
+      "statement": "A manager with publish creates classifieds for a profile and moves them through their states; derived listings are never created or transitioned by hand. Routes: POST /directory/classifieds; PATCH /directory/classifieds/{classifiedId}/status.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Creation needs publish and an adult; slug, title, description, modality, budget, an active non-derived category with its required fields, compensation metadata and an expiry at most 90 days are validated; the draft is inserted with a duplicate fingerprint and its search document. Status changes need the author profile's publish capability, refuse derived listings (409), require an adult to publish and follow allowedClassifiedTransition; the database trigger re-validates the transition and sets published and expiry times.",
+      "actors": [
+        "Profile manager with publish"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/classifieds",
+        "PATCH /directory/classifieds/{classifiedId}/status"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "classified, selections, search document",
+        "audit"
+      ],
+      "authorization": "requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Plus requireAdult.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Status transitions are enforced by the database trigger; creation is keyed.",
+      "idempotency": "Creation replays by key; same-state changes are allowed.",
+      "failure": "400 invalid; 403 not adult; 404 no capability; 409 derived, transition or unsupported compensation; 500 duplicate slug.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A body rejected after the key is reserved (for example an expiry over 90 days) burns the key: the corrected replay is 409.",
+        "Duplicate slugs surface as 500.",
+        "No rate limit on creation."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-ENGAGEMENT-001",
+      "title": "Applications, invitations and contact between directory profiles",
+      "statement": "Managers with contact apply to classifieds, invite other profiles and open conversations; participants and directory administrators move applications and invitations through their states. Routes: POST /directory/classifieds/{classifiedId}/applications; PATCH /directory/applications/{applicationId}/status; POST /directory/invitations; PATCH /directory/invitations/{invitationId}/status; POST /directory/contact.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Creation routes need the contact capability on the acting profile and an adult, validate the message and proposal, check eligibility in SQL (published target, not self, completeness preference, no block) and are keyed and rate limited per day (applications 20, invitations 10, contacts 20). Status changes are open to the applicant, author, sender or target managers (and administrators) with role-specific target states (403) and the declared transitions (409); a pending invitation past its expiry is expired lazily; a target blocking an invitation records a profile block. Contact upserts the direct-message thread, writes the conversation context and message, and replays by its idempotency resource.",
+      "actors": [
+        "Profile manager with contact",
+        "Application or invitation participant",
+        "Directory administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/classifieds/{classifiedId}/applications",
+        "PATCH /directory/applications/{applicationId}/status",
+        "POST /directory/invitations",
+        "PATCH /directory/invitations/{invitationId}/status",
+        "POST /directory/contact"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "classified_application, directory_invitation, directory_profile_block",
+        "chat_thread, directory_conversation_context, chat_message",
+        "notification rows and analytics events"
+      ],
+      "authorization": "requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Status changes: applicationParticipantRole / invitationParticipantRole or requireDirectoryAdmin: Admin role and ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Creations keyed and rate limited; status changes have no lock or conditional update.",
+      "idempotency": "Creations replay by key (new keys allow repeated applications and invitations); same-state changes allowed.",
+      "failure": "400 invalid; 403 ineligible or wrong target state; 404 not a participant; 409 transition; 429 daily limit.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Application and invitation status changes can race (two participants can both pass validation).",
+        "Any manager of the applicant profile may transition an application; no capability column is checked.",
+        "Notifications are inserted outside the creating transaction.",
+        "The rate counter is consumed only after eligibility passes.",
+        "Contact inserts go through the social DM write guard; consistency of directory blocks with social consent rules was not checked."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-REVIEWS-FAVORITES-001",
+      "title": "Verified reviews and personal favorites",
+      "statement": "A manager with edit reviews another profile after a verified completed interaction; any party keeps favorites of eligible targets. Routes: POST /directory/reviews; PUT /directory/favorites/{targetKind}/{targetId}; DELETE /directory/favorites/{targetKind}/{targetId}.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Reviews need edit on the author profile and an adult, refuse self-reviews, validate rating 1..5 and body, require a verified completed interaction without a block (409), are unique per interaction, author and subject, keyed and limited to 10 per day; the database trigger checks the interaction. Favorites are keyed by the caller's party and canonical target, accept only public or upcoming targets (404) and are idempotent; removal is unconditional.",
+      "actors": [
+        "Profile manager with edit",
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /directory/reviews",
+        "PUT /directory/favorites/{targetKind}/{targetId}",
+        "DELETE /directory/favorites/{targetKind}/{targetId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_review and notifications",
+        "directory_favorite and audit"
+      ],
+      "authorization": "Reviews: requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise). Favorites: own party.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Review uniqueness by key and conflict; favorites ON CONFLICT DO NOTHING.",
+      "idempotency": "Reviews replay by key; favorites idempotent.",
+      "failure": "400 invalid; 403 not adult; 404 capability or target; 409 ineligible or duplicate; 429 limit.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-SUBMISSIONS-001",
+      "title": "Artist claim preparation, verification requests and moderation reports",
+      "statement": "Any signed-in party prepares an artist claim target or reports content; a manager with edit requests verification. Routes: PUT /directory/artist-claim-targets/{partyId}; POST /directory/verifications; POST /directory/reports.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Preparing a claim locks the artist party, reuses its canonical artist profile or inserts a private draft directory profile with no manager (404 for non-artists or suspended, archived, merged or blocked targets). Verification requests need edit and insert a submitted verification under a key. Reports validate target kind, reason and details, insert the report and open the single active moderation case per target under a key.",
+      "actors": [
+        "Authenticated party",
+        "Profile manager with edit"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /directory/artist-claim-targets/{partyId}",
+        "POST /directory/verifications",
+        "POST /directory/reports"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_profile draft (claim target)",
+        "directory_verification",
+        "directory_moderation_report and directory_moderation_case",
+        "analytics"
+      ],
+      "authorization": "Claim targets and reports: authentication only. Verifications: requireProfileCapability: an active directory_profile_manager row for the caller with the named capability (404 otherwise).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Claim preparation locks the party; reports and verifications are keyed inserts.",
+      "idempotency": "Claim preparation is naturally idempotent; the others replay by key.",
+      "failure": "400 invalid; 404 ineligible artist or no capability; 500 on a repeated report with the same reason.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "docs/artist-management-claims.md"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Preparing a claim creates a directory identity for any legacy artist, which removes the artist from public search until the twin is published (ART-PUBLIC-VISIBILITY-001 lets the directory identity win).",
+        "Reports are not checked against an existing target; a second report by the same reporter with the same reason violates the unique index (500) although the API promises deduplication.",
+        "Verifications and reports have no rate limit."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DIR-ADMIN-MODERATION-001",
+      "title": "Administrator verification decisions, moderation decisions and profile merges",
+      "statement": "Directory administrators decide verification requests, close moderation cases with an action on the target, and merge one profile into another. Routes: PATCH /directory/admin/verifications/{verificationId}/status; POST /directory/admin/moderation/{caseId}/decisions; POST /directory/admin/merges.",
+      "domain": "DIR",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/directory-routes.md.",
+      "source": "formal/system/directory-routes.md",
+      "contract": "formal/system/directory-routes.md",
+      "property": "Verification decisions set under_review, verified, rejected, expired or revoked with reviewer, notes and timestamps. Moderation decisions insert the decision, close the case and apply the action (profile pause, remove or suspend; classified pause or remove; review pause or remove; warn is a no-op). Merges run directory_execute_profile_merge: both profiles locked in id order, already-merged sources refused, the operation recorded as executed, the source marked merged with the target as canonical, audit written and the source's classifieds and search documents withdrawn by trigger.",
+      "actors": [
+        "Directory administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PATCH /directory/admin/verifications/{verificationId}/status",
+        "POST /directory/admin/moderation/{caseId}/decisions",
+        "POST /directory/admin/merges"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "directory_verification",
+        "directory_moderation_decision, case status, target status and search documents",
+        "directory_merge_operation, source profile merged, audit"
+      ],
+      "authorization": "requireDirectoryAdmin: Admin role and ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Merges lock both profiles; verification and moderation writes have no lock or state guard.",
+      "idempotency": "Merges replay the stored receipt by key; verification decisions are not keyed; moderation replays re-run the case update and the target mutation.",
+      "failure": "400 invalid; 403 not a directory administrator; 404 missing; 409 empty merge result; 500 for function exceptions.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql"
+      ],
+      "tests": [
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/test-music-directory-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/directory-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Verification decisions have no self-review guard, no state machine (rejected -> verified allowed) and no audit, although the verified badge is public.",
+        "A moderation decision replay is not observational; closed cases can be re-decided; profile suspension bypasses allowedProfileTransition.",
+        "Merges jump to executed with requester = approver, do not check that source and target share a subject party or kind, do not reconcile the source's managers onto the target, and allow draft or suspended sources; function exceptions surface as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
