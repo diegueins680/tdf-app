@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-06",
+  "pullRequest": 667,
+  "parent": "16efe21c03eca32581f68124a2d0fbb5b2c8194e",
+  "protectedMain": "06e88b75f715397f1a70d09b99d29d5b7dd86068",
+  "thread": "PRRT_kwDOQPdUrM60meZd",
+  "fix": "Reject absent or non-object decoded Core sessions with401 before reading identity or creating a campaign actor. Current valid identity/role processing and upstream error classification remain unchanged.",
+  "qualification": {
+    "service": {
+      "passed": 135,
+      "failed": 0,
+      "runtime": "Python3.12.14 with isolated requirement-pinned cryptography46.0.3",
+      "logSha256": "8b9559f6a136fe9aaa48c02479e535a440e348ec7ad08929b79de84895dad6c3"
+    },
+    "httpBoundary": {
+      "passed": 22,
+      "logSha256": "a7f65a88f266183416c7ba5582435d4967685ab4daff48fe24624b44c1954bc5",
+      "scope": "Real loopback HTTP handler and SQLite store; Core responses mocked. No real login/OAuth, provider request or business data write."
+    },
+    "negativeControl": {
+      "parent": "16efe21c",
+      "methods": 2,
+      "expectedAssertionFailures": 7,
+      "errors": 0,
+      "logSha256": "0611d88af5600040d28f3e4bfdeaade3035892167dfcc4e1cfb8594b07857436"
+    },
+    "cases": [
+      "Null Core session over expired synthetic cookie and revoked synthetic Bearer returns401 without actor insertion",
+      "Non-object payloads return401; a valid later Core response restores the same HTTP service without admin escalation",
+      "Core401/403 map to401; Core500 or malformed JSON remain503"
+    ],
+    "boundedModel": "Existing1024-state dispatch model and negative controls pass; not an authentication refinement proof",
+    "repositoryQuality": {
+      "result": "PASS",
+      "runtime": "System Python3.13.5 and official checksum-pinned age1.3.2",
+      "logSha256": "527c20c0909720093f41bbaf86819a4da51240d640ae2504fbf682b98b376bdb"
+    },
+    "specification": {
+      "inventoryControls": 7,
+      "conformanceControls": 10,
+      "freshness": "PASS",
+      "generatedClients": 2
+    },
+    "catalog": "Catalog input roots unchanged from parent16; prior strict1395 receipt remains parent-scoped. New hosted scan required.",
+    "web": "Unchanged; parent CI42254073184 has a failed tablet thumbnail bound (12>10),719passed/22skipped, artifact13522959958. Trace repeats two404 mqdefault paths; no root cause or pass claimed. No browser assertion, fixture or bound was changed; no rerun of this failed parent was requested.",
+    "localBrowser": "Bundled headless executable absent; separate system Chromium launch failed before test execution. No local browser pass claimed."
+  },
+  "sourceSha256": {
+    "services/campaign-platform/server.py": "ddddea97c6a601ef1833585b6b00c9a90cdaaf77724b6e303cc8a9defa0a5df9",
+    "services/campaign-platform/tests/test_http.py": "86cf231e96ae998d3367502e0a309e486f7ec9f4543320fef1f83947cd11721c"
+  },
+  "release": "New-head hosted CI, independent approval and protected admission required. No merge/deployment, production/provider/SMTP/account/follow or campaign write. Public playback/auth return remains unverified."
+}
