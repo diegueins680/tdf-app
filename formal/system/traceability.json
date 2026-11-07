@@ -13881,7 +13881,7 @@
     {
       "id": "PAY-CAPTURE-RECON-001",
       "title": "Captured provider money is always verified or reconciled",
-      "statement": "When a provider reports authoritative captured money (server-to-server or signature-verified evidence, positive amount) for a Domo quote, course registration, event ticket order, marketplace order or service storefront order, the payment is either admitted as a verified checkout payment or an open reconciliation exception is recorded in the same transaction. A rejected admission is never only an error response.",
+      "statement": "When a provider reports authoritative captured money (server-to-server or signature-verified evidence, positive amount) for a Domo quote, course registration, event ticket order, marketplace order, service storefront order or music purchase, the payment is either admitted as a verified checkout payment or an open reconciliation exception is recorded in the same transaction. A rejected admission is never only an error response.",
       "domain": "PAY",
       "authority": "Audit finding F-14 (formal/system/audit-2026-10-31-phase1.md); existing payment_after_*_hold_expiry reconciliation intent in each handler; owner mandate 2026-10-31 (money first).",
       "source": "formal/system/audit-2026-10-31-phase1.md (F-14); formal/payments/README.md",
@@ -13932,9 +13932,10 @@
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record.",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -13942,7 +13943,8 @@
       "tests": [
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "tdf-hq/test/Spec.hs",
-        "scripts/verify-inductive-proofs.sh"
+        "scripts/verify-inductive-proofs.sh",
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs"
       ],
       "formalModels": [
         "formal/payments/CaptureAccounting.tla",
@@ -17497,6 +17499,426 @@
       "historicalStatus": null
     },
     {
+      "id": "MEDIA-MUSIC-AUTHORING-001",
+      "title": "Release authoring: creation, drafts, content, validation, terms and editorial comments",
+      "statement": "An authorized artist team creates releases, edits version drafts and catalogue content under optimistic concurrency, validates submissions, accepts terms, and exchanges editorial comments with staff. Routes: POST /music/releases; PUT /music/releases/{releaseId}/versions/{versionId}/draft; PUT /music/releases/{releaseId}/versions/{versionId}/content; POST /music/releases/{releaseId}/versions/{versionId}/validate; POST /music/releases/{releaseId}/versions/{versionId}/terms; POST /music/releases/{releaseId}/versions/{versionId}/comments; POST /music/releases/{releaseId}/versions/{versionId}/comments/{commentId}/resolve.",
+      "domain": "MEDIA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/music-routes.md.",
+      "source": "formal/system/music-routes.md",
+      "contract": "formal/system/music-routes.md",
+      "property": "Creation needs music_can release.create and an Idempotency-Key (replayed through the audit row). Draft and content writes need release.edit and apply only while updated_at equals expectedUpdatedAt and the version is editable (409 otherwise); content replacement is one transaction that re-validates references. Terms need release.submit and are unique per (version, kind, version, acceptor). Staff-only and change-request comments need a strict administrator; a change request moves in_review to changes_requested in the same statement.",
+      "actors": [
+        "Verified artist",
+        "Artist team member",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "The revenue feature flag named per route"
+      ],
+      "inputs": [
+        "POST /music/releases",
+        "PUT /music/releases/{releaseId}/versions/{versionId}/draft",
+        "PUT /music/releases/{releaseId}/versions/{versionId}/content",
+        "POST /music/releases/{releaseId}/versions/{versionId}/validate",
+        "POST /music/releases/{releaseId}/versions/{versionId}/terms",
+        "POST /music/releases/{releaseId}/versions/{versionId}/comments",
+        "POST /music/releases/{releaseId}/versions/{versionId}/comments/{commentId}/resolve"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "music_release, music_release_version, catalogue rows, music_terms_acceptance, music_editorial_comment",
+        "Audit rows"
+      ],
+      "authorization": "requireOwnerPermission: strict administrator, or music_can(actor, artist party, permission): a verified artist acting for themself, or an active team member with the owner/admin role or that permission.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Optimistic updated_at checks on draft and content; terms and comments without locks; creation replay has no lock.",
+      "idempotency": "Creation and terms replay; drafts and content are last-write-wins behind the revision check.",
+      "failure": "400 invalid; 403 permission; 404 missing; 409 stale revision, not editable or already resolved; 503 feature off.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/music-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Concurrent creations with one key can create two releases (replay lookup without a lock); a duplicate (artist, slug) answers 500 instead of 409.",
+        "A change-request comment changes the version state without the audit row the transition route writes.",
+        "An artist editor can resolve staff-only comments.",
+        "An unknown version on the terms route answers 409 rather than 404."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-MUSIC-UPLOAD-SESSION-001",
+      "title": "Binding and cancelling an upload session",
+      "statement": "The creator of an upload session binds the provider multipart upload id and cancels the session; cancelling returns a signed abort URL for the client. Routes: PUT /music/uploads/{uploadId}/provider; DELETE /music/uploads/{uploadId}.",
+      "domain": "MEDIA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/music-routes.md.",
+      "source": "formal/system/music-routes.md",
+      "contract": "formal/system/music-routes.md",
+      "property": "The session is loaded for its creator or a team member with release.upload, but the bind and cancel writes apply only to the creator; an expired session is 410; binding a different provider id or a session that is not initiated/uploading is 409; cancel is idempotent and makes no S3 call.",
+      "actors": [
+        "Upload creator",
+        "Artist team member"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "The revenue feature flag named per route"
+      ],
+      "inputs": [
+        "PUT /music/uploads/{uploadId}/provider",
+        "DELETE /music/uploads/{uploadId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "music_upload_session provider_upload_id and status"
+      ],
+      "authorization": "loadUpload (creator or team upload permission) then created_by = actor on the write.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single conditional update.",
+      "idempotency": "Bind with the same id and cancel repeat harmlessly.",
+      "failure": "400 invalid id; 404 not visible; 409 state; 410 expired.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/music-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A team member passes the load check but gets 409 on the write because of the created_by filter.",
+        "The server never aborts the multipart upload itself; the client performs the abort with the signed URL."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "REC-DDEX-REGISTRY-001",
+      "title": "Registering DDEX parties",
+      "statement": "A strict administrator registers a DDEX party (sender, recipient or both) with its DPID and verification evidence. Routes: POST /music/ddex/parties.",
+      "domain": "REC",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/music-routes.md.",
+      "source": "formal/system/music-routes.md",
+      "contract": "formal/system/music-routes.md",
+      "property": "Name, authority, role, evidence and DPID syntax are validated; the DPID is unique.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "The revenue feature flag named per route"
+      ],
+      "inputs": [
+        "POST /music/ddex/parties"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Insert music_ddex_party_registry with verified_by and verified_at"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess; no feature flag.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique DPID.",
+      "idempotency": "Not idempotent.",
+      "failure": "400 invalid; 403 not a strict administrator.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/music-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A duplicate DPID raises a unique violation that answers 500 instead of 409.",
+        "No audit row is written."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-MUSIC-INFRINGEMENT-001",
+      "title": "Infringement reports and their staff resolution",
+      "statement": "Any signed-in user reports a public release for infringement with an idempotency key; a strict administrator moves the report through triage, investigating, actioned or dismissed and may suspend a version when actioning it. Routes: POST /music/infringement-reports; PUT /music/infringement-reports/{reportId}.",
+      "domain": "MEDIA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/music-routes.md.",
+      "source": "formal/system/music-routes.md",
+      "contract": "formal/system/music-routes.md",
+      "property": "Creation: public feature flag, reason code, description 1..10000, release in music_public_release, replay by (reporter, key) under an advisory lock. Action: authoring flag, strict administrator, valid status transition checked by compare-and-set on the prior status, optional suspension of a version in in_review, approved, scheduled or published.",
+      "actors": [
+        "Authenticated user",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "The revenue feature flag named per route"
+      ],
+      "inputs": [
+        "POST /music/infringement-reports",
+        "PUT /music/infringement-reports/{reportId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "music_infringement_report and audit rows",
+        "music_release_version state suspended"
+      ],
+      "authorization": "Creation: authentication only. Action: hasStrictAdminAccess.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Advisory lock on (reporter, key); compare-and-set on report status.",
+      "idempotency": "Creation replays by key; a repeated action is 409.",
+      "failure": "400 invalid; 403 not staff; 404 release or report; 409 transition; 503 feature.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/music-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Suspending a version through this route writes no state_transition_requested audit row.",
+        "No notification is sent to the reporter or the artist.",
+        "Audit rows are unique per (release, key), so a key reused on another route can collide with 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-MUSIC-PLAYBACK-001",
+      "title": "Playback event ingestion with a stable identity",
+      "statement": "Listeners record playback events for recordings in public releases; anonymous listeners send an opaque identity, signed-in listeners are identified by their session and get listening history. Routes: POST /music/playback-events; POST /music/me/playback-events.",
+      "domain": "MEDIA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/music-routes.md.",
+      "source": "formal/system/music-routes.md",
+      "contract": "formal/system/music-routes.md",
+      "property": "The recording must be in a public release with a listening rule for the trusted territory; anonymous ids are at least 16 characters; event type and counters are validated and metadata is at most 16 KiB; music_record_playback_event deduplicates by event id under advisory locks, answers an identical replay as duplicate and a conflicting one as 409; eligible plays are rate limited per identity.",
+      "actors": [
+        "Anonymous listener",
+        "Authenticated listener"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "The revenue feature flag named per route"
+      ],
+      "inputs": [
+        "POST /music/playback-events",
+        "POST /music/me/playback-events"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "music_playback_event",
+        "music_playback_history upsert for signed-in listeners"
+      ],
+      "authorization": "Public route for anonymous events; AuthProtect for personal events, whose party comes from the session and ignores any anonymousId.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Advisory transaction locks on event id and session id.",
+      "idempotency": "Identical replay is a no-op.",
+      "failure": "400 invalid; 404 recording not public; 409 identity conflict.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/sql/2026-09-16_music_playback_identity.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/music-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The anonymous identity is client chosen, so the per-identity play limit can be evaded by rotating ids."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-MUSIC-COLLECTION-001",
+      "title": "Personal favorites and playlists",
+      "statement": "A signed-in listener keeps favorites and playlists of their own; playlist items reorder under the playlist row lock. Routes: PUT /music/favorites; DELETE /music/favorites/{recordingId}; POST /music/playlists; PUT /music/playlists/{playlistId}; DELETE /music/playlists/{playlistId}; POST /music/playlists/{playlistId}/items; PUT /music/playlists/{playlistId}/items/{itemId}; DELETE /music/playlists/{playlistId}/items/{itemId}.",
+      "domain": "MEDIA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/music-routes.md.",
+      "source": "formal/system/music-routes.md",
+      "contract": "formal/system/music-routes.md",
+      "property": "Favorites and playlist items accept only recordings in public releases for the trusted territory; every write is keyed by the session party (owner_party_id); names are 1..200 characters, visibility private, unlisted or public, positions 0..9999 and at most 10000 items; item writes lock the playlist row and keep positions unique.",
+      "actors": [
+        "Authenticated listener"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "The revenue feature flag named per route"
+      ],
+      "inputs": [
+        "PUT /music/favorites",
+        "DELETE /music/favorites/{recordingId}",
+        "POST /music/playlists",
+        "PUT /music/playlists/{playlistId}",
+        "DELETE /music/playlists/{playlistId}",
+        "POST /music/playlists/{playlistId}/items",
+        "PUT /music/playlists/{playlistId}/items/{itemId}",
+        "DELETE /music/playlists/{playlistId}/items/{itemId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "music_favorite, music_playlist, music_playlist_item"
+      ],
+      "authorization": "Own rows only: WHERE owner_party_id = actor on every write.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Playlist row lock (FOR UPDATE) for item writes; deferrable unique (playlist, position).",
+      "idempotency": "Favorites are idempotent; playlists have no key.",
+      "failure": "400 invalid; 404 not owner or not public; 409 full playlist or, for item creation, a playlist the caller does not own.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/music-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Adding an item to a playlist the caller does not own answers 409 instead of 404.",
+        "Playlist creation has no idempotency key, so a retry creates a duplicate."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
@@ -19195,7 +19617,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "0a529bbda939368c78f53435d3adba1d7fb991d4e0fee72b7259d2e917df216c",
-    "formal/system/route-requirements.json": "69e74dbfb3aec30a7628d00970ea52d950bfc816d6d27329979f4729390efb90",
+    "formal/system/route-requirements.json": "82bbd627edf7ef3c293a125326b9e59a30c9f66b02c75b44d76a1bac9103fb54",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -20364,7 +20786,7 @@
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ef9e613714411c9f7388714b7b80d49e4a0001d440472fa74fbbd83047ced199",
     "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "b8a242ab8938a53cefac018e4b8c5b0c529b3fbeb7752876549ebd1078cdc8d0",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
-    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "4051230476f98bb4be15d001553c7d0241e5978b3568140e8b5a546bcd98ed44",
+    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "feb330191f5b1146684ed7953ed957212d6b2aac155f829307c7305ea3444486",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "f0e50cb9103b6da489980440202a50e7c4431bc19f0fdce666be6f738bb763ef",
@@ -20458,7 +20880,7 @@
     "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs": "6f440b98f7d532b31c37c1a7e22af4cf11affd21c38ce845fc49b86f50901389",
     "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs": "4385c3797470d22b173b2552916a06fe60ec7d04afc20d470b2792648e977385",
     "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
-    "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "e04f6350a2e753356f043d5e961751969f33c7bf94d925881b235c73ee5b8a35",
+    "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "989d6b49cef51ffb88eadee71cdfdbe5d172366aa94a9c26b956745c592a074b",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "87adc6974c0b77da9983747c5900ec34687cd4c790084db30fcb521750daedb8",
@@ -28736,6 +29158,10 @@
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-AUTHORING-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API/MusicRelease.hs": [
@@ -28772,6 +29198,22 @@
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-AUTHORING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-INFRINGEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PLAYBACK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-COLLECTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": [
@@ -28781,6 +29223,10 @@
       },
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-AUTHORING-001",
         "relationship": "implementation"
       }
     ],
@@ -28960,6 +29406,14 @@
       {
         "requirement": "SYS-MUSIC-TEST-ENTRY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-AUTHORING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-INFRINGEMENT-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": [
@@ -28969,6 +29423,10 @@
       },
       {
         "requirement": "SYS-MUSIC-TEST-ENTRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-AUTHORING-001",
         "relationship": "tests"
       }
     ],
@@ -29064,6 +29522,14 @@
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PLAYBACK-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-COLLECTION-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-music-publication.sh": [
@@ -29145,6 +29611,10 @@
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": [
       {
         "requirement": "MEDIA-MUSIC-ASSET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-UPLOAD-SESSION-001",
         "relationship": "implementation"
       }
     ],
@@ -29440,6 +29910,10 @@
       {
         "requirement": "MEDIA-MUSIC-DDEX-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-DDEX-REGISTRY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/app/MusicDdexRenderMain.hs": [
@@ -29479,6 +29953,10 @@
       },
       {
         "requirement": "SYS-MUSIC-TEST-ENTRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "REC-DDEX-REGISTRY-001",
         "relationship": "tests"
       }
     ],
@@ -29584,6 +30062,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-DATAFAST-001",
         "relationship": "implementation"
       }
@@ -29629,6 +30111,10 @@
       },
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
         "relationship": "tests"
       }
     ],
@@ -29973,6 +30459,10 @@
     "tdf-hq/sql/2026-09-16_music_playback_identity.sql": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PLAYBACK-001",
         "relationship": "implementation"
       }
     ],
@@ -34516,6 +35006,16 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs": [
+      {
+        "requirement": "MEDIA-MUSIC-UPLOAD-SESSION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Invoice/SessionIssue.hs": [
       {
         "requirement": "PAY-INVOICE-ISSUE-001",
@@ -35042,12 +35542,6 @@
       {
         "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
         "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs": [
-      {
-        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
-        "relationship": "tests"
       }
     ],
     "tdf-hq/test/MusicCredentialCacheMain.hs": [
@@ -56573,6 +57067,10 @@
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PLAYBACK-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -60389,6 +60887,10 @@
         {
           "requirement": "MEDIA-MUSIC-RELEASE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-AUTHORING-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -61099,6 +61601,22 @@
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-AUTHORING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-INFRINGEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PLAYBACK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-COLLECTION-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -61131,13 +61649,17 @@
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-AUTHORING-001",
+          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "4051230476f98bb4be15d001553c7d0241e5978b3568140e8b5a546bcd98ed44",
+      "sha256": "feb330191f5b1146684ed7953ed957212d6b2aac155f829307c7305ea3444486",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61157,6 +61679,10 @@
           "relationship": "implementation"
         },
         {
+          "requirement": "PAY-CAPTURE-RECON-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "PAY-DATAFAST-001",
           "relationship": "implementation"
         }
@@ -61171,6 +61697,10 @@
         {
           "requirement": "MEDIA-MUSIC-DDEX-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "REC-DDEX-REGISTRY-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -61182,6 +61712,10 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-UPLOAD-SESSION-001",
           "relationship": "implementation"
         }
       ]
@@ -63111,6 +63645,10 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "MEDIA-MUSIC-UPLOAD-SESSION-001",
+          "relationship": "tests"
+        },
+        {
           "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
           "relationship": "tests"
         }
@@ -63125,13 +63663,21 @@
         {
           "requirement": "MEDIA-MUSIC-RELEASE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PLAYBACK-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-COLLECTION-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "e04f6350a2e753356f043d5e961751969f33c7bf94d925881b235c73ee5b8a35",
+      "sha256": "989d6b49cef51ffb88eadee71cdfdbe5d172366aa94a9c26b956745c592a074b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63144,6 +63690,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-CAPTURE-RECON-001",
           "relationship": "tests"
         }
       ]
@@ -63161,6 +63711,10 @@
         {
           "requirement": "SYS-MUSIC-TEST-ENTRY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-AUTHORING-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -63176,6 +63730,10 @@
         },
         {
           "requirement": "SYS-MUSIC-TEST-ENTRY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "REC-DDEX-REGISTRY-001",
           "relationship": "tests"
         }
       ]
@@ -63200,6 +63758,14 @@
         },
         {
           "requirement": "SYS-MUSIC-TEST-ENTRY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-AUTHORING-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-INFRINGEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -70543,7 +71109,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0c913beb0bfbd5771c25661b53358cd24b9baff8515f96af6878a311e24d5cd1",
+      "sourceSha256": "fa8b85533c886a4d599781a6b0351217a1d27e19aea0c1a24f45dc98287d9d30",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70571,7 +71137,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0c913beb0bfbd5771c25661b53358cd24b9baff8515f96af6878a311e24d5cd1",
+      "sourceSha256": "fa8b85533c886a4d599781a6b0351217a1d27e19aea0c1a24f45dc98287d9d30",
       "definition": {
         "states": [
           "absent",
@@ -70601,7 +71167,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0c913beb0bfbd5771c25661b53358cd24b9baff8515f96af6878a311e24d5cd1",
+      "sourceSha256": "fa8b85533c886a4d599781a6b0351217a1d27e19aea0c1a24f45dc98287d9d30",
       "definition": {
         "export": [
           "queued",
@@ -93551,7 +94117,7 @@
   ],
   "conformanceCounts": {
     "FAIL": 0,
-    "IMPLEMENTED BUT UNSPECIFIED": 28,
+    "IMPLEMENTED BUT UNSPECIFIED": 34,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
     "PARTIAL": 197,

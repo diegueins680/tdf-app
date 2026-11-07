@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 100,
+    "named": 122,
     "path-named": 1,
-    "reviewed": 37,
-    "unspecified": 378,
-    "covered": 138
+    "reviewed": 50,
+    "unspecified": 343,
+    "covered": 173
   },
   "routes": [
     {
@@ -1868,212 +1868,295 @@
     {
       "method": "POST",
       "path": "/music/ddex/parties",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-DDEX-REGISTRY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/downloads/free",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-DOWNLOAD-001"
+      ],
+      "note": "PAY-MUSIC-DOWNLOAD-001 specifies the shared downloadable-asset predicate, per-request counting under the entitlement row lock, 300-second URLs and revoked grants staying revoked."
     },
     {
       "method": "POST",
       "path": "/music/entitlements/{entitlementId}/download",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-DOWNLOAD-001"
+      ],
+      "note": "PAY-MUSIC-DOWNLOAD-001 specifies the shared downloadable-asset predicate, per-request counting under the entitlement row lock, 300-second URLs and revoked grants staying revoked."
     },
     {
       "method": "PUT",
       "path": "/music/favorites",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/favorites/{recordingId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/infringement-reports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-INFRINGEMENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/infringement-reports/{reportId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-INFRINGEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/me/playback-events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-PLAYBACK-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/playback-events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-PLAYBACK-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/playlists",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/playlists/{playlistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/playlists/{playlistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/playlists/{playlistId}/items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/playlists/{playlistId}/items/{itemId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/playlists/{playlistId}/items/{itemId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/purchases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-PURCHASE-REPLAY-001"
+      ],
+      "note": "PAY-MUSIC-PURCHASE-REPLAY-001 specifies buyer-scoped keys bound to the offer, territory, terms and environment, with identical requests reusing the order."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/datafast/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/releases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/comments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/comments/{commentId}/resolve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/releases/{releaseId}/versions/{versionId}/content",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/corrections",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-RELEASE-001"
+      ],
+      "note": "MEDIA-MUSIC-RELEASE-001 specifies version transitions through music_valid_transition with frozen snapshots, and corrections idempotent per request key under row locks."
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-DDEX-001"
+      ],
+      "note": "MEDIA-MUSIC-DDEX-001 specifies strict-admin export creation committing export and job atomically, serialized per actor/key and version, with natural-key uniqueness."
     },
     {
       "method": "PUT",
       "path": "/music/releases/{releaseId}/versions/{versionId}/draft",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/terms",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/transition",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-RELEASE-001"
+      ],
+      "note": "MEDIA-MUSIC-RELEASE-001 specifies version transitions through music_valid_transition with frozen snapshots, and corrections idempotent per request key under row locks."
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/uploads",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-ASSET-001"
+      ],
+      "note": "MEDIA-MUSIC-ASSET-001 specifies scoped SigV4 multipart uploads to quarantine, part evidence and idempotent confirmation creating the asset and one job per session."
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/validate",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/uploads/{uploadId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-UPLOAD-SESSION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/uploads/{uploadId}/confirm",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-ASSET-001"
+      ],
+      "note": "MEDIA-MUSIC-ASSET-001 specifies scoped SigV4 multipart uploads to quarantine, part evidence and idempotent confirmation creating the asset and one job per session."
     },
     {
       "method": "PUT",
       "path": "/music/uploads/{uploadId}/parts/{partNumber}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-ASSET-001"
+      ],
+      "note": "MEDIA-MUSIC-ASSET-001 specifies scoped SigV4 multipart uploads to quarantine, part evidence and idempotent confirmation creating the asset and one job per session."
     },
     {
       "method": "PUT",
       "path": "/music/uploads/{uploadId}/provider",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-UPLOAD-SESSION-001"
+      ]
     },
     {
       "method": "PUT",

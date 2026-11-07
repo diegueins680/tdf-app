@@ -520,3 +520,9 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
   - aprobar un candidato de identidad puede otorgar el rol Artist a cualquier parte;
   - `user_credential` no tiene clave única por parte;
   - la contraseña inicial viaja en claro en el correo de bienvenida.
+
+## 46. F-05 — requisitos de las rutas `/music` (2026-11-07)
+
+- **Cobertura:** las 35 rutas mutantes de `/music` quedan atribuidas: 13 revisadas contra requisitos existentes (`MEDIA-MUSIC-RELEASE-001`, `MEDIA-MUSIC-ASSET-001`, `MEDIA-MUSIC-DDEX-001`, `PAY-MUSIC-PURCHASE-REPLAY-001`, `PAY-MUSIC-OUTCOME-001`, `PAY-MUSIC-DOWNLOAD-001`) y 22 nombradas por 6 requisitos nuevos (`implemented but unspecified`). Recuento global: 173 de 516 rutas atribuidas; **343** sin requisito. Documento de revisión: `formal/system/music-routes.md`.
+- **Defecto corregido (dinero):** las rutas de captura PayPal y estado Datafast de compras de música registraban el pago verificado con `recordVerifiedPayment` a secas. Los demás dominios usan `recordVerifiedPaymentOrReconcile`, que deja una excepción de conciliación abierta cuando dinero capturado con evidencia autoritativa no se admite (por ejemplo, un checkout caducado entretanto). Música respondía 502 sin registrar nada, así que dinero capturado podía quedar sin rastro. Ahora usa la variante con conciliación; `PAY-CAPTURE-RECON-001` nombra el dominio de música, y una prueba en PostgreSQL (`MusicPurchaseSpec`, 33 ejemplos) lleva una captura COMPLETED a un checkout caducado y encuentra la excepción abierta.
+- **Pendiente de decisión** (campos `ambiguity`): creaciones concurrentes con una misma clave pueden crear dos lanzamientos; el miembro de equipo con permiso de subida no puede confirmar ni cancelar la sesión que ve; comentarios de petición de cambios y acciones por infracción cambian el estado sin fila de auditoría de transición; la identidad anónima de reproducción es elegida por el cliente.
