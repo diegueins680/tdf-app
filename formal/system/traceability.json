@@ -8399,7 +8399,8 @@
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.ts",
         "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
-        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql",
+        "scripts/lib/test-child-completion.mjs"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -17814,7 +17815,7 @@
     "scripts/__tests__/music-test-database.test.mjs": "b959b1430823162445ce77bdd7124f9f06967bdbc9f0f0f8f60662cd4aa66b3b",
     "scripts/__tests__/music-track-search-model.test.mjs": "2e61f61fdd8dac32222ed6d9e650b960646f7dbc87ac62237004902e17957b28",
     "scripts/__tests__/music-worker-build.test.mjs": "48ed0c6d1a7308dae7e8d1c6370d2ce14243bd7a1caf80f6b07b1bf5a6e62dcf",
-    "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs": "fd2af325e8fe07b3012fa55505eee78cb82b9e7dcad442ef2fffd1c888b2282f",
+    "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs": "f062c74466f16174217984005a9eaca71e00dd31d3613bfb46eca6682c3a39ed",
     "scripts/__tests__/music-worker-timing.test.mjs": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
     "scripts/__tests__/music-worker-upload.test.mjs": "85b62ef8c0264b420667a9c519c86cc73aaa926f585638fb97f9b5a70751d005",
     "scripts/__tests__/native-resolver-lock.test.mjs": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
@@ -17900,7 +17901,7 @@
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
-    "scripts/lib/test-child-completion.mjs": "73f6d1e064be16aed833091c25a0dcf526b9e59dd6c19dc4a5712f5afe7c1da0",
+    "scripts/lib/test-child-completion.mjs": "b2254b43a28ad96b7c522a18fd57fa17479bfd783513f1f4bd056bc6c4fbf039",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
@@ -18010,7 +18011,7 @@
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
     "scripts/test-music-release-audio-pipeline.sh": "872c969557cc8cde9e5e135d768cfa5da60937beacb954de5ad1301c5331b8de",
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
-    "scripts/test-music-release-worker-runtime.mjs": "75e5b87cb6b333cc081f083483c1e9c3caa647127097b3a18289c823118b7616",
+    "scripts/test-music-release-worker-runtime.mjs": "9dab132988cd53ea2f568bc0822fad5db32fc14934f6b164d530c47d40d56994",
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
     "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
@@ -27688,6 +27689,16 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/test-child-completion.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-ASSET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WORKER-COMPLETION-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": [
       {
         "requirement": "MEDIA-MUSIC-ASSET-001",
@@ -32678,12 +32689,6 @@
         "relationship": "tests"
       }
     ],
-    "scripts/lib/test-child-completion.mjs": [
-      {
-        "requirement": "SYS-WORKER-COMPLETION-001",
-        "relationship": "implementation"
-      }
-    ],
     "scripts/__tests__/test-child-completion.test.mjs": [
       {
         "requirement": "SYS-WORKER-COMPLETION-001",
@@ -36736,7 +36741,7 @@
     {
       "id": "SURFACE-d6545235ef8b425c",
       "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
-      "sha256": "fd2af325e8fe07b3012fa55505eee78cb82b9e7dcad442ef2fffd1c888b2282f",
+      "sha256": "f062c74466f16174217984005a9eaca71e00dd31d3613bfb46eca6682c3a39ed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38465,9 +38470,13 @@
     {
       "id": "SURFACE-0ebd44c86ad332c6",
       "path": "scripts/lib/test-child-completion.mjs",
-      "sha256": "73f6d1e064be16aed833091c25a0dcf526b9e59dd6c19dc4a5712f5afe7c1da0",
+      "sha256": "b2254b43a28ad96b7c522a18fd57fa17479bfd783513f1f4bd056bc6c4fbf039",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-WORKER-COMPLETION-001",
           "relationship": "implementation"
@@ -41023,7 +41032,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "75e5b87cb6b333cc081f083483c1e9c3caa647127097b3a18289c823118b7616",
+      "sha256": "9dab132988cd53ea2f568bc0822fad5db32fc14934f6b164d530c47d40d56994",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69493,7 +69502,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5a21416a1879abd02aa9e69798b4e63415198938a350839c559f22e15d537494",
+      "sourceSha256": "051a18e6fc761c1820d928ab92e8bc7526ef61d8633c2d69a99a94ec69d9a201",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -69521,7 +69530,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5a21416a1879abd02aa9e69798b4e63415198938a350839c559f22e15d537494",
+      "sourceSha256": "051a18e6fc761c1820d928ab92e8bc7526ef61d8633c2d69a99a94ec69d9a201",
       "definition": {
         "states": [
           "absent",
@@ -69551,7 +69560,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5a21416a1879abd02aa9e69798b4e63415198938a350839c559f22e15d537494",
+      "sourceSha256": "051a18e6fc761c1820d928ab92e8bc7526ef61d8633c2d69a99a94ec69d9a201",
       "definition": {
         "export": [
           "queued",

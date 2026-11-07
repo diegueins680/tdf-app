@@ -4167,7 +4167,7 @@
     {
       "id": "SURFACE-d6545235ef8b425c",
       "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
-      "sha256": "fd2af325e8fe07b3012fa55505eee78cb82b9e7dcad442ef2fffd1c888b2282f",
+      "sha256": "f062c74466f16174217984005a9eaca71e00dd31d3613bfb46eca6682c3a39ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5109,7 +5109,7 @@
     {
       "id": "SURFACE-0ebd44c86ad332c6",
       "path": "scripts/lib/test-child-completion.mjs",
-      "sha256": "73f6d1e064be16aed833091c25a0dcf526b9e59dd6c19dc4a5712f5afe7c1da0",
+      "sha256": "b2254b43a28ad96b7c522a18fd57fa17479bfd783513f1f4bd056bc6c4fbf039",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6453,7 +6453,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "75e5b87cb6b333cc081f083483c1e9c3caa647127097b3a18289c823118b7616",
+      "sha256": "9dab132988cd53ea2f568bc0822fad5db32fc14934f6b164d530c47d40d56994",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30358,7 +30358,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5a21416a1879abd02aa9e69798b4e63415198938a350839c559f22e15d537494",
+      "sha256": "051a18e6fc761c1820d928ab92e8bc7526ef61d8633c2d69a99a94ec69d9a201",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
