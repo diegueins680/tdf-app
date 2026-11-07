@@ -132,7 +132,7 @@ export const buildEventFinanceCsvRows = (
       eventTitle,
       eventStart,
       eventEnd,
-      eventCurrency,
+      entry.efeCurrency,
       '',
       '',
       entry.efeBudgetLineId ?? '',
