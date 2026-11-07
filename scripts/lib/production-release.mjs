@@ -703,6 +703,12 @@ ROLLBACK;
 // as undefined_function at request time. The release test derives the called set
 // from source and fails if a newly called function is missing here.
 export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
+  'music_media_eligible(text,text)',
+  'music_media_reconcile(integer)',
+  'music_media_claim(uuid)',
+  'music_media_observe(uuid,text,text)',
+  'music_artist_featured_track_eligible(bigint,uuid,bigint,text)',
+  'music_set_artist_featured_track(bigint,uuid,bigint,text)',
   'music_can(bigint,bigint,text)',
   'music_checkout_payment_attempt_allowed(uuid)',
   'music_check_ddex_export(uuid)',
@@ -2726,6 +2732,8 @@ BEGIN
     RAISE EXCEPTION 'Music migration 2026-10-07_artist_invitation_links is not applied';
   END IF;
   FOREACH music_table IN ARRAY ARRAY[
+    'music_artist_featured_track',
+    'music_media_health', 'music_media_source',
     'music_release', 'music_release_version', 'music_party', 'music_party_identifier',
     'music_recording', 'music_release_track', 'music_credit', 'music_identifier',
     'music_rights_declaration', 'music_rights_split', 'music_asset', 'music_upload_session',
@@ -2742,6 +2750,31 @@ BEGIN
       RAISE EXCEPTION 'Music release relation public.% is missing', music_table;
     END IF;
   END LOOP;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('artist_party_id','bigint','NO'),('recording_id','uuid','YES'),
+      ('legacy_release_id','bigint','YES'),('updated_at','timestamp with time zone','NO')
+    ) expected(column_name,data_type,is_nullable)
+    LEFT JOIN information_schema.columns actual ON actual.table_schema='public'
+      AND actual.table_name='music_artist_featured_track'
+      AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+      OR actual.is_nullable<>expected.is_nullable
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.music_artist_featured_track'::regclass
+      AND conname='music_artist_featured_track_one_source' AND contype='c' AND convalidated
+  ) THEN
+    RAISE EXCEPTION 'Artist featured-track preference schema is incompatible';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgrelid='public.music_artist_featured_track'::regclass
+      AND tgname='identity_archive_reference_guard' AND NOT tgisinternal
+      AND tgfoid=to_regprocedure('public.identity_reject_archived_reference()')
+      AND tgtype=23 AND tgenabled IN ('O','A') AND tgattr::text='' AND tgqual IS NULL
+      AND tgnargs=1 AND encode(tgargs,'hex')='6172746973745f70617274795f696400'
+  ) THEN
+    RAISE EXCEPTION 'Artist featured-track archived-reference protection is missing or incompatible';
+  END IF;
   FOREACH music_table IN ARRAY ARRAY[
     ${MUSIC_RUNTIME_FUNCTION_SIGNATURES.map((signature) => `'${signature}'`).join(',\n    ')}
   ] LOOP
@@ -2749,6 +2782,13 @@ BEGIN
       RAISE EXCEPTION 'Music runtime function % is missing', music_table;
     END IF;
   END LOOP;
+  IF (SELECT count(*) FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='music_media_health')<>11
+    OR to_regclass('public.music_media_health_due') IS NULL
+    OR to_regprocedure('public.music_public_asset_accessible_before_health(uuid,text)') IS NULL
+    OR position('music_media_eligible' IN pg_get_functiondef('public.music_public_asset_accessible(uuid,text)'::regprocedure))=0
+    OR position('music_media_eligible' IN pg_get_functiondef('public.music_artist_featured_track_eligible(bigint,uuid,bigint,text)'::regprocedure))=0
+  THEN RAISE EXCEPTION 'Music source health policy or schema is missing'; END IF;
   IF to_regclass('public.artist_invitation_link') IS NULL
      OR NOT EXISTS (
        SELECT 1 FROM pg_constraint

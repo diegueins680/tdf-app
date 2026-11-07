@@ -26,7 +26,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
-      bash ca-certificates curl ffmpeg jq libpq5 libxml2-utils perl postgresql-client tini unzip zip && \
+      bash ca-certificates curl ffmpeg jq libpq5 libxml2-utils perl postgresql-client python3-minimal tini unzip zip && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder /out/tdf-ddex-render /app/tdf-ddex-render
 COPY --from=builder /out/renderer-inputs.sha256 /app/renderer-inputs.sha256
@@ -38,6 +38,7 @@ COPY scripts/build-ddex-ern432-package.sh /app/scripts/build-ddex-ern432-package
 COPY scripts/run-music-release-worker-once.sh /app/scripts/run-music-release-worker-once.sh
 COPY scripts/music-s3-upload.pl /app/scripts/music-s3-upload.pl
 COPY scripts/run-music-release-worker.sh /app/scripts/run-music-release-worker.sh
+COPY scripts/music-media-health.py /app/scripts/music-media-health.py
 RUN chmod 0755 /app/tdf-ddex-render /app/scripts/*.sh && \
     useradd -m -u 1000 worker && chown -R worker:worker /app
 USER worker

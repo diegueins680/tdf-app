@@ -1,9 +1,12 @@
+import { isArtistMediaRecoveryEnabled } from '../config/artistMediaRecoveryRollout';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { loadArtistCatalog } from '../api/artistCatalog';
 import MarkdownText from '../components/MarkdownText';
 import ArtistVideoLibrary from '../components/ArtistVideoLibrary';
+import { useOptionalPlayer } from '../player/PlayerProvider';
+import ArtistProfilePlayback from '../player/ArtistProfilePlayback';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -185,6 +188,9 @@ export default function ArtistPublicPage() {
   }, []);
 
   const segment = (slugOrId ?? '').trim();
+  const beginArtist = useOptionalPlayer()?.beginArtist;
+  const artistMediaRecoveryEnabled = isArtistMediaRecoveryEnabled();
+  useEffect(() => { if (artistMediaRecoveryEnabled) beginArtist?.(segment); }, [artistMediaRecoveryEnabled, beginArtist, segment]);
 
   const artistQuery = useQuery({
     queryKey: ['public-artist', segment],
@@ -384,6 +390,9 @@ export default function ArtistPublicPage() {
 
   return (
     <Box sx={{ maxWidth: 1040, mx: 'auto' }}>
+      {artistMediaRecoveryEnabled && <ArtistProfilePlayback profileKey={segment} artistId={artistId} artistName={artist.apDisplayName} canManage={isSelf && hasToken}
+        releases={catalogQuery.data ? canonicalReleases : undefined} legacyReleases={releases} loading={catalogQuery.isPending}
+        failed={catalogQuery.isError || Boolean(catalogQuery.data?.unavailableSources.includes('canonical'))} retryCatalog={() => { void catalogQuery.refetch(); }} />}
       <Card sx={{ borderRadius: 4, overflow: 'hidden' }} variant="outlined">
         <section aria-labelledby="artist-hero">
         <Box

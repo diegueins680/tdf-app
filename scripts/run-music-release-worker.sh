@@ -20,6 +20,12 @@ request_stop() {
 trap request_stop INT TERM
 
 while [ "$stop_requested" = false ]; do
+  # One bounded, leased check per iteration; inspection never publishes music.
+  python3 "$(dirname -- "$worker_once")/music-media-health.py" &
+  active_pid=$!
+  wait "$active_pid" || true
+  active_pid=''
+  [ "$stop_requested" = false ] || break
   "$worker_once" &
   active_pid=$!
   result=0

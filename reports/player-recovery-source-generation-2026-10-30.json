@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "scope": "Retired native-source event recovery; synthetic hosted evidence and controlled component interleaving, not production qualification",
+  "sourceBasis": "0430693db87b64593d108940f5c3f7ba318128ac",
+  "catalogDependency": "3c99531049394b2ee7e80241e627375fd54b8279",
+  "failure": {
+    "runId": 41048240137,
+    "jobId": 124037969788,
+    "artifactId": 12974515778,
+    "artifactSha256": "355140ce805c4cf02f1f0f556b094ec26ec4a5db877818eceb723633c334f82d",
+    "result": "68 passed; Firefox PW-MUSIC-NATIVE-07 failed the unchanged next-source clock predicate at line514",
+    "observation": "Second source loaded metadata, readyState4, duration24.021333, time0 and paused; first source emitted terminal errors. This does not uniquely prove browser event scheduling.",
+    "nativeObservations": {
+      "events": [
+        {
+          "type": "loadedmetadata",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "playing",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.021041,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.30275,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.58877,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0.87075,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.152812,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.43452,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.718666,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 1.920041,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 1.920041,
+          "source": "http://127.0.0.1:33211/media/first/high",
+          "error": null
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=0&attempt=1",
+          "error": 4
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=0&attempt=2",
+          "error": 4
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=0&attempt=3",
+          "error": 4
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=1",
+          "error": 4
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=1",
+          "error": 4
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=1",
+          "error": 4
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=2",
+          "error": 4
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=2",
+          "error": 4
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=2",
+          "error": 4
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=3",
+          "error": 4
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=3",
+          "error": 4
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=1&attempt=3",
+          "error": 4
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=2&attempt=1",
+          "error": 4
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=2&attempt=1",
+          "error": 4
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=2&attempt=1",
+          "error": 4
+        },
+        {
+          "type": "error",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=2&attempt=2",
+          "error": 4
+        },
+        {
+          "type": "timeupdate",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=2&attempt=2",
+          "error": 4
+        },
+        {
+          "type": "pause",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/first/low?grant=permanently-expired&rendition=2&attempt=2",
+          "error": 4
+        },
+        {
+          "type": "loadedmetadata",
+          "trusted": true,
+          "time": 0,
+          "source": "http://127.0.0.1:33211/media/second/low",
+          "error": null
+        }
+      ],
+      "selectionTimings": [
+        {
+          "trackId": "33000000-0000-4000-8000-000000000001",
+          "selectedAt": 918,
+          "ordinal": 1,
+          "startedAt": 1041,
+          "selectionToPlayingMs": 123,
+          "source": "http://127.0.0.1:33211/media/first/high"
+        }
+      ],
+      "audio": [
+        {
+          "src": "http://127.0.0.1:33211/media/second/low",
+          "time": 0,
+          "duration": 24.021333,
+          "paused": true,
+          "readyState": 4,
+          "aac": "maybe",
+          "flac": "maybe"
+        }
+      ]
+    }
+  },
+  "counterexample": {
+    "test": "a retired source error during the next render cannot cancel automatic recovery",
+    "trigger": "Dispatch a second retired-source native error from a child layout effect after next-track render, before parent passive listener/source cleanup.",
+    "originalResult": "Expected playing; actual loading after the next source was selected.",
+    "correctedResult": "Focused player/provider/identity/analytics suites: 98 tests passed.",
+    "harnessLimit": "The initial probe used a nonexistent helper and was corrected to public playTrack before reproducing the behavioral assertion; that setup error is not defect evidence."
+  },
+  "repair": "Loaded native sources carry their generation. Handlers require current generation, current queue selection and matching native URL; recovery retires prior generation before deferred React cleanup. Existing pause/autoplay/retry bounds remain.",
+  "sourceSha256": {
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "239dff8584ac52d2ab5ef80d1e1a639a43fbeef220300d4b39333e8a8d40dfc6",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "b1dcd742b534ff8a1b4e49bac46b99b266d51ada21b3cf9799310ef99a79a508"
+  },
+  "qualification": "Fresh full-suite/build and current-source hosted native Firefox qualification are separate. Persistent media-health implementation, Mobile publication403, independent review, FIFO and deployment prerequisites remain unresolved."
+}

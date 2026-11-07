@@ -192,11 +192,25 @@ for migration in \
   2026-09-16_music_ddex_operations.sql \
   2026-09-16_music_playback_identity.sql \
   2026-10-15_music_payment_outcome_consistency.sql \
-  2026-10-15_music_exact_minor_units.sql
+  2026-10-15_music_exact_minor_units.sql \
+  2026-10-30_artist_featured_track.sql \
+  2026-11-06_music_media_health.sql \
+  2026-11-06_music_legacy_source_compatibility.sql \
+  2026-11-07_music_featured_source_health.sql
 do
   psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" \
     < "$TDF_MUSIC_ROOT/tdf-hq/sql/$migration"
 done
+
+# The public catalog/search handler uses the exact shipped normalizer. This
+# selected-migration fixture does not install the unrelated directory schema.
+node --input-type=module - "$TDF_MUSIC_ROOT" <<'JS' | psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE"
+import { readFileSync } from 'node:fs';
+const text=readFileSync(process.argv[2]+'/tdf-hq/sql/2026-08-14_music_directory_core.sql','utf8');
+const match=text.match(/CREATE OR REPLACE FUNCTION directory_normalize_text[\s\S]*?\$\$;/);
+if(!match) throw new Error('Missing actual directory normalizer');
+process.stdout.write(match[0]);
+JS
 
 # Persistent owns the remaining runtime tables and canonical role tables; the
 # normal test seed creates synthetic users after those tables exist.
