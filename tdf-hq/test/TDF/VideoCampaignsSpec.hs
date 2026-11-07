@@ -39,7 +39,8 @@ spec = do
       case configured of
         Nothing -> pendingWith "Set TDF_VIDEO_CAMPAIGN_MANAGER_TEST_DB to an isolated loopback _test database"
         Just url -> do
-          isDisposablePostgresUrl False url `shouldBe` True
+          ci <- lookupEnv "CI"
+          isDisposablePostgresUrl (ci == Just "true") url `shouldBe` True
           outcomes <- runNoLoggingT $ withPostgresqlPool (BS.pack url) 1 $ \pool -> liftIO $ runSqlPool (do
             rawExecute "CREATE TEMP TABLE directory_profile(id integer PRIMARY KEY,subject_party_id bigint,profile_kind text,profile_status text,moderation_status text,visibility text) ON COMMIT DROP" []
             rawExecute "CREATE TEMP TABLE directory_profile_manager(profile_id integer,account_party_id bigint,active boolean,can_view_private boolean,can_edit boolean,can_publish boolean) ON COMMIT DROP" []

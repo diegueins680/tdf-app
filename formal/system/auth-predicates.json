@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+    "tdf-hq/src/TDF/Auth.hs": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
@@ -187,19 +187,6 @@
       "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required."
     },
     {
-      "reviewedAgainst": "f41c993a56e55242b5b0c09c4d5da96970ca21ae",
-      "changes": [
-        {
-          "source": "tdf-hq/tdf-hq.cabal",
-          "previousSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
-          "currentSha256": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a"
-        }
-      ],
-      "change": "Remove automatic private-email substitution in the Google token validator; register GoogleProfileNameSpec in test other-modules only.",
-      "semanticReview": "Reversing the exact gpName assignment reproduces the parent ServerAuth bytes; removing exactly one test module registration reproduces the parent Cabal bytes. No authorization predicate, RoleEnum, ingestion admission, recoveryWindowValid, token issuance, expiry SQL, identity contract, dependency, source path, compiler/CPP option or Stack input changes. All obligation claims, assumptions and translator controls are preserved. The decoder-to-name regression uses synthetic contact data and retains six negative authentication cases.",
-      "qualification": "Requires fresh source-bound solver execution, replay and mutation controls. Context review is not independent PR approval, whole-program proof or production authorization."
-    },
-    {
       "reviewedAgainst": "3293403e3f3df823b5bc2261dc788ecb465b40da",
       "candidateImplementation": "feat/session-token-expiry-20261031 (merge of main 3293403e into ID-SESSION-004)",
       "changes": [
@@ -312,6 +299,78 @@
       "qualification": "Fresh final-head hosted checks and independent review remain mandatory. No old runtime/HTTP/formal receipt is relabelled and no full-refinement or release clearance is claimed."
     },
     {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "ba78293ff4d336cf07c6b78ff8ae5fe72497885ca5c5046f4380e396adeafdbc",
+      "change": "MEDIA-VIDEO-CAMPAIGN-001 adds TDF.VideoCampaigns and TDF.VideoCampaignsSpec module registrations and the library network-uri dependency.",
+      "semanticReview": "Removing exactly these three added lines reproduces protected main Cabal bytes. Existing compiler flags, source paths, language settings and prior dependency declarations are unchanged. network-uri was already a test dependency and is resolved by the unchanged Stack snapshot. The new module imports existing authorization helpers but does not redefine their predicates; URL parsing does not enter the verified authorization or recovery expressions. Every other reviewed source hash remains unchanged.",
+      "qualification": "Snapshot review only; no broader authentication, endpoint or release proof. Fresh solver execution, serialized replay, source mutation controls and independent protected review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "02df9d6c6410b0f14e014e8348fafedf3cea42bc",
+      "previousSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "currentSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "change": "Normal composition retains the protected music credential-cache modules/tests and adds only TDF.VideoCampaigns, TDF.VideoCampaignsSpec and the library network-uri declaration.",
+      "semanticReview": "Removing exactly these three launch additions reproduces current protected Main Cabal bytes. Existing dependency declarations, flags, extensions and source paths are retained. Every other reviewed source hash matches protected Main. Both parent context histories are retained; the added URL parser does not enter authorization/recovery predicate expressions.",
+      "qualification": "Context correspondence only, not whole-system proof or release authorization. Fresh bound solver execution/replay and protected review remain required."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "reviewedAgainst": "46cf174bacb5b65c3243433d3e73eca2659f6219",
+      "previousSha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+      "currentSha256": "451b71331aeeb7cf27ac85fe05c6f8b829835e8ca5eae0db2438a451ac137878",
+      "change": "ID-SESSION-004: inspect both nullable window endpoints; bounded admission requires 0 <= issuedAt <= database time < expiresAt. Incomplete or malformed windows fail closed. Explicitly unbounded service/custom and legacy-interactive rejection are preserved.",
+      "semanticReview": "The entire Auth source outside the validity helper and its comment is byte-identical to the parent. The six existing translated role/identity/module definitions, imports and callers are unchanged. The existing domain, strict-admin, module-access and ingestion-admission Z3 projections are exactly identical before/after. Models, RecordsIngestion, Cabal and Stack pins are unchanged; all prior obligation claims, assumptions, translators and controls are retained.",
+      "qualification": "Fresh source-bound solver, replay and control execution is required. Those inherited conditional proofs do not establish session validity, endpoint refinement, clock behavior or production safety; window regression evidence is TESTED, and whole implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "reviewedAgainst": "41c2f474b9c72df3b2c0bdda85bf10ba727bbed4",
+      "previousSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "currentSha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
+      "change": "Normal current-main composition of existing PR690; retain complete paired session validity checks and current-main authorization/recovery source.",
+      "semanticReview": "Only apiTokenWithinValidity and its adjacent comment differ from protected main: bounded admission inspects both nullable endpoints and requires 0 <= issued <= now < expires; both-null unbounded noninteractive compatibility remains and incomplete windows fail closed. Main secretTokenMatches export/definition, imports, six translated authorization definitions, all callers, Models, RecordsIngestion, Cabal and Stack are unchanged. This inherited authorization projection does not translate or prove the session-window helper.",
+      "qualification": "Context review binds only this actual source composition. Old execution receipts retain original revisions. Fresh solver execution, serialized replay and mutation controls are required. Complete session/clock/HTTP/SQL refinement and production authorization remain UNPROVEN; this is not independent GitHub approval."
+    },
+    {
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "reviewedAgainst": "e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324",
+      "previousSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "currentSha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
+      "change": "Normal integration of existing session-window correction with actual protected main including campaign evidence, 5GB storage authority, current Cabal/API and Mobile companion.",
+      "semanticReview": "Against actual protected e524, runtime Auth changes only apiTokenWithinValidity and its comment, exactly preserving main secretTokenMatches and all other source bytes. Bounded windows require both endpoints and 0 <= issued <= now < expires; both-null noninteractive compatibility remains. The six translated authorization definitions and their imports/callers are unchanged. Main storage Models/Cabal changes, Stack inputs and ingestion source are retained byte-exact and keep actual-main reviewed pins. This inherited authorization projection does not translate or prove the session-window helper.",
+      "qualification": "Source-context binding only; historical ac74/main41 and original c64 receipts retain their original revision/hash identities. Fresh solver, serialized replay, mutation controls and actual compiled regressions remain required. Complete session/clock/endpoint/SQL refinement and production authorization remain UNPROVEN; not independent GitHub approval."
+    },
+    {
+      "reviewedAgainst": "7a41f893ee14b4346907e9d53b65c2aa54506cfb",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "change": "Normal protected-main633 composition retains the two credential-cache module registrations and both parent context-review histories.",
+      "semanticReview": "Removing exactly TDF.MusicRelease.CredentialCache and TDF.MusicCredentialCacheSpec registrations reproduces previous690 Cabal bytes. No dependency, source path, compiler flag, extension or Stack input changes. Auth window predicates and recovery arithmetic remain byte-identical to previous690; current-main cache middleware, server wiring and tests are preserved. Reviewed identity-lifecycle extension is unchanged. Current predicate guards remain conditional claims, not middleware or whole-program refinement proof.",
+      "qualification": "Fresh source-bound verifier execution, adversarial controls and current-head hosted checks remain required. Existing native receipts retain their original source identity; this context review grants no independent approval or release authority."
+    },
+    {
+      "reviewedAgainst": "46edd832a76625010d67daa3b11a91ec2ba32c32",
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "previousSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "currentSha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
+      "change": "Normal main46 composition retains original690 complete validity-window production guard and identity specification, and every current protected-main video/storage/cache/ticket/Cabal input.",
+      "semanticReview": "The original690 Auth.hs and ServerSpec changes are unchanged; current-main Cabal is retained byte-exact. Three authorization predicate projections and four recovery arithmetic obligations keep both parent obligations and all review histories. SessionExpiry TLA/CFG inputs are unchanged from current main; this context binding does not prove the stronger issued-at or malformed-window admission rule.",
+      "qualification": "Fresh source-bound solver/control execution and current-head hosted native/SQL/review remain required. Historical native, failed local process-observation and model receipts retain their original source identities; no release or independent approval is granted."
+    },
+    {
+      "reviewedAgainst": "46edd832a76625010d67daa3b11a91ec2ba32c32",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "currentSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "change": "Normal main46 composition retains original690 complete validity-window production guard and identity specification, and every current protected-main video/storage/cache/ticket/Cabal input.",
+      "semanticReview": "The original690 Auth.hs and ServerSpec changes are unchanged; current-main Cabal is retained byte-exact. Three authorization predicate projections and four recovery arithmetic obligations keep both parent obligations and all review histories. SessionExpiry TLA/CFG inputs are unchanged from current main; this context binding does not prove the stronger issued-at or malformed-window admission rule.",
+      "qualification": "Fresh source-bound solver/control execution and current-head hosted native/SQL/review remain required. Historical native, failed local process-observation and model receipts retain their original source identities; no release or independent approval is granted."
+    },
+    {
       "reviewedAgainst": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
       "candidateImplementation": "bee50521d92c8f1136f960dea8061aab29c4c971",
       "changes": [
@@ -368,24 +427,6 @@
       "qualification": "Source-context binding only; fresh solver/replay/control execution and independent review remain required. No full refinement, provider certification, activation or deployment claim."
     },
     {
-      "source": "tdf-hq/tdf-hq.cabal",
-      "reviewedAgainst": "d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8",
-      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
-      "currentSha256": "ba78293ff4d336cf07c6b78ff8ae5fe72497885ca5c5046f4380e396adeafdbc",
-      "change": "MEDIA-VIDEO-CAMPAIGN-001 adds TDF.VideoCampaigns and TDF.VideoCampaignsSpec module registrations and the library network-uri dependency.",
-      "semanticReview": "Removing exactly these three added lines reproduces protected main Cabal bytes. Existing compiler flags, source paths, language settings and prior dependency declarations are unchanged. network-uri was already a test dependency and is resolved by the unchanged Stack snapshot. The new module imports existing authorization helpers but does not redefine their predicates; URL parsing does not enter the verified authorization or recovery expressions. Every other reviewed source hash remains unchanged.",
-      "qualification": "Snapshot review only; no broader authentication, endpoint or release proof. Fresh solver execution, serialized replay, source mutation controls and independent protected review remain required."
-    },
-    {
-      "source": "tdf-hq/tdf-hq.cabal",
-      "reviewedAgainst": "02df9d6c6410b0f14e014e8348fafedf3cea42bc",
-      "previousSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
-      "currentSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
-      "change": "Normal composition retains the protected music credential-cache modules/tests and adds only TDF.VideoCampaigns, TDF.VideoCampaignsSpec and the library network-uri declaration.",
-      "semanticReview": "Removing exactly these three launch additions reproduces current protected Main Cabal bytes. Existing dependency declarations, flags, extensions and source paths are retained. Every other reviewed source hash matches protected Main. Both parent context histories are retained; the added URL parser does not enter authorization/recovery predicate expressions.",
-      "qualification": "Context correspondence only, not whole-system proof or release authorization. Fresh bound solver execution/replay and protected review remain required."
-    },
-    {
       "reviewedAgainst": "7fd0c0d4b5b2bd01dbc33b7c3f172a5ad5505a81",
       "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
@@ -393,6 +434,20 @@
       "change": "Compose protected main video-campaign registrations with the two Datafast library modules and DatafastConfigSpec test registration.",
       "semanticReview": "Removing exactly the three Datafast module-registration lines reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match both parents. Both original context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "6033b84e2bb892c40f87e1e64f373a7f3fc2131b",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "currentSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "change": "Normal composition of existing PR690 with protected main; retain DatafastConfig, TicketBuyerContact and DatafastConfigSpec registrations. Preserve all35 distinct full-object parent context reviews.",
+      "semanticReview": "Independent read-only current-context review found that removing exactly those three registrations reproduces PR690 source63fa Cabal bytes. All non-Cabal reviewed inputs match the actual composed sources, all seven restricted projection obligations remain unchanged, and the complete session validity helper and lifecycle clarification retain their original source bytes.",
+      "independentTechnicalReview": {
+        "receipt": "pr690-current-context-review-6033.json",
+        "sha256": "a84e86a0e52b1aad4d03d27c3bbd5c1f560d002741dd22313006aba5bd6f2692",
+        "scope": "Source-context review only; not a GitHub approval or runtime/refinement proof."
+      },
+      "qualification": "Fresh source-bound3 authorization and4 recovery obligations, SMT replay and16 verifier controls are required. No lower-bound/session/whole-program/native/production claim is established by this binding update."
     }
   ]
 }
