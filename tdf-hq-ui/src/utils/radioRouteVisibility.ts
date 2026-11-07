@@ -4,6 +4,9 @@ const HIDDEN_RADIO_PATH_PREFIXES = [
   '/marketplace',
   '/inscripcion',
   '/configuracion/inscripciones-curso',
+  '/mi-artista/campanas',
+  '/a/',
+  '/artista/',
   '/whatsapp/consentimiento',
   '/whatsapp/ok',
 ];

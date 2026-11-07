@@ -124,3 +124,57 @@ BEGIN
   RAISE NOTICE 'identity integration: retry, false positives, whole-group proof, ownership, relationships, stale plans, archival, field provenance and rollback passed';
 END $$;
 ROLLBACK;
+
+-- Draft campaign ownership and conversion evidence must survive identity review.
+BEGIN;
+DO $$
+DECLARE a bigint; b bigint; operator_id bigint; campaign bigint;
+  case_key uuid:=gen_random_uuid(); operation_key uuid:=gen_random_uuid(); plan jsonb;
+BEGIN
+  INSERT INTO party(display_name) VALUES('Video identity operator') RETURNING id INTO operator_id;
+  a:=identity_create_contact(operator_id,'video-identity-0001','{"display_name":"Video identity fixture","is_org":false}');
+  b:=identity_create_contact(operator_id,'video-identity-0002','{"display_name":"Video identity fixture","is_org":false}');
+  INSERT INTO identity_reconciliation_case(id,member_ids,evidence,before_parties,reason,status,reviewed_by,reviewed_at)
+    SELECT case_key,ARRAY[a,b],jsonb_build_object('basis','verified-source-subject','issuer','video-fixture',
+      'scope','synthetic-only','subject','video-fixture','evidence_reference','synthetic-only',
+      'external_reference_review','no-unresolved-references','member_ids',ARRAY[a,b]),
+      jsonb_agg(to_jsonb(p) ORDER BY p.id),'Synthetic video identity fixture','confirmed',operator_id,now()
+    FROM party p WHERE id IN(a,b);
+  INSERT INTO video_campaign(artist_party_id,campaign_key,revision,document,created_at,updated_at)
+    VALUES(b,'identity-video-fixture',1,'{"status":"draft"}',now(),now()) RETURNING id INTO campaign;
+  IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'campaign ownership was ignored'; END IF;
+  UPDATE video_campaign SET artist_party_id=a WHERE id=campaign;
+  INSERT INTO video_campaign_conversion(campaign_id,viewer_party_id,kind,source,piece,created_at)
+    VALUES(campaign,b,'follow','instagram','synthetic-piece',now());
+  IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'conversion subject was ignored'; END IF;
+  DELETE FROM video_campaign_conversion WHERE campaign_id=campaign;
+  -- Remove ownership too so the existing canonical merge policy can decide.
+  DELETE FROM video_campaign WHERE id=campaign;
+  plan:=identity_merge_plan(case_key);
+  IF NOT (plan->>'can_execute')::boolean THEN RAISE EXCEPTION 'empty synthetic case blocked: %',plan->'blockers'; END IF;
+  PERFORM identity_execute_merge(operation_key,case_key,plan->>'fingerprint');
+  BEGIN
+    INSERT INTO video_campaign(artist_party_id,campaign_key,revision,document,created_at,updated_at)
+      VALUES(b,'must-reject',1,'{"status":"draft"}',now(),now());
+    RAISE EXCEPTION 'archived artist campaign accepted';
+  EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+  INSERT INTO video_campaign(artist_party_id,campaign_key,revision,document,created_at,updated_at)
+    VALUES(a,'active-fixture',1,'{"status":"draft"}',now(),now()) RETURNING id INTO campaign;
+  BEGIN
+    UPDATE video_campaign SET artist_party_id=b WHERE id=campaign;
+    RAISE EXCEPTION 'archived artist reassignment accepted';
+  EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+  BEGIN
+    INSERT INTO video_campaign_conversion(campaign_id,viewer_party_id,kind,source,piece,created_at)
+      VALUES(campaign,b,'follow','instagram','must-reject',now());
+    RAISE EXCEPTION 'archived conversion subject accepted';
+  EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+  INSERT INTO video_campaign_conversion(campaign_id,viewer_party_id,kind,source,piece,created_at)
+    VALUES(campaign,a,'follow','instagram','active-fixture',now());
+  BEGIN
+    UPDATE video_campaign_conversion SET viewer_party_id=b WHERE campaign_id=campaign;
+    RAISE EXCEPTION 'archived conversion reassignment accepted';
+  EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+  IF (SELECT document FROM video_campaign WHERE id=campaign)<>'{"status":"draft"}' THEN RAISE EXCEPTION 'draft was changed'; END IF;
+END $$;
+ROLLBACK;
