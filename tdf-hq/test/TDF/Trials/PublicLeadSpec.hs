@@ -2976,6 +2976,7 @@ spec = do
           , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
+        insertCanonicalRoleFixture targetStudentId "student" True
         privateStudentUpdateHandler
           (fromIntegral (fromSqlKey targetStudentId))
           (StudentUpdate Nothing (Just " Taken@Example.com ") Nothing Nothing)
@@ -2986,11 +2987,23 @@ spec = do
         Right _ ->
           expectationFailure "Expected duplicate student emails to be rejected"
 
+    it "answers 404 when staff name a party that is not a student" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        otherPartyId <- insertPartyFixture "Not A Student" now
+        privateStudentUpdateHandler
+          (fromIntegral (fromSqlKey otherPartyId))
+          (StudentUpdate (Just "Renamed") Nothing Nothing Nothing)
+      case result of
+        Left err -> errHTTPCode err `shouldBe` 404
+        Right _ -> expectationFailure "Expected a non-student target to be refused"
+
     it "rejects unsafe or oversized display names before updating private student profiles" $ do
       let assertRejected rawDisplayName expectedMessage = do
             result <- try $ runTrialsInMemory $ do
               now <- liftIO getCurrentTime
               targetStudentId <- insertPartyFixture "Target Student" now
+              insertCanonicalRoleFixture targetStudentId "student" True
               privateStudentUpdateHandler
                 (fromIntegral (fromSqlKey targetStudentId))
                 (StudentUpdate (Just rawDisplayName) Nothing Nothing Nothing)
@@ -3014,6 +3027,7 @@ spec = do
             result <- try $ runTrialsInMemory $ do
               now <- liftIO getCurrentTime
               targetStudentId <- insertPartyFixture "Target Student" now
+              insertCanonicalRoleFixture targetStudentId "student" True
               privateStudentUpdateHandler
                 (fromIntegral (fromSqlKey targetStudentId))
                 (StudentUpdate Nothing Nothing Nothing (Just rawNotes))
@@ -3288,6 +3302,16 @@ initializeTrialsSchema = do
     \\"booking_id\" INTEGER NULL,\
     \\"created_at\" TIMESTAMP NOT NULL,\
     \CONSTRAINT \"unique_trial_assignment_request\" UNIQUE (\"request_id\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"teacher_student\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"teacher_id\" INTEGER NOT NULL,\
+    \\"student_id\" INTEGER NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL DEFAULT 1,\
+    \\"created_at\" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+    \CONSTRAINT \"unique_teacher_student\" UNIQUE (\"teacher_id\", \"student_id\")\
     \)"
     []
   rawExecute
