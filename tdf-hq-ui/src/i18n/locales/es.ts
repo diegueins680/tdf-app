@@ -204,6 +204,7 @@ const es = {
     stateError: 'No pudimos comprobar si sigues a este artista.',
     retry: 'Reintentar',
     authCta: 'Crear cuenta o ingresar para seguir',
+    benefit: 'Sigue a {{artist}} para volver a encontrarlo en tu comunidad. Puedes ver sus videos sin crear una cuenta.',
     resumeMessage: 'Ya ingresaste. Continúa donde estabas y sigue a {{artist}}.',
     resumeAction: 'Seguir ahora',
     resumeError: 'No pudimos seguir a {{artist}}. Revisa tu conexión e inténtalo de nuevo.',

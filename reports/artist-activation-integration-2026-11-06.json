@@ -1,0 +1,88 @@
+{
+  "date": "2026-11-06",
+  "pullRequest": 667,
+  "protectedMain": "c47c2a8d8851a58a828dec830704f8c352496c20",
+  "previousHead": "6b956eab02e2c457a293c9f06f58a8670a10ca7a",
+  "scope": "Normal merge reconciliation; current storage/Core/generated contracts and exact Mobile pin preserved. Existing artist video/follow implementation retained; canonical-identity and library-recovery browser regressions added.",
+  "preservation": {
+    "mobileRevision": "14318a730f96b2053f71885091bbc05cffc3294d",
+    "mainRequirementsUnchangedExceptOwnedCiMapping": 189,
+    "mainCatalogDecisionsUnchanged": 1394,
+    "campaignServiceByteIdenticalToPreviousHead": true,
+    "protectedMainBlobs": {
+      "tdf-hq/docs/openapi/api.yaml": "e96210dece44491936f17b058ca45877f932ef41",
+      "formal/system/compiled-api-surface.json": "bfbed100c6afe32913d0ae36a91e5cfb47e45062",
+      "tdf-hq-ui/src/api/generated/types.ts": "c6612a3c5472410d3fcaae0e4e17b0f657dd2c7f",
+      "scripts/production-migrations.json": "8110f4fa93b98b1803cdd9a01550d4c021711aaf",
+      ".github/workflows/ci.yml": "e25317332a9ff2530794ae2ac811051553d589c7"
+    }
+  },
+  "publicObservation": {
+    "authentication": "Anonymous read-only Core requests; browser inspection used its existing signed-in session",
+    "artistSlug": "rojo",
+    "resolvedArtistId": 535,
+    "historicalArtist520Status": 404,
+    "featuredVideo": "youtube:uRNyIMLiqU8",
+    "backendCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+    "publicPlayerObserved": false,
+    "productionWrites": []
+  },
+  "localEvidence": {
+    "productionBuild": {
+      "result": "PASS",
+      "typecheck": "PASS",
+      "gzipInitialJavaScriptBytes": 389731,
+      "logSha256": "6ac2df8f40d996c1567fa2aab391abd3e4dca7f4f892191fb81278fa09357085"
+    },
+    "campaignService": {
+      "tests": 105,
+      "failures": 0,
+      "boundedModel": "PASS with negative controls",
+      "logSha256": "9b7d3809229f5b2d398e138aeec1203d72f11be9466a85aea43e2955b66328f7"
+    },
+    "catalog": {
+      "candidates": 1395,
+      "unreviewed": 0,
+      "stale": 0,
+      "formats": [
+        "JSON",
+        "CSV"
+      ],
+      "controlTests": 9
+    },
+    "specification": {
+      "inventoryControls": 7,
+      "conformanceControls": 10,
+      "generatedClients": 2,
+      "mobileRevision": "14318a730f96b2053f71885091bbc05cffc3294d",
+      "receipt": "Generators and both strict check modes passed before the final test/document update; regenerated again afterward."
+    },
+    "fullWebSuite": "Running at report capture; no result claimed. Fresh hosted qualification remains mandatory.",
+    "lint": "Initial concurrent run exited137; bounded-memory rerun running at report capture. No pass claimed.",
+    "browser": {
+      "result": "BLOCKED locally before test execution",
+      "reason": "Installed Chromium could not create its singleton socket under the executor restriction. Packaged browser download also failed archive validation. Current tests must run in hosted Playwright CI.",
+      "newCases": [
+        "Current resolved canonical artist ID is retained with exact video and anchor, without auth/follow writes",
+        "Library outage does not substitute another featured video; retry restores only selected session without following"
+      ]
+    }
+  },
+  "releaseStatus": {
+    "merged": false,
+    "deployed": false,
+    "requires": "Current-head hosted CI, independent review, ordinary protected admission and qualified deployment. Prior-head reviews/checks are historical only."
+  },
+  "sourceSha256": {
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "a281c9faac4c972df779d215ea50f765c288e523748998a67ac12b2782d15069",
+    "tdf-hq-ui/src/utils/artistFollowIntent.ts": "ce8141f4e08a7c6334db684dc85c15a9202a1e40877029da2e12f8c3b5b00cc7",
+    "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "a97a1b7695787cc77ed55c94fe3ece8dbe877394f882c1cf9114dba7284f15fb",
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "64c1e06b51b85af822c807a6878524bb22a063339dda0fcfa909529df50961b8",
+    "e2e/web/artist-follow.spec.mjs": "8a52e59780a5c796ba107afa0a422152a40f62258ccc94e4a037548238ecfb90"
+  },
+  "limitations": [
+    "Synthetic tests do not prove real registration, provider OAuth, audible playback or organic conversion.",
+    "Native player PR177 remains separate and unmerged; current Mobile pin does not include that player.",
+    "No campaign, artist, publication, schedule, provider outcome or conversion counter was written."
+  ]
+}
