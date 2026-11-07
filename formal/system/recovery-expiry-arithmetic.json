@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+    "tdf-hq/tdf-hq.cabal": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
     "formal/system/identity-lifecycle.md": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440"
   },
   "obligations": [
@@ -346,6 +346,62 @@
       "qualification": "Fresh final-head hosted checks and independent review remain mandatory. No old runtime/HTTP/formal receipt is relabelled and no full-refinement or release clearance is claimed."
     },
     {
+      "reviewedAgainst": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "candidateImplementation": "bee50521d92c8f1136f960dea8061aab29c4c971",
+      "changes": [
+        {
+          "source": "tdf-hq/src/TDF/ServerAuth.hs",
+          "previousSha256": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
+          "currentSha256": "6fa9f4475e4da6d08fe8f90fd57089cec5fe72b6b4db4d4e0aa42be544a77cca"
+        },
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+          "currentSha256": "ce670990ab2b43addb5ee2410d70a71529f443b82b321d5a78380387ab5b9917"
+        },
+        {
+          "source": "formal/system/identity-lifecycle.md",
+          "previousSha256": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31",
+          "currentSha256": "966ef1caafb0d26a7ff79324f27c2fab49b124617021a8d7bd55f8cd28a56fb2"
+        }
+      ],
+      "change": "Server-side interactive session expiry (ID-SESSION-004): ApiToken gains nullable issuedAtEpoch/expiresAtEpoch; login, Google login, signup, password change and recovery confirmation mint password-login:/google-login: tokens with a SESSION_TOKEN_TTL_SECONDS window; authentication denies elapsed or absent windows on interactive labels.",
+      "semanticReview": "ServerAuth.hs: `recoveryWindowValid` is byte-identical and still the single definition matched by the recognizer. The block between `createPasswordResetToken ::` and `createReusableSessionToken ::` still contains exactly one `auth_recovery_challenge` insert whose fourth value is `issued+900`; the same `issued` value, sampled once by `recoveryClockEpoch`, is now also written to the token row through the new `Maybe (Int64, Int64)` window argument of `createTokenWithLabel`, so the row window equals the challenge window by construction. `recoveryClockEpoch` is unchanged. New code: `SessionTokenTtl` newtype, `sessionTokenTtlFromConfig`, `sessionValidityWindow` (issued + max 1 ttl on the same clock) and a leading `SessionTokenTtl` parameter on `completeGoogleLogin`, `runLogin`, `runSignupDb`, `runChangePassword`, `runPasswordResetConfirm`, `createSessionToken`, `createReusableSessionToken`; the five AppM handlers pass `sessionTokenTtlFromConfig cfg`. Only `Data.Int (Int64)` is newly imported in Auth.hs; ServerAuth.hs imports are unchanged. Recovery consumption, binding checks, lock order and transaction boundaries are untouched. Cabal: The Cabal manifest now declares a `library` holding every former `src` module as exposed-modules, with `Paths_tdf_hq` as its autogen module; `tdf-hq-exe`, `tdf-ddex-render` and `tdf-hq-test` drop `src` from hs-source-dirs and depend on `tdf-hq` instead. The library's build-depends are the former executable list with duplicate `servant-multipart`/`directory` entries removed; the test suite keeps its former dependency list plus `tdf-hq`. The 250 module registrations are carried over unchanged (TDF.Catalog.DB remains unregistered, as before). GHC options are unchanged per component, and `-Werror=missing-fields` now applies to the library so `src` keeps the executable's strictness. No CPP flags, default extensions, dependency version bounds, Stack resolver or lock changes. identity-lifecycle.md appends one `## Interactive session expiry \u2014 ID-SESSION-004` section after the existing text; the ID-SESSION-003 section and everything before it are byte-identical. The recovery migration, Stack resolver and lock are unchanged. Obligation claims, assumptions, translations and limitations are preserved.",
+      "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required. The candidate was authored without a local GHC; compilation is established only by the hosted stack build."
+    },
+    {
+      "reviewedAgainst": "a0cc6529fa10d3aae33804a06c3da23c648a9fbb",
+      "candidateImplementation": "integrate/datafast-main-security-20261102",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "9ddd4662b265d1cb29e88339707318dd1a60b0cda2b173293bdf870973a2e8d3",
+          "currentSha256": "cb3e5407e73e52f5f7cf311281c68a3e33bc81b78f94e6d3a844d1aafb7e664b"
+        }
+      ],
+      "change": "Add DatafastConfig and TicketBuyerContact exposed library modules and DatafastConfigSpec test module to current main manifest.",
+      "semanticReview": "Removing exactly these three module-registration lines reproduces current main Cabal bytes. Current main library/component restructuring, dependency versions, compiler/CPP options, resolver and lock are preserved. Every other reviewed source is byte-identical to main. Obligation claims, assumptions, translations, controls and all incoming review records are unchanged.",
+      "qualification": "Source-context binding only; no new proof claim. Fresh source-bound solver, replay and controls and independent protected review are still required. No provider activation or deployment authorization."
+    },
+    {
+      "reviewedAgainst": "81a06faa06731f866333a0b89fb266720c4fa065",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "10799da61c1a9d48da161792391b0fc33e9b564d4686d66709ce7d526b6f64c6",
+      "change": "Register exactly DatafastConfig and TicketBuyerContact exposed library modules and DatafastConfigSpec test module; removing these three exact lines reproduces protected main bytes.",
+      "semanticReview": "All other reviewed source inputs and all main obligations/assumptions/controls are unchanged. No dependencies, flags, extensions, source paths, existing module registrations or Stack/lock changes. Both parent source-context histories are retained without changing their original hashes.",
+      "qualification": "Source-context binding only; fresh source-bound solver/replay/controls and current independent protected review are required. No full refinement, provider activation, certification or deployment claim."
+    },
+    {
+      "reviewedAgainst": "7a41f893ee14b4346907e9d53b65c2aa54506cfb",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "currentSha256": "94f2ad366282ba2ca829d03b7015afe789819ec77235b7368ae2ef883e024f81",
+      "change": "Preserve all current main credential-cache declarations and add exactly the original two Datafast library modules and one Datafast test module. Removing those three exact lines reproduces protected main bytes.",
+      "semanticReview": "No dependency, compiler flag, extension, resolver, lock, source-path or existing module change. Every other controlled authorization/recovery source equals current main. Both parent context-review histories are retained exactly.",
+      "qualification": "Source-context binding only; fresh solver/replay/control execution and independent review remain required. No full refinement, provider certification, activation or deployment claim."
+    },
+    {
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8",
       "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
@@ -362,6 +418,15 @@
       "change": "Normal composition retains the protected music credential-cache modules/tests and adds only TDF.VideoCampaigns, TDF.VideoCampaignsSpec and the library network-uri declaration.",
       "semanticReview": "Removing exactly these three launch additions reproduces current protected Main Cabal bytes. Existing dependency declarations, flags, extensions and source paths are retained. Every other reviewed source hash matches protected Main. Both parent context histories are retained; the added URL parser does not enter authorization/recovery predicate expressions.",
       "qualification": "Context correspondence only, not whole-system proof or release authorization. Fresh bound solver execution/replay and protected review remain required."
+    },
+    {
+      "reviewedAgainst": "7fd0c0d4b5b2bd01dbc33b7c3f172a5ad5505a81",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "currentSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "change": "Compose protected main video-campaign registrations with the two Datafast library modules and DatafastConfigSpec test registration.",
+      "semanticReview": "Removing exactly the three Datafast module-registration lines reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match both parents. Both original context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
     }
   ]
 }

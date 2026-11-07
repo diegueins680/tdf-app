@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "kind": "facebook_live_campaign_and_protected_ci_integration",
+  "at": "2026-10-30T16:25:04.506693+00:00",
+  "sourceParent": "6a7e33a0c24bd5a1ab8e33238031ae76f70fd280",
+  "protectedMain": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+  "facebook": {
+    "campaignVersion": 6,
+    "campaignApprovedVersion": 6,
+    "pieces": [
+      {
+        "name": "FB02 — TDF Estudio",
+        "page": "TDF Estudio",
+        "url": "https://www.facebook.com/1756382363164678/posts/1756402893162625",
+        "externalId": "169846481310276_1756402893162625",
+        "providerCreatedAt": "2026-10-30T16:04:04+0000",
+        "version": 1,
+        "approvedVersion": 1,
+        "tdfApprovalVersion": 1,
+        "job": {
+          "id": "c3f11e3000ea4de5a77dfe3b613d353c",
+          "state": "completed",
+          "attempts": 1,
+          "error": null,
+          "finished_at": 1793376248.2412813
+        },
+        "providerIsPublished": true,
+        "authorMatchesPage": true,
+        "messageExact": false,
+        "providerRemovedTrailingDuplicateLink": true,
+        "attachmentRoutesToExactSession": true
+      },
+      {
+        "name": "FB01 — TDF Records",
+        "page": "TDF Records",
+        "url": "https://www.facebook.com/122142606687192354/posts/122142607635192354",
+        "externalId": "893238397214560_122142607635192354",
+        "providerCreatedAt": "2026-10-30T16:02:03+0000",
+        "version": 1,
+        "approvedVersion": 1,
+        "tdfApprovalVersion": 1,
+        "job": {
+          "id": "20baedf7ec464b6dab1a2701b3fd4f53",
+          "state": "completed",
+          "attempts": 1,
+          "error": null,
+          "finished_at": 1793376133.8116417
+        },
+        "providerIsPublished": true,
+        "authorMatchesPage": true,
+        "messageExact": true,
+        "providerRemovedTrailingDuplicateLink": false,
+        "attachmentRoutesToExactSession": true
+      }
+    ],
+    "nativeRecordsPostAndLink": "PASS; rendered Page/title/caption and exact YouTube route",
+    "nativeStudioPost": "PASS; rendered Page/title/caption",
+    "nativeStudioCardClick": "PASS; native click opened YouTube watch?v=uRNyIMLiqU8",
+    "anonymousPlaybackClaimed": false,
+    "youtubePreviewOfficialLogoVisuallyVerified": true,
+    "recordingDate": "2025-02-24",
+    "liveTransmissionClaimed": false,
+    "duplicateChecksCoverLaunchPeriod": true,
+    "initialSeparateCampaignActivation": "Refused by existing one-active-campaign plan; no job or publication created. Unused campaign cancelled, new posts integrated into existing campaign. No plan change or charge.",
+    "expiredAssistedStories": "Three old Stories were refused by the existing lateness guard before provider calls during normal reactivation. Their existing job attempts increased to two; no external identity or duplicate post resulted.",
+    "allOtherFacebookFormatsLiveQualified": false
+  },
+  "ci": {
+    "originalRaciFailureJob": 123925635370,
+    "originalRaciFailure": "Playwright 1.59.1 cannot install Chromium dependencies on Ubuntu 26.04; preserved failed run.",
+    "originalRepositoryFailureJob": 123925861712,
+    "originalRepositoryFailure": "Synthetic container cleanup could not be confirmed; original cause remains unknown.",
+    "protectedMainChanges": "Adopt the protected Ubuntu 24.04 runner pins and cleanup diagnostics through a normal merge; preserve all original assertions and policies.",
+    "freshHostedResults": "pending after publication",
+    "focusedWebTests": {
+      "passed": 32,
+      "suites": 2,
+      "seconds": 17.122
+    },
+    "repositoryQuality": "PASS on the combined inputs; platform-specific skips retain their limitations",
+    "strictCatalog": {
+      "result": "PASS",
+      "candidates": 1355,
+      "csv": "Canonical CSV derived from the same fresh strict JSON; not a second source scan."
+    },
+    "webLint": "PASS",
+    "webBuild": {
+      "result": "PASS including TypeScript",
+      "gzipInitialBytes": 338335,
+      "preloads": 5
+    }
+  },
+  "sourceLimits": {
+    "priorFullWebTests": 3760,
+    "priorFullWebSuites": 324,
+    "priorFullExecution": "bc2d26f67528e1e2372b07e394d09f820438310d; report metadata child6a preserves these inputs",
+    "newWholeWebRunClaimed": false,
+    "mobile": "3d6f911c1b7570ac439561a159101ba78be4f01b unchanged; prior 653 local tests / hosted run 41013521376 SUCCESS retain identities",
+    "campaignServiceFilesUnchanged": 47,
+    "productionRuntime": "49032779d0c53f0fdca5",
+    "sandboxRuntime": "8bcb09173562d9b6df57",
+    "thisSourceIntegrationRestartsServices": false,
+    "protectedMergeOrSelfApproval": false,
+    "modelRefinementClaimed": false
+  },
+  "sourceMerge": "eacf87b00cf7013f9083989c232106ebb92a4ed5",
+  "inputEquivalence": {
+    "priorManifestSha256": "2e92ff8c19cc66f1c833cdebb97acf814339c75bf1fb9f6ec0ab49dcad80b394",
+    "priorSealedInputs": 1294,
+    "identicalInputs": 1292,
+    "changedInputs": [
+      "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+      "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+    ],
+    "protectedInputsExact": true,
+    "incomingNormativeRecordsExact": 159,
+    "combinedNorms": 160,
+    "campaignRuntimeSourceFilesUnchanged": 47,
+    "mobileRevisionUnchanged": "3d6f911c1b7570ac439561a159101ba78be4f01b",
+    "newWholeWebExecutionNotClaimed": true
+  },
+  "backup": {
+    "manifest": "1UR9squK9yvb2MPsIlYte9a7qBVMsz_AP",
+    "result": "PASS",
+    "readyAssets": 49,
+    "objects": 52,
+    "reusedPriorProofs": 48,
+    "vaultRecordsRecovered": 5,
+    "sqliteIntegrity": "ok",
+    "foreignKeys": "ok",
+    "privateKeySentToServer": false,
+    "sandboxStateIncluded": false,
+    "restoredServicesStarted": false
+  },
+  "qualificationLogSha256": {
+    "focused-web-tests.log": "a9a1d9bb31aed17b5477686ddded1b1587dc56de1fdf4c16ad04624f0f71e669",
+    "web-lint.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+    "web-build.log": "56fc22504277d9ee2d088dfa578ed1a83ee817fef2da8ef085975eff9646ae34",
+    "catalog-json.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "raci-failed-6a.log": "f4c870dd05454585213b2eaf7b37f9f77946e6709c998efa53ad59d6ac9fb42a",
+    "repo-quality-failed-6a.log": "21c006ce67eeeb2a6fbc92de1ccd1c55e6340d6a8544477fb54c59e23ec643f0",
+    "repo-quality.log": "f2b6590a68a86a4a7cbf71fd1d75f9ce880677040829ee65e9e4bacd4d4002a6"
+  },
+  "canonicalMetadata": "Regeneration and committed checks recorded separately after this report-only child"
+}

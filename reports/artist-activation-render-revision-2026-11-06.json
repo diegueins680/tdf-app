@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-06",
+  "pullRequest": 667,
+  "reviewedParent": "20ab9843da37b3bec5990d19baf7d62e64bed3df",
+  "protectedMain": "7a41f893ee14b4346907e9d53b65c2aa54506cfb",
+  "thread": "PRRT_kwDOQPdUrM60eaoM",
+  "fix": "Render completion accepts only initial version1 unapproved drafts belonging to the render job. Human edits and a prior successful binding advance the version, preventing late overwrite and replay; manual media/copy/settings and campaign version remain unchanged. Late output is retained for explicit review, never auto-published.",
+  "qualification": {
+    "service": {
+      "passed": 132,
+      "failed": 0,
+      "scope": "Local HTTP/SQLite/filesystem and controlled external provider/media/SMTP fixtures",
+      "logSha256": "701eda2ceeaf3512cc40e91c096d8e27e5f7f93f2979d49edecb736423d99555"
+    },
+    "negativeControls": {
+      "oldSource": "20ab9843",
+      "cases": 3,
+      "expectedFailures": 3,
+      "errors": 0,
+      "logSha256": "93034fbdf9eee37dd6275b9cbb25176ef4e4d68a1561f6ffaa745623298cd74c"
+    },
+    "regressions": [
+      "Manual media replacement with retained render_job survives completion",
+      "Copy-only revision remains unchanged and unapproved",
+      "Four concurrent render completions bind once; repeated completion preserves piece/campaign versions and one bind audit"
+    ],
+    "model": "Existing bounded1024-state model and negative controls pass; not a refinement proof of this render boundary",
+    "inventoryControls": 7,
+    "conformanceControls": 10,
+    "generatedClients": 2,
+    "web": "Unchanged from parent20ab. Parent CI first attempt failed thumbnail request count; single unchanged rerun passed. Neither qualifies this new source head."
+  },
+  "sourceSha256": {
+    "services/campaign-platform/media.py": "6f1a170104b165432d897e2c2427453c031fe989d691b752fb0cd07029b1e6a9",
+    "services/campaign-platform/tests/test_domain.py": "bee8dbc797f6ddd8fdcc25cf3b8de4e06d02e8ed8bfd8266d888e2eb1933493d"
+  },
+  "release": "New-head hosted CI, independent approval and protected admission required. No merge, production operation, real campaign/provider/SMTP/account/follow write, or deployed playback/conversion claim."
+}
