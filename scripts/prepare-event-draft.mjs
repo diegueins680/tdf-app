@@ -32,6 +32,10 @@ function validateReviewPlan(plan) {
       || !Array.isArray(event.eventArtists) || !Array.isArray(tiers) || tiers.length === 0) {
     throw new Error('Review plans must be private and must not contain public asset or ticket URLs');
   }
+  if (typeof event.eventCurrency !== 'string' || event.eventCurrency.length !== 3
+      || !/^[A-Z]{3}$/.test(event.eventCurrency)) {
+    throw new Error('Review currency must be a canonical three-letter uppercase string');
+  }
   const eventStart = Date.parse(event.eventStart);
   const eventEnd = Date.parse(event.eventEnd);
   if (!Number.isFinite(eventStart) || !Number.isFinite(eventEnd) || eventEnd <= eventStart
