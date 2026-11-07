@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeOperators #-}
 module TDF.Contracts.EventWorkspace (eventWorkspaceServer, workspaceDocumentLines, escapeDocumentText, workspacePdfResponse) where
 
-import Control.Exception (try)
+import Control.Exception (IOException, try)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
@@ -111,7 +111,10 @@ workspacePdfResponse :: (Text -> IO (Either Text BL.ByteString)) -> Text -> [Tex
 workspacePdfResponse renderer name linesValue = do
   let latex = T.unlines (["\\documentclass[a4paper,11pt]{article}","\\usepackage[utf8]{inputenc}","\\usepackage[T1]{fontenc}","\\usepackage[margin=22mm]{geometry}","\\usepackage{parskip}","\\begin{document}"]
          <> map (\line -> escapeDocumentText line<>"\\par") linesValue <> ["\\end{document}"])
-  result <- liftIO (renderer latex)
+  rendered <- liftIO (try (renderer latex))
+  let result = case rendered of
+        Left (_ :: IOException) -> Left "PDF renderer unavailable"
+        Right value -> value
   case result of
     Left _ -> throwError err503{errBody="No se pudo generar el PDF. El acuerdo permanece guardado; reintenta la descarga.",errHeaders=[("Cache-Control","no-store")]}
     Right pdf -> pure (addHeader ("private, no-store" :: Text) (addHeader ("attachment; filename=\""<>name<>"\"" :: Text) pdf))

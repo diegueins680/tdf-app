@@ -8,6 +8,7 @@ import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { EventWorkspaceAPI, type AgreementContent, type AgreementVersion, type EventAgreement, type EventPlanContent, type EventWorkspace, type WorkspaceCommand } from '../api/eventWorkspace';
 import { useSession } from '../session/SessionContext';
+import { isEventAgreementsEnabled } from '../config/eventAgreementsRollout';
 import { getAuthSessionEpoch } from '../session/authEvents';
 import { useSessionOwner } from '../session/useSessionOwner';
 import { useOwnedSessionDraft } from '../session/useOwnedSessionDraft';
@@ -32,6 +33,7 @@ export function agreementReadiness(version: AgreementVersion): string[] {
 export default function EventAgreementsPage() {
   const { eventId = '' } = useParams();
   const { session } = useSession();
+  if (!isEventAgreementsEnabled()) return <PageShell title="Acuerdos y plan"><Alert severity="info">El espacio de acuerdos todavía no está habilitado.</Alert><Button component={RouterLink} to={`/social/eventos/${encodeURIComponent(eventId)}`}>Volver al evento</Button></PageShell>;
   return <Workspace key={`${eventId}:${session?.partyId}:${getAuthSessionEpoch()}`} eventId={eventId} ownerId={session?.partyId ?? null} />;
 }
 

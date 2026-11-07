@@ -6,6 +6,8 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
+let agreementRollout: unknown = 'true';
+jest.unstable_mockModule('../config/eventAgreementsRollout', () => ({ isEventAgreementsEnabled: () => agreementRollout === 'true' }));
 const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
 const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
 const createMomentMock = jest.fn<(eventId: string, body: unknown) => Promise<SocialEventMomentDTO>>();
@@ -106,6 +108,7 @@ const renderPage = (entry = '/social/eventos/121') => {
 
 describe('SocialEventDetailPage ticket sharing', () => {
   beforeEach(() => {
+    agreementRollout = 'true';
     activeSession = null;
     preferenceMock.mockClear();
     createMomentMock.mockReset();
@@ -399,6 +402,21 @@ describe('SocialEventDetailPage ticket sharing', () => {
     });
     expect(await screen.findByText('Enlace de compra copiado al portapapeles.')).toBeTruthy();
 
+    view.unmount();
+  });
+});
+
+describe('event agreement rollout on existing event detail', () => {
+  it.each([undefined, 'false'])('rollout: keeps current event detail without advertising an unavailable workspace (%j)', async setting => {
+    agreementRollout = setting; activeSession = { partyId: 9 };
+    getEventMock.mockReset().mockResolvedValue(eventFixture);
+    listMomentsMock.mockReset().mockResolvedValue([]);
+    listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
+    getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
+    const view = renderPage();
+    await screen.findByRole('button', { name: 'Compartir entradas' });
+    expect(getEventMock).toHaveBeenCalledWith('121');
+    expect(screen.queryByRole('link', { name: 'Acuerdos y plan' })).toBeNull();
     view.unmount();
   });
 });

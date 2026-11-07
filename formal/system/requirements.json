@@ -16865,9 +16865,13 @@
         "scripts/production-migrations.json",
         "docs/catalog-persistence/catalog-list-decisions.json",
         "formal/system/state-machine-bindings.json",
-        "docs/catalog-persistence/event-agreements-smtp-reconciliation-20261106.json"
+        "docs/catalog-persistence/event-agreements-smtp-reconciliation-20261106.json",
+        "tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql",
+        "tdf-hq/sql/2026-11-07_event_agreement_identity_guards_rollback.sql",
+        "tdf-hq-ui/src/config/eventAgreementsRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts"
       ],
-      "verification": "Actual isolated PostgreSQL migration tests, web response/session regressions, Haskell document and delivery tests in Stack CI, bounded TLC baseline and five negative configurations.",
+      "verification": "Actual isolated PostgreSQL migration tests, web response/session regressions, Haskell document and delivery tests in Stack CI, bounded TLC baseline and five negative configurations. Current-main integration additionally exercises archived-reference forward/replay/rollback with actualSQL and exact-true/default-off web rollout controls. The UI switch is not authorization and old bounded model evidence does not prove these additions.",
       "evidence": "Event agreement persistence CI; web focused tests; account acceptance TLC output; Stack CI. Deployment is independent.",
       "status": "specified and implemented",
       "historicalStatus": "new workflow",
@@ -16946,7 +16950,10 @@
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
         "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-event-agreement-identity-guards.py",
+        "scripts/test-event-agreement-runner-safety.py",
+        "tdf-hq-ui/src/config/eventAgreementsRollout.test.ts"
       ],
       "formalModels": [
         "formal/event-operations/EventAgreement.tla",

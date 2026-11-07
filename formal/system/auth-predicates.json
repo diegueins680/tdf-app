@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6"
+    "tdf-hq/tdf-hq.cabal": "46a1fe2acf49507d20e7bec8c35ec77cb1d45e8f880fc2a20364aac7b6382a42"
   },
   "obligations": [
     {
@@ -328,6 +328,16 @@
       "change": "Normal composition retains the protected music credential-cache modules/tests and adds only TDF.VideoCampaigns, TDF.VideoCampaignsSpec and the library network-uri declaration.",
       "semanticReview": "Removing exactly these three launch additions reproduces current protected Main Cabal bytes. Existing dependency declarations, flags, extensions and source paths are retained. Every other reviewed source hash matches protected Main. Both parent context histories are retained; the added URL parser does not enter authorization/recovery predicate expressions.",
       "qualification": "Context correspondence only, not whole-system proof or release authorization. Fresh bound solver execution/replay and protected review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "ccea8c487c9fcdc73a85a9583ee2d257f6ba41d4",
+      "previousSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "currentSha256": "46a1fe2acf49507d20e7bec8c35ec77cb1d45e8f880fc2a20364aac7b6382a42",
+      "change": "Register only existing event agreement library modules TDF.Contracts.EventWorkspaceAPI and TDF.Contracts.EventWorkspace and isolated test modules TDF.Contracts.DeliverySpec and TDF.Contracts.EventWorkspaceSpec. Removing those four lines exactly reproduces protected main Cabal bytes.",
+      "semanticReview": "No existing module binding, dependency, compiler/CPP flag, extension, source directory, resolver or lock changes. Existing Auth/Models/ServerAuth/RecordsIngestion, recoverySQL, translator and witness inputs are byte-exact protected main. Added modules do not redefine those predicates or add TH/unsafe/orphan binding hooks. Independent technical review hashes the context; this is not a GitHub approval.",
+      "independentContextReviewSHA256": "31e4049de948667ae76cfa79ab1a8a41cd588361bb7ebcde9ce99c43f38f495a",
+      "qualification": "Reviewed source-context correspondence only. Preserve identical three authorization/four recovery projection goals, assumptions and limitations; require fresh solver execution and serialized replay. Event agreement API/session/record/SQL/PDF remains separately PARTIAL; no whole-program refinement or release authorization."
     }
   ]
 }

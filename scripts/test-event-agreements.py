@@ -8,6 +8,7 @@ import concurrent.futures
 import copy
 import json
 import os
+import re
 from pathlib import Path
 import unittest
 import uuid
@@ -17,15 +18,38 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 
 ROOT = Path(__file__).resolve().parent.parent
+FORWARD_IDENTITY_GUARDS = True  # Only the explicit negative-control driver changes this.
+
+
+def checked_test_dsn(value):
+    forbidden = ('PGHOSTADDR', 'PGSERVICE', 'PGSERVICEFILE', 'PGOPTIONS', 'PGTARGETSESSIONATTRS', 'PGLOADBALANCEHOSTS')
+    if any(os.environ.get(key) for key in forbidden):
+        raise RuntimeError('Inherited libpq routing overrides are not permitted')
+    routing = conninfo_to_dict(value)
+    if set(routing) - {'host', 'port', 'dbname', 'user', 'password', 'application_name'}:
+        raise RuntimeError('Only explicit disposable database connection fields are permitted')
+    port = routing.get('port', '')
+    if (routing.get('host') not in ('127.0.0.1', 'localhost')
+            or not re.fullmatch(r'[0-9]{1,5}', port) or not 1 <= int(port) <= 65535
+            or not re.fullmatch(r'[a-zA-Z0-9_]+_test', routing.get('dbname', ''))):
+        raise RuntimeError('An explicit loopback test database is required')
+    return value
+
+
+def install_identity_guard(db):
+    db.execute('CREATE TABLE identity_party_archive(party_id BIGINT PRIMARY KEY REFERENCES party(id))')
+    canonical = (ROOT / 'tdf-hq/sql/2026-09-17_identity_reconciliation.sql').read_text()
+    start = canonical.index('CREATE OR REPLACE FUNCTION identity_reject_archived_reference()')
+    end = canonical.index('CREATE OR REPLACE FUNCTION identity_reject_archived_party_write()', start)
+    db.execute(canonical[start:end])
+    if FORWARD_IDENTITY_GUARDS:
+        db.execute((ROOT / 'tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql').read_text())
 
 
 class AgreementDatabaseTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.dsn = os.environ['EVENT_AGREEMENTS_TEST_DSN']
-        routing = conninfo_to_dict(cls.dsn)
-        if routing.get('host') not in ('127.0.0.1', 'localhost') or not routing.get('dbname', '').endswith('_test'):
-            raise RuntimeError('An explicit loopback test database is required')
+        cls.dsn = checked_test_dsn(os.environ['EVENT_AGREEMENTS_TEST_DSN'])
         cls.schema = 'event_agreements_' + uuid.uuid4().hex
         cls.db = psycopg.connect(cls.dsn, autocommit=True)
         cls.db.execute(sql.SQL('CREATE SCHEMA {}').format(sql.Identifier(cls.schema)))
@@ -36,6 +60,7 @@ class AgreementDatabaseTests(unittest.TestCase):
         cls.db.execute("CREATE TABLE notification(id BIGSERIAL PRIMARY KEY,recipient_party_id BIGINT,notif_type TEXT CHECK(notif_type='existing'),title TEXT,body TEXT,target_type TEXT,target_id BIGINT,target_key TEXT,is_read BOOL)")
         # Match production's named, pre-existing notification allowlist.
         cls.db.execute((ROOT / 'tdf-hq/sql/2026-11-03_event_agreements.sql').read_text())
+        install_identity_guard(cls.db)
         cls.db.execute("INSERT INTO party VALUES(1,'Organizer'),(2,'Synthetic recipient'),(3,'Unrelated account')")
         cls.db.execute('INSERT INTO user_credential VALUES(1,TRUE),(2,TRUE),(3,TRUE)')
         print('PostgreSQL', cls.db.execute('SHOW server_version').fetchone()[0], 'actual agreement migration')

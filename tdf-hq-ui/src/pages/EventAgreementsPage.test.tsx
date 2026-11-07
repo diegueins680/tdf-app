@@ -4,23 +4,27 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { EventWorkspace, WorkspaceCommand } from '../api/eventWorkspace';
 import { workspaceFixture } from '../api/eventWorkspace.fixture';
-import { advanceAuthSessionEpoch } from '../session/authEvents';
+import { advanceAuthSessionEpoch, getAuthSessionEpoch } from '../session/authEvents';
 
 let session: { partyId: number } | null = { partyId: 2 };
 const read = jest.fn<(id: string) => Promise<EventWorkspace>>();
 const command = jest.fn<(id: string, payload: WorkspaceCommand) => Promise<EventWorkspace>>();
+let agreementRollout: unknown = 'true';
+jest.unstable_mockModule('../config/eventAgreementsRollout', () => ({ isEventAgreementsEnabled: () => agreementRollout === 'true' }));
 const document = jest.fn<(id: string, path: string) => Promise<Blob>>();
 jest.unstable_mockModule('../api/eventWorkspace', () => ({ EventWorkspaceAPI: { read, command, document } }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session }), getStoredSessionToken: () => null }));
 jest.unstable_mockModule('../components/party-selector/PartySelector', () => ({ UserSelector: () => null }));
 const { default: Page } = await import('./EventAgreementsPage');
 
-function setup() {
+function setup(cached = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  if (cached) client.setQueryData(['event-workspace', '216', session?.partyId ?? null, getAuthSessionEpoch()], workspaceFixture());
   const app = () => <QueryClientProvider client={client}><MemoryRouter initialEntries={['/social/eventos/216/acuerdos']}><Routes><Route path="/social/eventos/:eventId/acuerdos" element={<Page />} /></Routes></MemoryRouter></QueryClientProvider>;
   const view = render(app()); return { ...view, redraw: () => view.rerender(app()) };
 }
 beforeEach(() => {
+  agreementRollout = 'true';
   session = { partyId: 2 };
   read.mockReset().mockResolvedValue(workspaceFixture());
   command.mockReset().mockResolvedValue(workspaceFixture()); document.mockReset();
@@ -101,4 +105,14 @@ it('does not download private bytes after the session changes', async () => {
   view.redraw();
   await act(async () => { resolve(new Blob(['%PDF-synthetic'])); });
   expect(createUrl).not.toHaveBeenCalled();
+});
+
+it.each([undefined, 'false'])('rollout: disabled direct workspace makes no private read or command (%j)', setting => {
+  agreementRollout = setting;
+  setup(true);
+  expect(screen.queryByText('Synthetic event plan')).toBeNull();
+  expect(read).not.toHaveBeenCalled();
+  expect(command).not.toHaveBeenCalled();
+  expect(document).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'Aceptar acuerdo', exact: true })).toBeNull();
 });

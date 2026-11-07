@@ -15,3 +15,19 @@ Approval requires known integer-cent budget lines, a cap equal to their total an
 Verification maps the actual SQL migration and UI boundaries to eleven isolated PostgreSQL regressions, focused web tests and Haskell document tests. The finite EventAgreement model explores two document versions, two plan revisions and three actor classes; baseline invariants and five deliberately broken controls are checked. This is not a cryptographic proof or a refinement proof of Haskell/SQL. Local PostgreSQL was 16.2; CI runs 17. Stack compilation, exact deployed schema, recipient identity and production PDF rendering are separate prerequisites.
 
 The production migration must be applied through the reviewed manifest/runbook before enabling the UI in production. Root and Mobile generated API/feature registry changes must land together; no native signing screen is claimed.
+
+Current-main integration keeps the generic contract sender and its SMTP delivery
+semantics unchanged. The model-only Party reference registry also stays at231;
+actual-FK dependency discovery already detects the nine raw agreement references.
+A separate forward installs archived-reference guards on all six new tables,
+locking all targets in a shared deterministic order before validating their nine
+FK prerequisites. Its rollback first locks every target, refuses populated
+evidence with55000, and removes only the new triggers when empty. Isolated SQL
+fixtures and a controlled two-actor DDL interleaving qualify these finite cases,
+not a production concurrency observation or complete database refinement.
+
+The new web rollout is default-off and requires the exact public build setting
+`VITE_EVENT_AGREEMENTS_ENABLED=true` for both link and direct-page mounting. It
+grants no authorization. Server session, recipient, version/hash and consent
+checks remain mandatory. Staging this additive code does not initiate production
+activation or impose a separate approval for merging compatible staged code.

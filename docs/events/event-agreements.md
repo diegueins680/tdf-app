@@ -36,3 +36,25 @@ Current local checks: 11 real PostgreSQL 16.2 agreement regressions, 72 focused 
 Mobile remains a separate integration blocker. `event-agreements-mobile-20261106.patch` is regenerated against the root's pinned Mobile `14318a730f96b2053f71885091bbc05cffc3294d`; the original companion patch remains preserved. Mobile main has independently advanced to `d5c718c23b50b83dd2dd76bbb41b835730dbf7a2` with the artist video campaign contract. Reconcile the companion with those newer operations and feature entries without deleting them, obtain Mobile review/CI, merge it, then update the root gitlink and regenerate source evidence. A fresh attempt to create the companion branch returned HTTP 403 (`Resource not accessible by integration`). No Mobile commit is published or claimed synchronized.
 
 Tests use synthetic accounts, isolated database schemas/files, fake PDFs and injected transports. No real contract is sent, no historical commercial document is edited, and no production mutation is part of these checks.
+
+## Staged web rollout and current identity guards
+
+The new web workspace is additive. `VITE_EVENT_AGREEMENTS_ENABLED` must be the
+exact string `true` to expose its event-detail link or mount its private page.
+Absent, false, or differently spelled values keep the current event experience
+and make no workspace read/command/download call. This is a public UI rollout
+control, not authorization: every enabled request still needs the current
+session and event/recipient checks. Enable it only after the existing reviewed
+backend and migration rollout has made the workspace available; no new merge
+approval or production action is implied by staging the code.
+
+The full existing 246-migration prefix is retained. The original event agreement
+SQL is entry247; the following forward migration installs the canonical archived
+Party reference guard on all nine real Party FK columns across its six raw-SQL
+tables. The 231 model-declared registry and generator remain unchanged; dynamic
+actual-FK discovery already protects identity merge refusal. The new guards
+prevent new archived references and changed references without rewriting legal
+or audit evidence. Replaying the guard forward preserves its protection.
+Populated rollback refuses with55000 and retains evidence/guards; an empty
+rollback removes only the new triggers, preserving tables, FKs and canonical
+functions. No real agreement or production identity is modified by tests.

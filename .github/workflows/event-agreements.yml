@@ -5,6 +5,9 @@ on:
       - 'tdf-hq/sql/2026-11-03_event_agreements.sql'
       - 'tdf-hq/src/TDF/Contracts/**'
       - 'scripts/test-event-agreements.py'
+      - 'scripts/test-event-agreement-identity-guards.py'
+      - 'scripts/test-event-agreement-runner-safety.py'
+      - 'tdf-hq/sql/2026-11-07_event_agreement_identity_guards*'
       - 'formal/event-operations/EventAgreement*'
       - '.github/workflows/event-agreements.yml'
 permissions:
@@ -33,6 +36,10 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install 'psycopg[binary]==3.3.7'
+      - run: python scripts/test-event-agreement-runner-safety.py
       - run: python scripts/test-event-agreements.py
+        env:
+          EVENT_AGREEMENTS_TEST_DSN: host=127.0.0.1 port=5432 dbname=event_agreements_test user=postgres password=postgres
+      - run: python scripts/test-event-agreement-identity-guards.py
         env:
           EVENT_AGREEMENTS_TEST_DSN: host=127.0.0.1 port=5432 dbname=event_agreements_test user=postgres password=postgres
