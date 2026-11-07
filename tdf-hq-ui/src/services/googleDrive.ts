@@ -2,7 +2,7 @@ import { del, post } from '../api/client';
 import { getActiveSession } from '../session/SessionContext';
 import { getAuthSessionEpoch } from '../session/authEvents';
 import { UploadFailure } from '../api/uploadFailure';
-import { isDriveConnectionHandle, retireLegacyDriveCredentials } from './storageCredentials';
+import { isAcceptedDriveCredentialPair, isDriveConnectionHandle, isDriveVaultRequired, retireLegacyDriveCredentials } from './storageCredentials';
 export { isDriveConnectionHandle } from './storageCredentials';
 
 const TOKEN_KEY = 'tdf-google-drive-token';
@@ -146,7 +146,7 @@ export const getStoredToken = (): StoredToken | null => {
     const accessTokenRaw = value['accessToken'];
     const refreshTokenRaw = value['refreshToken'];
     const expiresAtRaw = value['expiresAt'];
-    if (!isDriveConnectionHandle(accessTokenRaw) || (refreshTokenRaw !== undefined && refreshTokenRaw !== accessTokenRaw)) {
+    if (!isAcceptedDriveCredentialPair(accessTokenRaw, refreshTokenRaw)) {
       invalidateStoredToken();
       return null;
     }
@@ -168,7 +168,7 @@ export const getStoredToken = (): StoredToken | null => {
 };
 
 export const storeToken = (token: StoredToken) => {
-  if (!isDriveConnectionHandle(token.accessToken) || (token.refreshToken !== undefined && token.refreshToken !== token.accessToken)) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
+  if (!isAcceptedDriveCredentialPair(token.accessToken, token.refreshToken) || !Number.isFinite(token.expiresAt)) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
   const ownerPartyId = getActiveSession()?.partyId;
   if (!ownerPartyId || (token.ownerPartyId !== undefined && token.ownerPartyId !== ownerPartyId) || (token.ownerEpoch !== undefined && token.ownerEpoch !== getAuthSessionEpoch())) throw new UploadFailure('storage_reconnect_required', 409, 'reconnect');
   const key = scopedTokenKey();
@@ -180,8 +180,18 @@ export const storeToken = (token: StoredToken) => {
 export const disconnectDrive = async (): Promise<void> => {
   const owner = getActiveSession()?.partyId;
   const epoch = getAuthSessionEpoch();
+  const descriptor = getStoredToken();
+  const key = scopedTokenKey();
+  const snapshot = key ? localStorage.getItem(key) : null;
+  // Old backends have no vault-revocation route. Select this legacy behavior
+  // before a request; a denied opaque revocation must never become local success.
+  if (!isDriveVaultRequired() && descriptor && !isDriveConnectionHandle(descriptor.accessToken)) {
+    clearToken();
+    return;
+  }
   await del<void>('/drive/token');
-  if (getActiveSession()?.partyId === owner && getAuthSessionEpoch() === epoch) clearToken();
+  if (getActiveSession()?.partyId === owner && getAuthSessionEpoch() === epoch
+    && key && localStorage.getItem(key) === snapshot) clearToken();
 };
 
 export const clearToken = () => { const key = scopedTokenKey(); if (key) localStorage.removeItem(key); };

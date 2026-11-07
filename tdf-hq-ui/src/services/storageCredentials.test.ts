@@ -1,4 +1,6 @@
-import { retireLegacyDriveCredentials } from './storageCredentials';
+import { jest } from '@jest/globals';
+jest.unstable_mockModule('../utils/env', () => ({ env: { read: (key: string) => key === 'VITE_DRIVE_VAULT_REQUIRED' ? 'true' : undefined } }));
+const { retireLegacyDriveCredentials } = await import('./storageCredentials');
 
 it('erases provider secrets for inactive accounts while preserving nonsecret descriptors and form drafts', () => {
   localStorage.clear();

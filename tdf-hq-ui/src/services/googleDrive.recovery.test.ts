@@ -3,6 +3,7 @@ import { jest } from '@jest/globals';
 let owner = 10;
 let epoch = 1;
 const post = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.unstable_mockModule('../utils/env', () => ({ env: { read: (key: string) => key === 'VITE_DRIVE_VAULT_REQUIRED' ? 'true' : undefined } }));
 jest.unstable_mockModule('../api/client', () => ({ post, del: jest.fn() }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ getActiveSession: () => ({ partyId: owner }) }));
 jest.unstable_mockModule('../session/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));

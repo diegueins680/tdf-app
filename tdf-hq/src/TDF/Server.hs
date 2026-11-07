@@ -11,6 +11,7 @@
 
 module TDF.Server where
 
+import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.StorageVault as StorageVault
 import qualified TDF.Social.Chat as SocialChat
@@ -206,6 +207,7 @@ import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, se
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.DatafastConfig as DatafastConfig
 import qualified TDF.Commerce.Money as CommerceMoney
 import qualified TDF.Commerce.ArtistTip as ArtistTip
 import qualified TDF.Commerce.ArtistTipStore as TipStore
@@ -3197,6 +3199,7 @@ artistSecureServer user =
     :<|> artistUpdateOwnProfile user
     :<|> artistUpdateOwnProfile user
        )
+  :<|> VideoCampaigns.campaignServer user
   :<|> artistUpdateOwnPhoto user
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM
@@ -11041,7 +11044,7 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
   when (sbpcCheckoutStatus context == "paid") $
     throwError err409 { errBody = "This booking deposit is already paid" }
   ensureNoSubmittedServiceBookingManualEvidence context
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireServiceBookingProvider
     context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   attempt <- beginServiceBookingPaymentAttempt
@@ -17263,7 +17266,7 @@ isMarketplaceActiveStripeOrderConflict exception =
 createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
 createDatafastCheckout rawId mIdempotency payload = do
   context <- prepareMarketplaceSaleCheckout "datafast" rawId mIdempotency payload
-  dfEnv <- loadDatafastEnv
+  dfEnv <- loadDatafastCheckoutEnv
   unless (dfEnvironment dfEnv == msccEnvironment context) $
     throwError err500
       { errBody = "DATAFAST_ENV must match COMMERCE_CHECKOUT_ENV for marketplace checkout"
@@ -17787,12 +17790,12 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
 
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
-  dfEnv <- loadDatafastEnv
+  dfEnv <- loadDatafastCheckoutEnv
   let manager = sharedProviderManager
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
       currencyTxt = T.toUpper (T.strip currency)
-      (givenName, surname) = splitName name
+      (givenName, surname) = DatafastConfig.splitDatafastBuyerName name
       baseParams =
         [ ("entityId", TE.encodeUtf8 (dfEntityId dfEnv))
         , ("amount", TE.encodeUtf8 amountTxt)
@@ -17997,14 +18000,6 @@ invalidDatafastResourcePath =
     { errBody =
         "resourcePath must be a Datafast relative checkout payment path"
     }
-
-splitName :: Text -> (Text, Text)
-splitName raw =
-  let parts = T.words raw
-  in case parts of
-    []       -> ("Cliente", "TDF")
-    [x]      -> (x, x)
-    (x:rest) -> (x, T.unwords rest)
 
 normalizeBaseUrl :: String -> String
 normalizeBaseUrl url =
@@ -20129,6 +20124,20 @@ instance Show DatafastEnv where
       <> ", dfTestMode = " <> show (dfTestMode environment)
       <> ", dfExtraParams = <redacted>, dfEnvironment = "
       <> show (dfEnvironment environment) <> "}"
+
+-- Use the same required merchant metadata as every shared checkout path.
+-- Existing status lookup retains its credential-only configuration below.
+loadDatafastCheckoutEnv :: AppM DatafastEnv
+loadDatafastCheckoutEnv = do
+  (configured, parameters) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
+  pure DatafastEnv
+    { dfEntityId = ServiceStorefront.sdfEntityId configured
+    , dfBearerToken = ServiceStorefront.sdfBearerToken configured
+    , dfBaseUrl = ServiceStorefront.sdfBaseUrl configured
+    , dfTestMode = ServiceStorefront.sdfTestMode configured
+    , dfExtraParams = parameters
+    , dfEnvironment = ServiceStorefront.sdfEnvironment configured
+    }
 
 loadDatafastEnv :: AppM DatafastEnv
 loadDatafastEnv = do

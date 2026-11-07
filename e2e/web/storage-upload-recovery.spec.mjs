@@ -78,3 +78,42 @@ test('recovers the form after reload and reselects only the original file with t
   expect(uploads).toHaveLength(2);
   expect(uploads[1].match(/name="idempotencyKey"\r\n\r\n([a-f0-9]{64})/)?.[1]).toBe(firstKey);
 });
+
+
+test('waits for popup session bootstrap before consuming OAuth state or exchanging the code', async ({ page, context }) => {
+  let releaseBootstrap;
+  const bootstrapGate = new Promise(resolve => { releaseBootstrap = resolve; });
+  let announceBootstrap;
+  const bootstrapStarted = new Promise(resolve => { announceBootstrap = resolve; });
+  let tokenRequests = 0;
+  await context.route('**/session', async route => {
+    if (await route.request().frame().page().opener()) { announceBootstrap(); await bootstrapGate; }
+    return route.fulfill({ json: profile });
+  });
+  await context.route('**/drive/token', async route => {
+    tokenRequests += 1;
+    return route.fulfill({ json: { accessToken: 'synthetic-provider-token', refreshToken: 'synthetic-refresh', expiresIn: 3600 } });
+  });
+  try {
+    await page.goto('/e2e/storage-upload.html');
+    await page.getByLabel('Biografía').fill('Bootstrap preserves my file and biography.');
+    await choose(page, 'Mi Google Drive · no consume espacio TDF');
+    await page.locator('input[data-testid=storage-upload-select]').setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: png });
+    await expect(page.getByRole('button', { name: /Reintentar cover.png/ })).toBeVisible();
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: 'Conectar Drive', exact: true }).click();
+    const popup = await popupPromise;
+    await bootstrapStarted;
+    await expect(popup.getByText('Conectando con Google Drive...')).toBeVisible();
+    expect(await popup.evaluate(() => localStorage.getItem('tdf-google-drive-state') === new URLSearchParams(location.search).get('state'))).toBe(true);
+    expect(tokenRequests).toBe(0);
+    const closed = popup.waitForEvent('close');
+    releaseBootstrap();
+    await closed;
+    expect(tokenRequests).toBe(1);
+    await expect(page.getByLabel('Biografía')).toHaveValue('Bootstrap preserves my file and biography.');
+    await page.getByRole('button', { name: /Reintentar cover.png/ }).click();
+    await expect(page.getByRole('status').filter({ hasText: /^Archivo listo$/ })).toHaveText('Archivo listo');
+    expect(uploads).toHaveLength(1); expect(uploads[0]).toContain('google_drive');
+  } finally { releaseBootstrap(); }
+});

@@ -804,6 +804,28 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Exact merchandise commission constraint is missing or changed';
   END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('content_storage_credential','owner_party_id'),
+      ('content_storage_reference','bound_by')
+    ) expected(table_name,column_name)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_attribute a JOIN pg_constraint c ON c.conrelid=a.attrelid
+      WHERE a.attrelid=to_regclass('public.' || expected.table_name)
+        AND a.attname=expected.column_name AND a.atttypid='bigint'::regtype
+        AND a.attnotnull AND NOT a.attisdropped AND c.contype='f' AND c.convalidated
+        AND c.confrelid='public.party'::regclass AND c.conkey=ARRAY[a.attnum]
+        AND c.confkey=ARRAY[(SELECT attnum FROM pg_attribute WHERE attrelid='public.party'::regclass AND attname='id')]
+    ) OR NOT EXISTS (
+      SELECT 1 FROM pg_trigger t WHERE t.tgrelid=to_regclass('public.' || expected.table_name)
+        AND t.tgname='identity_archive_reference_guard' AND NOT t.tgisinternal
+        AND t.tgfoid=to_regprocedure('public.identity_reject_archived_reference()')
+        AND t.tgtype=23 AND t.tgenabled IN ('O','A') AND t.tgattr::text='' AND t.tgqual IS NULL
+        AND t.tgnargs=1 AND encode(t.tgargs,'hex')=encode(convert_to(expected.column_name,'UTF8'),'hex') || '00'
+    )
+  ) THEN
+    RAISE EXCEPTION 'Storage credential/reference archived-Party admission is missing or incompatible';
+  END IF;
   IF to_regclass('public.google_calendar_config') IS NULL
      OR to_regclass('public.google_calendar_event') IS NULL THEN
     RAISE EXCEPTION 'Calendar runtime relations are missing';

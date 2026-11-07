@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getActiveSession } from '../session/SessionContext';
+import { getActiveSession, useOptionalSession } from '../session/SessionContext';
 import {
   buildAuthUrl,
   disconnectDrive,
@@ -124,9 +124,13 @@ export function useGoogleDriveAuth(options: DriveAuthOptions = {}) {
 }
 
 export function useGoogleDriveCallback() {
+  const sessionLoading = useOptionalSession()?.loading ?? false;
   const [result, setResult] = useState<DriveCallbackResult>({ ok: false });
 
   useEffect(() => {
+    // Bootstrap establishes the current owner/epoch. Do not consume one-use
+    // OAuth state or start an exchange against the preliminary stored session.
+    if (sessionLoading) return;
     const search = new URLSearchParams(window.location.search);
     const code = search.get('code');
     const error = search.get('error');
@@ -189,7 +193,7 @@ export function useGoogleDriveCallback() {
     }
 
     void flowPromise.then(setResult);
-  }, []);
+  }, [sessionLoading]);
 
   return result;
 }

@@ -210,6 +210,7 @@ test.describe('Course enrollment on a small Android phone', () => {
   });
 
   test('Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow', async ({ page, baseURL }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await fixture(page, baseURL);
     await page.goto(`/curso/${SLUG}`, { waitUntil: 'domcontentloaded' });
     await expectRenderedRoot(page);
@@ -231,6 +232,9 @@ test.describe('Course enrollment on a small Android phone', () => {
     await stickyBar.getByRole('button', { name: 'Inscribirme' }).click();
     const dialog = page.getByRole('dialog', { name: 'Inscríbete en Curso de Batería con Guillermo Díaz' });
     await expectInViewport(page, dialog.getByLabel('Nombre completo'));
+    // A visible input can arrive before the sliding sheet. Wait for the
+    // whole form to enter the viewport before targeting its moving close button.
+    await expect(dialog).toBeInViewport({ ratio: 1 });
     await dialog.getByRole('button', { name: 'Cerrar' }).click();
     await expect(dialog).toBeHidden();
   });

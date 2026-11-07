@@ -8,6 +8,12 @@ interface DriveCallbackResult {
   returnTo?: string;
 }
 
+let sessionLoading = false;
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  getActiveSession: () => ({ partyId: 10 }),
+  useOptionalSession: () => ({ loading: sessionLoading }),
+}));
+
 const buildAuthUrlMock = jest.fn<(state?: string) => Promise<string>>(() => Promise.resolve(''));
 const disconnectDriveMock = jest.fn<() => Promise<void>>(() => Promise.resolve());
 const driveConfigErrorMock = jest.fn<() => string | null>(() => null);
@@ -60,6 +66,9 @@ const renderProbe = async (strictMode = false) => {
 
   return {
     container,
+    rerender: async () => {
+      await act(async () => { root?.render(strictMode ? <StrictMode><CallbackProbe /></StrictMode> : <CallbackProbe />); await flushPromises(); });
+    },
     cleanup: async () => {
       if (!root) return;
       await act(async () => {
@@ -84,6 +93,7 @@ describe('useGoogleDriveCallback', () => {
   });
 
   beforeEach(() => {
+    sessionLoading = false;
     buildAuthUrlMock.mockReset().mockResolvedValue('https://accounts.google.com/o/oauth2/v2/auth');
     disconnectDriveMock.mockReset().mockResolvedValue(undefined);
     driveConfigErrorMock.mockReset().mockReturnValue(null);
@@ -93,6 +103,25 @@ describe('useGoogleDriveCallback', () => {
     getStoredTokenMock.mockReset().mockReturnValue(null);
     parseDriveStateMock.mockReset().mockReturnValue(null);
     storeTokenMock.mockReset();
+  });
+
+  it('keeps OAuth state untouched until session bootstrap is ready, then exchanges once', async () => {
+    window.history.replaceState({}, '', '/oauth/google/callback?code=after-bootstrap&state=bootstrap-state');
+    sessionLoading = true;
+    consumeDriveStateMock.mockReturnValue('bootstrap-state');
+    parseDriveStateMock.mockReturnValue({ nonce: 'bootstrap-nonce', returnTo: '/drive' });
+    const { container, rerender, cleanup } = await renderProbe();
+    try {
+      expect(consumeDriveStateMock).not.toHaveBeenCalled();
+      expect(exchangeCodeForTokenMock).not.toHaveBeenCalled();
+      expect(storeTokenMock).not.toHaveBeenCalled();
+      sessionLoading = false;
+      await rerender();
+      expect(consumeDriveStateMock).toHaveBeenCalledTimes(1);
+      expect(exchangeCodeForTokenMock).toHaveBeenCalledWith('after-bootstrap');
+      expect(storeTokenMock).toHaveBeenCalledTimes(1);
+      expect(readCallbackResult(container)).toEqual({ ok: true, returnTo: '/drive' });
+    } finally { await cleanup(); }
   });
 
   it('rejects callbacks whose state is not present in browser storage', async () => {
