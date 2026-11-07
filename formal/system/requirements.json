@@ -14171,7 +14171,7 @@
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs"
       ],
-      "verification": "QuickCheck properties over the real adapters with generated matching and mismatching bindings, transaction status lists and status codes; exact money round-trip and sub-cent rejection.",
+      "verification": "QuickCheck properties over the real adapters with generated matching and mismatching bindings, transaction status lists and status codes; exact money round-trip and sub-cent rejection. Z3 proof placetopay_query_admission.py (source-pinned translation of the PlaceToPay query parser and exact minor-unit conversion; guard necessity checked).",
       "evidence": "tdf-hq-test ProviderAdapterBindingSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14180,7 +14180,9 @@
         "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/placetopay_query_admission.py"
+      ],
       "confidence": "High for the parsers under generated inputs; the request builders (create/cancel bodies) and HTTP execution are covered by PAY-RETRY-001 and existing provider retry tests, not here.",
       "ambiguity": [
         "Signature verification of PlaceToPay notifications is covered by existing unit tests, not by these properties.",

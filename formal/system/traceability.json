@@ -14172,7 +14172,7 @@
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs"
       ],
-      "verification": "QuickCheck properties over the real adapters with generated matching and mismatching bindings, transaction status lists and status codes; exact money round-trip and sub-cent rejection.",
+      "verification": "QuickCheck properties over the real adapters with generated matching and mismatching bindings, transaction status lists and status codes; exact money round-trip and sub-cent rejection. Z3 proof placetopay_query_admission.py (source-pinned translation of the PlaceToPay query parser and exact minor-unit conversion; guard necessity checked).",
       "evidence": "tdf-hq-test ProviderAdapterBindingSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14181,7 +14181,9 @@
         "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/placetopay_query_admission.py"
+      ],
       "confidence": "High for the parsers under generated inputs; the request builders (create/cancel bodies) and HTTP execution are covered by PAY-RETRY-001 and existing provider retry tests, not here.",
       "ambiguity": [
         "Signature verification of PlaceToPay notifications is covered by existing unit tests, not by these properties.",
@@ -26161,7 +26163,7 @@
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
     ".github/workflows/ci.yml": "7adbcaa1fdd69b2639c0f6a17d55b5cf38a37631b2499ef834f3789e658266e9",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
+    ".github/workflows/event-operations-formal.yml": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -26522,6 +26524,7 @@
     "formal/payments/domo_cancellation_refund.py": "6c0c8bdca1c70caff40c8f46f645aa482cc943ee9f1ac3ec6cef333c41b4bc40",
     "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
+    "formal/payments/placetopay_query_admission.py": "b4564fbbef90dba77d7a0f03d053cf53db753fea3f50102d8efa2457a3d772c8",
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
@@ -41977,6 +41980,12 @@
         "relationship": "tests"
       }
     ],
+    "formal/payments/placetopay_query_admission.py": [
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": [
       {
         "requirement": "PAY-COURSE-PRICE-001",
@@ -44852,7 +44861,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
+      "sha256": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79953,7 +79962,6 @@
     "SYS-CI-SELECTED-001",
     "ART-ENRICH-REVIEW-001",
     "ART-PUBLIC-VISIBILITY-001",
-    "PAY-ADAPTER-BINDING-001",
     "AUTH-ADMIN-GUARD-001",
     "AUTH-SOCIAL-OAUTH-001",
     "EVT-REPORT-LINK-001",
@@ -81120,7 +81128,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4b8ab8bfb3b3a0c7936723aa6b5d28ecedcd22d550019c212c282f9acdaad43",
+      "sourceSha256": "650e8d4a8e6553554b7edd32ff62965ee8256d88e8bd1dd5d5210d259a530f89",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -81148,7 +81156,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4b8ab8bfb3b3a0c7936723aa6b5d28ecedcd22d550019c212c282f9acdaad43",
+      "sourceSha256": "650e8d4a8e6553554b7edd32ff62965ee8256d88e8bd1dd5d5210d259a530f89",
       "definition": {
         "states": [
           "absent",
@@ -81178,7 +81186,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4b8ab8bfb3b3a0c7936723aa6b5d28ecedcd22d550019c212c282f9acdaad43",
+      "sourceSha256": "650e8d4a8e6553554b7edd32ff62965ee8256d88e8bd1dd5d5210d259a530f89",
       "definition": {
         "export": [
           "queued",
