@@ -1,0 +1,56 @@
+Independent final review: event finance report currency
+Date: 2026-10-29
+Source M: 37ffca0348620583a214f7c76b6a011ca9d6da29
+Parent: a7ae597f7c111d6858561280cdf080d4e62b0d70
+Result: zero blocking defects identified within the scoped correction and evidence assessment.
+
+Authority and review scope:
+The owner explicitly chose refusal until contributing amounts match event currency, preserving intentional foreign-currency authoring. I inspected the applied/committed source, all 14 currency cases and retained 15 RANGE cases, normative contract, raw baseline/corrected/control logs, native mutation controller and final source/binary restoration. I independently rehashed Git and filesystem correspondence after mutations completed. I did not rerun the corrected tests, compiler, database or server; this final review uses the executor's actual raw runtime evidence. My earlier separately recorded native observation probe at source 2a independently established the old EUR100 -> USD100 mismatch, but is not corrected-source qualification. This review grants no GitHub approval or merge/deployment authority.
+
+Source reasoning:
+The normalized shared currency guard applies at reporting boundaries, leaving the established authoring validator and itemized entries unchanged. Manual rows preserve existing stored validation and check exactly nonvoid normalized states. Budget checks use the same posted/event/line/direction-selected entities as exact arithmetic; zero inputs are retained in the sum but need no currency conversion. Any nonzero selected input is validated, even if selected amounts cancel to zero. The existing event metadata/default resolver also performs its inherited general-budget metadata validation at these budget reads, as now accurately documented. Update validation remains before the first existing UPDATE.
+The exported storedTicketOrderSummaryFields signature/behavior is retained. Its private currency wrapper is called only after canonical capturedIds exclusion, preserving authoritative canonical evidence. The present normalized status parser accepts pending/paid/refunded/cancelled, including canceled alias, so nonzero and not-cancelled checks exactly the three contributing legacy states. Zero and cancelled rows do not cause false currency refusal. Future status expansion would require reviewing that predicate. Existing canonical captured-revenue checks, range checks, signed supported balances, filters and explicit/default currency precedence remain. There is no conversion, clamping, silent row removal or financial data rewriting.
+
+Evidence and test freshness:
+The actual baseline native build succeeded, and the original 13 currency cases completed with 8 genuine assertion failures and 5 compatibility passes. Failures returned successful mismatched summary/budget DTOs, not fixture or compiler errors. The 14th zero historical budget compatibility case was added after that red receipt and is not falsely counted as an old counterexample. Existing ordinary foreign-entry creation is asserted through the real typed Servant writer and persisted EUR is checked. Legacy/event-currency fixture setup is SQL on a synthetic SQLite schema; it is not described as an ordinary purchase/event-update or production workflow execution.
+Current clean-source native Cabal build, targeted and full runs all report actual exit 0. Raw logs confirm targeted 29/0/0pending (15 RANGE +14 currency) and full 4074/0 / 21 inherited pending. Binary SHA256: ef1b4a01de062ca4d718e00fd5774cb9097f5f1db45b88320360471ece780780. These finite native actual-handler tests on SQLite support TESTED scope only. The cached serving executable is not qualified by this test-binary evidence.
+
+Controls and restoration:
+The actual native -O0 controller first ran the correct combined 29 cases, all passing. The two independently compiled source fault variants were:
+1. Replacing the shared currency guard with unconditional Right(). Actual build 0, fourteen currency cases, exit 1 with exactly eight intended currency-refusal assertion failures; the six compatibility cases passed. Raw results reproduce the unit relabeling in manual, budget and legacy paths.
+2. Moving budget currency validation after the existing UPDATE. Actual build 0, fourteen currency cases, exit 1 with exactly one persisted-state assertion failure: expected Just 7, got Just 99. This confirms the refusal-before-write test detects a committed edit followed by HTTP500, beyond checking a status code alone.
+Thus TWO variants produced NINE intended assertion failures, not nine independent mutations or complete mutation coverage. Both had real completed Hspec summaries, so compile/setup failure or generic process exit 1 was not accepted as fault detection. The restored isolated native runner passed all 29, and the unchanged original qualified Cabal binary separately passed all 29. No test/assertion was weakened to accommodate a fault. The controller restored source in finally and preserved the qualified binary; I independently verified the final clean source and binary hash.
+
+Independent final correspondence:
+All 1417 registered filesystem hashes and corresponding Git blobs match source 37ff:1317 main-repository blobs plus 100 Mobile blobs at gitlink 7000df1da934aa467e443ad267c0a8caa1e9cb72. All 986 native backend tracked inputs match current files and Git. Whole backend tree: ead9f59a88829cc4a6de476b788d38a8694aea87. Global source digest: 6808d96fa3ba5cd02ea6f581cff698efb613cc53d81d817578fbad4dc44eda68. The new Markdown, outside the generic fingerprint, is separately Git/discovery bound. I confirmed all 158 parent requirement objects are unchanged, with the sole new currency requirement bringing total 159, and the whole historical catalog decision file is byte-exact parent. No extra source edit remains.
+Root quality/admission/catalog-unit receipts report actual exit 0, including 8 catalog cases. Source-selection activates backend/repository lanes only. Clean committed assurance executes successfully while retaining 159 whole requirements and 318 implementation/refinement obligations UNPROVEN, 11 inherited conditional SMT claims and release BLOCKED. Inherited algebra claims do not prove this new currency implementation.
+
+Limits and integration conditions:
+No fresh production PostgreSQL DDL/trigger, HTTP authentication/transport, provider/FX, deployment or concurrency qualification follows from these SQLite executions. Existing separate reads remain; equality concerns observed rows and event currency resolved for that report, not a new serialized finance snapshot. Lowercase stored-currency, canonical-shadow, proposed budget-type and offsetting-row edges are supported by source reasoning, not individually claimed new executed cases. Parent RANGE hosted persona failure and aggregate quality state are separate outstanding integration evidence; this local source review does not waive any required CI, current-head review, FIFO/main composition or branch protection. There is no complete implementation/refinement theorem, whole-platform guarantee or universal input claim.
+
+Reviewed source SHA256 values:
+- tdf-hq/src/TDF/Server/SocialEventsHandlers.hs: 47d38da8d2d9c80cdd0b7478d4a516243b11254a8125157a375e949c51e5a793
+- tdf-hq/test/TDF/Social/FollowHandlerSpec.hs: a4be6dbdf38b566384e893410ded47af549fa3b3ef08c6e3b01de8649d38900e
+- formal/system/event-finance-report-currency.md: 69015488aae669c32821e6be4ef88524e10d486e284adb97258c2b8de0490b9f
+- formal/system/requirements.json: 8cc97557a1c18d31dc95f0270f45b43ccf5269f631077dbcda406b59e65359ca
+
+Raw receipt/log SHA256 values (artifact root /private/tmp/tdf-event-finance-currency-qualification-20261029):
+- baseline-confirmed.json: d74ed71290d77d97e41f3fe6b29d99029ef951a9f099c38a20649b9a9b43abeb
+- baseline-inputs.json: 212000ecc00c0715c0dc60b247b6a944f677a23644db11b3e695c5843e4fa869
+- baseline-native-tests.log: fb39891ce1e993905514509bb3813834f5f1647139a68b968a25d9799b9db960
+- native-qualified-inputs.json: b3909bd912b803d81e00304b89b57e30848e7d458699e9716933fca16850508a
+- native-quality.json: 8814ec4249b42fbd45906638810835d549e894b301621ab06205c0d720881a53
+- qualified-build.log: d0b089f12a233c40d8859f6dd210ceb163092c57c24108b3bf7977fd2cd41200
+- qualified-targeted.log: adbb739049e896df19c20a5ead4b3334e22e8eb13b2f36a36a233fcffa0776bc
+- qualified-full.log: a6053eef6d351bcbed0003e5c913a2e7e7ae2c9a2d765ea6d39aef1affab6df3
+- mutations.json: c15ada10c53a60f5e69a43566d4286fd17700921576afbeb3bfc3dcb08e9d151
+- mutation-correct-native-control.log: bd3bd6dd8315ff6df103f3344a9395c9591957c60d9aa2d57ca675bc60374d6a
+- mutation-currency-guard-bypass.log: 1b909f13d53b14ac9e66bf1b7bc16236113018063e6a6f1e05d7793ff27cf21c
+- mutation-late-budget-currency-check.log: 442c11e88a3456c59584679b218fae2a986775dd24ae41b57abb30dd7c1566be
+- mutation-restored-native-control.log: a93b1245c60cc48f330632a9aa0eb90343f99e625a9a7a60f6455a0b6976eece
+- restored-qualified-targeted.log: dcbd5f3e712a3f56d95b7bd36c16c2209d1931ea3dd70976238c42ea3d7c1fea
+- source-correspondence.json: dd124292ce8adbe0c8fe2d8de60a8274d6e8e5e9281d9238d18b6c0412f0e53a
+- root-quality-result.json: 8e667e41ea9d48029b3c09bd40ab6cadd482180dcebc175a67f14831ad897995
+- ci-source-selection.json: a31a567d9d416c869ecee95cbffe372ac05c576b12c0d2532f3b523b6a06c9f7
+- assurance-committed/report.json: 56056cf89b96abb4d619c94d867a1a0e68927ada84efd12268be303b07661c2c
+- native mutation controller: 59c4e4d066cd7955c1823a5e2739f321dd1d4f97b3b905bf4ab4ba4b3a5317f9
