@@ -1685,17 +1685,17 @@
       "critical": true,
       "status": "specified and implemented",
       "contract": "formal/system/identity-lifecycle.md",
-      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "confidence": "Specified shared admission rule with finite unit/property and SQLite controls; exact source-bound qualification is recorded separately. PostgreSQL locked-window and production rollout guarantees are not implied.",
       "ambiguity": [
         "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
         "Production release sequencing after the additive migration is not yet verified."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+        "reason": "Finite predicate/lookup regressions and inherited migration/config controls support the rule; exact candidate compilation and execution receipts are separate, and complete endpoint/clock/refinement and production rollout remain unresolved."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
-      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test Formal model formal/auth/SessionExpiry.tla: Apalache proves WithinWindowAtUse, LegacyInteractiveFailsClosed, TtlBoundedByCookie and ResetNeverAuthenticates inductively for up to four tokens and any clock movement; TLC explores 2,046,828 states; accepting tokens without expiry, or admitting a TTL above the cookie Max-Age, violates Safe in both tools; a reachability witness shows a minted session is accepted (scripts/verify-inductive-proofs.sh).",
+      "verification": "Actual shared-predicate boundary cases, generated full-width valid-window clock partitions, SQLite loadAuthedUser and credential-identification positive/negative controls, existing config validation, idempotent PostgreSQL migration/constraint controls and rollback-floor test. Fresh candidate receipts are separate; no complete endpoint/refinement proof. Conditional authorization/recovery projections remain separately scoped source-derived solver claims, not a proof of the complete validity-window helper. The retained formal/auth/SessionExpiry.tla model has actual source182ae5e2437756bea7edf28a5f13898eec040627 hosted verification (run42313255678/job128219591685): TLC1.7.2 checked three tokens, one legacy token, cookie Max-Age3, TTL2 and clock0..5; positive and missing-expiry/unchecked-TTL negative configurations completed. The reported2046828 state count is owner-reported and not independently verified from retained hosted logs. Apalache0.62.4 checked initiation, consecution and implication for any nonempty subset of up to four tokens, any legacy subset, TTL/Max-Age1..100000 with TTL<=Max-Age and clock0..MaxTime where MaxTime0..1000000; it also found the minted-session witness and missing-expiry negative control. The unchecked-TTL negative control runs in TLC only. These model inputs are retained byte-exact without rebinding the historical execution; the model encodes upper expiry/legacy/TTL/reset safety and does not establish the issued-at lower bound or complete malformed-window behavior of this stronger runtime rule. Correspondence to implementation remains by review, with no whole endpoint, compiler/translator or program refinement claim.",
       "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
@@ -1718,7 +1718,7 @@
       ],
       "id": "ID-SESSION-004",
       "title": "Interactive sessions expire on the server",
-      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "statement": "A password or Google login session must carry a well-formed database-clock half-open validity window and be denied before issuance, at or after expiry, or when its window is absent or malformed. Legacy interactive sessions fail closed without backfill; both-null service/custom tokens may stay unbounded.",
       "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
       "actors": [
         "session holder",
@@ -1739,10 +1739,11 @@
       },
       "allowedTransitions": [
         "Login/signup/password change/recovery -> interactive token issued with window",
-        "Active token with now < expires -> authenticated",
-        "Service token without window -> authenticated"
+        "Well-formed bounded token with 0 <= issued <= now < expires -> session-time admission; existing identity, purpose and grant checks still apply",
+        "Service/custom token with both epochs absent -> session-time admission under existing identity, purpose and grant checks"
       ],
       "forbiddenTransitions": [
+        "now < issued or malformed/incomplete stored window -> authenticated",
         "now >= expires -> authenticated",
         "Interactive label without window -> authenticated",
         "Expired bearer -> credential identification for password change",
@@ -1754,7 +1755,7 @@
       "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
       "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
       "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
-      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "failure": "401 for pre-issuance, expired, malformed, absent-window interactive or unknown tokens; startup fails on invalid TTL.",
       "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
       "implementation": [
         "tdf-hq/src/TDF/Models.hs",
@@ -16561,7 +16562,9 @@
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "scripts/__tests__/video-campaign-access.test.mjs",
         "scripts/test-identity-reconciliation.sh",
-        "tdf-hq/test/sql/identity_reconciliation.sql"
+        "tdf-hq/test/sql/identity_reconciliation.sql",
+        "scripts/test-video-campaign-postgres.sh",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs"
       ],
       "formalModels": [
         "scripts/verify-video-campaign-access.mjs"
@@ -16925,7 +16928,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "7adbcaa1fdd69b2639c0f6a17d55b5cf38a37631b2499ef834f3789e658266e9",
+    ".github/workflows/ci.yml": "70b50d86260430b2ccfc3e785853df2682f233afcd4c51001b21ed63c486a8aa",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -17300,7 +17303,7 @@
     "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "0a529bbda939368c78f53435d3adba1d7fb991d4e0fee72b7259d2e917df216c",
+    "formal/system/recovery-expiry-arithmetic.json": "8a6c9ae4bb2f75ea6f0ea22d150915ba9d252732da7588ee5e48fd532f75dda2",
     "formal/system/route-requirements.json": "f7e7efb758551bef5ba4bdb743e04dbb46b525dc952fdca1b9be8eb5d74a5772",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -17424,6 +17427,7 @@
     "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
+    "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
     "scripts/artist-enrichment.mjs": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
     "scripts/artist-image-download.mjs": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
@@ -17638,6 +17642,7 @@
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
     "scripts/test-verification-report.py": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+    "scripts/test-video-campaign-postgres.sh": "0e6c93dc5d5784fcdd874459d282c32c3b9634f21cbf114b206af6cda08c948a",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -18370,7 +18375,7 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
-    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+    "tdf-hq/src/TDF/Auth.hs": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
@@ -18571,7 +18576,7 @@
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
-    "tdf-hq/test/TDF/ServerSpec.hs": "52ec1c55e972f115f2a59b3d53ac6e16fa24934b729eddd72da0a478bfbdf60c",
+    "tdf-hq/test/TDF/ServerSpec.hs": "911ee4acfb48e29b2684f996555cdfe4bc887ac60e76b216217d7938a2c9a1c3",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "ca5e6414a7414e7431dd2464ff11982ac295b181492dc1d70ab2b1681b5b8805",
@@ -18581,7 +18586,7 @@
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "f74652162b14f0fe4516da6cb4aa45806d75cd9eae289935b6fcd37f35f713bb",
-    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
+    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -33025,6 +33030,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-video-campaign-postgres.sh": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/video-campaign-postgres-runner.test.mjs": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
+      }
+    ],
     ".github/workflows/campaign-platform.yml": [
       {
         "requirement": "CAMP-SERVER-001",
@@ -33550,7 +33567,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7adbcaa1fdd69b2639c0f6a17d55b5cf38a37631b2499ef834f3789e658266e9",
+      "sha256": "70b50d86260430b2ccfc3e785853df2682f233afcd4c51001b21ed63c486a8aa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36254,6 +36271,18 @@
       "id": "SURFACE-767f37f563e0a8fa",
       "path": "scripts/__tests__/video-campaign-access.test.mjs",
       "sha256": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d854c1b43b7f1af6",
+      "path": "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
+      "sha256": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40849,6 +40878,18 @@
       "sha256": "b848c1dbfbf90a97fd2cef8c5bf26b61a43cd95609b33ea017abbc78b0f19489",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-546136dfed4fd297",
+      "path": "scripts/test-video-campaign-postgres.sh",
+      "sha256": "0e6c93dc5d5784fcdd874459d282c32c3b9634f21cbf114b206af6cda08c948a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-da68a6be269c4e94",
@@ -56845,7 +56886,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "sha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60980,7 +61021,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "52ec1c55e972f115f2a59b3d53ac6e16fa24934b729eddd72da0a478bfbdf60c",
+      "sha256": "911ee4acfb48e29b2684f996555cdfe4bc887ac60e76b216217d7938a2c9a1c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61226,7 +61267,7 @@
     {
       "id": "SURFACE-7881cee644a10784",
       "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
-      "sha256": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
+      "sha256": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68047,7 +68088,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e6b3865ef19f7182968ff49a080df3a4bffa6385798dadc48d462329758e2d7d",
+      "sourceSha256": "e6dd77bd1cf732efd9e72bebdc601e8c1237241baaeda35f2ffe6da6b42ee944",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -68075,7 +68116,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e6b3865ef19f7182968ff49a080df3a4bffa6385798dadc48d462329758e2d7d",
+      "sourceSha256": "e6dd77bd1cf732efd9e72bebdc601e8c1237241baaeda35f2ffe6da6b42ee944",
       "definition": {
         "states": [
           "absent",
@@ -68105,7 +68146,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e6b3865ef19f7182968ff49a080df3a4bffa6385798dadc48d462329758e2d7d",
+      "sourceSha256": "e6dd77bd1cf732efd9e72bebdc601e8c1237241baaeda35f2ffe6da6b42ee944",
       "definition": {
         "export": [
           "queued",

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T05:49:31.221Z",
+  "generatedAt": "2026-11-07T07:51:03.990Z",
   "repositoryRoot": ".",
-  "filesScanned": 2638,
+  "filesScanned": 2640,
   "candidateCount": 1405,
   "byClassification": {
     "dynamic-business-catalog": 920,
@@ -4222,7 +4222,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 331,
+      "consumerCount": 332,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -4389,6 +4389,7 @@
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/artist-image-download.mjs",
@@ -4403,8 +4404,7 @@
         "scripts/identity-reconciliation.mjs",
         "scripts/install-flyctl.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
-        "scripts/lib/discovery.mjs",
-        "scripts/lib/formal-methods-audit.mjs"
+        "scripts/lib/discovery.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -4739,7 +4739,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1190,
+      "consumerCount": 1191,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5027,7 +5027,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1190,
+      "consumerCount": 1191,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -8242,7 +8242,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1190,
+      "consumerCount": 1191,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -8872,7 +8872,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1553,
+      "consumerCount": 1554,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -30853,7 +30853,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 235,
+      "consumerCount": 236,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -30971,6 +30971,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -31002,8 +31003,7 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-download-predicate.mjs",
-        "scripts/test-music-purchase-asset-query.py"
+        "scripts/test-music-download-predicate.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -31052,7 +31052,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 193,
+      "consumerCount": 194,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -31151,6 +31151,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -31181,8 +31182,7 @@
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-provider-domain-binding.py",
-        "scripts/test-provider-event-operations-migration.sh",
-        "scripts/test-provider-execution-runtime-migration.sh"
+        "scripts/test-provider-event-operations-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -56656,7 +56656,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1218,
+      "consumerCount": 1219,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -58501,7 +58501,7 @@
       "lines": [
         405
       ],
-      "consumerCount": 1193,
+      "consumerCount": 1194,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -71036,7 +71036,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1198,
+      "consumerCount": 1199,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -72519,7 +72519,7 @@
       "lines": [
         134
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -72611,6 +72611,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -90863,7 +90864,7 @@
       "lines": [
         14551
       ],
-      "consumerCount": 1191,
+      "consumerCount": 1192,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -91892,7 +91893,7 @@
       "lines": [
         14953
       ],
-      "consumerCount": 1191,
+      "consumerCount": 1192,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -93652,7 +93653,7 @@
       "lines": [
         16860
       ],
-      "consumerCount": 136,
+      "consumerCount": 137,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -93740,6 +93741,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
@@ -93970,7 +93972,7 @@
         17414,
         17466
       ],
-      "consumerCount": 1190,
+      "consumerCount": 1191,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -96139,7 +96141,7 @@
       "lines": [
         19003
       ],
-      "consumerCount": 1201,
+      "consumerCount": 1202,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -101264,7 +101266,7 @@
       "lines": [
         180
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -101352,6 +101354,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
@@ -104936,7 +104939,7 @@
         164,
         288
       ],
-      "consumerCount": 172,
+      "consumerCount": 173,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -105033,6 +105036,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -105064,8 +105068,7 @@
         "scripts/test-provider-domain-binding.py",
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-execution-runtime-migration.sh",
-        "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh"
+        "scripts/test-provider-retry-runtime.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -108169,7 +108172,7 @@
         126,
         142
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -108260,6 +108263,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -108292,8 +108296,7 @@
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-execution-runtime-migration.sh",
         "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-public-ticket-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -110036,7 +110039,7 @@
       "lines": [
         345
       ],
-      "consumerCount": 172,
+      "consumerCount": 173,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -110133,6 +110136,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -110164,8 +110168,7 @@
         "scripts/test-provider-domain-binding.py",
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-execution-runtime-migration.sh",
-        "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh"
+        "scripts/test-provider-retry-runtime.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -111580,7 +111583,7 @@
       "lines": [
         98
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -111671,6 +111674,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -111703,8 +111707,7 @@
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-execution-runtime-migration.sh",
         "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-public-ticket-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -126696,7 +126699,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 141,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -126789,6 +126792,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -133851,7 +133855,7 @@
       "lines": [
         390
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -133946,6 +133950,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/fixtures/artist-merch-mobile.mjs",
@@ -138024,7 +138029,7 @@
         345,
         362
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -138115,6 +138120,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -138147,8 +138153,7 @@
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-execution-runtime-migration.sh",
         "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-public-ticket-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -150273,7 +150278,7 @@
         51,
         66
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -150364,6 +150369,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/inspect-payment-staging.mjs",
@@ -150396,8 +150402,7 @@
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-execution-runtime-migration.sh",
         "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-public-ticket-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -153275,7 +153280,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 460,
+      "line": 463,
       "values": [
         "ModuleCRM",
         "ModuleScheduling",
@@ -153289,8 +153294,8 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        460,
-        462
+        463,
+        465
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -153336,7 +153341,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 461,
+      "line": 464,
       "values": [
         "ModuleCRM",
         "ModuleScheduling",
@@ -153349,7 +153354,7 @@
       "valueCount": 7,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        461
+        464
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -153395,7 +153400,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 463,
+      "line": 466,
       "values": [
         "ModuleCRM",
         "ModuleScheduling"
@@ -153403,9 +153408,9 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        463,
-        467,
-        474
+        466,
+        470,
+        477
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -153451,7 +153456,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 469,
+      "line": 472,
       "values": [
         "ModuleScheduling",
         "ModulePackages"
@@ -153459,8 +153464,8 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        469,
-        470
+        472,
+        473
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -153506,7 +153511,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 471,
+      "line": 474,
       "values": [
         "ModuleAdmin",
         "ModuleCRM"
@@ -153514,7 +153519,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        471
+        474
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -153560,7 +153565,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 484,
+      "line": 487,
       "values": [
         "ModuleCRM",
         "ModuleScheduling",
@@ -153569,7 +153574,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        484
+        487
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -153615,7 +153620,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 488,
+      "line": 491,
       "values": [
         "ModuleCRM",
         "ModuleCatalog"
@@ -153623,7 +153628,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        488
+        491
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -153669,7 +153674,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "modulesForRole",
-      "line": 490,
+      "line": 493,
       "values": [
         "ModulePackages",
         "ModuleScheduling",
@@ -153678,7 +153683,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        490
+        493
       ],
       "consumerCount": 19,
       "backendConsumers": [
@@ -165536,7 +165541,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1190,
+      "consumerCount": 1191,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
