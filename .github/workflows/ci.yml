@@ -225,6 +225,9 @@ jobs:
       - name: Run isolated persona web journeys
         run: npm run test:e2e:web
 
+      - name: Verify actual torrent audio worker and streaming lifecycle
+        run: node node_modules/@playwright/test/cli.js test --config=playwright.torrent-audio.config.mjs
+
       - name: Verify default-off deletion rollout
         env:
           PLAYWRIGHT_ACCOUNT_DELETION_FORM_ENABLED: 'false'
@@ -242,6 +245,7 @@ jobs:
           path: |
             artifacts/persona-playwright
             artifacts/storage-upload
+            artifacts/torrent-audio-browser
           retention-days: 14
 
       - name: Upload sanitized discovery evidence
