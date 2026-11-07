@@ -210,6 +210,7 @@
       "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
+      "scripts/__tests__/native-resolver-lock.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
       "scripts/__tests__/operations-api-schema.test.mjs",
@@ -271,6 +272,7 @@
       "scripts/check-messaging-token.mjs",
       "scripts/check-mobile-distribution.mjs",
       "scripts/check-mobile-gitlink-ancestry.sh",
+      "scripts/check-native-resolver-lock.mjs",
       "scripts/check-new-specification-surfaces.py",
       "scripts/check-public-routes.py",
       "scripts/check-route-requirements.py",
@@ -3045,7 +3047,7 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
+      "sha256": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3609,7 +3611,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
+      "sha256": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4147,6 +4149,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-968418b6459c1f09",
+      "path": "scripts/__tests__/native-resolver-lock.test.mjs",
+      "sha256": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3875378b2b3df521",
       "path": "scripts/__tests__/navigation-http-runtime.mjs",
       "sha256": "a53889636386d5a6307eca3d6b1fb467bae5abc17abe7b72393e1b32d573729f",
@@ -4510,6 +4518,12 @@
       "id": "SURFACE-8e9419e7643699b3",
       "path": "scripts/check-mobile-gitlink-ancestry.sh",
       "sha256": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0575a70cb91a6ce5",
+      "path": "scripts/check-native-resolver-lock.mjs",
+      "sha256": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5259,13 +5273,13 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "ad5253add0bdcc13765bc9319431033a5b9eba9d10e288927d7e802a2ea0b578",
+      "sha256": "a294b53a8d4b6587c4fe5a53146ddf855cc147afcc5d9afb05f82a3c707df216",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
+      "sha256": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29867,6 +29881,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/native-resolver-lock.md",
+      "sha256": "925543ae11d162c986df95a23a95835d2644ce3ff02e78cf721b62d3db241c89",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-aux-write.md",
       "sha256": "2d8dee259c38886c7de44bb20df7085d406984d16647b2c41659792806e8f391",
       "authority": "inferred",
@@ -30064,7 +30085,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6e124652d21aacc4309a2506ad36e68cbe2a972a46837a82321e3821f27d3c00",
+      "sha256": "9e7562eeb264244061c0411124d0f9ee4c1fde48049f7049db66106c9ab3deeb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
