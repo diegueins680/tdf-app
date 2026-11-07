@@ -1,0 +1,399 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "name": "inventory_session_identity",
+    "requiredRelations": [],
+    "shape": {
+      "databaseMatches": true,
+      "roleMatches": true,
+      "sessionRoleMatches": true,
+      "localSocket": true,
+      "portMatches": true,
+      "readOnly": true,
+      "serverMajorMatches": true,
+      "restrictedRole": true
+    },
+    "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nSELECT pg_catalog.jsonb_build_object(\n 'databaseMatches',current_database()='tdf_hq',\n 'roleMatches',current_user='tdf_catalog_inventory',\n 'sessionRoleMatches',session_user='tdf_catalog_inventory',\n 'localSocket',inet_server_addr() IS NULL,\n 'portMatches',current_setting('port')='5432',\n 'readOnly',current_setting('transaction_read_only')='on',\n 'serverMajorMatches',split_part(current_setting('server_version'),'.',1)='17',\n 'restrictedRole',(SELECT NOT rolsuper AND NOT rolbypassrls AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolinherit FROM pg_catalog.pg_roles WHERE rolname=current_user));\nROLLBACK;\n",
+    "interpretation": "All booleans must be true; otherwise no business aggregate runs."
+  },
+  "capabilities": {
+    "name": "relation_capabilities",
+    "requiredRelations": [],
+    "shape": {
+      "music_asset": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ],
+      "music_release": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ],
+      "music_release_version": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ],
+      "music_release_track": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ],
+      "music_recording": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ],
+      "music_processing_job": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ],
+      "music_upload_session": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ],
+      "artist_release": [
+        "select_available",
+        "permission_denied",
+        "relation_missing",
+        "rls_coverage_unobserved",
+        "unexpected_relation_kind"
+      ]
+    },
+    "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nWITH names(name) AS (VALUES ('music_asset'),('music_release'),('music_release_version'),('music_release_track'),('music_recording'),('music_processing_job'),('music_upload_session'),('artist_release')), resolved AS (\n SELECT name,pg_catalog.to_regclass('public.'||name) AS oid FROM names)\n SELECT pg_catalog.jsonb_object_agg(name,\n CASE WHEN resolved.oid IS NULL THEN 'relation_missing'\n WHEN relkind NOT IN ('r','p') THEN 'unexpected_relation_kind'\n WHEN relrowsecurity OR relforcerowsecurity THEN 'rls_coverage_unobserved'\n WHEN NOT pg_catalog.has_table_privilege(current_user,resolved.oid,'SELECT') THEN 'permission_denied'\n ELSE 'select_available' END)\n FROM resolved LEFT JOIN pg_catalog.pg_class ON pg_class.oid=resolved.oid;\nROLLBACK;\n",
+    "interpretation": "Fixed table allowlist only. RLS,missing SELECT or missing relation means affected counts are UNOBSERVED; do not infer zeros."
+  },
+  "relations": [
+    "music_asset",
+    "music_release",
+    "music_release_version",
+    "music_release_track",
+    "music_recording",
+    "music_processing_job",
+    "music_upload_session",
+    "artist_release"
+  ],
+  "capabilityStates": [
+    "select_available",
+    "permission_denied",
+    "relation_missing",
+    "rls_coverage_unobserved",
+    "unexpected_relation_kind"
+  ],
+  "queries": [
+    {
+      "name": "assets_by_role_and_processing_state",
+      "requiredRelations": [
+        "music_asset"
+      ],
+      "shape": {
+        "master_audio": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "stream_audio": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "preview_audio": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "cover_original": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "cover_display": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "thumbnail": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "rights_evidence": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "ddex_xml": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "ddex_manifest": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "ddex_package": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        },
+        "__other__": {
+          "quarantined": 0,
+          "uploaded": 0,
+          "inspecting": 0,
+          "valid": 0,
+          "invalid": 0,
+          "processing": 0,
+          "ready": 0,
+          "failed": 0,
+          "deleted": 0,
+          "__other__": 0
+        }
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nWITH counts AS (\n SELECT CASE WHEN asset_role IN ('master_audio','stream_audio','preview_audio','cover_original','cover_display','thumbnail','rights_evidence','ddex_xml','ddex_manifest','ddex_package') THEN asset_role ELSE '__other__' END AS role,\n CASE WHEN processing_state IN ('quarantined','uploaded','inspecting','valid','invalid','processing','ready','failed','deleted') THEN processing_state ELSE '__other__' END AS state,count(*) AS n\n FROM public.music_asset GROUP BY 1,2\n ), roles(role) AS (VALUES ('master_audio'),('stream_audio'),('preview_audio'),('cover_original'),('cover_display'),('thumbnail'),('rights_evidence'),('ddex_xml'),('ddex_manifest'),('ddex_package'),('__other__')), states(state) AS (VALUES ('quarantined'),('uploaded'),('inspecting'),('valid'),('invalid'),('processing'),('ready'),('failed'),('deleted'),('__other__')), role_counts AS (\n SELECT roles.role,pg_catalog.jsonb_object_agg(states.state,coalesce(counts.n,0)) AS states\n FROM roles CROSS JOIN states LEFT JOIN counts ON counts.role=roles.role AND counts.state=states.state GROUP BY roles.role)\n SELECT pg_catalog.jsonb_object_agg(role,states) FROM role_counts;\nROLLBACK;\n",
+      "interpretation": "Canonical music_asset database rows only; __other__ counts unexpected code values without exporting them. No stored-object existence, MIME validation, rights or playability claim."
+    },
+    {
+      "name": "release_totals",
+      "requiredRelations": [
+        "music_release"
+      ],
+      "shape": {
+        "total": 0,
+        "publishedPointerPresent": 0,
+        "withdrawnTimestampPresent": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nSELECT pg_catalog.jsonb_build_object('total',count(*),'publishedPointerPresent',count(*) FILTER (WHERE published_version_id IS NOT NULL),'withdrawnTimestampPresent',count(*) FILTER (WHERE withdrawn_at IS NOT NULL)) FROM public.music_release;\nROLLBACK;\n",
+      "interpretation": "Publication pointer/timestamps are database facts,not discoverability or authorization."
+    },
+    {
+      "name": "release_versions_by_state",
+      "requiredRelations": [
+        "music_release_version"
+      ],
+      "shape": {
+        "draft": 0,
+        "uploading": 0,
+        "processing": 0,
+        "validation_failed": 0,
+        "ready_for_review": 0,
+        "in_review": 0,
+        "changes_requested": 0,
+        "approved": 0,
+        "scheduled": 0,
+        "published": 0,
+        "suspended": 0,
+        "cancelled": 0,
+        "replacement_pending": 0,
+        "takedown_scheduled": 0,
+        "withdrawn": 0,
+        "__other__": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nWITH counts AS (\n SELECT CASE WHEN state IN ('draft','uploading','processing','validation_failed','ready_for_review','in_review','changes_requested','approved','scheduled','published','suspended','cancelled','replacement_pending','takedown_scheduled','withdrawn') THEN state ELSE '__other__' END AS label,count(*) AS n\n FROM public.music_release_version GROUP BY 1\n ), labels(label) AS (VALUES ('draft'),('uploading'),('processing'),('validation_failed'),('ready_for_review'),('in_review'),('changes_requested'),('approved'),('scheduled'),('published'),('suspended'),('cancelled'),('replacement_pending'),('takedown_scheduled'),('withdrawn'),('__other__'))\n SELECT pg_catalog.jsonb_object_agg(labels.label,coalesce(counts.n,0))\n FROM labels LEFT JOIN counts ON counts.label=labels.label;\nROLLBACK;\n",
+      "interpretation": "Fixed lifecycle-code counts; published state alone is not an authorized delivery claim."
+    },
+    {
+      "name": "processing_jobs_by_state",
+      "requiredRelations": [
+        "music_processing_job"
+      ],
+      "shape": {
+        "queued": 0,
+        "running": 0,
+        "retry": 0,
+        "succeeded": 0,
+        "failed": 0,
+        "dead_letter": 0,
+        "cancelled": 0,
+        "__other__": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nWITH counts AS (\n SELECT CASE WHEN status IN ('queued','running','retry','succeeded','failed','dead_letter','cancelled') THEN status ELSE '__other__' END AS label,count(*) AS n\n FROM public.music_processing_job GROUP BY 1\n ), labels(label) AS (VALUES ('queued'),('running'),('retry'),('succeeded'),('failed'),('dead_letter'),('cancelled'),('__other__'))\n SELECT pg_catalog.jsonb_object_agg(labels.label,coalesce(counts.n,0))\n FROM labels LEFT JOIN counts ON counts.label=labels.label;\nROLLBACK;\n",
+      "interpretation": "Status counts only; no job keys,worker IDs,error codes or failure summaries are selected."
+    },
+    {
+      "name": "upload_sessions_by_state",
+      "requiredRelations": [
+        "music_upload_session"
+      ],
+      "shape": {
+        "initiated": 0,
+        "uploading": 0,
+        "completing": 0,
+        "completed": 0,
+        "cancelled": 0,
+        "expired": 0,
+        "failed": 0,
+        "__other__": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nWITH counts AS (\n SELECT CASE WHEN status IN ('initiated','uploading','completing','completed','cancelled','expired','failed') THEN status ELSE '__other__' END AS label,count(*) AS n\n FROM public.music_upload_session GROUP BY 1\n ), labels(label) AS (VALUES ('initiated'),('uploading'),('completing'),('completed'),('cancelled'),('expired'),('failed'),('__other__'))\n SELECT pg_catalog.jsonb_object_agg(labels.label,coalesce(counts.n,0))\n FROM labels LEFT JOIN counts ON counts.label=labels.label;\nROLLBACK;\n",
+      "interpretation": "Canonical upload statuses only; multipart/object/provider IDs and names never leave the host."
+    },
+    {
+      "name": "ready_asset_reference_gaps",
+      "requiredRelations": [
+        "music_asset",
+        "music_release_version",
+        "music_recording"
+      ],
+      "shape": {
+        "readyAssetsMissingVersion": 0,
+        "readyAudioMissingRecording": 0,
+        "readyDerivedAudioMissingParent": 0,
+        "readyDerivedAudioCrossContextParent": 0,
+        "readyAssetsWithoutReadyTimestamp": 0,
+        "readyAssetsWithBlankObjectReference": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nSELECT pg_catalog.jsonb_build_object(\n 'readyAssetsMissingVersion',(SELECT count(*) FROM public.music_asset a WHERE a.processing_state='ready' AND NOT EXISTS(SELECT 1 FROM public.music_release_version v WHERE v.id=a.release_version_id)),\n 'readyAudioMissingRecording',(SELECT count(*) FROM public.music_asset a WHERE a.processing_state='ready' AND a.asset_role IN ('master_audio','stream_audio','preview_audio') AND (a.recording_id IS NULL OR NOT EXISTS(SELECT 1 FROM public.music_recording r WHERE r.id=a.recording_id))),\n 'readyDerivedAudioMissingParent',(SELECT count(*) FROM public.music_asset a WHERE a.processing_state='ready' AND a.asset_role IN ('stream_audio','preview_audio') AND (a.parent_asset_id IS NULL OR NOT EXISTS(SELECT 1 FROM public.music_asset p WHERE p.id=a.parent_asset_id))),\n 'readyDerivedAudioCrossContextParent',(SELECT count(*) FROM public.music_asset a JOIN public.music_asset p ON p.id=a.parent_asset_id WHERE a.processing_state='ready' AND a.asset_role IN ('stream_audio','preview_audio') AND (p.release_version_id IS DISTINCT FROM a.release_version_id OR p.recording_id IS DISTINCT FROM a.recording_id)),\n 'readyAssetsWithoutReadyTimestamp',(SELECT count(*) FROM public.music_asset WHERE processing_state='ready' AND ready_at IS NULL),\n 'readyAssetsWithBlankObjectReference',(SELECT count(*) FROM public.music_asset WHERE processing_state='ready' AND (bucket_name IS NULL OR object_key IS NULL OR btrim(bucket_name)='' OR btrim(object_key)=''))\n);\nROLLBACK;\n",
+      "interpretation": "Database structural references and blank reference strings only. Zero may follow validated constraints; it does not establish stored-object existence or byte access."
+    },
+    {
+      "name": "published_reference_gaps",
+      "requiredRelations": [
+        "music_release",
+        "music_release_version",
+        "music_release_track",
+        "music_recording",
+        "music_asset"
+      ],
+      "shape": {
+        "releasePointersMissingOrWrongVersion": 0,
+        "publishedVersionsMissingRelease": 0,
+        "publishedVersionsWithoutTracks": 0,
+        "publishedTracksMissingRecording": 0,
+        "publishedTracksWithoutValidatedImmutableMaster": 0,
+        "publishedTracksWithoutReadyStream": 0,
+        "publishedVersionsWithoutValidatedImmutableCoverOriginal": 0,
+        "publishedVersionsWithoutReadyCoverDisplay": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nSELECT pg_catalog.jsonb_build_object(\n 'releasePointersMissingOrWrongVersion',(SELECT count(*) FROM public.music_release r WHERE r.published_version_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.music_release_version v WHERE v.id=r.published_version_id AND v.release_id=r.id)),\n 'publishedVersionsMissingRelease',(SELECT count(*) FROM public.music_release_version v WHERE v.state='published' AND NOT EXISTS(SELECT 1 FROM public.music_release r WHERE r.id=v.release_id)),\n 'publishedVersionsWithoutTracks',(SELECT count(*) FROM public.music_release_version v WHERE v.state='published' AND NOT EXISTS(SELECT 1 FROM public.music_release_track t WHERE t.release_version_id=v.id)),\n 'publishedTracksMissingRecording',(SELECT count(*) FROM public.music_release_track t JOIN public.music_release_version v ON v.id=t.release_version_id WHERE v.state='published' AND NOT EXISTS(SELECT 1 FROM public.music_recording r WHERE r.id=t.recording_id)),\n 'publishedTracksWithoutValidatedImmutableMaster',(SELECT count(*) FROM public.music_release_track t JOIN public.music_release_version v ON v.id=t.release_version_id WHERE v.state='published' AND NOT EXISTS(SELECT 1 FROM public.music_asset a WHERE a.release_version_id=v.id AND a.recording_id=t.recording_id AND a.asset_role='master_audio' AND a.processing_state IN ('valid','ready') AND a.immutable)),\n 'publishedTracksWithoutReadyStream',(SELECT count(*) FROM public.music_release_track t JOIN public.music_release_version v ON v.id=t.release_version_id WHERE v.state='published' AND NOT EXISTS(SELECT 1 FROM public.music_asset a WHERE a.release_version_id=v.id AND a.recording_id=t.recording_id AND a.asset_role='stream_audio' AND a.processing_state='ready')),\n 'publishedVersionsWithoutValidatedImmutableCoverOriginal',(SELECT count(*) FROM public.music_release_version v WHERE v.state='published' AND NOT EXISTS(SELECT 1 FROM public.music_asset a WHERE a.release_version_id=v.id AND a.asset_role='cover_original' AND a.processing_state IN ('valid','ready') AND a.immutable)),\n 'publishedVersionsWithoutReadyCoverDisplay',(SELECT count(*) FROM public.music_release_version v WHERE v.state='published' AND NOT EXISTS(SELECT 1 FROM public.music_asset a WHERE a.release_version_id=v.id AND a.asset_role='cover_display' AND a.processing_state='ready'))\n);\nROLLBACK;\n",
+      "interpretation": "DB predicates mirror relevant cover/master/stream checks in music validation SQL; not full publication validation,rights,visibility,storage delivery or current API eligibility."
+    },
+    {
+      "name": "structural_orphan_references",
+      "requiredRelations": [
+        "music_release",
+        "music_release_version",
+        "music_release_track",
+        "music_recording",
+        "music_asset",
+        "music_upload_session",
+        "music_processing_job"
+      ],
+      "shape": {
+        "versionsMissingRelease": 0,
+        "tracksMissingVersion": 0,
+        "tracksMissingRecording": 0,
+        "assetsMissingVersion": 0,
+        "assetsWithDanglingRecording": 0,
+        "assetsWithDanglingParent": 0,
+        "completedUploadsMissingAsset": 0,
+        "jobsMissingVersion": 0,
+        "jobsWithDanglingSourceAsset": 0,
+        "recordingsWithoutTrackReference": 0,
+        "audioAssetsWithoutTrackContext": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nSELECT pg_catalog.jsonb_build_object(\n 'versionsMissingRelease',(SELECT count(*) FROM public.music_release_version v WHERE NOT EXISTS(SELECT 1 FROM public.music_release r WHERE r.id=v.release_id)),\n 'tracksMissingVersion',(SELECT count(*) FROM public.music_release_track t WHERE NOT EXISTS(SELECT 1 FROM public.music_release_version v WHERE v.id=t.release_version_id)),\n 'tracksMissingRecording',(SELECT count(*) FROM public.music_release_track t WHERE NOT EXISTS(SELECT 1 FROM public.music_recording r WHERE r.id=t.recording_id)),\n 'assetsMissingVersion',(SELECT count(*) FROM public.music_asset a WHERE NOT EXISTS(SELECT 1 FROM public.music_release_version v WHERE v.id=a.release_version_id)),\n 'assetsWithDanglingRecording',(SELECT count(*) FROM public.music_asset a WHERE a.recording_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.music_recording r WHERE r.id=a.recording_id)),\n 'assetsWithDanglingParent',(SELECT count(*) FROM public.music_asset a WHERE a.parent_asset_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.music_asset p WHERE p.id=a.parent_asset_id)),\n 'completedUploadsMissingAsset',(SELECT count(*) FROM public.music_upload_session u WHERE u.status='completed' AND (u.completed_asset_id IS NULL OR NOT EXISTS(SELECT 1 FROM public.music_asset a WHERE a.id=u.completed_asset_id))),\n 'jobsMissingVersion',(SELECT count(*) FROM public.music_processing_job j WHERE NOT EXISTS(SELECT 1 FROM public.music_release_version v WHERE v.id=j.release_version_id)),\n 'jobsWithDanglingSourceAsset',(SELECT count(*) FROM public.music_processing_job j WHERE j.source_asset_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.music_asset a WHERE a.id=j.source_asset_id)),\n 'recordingsWithoutTrackReference',(SELECT count(*) FROM public.music_recording r WHERE NOT EXISTS(SELECT 1 FROM public.music_release_track t WHERE t.recording_id=r.id)),\n 'audioAssetsWithoutTrackContext',(SELECT count(*) FROM public.music_asset a WHERE a.asset_role IN ('master_audio','stream_audio','preview_audio') AND NOT EXISTS(SELECT 1 FROM public.music_release_track t WHERE t.release_version_id=a.release_version_id AND t.recording_id=a.recording_id))\n);\nROLLBACK;\n",
+      "interpretation": "Named structural/reference counts only. Unreferenced draft recordings/assets can be legitimate; no deletion,automatic repair,duplicate-content or storage-orphan claim."
+    },
+    {
+      "name": "legacy_artist_release_reference_totals",
+      "requiredRelations": [
+        "artist_release"
+      ],
+      "shape": {
+        "total": 0,
+        "spotifyReferencePresent": 0,
+        "youtubeReferencePresent": 0
+      },
+      "sql": "BEGIN READ ONLY;\nSET LOCAL ROLE tdf_catalog_inventory;\nSET LOCAL statement_timeout = '2s';\nSET LOCAL lock_timeout = '500ms';\nSET LOCAL search_path = pg_catalog, public;\nSELECT pg_catalog.jsonb_build_object('total',count(*),'spotifyReferencePresent',count(*) FILTER(WHERE spotify_url IS NOT NULL AND btrim(spotify_url)<>''),'youtubeReferencePresent',count(*) FILTER(WHERE youtube_url IS NOT NULL AND btrim(youtube_url)<>'')) FROM public.artist_release;\nROLLBACK;\n",
+      "interpretation": "Only legacy reference presence; provider pages are not automatically native audio,available,owned or authorized. Other uploads/social/podcasts/storage are outside this collector."
+    }
+  ]
+}

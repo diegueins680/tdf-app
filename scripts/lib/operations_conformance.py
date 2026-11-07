@@ -6,6 +6,7 @@ are witnessed in pg_stat_activity; a sleep alone never establishes a race.
 import concurrent.futures
 from contextlib import contextmanager
 import json
+from pathlib import Path
 import subprocess
 import time
 import uuid
@@ -261,6 +262,16 @@ def verify_operations(sql, request, check, env, database, output, actors):
             response = request('/operations/work-items/' + key + '/seen', {'expectedVersion': 1, 'reason': None, 'requestId': 'mixed-role', 'sourceClient': 'conformance'}, token='fixture-teacher', method='PATCH')
             check('operations read-only grant cannot expand teacher writes', response[0] == 404 and sql('SELECT version FROM operations_work_item WHERE id=' + q(key)) == '1')
         finally: sql('UPDATE party_security_role SET active=false WHERE id=' + q(extra))
+    if 'read-only' in actors and 'accounting' in actors:
+        # A write site: linking an approval to a work item the writer cannot
+        # see. ReadOnly widens reads, never the writer's visibility (2026-10-12).
+        hidden = policy_items['booking']
+        check('operations Accounting cannot link an approval to a hidden item', create(approval_body(workItemId=hidden), 'fixture-accounting')[0] == 404)
+        extra = sql("INSERT INTO party_security_role(party_id,role_id,approval_mode,active) SELECT " + actors['accounting'] + ",id,'bootstrap',true FROM security_role WHERE code='read-only' RETURNING id")
+        try:
+            check('operations ReadOnly plus Accounting permits reading the item', request('/operations/work-items/' + hidden, token='fixture-accounting')[0] == 200)
+            check('operations ReadOnly plus Accounting still cannot link an approval to it', create(approval_body(workItemId=hidden), 'fixture-accounting')[0] == 404)
+        finally: sql('UPDATE party_security_role SET active=false WHERE id=' + q(extra))
 
     # Manual keys are receipt identifiers, never trusted source correlation keys.
     def manual(**changes):
@@ -331,21 +342,58 @@ def verify_operations(sql, request, check, env, database, output, actors):
         + ",encode(digest(" + q(legacy_body['correlationKey'] + ':manual-created') + ",'sha256'),'hex'),now(),'{}')")
     check('operations refuses unbound legacy manual replay', post_manual(legacy_body)[0] == 409)
 
-    # Exercise the installed WhatsApp capture trigger, not a handwritten DTO.
-    sender = 'synthetic-identity-' + uuid.uuid4().hex
-    thread_ids = []
-    for party in ['NULL', actors['admin'], 'NULL']:
-        external = 'synthetic-message-' + uuid.uuid4().hex
-        sql("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at,party_id,text) VALUES (" + q(external) + ',' + q(sender) + ",'incoming',now()," + party + ",'Synthetic private message')")
-        event_id = sql('SELECT id FROM operations_domain_event WHERE provider_event_id=' + q(external))
-        check('operations WhatsApp source trigger produces one event', bool(event_id) and '\n' not in event_id)
-        check('operations WhatsApp identity progression projects',
-              sql("SELECT processed||'|'||failed FROM operations_process_outbox_batch(1,'synthetic'," + q(event_id) + '::uuid)') == '1|0')
-        row = json.loads(sql("SELECT row_to_json(item)::text FROM operations_work_item item WHERE correlation_key=" + q('whatsapp:' + sender)))
-        thread_ids.append(row['id'])
-        if len(thread_ids) > 1:
-            check('operations WhatsApp known identity remains bound', row['entity_type'] == 'party' and row['entity_id'] == actors['admin'] and not row['uncorrelated'])
-    check('operations WhatsApp identity retains a single thread', len(set(thread_ids)) == 1)
+    # Capture is opt-in in the same default context as operations_record_event.
+    capture_org = "00000000-0000-4000-8000-000000000001"
+    capture_branch = "00000000-0000-4000-8000-000000000002"
+    previous_capture = sql("SELECT operations_enabled FROM operations_organization WHERE id=" + q(capture_org))
+    previous_branch = sql("SELECT active FROM operations_branch WHERE id=" + q(capture_branch))
+    sql("UPDATE operations_organization SET operations_enabled=true WHERE id=" + q(capture_org))
+    sql("UPDATE operations_branch SET active=true WHERE id=" + q(capture_branch))
+    try:
+        for table in ['whats_app_message', 'instagram_message', 'facebook_message']:
+            for control_table, column, context in [
+                ('operations_organization', 'operations_enabled', capture_org),
+                ('operations_branch', 'active', capture_branch),
+            ]:
+                external = 'synthetic-capture-policy-' + uuid.uuid4().hex
+                insertion = ("/* operations_capture_policy */ INSERT INTO " + table
+                    + "(external_id,sender_id,direction,created_at) VALUES ("
+                    + q(external) + ",'synthetic-disabled-sender','incoming',now())")
+                update = "UPDATE " + control_table + " SET " + column + "=false WHERE id=" + q(context)
+                race(update, [lambda query=insertion: sql(query)])
+                check('capture rechecks disabled ' + column + ' after witnessed wait: ' + table,
+                      count('operations_domain_event', 'provider_event_id=' + q(external)) == 0
+                      and count(table, 'external_id=' + q(external)) == 1)
+                sql("UPDATE " + control_table + " SET " + column + "=true WHERE id=" + q(context))
+
+        # Reverse ordering: an admitted message retains the enablement lock until
+        # its commit; disabling cannot cross that accepted transaction boundary.
+        external = 'synthetic-capture-commit-' + uuid.uuid4().hex
+        insertion = ("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at) VALUES ("
+                     + q(external) + ",'synthetic-enabled-sender','incoming',now())")
+        race(insertion, [lambda: sql("UPDATE operations_organization SET operations_enabled=false WHERE id=" + q(capture_org))])
+        check('admitted capture holds its enablement lock until message commit',
+              count('operations_domain_event', 'provider_event_id=' + q(external)) == 1)
+        sql("UPDATE operations_organization SET operations_enabled=true WHERE id=" + q(capture_org))
+
+        # Exercise the installed WhatsApp capture trigger, not a handwritten DTO.
+        sender = 'synthetic-identity-' + uuid.uuid4().hex
+        thread_ids = []
+        for party in ['NULL', actors['admin'], 'NULL']:
+            external = 'synthetic-message-' + uuid.uuid4().hex
+            sql("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at,party_id,text) VALUES (" + q(external) + ',' + q(sender) + ",'incoming',now()," + party + ",'Synthetic private message')")
+            event_id = sql('SELECT id FROM operations_domain_event WHERE provider_event_id=' + q(external))
+            check('operations WhatsApp source trigger produces one event', bool(event_id) and '\n' not in event_id)
+            check('operations WhatsApp identity progression projects',
+                  sql("SELECT processed||'|'||failed FROM operations_process_outbox_batch(1,'synthetic'," + q(event_id) + '::uuid)') == '1|0')
+            row = json.loads(sql("SELECT row_to_json(item)::text FROM operations_work_item item WHERE correlation_key=" + q('whatsapp:' + sender)))
+            thread_ids.append(row['id'])
+            if len(thread_ids) > 1:
+                check('operations WhatsApp known identity remains bound', row['entity_type'] == 'party' and row['entity_id'] == actors['admin'] and not row['uncorrelated'])
+        check('operations WhatsApp identity retains a single thread', len(set(thread_ids)) == 1)
+    finally:
+        sql("UPDATE operations_organization SET operations_enabled=" + q(previous_capture) + "::boolean WHERE id=" + q(capture_org))
+        sql("UPDATE operations_branch SET active=" + q(previous_branch) + "::boolean WHERE id=" + q(capture_branch))
 
     # Appending a note has no expectedVersion, but current ownership is still locked.
     note_item = item()
@@ -379,13 +427,157 @@ def verify_operations(sql, request, check, env, database, output, actors):
         check('operations failure replay rejects a disabled branch after waiting', replies[0][0] == 403
               and sql('SELECT attempt_count FROM operations_integration_failure WHERE id=' + q(failure_id)) == '0')
     finally: sql('UPDATE operations_branch SET active=true WHERE id=' + q(branches[0]))
-    check('operations failure replay audit error rolls back state', audit_failure(replay)[0] == 500
-          and sql('SELECT status FROM operations_integration_failure WHERE id=' + q(failure_id)) == 'open')
-    sql("UPDATE operations_integration_failure SET status='dead_letter' WHERE id=" + q(failure_id))
-    replies = race('SELECT id FROM operations_integration_failure WHERE id=' + q(failure_id) + ' FOR UPDATE', [replay for _ in range(8)])
+    check('operations failure without an executor is not admitted as retrying', replay()[0] == 409
+          and sql('SELECT status,attempt_count FROM operations_integration_failure WHERE id=' + q(failure_id)) == 'open|0')
+
+    # A projection the worker itself dead-letters on its eighth failed attempt.
+    sql("CREATE FUNCTION synthetic_ops_projection_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic private data must not be logged'; END $$")
+    def refuse_projection():
+        sql("CREATE TRIGGER synthetic_ops_projection_failure BEFORE INSERT ON operations_work_item FOR EACH ROW WHEN (NEW.correlation_key LIKE 'synthetic-replay:%') EXECUTE FUNCTION synthetic_ops_projection_failure()")
+    def admit_projection():
+        sql('DROP TRIGGER synthetic_ops_projection_failure ON operations_work_item')
+    def replay_event(tag):
+        return sql("INSERT INTO operations_domain_event(organization_id,branch_id,event_type,aggregate_type,aggregate_id,source_system,source_channel,correlation_key,deduplication_key,occurred_at) VALUES ("
+                   + q(org) + "," + q(branches[0]) + ",'synthetic.replay','uncorrelated_inbound'," + q('synthetic-replay-' + tag.split('/')[0]) + ",'tdf-hq','internal'," + q('synthetic-replay:' + tag.split('/')[0]) + "," + q('synthetic-replay:' + tag) + ",now()) RETURNING id")
+    def project(event):
+        return sql("SELECT processed || '/' || dead_lettered FROM operations_process_outbox_batch(1,'conformance'," + q(event) + ")")
+    def exhaust(event):
+        sql('UPDATE operations_outbox SET attempt_count=7,next_attempt_at=now() WHERE event_id=' + q(event))
+        return project(event)
+    def outbox(event):
+        return sql('SELECT status FROM operations_outbox WHERE event_id=' + q(event))
+    def failures(tag, columns='status'):
+        return sql('SELECT ' + columns + ' FROM operations_integration_failure WHERE organization_id=' + q(org) + ' AND source_record_id=' + q('synthetic-replay-' + tag))
+    def replay_of(identity):
+        return lambda: request('/operations/integration-failures/' + identity + '/replay', replay_body, method='POST')
+
+    refuse_projection()
+    first, later = replay_event('a'), replay_event('a/later')
+    check('operations worker dead-letters the projection and opens one failure', exhaust(first) == '0/1'
+          and outbox(first) == 'dead_letter' and failures('a', "provider || '|' || status") == 'internal_outbox|dead_letter')
+    check('operations dead-lettered projection blocks later events of its record', project(later) == '0/0' and outbox(later) == 'pending')
+    projection_failure = failures('a', 'id')
+    retry = replay_of(projection_failure)
+    check('operations failure replay audit error rolls back state and queue', audit_failure(retry)[0] == 500
+          and failures('a') == 'dead_letter' and outbox(first) == 'dead_letter')
+    replies = race('SELECT id FROM operations_integration_failure WHERE id=' + q(projection_failure) + ' FOR UPDATE', [retry for _ in range(8)])
     check('operations failure retry admits exactly one request', sorted(reply[0] for reply in replies) == [202] + [409] * 7
-          and sql('SELECT attempt_count FROM operations_integration_failure WHERE id=' + q(failure_id)) == '1')
-    check('operations failure audit retains actual previous status', sql("SELECT previous_value->>'status' FROM operations_admin_audit WHERE correlation_id=" + q(failure_id)) == 'dead_letter')
+          and failures('a', "status || '|' || attempt_count") == 'retrying|9')
+    check('operations admitted retry puts the projection back in the queue',
+          sql("SELECT status || '|' || attempt_count FROM operations_outbox WHERE event_id=" + q(first)) == 'pending|0')
+    check('operations failure audit retains actual statuses', sql("SELECT (previous_value->>'status') || '>' || (new_value->>'status') FROM operations_admin_audit WHERE correlation_id=" + q(projection_failure)) == 'dead_letter>retrying')
+    check('operations retried projection that fails again returns the same failure to dead letter', exhaust(first).endswith('/1')
+          and outbox(first) == 'dead_letter' and failures('a', "count(*) || '|' || min(status)") == '1|dead_letter')
+    check('operations second dead letter is announced again', count('operations_domain_event',
+          "aggregate_type='integration_failure' AND aggregate_id=" + q(projection_failure)) == 2)
+    check('operations failure can be retried again after a second dead letter', retry()[0] == 202 and failures('a') == 'retrying')
+    admit_projection()
+    project(first)
+    check('operations retried projection that succeeds resolves its failure', outbox(first) == 'processed'
+          and failures('a', "status || '|' || (resolved_at IS NOT NULL)") == 'resolved|true'
+          and count('operations_work_item', 'organization_id=' + q(org) + " AND correlation_key='synthetic-replay:a'") == 1)
+    project(later)
+    check('operations later events of the record flow after the retry', outbox(later) == 'processed')
+    check('operations resolved failure cannot be retried', retry()[0] == 409 and failures('a') == 'resolved')
+    for event in sql("SELECT event_id FROM operations_outbox WHERE aggregate_type='integration_failure' AND aggregate_id=" + q(projection_failure) + ' ORDER BY aggregate_sequence').split():
+        project(event)
+    check('operations resolving a failure closes the work item that announced it',
+          sql("SELECT string_agg(DISTINCT status, ',') FROM operations_work_item WHERE correlation_key=" + q('integration_failure:' + projection_failure)) == 'resolved')
+
+    # Rows as an earlier server left them: relabelled without a re-queue, or duplicated.
+    def migrate():
+        with (output / 'operations-replay-migration.log').open('a') as log:
+            subprocess.run(['psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database, '-f', str(Path(__file__).resolve().parents[2] / 'tdf-hq/sql/2026-10-11_operations_failure_replay.sql')],
+                           env=env, stdout=log, stderr=log, check=True)
+    refuse_projection()
+    stranded, queued = replay_event('b'), replay_event('c')
+    for event in [stranded, queued]: exhaust(event)
+    sql('ALTER TABLE operations_integration_failure DISABLE TRIGGER USER; DROP INDEX operations_integration_failure_open_uidx; '
+        "UPDATE operations_integration_failure SET status='retrying' WHERE id=" + q(failures('b', 'id')) + '; '
+        'INSERT INTO operations_integration_failure(organization_id,branch_id,provider,direction,source_record_type,source_record_id,failure_code,redacted_summary,retryable,status) '
+        "SELECT organization_id,branch_id,provider,direction,source_record_type,source_record_id,failure_code,redacted_summary,retryable,'dead_letter' FROM operations_integration_failure WHERE id=" + q(failures('b', 'id')) + '; '
+        'ALTER TABLE operations_integration_failure ENABLE TRIGGER USER')
+    check('operations fixture holds a stranded and a duplicated failure', failures('b', "string_agg(status, ',' ORDER BY created_at, id)") == 'retrying,dead_letter' and outbox(stranded) == 'dead_letter')
+    sql("UPDATE operations_integration_failure SET status='retrying' WHERE id=" + q(failures('c', 'id')))
+    check('operations relabel by an earlier server still puts the projection back in the queue', failures('c') == 'retrying' and outbox(queued) == 'pending')
+    migrate()
+    check('operations migration returns a stranded retry to dead letter, keeps one failure per record and keeps a queued retry',
+          failures('b', "string_agg(status, ',' ORDER BY created_at, id)") == 'dead_letter,resolved' and failures('c') == 'retrying'
+          and outbox(stranded) == 'dead_letter' and outbox(queued) == 'pending'
+          and sql("SELECT count(*) FROM pg_indexes WHERE indexname='operations_integration_failure_open_uidx'") == '1')
+    admit_projection()
+    project(queued)
+    sql('ALTER TABLE operations_integration_failure DISABLE TRIGGER USER; '
+        "UPDATE operations_integration_failure SET status='dead_letter',resolved_at=NULL WHERE id=" + q(failures('c', 'id')) + '; '
+        'ALTER TABLE operations_integration_failure ENABLE TRIGGER USER')
+    response = replay_of(failures('c', 'id'))()
+    check('operations retry with nothing left to run resolves the failure', response[0] == 202
+          and json.loads(response[1])['status'] == 'resolved' and failures('c') == 'resolved')
+    sql("UPDATE operations_integration_failure SET status='dead_letter',resolved_at=NULL WHERE id=" + q(failures('c', 'id')))
+    migrate()
+    check('operations migration resolves a failure whose projections have all run', failures('c') == 'resolved')
+    replay_triggers = [
+        ('operations_integration_failure', 'operations_integration_failure_retry'),
+        ('operations_integration_failure', 'operations_integration_failure_merge'),
+        ('operations_integration_failure', 'operations_integration_failure_resolved'),
+        ('operations_outbox', 'operations_outbox_settle_failure'),
+    ]
+    stranded_failure = failures('b', "min(id::text) FILTER (WHERE status='dead_letter')")
+    for table, trigger in replay_triggers:
+        for drift in ['disabled', 'missing']:
+            if drift == 'disabled':
+                sql('ALTER TABLE ' + table + ' DISABLE TRIGGER ' + trigger)
+            else:
+                sql('DROP TRIGGER ' + trigger + ' ON ' + table)
+            try:
+                check('operations retry refuses ' + drift + ' trigger ' + trigger,
+                      replay_of(stranded_failure)()[0] == 503
+                      and outbox(stranded) == 'dead_letter'
+                      and sql('SELECT status FROM operations_integration_failure WHERE id='
+                              + q(stranded_failure)) == 'dead_letter')
+            finally:
+                if drift == 'disabled':
+                    sql('ALTER TABLE ' + table + ' ENABLE TRIGGER ' + trigger)
+                else:
+                    migrate()
+
+    # The worker and migration take the outbox table first. A replay waiting
+    # there must not hold the failure table and block their next write.
+    with held('LOCK TABLE operations_outbox IN SHARE ROW EXCLUSIVE MODE') as (release, barrier_pid):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            pending = executor.submit(replay_of(stranded_failure))
+            try:
+                blocked(1, barrier_pid)
+                sql('BEGIN; LOCK TABLE operations_integration_failure IN SHARE ROW EXCLUSIVE MODE NOWAIT; COMMIT')
+            finally:
+                release()
+            response = pending.result(timeout=15)
+    check('operations replay waits in migration table order and then admits the pending retry',
+          response[0] == 202 and outbox(stranded) == 'pending')
+    rollback_path = (Path(__file__).resolve().parents[2]
+                     / 'tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql')
+    def rollback():
+        return subprocess.run(['psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database,
+                               '-f', str(rollback_path)], env=env, capture_output=True, text=True)
+    refused = rollback()
+    check('operations rollback refuses active retries without removing triggers',
+          refused.returncode != 0 and 'internal retries are active' in refused.stderr
+          and outbox(stranded) == 'pending'
+          and sql('SELECT status FROM operations_integration_failure WHERE id='
+                  + q(stranded_failure)) == 'retrying'
+          and all(sql("SELECT count(*) FROM pg_trigger WHERE tgrelid=" + q(table)
+                      + "::regclass AND tgname=" + q(trigger)
+                      + " AND tgenabled IN ('O','A')") == '1'
+                  for table, trigger in replay_triggers))
+    project(stranded)
+    check('operations rollback succeeds after the replay settles',
+          outbox(stranded) == 'processed'
+          and sql('SELECT status FROM operations_integration_failure WHERE id='
+                  + q(stranded_failure)) == 'resolved'
+          and rollback().returncode == 0)
+    check('operations settled rollback is idempotent', rollback().returncode == 0)
+    migrate()
+    sql('DROP FUNCTION synthetic_ops_projection_failure()')
 
     view = {'organizationId': org, 'name': 'Synthetic owned view', 'shared': False, 'filters': {},
             'columns': ['status'], 'widgets': [], 'subscribedEventTypes': [], 'requestId': 'view', 'sourceClient': 'conformance'}

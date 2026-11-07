@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sourceCandidate": "d65651ae97d4135da7187f7915fe0a3fa6ca34c0",
+  "parentPR": 551,
+  "parentSource": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+  "originalMigrationIntroduction": "9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391",
+  "observedMain": "9a927fa390066f43cc27c872800bf1b0412e166e",
+  "scope": "Stacked ledger repair on #551, not current-main or production conformance. Original local prototype preserved in its separate worktree.",
+  "assuranceLevels": {
+    "installedGuards": "TESTED on PostgreSQL16.13",
+    "finiteModel": "BOUNDED_VERIFIED, 12 distinct states",
+    "completeRequirement": "PARTIAL; full implementation/refinement UNPROVEN"
+  },
+  "metrics": {
+    "sourceRequirements": 135,
+    "sourceCriticalRequirements": 110,
+    "completeRequirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 135,
+      "NOT_APPLICABLE": 0
+    },
+    "proofObligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 135,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 135,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    },
+    "confirmedBusinessCounterexamples": 2,
+    "correctedBusinessCounterexamples": 2,
+    "integratedBusinessCounterexamples": 0,
+    "newMigrationEntries": 1,
+    "preservedParentEntries": 219,
+    "completeCandidateEntries": 220,
+    "namespaceGuardRemovalControls": 2,
+    "legacyMVCCControlSchedules": 6,
+    "modelMutationControls": 2,
+    "verificationHarnessCounterexamplesDetectedBeforePublication": 2,
+    "sourceCriticalPAYRequirements": 17,
+    "sourceCriticalAUTHRequirements": 11,
+    "wholePAYRequirementsProven": 0,
+    "wholeAUTHRequirementsProven": 0
+  },
+  "earlierAttempt": {
+    "source": "2c60c8378d931a71f95fe0ed340f8b925780c057",
+    "result": "FAILED_FIXTURE",
+    "step": "namespace-optimized-positive-and-controls",
+    "reason": "Existing identity-reference trigger required SELECT on the synthetic identity_party_archive fixture. Trigger stayed enabled; the corrected fixture adds only that read privilege to its transaction-scoped synthetic role.",
+    "requalifiedSource": "d65651ae97d4135da7187f7915fe0a3fa6ca34c0"
+  },
+  "repositoryQuality": {
+    "passed": true,
+    "rawLogSha256": "96f54de8842e8b3872936071ad89c2f6c728a68dcf49cba500536104b26cc075",
+    "command": "PATH=<jq and verification venv> npm run quality:repo"
+  },
+  "commands": [
+    "TDF_MUSIC_REHEARSAL_DATABASE_URL=<new owned empty database> node scripts/test-music-integration-rehearsal.mjs",
+    "TDF_LEDGER_POSTING_DATABASE_URL=<owned fully migrated database> python3 scripts/__tests__/ledger-posting-namespace.py --negative-controls",
+    "TDF_LEDGER_POSTING_DATABASE_URL=<owned fully migrated database> python3 -O scripts/__tests__/ledger-posting-namespace.py --negative-controls",
+    "TDF_LEDGER_POSTING_DATABASE_URL=<owned fully migrated database> python3 scripts/__tests__/ledger-posting-upgrade.py",
+    "TDF_LEDGER_POSTING_DATABASE_URL=<owned fully migrated database> python3 scripts/__tests__/ledger-posting-snapshot.py --negative-controls",
+    "JAVA_BIN=<java> TLA2TOOLS_JAR=<pinned jar> ALLOY_JAR=<pinned jar> npm run verify:event-operations:formal"
+  ],
+  "remainingAssumptions": [
+    "Runtime writers cannot create/replace objects in the trusted public schema.",
+    "Database owners/superusers, privileged DDL and disabled triggers are excluded.",
+    "No production privilege audit, migration execution or financial activation was performed.",
+    "Finite model/SQL schedules do not prove arbitrary MVCC behavior, every financial writer, provider finality or whole-system equivalence."
+  ],
+  "nextTask": "Independent review and current-head CI of this child, then incorporate it into #551 and qualify the full financial candidate against the protected FIFO main.",
+  "artifactSha256": {
+    "README.md": "5873b81eb904475e5aa44dfe9fcd352f7126cd9be12c9e9c5da97c209bb4daf7",
+    "assurance-report.md": "d77d7984ec49665ca3e17466ac9dae8a69ad4799226365a51b0dfae7cbdeca3d",
+    "baseline-counterexamples.json": "b2c305fa38c1e9ba8e0643eed9124e6f5769f076249e4825223d699519d0388b",
+    "bounded-model.json": "5020f5e1484c33551ed736fc6292ef915dcbc8290b7c315fe74760b164f8fde3",
+    "namespace-optimized-positive-and-controls.log": "f3d1029873d61c7be68c6f2f1b611d483637ce82b77f6f8e03cabbba10735c25",
+    "namespace-with-controls.log": "f3d1029873d61c7be68c6f2f1b611d483637ce82b77f6f8e03cabbba10735c25",
+    "original-snapshot-default-lost-lookup-setting.log": "050572ed35d6e8f4f0f82ecf5dc963d5b31c3205b45bc43db3cca160ec89b58b",
+    "postgres-receipt.json": "73a5c2d5660f5efab7d7d42b9a24e8366631b40bc37ad1255c7b99cf2b26055f",
+    "repaired-default-keeps-exact-guards.log": "6f73101a6b3fafc5b9cccfc853a25ec79a109673f7a36c072366a9aa8a95912c",
+    "repaired-optimized-harness-rejects.log": "ebe9e8142caaa0c94f10baca6e0b8f88ddf9577ee282f50d10d82b39d3b048d4",
+    "snapshot-with-controls.log": "b18733cac648fe0f5dbd00f8ce411b49099094697f9d40db9445f31b9c267cfa"
+  },
+  "textLogNormalization": "Text logs remove trailing whitespace and final blank lines; JSON model/SQL receipts retain the original data."
+}

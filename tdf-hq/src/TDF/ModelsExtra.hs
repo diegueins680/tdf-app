@@ -75,6 +75,26 @@ derivePersistField "DeliverableKind"
 
 share [mkPersist sqlSettings, mkMigrate "migrateExtra"] [persistLowerCase|
 
+VideoCampaign
+    artistPartyId PartyId
+    campaignKey Text
+    revision Int64
+    document Text
+    createdAt UTCTime
+    updatedAt UTCTime
+    UniqueVideoCampaign artistPartyId campaignKey
+    deriving Show Generic
+
+VideoCampaignConversion
+    campaignId VideoCampaignId
+    viewerPartyId PartyId
+    kind Text
+    source Text
+    piece Text
+    createdAt UTCTime
+    UniqueVideoCampaignConversion campaignId viewerPartyId kind
+    deriving Show Generic
+
 Campaign
     name        Text
     objective   Text Maybe
@@ -556,6 +576,43 @@ SessionInvoice
     invoiceId   InvoiceId
     createdAt   UTCTime default=now()
     UniqueSessionInvoice sessionId invoiceId
+    deriving Show Generic
+
+-- CONTRACT-STORE-001: contracts live in the database (they were JSON files in
+-- a relative directory outside the persistent volume). payload is the
+-- canonical JSON the API validated.
+Contract
+    Id                  UUID
+    kind                Text
+    payload             Text
+    createdByPartyId    PartyId Maybe
+    createdAt           UTCTime default=now()
+    deriving Show Generic
+
+-- CONTRACT-SEND-001: one row per send request, written before SMTP is
+-- contacted; acceptedAt or failedAt records the transport outcome.
+ContractDelivery
+    contractId          ContractId
+    recipientEmail      Text
+    requestedByPartyId  PartyId Maybe
+    requestedAt         UTCTime default=now()
+    acceptedAt          UTCTime Maybe
+    failedAt            UTCTime Maybe
+    failure             Text Maybe
+    deriving Show Generic
+
+-- PAY-INVOICE-ISSUE-001: one reservation per (session, idempotency key) before a
+-- session invoice is created or an SRI document is issued. completedAt and
+-- response are set together once the request has an answer to replay.
+SessionInvoiceIssue
+    sessionId       SessionId
+    idempotencyKey  Text
+    requestSha256   Text
+    invoiceId       InvoiceId Maybe
+    response        Text Maybe
+    createdAt       UTCTime default=now()
+    completedAt     UTCTime Maybe
+    UniqueSessionInvoiceIssue sessionId idempotencyKey
     deriving Show Generic
 
 InputListTemplate
@@ -1071,9 +1128,12 @@ ArtistTip
     stripePaymentIntentId Text Maybe
     status                Text default='pending'
     message               Text Maybe
+    idempotencyKey        Text Maybe
+    requestSha256         Text Maybe
     createdAt             UTCTime default=now()
     updatedAt             UTCTime default=now()
     UniqueArtistTipStripePaymentIntent stripePaymentIntentId !force
+    UniqueArtistTipIdempotency artistProfileId idempotencyKey !force
     deriving Show Generic
 
 ServiceStorefrontPackage

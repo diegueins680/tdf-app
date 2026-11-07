@@ -1,6 +1,7 @@
+import { getLogoutRevision, getLogoutStatus, hasLogoutIntent, ownsLogoutRevision, subscribeLogoutIntent } from '../session/logoutIntent';
 import { authErrorMessage } from '../utils/authErrorMessage';
 import { logger } from '../utils/logger';
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -59,6 +60,7 @@ import { captureGrowthEvent } from '../analytics/growthAttribution';
 import { deriveSignupDisplayName, validateSignupFields } from '../utils/signupFields';
 import { reportClientError } from '../analytics/errorReporting';
 import { env } from '../utils/env';
+import { InAppBrowserNotice, useInAppBrowser } from '../components/InAppBrowserNotice';
 import { persistOnboardingIntentWithRetry } from '../session/onboardingIntentRecovery';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
@@ -193,13 +195,17 @@ export default function LoginPage() {
   const [googleCreating, setGoogleCreating] = useState(false);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
-  const { session, loading, login } = useSession();
+  const { session, loading, login, logout } = useSession();
+  const logoutStatus = useSyncExternalStore(subscribeLogoutIntent, getLogoutStatus, () => 'cleared' as const);
   const navigate = useNavigate();
   const location = useLocation();
   const artistInvitation = useMemo(() => readArtistInvitation(location.search), [location.search]);
   const analytics = useAnalytics();
-  const passwordHint = t('authEntry.passwordHint');
+  const passwordHint = t('authEntry.signupPasswordHint');
   const googleClientId = env.read('VITE_GOOGLE_CLIENT_ID') ?? '';
+  // Social in-app browsers (Instagram, Facebook…) cannot complete Google
+  // Sign-In with passkeys, so there we offer the system browser instead.
+  const inAppBrowser = useInAppBrowser();
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
@@ -403,6 +409,7 @@ export default function LoginPage() {
   );
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const authRevision = getLogoutRevision();
     setFormError(null);
 
     if (servicePreparing) {
@@ -426,6 +433,7 @@ export default function LoginPage() {
         username: normalizedIdentifier,
         password: normalizedPassword,
       });
+      if (!ownsLogoutRevision(authRevision)) return;
       const nextSession = await resolveAuthenticatedSession({
         username: normalizedIdentifier,
         displayName,
@@ -436,6 +444,7 @@ export default function LoginPage() {
       });
       const targetPath = resolvePostAuthPath(requestedIntent, nextSession.roles, nextSession.modules, redirectPath);
 
+      if (!ownsLogoutRevision(authRevision)) return;
       login(nextSession, { remember: rememberDevice });
       if (requestedIntent) {
         void persistOnboardingIntentWithRetry(
@@ -500,6 +509,7 @@ export default function LoginPage() {
       // Account creation happens from the signup dialog or from the explicit
       // "create my account with Google" choice offered after a login-card
       // attempt finds no TDF account for this Google identity.
+      const authRevision = getLogoutRevision();
       const creatingAccount = signupDialogOpen || createAccount;
       // The Google login contract cannot claim an existing artist. Keep the
       // selected claim in the email signup form, including late popup callbacks.
@@ -545,6 +555,7 @@ export default function LoginPage() {
         });
         setGoogleLinkToken(null);
         setGoogleLinkAccount({ username: '', password: '' });
+        if (!ownsLogoutRevision(authRevision)) return;
         const nextSession = await resolveAuthenticatedSession({
           username: fallbackUsername,
           displayName: fallbackName,
@@ -556,6 +567,7 @@ export default function LoginPage() {
         const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
         setGoogleCreating(false);
         const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
+        if (!ownsLogoutRevision(authRevision)) return;
         login(nextSession, { remember: rememberDevice });
         if (activeIntent && !signupDialogOpen) {
           void persistOnboardingIntentWithRetry(
@@ -781,14 +793,15 @@ export default function LoginPage() {
   };
 
   const handleSignupSubmit = async () => {
+    const authRevision = getLogoutRevision();
     if (servicePreparing) {
       setSignupFeedback({ type: 'error', message: servicePreparingMessage });
       return;
     }
 
     // Only email + password are asked for. The account API still needs a
-    // display-name part, so start from the email's local part (the same
-    // fallback Google accounts get); people can change it later in their profile.
+    // display-name part. Start with a neutral label so private email details
+    // cannot become public before people choose a name in their profile.
     const payload = {
       ...buildSignupPayload(
         { ...signupForm, firstName: deriveSignupDisplayName(signupForm.email), lastName: '' },
@@ -818,6 +831,7 @@ export default function LoginPage() {
     try {
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles);
+      if (!ownsLogoutRevision(authRevision)) return;
       const nextSession = await resolveAuthenticatedSession({
         username: payload.email,
         displayName: payload.firstName || payload.email,
@@ -829,6 +843,7 @@ export default function LoginPage() {
       const targetPath = claimArtistId === null
         ? resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath)
         : `/artista/crear?claimArtistId=${claimArtistId}`;
+      if (!ownsLogoutRevision(authRevision)) return;
       login(nextSession, { remember: rememberDevice });
       captureGrowthEvent(analytics, 'signup_completed', {
         route: '/login',
@@ -857,12 +872,14 @@ export default function LoginPage() {
   const [invitationRedemptionError, setInvitationRedemptionError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session || !artistInvitation || sessionHasArtistAccess || !invitationRedemptionKey) return;
+    if (!session || hasLogoutIntent() || !artistInvitation || sessionHasArtistAccess || !invitationRedemptionKey) return;
+    const authRevision = getLogoutRevision();
     if (invitationRedemptionAttemptRef.current === invitationRedemptionKey) return;
     invitationRedemptionAttemptRef.current = invitationRedemptionKey;
     setInvitationRedemptionError(null);
     void redeemArtistInvitation(artistInvitation, session.apiToken)
       .then((snapshot) => {
+        if (!ownsLogoutRevision(authRevision)) return;
         login({
           username: snapshot.username,
           displayName: snapshot.displayName,
@@ -870,7 +887,7 @@ export default function LoginPage() {
           modules: snapshot.modules,
           partyId: snapshot.partyId,
           apiToken: session.apiToken,
-        }, { remember: rememberDevice });
+        }, { remember: rememberDevice, refreshExistingSession: true });
       })
       .catch((error: unknown) => {
         setInvitationRedemptionError(
@@ -1061,7 +1078,10 @@ export default function LoginPage() {
                   </Alert>
                 )}
 
-                {googleClientId && !servicePreparing && (
+                {googleClientId && !servicePreparing && inAppBrowser && (
+                  <InAppBrowserNotice host={inAppBrowser} context="login" />
+                )}
+                {googleClientId && !servicePreparing && !inAppBrowser && (
                   <Stack spacing={1} alignItems="center">
                     <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                       {t('authEntry.googleContinue')}
@@ -1112,6 +1132,13 @@ export default function LoginPage() {
                   {t('authEntry.rememberHint')}
                 </Typography>
 
+                {(logoutStatus === 'pending' || logoutStatus === 'unconfirmed') && (
+                  <Alert severity="warning" action={logoutStatus === 'unconfirmed' ? (
+                    <Button color="inherit" onClick={logout}>{t('authEntry.retryLogout')}</Button>
+                  ) : undefined}>
+                    {t(logoutStatus === 'pending' ? 'authEntry.logoutPending' : 'authEntry.logoutUnconfirmed')}
+                  </Alert>
+                )}
                 {formError && <Alert severity="warning">{formError}</Alert>}
 
                 <Stack spacing={1}>
@@ -1525,7 +1552,10 @@ export default function LoginPage() {
                 {t('authEntry.claimReviewAfterSignup')}
               </Alert>
             )}
-            {googleClientId && claimArtistId === null && (
+            {googleClientId && claimArtistId === null && inAppBrowser && (
+              <InAppBrowserNotice host={inAppBrowser} context="signup" />
+            )}
+            {googleClientId && claimArtistId === null && !inAppBrowser && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   {t('authEntry.googleCreateEnter')}

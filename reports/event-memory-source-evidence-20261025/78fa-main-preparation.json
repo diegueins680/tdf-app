@@ -1,0 +1,196 @@
+{
+  "recordedAt": "2026-10-26T17:37:42.851989+00:00",
+  "branch": "integrate/event-memories-main-78fa-20261026",
+  "normalMerge": "a95bc6745ba09281431cb16aa08e5cb80a34d88b",
+  "normalMergeParents": [
+    "ebac187c9b96682c741671ba1dccfb133acc4cb7",
+    "78fa351b469c1d2031df3232204dd722ac480e3b"
+  ],
+  "qualifiedRuntimeSource": "3a17a9f86a031af91344923f13e7bb5fadd9dff2",
+  "baseMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "sourceWorktreeDirtyAtRuntime": true,
+  "runtimeUntrackedAtStart": [
+    "node_modules (owned dependency symlink)",
+    "tdf-hq-ui/node_modules (owned dependency symlink)"
+  ],
+  "cleanReleaseBuildAttestation": false,
+  "requirements": {
+    "protectedMainExact": 145,
+    "ownExact": 4,
+    "total": 149,
+    "scope": "Structural/source correspondence; not complete program refinement"
+  },
+  "manifest": {
+    "protectedMainPrefixExact": 222,
+    "total": 226,
+    "allHistoricalSqlBytesAndIntroductionAnchorsPreserved": true,
+    "migrationLedger": {
+      "expectedCount": 226,
+      "appliedCount": 226,
+      "idsSha256": "37fbc984065234d4adfa0af656c9f1432cfeb0ae18a9c5f3b8bb664dd3d787cb",
+      "batchSha256": "4be40505e7b80f95454090352ced456d612984ef8f8850b7584c5cf1c6d864df"
+    }
+  },
+  "catalog": {
+    "decisions": 1345,
+    "strictJson": "PASS",
+    "strictCsv": "PASS",
+    "controls": {
+      "pass": 8,
+      "fail": 0,
+      "skip": 0
+    }
+  },
+  "ui": {
+    "node": "22.14.0",
+    "jestTests": 3522,
+    "jestSuites": 310,
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "initialJsGzipBytes": 336424,
+    "preloads": 5,
+    "applicationSourceAtBuild": "a95bc6745ba09281431cb16aa08e5cb80a34d88b",
+    "subsequentChanges": "HTTP test harness, generated traceability/catalog metadata and reports; no application code changes"
+  },
+  "repositoryQuality": "PASS",
+  "apiClients": 2,
+  "mappedChangedSurfaces": 57,
+  "actualHttp": {
+    "requests": 120,
+    "assertionGroups": 18,
+    "sourceHashes": 250,
+    "browserAssertions": 5,
+    "realInjected409": 1
+  },
+  "sql": {
+    "sourceModeration": "PASS full226, replay, guarded successors, NULL organizer and eight real revocation interleavings",
+    "invitations": "PASS full226, replay, rollback/reapply, concurrent dispatch and publication suppression",
+    "boundedModel": "160 states, 3 expected negative controls; SQL refinement unproven",
+    "ledger": "PASS full226 apply/replay, 16 identity/source/audit mutation refusals and 4 startup guard controls with exact restore",
+    "ledgerLogSha256": "af4394b6701ecb0ef1a35822b5695d1d331ded3babdfba777e48bbc29b60a28c"
+  },
+  "binary": {
+    "sha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+    "actualVersion": {
+      "buildTime": "2026-10-26T05:36:20Z",
+      "commit": "262295679df492dde850333779db431132092993",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "compiledInputsByteExact": 278,
+    "scope": "Previously built Darwin binary with real262 identity; not a new merge compilation or Linux release image"
+  },
+  "logs": {
+    "ui-quality-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-ui-quality-v1.log",
+      "sha256": "e5705c50247e27485ee71570b245892b2f6367fe75be5588067b80a6850a8075"
+    },
+    "ui-build-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-ui-build-v1.log",
+      "sha256": "a38040d8cc1de6e3339dbaf4e1a15c15bcb9a6a640b0829b1d576364018f63a5"
+    },
+    "repo-quality-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-repo-quality-v1.log",
+      "sha256": "d9934060dd7ce9b14b2b9e122524996dd9cac3ab0ea543b1728e0c62422a55ca"
+    },
+    "source-sql-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-source-sql-v1.log",
+      "sha256": "a18b9fbce653861f24fd23ff26babafa4227357aaa6ea87382db4d541a8e2269"
+    },
+    "invitations-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-invitations-v1.log",
+      "sha256": "9d38d9e428a5706900ec977f4106ce1eb6d1a4a7a8ec1082e3eeef7da986a787"
+    },
+    "catalog-controls-v2": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-catalog-controls-v2.log",
+      "sha256": "3503558f1e836f17702171fa4d418964ce58489cc157b05ff965e3f3c2044755"
+    },
+    "catalog-strict-json": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-catalog-strict-json.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "catalog-strict-csv": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-catalog-strict-csv.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "catalog-after-ledger": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-catalog-after-ledger.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "catalog-after-ledger-csv": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-catalog-after-ledger-csv.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "formal-regen-v2": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-formal-regen-v2.log",
+      "sha256": "f54add72199d8fb282f4791db10240b9c11ca05dd48b25b57aa1dbf8c4538732"
+    },
+    "source-admission-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-source-admission-v1.log",
+      "sha256": "c3c0d64a26e23b4dc48646ceffd63e368baea60e46b5aa2dc237765939396b51"
+    },
+    "api-contracts-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-api-contracts-v1.log",
+      "sha256": "078d7a0224969236463f93df22b5681d0b42163ef6f52b237a4e2d811478d23a"
+    },
+    "http-browser-v1": {
+      "privateLog": "/private/tmp/tdf-event-memory-78fa-http-browser-v1.log",
+      "sha256": "2e5083c5948d93dd2750126d368f93dc7a43fdf0986ff4ab4cd23705d4474913"
+    }
+  },
+  "attemptHistory": [
+    {
+      "attempt": "initial-catalog-v1",
+      "status": "SETUP_FAILED",
+      "reason": "Missing TypeScript before installing owned dependency symlinks; preserved log."
+    },
+    {
+      "attempt": "initial-catalog-v2",
+      "status": "UNQUALIFIED",
+      "reason": "Scan started before linked Mobile7000 checkout was populated; not used for qualification. The process had already exited when cleanup checked its PID; no signal was sent. Full Mobile-inclusive strict scans qualified."
+    },
+    {
+      "attempt": "catalog-controls-v1",
+      "status": "FAIL",
+      "reason": "New combined test read a string metadata key as an object; corrected to the original protected-main ledgerHeaderMainIntegration document loader. All original checks and new predecessor hashes preserved."
+    },
+    {
+      "attempt": "catalog-controls-v2",
+      "status": "PASS",
+      "tests": 8
+    },
+    {
+      "attempt": "http-browser-v1",
+      "status": "PASS",
+      "scope": "First226 API/browser run with mandatory real409 recovery and complete ledger assertions"
+    }
+  ],
+  "cleanup": {
+    "apiStopped": true,
+    "browserViteStopped": true,
+    "ownedHttpDatabaseRemoved": true,
+    "sqlTestDatabasesRemoved": true,
+    "postgresRemainingDatabasesBeforeStop": [
+      "postgres"
+    ],
+    "postgresStopRequested": true,
+    "postgresStopped": true
+  },
+  "delivery": {
+    "protectedMerge": false,
+    "deployed": false,
+    "productionWrites": 0,
+    "realInvitationsAttempted": 0,
+    "realInvitationsSent": 0,
+    "realInvitationsDelivered": 0,
+    "realInvitationsFailed": 0,
+    "eligibleWithConsent": null,
+    "excluded": null
+  },
+  "holds": [
+    "Independent source615 approval and two pending review threads; native chain independent approvals.",
+    "Promote608 only after reviewed source integration, fresh protected CI/review and FIFO.",
+    "Canonical release image, recovery/canary, actual production acceptance and real recipient consent/eligibility before event141 campaign."
+  ]
+}

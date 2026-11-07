@@ -1,0 +1,15 @@
+{
+  "base": "4d5a460cb2bd8ca0d132effe7382454f6e0b21e7",
+  "head": "733288f9625e2bcdd466b72d6eb6c5f7d961e3c7",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    ".github/workflows/event-raci-browser.yml",
+    "scripts/__tests__/event-raci-browser-runner.test.mjs",
+    "scripts/test-event-memories-http.py",
+    "scripts/test-event-memory-signup-browser.mjs",
+    "scripts/test-event-memory-source-browser.mjs",
+    "scripts/test-event-raci-browser.sh"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

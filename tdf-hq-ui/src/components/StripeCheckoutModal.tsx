@@ -1,3 +1,4 @@
+import MarkdownText from './MarkdownText';
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -378,7 +379,10 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       }
       dispatch({
         type: 'buyerSubmitFailed',
-        error: err instanceof Error ? err.message : t('checkout.errors.paymentIntent'),
+        error: (err instanceof Error && 'status' in err && typeof err.status === 'number' && err.status >= 500)
+          || (err instanceof Error && /stripe (?:api )?error:/i.test(err.message))
+          ? t('checkout.errors.cardUnavailable')
+          : err instanceof Error ? err.message : t('checkout.errors.paymentIntent'),
       });
     } finally {
       if (attempt === buyerAttempt.current) {
@@ -535,14 +539,14 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
                   title={t('checkout.terms.title')}
                   summary={t('checkout.terms.version', { version: ticketPolicy.termsVersion })}
                 >
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{ticketPolicy.termsSummary}</Typography>
+                  <MarkdownText variant="body2">{ticketPolicy.termsSummary}</MarkdownText>
                 </LegalDisclosure>
                 <LegalDisclosure
                   id="social-ticket-refund-policy"
                   language={i18n.language?.startsWith('en') ? 'en' : 'es'}
                   title={t('checkout.terms.refundTitle')}
                 >
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{ticketPolicy.refundPolicy}</Typography>
+                  <MarkdownText variant="body2">{ticketPolicy.refundPolicy}</MarkdownText>
                 </LegalDisclosure>
                 <FormControlLabel
                   control={(

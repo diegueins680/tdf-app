@@ -1,0 +1,58 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runTestsByPath src/__tests__/PublicBookingPage.test.tsx --testNamePattern=keeps the chosen Quito date --json --outputFile=/private/tmp/tdf-booking-quito-suggestions-20261026/unit-negative-portable.json
+
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+(node:85384) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL src/__tests__/PublicBookingPage.test.tsx
+  PublicBookingPage
+    ✕ keeps the chosen Quito date when repeatedly selecting quick suggestions (1896 ms)
+    ○ skipped keeps the physical studio in Quito when the general display preference is UTC
+    ○ skipped stacks the service reviews below the booking card in a column so phones never squeeze the card
+    ○ skipped hides the rooms field from the public form
+    ○ skipped lets visitors pick any published service from the contact step
+    ○ skipped clears the old service quote while its replacement is pending and ignores a late old response
+    ○ skipped preserves booking acquisition context through optional login and signup
+    ○ skipped computes quick schedule shortcuts using studio-timezone opening hours
+    ○ skipped submits the canonical offering ID and lets the backend assign persisted default resources
+    ○ skipped creates an idempotent deposit checkout only from an authoritative server quote
+    ○ skipped can preselect DJ Booth from the public service query parameter
+    ○ skipped lets the backend resolve persisted default resources when legacy room UUIDs are ambiguous
+    ○ skipped prevents moving to schedule step with invalid email
+    ○ skipped does not overwrite in-progress contact edits after services load
+    ○ skipped advances by step on form submit before sending booking
+    ○ skipped does not auto-bind an ambiguous engineer id when duplicate names exist
+
+  ● PublicBookingPage › keeps the chosen Quito date when repeatedly selecting quick suggestions
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "2030-01-15T13:00"
+    Received: "2030-01-14T13:00"
+
+      533 |           await flushPromises();
+      534 |         });
+    > 535 |         expect(date.value).toBe(selectedStart);
+          |                            ^
+      536 |       }
+      537 |     } finally {
+      538 |       await cleanup();
+
+      at Object.<anonymous> (src/__tests__/PublicBookingPage.test.tsx:535:28)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 15 skipped, 16 total
+Snapshots:   0 total
+Time:        5.159 s
+Ran all test suites within paths "src/__tests__/PublicBookingPage.test.tsx".
+Test results written to: ../../tdf-booking-quito-suggestions-20261026/unit-negative-portable.json
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /private/tmp/tdf-studio-booking-quito-20261026/tdf-hq-ui
+npm error workspace tdf-hq-ui@0.1.0
+npm error location /private/tmp/tdf-studio-booking-quito-20261026/tdf-hq-ui
+npm error command failed
+npm error command sh -c NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runTestsByPath src/__tests__/PublicBookingPage.test.tsx '--testNamePattern=keeps the chosen Quito date' --json --outputFile=/private/tmp/tdf-booking-quito-suggestions-20261026/unit-negative-portable.json

@@ -1,0 +1,30 @@
+{
+  "archiveSha256": "f1c5fcfcf91e6cbd9c031f1837f6be4cf7873b9a2c457ba960f856ab27aadd16",
+  "members": {
+    "baseline.log": {
+      "bytes": 133569,
+      "sha256": "05c839b30eb0f4529985eea6fa3990a637e6f79e22d98f1880bd275ccc87c4d9"
+    },
+    "candidate.log": {
+      "bytes": 131516,
+      "sha256": "aafa5196c3efc0e21930d299f0dae36f136f0a7ca62646e6e0d68dbedfd8c8e8"
+    },
+    "first-attempt-baseline.log": {
+      "bytes": 131913,
+      "sha256": "5fc8170014a3fcf60ed17b6a717140c6892235e2d6dd38bac203d420b656d1f0"
+    },
+    "initial-success-baseline.log": {
+      "bytes": 133569,
+      "sha256": "a1bce35138f5d4e640b52f5392d75d1c60f2e8c6fb663840ee0f79ae3b72969f"
+    },
+    "initial-success-candidate.log": {
+      "bytes": 131516,
+      "sha256": "a986f6a3fcaa593c35ae5df90f89fa025e839a04e17ed7ccb4c58c8cd2f34ea1"
+    },
+    "original744-ci-worker-cleanup-excerpt.log": {
+      "bytes": 2138,
+      "sha256": "dddfd47d2e715adeeaf0726aae1545c4333818c6944c54e37d246eadb5213bd0"
+    }
+  },
+  "scope": "Raworiginalbytes preserved in compressedarchive, including timestamped blanklines; no log normalization or deletion of evidence."
+}

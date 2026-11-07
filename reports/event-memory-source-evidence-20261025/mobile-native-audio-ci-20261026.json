@@ -1,0 +1,37 @@
+{
+  "observedAt": "2026-10-26T08:16:25.211424+00:00",
+  "pr": 173,
+  "head": "6d0b1090cebf6b96fa7a840cb4062871b6ac0914",
+  "mobileValidate": {
+    "run": 40287085629,
+    "status": "SUCCESS",
+    "jestTests": 722,
+    "jestSuites": 99,
+    "artifactTestsTotal": 14,
+    "artifactTestsExecuted": 13,
+    "artifactTestsSkipped": 1,
+    "skip": "Actual codesign fixture requires macOS; local macOS executed all 14 successfully",
+    "expoDoctor": "17/17"
+  },
+  "android": {
+    "run": 40287087143,
+    "status": "SUCCESS"
+  },
+  "iosSimulator": {
+    "run": 40287087139,
+    "status": "SUCCESS",
+    "podInstallDeployment": "PASS"
+  },
+  "actualNativeCheckout": "f1c0519e72fbc3d4c206440fe3bf03c499a82d89",
+  "headAndCheckoutWholeTree": "e408ce8527d2ebdd5cc7b905098f8f5e70d6ed14",
+  "prior172Clarification": {
+    "run": 40282201755,
+    "artifactTestsTotal": 12,
+    "executed": 11,
+    "skipped": 1
+  },
+  "mobileValidateLogSha256": "e62062de08ef388cf2ed52e3ecab0cb5f2b8e382bd9b672acc7444694677c928",
+  "physicalDeviceOrStore": "NOT VERIFIED",
+  "productionWritten": false,
+  "realInvitationsSent": 0
+}

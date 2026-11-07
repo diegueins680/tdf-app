@@ -11,7 +11,13 @@ relative values. No historical migration is changed.
 The October5 read-only production observation found `/app/uploads` absent and
 only the public asset bind present. This establishes exposure to future file loss
 on container replacement, not evidence that existing customer files were lost.
-The deployed image has not received this repair.
+That observation is historical. The October13 inspection at
+`2026-10-13T18:08:17Z` observed backend
+`7ab344400d0878838b9b12742ca4cc5cd7f38f94` with the canonical writable private
+bind present. [The retained receipt](evidence/2026-10-13-runtime-controls/runtime.json)
+supersedes the missing-mount observation for that instant. It does not establish
+legacy file preservation, startup rejection, content integrity, permissions or
+coordinated recovery; those obligations remain open.
 
 ## Executable boundary
 

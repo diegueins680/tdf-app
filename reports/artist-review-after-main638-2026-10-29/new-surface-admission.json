@@ -1,0 +1,15 @@
+{
+  "base": "6197b87326a437350dca239ee64902e78da6964c",
+  "head": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    "scripts/__tests__/artist-enrichment.test.mjs",
+    "scripts/artist-enrichment.mjs",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.ts"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

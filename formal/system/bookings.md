@@ -100,6 +100,9 @@ The exact four-role policy comes from the product owner, not those references.
 
 ## Customer-facing retrieval boundary
 
+The canonical retrieval contract, model bounds and conformance checks are in
+[public-knowledge-retrieval.md](public-knowledge-retrieval.md) (PRIV-RAG-001).
+
 `PRIV-RAG-001` separately owns this privacy boundary. The staff assistant
 (`/ads/assist`, Social Inbox staff only since AUTHORITY-049) and
 Instagram/Facebook/WhatsApp automated replies have no

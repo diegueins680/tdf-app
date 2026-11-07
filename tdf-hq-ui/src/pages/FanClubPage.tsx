@@ -1,9 +1,11 @@
+import UserProfileLink from '../components/UserProfileLink';
+import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
-import { createElement, useEffect, useMemo } from 'react';
+import { createElement, useEffect, useMemo, useRef } from 'react';
 import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
+  Alert, Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
   Divider, Grid, IconButton, Stack, Tab, Tabs, TextField, Typography,
   Avatar, Tooltip, ImageList, ImageListItem, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
@@ -34,6 +36,8 @@ import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useLocalValue } from '../hooks/useLocalValue';
+import { useOwnedTabDraft } from '../session/useOwnedTabDraft';
+import { useTranslation } from 'react-i18next';
 import { firstNonEmptyString } from '../utils/stringValues';
 import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubFeedItemDTO, FanClubMemoryDTO, FanClubInboxMessageDTO } from '../api/types';
 
@@ -44,7 +48,8 @@ const optionalImageSource = (value: string | null | undefined): string | undefin
 
 export default function FanClubPage() {
   const { artistId } = useParams();
-  const artistIdNum = parseInt(firstNonEmptyString(artistId, '0'), 10);
+  const artistIdNum = Number(firstNonEmptyString(artistId, '0'));
+  const validArtistId = /^\d+$/.test(artistId ?? '') && Number.isSafeInteger(artistIdNum) && artistIdNum > 0;
   const { session } = useSession();
   const isAuthenticated = Boolean(session);
   const [tab, setTab] = useLocalValue(0);
@@ -60,39 +65,45 @@ export default function FanClubPage() {
   const loginPath = useMemo(() => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`), [location]);
 
   const clubQuery = useQuery({
-    queryKey: ['fan-club', artistIdNum, isAuthenticated ? 'auth' : 'public'],
+    queryKey: ['fan-club', validArtistId ? artistIdNum : 'invalid', isAuthenticated ? 'auth' : 'public'],
     queryFn: () => isAuthenticated ? Fans.getMyClub(artistIdNum) : Fans.getClub(artistIdNum),
-    enabled: artistIdNum > 0,
+    enabled: validArtistId,
   });
+
+  const clubReady = validArtistId && Boolean(clubQuery.data);
+  const clubErrorStatus = typeof clubQuery.error === 'object' && clubQuery.error !== null && 'status' in clubQuery.error
+    ? clubQuery.error.status
+    : undefined;
+  const clubLoadFailed = validArtistId && !clubQuery.data && clubErrorStatus !== 404;
 
   const feedQuery = useQuery({
     queryKey: ['fan-club-feed', artistIdNum],
     queryFn: () => Fans.listClubFeed(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 0 && isAuthenticated,
+    enabled: clubReady && tab === 0 && isAuthenticated,
   });
 
   const postsQuery = useQuery({
     queryKey: ['fan-club-posts', artistIdNum],
     queryFn: () => Fans.listClubPosts(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 1 && isAuthenticated,
+    enabled: clubReady && tab === 1 && isAuthenticated,
   });
 
   const memoriesQuery = useQuery({
     queryKey: ['fan-club-memories', artistIdNum],
     queryFn: () => Fans.listClubMemories(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 2 && isAuthenticated,
+    enabled: clubReady && tab === 2 && isAuthenticated,
   });
 
   const eventsQuery = useQuery({
     queryKey: ['fan-club-events', artistIdNum, isAuthenticated ? 'auth' : 'public'],
     queryFn: () => isAuthenticated ? Fans.listClubEvents(artistIdNum) : Fans.getClubEvents(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 3,
+    enabled: clubReady && tab === 3,
   });
 
   const electionsQuery = useQuery({
     queryKey: ['fan-club-elections', artistIdNum],
     queryFn: () => Fans.listClubElections(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 4 && isAuthenticated,
+    enabled: clubReady && tab === 4 && isAuthenticated,
   });
 
   const club = clubQuery.data;
@@ -103,7 +114,7 @@ export default function FanClubPage() {
   const inboxQuery = useQuery({
     queryKey: ['fan-club-inbox', artistIdNum],
     queryFn: () => Fans.listClubInbox(artistIdNum),
-    enabled: artistIdNum > 0 && isAuthenticated && canManageClub && tab === 5,
+    enabled: clubReady && isAuthenticated && canManageClub && tab === 5,
   });
 
   useEffect(() => {
@@ -123,11 +134,26 @@ export default function FanClubPage() {
       ) : !club ? (
         <EmptyState
           icon={<GroupsIcon fontSize="large" />}
-          title="Club no encontrado"
-          description="Este artista aún no tiene un club de fans activo."
-          actionLabel="Volver a la comunidad"
-          actionHref="/fans"
-        />
+          title={clubLoadFailed ? 'No pudimos cargar el club' : 'Club no disponible'}
+          description={clubLoadFailed
+            ? 'No pudimos comprobar su disponibilidad. Revisa tu conexión e inténtalo de nuevo.'
+            : validArtistId
+              ? 'Consulta el perfil público del artista o sigue explorando en Comunidad.'
+              : 'El enlace no identifica un club válido.'}
+          actionLabel={clubLoadFailed ? 'Reintentar' : validArtistId ? 'Ver perfil del artista' : 'Volver a la comunidad'}
+          actionHref={clubLoadFailed ? undefined : validArtistId ? `/artista/${artistIdNum}` : '/fans'}
+          actionOnClick={clubLoadFailed ? () => { void clubQuery.refetch(); } : undefined}
+        >
+          {(clubErrorStatus === 401 || clubErrorStatus === 403) && (
+            <Button component={RouterLink} to={loginPath}>Ingresar de nuevo</Button>
+          )}
+          {clubLoadFailed && validArtistId && (
+            <Button component={RouterLink} to={`/artista/${artistIdNum}`}>Ver perfil del artista</Button>
+          )}
+          {(clubLoadFailed || validArtistId) && (
+            <Button component={RouterLink} to="/fans">Volver a la comunidad</Button>
+          )}
+        </EmptyState>
       ) : (
         <Stack spacing={3}>
           <Card>
@@ -149,7 +175,7 @@ export default function FanClubPage() {
                 )}
                 <Typography variant="h5" fontWeight={600}>{club.fcName}</Typography>
                 {club.fcDescription && (
-                  <Typography variant="body1" color="text.secondary">{club.fcDescription}</Typography>
+                  <MarkdownText variant="body1" color="text.secondary">{club.fcDescription}</MarkdownText>
                 )}
                 <Divider />
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -177,7 +203,7 @@ export default function FanClubPage() {
                       color="primary"
                       variant="outlined"
                       component={RouterLink}
-                      to={`/fans/clubs/${artistIdNum}/members/${o.fcoPartyId}`}
+                      to={`/perfil/${o.fcoPartyId}`}
                       clickable
                     />
                   ))}
@@ -300,8 +326,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(item.fcfAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{item.fcfAuthorName}</Typography>
+                        <UserProfileLink partyId={item.fcfAuthorId}><Avatar src={optionalImageSource(item.fcfAvatarUrl)} alt={item.fcfAuthorName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{item.fcfAuthorName}</Typography></UserProfileLink>
                         {item.fcfIsOfficer && <Chip size="small" label="Directiva" color="primary" />}
                         {item.fcfIsPinned && <Chip size="small" label="Fijado" color="primary" />}
                         <Chip size="small" label={item.fcfKind === 'memory' ? 'Recuerdo' : 'Post'} variant="outlined" />
@@ -319,7 +344,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                         )}
                       </Stack>
                       {item.fcfTitle && <Typography variant="h6">{item.fcfTitle}</Typography>}
-                      <Typography variant="body1">{item.fcfContent}</Typography>
+                      <MarkdownText variant="body1">{item.fcfContent}</MarkdownText>
                       {item.fcfMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
                           {item.fcfMediaUrls.map((url, idx) => (
@@ -413,8 +438,7 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{msg.fcimFanName}</Typography>
+                        <UserProfileLink partyId={msg.fcimFanId}><Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} alt={msg.fcimFanName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{msg.fcimFanName}</Typography></UserProfileLink>
                         <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus)} />
                         <Box flexGrow={1} />
                         <Button size="small" variant="outlined" onClick={() => setDetailOpen(msg.fcimId)}>Ver</Button>
@@ -426,9 +450,9 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
                         )}
                       </Stack>
                       {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
-                      <Typography variant="body2" color="text.secondary">
+                      <MarkdownText variant="body2" color="text.secondary">
                         {msg.fcimBody.length > 200 ? `${msg.fcimBody.slice(0, 200)}…` : msg.fcimBody}
-                      </Typography>
+                      </MarkdownText>
                       <Typography variant="caption" color="text.secondary">
                         {new Date(msg.fcimCreatedAt).toLocaleString()}
                       </Typography>
@@ -450,17 +474,16 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
             return (
               <Stack spacing={2} sx={{ mt: 1 }}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} />
-                  <Typography variant="subtitle1">{msg.fcimFanName}</Typography>
+                  <UserProfileLink partyId={msg.fcimFanId}><Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} alt={msg.fcimFanName} /><Typography variant="subtitle1">{msg.fcimFanName}</Typography></UserProfileLink>
                   <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus)} />
                 </Stack>
                 {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
-                <Typography variant="body1">{msg.fcimBody}</Typography>
+                <MarkdownText variant="body1">{msg.fcimBody}</MarkdownText>
                 {msg.fcimReplyBody && (
                   <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
                     <CardContent>
-                      <Typography variant="subtitle2">Respuesta de {firstNonEmptyString(msg.fcimOfficerName, 'Directiva')}</Typography>
-                      <Typography variant="body2">{msg.fcimReplyBody}</Typography>
+                      <Typography variant="subtitle2">Respuesta de <UserProfileLink partyId={msg.fcimOfficerId}>{firstNonEmptyString(msg.fcimOfficerName, 'Directiva')}</UserProfileLink></Typography>
+                      <MarkdownText variant="body2">{msg.fcimReplyBody}</MarkdownText>
                     </CardContent>
                   </Card>
                 )}
@@ -493,20 +516,35 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
 
 function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; posts: FanClubPostDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useLocalValue(false);
-  const [title, setTitle] = useLocalValue('');
-  const [content, setContent] = useLocalValue('');
-  const [postMediaUrls, setPostMediaUrls] = useLocalValue([] as string[]);
+  const { session, loading: recoveryLoading } = useSession();
+  const { i18n } = useTranslation();
+  const composer = useOwnedTabDraft({ open: false, title: '', content: '', postMediaUrls: [] as string[] }, {
+    ownerId: recoveryLoading ? null : session?.partyId ?? null, scope: `fan-club:${artistId}:post`,
+    parse: (value) => {
+      if (!value || typeof value !== 'object') return undefined;
+      const data = value as Record<string, unknown>;
+      if (typeof data['open'] !== 'boolean' || typeof data['title'] !== 'string' || typeof data['content'] !== 'string'
+        || !Array.isArray(data['postMediaUrls']) || data['postMediaUrls'].some((url: unknown) => typeof url !== 'string')) return undefined;
+      return { open: data['open'], title: data['title'], content: data['content'], postMediaUrls: data['postMediaUrls'] as string[] };
+    },
+  });
+  const [open, setOpen] = composer.field('open');
+  const [title, setTitle] = composer.field('title');
+  const [content, setContent] = composer.field('content');
+  const [postMediaUrls, setPostMediaUrls] = composer.field('postMediaUrls');
 
+  const latestComposer = useRef(composer);
+  latestComposer.current = composer;
   const createPost = useMutation({
-    mutationFn: () => Fans.createClubPost(artistId, { fcpReqTitle: title || null, fcpReqContent: content, fcpReqParentId: null, fcpReqMediaUrls: postMediaUrls }),
-    onSuccess: () => {
+    mutationFn: ({ draft, owns }: { draft: typeof composer.value; owns: () => boolean }) => {
+      if (!owns()) throw new Error('La sesión cambió. Revisa tu publicación antes de reintentar.');
+      return Fans.createClubPost(artistId, { fcpReqTitle: draft.title || null, fcpReqContent: draft.content, fcpReqParentId: null, fcpReqMediaUrls: draft.postMediaUrls });
+    },
+    onSuccess: (_response, { draft, owns }) => {
+      if (!owns()) return;
       void qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
       void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
-      setOpen(false);
-      setTitle('');
-      setContent('');
-      setPostMediaUrls([]);
+      if (JSON.stringify(latestComposer.current.value) === JSON.stringify(draft)) latestComposer.current.discard();
     },
   });
 
@@ -556,8 +594,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(post.fcpAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{post.fcpAuthorName}</Typography>
+                        <UserProfileLink partyId={post.fcpAuthorId}><Avatar src={optionalImageSource(post.fcpAvatarUrl)} alt={post.fcpAuthorName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{post.fcpAuthorName}</Typography></UserProfileLink>
                         {post.fcpIsPinned && <Chip size="small" label="Fijado" color="primary" />}
                         <Box flexGrow={1} />
                         {isOfficer && (
@@ -584,7 +621,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                         )}
                       </Stack>
                       {post.fcpTitle && <Typography variant="h6">{post.fcpTitle}</Typography>}
-                      <Typography variant="body1">{post.fcpContent}</Typography>
+                      <MarkdownText variant="body1">{post.fcpContent}</MarkdownText>
                       <InteractionPanel kind="club_post" entityKey={String(post.fcpId)} />
                       {post.fcpMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
@@ -612,16 +649,20 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="Título (opcional)" value={title} onChange={e => setTitle(e.target.value)} fullWidth />
+            {composer.restored && <Alert severity="info">{i18n.language.startsWith('en') ? 'We restored your unsaved post from this tab.' : 'Recuperamos la publicación sin guardar de esta pestaña.'}</Alert>}
             <TextField label="Contenido" value={content} onChange={e => setContent(e.target.value)} multiline rows={4} fullWidth />
             <GoogleDriveUploadWidget
+              recoveryScope={`club-post:${artistId}`}
+              formRecoveryAvailable={composer.persistenceAvailable}
               label="Adjuntar fotos, audio o video"
-              helperText="Sube archivos a Google Drive. Se insertarán como enlaces en el post."
+              visibility="public"
+              helperText="Elige dónde guardar tus archivos. Se insertarán como enlaces en el post."
               accept="image/*,audio/*,video/*"
               multiple
               dense
               onComplete={(files) => {
                 const urls = files.map(f => f.publicUrl ?? f.webContentLink ?? f.webViewLink ?? '').filter(Boolean);
-                setPostMediaUrls(prev => [...prev, ...urls]);
+                setPostMediaUrls(prev => [...new Set([...prev, ...urls])]);
               }}
             />
             {postMediaUrls.length > 0 && (
@@ -635,7 +676,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
         </DialogContent>
         <DialogActions>
           <Button onClick={() => { setOpen(false); setPostMediaUrls([]); }}>Cancelar</Button>
-          <Button variant="contained" onClick={() => createPost.mutate()} disabled={!content.trim() || createPost.isPending}>
+          <Button variant="contained" onClick={() => createPost.mutate({ draft: composer.value, owns: composer.isCurrentOwner })} disabled={!content.trim() || createPost.isPending}>
             Publicar
           </Button>
         </DialogActions>
@@ -645,6 +686,11 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
 }
 
 function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: number; memories: FanClubMemoryDTO[]; isOfficer: boolean; loading: boolean }) {
+  const membersQuery = useQuery({
+    queryKey: ['fan-club-member-profiles', artistId],
+    queryFn: () => Fans.listClubMemberProfiles(artistId),
+    enabled: artistId > 0,
+  });
   const qc = useQueryClient();
   const [open, setOpen] = useLocalValue(false);
   const [title, setTitle] = useLocalValue('');
@@ -724,8 +770,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(memory.fcmMemberAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{memory.fcmMemberName}</Typography>
+                        <UserProfileLink partyId={membersQuery.data?.find((member) => member.fcmpId === memory.fcmMemberProfileId)?.fcmpPartyId}><Avatar src={optionalImageSource(memory.fcmMemberAvatarUrl)} alt={memory.fcmMemberName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{memory.fcmMemberName}</Typography></UserProfileLink>
                         <Box flexGrow={1} />
                         {isOfficer && (
                           <>
@@ -761,7 +806,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                       </Stack>
                       <Typography variant="h6">{memory.fcmTitle}</Typography>
                       <InteractionPanel kind="club_memory" entityKey={String(memory.fcmId)} />
-                      {memory.fcmDescription && <Typography variant="body1">{memory.fcmDescription}</Typography>}
+                      {memory.fcmDescription && <MarkdownText variant="body1">{memory.fcmDescription}</MarkdownText>}
                       {memory.fcmMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
                           {memory.fcmMediaUrls.map((url, idx) => (
@@ -889,7 +934,7 @@ function ClubCalendar({ artistId, events, isOfficer, loading }: { artistId: numb
                           <Typography variant="h6">{ev.fceTitle}</Typography>
                           {ev.fceIsArtistConcert && <Chip size="small" label="Concierto" color="secondary" />}
                         </Stack>
-                        {ev.fceDescription && <Typography variant="body2" color="text.secondary">{ev.fceDescription}</Typography>}
+                        {ev.fceDescription && <MarkdownText variant="body2" color="text.secondary">{ev.fceDescription}</MarkdownText>}
                         {ev.fceStartsAt && (
                           <Typography variant="body2">
                             📅 {new Date(ev.fceStartsAt).toLocaleString()}
@@ -1049,11 +1094,7 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
               }}>
                 <CardContent>
                   <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar src={optionalImageSource(c.fccAvatarUrl)} />
-                    <Box>
-                      <Typography variant="subtitle2">{c.fccFanName}</Typography>
-                      <Typography variant="caption">{c.fccRole}</Typography>
-                    </Box>
+                    <UserProfileLink partyId={c.fccFanId}><Avatar src={optionalImageSource(c.fccAvatarUrl)} alt={c.fccFanName} /><Box><Typography variant="subtitle2">{c.fccFanName}</Typography><Typography variant="caption">{c.fccRole}</Typography></Box></UserProfileLink>
                   </Stack>
                 </CardContent>
               </Card>

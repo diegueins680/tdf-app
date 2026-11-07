@@ -8,6 +8,7 @@ import { reportMissingEnv } from './utils/env';
 import { LocalePreferencesProvider } from './contexts/LocalePreferencesContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import './styles/print.css';
+import './styles/navigation.css';
 import { BootErrorBoundary, installGlobalErrorHandlers } from './bootSafety';
 
 reportMissingEnv(['VITE_PAYPAL_CLIENT_ID']);

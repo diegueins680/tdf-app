@@ -1,0 +1,164 @@
+{
+  "scope": "Expo Web preview of native source; all API responses synthetic and external egress blocked, connectivity HEAD fulfilled locally; not a physical native device or real backend integration",
+  "status": "PASS",
+  "startedAt": "2026-10-26T16:22:55.573Z",
+  "node": "v20.19.4",
+  "sourceHashes": {
+    "app/eventDetail.tsx": "f626c210a52d9b9ac73fbf74871a86888aa66c995eeedead6d26a198ddc6f404",
+    "src/api/events.ts": "50ce6e23235e77299f7f6b588c6d96ffe56d431f637a35b5e25c6a7f1441d8a0",
+    "src/components/EventMomentCard.tsx": "4d6c16c22b1dc3ce3ced783af44aae982ffa3d8f3a9cb84a2db79638d754fd0e",
+    "src/localization/eventExperienceCopy.ts": "a37b5f49ca779bc94668f59abd7ea5a8e9cb8a21cebcdce854859179445cd17d"
+  },
+  "syntheticConnectivityProbes": 3,
+  "apiRequests": [
+    {
+      "method": "GET",
+      "path": "/session"
+    },
+    {
+      "method": "GET",
+      "path": "/session/preferences"
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/batch"
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/workflows/social-event-lifecycle/states"
+    },
+    {
+      "method": "GET",
+      "path": "/records/feed"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/me/memory-invitations"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/42"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/42/rsvp"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/42/rsvp-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/42/ticket-tiers"
+    },
+    {
+      "method": "GET",
+      "path": "/session/experiments/single-feature-onboarding-v1/assignment"
+    },
+    {
+      "method": "POST",
+      "path": "/session/onboarding/reconcile"
+    },
+    {
+      "method": "GET",
+      "path": "/directory/favorites"
+    },
+    {
+      "method": "GET",
+      "path": "/session/preferences"
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/batch"
+    },
+    {
+      "method": "GET",
+      "path": "/catalogs/workflows/social-event-lifecycle/states"
+    },
+    {
+      "method": "GET",
+      "path": "/records/feed"
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event/42"
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/event/42"
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/eligibility"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/42/moments"
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/77"
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/42/moments/77"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/42/moments"
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event/42"
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/77"
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/42/moments/77"
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/42/moments"
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event/42"
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/77"
+    }
+  ],
+  "blockedExternal": 1,
+  "pageErrors": [
+    "NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'https://cdn.jsdelivr.net/npm/jsqr@1.2.0/dist/jsQR.min.js' failed to load."
+  ],
+  "edits": [
+    {
+      "emeCaption": "Mi recuerdo corregido",
+      "emeExpectedUpdatedAt": "2026-10-26T08:00:00.123456Z"
+    }
+  ],
+  "deletions": 1,
+  "touchTargets": [
+    {
+      "action": "cancelEdit",
+      "width": 60,
+      "height": 44
+    },
+    {
+      "action": "cancelDelete",
+      "width": 60,
+      "height": 44
+    }
+  ],
+  "knownBlockedExternalWorkerErrors": [
+    "NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'https://cdn.jsdelivr.net/npm/jsqr@1.2.0/dist/jsQR.min.js' failed to load."
+  ],
+  "unexpectedPageErrors": [],
+  "finishedAt": "2026-10-26T16:24:06.241Z",
+  "browserClosed": true
+}

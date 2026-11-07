@@ -352,6 +352,81 @@ describe('PublicBookingPage', () => {
     ) as unknown as typeof fetch;
   });
 
+  it('keeps the physical studio in Quito when the general display preference is UTC', async () => {
+    const runtime = window as Window & { __ENV__?: Record<string, string> };
+    const previous = runtime.__ENV__;
+    runtime.__ENV__ = { ...previous, VITE_DEFAULT_TIMEZONE: 'UTC' };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      expect(container.textContent).toContain('08:00–22:00, Quito (GMT-5)');
+    } finally {
+      await cleanup();
+      container.remove();
+      runtime.__ENV__ = previous;
+    }
+  });
+
+  it.each(['error', 'empty'])('retries an %s catalog without losing contact edits or creating a booking', async (failure) => {
+    let finishCatalog!: (services: PublicServiceCatalogItem[]) => void;
+    let failCatalog!: (error: Error) => void;
+    listPublicServicesMock.mockReturnValueOnce(new Promise((resolve, reject) => {
+      finishCatalog = resolve;
+      failCatalog = reject;
+    }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, { route: '/reservar?service=dj-booth-practice' });
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Visitante de prueba');
+        setInputValue(getInputByLabel(container, 'Correo'), 'visitante@example.test');
+        if (failure === 'error') failCatalog(new Error('Synthetic catalog outage'));
+        else finishCatalog([]);
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(true);
+      expect(container.textContent).toContain('No pudimos cargar el catálogo');
+
+      listPublicServicesMock.mockReturnValueOnce(new Promise((resolve) => { finishCatalog = resolve; }));
+      await act(async () => {
+        clickButtonByText(container, 'Reintentar catálogo');
+        await flushPromises();
+      });
+      const pendingRetry = container.querySelector<HTMLButtonElement>('button[aria-busy="true"]');
+      expect(pendingRetry?.disabled).toBe(true);
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(true);
+      expect(createPublicMock).not.toHaveBeenCalled();
+      expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+
+      await act(async () => {
+        finishCatalog([]);
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(true);
+      listPublicServicesMock.mockResolvedValueOnce(defaultPublicServices);
+      await act(async () => {
+        clickButtonByText(container, 'Reintentar catálogo');
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(listPublicServicesMock).toHaveBeenCalledTimes(3);
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(false);
+      expect(getInputByLabel(container, 'Nombre completo').value).toBe('Visitante de prueba');
+      expect(getInputByLabel(container, 'Correo').value).toBe('visitante@example.test');
+      expect(container.querySelector<HTMLInputElement>('input[value="' + DJ_PRACTICE_ID + '"]')).not.toBeNull();
+      expect(container.textContent).not.toContain('No pudimos cargar el catálogo');
+      expect(createPublicMock).not.toHaveBeenCalled();
+      expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+      container.remove();
+    }
+  });
+
   it('stacks the service reviews below the booking card in a column so phones never squeeze the card', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -386,6 +461,86 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
+  it('lets visitors pick any published service from the contact step', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    expect(container.textContent).toContain('Elige tu servicio');
+    const serviceSelect = container.querySelector<HTMLElement>('[role="combobox"]');
+    expect(serviceSelect).not.toBeNull();
+    expect(serviceSelect?.textContent).toContain('Grabación de banda');
+
+    await act(async () => {
+      serviceSelect?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+      await flushPromises();
+    });
+    const optionLabels = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]')).map(
+      (option) => option.textContent ?? '',
+    );
+    expect(optionLabels.some((label) => label.includes('Grabación de banda'))).toBe(true);
+    expect(optionLabels.some((label) => label.includes('Práctica en DJ Booth'))).toBe(true);
+
+    const djOption = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]')).find((option) =>
+      option.textContent?.includes('Práctica en DJ Booth'),
+    );
+    await act(async () => {
+      djOption?.click();
+      await flushPromises();
+    });
+    expect(container.textContent).toContain('Estimado para Práctica en DJ Booth');
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('clears the old service quote while its replacement is pending and ignores a late old response', async () => {
+    const quote = (totalMinor: number) => ({ currency: 'USD', totalMinor, depositMinor: totalMinor / 2,
+      durationMinutes: 60, termsVersion: 'test-v1' });
+    const pending: { service: string; resolve: (value: unknown) => void }[] = [];
+    globalThis.fetch = jest.fn((input: unknown) => new Promise((resolve) => {
+      const service = new URL(String(input), 'http://localhost').searchParams.get('serviceOfferingId') ?? '';
+      pending.push({ service, resolve });
+    })) as unknown as typeof fetch;
+    const respond = async (request: typeof pending[number], totalMinor: number) => {
+      await act(async () => {
+        request.resolve({ ok: true, json: async () => ({ available: true, quote: quote(totalMinor) }) });
+        await flushPromises();
+      });
+    };
+    const selectService = async (name: string) => {
+      await act(async () => {
+        container.querySelector<HTMLElement>('[role="combobox"]')?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+        await flushPromises();
+      });
+      const option = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]')).find((row) => row.textContent?.includes(name));
+      if (!option) throw new Error('Service option not found');
+      await act(async () => { option.click(); await flushPromises(); });
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      const original = pending.find((request) => request.service === BAND_RECORDING_ID);
+      if (!original) throw new Error('Initial availability request missing');
+      await respond(original, 23000);
+      expect(container.textContent).toContain('USD 230.00 total');
+      await selectService('Práctica en DJ Booth');
+      expect(container.textContent).not.toContain('USD 230.00 total');
+      const delayedDj = pending.find((request) => request.service === DJ_PRACTICE_ID);
+      if (!delayedDj) throw new Error('DJ availability request missing');
+      await selectService('Grabación de banda');
+      const newest = pending[pending.length - 1];
+      if (!newest || newest === original) throw new Error('Replacement availability request missing');
+      await respond(newest, 33000);
+      expect(container.textContent).toContain('USD 330.00 total');
+      await respond(delayedDj, 5000);
+      expect(container.textContent).toContain('USD 330.00 total');
+      expect(container.textContent).not.toContain('USD 50.00 total');
+      expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); document.body.removeChild(container); }
+  });
+
   it('preserves booking acquisition context through optional login and signup', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -407,6 +562,41 @@ describe('PublicBookingPage', () => {
 
     await cleanup();
     document.body.removeChild(container);
+  });
+
+  it('keeps the chosen Quito date when repeatedly selecting quick suggestions', async () => {
+    const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+    const opening = DateTime.fromISO('2030-01-15T08:00', { zone: 'America/Guayaquil' }).setZone(userZone);
+    const selectedStart = opening.toFormat("yyyy-MM-dd'T'HH:mm");
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, { route: '/reservar?service=dj-booth-practice' });
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Persona Sintética');
+        setInputValue(getInputByLabel(container, 'Correo'), 'synthetic@example.invalid');
+        clickButtonByText(container, 'Continuar');
+        await flushPromises();
+      });
+      const date = getInputByLabel(container, 'Fecha y hora');
+      await act(async () => {
+        setInputValue(date, selectedStart);
+        await flushPromises();
+      });
+      for (let click = 0; click < 2; click += 1) {
+        await act(async () => {
+          const suggestion = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'))
+            .find((button) => button.textContent?.trim() === opening.toFormat('HH:mm'));
+          expect(suggestion).toBeDefined();
+          suggestion!.click();
+          await flushPromises();
+        });
+        expect(date.value).toBe(selectedStart);
+      }
+    } finally {
+      await cleanup();
+      container.remove();
+    }
   });
 
   it('computes quick schedule shortcuts using studio-timezone opening hours', () => {
@@ -479,6 +669,7 @@ describe('PublicBookingPage', () => {
     const idempotencyKey = createPublicMock.mock.calls[0]?.[1];
     expect(payload).toMatchObject({
       pbServiceOfferingId: BAND_RECORDING_ID,
+      pbStartsAt: '2030-01-01T17:00:00.000Z',
       pbResourceIds: null,
     });
     expect(idempotencyKey).toMatch(/^service-booking-/);
@@ -575,67 +766,6 @@ describe('PublicBookingPage', () => {
     expect(container.textContent).not.toContain('Pago confirmado');
     expect(container.textContent).toContain('Seguir esta orden');
     expect(container.querySelector('a[href="/reservas/orden/456"]')).not.toBeNull();
-
-    await cleanup();
-    document.body.removeChild(container);
-  });
-
-  it('uses the DJ Booth preset route copy and canonical service offering', async () => {
-    listPublicRoomsMock.mockResolvedValueOnce([
-      ...defaultPublicRooms,
-      { roomId: 'room-dj', rName: 'DJ Booth', rBookable: true },
-    ]);
-
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container, {
-      route: '/dj-booth',
-      props: { preset: 'dj-booth' },
-    });
-
-    expect(container.textContent).toContain('Reserva práctica en DJ Booth');
-    expect(container.textContent).toContain('Agenda horas de práctica o alquiler del DJ Booth');
-
-    await act(async () => {
-      setInputValue(getInputByLabel(container, 'Nombre completo'), 'DJ Test');
-      setInputValue(getInputByLabel(container, 'Correo'), 'dj@example.com');
-      clickButtonByText(container, 'Continuar');
-      await flushPromises();
-    });
-
-    expect(container.textContent).toContain('Práctica en DJ Booth');
-
-    await act(async () => {
-      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-      const desiredStudio = DateTime.fromObject(
-        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
-        { zone: 'America/Guayaquil' },
-      );
-      const desiredUser = desiredStudio.setZone(userZone);
-      setInputValue(getInputByLabel(container, 'Fecha y hora'), desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
-      await flushPromises();
-    });
-
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
-
-    await act(async () => {
-      const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
-      if (!submitButton) throw new Error('Submit button not found');
-      submitButton.click();
-      await flushPromises();
-    });
-
-    expect(createPublicMock).toHaveBeenCalledTimes(1);
-    expect(createPublicMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pbServiceOfferingId: DJ_PRACTICE_ID,
-        pbResourceIds: null,
-      }),
-      expect.stringMatching(/^service-booking-/),
-    );
 
     await cleanup();
     document.body.removeChild(container);

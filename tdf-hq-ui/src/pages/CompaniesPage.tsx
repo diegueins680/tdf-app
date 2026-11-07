@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useContactCreation } from '../hooks/useContactCreation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -63,7 +64,7 @@ function CompanyRow({ company, onOpenRelated, onEdit }: { company: PartyDTO; onO
       <TableCell>{company.primaryEmail ?? '—'}</TableCell>
       <TableCell>{company.primaryPhone ?? '—'}</TableCell>
       <TableCell>{company.taxId ?? '—'}</TableCell>
-      <TableCell>{company.notes ?? '—'}</TableCell>
+      <TableCell><MarkdownText>{company.notes ?? '—'}</MarkdownText></TableCell>
       <TableCell align="right">
         <Button
           size="small"

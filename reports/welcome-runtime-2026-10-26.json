@@ -1,0 +1,145 @@
+{
+  "observedAt": "2026-10-26T03:13:45.334201+00:00",
+  "status": "VERIFIED-synthetic-welcome-and-activation-only",
+  "publishedPullRequest": 619,
+  "publishedHead": "d8191612b1d8e185e997a4ecf72c2d23ed83fba9",
+  "runtimeSource": "600db4d99b576aeda53bac416a2644545f3d9ed3",
+  "runtimeSourceTree": "700002bdc2c5b7ae0f1a81d4314e5e48b81d0ea5",
+  "sourcePreparationPublished": false,
+  "protectedMainInPreparation": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+  "webSourceEqualOriginalPublishedHead": true,
+  "backendInputsEqualProtectedMain": true,
+  "trackedSourceClean": true,
+  "worktreeDirty": true,
+  "untrackedAtExecution": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "binary": {
+    "sha256": "577f3c1e045e73a8d8489ee557d7b5f856f59fa9d729d3b83cc1b8ef96cbbc6a",
+    "actualVersionCommit": "f9ee2199273471a12cfb95da95bc5503fe51ac79",
+    "qualifiedSource": "f9ee2199273471a12cfb95da95bc5503fe51ac79",
+    "limitation": "Original executable identity retained; no newly compiled Haskell candidate claim."
+  },
+  "frontend": {
+    "entry": "/assets/index-n3sqIwlB.js",
+    "sha256": "62f83bb7553982124553d523061c6ed822b849766f1c373be3412e6516a4ffe3",
+    "embeddedSource": "600db4d99b576aeda53bac416a2644545f3d9ed3",
+    "apiBase": "http://127.0.0.1:18819"
+  },
+  "scenario": {
+    "welcome": {
+      "anonymousSession": true,
+      "rootToInicio": true,
+      "imageLoaded": true,
+      "keyboardNavigation": true,
+      "studioAnchor": true,
+      "serviceAnchor": true,
+      "noSignupBeforeExplicitAction": true
+    },
+    "artistUiSignup": true,
+    "artistProfilePublication": true,
+    "uploadRecovery": true,
+    "saveRecovery": true,
+    "fansUiSignup": 2,
+    "community": true,
+    "crossWebFormFactorRelogin": true,
+    "successfulLogoutUi": true,
+    "browserSessionAbsentAfterSuccessfulLogout": true,
+    "originalCookieRevoked": true,
+    "artistUiFollowerCount": 2
+  },
+  "databaseAssertions": {
+    "syntheticFirstValueRecords": 2,
+    "syntheticPairs": 2,
+    "followRows": 2,
+    "evidenceRows": 2,
+    "duplicateRows": 0
+  },
+  "schema": {
+    "migrations": 220,
+    "runner": "scripts/test-music-integration-rehearsal.mjs",
+    "passed": true,
+    "scope": "Disposable full schema/replay controls; not complete implementation/refinement or provider proof."
+  },
+  "isolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full220-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "humanParticipants": 0,
+  "measuredProductionActivations": null,
+  "conversionImprovement": null,
+  "humanPilotHeld": true,
+  "failedLogoutRepair616Included": false,
+  "nativeDeviceTested": false,
+  "googleStorageProviderTested": false,
+  "adapters": [
+    "Fictional portrait upload and media response, authenticated against real isolated API session/profile; one injected upload503.",
+    "One injected profile PUT503 before real successful persistence.",
+    "Browser-only desktop and Pixel7 emulation."
+  ],
+  "limitations": [
+    "No human comprehension, conversion uplift, native device, Google OAuth/storage or production correspondence claim.",
+    "Failed logout/privacy scenario remains held for separately owned616; only successful server revocation is tested.",
+    "Execution belongs to runtimeSource600db; future source integration needs its own current checks and review."
+  ],
+  "privateRawReceipt": "/private/tmp/tdf-welcome-activation-220-20261026-d1agg1q_/results.json",
+  "harnessManifest": "reports/welcome-runtime-evidence-20261026/manifest.json",
+  "executedHarnessDirectory": "/private/tmp/tdf-welcome-runtime-20261026",
+  "versionedEvidenceDirectory": "reports/welcome-runtime-evidence-20261026",
+  "executedHarnessSha256": {
+    "run.py": "6d2ad7bcc61de405762631a003c87c6b519123206ea25cce0040c53aff8c323e",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "30fb75c9bcb7b91c4a41656f3b1c88716afd83224dac71be422bae4ba0102063",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  }
+}

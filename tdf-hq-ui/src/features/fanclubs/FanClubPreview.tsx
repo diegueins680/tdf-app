@@ -1,4 +1,6 @@
-import { Card, CardContent, CardMedia, Grid, Stack, Typography } from '@mui/material';
+import ArtistProfileImage from '../../components/ArtistProfileImage';
+import MarkdownText from '../../components/MarkdownText';
+import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import type { FanClubDTO } from '../../api/types';
 import LazyPaginatedList from '../../components/LazyPaginatedList';
@@ -36,9 +38,9 @@ export function FanClubPreview({
                     '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
                   }}
                 >
-                  {club.fcArtistImageUrl && (
-                    <CardMedia component="img" height={160} image={club.fcArtistImageUrl} alt={club.fcName} />
-                  )}
+                  <ArtistProfileImage artistName={club.fcName.replace(/^Club de Fans de /i, '')}
+                    imageUrl={club.fcArtistImageUrl} alt={club.fcName} width={640} height={160}
+                    sx={{ width: '100%' }} />
                   <CardContent sx={{ flex: 1 }}>
                     <Stack spacing={1}>
                       <Typography variant="h6" fontWeight={700}>
@@ -48,11 +50,11 @@ export function FanClubPreview({
                         {club.fcFollowerCount} seguidores
                       </Typography>
                       {club.fcDescription && (
-                        <Typography variant="body2" color="text.secondary">
+                        <MarkdownText disableLinks inline variant="body2" color="text.secondary">
                           {club.fcDescription.length > 100
                             ? `${club.fcDescription.slice(0, 100)}…`
                             : club.fcDescription}
-                        </Typography>
+                        </MarkdownText>
                       )}
                     </Stack>
                   </CardContent>

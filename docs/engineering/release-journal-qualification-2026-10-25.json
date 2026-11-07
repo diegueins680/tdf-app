@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-26T00:17:04.412687+00:00",
+  "sourceBase": "b732efd65de23e5b97f3f619a2242397c64965c3",
+  "sourceState": "Uncommitted candidate inputs bound below; not a mathematical proof or released artifact.",
+  "inputSha256": {
+    "ops/hetzner/release-journal.py": "1c9dccb95894a676582e27acee4f8191225dcbd33a776f773e12fc322289635d",
+    "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
+    "scripts/verify-event-operations-formal.sh": "f45846e4654fcc7c240a8da91377bce92dab966435549eea519cdc94aa03bc73",
+    "formal/system/requirements.json": "b503e7d0d8d3e0f55aa8de0d77fce55f72a677a06a9d950fda72b3d6a50c5cf3",
+    "formal/system/release-journal.md": "a2c2d4b98c9236383b2deee702d54f12574384ef1a3674431f4383af8065af9c",
+    "formal/event-operations/ReleaseJournalSuccession.cfg": "16cf95a44f8cf746facff4b5924a32c55819beaf9c277e4c8126e505e7c353eb",
+    "formal/event-operations/ReleaseJournalSuccession.tla": "d309f03befa784b1b67ee0bc2314b7ffb4c8cca285151bd04bc6e5a650028e94",
+    "formal/event-operations/ReleaseJournalSuccessionDiscardHistory.cfg": "94114427040e5cbbd3cdd110390cffc6f26a43c4bfc6c1f05eb360bdbc5e6023",
+    "formal/event-operations/ReleaseJournalSuccessionForgetWrites.cfg": "fb593e372ee02f266ab2857dde67275f012d0156e9f30088c087495e7194e28b",
+    "formal/event-operations/ReleaseJournalSuccessionNoIntent.cfg": "24b35a90937b8ad95e1645b338a718342ae0bed31682bfe91ee7eba420a0db2d",
+    "formal/event-operations/ReleaseJournalSuccessionPending.cfg": "483b31416adfada15e8f43d7cac265ea2d86477ce2f9995f3f67bd0005121626",
+    "formal/event-operations/ReleaseJournalSuccessionReusedNonce.cfg": "19dfb4d1f36821c274ab0adb2fb1e2bca3af40d1d7d71e1ffe04b1c2bb3e6126",
+    "formal/event-operations/ReleaseJournalSuccessionStaleTip.cfg": "e97b7eb1c8ca5b5f9a86632fbf84854a4da5a08bc148f7a6b746e21c74b4e505",
+    "formal/event-operations/ReleaseJournalSuccessionTwo.cfg": "64797b3dc40b4db719913c15f70e45fcef37c30ccaf7b854e015b256f97f9d7d",
+    "formal/event-operations/ReleaseJournalSuccessionUnlocked.cfg": "dca1f0c19e49b53e79ea80ae1ad7cbc2ace4deaddb8c6acf1f6ce1bfc5377b5d",
+    "formal/event-operations/ReleaseJournalSuccessionWitness.cfg": "8a7bd00ee4ba9a15666f9be61f26c5b864bd87aab7f6ed989e96e571a36ccc03",
+    "formal/event-operations/ReleaseJournalSuccessionWrongObservation.cfg": "1f9ec729d8c499e6cdbb41bce43763e2b58b4c3d48352bda402c92d45fb56560"
+  },
+  "requirements": {
+    "count": 140,
+    "modified": [
+      "DEPLOY-JOURNAL-001"
+    ],
+    "other139CanonicalObjectsIdentical": true,
+    "conformancePromotions": 0
+  },
+  "authoredTests": {
+    "passed": 22,
+    "modes": [
+      "normal",
+      "python -O"
+    ],
+    "commands": [
+      "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-journal.py -v",
+      "PYTHONDONTWRITEBYTECODE=1 python3 -O scripts/test-release-journal.py"
+    ],
+    "logs": [
+      {
+        "localPath": "/private/tmp/tdf-journal-succession-tests-final-20261025.log",
+        "sha256": "a3af811ad99d9dc5b358bc400fb3bd5dab15d426d0bd0e615c1c9187851eff6b"
+      },
+      {
+        "localPath": "/private/tmp/tdf-journal-succession-tests-optimized-final-20261025.log",
+        "sha256": "877a2455b9ebd2afca2149b3e77dae98e643baa2026636d8f0833498f4d89a4b"
+      }
+    ]
+  },
+  "independentReview": {
+    "result": "No open material findings on final Python and test hashes",
+    "receipt": {
+      "localPath": "/private/tmp/tdf-release-journal-review-20261025/receipt-final-mutex.json",
+      "sha256": "691e472dc7fd4ce6aaec20b1064bfab1e5942ac7f9755b52f905ca304a832c8a"
+    },
+    "checksPerMode": 8,
+    "modes": [
+      "normal",
+      "python -O"
+    ],
+    "scope": "Four boundary and four thread-interleaving controls. Real b732 writer creates v1 prefix; large canonical fixtures are constructed for numeric/cap boundaries; append boundaries use actual API.",
+    "history": "Initial review superseded after two candidate shared-handle races were reproduced; final CAS+mutex source reviewed.",
+    "documentationLimit": "Final contract gained explanatory legacy-reader rollback paragraph after the independent code review; no Python/test changes."
+  },
+  "boundedFormal": {
+    "newModel": {
+      "positive": 2,
+      "guardMutationControls": 8,
+      "threeReleaseReachabilityWitness": 1,
+      "receipt": {
+        "localPath": "/private/tmp/tdf-succession-tlc-20261025-q7wnid0s/receipt.json",
+        "sha256": "b3744976f554d85507acf7364b2111460e703c93c3405cd3f89f0d52946e0015"
+      }
+    },
+    "canonicalPortfolio": {
+      "exitCode": 0,
+      "counts": {
+        "TLC_positive": 115,
+        "TLC_negative": 340,
+        "Alloy_scenario": 2,
+        "Alloy_assertion": 13,
+        "Alloy_negative": 15
+      },
+      "log": {
+        "localPath": "/private/tmp/tdf-journal-succession-full-formal-20261025.log",
+        "sha256": "871a9d4c1130363b80f39143cabb45cd05a138f3cb5e07b133338a7e03d7fe6a"
+      },
+      "countingLimit": "340 expected-counterexample results include the new deliberately false reachability invariant; do not report all340 as guard mutations."
+    },
+    "priorFiveJournalModelFilesIdenticalToBase": true,
+    "limits": "Finite target contracts only; no Python refinement, hardware/fsync, factual effects, liveness or complete correctness proof."
+  },
+  "repositoryQuality": {
+    "command": "bash scripts/quality-repo.sh",
+    "exitCode": 0,
+    "log": {
+      "localPath": "/private/tmp/tdf-journal-succession-repo-quality-final-20261025.log",
+      "sha256": "86ca5d2c77dab6624672adbe8783e5f2b74eb95503cd74d9b143c27bf2fc6fd8"
+    },
+    "environment": "Matching candidate npm lock/dependency/override fields; TypeScript5.9.3,YAML2.9.1,PyYAML6.0.3,local jq1.8.1. Source/tests not weakened for setup."
+  },
+  "catalog": {
+    "strictCandidates": 1327,
+    "unreviewed": 0,
+    "existingDecisionsFileUnmodified": true,
+    "log": {
+      "localPath": "/private/tmp/tdf-journal-catalog-before-20261025.json",
+      "sha256": "af61921ce04802de5809839479fa6fdd0dd09fbab7f14ed47b02100e0d61d649"
+    }
+  },
+  "production": {
+    "journalAccess": false,
+    "sourceDeployment": false,
+    "migration": false,
+    "providerTransaction": false,
+    "releaseAuthorizationGranted": false
+  },
+  "remaining": [
+    "Current-head hosted CI and independent protected review/admission/merge",
+    "Reviewed fixed-directory coordinator and external-effect validation; no production invocation from this library change",
+    "Private receipt storage, exact-artifact assurance/risk disposition, recovery and deployment authorization retain their separate gates"
+  ],
+  "setupAttempts": [
+    "Initial root dependency comparison rejected mismatching override/YAML; matching existing candidate dependencies used.",
+    "First repository check lacked UI react dependency link; second lacked jq inPATH. Both failed attempts retained, final full gate passed with declared environment.",
+    "Original isolated model attempt had a precedence error; corrected source/config hashes qualified by the final model receipt."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "preparedAt": "2026-10-26T03:57:31.858287+00:00",
+  "status": "PREPARED-NOT-EXECUTED",
+  "source": "/private/tmp/tdf-welcome-main-integration-20261026",
+  "expectedSource": "7cf6c8000f7f42f3c8ea0a44daf213ff5b7b7dc3",
+  "binary": "/private/tmp/tdf-alert-parity-repro-20261025/bin-post551/tdf-hq-exe",
+  "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+  "binaryQualifiedSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "ports": {
+    "postgres": 55578,
+    "api": 18819,
+    "web": 4289
+  },
+  "database": "tdf_welcome_20261026_test",
+  "originalPacketSha256": {
+    "runtime.mjs": "9b97cdb8bf81fc094c5ad8dd7694a606aef79fb5d68c97dd360e6cb32d9ca8a4",
+    "rehearsal.mjs": "11baebc6db2baf65e9f113d1c43d21e8345d70a7e48003b15f9802dcbcbe24e0",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "copySha256": {
+    "run.py": "1c1ad77193fe7fa5a6d2f574e8c09e4b71a994cd0ccb9bc83cd4e8de10a1b2dc",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "30fb75c9bcb7b91c4a41656f3b1c88716afd83224dac71be422bae4ba0102063",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "scope": "Synthetic public welcome and positive artist/fan activation only. Original persistence/upload/save-recovery/successful-logout assertions retained. No 616 failed-logout assertions, no human or provider claim; manual privacy hold remains.",
+  "sourceWorktreeStatusObserved": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "command": [
+    "python3",
+    "/private/tmp/tdf-welcome-runtime-221-20261026/run.py",
+    "--mode",
+    "rehearsal",
+    "--source",
+    "/private/tmp/tdf-welcome-main-integration-20261026",
+    "--expected-source",
+    "7cf6c8000f7f42f3c8ea0a44daf213ff5b7b7dc3",
+    "--binary",
+    "/private/tmp/tdf-alert-parity-repro-20261025/bin-post551/tdf-hq-exe"
+  ],
+  "protectedMain": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+  "schemaMigrations": 221,
+  "setupFailure": "An incorrect explicit expected-source was rejected by the source guard before services; corrected to actual immutable HEAD. No product assertions changed."
+}

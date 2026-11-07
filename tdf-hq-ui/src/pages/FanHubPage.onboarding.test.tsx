@@ -8,11 +8,16 @@ import { MemoryRouter } from 'react-router-dom';
 
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 import type { OnboardingProgressDTO, OnboardingCompletionResultDTO } from '../api/session';
+import type { ArtistProfileDTO, ArtistProfileUpsert } from '../api/types';
+import type { DirectorySearchResponse } from '../api/directory';
 import type { SessionUser } from '../session/SessionContext';
 import es from '../i18n/locales/es';
 
 const loadOnboardingProgressMock = jest.fn<(apiToken?: string) => Promise<OnboardingProgressDTO>>();
 const completeOnboardingProgressMock = jest.fn<() => Promise<unknown>>();
+const getMyArtistProfileMock = jest.fn<() => Promise<ArtistProfileDTO | null>>(async () => null);
+const updateMyArtistProfileMock = jest.fn<(payload: ArtistProfileUpsert) => Promise<ArtistProfileDTO>>();
+const directorySearchMock = jest.fn<() => Promise<DirectorySearchResponse>>(async () => ({ items: [], sponsoredItems: [], facets: { total: 0, entityTypes: {}, cities: [] } }));
 const listArtistsMock = jest.fn(async () => []);
 const listFollowsMock = jest.fn(async () => []);
 const listMyClubsMock = jest.fn(async () => []);
@@ -27,13 +32,19 @@ let sessionMock: SessionUser | null = {
   partyId: 42,
 };
 
+jest.unstable_mockModule('../api/directory', () => ({ Directory: { taxonomies: async () => ({ cities: [], genres: [] }), search: directorySearchMock } }));
+
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: sessionMock, loading: sessionLoading }),
   getActiveSession: () => sessionMock,
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key }),
+  useTranslation: () => ({
+    t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key,
+    i18n: { language: 'es' },
+  }),
 }));
 
 jest.unstable_mockModule('../api/session', () => ({
@@ -46,8 +57,8 @@ jest.unstable_mockModule('../api/fans', () => ({
     listArtists: listArtistsMock,
     listFollows: listFollowsMock,
     listMyClubs: listMyClubsMock,
-    getMyArtistProfile: jest.fn(async () => null),
-    updateMyArtistProfile: jest.fn(),
+    getMyArtistProfile: getMyArtistProfileMock,
+    updateMyArtistProfile: updateMyArtistProfileMock,
     requestMyFanRole: jest.fn(),
     follow: jest.fn(),
     unfollow: jest.fn(),
@@ -128,7 +139,6 @@ jest.unstable_mockModule('../components/StreamingPlayer', () => ({ default: () =
 jest.unstable_mockModule('../features/releases/ReleaseFeed', () => ({ ReleaseFeed: () => null }));
 jest.unstable_mockModule('../features/fans/FanProfileEditor', () => ({ FanProfileEditor: () => null }));
 jest.unstable_mockModule('../features/fans/FollowedArtists', () => ({ FollowedArtists: () => null }));
-jest.unstable_mockModule('../features/fans/ProfileSectionCard', () => ({ ProfileSectionCard: () => null }));
 jest.unstable_mockModule('../features/fanclubs/FanClubPreview', () => ({ FanClubPreview: () => null }));
 
 const { default: FanHubPage } = await import('./FanHubPage');
@@ -399,7 +409,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1);
     expect(completeOnboardingProgressMock).toHaveBeenCalledWith(undefined, 'synthetic-exit-token');
     expect(loadOnboardingProgressMock).toHaveBeenCalledWith('synthetic-exit-token');
-    expect((await screen.findByRole('status')).textContent).toBe(es.fanHubOnboarding.saving);
+    expect((await screen.findByText(es.fanHubOnboarding.saving)).textContent).toBe(es.fanHubOnboarding.saving);
     expect(screen.getByText('Primeros pasos')).toBeTruthy();
     await act(async () => { resolveExit?.({ newlyCompleted: false, progress: completedProgress }); });
     await waitFor(() => expect(screen.queryByText('Primeros pasos')).toBeNull());
@@ -469,5 +479,123 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     await act(async () => { resolveRead?.(eligibleProgress); await refresh; });
     expect(screen.queryByText('Primeros pasos')).toBeNull();
     expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+
+describe('artist photo continuity in Community', () => {
+  afterEach(() => { cleanup(); });
+
+  it('refreshes an open search and cached artist previews after any artist saves a photo', async () => {
+    sessionMock = { username: 'artist-42', displayName: 'New artist', roles: ['Artist'], modules: [], partyId: 42, apiToken: 'synthetic-test-token' };
+    loadOnboardingProgressMock.mockResolvedValue(completedProgress);
+    let profile = { apArtistId: 42, apDisplayName: 'New artist', apSlug: 'new-artist', apHeroImageUrl: 'https://cdn.example.test/old-photo.jpg', apGenreIds: [] } as unknown as ArtistProfileDTO;
+    getMyArtistProfileMock.mockImplementation(async () => profile);
+    updateMyArtistProfileMock.mockImplementation(async (payload) => {
+      profile = { ...profile, apHeroImageUrl: payload.apuHeroImageUrl };
+      return profile;
+    });
+    directorySearchMock.mockImplementation(async () => ({
+      items: [{ type: 'profile', id: 'artist-42', slug: '42', canonicalPath: '/artista/42', title: 'New artist', imageUrl: profile.apHeroImageUrl, location: {}, taxonomy: { genreIds: [], professionIds: [], serviceIds: [], instrumentIds: [] }, score: 1, scoreBreakdown: {}, sponsored: false }],
+      sponsoredItems: [], facets: { total: 1, entityTypes: { profile: 1 }, cities: [] },
+    }));
+    const imageLoader = jest.spyOn(window, 'Image').mockImplementation(() => {
+      const image = document.createElement('img');
+      Object.defineProperty(image, 'src', { set: () => { queueMicrotask(() => image.dispatchEvent(new Event('load'))); } });
+      return image;
+    });
+    const view = renderPage('/mi-artista?q=New');
+    view.queryClient.setQueryData(['public-artist', 'new-artist'], profile);
+    view.queryClient.setQueryData(['public-artist', '42'], profile);
+    try {
+      const card = await screen.findByRole('article');
+      const image = await waitFor(() => {
+        const result = card.querySelector('img');
+        expect(result).not.toBeNull();
+        return result!;
+      });
+      expect(image.getAttribute('src')).toBe('https://cdn.example.test/old-photo.jpg');
+      const input = await screen.findByLabelText('URL de portada (opcional)');
+      await waitFor(() => expect(input).toHaveProperty('value', 'https://cdn.example.test/old-photo.jpg'));
+      fireEvent.change(input, { target: { value: 'https://cdn.example.test/new-photo.jpg' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar perfil de artista' }));
+      await waitFor(() => expect(updateMyArtistProfileMock.mock.calls.at(-1)?.[0]).toEqual(expect.objectContaining({ apuArtistId: 42, apuHeroImageUrl: 'https://cdn.example.test/new-photo.jpg' })));
+      // Source versions deliberately get a fresh img so retired errors cannot invalidate the replacement.
+      await waitFor(() => expect(card.querySelector('img')?.getAttribute('src')).toBe('https://cdn.example.test/new-photo.jpg'));
+      expect(view.queryClient.getQueryState(['public-artist', 'new-artist'])?.isInvalidated).toBe(true);
+      expect(view.queryClient.getQueryState(['public-artist', '42'])?.isInvalidated).toBe(true);
+    } finally { view.queryClient.clear(); imageLoader.mockRestore(); }
+  });
+});
+
+
+describe('artist public link never uses an unsaved slug', () => {
+  const initialArtist = (): ArtistProfileDTO => ({
+    apArtistId: 42,
+    apDisplayName: 'Artist 42',
+    apSlug: 'published-artist',
+    apGenreIds: [],
+  } as unknown as ArtistProfileDTO);
+
+  beforeEach(() => {
+    sessionLoading = false;
+    sessionMock = {
+      username: 'artist-42', displayName: 'Artist 42', roles: ['Artist'],
+      modules: [], partyId: 42, apiToken: 'synthetic-artist-token',
+    };
+    loadOnboardingProgressMock.mockReset().mockResolvedValue(completedProgress);
+    completeOnboardingProgressMock.mockReset().mockResolvedValue(completedReceipt);
+    updateMyArtistProfileMock.mockReset();
+    getMyArtistProfileMock.mockReset().mockResolvedValue(initialArtist());
+  });
+
+  afterEach(() => { cleanup(); });
+
+  it('keeps public view and copy pointed at the persisted slug while an artist edits a draft', async () => {
+    const view = renderPage('/mi-artista');
+    try {
+      const publicLink = await screen.findByRole('link', { name: 'Ver público' });
+      expect(publicLink.getAttribute('href')).toBe('/a/published-artist');
+      const slug = await screen.findByRole('textbox', { name: 'Slug público' });
+      await waitFor(() => expect((slug as HTMLInputElement).value).toBe('published-artist'));
+      fireEvent.change(slug, { target: { value: 'not-saved-yet' } });
+      expect(publicLink.getAttribute('href')).toBe('/a/published-artist');
+      expect(screen.getByRole('button', { name: 'Copiar enlace' })).toBeTruthy();
+      expect(updateMyArtistProfileMock).not.toHaveBeenCalled();
+    } finally { view.queryClient.clear(); }
+  });
+
+  it('changes the shareable link only after a matching authoritative save receipt', async () => {
+    let persisted = initialArtist();
+    getMyArtistProfileMock.mockImplementation(async () => persisted);
+    updateMyArtistProfileMock.mockImplementation(async () => {
+      persisted = { ...persisted, apSlug: 'server-confirmed-slug' };
+      return persisted;
+    });
+    const view = renderPage('/mi-artista');
+    try {
+      await screen.findByRole('link', { name: 'Ver público' });
+      const slug = await screen.findByRole('textbox', { name: 'Slug público' });
+      fireEvent.change(slug, { target: { value: 'requested-slug' } });
+      expect(screen.getByRole('link', { name: 'Ver público' }).getAttribute('href')).toBe('/a/published-artist');
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar perfil de artista' }));
+      await waitFor(() => expect(updateMyArtistProfileMock).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(screen.getByRole('link', { name: 'Ver público' }).getAttribute('href')).toBe('/a/server-confirmed-slug'));
+      expect(view.queryClient.getQueryData<ArtistProfileDTO>(['artist-profile', 42])?.apSlug).toBe('server-confirmed-slug');
+    } finally { view.queryClient.clear(); }
+  });
+
+  it('rejects a mismatched account save receipt and never shares its slug', async () => {
+    updateMyArtistProfileMock.mockResolvedValue({
+      ...initialArtist(), apArtistId: 99, apSlug: 'other-artist',
+    });
+    const view = renderPage('/mi-artista');
+    try {
+      await screen.findByRole('link', { name: 'Ver público' });
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar perfil de artista' }));
+      await screen.findByText(/No pudimos confirmar el perfil guardado/);
+      expect(screen.getByRole('link', { name: 'Ver público' }).getAttribute('href')).toBe('/a/published-artist');
+      expect(view.queryClient.getQueryData<ArtistProfileDTO>(['artist-profile', 42])?.apSlug).toBe('published-artist');
+    } finally { view.queryClient.clear(); }
   });
 });

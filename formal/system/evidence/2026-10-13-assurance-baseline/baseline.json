@@ -1,0 +1,85 @@
+{
+  "observedAt": "2026-10-13T23:08:59.206930+00:00",
+  "baselineRevision": "aa7b70d10aee0057e8db9472a6b41e97ed765006",
+  "sharedWorktreeRevision": "22ba284bb3085981bfa87aec88ad98863f255a53",
+  "sharedWorktree": "dirty; preserved without edits",
+  "mobileRevision": "c93df7ecc7b2aeee8bb3e9d78ddc24cb752c8e48",
+  "registeredRequirements": 119,
+  "criticalRequirements": 101,
+  "baselineRegisterStatuses": {
+    "PARTIAL": 119
+  },
+  "hostedCI": [
+    {
+      "run": 38476150383,
+      "name": "Social formal and persistence verification",
+      "conclusion": "success"
+    },
+    {
+      "run": 38476150409,
+      "name": "Event operations verification",
+      "conclusion": "success"
+    },
+    {
+      "run": 38476150366,
+      "name": "Build Image",
+      "conclusion": "success"
+    },
+    {
+      "run": 38476150248,
+      "name": "Run Datadog Synthetic tests",
+      "conclusion": "failure"
+    },
+    {
+      "run": 38476150260,
+      "name": "Universal interaction verification",
+      "conclusion": "success"
+    }
+  ],
+  "localBaseline": {
+    "verifyFormal": "passed; deterministic loop model and source audit only, 0 errors/critical, 505 warnings",
+    "evidenceTests": "6 passed",
+    "fullApplicationBuildAndTests": "not rerun; this slice modifies proof/reporting tooling only"
+  },
+  "openIssues": [
+    577,
+    572,
+    564,
+    534,
+    514,
+    130,
+    128
+  ],
+  "pendingProofAndFixPRs": [
+    551,
+    554,
+    555,
+    558,
+    559,
+    561,
+    562,
+    563,
+    565,
+    566,
+    567,
+    570,
+    571,
+    574
+  ],
+  "branchProtection": {
+    "requiredApprovingReviews": 1,
+    "dismissStaleReviews": true,
+    "strictChecks": true,
+    "enforceAdmins": true,
+    "requiredFormalChecks": [
+      "specification-contracts",
+      "verify"
+    ]
+  },
+  "limitations": [
+    "Read-only hosted CI observation, not independent mathematical validation",
+    "Existing pending PRs are not credited to main",
+    "Production runtime not inspected or mutated in this execution",
+    "Architecture inventory already exists; exhaustive behavioral coverage and specification reconciliation remain incomplete"
+  ]
+}

@@ -48,6 +48,16 @@ class DiscoveryCoverage(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(inventory.is_specification_candidate(path))
 
+    def test_server_campaign_material_is_not_hidden_from_traceability(self):
+        for path in ['services/campaign-platform/domain.py',
+                     'services/campaign-platform/tdf-campaign-worker.service',
+                     'services/campaign-platform/tdf-campaign-monitor.timer',
+                     'services/campaign-platform/ui/index.html',
+                     'services/campaign-platform/ui/style.css',
+                     'services/campaign-platform/ui/tdf-logo.png']:
+            with self.subTest(path=path):
+                self.assertTrue(inventory.material_source(path))
+
     def test_private_context_and_receipts_are_not_requirements(self):
         for path in ["MEMORY.md", "USER.md", "SOUL.md", "DREAMS.md", "TOOLS.md",
                      "memory/2026-09-20.md", "docs/campaigns/example.md",

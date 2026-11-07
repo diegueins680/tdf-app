@@ -1,0 +1,182 @@
+{
+  "observedAt": "2026-10-26T18:11:42.580800+00:00",
+  "pr": 623,
+  "composition": {
+    "observedAt": "2026-10-26T18:07:09.225775+00:00",
+    "protectedMain": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+    "privateQualifiedMaterialSource": "355e0f881880218bbd6e4ff7e8dd3fe123957395",
+    "currentComposition": "6ddc2a9180a0ebc618ffedf1be000e5004ba9aec",
+    "wholeTreeExactToPrivatePreparation": true,
+    "allPrivateExecutionIdentitiesRetained": true,
+    "noSecondSourceQualificationInferred": true,
+    "requiredNext": "Finalreport/sourceadmission/publicationguard,newheadCI,newindependentreview; no inheritedE036approval."
+  },
+  "sourceAudit": {
+    "observedAt": "2026-10-26T18:11:14.941954+00:00",
+    "pr": 623,
+    "head": "6ddc2a9180a0ebc618ffedf1be000e5004ba9aec",
+    "main": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+    "feature": "e036d96265a71363794dd7584fe96ab1440d98f3",
+    "requirements": 146,
+    "mainWholeRequirementObjectsPreserved": 145,
+    "onlyExtendedRequirement": "EVT-TICKET-001 exact originalStripefeature",
+    "catalogDecisionFileExactToMain": 1339,
+    "migrationManifestAndSqlHistoryExactToMain": 222,
+    "ownedStripeMaterialExact": [
+      "formal/ticket-admission/README.md",
+      "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+      "tdf-hq-ui/src/i18n/locales/en.ts",
+      "tdf-hq-ui/src/i18n/locales/es.ts",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+    ],
+    "mainInputsPreserved": [
+      "tdf-hq/sql",
+      "scripts/production-migrations.json",
+      "scripts/lib/production-release.mjs",
+      "tdf-hq/src/TDF/Server/MusicRelease.hs",
+      "tdf-hq/src/TDF/Services/Stripe.hs",
+      "ops",
+      "package.json",
+      "package-lock.json",
+      "packages",
+      "tdf-mobile",
+      "tdf-hq/docs/openapi/api.yaml",
+      "tdf-hq-ui/src/api/generated/types.ts"
+    ],
+    "onlyBackendSourceDiff": [
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+    ],
+    "changedPaths": [
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+      "docs/catalog-persistence/reports/static-list-inventory.json",
+      "formal/system/inventory.json",
+      "formal/system/requirements.json",
+      "formal/system/traceability.json",
+      "formal/ticket-admission/README.md",
+      "reports/stripe-checkout-after-ledger-2026-10-26.json",
+      "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+      "tdf-hq-ui/src/i18n/locales/en.ts",
+      "tdf-hq-ui/src/i18n/locales/es.ts",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+    ],
+    "sourceAncestryNormal": true,
+    "scope": "Immutable correspondence after actual protected622merge. No new compiled Haskell/current-head CI/review/deployment implied; old whole-backend4056 equivalence no longer claimed after main adds music search."
+  },
+  "executionContext": "Combined123-case test ran on reconciled working tree rootedE036+5f; application bytes match immutable355e0f8. Actual protectedmain e05d was then normally merged as6ddc2a9 with WHOLETREEIDENTICAL to355e0f8. Original execution identities retained; no newcompiledHaskell/currentpublicationheadCI inferred.",
+  "rootNode": "22.14.0",
+  "verification": {
+    "focusedCombined": {
+      "passed": 123,
+      "suites": 10,
+      "exitCode": 0
+    },
+    "uiLint": {
+      "exitCode": 0
+    },
+    "uiTypecheckAndBuild": {
+      "exitCode": 0,
+      "initialJsGzipBytes": 336467,
+      "preloads": 5,
+      "privateBuildNotDeployedArtifact": true
+    },
+    "apiClients": {
+      "webRegenerated": true,
+      "mobileRegenerated": true,
+      "bothCommittedBytesUnchanged": true,
+      "mobilePin": "d832bb3057dd03d44c0f35eea05be9f36320429d"
+    },
+    "strictCatalog": {
+      "jsonExitCode": 0,
+      "csvExitCode": 0,
+      "candidates": 1339,
+      "unreviewed": 0,
+      "stale": 0,
+      "decisionRegistryExactToMain": true
+    },
+    "inventoryAndTraceability": "regenerated from combined register and checked",
+    "sourceAdmission": {
+      "base": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+      "head": "6ddc2a9180a0ebc618ffedf1be000e5004ba9aec",
+      "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mappedChangedSurfaces": [
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+    },
+    "localCanonicalRepoQuality": {
+      "status": "BLOCKED_LOCAL_MOCK",
+      "initialInvocationExitCode": 1,
+      "exactStageRetryExitCode": 1,
+      "unmodifiedRemainingSuffixExitCode": 0,
+      "blockedStage": "node --test scripts/__tests__/hetzner-restore.test.mjs",
+      "failure": "Local Node22.14 macOS synthetic SSH stand-in stalled twice; sampled fs ReadFileUtf8 and parent synchronous polling. Root cause unproven.",
+      "productionOrNetworkSshOccurred": false,
+      "mockNetworkDescriptors": 0,
+      "diagnosticFiles": [
+        "623-stack-quality-stall.json",
+        "623-stack-quality-second-stall.json"
+      ],
+      "stoppedOnlyExactOwnedTestProcesses": true,
+      "sourceTestsTimeoutsOrAssertionsChanged": false,
+      "declaredGate": "Full unmodified current-head Linux repo-quality, including the blocked local test file, is mandatory before merge. This local whole-command result is not passed."
+    }
+  },
+  "logDigests": {
+    "623-stack-focused.log": {
+      "sha256": "2caf5538f96cd49caf043a414eda2a05913d6011cdaa00ec371e2d627d0cec53",
+      "bytes": 1807
+    },
+    "623-stack-lint.log": {
+      "sha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+      "bytes": 71
+    },
+    "623-stack-build.log": {
+      "sha256": "ac444aa5815b1b207784f72baa4c3b72786eb47c6ffa0117bb26e8c53f751931",
+      "bytes": 31131
+    },
+    "623-stack-api.log": {
+      "sha256": "66dec8f3534e9462ad3825612f9d93512ed4bba3fcabe5fd59a707995acf2f53",
+      "bytes": 640
+    },
+    "623-stack-catalog-json.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "623-stack-catalog-csv.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "623-stack-repo-quality.log": {
+      "sha256": "f2b09a80854c54402162e6c30c62c92f81d12823937569f03b87caa235fc867f",
+      "bytes": 34492
+    },
+    "623-stack-repo-quality-resumed.log": {
+      "sha256": "7cb03ab03edf5190a8aa546c78285344395fad3d42d4011cd224f934aef96b3f",
+      "bytes": 15
+    },
+    "623-stack-repo-quality-remaining.log": {
+      "sha256": "5c6a55d7bbd4220763d9621ecc6344690ad2d6c980721bf41cd478ffee5fc390",
+      "bytes": 97713
+    }
+  },
+  "retainedHistoricalEvidence": "PreviousE036/4712 qualification report remains unchanged. Old4056/A571 whole-backend equivalence is not claimed for the new combined backend containing protected music-search changes.",
+  "deployment": {
+    "performed": false,
+    "productionWrites": 0,
+    "providerActivation": false,
+    "payments": 0,
+    "financialRelease": "BLOCKED:formalacceptance/privateevidencestorage/coordinatedrecoveryandactualimagequalification outstanding.",
+    "requiredBeforeIntegration": [
+      "Fresh publication-head CI(all20required checks)",
+      "New independent head approval",
+      "Current main ancestry/FIFO/conversations and protected normal merge"
+    ]
+  }
+}

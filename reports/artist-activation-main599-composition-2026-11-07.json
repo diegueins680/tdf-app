@@ -1,0 +1,364 @@
+{
+  "dateUTC": "2026-11-07",
+  "pullRequest": 667,
+  "previousHead": "2b508f65bb79d82d8c4c229d36f058afb508a15a",
+  "protectedMain": "7fd0c0d4b5b2bd01dbc33b7c3f172a5ad5505a81",
+  "mobileRevision": "0f57163cc9c489e22738cac3ff7985d8ca4b647c",
+  "composition": "Normal two-parent composition; no merge to protected main. Preserve campaign persistence, identity migrations, immutable ancestors, exact Mobile, library selection and explicit following.",
+  "preservedMain599Artifacts": [
+    {
+      "path": ".github/workflows/catalog-list-audit.yml",
+      "gitBlob": "b96bb1bdadde8663da22a6d074d8d66cbb5b448a",
+      "sha256": "8f40aa2c4caffde1bc8ab4e39c63d113d47483cd1683c92d489936af3768f17f"
+    },
+    {
+      "path": "docs/artists/video-campaigns-mobile-contract.patch",
+      "gitBlob": "c2f0e45899d0137baffb33afaca150aee49c9156",
+      "sha256": "763e2222cea319d59e978f1a9f707041fb31e79bf3e8d08ba2c0fbcfcfd90d6f"
+    },
+    {
+      "path": "docs/artists/video-campaigns.md",
+      "gitBlob": "b268e43328be66e0a384022d57fbe72563e695d3",
+      "sha256": "5866bd513e11117068b894b4ec804c9a29757a859c3c2ec5ee396ba0321b44c8"
+    },
+    {
+      "path": "docs/campaigns/liquid-paper-girl-2026-10-20/README.md",
+      "gitBlob": "1492682555f31cb92e73e8ee5c47d5f6feb5a284",
+      "sha256": "f7051421fce683b2f1b1a9abf668478f0a098fb52e154a8914506940713ca438"
+    },
+    {
+      "path": "docs/campaigns/liquid-paper-girl-2026-10-20/assets.json",
+      "gitBlob": "e9915b01efd535220cc71738911b511b407a9647",
+      "sha256": "a0d06853b30b9a7f22b0228d076f79a1a202393d4149a4d32c09c6247c8d3712"
+    },
+    {
+      "path": "docs/campaigns/liquid-paper-girl-2026-10-20/calendar.csv",
+      "gitBlob": "5337b3a22f98f3f579deca33bfecf7a94ceb2f44",
+      "sha256": "2b0b582204df83a5384d7ad034d1b2a34a9221eb5868dd0b833db4fa9c598214"
+    },
+    {
+      "path": "docs/campaigns/liquid-paper-girl-2026-10-20/campaign.json",
+      "gitBlob": "a22daa2987787735cd33fa354405ca1136f2ea39",
+      "sha256": "dacba108adaecaf90f6f53b0fcb6e1b869e722ab044562e8cf02a2af589f09fa"
+    },
+    {
+      "path": "docs/campaigns/liquid-paper-girl-2026-10-20/delivery.md",
+      "gitBlob": "08048a05791f0f87758e15d7ff2441ba8cea9858",
+      "sha256": "9d6c3727b70268ae0960704966fc7340ca67d9ff5b35cb11ca6309eb581209c0"
+    },
+    {
+      "path": "docs/campaigns/liquid-paper-girl-2026-10-20/validation.json",
+      "gitBlob": "550c97634f80ab620d6dc8f30284f585bf58a9ab",
+      "sha256": "c0f6e6ab640bc74b7049a15ee088d61154216c99af1a73295c89d02ca78b547b"
+    },
+    {
+      "path": "docs/catalog-persistence/event-catalog-current-successors.json",
+      "gitBlob": "93026b0d56c9cee6fb349685222f3241a27bda94",
+      "sha256": "51fcea222d2a082358e00254e1cf86c4bd159c780d27de3bae6242ccbba54500"
+    },
+    {
+      "path": "docs/catalog-persistence/event-integration-retirements.json",
+      "gitBlob": "11e117805f81863f6c07367adfbcc0899b6c0388",
+      "sha256": "cdb94b9b23531b6a4656f2387a1a66af4f28efa7544477610ad6ec8f114c9c69"
+    },
+    {
+      "path": "e2e/web/video-campaigns.spec.mjs",
+      "gitBlob": "c7bfc045ba368ef3337b943caddce589f76158e6",
+      "sha256": "4028aeb82bc7d91c568672124ce308acf27ed2626bf36167546bcca46e12a2cf"
+    },
+    {
+      "path": "formal/system/auth-predicates.json",
+      "gitBlob": "bb4dcae8cabcc6fe83201924290a87013e0f1700",
+      "sha256": "8e604f1ab84fdf7112691990327ba8f540a2b8aeb8744b024b23a5f477050777"
+    },
+    {
+      "path": "formal/system/compiled-api-surface.json",
+      "gitBlob": "c927b94632dcdfd3be54819c93b0ef70ed012f96",
+      "sha256": "c592780532eff39cd73ee7a2878b2120e3f09ad2684bd2dfcd1d45db99fcf09b"
+    },
+    {
+      "path": "formal/system/recovery-expiry-arithmetic.json",
+      "gitBlob": "861452a7db602062fe12dc0e45695afb32151388",
+      "sha256": "edb95f040231e7c76f901918db97b72adbe544fa72aa55df936344552c3bca26"
+    },
+    {
+      "path": "scripts/__tests__/catalog-list-audit.test.mjs",
+      "gitBlob": "31db8f5ee21ba4359f710764f2b1138045ac6f0c",
+      "sha256": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629"
+    },
+    {
+      "path": "scripts/__tests__/video-campaign-access.test.mjs",
+      "gitBlob": "a4bb9e2788b9d1ba42071d82f8babc0eb1547f73",
+      "sha256": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04"
+    },
+    {
+      "path": "scripts/production-migrations.json",
+      "gitBlob": "6dd2253e0ae6b025e0345934e75d27d4694436ab",
+      "sha256": "b4b40f427e0d440ff0d3c54ecfeed00086cb857501627cd6a2684c277a058360"
+    },
+    {
+      "path": "scripts/test-identity-reconciliation.sh",
+      "gitBlob": "c108dbc3d0098a38a6a001ac5ee72ca1219bf330",
+      "sha256": "68ef02f07b10ee6d6eb8d4bf5f95dab2d8791f54e34a3ffd68a7a61726a57cef"
+    },
+    {
+      "path": "scripts/verify-video-campaign-access.mjs",
+      "gitBlob": "418bf84ca4db3b942aa6cdaebd3bd6e83a5f9168",
+      "sha256": "0b6a82b0c2472d1735cbe9e0f84b2ecc1d513c3fa81b853bd2d7a932cea6ace7"
+    },
+    {
+      "path": "tdf-hq-ui/src/api/generated/types.ts",
+      "gitBlob": "9aae99bf4c7254919f305280d0a5976d91383bb9",
+      "sha256": "157a680d2edbd9895297be8adf4b70bedad1ae723a53482594970bb41efc84bb"
+    },
+    {
+      "path": "tdf-hq-ui/src/api/videoCampaigns.ts",
+      "gitBlob": "26f26ed030becb80f1820b616e4ca3aa0283d0e7",
+      "sha256": "8ee7fef3bd2d796b66f216817fe73d2e0638f0ddadd76e0f615d75bd4a7b6c64"
+    },
+    {
+      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+      "gitBlob": "e858033653484c6f023784c7b2e92bcacae436ba",
+      "sha256": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4"
+    },
+    {
+      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+      "gitBlob": "61402a2ff5c1d1fe83c7214cd99c920c33f684cb",
+      "sha256": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5"
+    },
+    {
+      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+      "gitBlob": "67f9418699ab2b28fce7d77cfebe86ee6c35ae0f",
+      "sha256": "ea50012625c3e00735db60556e8400db0b697c859d029c8ce398376f1d44fba2"
+    },
+    {
+      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+      "gitBlob": "6521276a7387f2d4207f67a1e03d890fb0f498d2",
+      "sha256": "7aab0af6588a6b078fe8ea4136fd6b9656c7d2996d19e3913041f01125c0d50b"
+    },
+    {
+      "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
+      "gitBlob": "263b743fa5bcf8e7a4a9b694faa40f0a914846d8",
+      "sha256": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767"
+    },
+    {
+      "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+      "gitBlob": "ed512746953a74b8b213ebf0b75307916e174779",
+      "sha256": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891"
+    },
+    {
+      "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+      "gitBlob": "ba9171b3c825463ebffb7ed2b7f66768ea78ebcd",
+      "sha256": "d3a2149f3bdde2e710a920fca3d2dc43e3085615c54b4c3685502bc894f5d7bb"
+    },
+    {
+      "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "gitBlob": "fafb9a7c094ca44d08390f753ca28078c9a7026b",
+      "sha256": "6455e176ec494303d64d2df941508ae30c8ac1b623958a4f36eaeb77d49a2b13"
+    },
+    {
+      "path": "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
+      "gitBlob": "f9e3b1661bf706a918869054c25d4bfda7ace55a",
+      "sha256": "e588d8dc3d90d1c59f88b833ccce51a34c129c42153f3bb560017432000109df"
+    },
+    {
+      "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+      "gitBlob": "d01c50bdd887bf4ee0428f4057f152d478045e1d",
+      "sha256": "e106acc20d3913b5612806e9ebbfd83fcf1944dea00e1d696357184e84fef647"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/api.yaml",
+      "gitBlob": "bbb78b502ed2b52496b447e2a11a3f9259669347",
+      "sha256": "4ca7920bde8ef05dd5181334f9b0ef1bbb8cff1e591e9bf2d532a989520336cc"
+    },
+    {
+      "path": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+      "gitBlob": "c6f7b9f42057f8591cadb99befe1cceefd596c07",
+      "sha256": "6d79f7b97f10d7ea72f057b3bff3c0a4a89cebc5ec531346d3780078f35c27a6"
+    },
+    {
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+      "gitBlob": "fe50b6e6d3f3673cfc0e6d305c79ef7f37a96bb6",
+      "sha256": "02185d6050fe65042d41f79e6b3ab26ea6c71fe3b8d47b298698cbf736d25407"
+    },
+    {
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+      "gitBlob": "654d2087382635c5f19dc1a9fa65de8d876591d3",
+      "sha256": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852"
+    },
+    {
+      "path": "tdf-hq/src/TDF/API.hs",
+      "gitBlob": "0492a4d18a9f96ba70efe604227012cd0011397a",
+      "sha256": "c5a3b1529b86339f16f10d2697107df71d932a93564021a3fc4c7ba37ecf8016"
+    },
+    {
+      "path": "tdf-hq/src/TDF/ModelsExtra.hs",
+      "gitBlob": "1b3950c7bfa4e47b5f7afceaf55e5176f3807dee",
+      "sha256": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc"
+    },
+    {
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "gitBlob": "2bdace9a7cc0bd5605085512b8c886e74389819f",
+      "sha256": "4bb93fe0b571099ab29e38c185ee3974a57533cd47ad140b8f22da901e472d17"
+    },
+    {
+      "path": "tdf-hq/src/TDF/VideoCampaigns.hs",
+      "gitBlob": "823c167d3b89d2d1dd220f51a5356e7208ceb7dd",
+      "sha256": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c"
+    },
+    {
+      "path": "tdf-hq/tdf-hq.cabal",
+      "gitBlob": "5e48da3aaa3fea34ea0e3fe5c5dcb7e9b6b2ee9a",
+      "sha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6"
+    },
+    {
+      "path": "tdf-hq/test/Spec.hs",
+      "gitBlob": "cc27dd266631a7ea79b7fbb5508f512d06839cd4",
+      "sha256": "f6b59cf38512a3c5297d6ac8a5fc19b9c2ed520b6b18a56caa8ac34edace249b"
+    },
+    {
+      "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
+      "gitBlob": "70e202b07642a588cc497e47747e996a6bb4ff88",
+      "sha256": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046"
+    },
+    {
+      "path": "tdf-hq/test/sql/identity_reconciliation.sql",
+      "gitBlob": "fb9ab2f8758c436cc85ec7d1a3f4ad105591ade7",
+      "sha256": "03917f0481ccaeb39cbd5338efe34361e231e20b8ce1ad1317a0fb21a933342c"
+    }
+  ],
+  "composedPaths": [
+    "docs/catalog-persistence/catalog-list-decisions.json",
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "docs/catalog-persistence/reports/static-list-inventory.json",
+    "e2e/web/artist-follow.spec.mjs",
+    "formal/system/inventory.json",
+    "formal/system/requirements.json",
+    "formal/system/traceability.json",
+    "scripts/quality-repo.sh",
+    "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+    "tdf-hq-ui/src/utils/artistFollowIntent.ts",
+    "tdf-hq/assets/feature-registry.json"
+  ],
+  "reconciliation": {
+    "player": "One public library player; explicit opening precedes external frames. Preserve Drive resourcekey and safe source links, public file play/end attribution without URL exposure, own measured watch events, pause/close/retry and stable selected source. Main campaign assertions remain in a separate test file with explicit opening added.",
+    "auth": "Support original main string-attribution caller with its original public-field allowlist, and session context caller retaining exact video/hash. Both parent sources fail one of two continuity assertions; composed source passes both, no harness errors.",
+    "catalog": "All1404 protected-main decisions remain byte-equivalent as objects. Current strict1405 candidates; two stale PR fingerprints for old Mobile/manifest retained in reconciliation.artistActivationMain599.retiredDecisions, no reclassification.",
+    "requirements": "192 main objects plus2 PR obligations=194; only additive existing PR mapping fields differ in DISCOVERY-NAV-001 and SYS-CI-SELECTED-001.",
+    "contracts": "Core/SQL/OpenAPI/generated clients/production manifest/CI match protected main. Manifest246 entries; no SQL or historical ancestor rewrite.",
+    "campaigns": "Existing Liquid Paper Girl and other campaign content preserved; no real campaign/provider/publication/account/follow writes."
+  },
+  "qualification": {
+    "web": {
+      "tests": 4054,
+      "suites": 358,
+      "status": "PASS",
+      "environment": "local Jest/jsdom; NODE_PATH removed for process to prevent injected global package resolution"
+    },
+    "focused": {
+      "tests": 92,
+      "suites": 8,
+      "status": "PASS",
+      "scope": "84 cases in7 files plus8 thumbnail component cases; initial wrong-path selection had one ENOENT harness failure and is not a passing run"
+    },
+    "typecheck": "PASS",
+    "build": {
+      "status": "PASS",
+      "initialJsGzipBytes": 389747
+    },
+    "lint": "PASS",
+    "qualityRepo": {
+      "status": "PASS",
+      "python": "3.13.5 system",
+      "age": "1.3.2 officially pinned",
+      "ageBinarySha256": "eb7dd1b518f0a307c99cd97782623c5321da049154b04acd2d98d21aa7bc9b2c"
+    },
+    "service": {
+      "tests": 135,
+      "status": "PASS",
+      "scope": "isolated SQLite, loopback HTTP and mocked external providers; pinned cryptography46.0.3 target"
+    },
+    "boundedModel": "PASS1024 states and negative controls",
+    "specification": "7 inventory/10 conformance plus freshness and two generated clients PASS",
+    "catalog": "strict JSON and CSV PASS1405;0unreviewed/0stale",
+    "changedSourceMapping": "PASS against protected main after sealing regenerated traceability; initial pre-seal failure retained as ordering/historical failure, not a functional pass",
+    "limitations": [
+      "First return-negative script failed invalid child_process options before assertions; corrected script reproduces each parent assertion failure without harness errors.",
+      "No new local compiled Haskell/PostgreSQL or real-browser rehearsal. Chromium launch socket restriction remains.",
+      "Published2b browser failure12>10 remains failed; no thumbnail runtime change, assertion/budget change or CI rerun.",
+      "Prior4bc local worker3/6 failures retain their historical scope; current full quality run passed."
+    ]
+  },
+  "sourceSha256": {
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "6b84cf452d35810cd5fc3d2117dabb518ed9babe6cba469ee3796f8a8ea24c83",
+    "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
+    "tdf-hq-ui/src/components/SessionVideoPreview.campaign.test.tsx": "4945d715b69fe77bdcd52e84df20c812c28793b62abd984b07fb475f313553c0",
+    "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "12b5c7fbb55aaaa9df265c3feb6832c61d75bfe45050f1459304f73f3b21cbcc",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "d34c07f4c77465f5235473d8e40e504bfe55bf6dce6df130a194d1de5d27fd83",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts": "60afc03d528b10685cde5973a8a66d4e1b81d296663c6dc4360ab3280a269786",
+    "tdf-hq-ui/src/utils/artistFollowIntent.ts": "8df56d639e7ff6dcace64d8bcf1fc3169a054781c9d69aefa83fea45eaf8fb77"
+  },
+  "localLogs": {
+    "web-full": {
+      "localPath": "/tmp/pr667-main599-web-full.log",
+      "sha256": "9389f3364e0896e4f2faae9d01f9b32e74ad1533eccd358c1f05ee699eae9483"
+    },
+    "typecheck2": {
+      "localPath": "/tmp/pr667-main599-typecheck2.log",
+      "sha256": "2e64492c4ff97b3a9fadc75a4234d3d6410499e048fbb0da89afcb6c4e651652"
+    },
+    "build": {
+      "localPath": "/tmp/pr667-main599-build.log",
+      "sha256": "4d477c030dad24e7d342fb541a3afc9029b90e472c40933b8cfcb860c26541d6"
+    },
+    "lint": {
+      "localPath": "/tmp/pr667-main599-lint.log",
+      "sha256": "afd290cb866a029420f31d40a50a211a02d0fc0f0d820cad3087b9d578f9a174"
+    },
+    "quality": {
+      "localPath": "/tmp/pr667-main599-quality.log",
+      "sha256": "3bfafd4ffa224db1d1f19f96172c6a6cea5dd369ab19e75dbb0e8f9ca64c572b"
+    },
+    "service": {
+      "localPath": "/tmp/pr667-main599-service.log",
+      "sha256": "0171885e857ab1f31d6179e9223d4c8a5878cf8681d982851a5bf6433681fb62"
+    },
+    "model": {
+      "localPath": "/tmp/pr667-main599-model.log",
+      "sha256": "af6013484bae24b51cf30b36589859fd70502116e9295fdf7463990ef09ea350"
+    },
+    "inventory-tests": {
+      "localPath": "/tmp/pr667-main599-inventory-tests.log",
+      "sha256": "fac2f31369d9585cbe1f20a74449d5ee3d007db129af038c240e078d6a9dded3"
+    },
+    "conformance-tests": {
+      "localPath": "/tmp/pr667-main599-conformance-tests.log",
+      "sha256": "995c0c4318c090d7604d0a429901d635df591cd10d44cbcec43ec22b4d9d9de2"
+    },
+    "catalog-json": {
+      "localPath": "/tmp/pr667-main599-catalog-json.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "catalog-csv": {
+      "localPath": "/tmp/pr667-main599-catalog-csv.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "return-negative-corrected": {
+      "localPath": "/tmp/pr667-main599-return-negative-corrected.log",
+      "sha256": "b7269f63e23cd7fd3405eee575ab890cd1ad1d59be0c144976e81ed21feaa709"
+    },
+    "changedSourceMapping": {
+      "localPath": "/tmp/pr667-main599-mapping-sealed.json",
+      "sha256": "95baf98f332e152cc8c51f485f719cd04506777a748ef228cfe7abe80e2e6076"
+    }
+  },
+  "release": {
+    "draft": true,
+    "hostedCI": "mandatory fresh execution after publication",
+    "review": "fresh exact-head independent APPROVED and all required checks/admission on current main mandatory",
+    "publicVerification": "not performed; no merge/deployment; preview/fixtures do not prove public playback, OAuth return or conversions",
+    "nativeMobile177": "separate; not merged by this work"
+  }
+}

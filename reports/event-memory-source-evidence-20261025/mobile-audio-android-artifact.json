@@ -1,0 +1,31 @@
+{
+  "run": 40287087143,
+  "branchHead": "6d0b1090cebf6b96fa7a840cb4062871b6ac0914",
+  "actualCheckout": "f1c0519e72fbc3d4c206440fe3bf03c499a82d89",
+  "nativeGitTrees": {
+    "f1c0519e72fbc3d4c206440fe3bf03c499a82d89": {
+      "tree": "e408ce8527d2ebdd5cc7b905098f8f5e70d6ed14",
+      "parents": [
+        "f5197c69ca1eeddbb7664b1c6b87f9c192548e6d",
+        "6d0b1090cebf6b96fa7a840cb4062871b6ac0914"
+      ]
+    },
+    "6d0b1090cebf6b96fa7a840cb4062871b6ac0914": {
+      "tree": "e408ce8527d2ebdd5cc7b905098f8f5e70d6ed14",
+      "parents": [
+        "f5197c69ca1eeddbb7664b1c6b87f9c192548e6d"
+      ]
+    }
+  },
+  "exactHeadTree": true,
+  "apkBytes": 76304651,
+  "apkSha256": "78373e8317e771826183a0e67241ca10c47b33309a691ae48b779c55209e1a88",
+  "nativeDocumentPickerDex": [
+    "classes5.dex"
+  ],
+  "runtimeInCompiledResources": "1.0.1-interactions-audio.1",
+  "bundledJavascript": [
+    "assets/index.android.bundle"
+  ],
+  "scope": "Isolated x86_64 test APK, repository test signing key; no device execution or store distribution"
+}

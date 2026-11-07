@@ -1,0 +1,67 @@
+{
+  "observedAt": "2026-10-26T02:08:24.026284+00:00",
+  "scope": "Owned synthetic PostgreSQL; no production mutations",
+  "source": "bb0c9a35fde3193b7ef8e3d175f12e7f2c4c6ac9",
+  "sourceWorktreeDirtyDuringHttp": true,
+  "migration": 217,
+  "introducedBy": "baab857f085b74f333c9f5d29e31306072fbc496",
+  "sqlSha256": "f12c7a3de7c62ec9cce3bd4a21969de40b7993b39889ee3d1704a1b56ac86d1f",
+  "runnerSha256": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
+  "cases": {
+    "operations": [
+      "source.remove",
+      "source.restore",
+      "source.hide",
+      "source.report.resolve"
+    ],
+    "orders": [
+      "action-first",
+      "revocation-first"
+    ],
+    "interleavings": 8,
+    "synchronization": "Observed pg_blocking_pids; no sleep-only success criterion",
+    "deniedEffects": "Source, target version, request ledger and audit unchanged",
+    "replay": "Denied after committed role revocation"
+  },
+  "negative": {
+    "assignmentActive": false,
+    "state": "removed",
+    "audit": 1,
+    "requests": 1,
+    "bothTransactionsCommitted": true
+  },
+  "globalRoleDeactivation": "Initial extra fixture was correctly refused by emergency-admin guard; not counted as a security counterexample or one of the eight cases",
+  "optimizedPython": "Fails closed before database access; assertions cannot be suppressed silently",
+  "http": {
+    "status": "PASS",
+    "requests": 120,
+    "assertionGroups": 17,
+    "runtimeSourceHashes": 24,
+    "externalProviderCalls": 0,
+    "actualBinarySha256": "830082822b64ef620152d1e5632cd9a2fd0c4a06f92cb7197bb682fefcbf3d1c"
+  },
+  "logs": {
+    "committedPredecessorCounterexample": {
+      "path": "/private/tmp/tdf-event-memory-permission-negative-committed.log",
+      "sha256": "618dd5a31666cc052d589ea7ea92ae5a6d6ccb30a8edd294a78cb740e873daf5"
+    },
+    "correctedEightInterleavings": {
+      "path": "/private/tmp/tdf-event-memory-permission-positive-v2.log",
+      "sha256": "fd05f850fc8dd03006d1378eeefabea2d79e2157b41e71f8d29769f45594a1a2"
+    },
+    "fullCanonicalSchema": {
+      "path": "/private/tmp/tdf-event-memory-permission-full-schema-v1.log",
+      "sha256": "edb875f4c375dcdaa06a5a97d2dcab3ef3eb8147a24d15446611f8371ab79eee"
+    },
+    "invitationRegression": {
+      "path": "/private/tmp/tdf-event-memory-permission-invitations-v1.log",
+      "sha256": "ee093c761be963e12c48c94e2de119a8a1eae6928da8254cb6ebccba8f5b0f27"
+    }
+  },
+  "limits": [
+    "Does not prove every security-catalog interleaving",
+    "Not an end-to-end administrative grant-approval test",
+    "Historical six-candidate CI does not qualify this successor",
+    "No independent approval, integration, deployment or real communications"
+  ]
+}

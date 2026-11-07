@@ -27,10 +27,10 @@ const append = (params: URLSearchParams, key: string, value: string | number | b
 
 export const Directory = {
   notificationContext: (kind: string, id: string) => get<Record<string, unknown>>(`/directory/notification-context/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`),
-  search: (query: DirectorySearchQuery = {}) => {
+  search: (query: DirectorySearchQuery = {}, signal?: AbortSignal) => {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => append(params, key, value));
-    return get<DirectorySearchResponse>(`/directory/search?${params.toString()}`);
+    return get<DirectorySearchResponse>(`/directory/search?${params.toString()}`, { signal });
   },
   suggestions: (q: string, cityId?: string) => {
     const params = new URLSearchParams({ q });

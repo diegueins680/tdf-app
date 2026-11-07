@@ -70,7 +70,7 @@ function buildCart(state) {
 
 async function fixture(page, baseURL) {
   const origin = new URL(baseURL).origin;
-  const state = { items: [], creates: 0, upserts: [] };
+  const state = { items: [], creates: 0, upserts: [], cartReadFailure: false };
   await page.route('**/*', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -86,7 +86,10 @@ async function fixture(page, baseURL) {
       state.creates++;
       return route.fulfill({ json: buildCart(state) });
     }
-    if (path === `/marketplace/cart/${CART_ID}` && method === 'GET') return route.fulfill({ json: buildCart(state) });
+    if (path === `/marketplace/cart/${CART_ID}` && method === 'GET') {
+      if (state.cartReadFailure) return route.fulfill({ status: 503, json: { error: 'Synthetic temporary outage' } });
+      return route.fulfill({ json: buildCart(state) });
+    }
     if (path === `/marketplace/cart/${CART_ID}/items` && method === 'POST') {
       const body = request.postDataJSON();
       state.upserts.push(body);
@@ -154,6 +157,35 @@ test('Marketplace cart stays reachable after adding on a small phone @mobile-flo
   await drawer.getByRole('button', { name: 'Cerrar carrito' }).click();
   await expect(drawer).toBeHidden();
 
+  // Keep persistence after an actual drawer cycle in this journey as well.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
+  await expect(header.locator('.MuiBadge-badge')).toHaveText('1');
+  await expectHealthyLayout(page);
+});
+
+test('Marketplace restores and removes a genuinely added cart after reload on a small phone @mobile-flow', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL);
+  await page.goto('/marketplace', { waitUntil: 'domcontentloaded' });
+  const header = page.locator('header');
+  const cartButton = header.getByTestId('marketplace-cart-button');
+  const drawer = page.getByRole('dialog', { name: 'Carrito' });
+  await expect(page.getByText('Micrófono Vintage SM58').first()).toBeVisible();
+
+  // This case creates its own saved cart through the real rendered controls.
+  // Await the successful synthetic server response before testing restoration;
+  // no localStorage or cart contents are seeded to simulate an add.
+  const addedResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === `/marketplace/cart/${CART_ID}/items`
+    && response.request().method() === 'POST' && response.status() === 200);
+  await page.getByRole('button', { name: 'Agregar: Micrófono Vintage SM58' }).click();
+  const addedCart = await (await addedResponse).json();
+  expect(addedCart.mcCartId).toBe(CART_ID);
+  expect(addedCart.mcItems).toEqual([expect.objectContaining({ mciListingId: 'listing-mic', mciQuantity: 1 })]);
+  await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
+  expect(state.upserts).toEqual([{ mciuListingId: 'listing-mic', mciuQuantity: 1 }]);
+  expect(state.creates).toBe(1);
+
   // Refresh keeps the count (restored from localStorage, then confirmed by the server cart).
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
@@ -171,5 +203,38 @@ test('Marketplace cart stays reachable after adding on a small phone @mobile-flo
   await expect(header.locator('.MuiBadge-badge.MuiBadge-invisible')).toHaveCount(1);
   await expect(cartButton).toBeVisible();
   expect(state.upserts.at(-1)).toEqual({ mciuListingId: 'listing-mic', mciuQuantity: 0 });
+  await expectHealthyLayout(page);
+});
+
+
+test('Saved cart failure stays recoverable without creating a replacement @mobile-flow', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL);
+  state.items = [{ listingId: 'listing-mic', quantity: 1 }];
+  state.cartReadFailure = true;
+  await page.addInitScript((cartId) => {
+    localStorage.setItem('tdf-marketplace-cart-id', cartId);
+    localStorage.setItem('tdf-marketplace-cart-meta', JSON.stringify({ cartId, count: 1, updatedAt: Date.now() }));
+  }, CART_ID);
+  await page.goto('/marketplace#carrito', { waitUntil: 'domcontentloaded' });
+  const drawer = page.getByTestId('marketplace-cart-drawer');
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toBeVisible({ timeout: 15_000 });
+  await expect(drawer.getByText('Tu carrito está vacío.', { exact: true })).toHaveCount(0);
+  // The modal correctly removes the background header from the accessibility
+  // tree. Verify the preserved count once the header is available to users.
+  await drawer.getByRole('button', { name: 'Cerrar carrito' }).click();
+  await expect(drawer).not.toBeVisible();
+  const cartButton = page.locator('header').getByTestId('marketplace-cart-button');
+  await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
+  await cartButton.click();
+  await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toBeVisible();
+  expect(state.creates).toBe(0);
+
+  state.cartReadFailure = false;
+  await drawer.getByRole('button', { name: 'Reintentar carrito' }).click();
+  await expect(drawer.getByText('Micrófono Vintage SM58', { exact: true })).toBeVisible();
+  await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toHaveCount(0);
+  expect(state.creates).toBe(0);
+  expect(state.upserts).toHaveLength(0);
   await expectHealthyLayout(page);
 });

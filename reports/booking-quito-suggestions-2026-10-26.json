@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "reviewComment": "https://github.com/diegueins680/tdf-app/pull/642#discussion_r4384399010",
+  "previousSource": "75b2cd18745800b6432e5dd80870886af213319d",
+  "problem": "Quick suggestions floored the visitor date before converting to Quito; selecting January15 at13UTC then clicking a suggestion changed the form toJanuary14 and could drift again.",
+  "fix": "Convert the selected instant to America/Guayaquil before startOf(day), then derive opening and closing.",
+  "executionIdentity": {
+    "baseHead": "75b2cd18745800b6432e5dd80870886af213319d",
+    "executedFiles": {
+      "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "315f517131f34c50287ac5a839dbe6517487b95ebdf689899350fa4dfa801f62",
+      "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "0582c2b4defaf6aa4ed03d324ba8599f3c3cf389e1194f4786dc931ffab9496b",
+      "e2e/web/booking-timezone.spec.mjs": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3"
+    }
+  },
+  "negativeControl": {
+    "actualReactComponent": "Original75 component with new portable rendered-form test, executed with TZ=UTC",
+    "failed": 1,
+    "unselected": 15,
+    "expected": "2030-01-15T13:00",
+    "actual": "2030-01-14T13:00",
+    "result": "Expected assertion failure demonstrates original defect; no tests disabled."
+  },
+  "fixedUnit": {
+    "passed": 16,
+    "failed": 0,
+    "suites": 1,
+    "timezone": "UTC",
+    "portableSupplement": "Same date-preservation regression also passes with TZ=America/Guayaquil; remaining15 tests not selected in that supplemental run."
+  },
+  "browser": {
+    "stats": {
+      "startTime": "2026-10-27T03:03:12.295Z",
+      "duration": 53766.574,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone",
+      "android-chrome-small",
+      "firefox-critical"
+    ],
+    "newAssertions": "Click opening suggestion twice, then repeat after a late Quito slot crossing visitor-local midnight; selected Quito date remains stable. Preserve all prior boundary, UTC request,dated offset,contact and409false-success assertions.",
+    "scope": "AllAPI/sessionresponses synthetic and externaltraffic aborted; no real booking/payment/provider/human/physicaldevice claim. No localWebKit."
+  },
+  "build": {
+    "typecheck": "PASS",
+    "optimized": "PASS",
+    "seconds": 32.99,
+    "initialGzipBytes": 336533,
+    "preloads": 5,
+    "source": "Original75 checkout plus fingerprinted fix/test changes, before normalmain4b merge; compiler metadata keeps actual75 identity."
+  },
+  "lint": "Two changed TSX files passed unchanged lint rules.",
+  "infrastructureAttempts": {
+    "browserNegativeAttempts": 2,
+    "productCasesExecuted": 0,
+    "cause": "ENOSPC before test startup, followed by failed shell log creation. Original logs retained privately; actual product counterexample comes from the rendered-form negative control.",
+    "retention": "Initial startup log retained privately; subsequent shell log-creation error retained in tool transcript."
+  },
+  "delivery": {
+    "implemented": true,
+    "localTestsPassed": true,
+    "hostedCI": "pending for new candidate",
+    "independentReview": "required for changed candidate",
+    "merged": false,
+    "deployed": false
+  },
+  "preservation": {
+    "actualProtectedBase": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "all149WholeMainRequirementObjects": true,
+    "totalWithOwnRequirement": 150,
+    "all1341CatalogDecisionObjectsAndHistoryByteExact": true,
+    "backendApiSqlScriptsWorkflowsOpsDependenciesMobileExactBase": true,
+    "executedImplementationAndTestsByteExactAfterComposition": true,
+    "incomingMainHasNoFrontendChangesRelativeToOriginalBase63": true,
+    "scope": "Tests/build keep their actual75+working-fix execution identity; composition preserves every executed frontend byte. Final canonical checks and new CI remain separate."
+  },
+  "evidenceSha256": {
+    "unit-negative.txt": "75e579edb17b0c3935ae391a9955a5e951009615888e451decf3749c04846f29",
+    "unit-quito.json": "fcc19e60a7cb66dd4e20916577055c7874d888560d414a41f6395bb91925c365",
+    "unit-fixed.txt": "819d6bbeaee1f784e4ed26a817bbd64f8d6c037f1b7681c9e9bb0d8d4f8fb9e1",
+    "build.txt": "864aa9a7be3f6a76c6ad624a5265a278c810287eef86e2682cdbdfb880e28e09",
+    "browser.txt": "8af6f5c39428cb6afeddbf7835ad9d34cfae5607e93741e94c345603c0c3dce3",
+    "browser-results.json": "7516621145cd39867f154e913b3317ffe24bf7b014c19e36a8f5e295a400b14f",
+    "tested-inputs.json": "d82220319159175001a3594db15dfcaedea029fa6047c03648f6285b2d50a9d6",
+    "unit-negative.json": "612e21a401514d01cd5242d9f7500905b1643eb83a43b470d9acb523845ac5a1",
+    "phone-date-preserved.png": "27fdac8d8ac4b38e85e9d654cc33775aaea37849fd975d8a7aca972009764fe9",
+    "unit-fixed.json": "5bf4795e6b77d18582915d78f9c0265e3074f6c737988c774c89e3585ec9e7fd"
+  },
+  "canonicalCatalog": {
+    "strictJson": "passed",
+    "strictCsv": "passed",
+    "candidates": 1341,
+    "added": 0,
+    "removed": 0,
+    "changes": "Only two source line offsets; all decision objects and history preserved."
+  }
+}

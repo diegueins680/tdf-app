@@ -7,6 +7,7 @@
 module TDF.API where
 
 import qualified TDF.API.Chat as Chat
+import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
 import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
@@ -467,6 +468,7 @@ type FanPublicAPI =
          :> QueryParam "pageSize" Int
          :> Get '[JSON] ArtistFansResponse
   :<|> "artists" :> Capture "artistId" Int64 :> "tips"
+         :> Header "Idempotency-Key" Text
          :> ReqBody '[JSON] ArtistTipRequest
          :> Post '[JSON] ArtistTipResponse
   :<|> "clubs" :> Capture "artistId" Int64 :> Get '[JSON] FanClubDTO
@@ -546,6 +548,7 @@ type ArtistSecureAPI =
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Post '[JSON] ArtistProfileDTO
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
          )
+  :<|> VideoCampaignAPI
   :<|> "me" :> "photo" :> ReqBody '[JSON] ArtistProfilePhotoUpdate :> Post '[JSON] ArtistProfileDTO
 
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent

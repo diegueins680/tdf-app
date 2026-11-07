@@ -1,4 +1,5 @@
 import {
+  buildEventSignupPath,
   buildLoginRedirectPath,
   COMMUNITY_LANDING_PATH,
   normalizeOnboardingIntent,
@@ -217,4 +218,16 @@ describe('redirect helpers', () => {
     );
     expect(buildLoginRedirectPath('/login')).toBe('/login');
   });
+
+  it('builds event invitation signup links that return to the public event', () => {
+    expect(buildEventSignupPath(211)).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F211');
+    expect(buildEventSignupPath('42')).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F42');
+    expect(buildEventSignupPath('42?token=secret')).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F42');
+  });
 });
+
+ it('defaults authentication to Comunidad while preserving safe deep links', () => {
+   expect(resolvePostAuthPath(null, ['Admin'], ['admin'])).toBe('/fans');
+   expect(resolvePostAuthPath(null, ['Customer'], [], '/artista/42#music')).toBe('/artista/42#music');
+   expect(resolvePostAuthPath(null, ['Customer'], [], '//evil.example')).toBe('/fans');
+ });

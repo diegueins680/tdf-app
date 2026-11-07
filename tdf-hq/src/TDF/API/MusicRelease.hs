@@ -1,10 +1,13 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
 module TDF.API.MusicRelease
   ( MusicReleasePublicAPI
   , MusicReleaseProtectedAPI
+  , MusicPublicTrackSearchHit(..)
+  , MusicPublicTrackSearchSource(..)
   , MusicReleaseCreateRequest(..)
   , MusicReleaseDraftSaveRequest(..)
   , MusicReleaseContentRequest(..)
@@ -43,19 +46,22 @@ import Data.Aeson
   ( FromJSON(..)
   , Options
   , ToJSON(..)
-  , Value
+  , Value(..)
   , defaultOptions
   , fieldLabelModifier
   , genericParseJSON
   , genericToJSON
   , rejectUnknownFields
+  , withObject
   )
+import qualified Data.Aeson.KeyMap as KeyMap
 import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (Day, UTCTime)
 import Data.UUID (UUID)
 import GHC.Generics (Generic)
 import Servant
+import TDF.MusicRelease.Money (musicMinorUnitsJSON, normalizeMusicMinorField)
 import TDF.UUIDInstances ()
 
 type MusicReleasePublicAPI = "music" :>
@@ -70,6 +76,11 @@ type MusicReleasePublicAPI = "music" :>
          :> Header "CF-IPCountry" Text :> Get '[JSON] Value
   :<|> "playback-events" :> Header "CF-IPCountry" Text
          :> ReqBody '[JSON] MusicPlaybackEventRequest :> Post '[JSON] NoContent
+  :<|> "search" :> Header "CF-IPCountry" Text
+         :> QueryParam "q" Text
+         :> QueryParam "limit" Int
+         :> QueryParam "offset" Int
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
   )
 
 type MusicReleaseProtectedAPI = "music" :>
@@ -320,9 +331,14 @@ data MusicAvailabilityDraft = MusicAvailabilityDraft
   } deriving (Eq, Show, Generic)
 
 instance FromJSON MusicAvailabilityDraft where
-  parseJSON = genericParseJSON (musicOptions 17)
+  parseJSON = withObject "MusicAvailabilityDraft" $ \fields -> do
+    normalized <- normalizeMusicMinorField "priceMinor" fields
+    genericParseJSON (musicOptions 17) (Object normalized)
 instance ToJSON MusicAvailabilityDraft where
-  toJSON = genericToJSON (musicOptions 17)
+  toJSON draft = case genericToJSON (musicOptions 17) draft of
+    Object fields -> Object (KeyMap.insert "priceMinor"
+      (maybe Null musicMinorUnitsJSON (musicAvailabilityPriceMinor draft)) fields)
+    other -> other
 
 data MusicTermsAcceptanceRequest = MusicTermsAcceptanceRequest
   { musicTermsKind :: Text
@@ -451,6 +467,8 @@ data MusicPurchaseCreateRequest = MusicPurchaseCreateRequest
   { musicPurchaseAvailabilityRuleId :: UUID
   , musicPurchaseTerritoryCode :: Text
   , musicPurchaseTermsVersion :: Text
+  , musicPurchaseExpectedAmountMinor :: Text
+  , musicPurchaseExpectedCurrency :: Text
   } deriving (Eq, Show, Generic)
 
 instance FromJSON MusicPurchaseCreateRequest where
@@ -591,3 +609,35 @@ musicEventOptions = (musicOptions 10)
       "musicEventType" -> "eventType"
       _ -> fieldLabelModifier (musicOptions 10) field
   }
+
+-- | Public search deliberately projects only selection metadata. Asset IDs are
+-- reauthorized by the existing access endpoint when a listener selects a hit.
+data MusicPublicTrackSearchHit = MusicPublicTrackSearchHit
+  { musicSearchTrackId :: UUID
+  , musicSearchRecordingId :: UUID
+  , musicSearchReleaseId :: UUID
+  , musicSearchReleaseVersionId :: UUID
+  , musicSearchReleaseSlug :: Text
+  , musicSearchReleaseTitle :: Text
+  , musicSearchTitle :: Text
+  , musicSearchDisplayArtist :: Text
+  , musicSearchDurationMs :: Maybe Int64
+  , musicSearchSources :: [MusicPublicTrackSearchSource]
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON MusicPublicTrackSearchHit where
+  parseJSON = genericParseJSON (musicOptions 11)
+instance ToJSON MusicPublicTrackSearchHit where
+  toJSON = genericToJSON (musicOptions 11)
+
+data MusicPublicTrackSearchSource = MusicPublicTrackSearchSource
+  { musicSearchSourceAssetId :: UUID
+  , musicSearchSourceRole :: Text
+  , musicSearchSourceMediaType :: Text
+  , musicSearchSourceTechnicalMetadata :: Value
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON MusicPublicTrackSearchSource where
+  parseJSON = genericParseJSON (musicOptions 17)
+instance ToJSON MusicPublicTrackSearchSource where
+  toJSON = genericToJSON (musicOptions 17)

@@ -1,0 +1,167 @@
+{
+  "status": "VERIFIED-isolated-only",
+  "humanParticipants": 0,
+  "productionWrites": false,
+  "fanIds": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "cases": [
+    {
+      "surface": "public",
+      "scenario": "lost-response",
+      "formFactor": "desktop-web",
+      "postCount": 2,
+      "deleteCount": 1,
+      "followReads": 4,
+      "droppedCommittedResponses": [
+        {
+          "method": "POST",
+          "status": 200
+        },
+        {
+          "method": "DELETE",
+          "status": 200
+        }
+      ],
+      "firstValueReceipts": [
+        {
+          "newlyCompleted": true
+        },
+        {
+          "newlyCompleted": false
+        }
+      ],
+      "serverFirstValueConfirmed": true,
+      "unrelatedDeepLinkPreserved": true,
+      "committedUnfollowRecoveredWithoutReplay": true,
+      "actualLogoutAndCookieAbsence": true,
+      "persistedAfterIndependentWebLogin": true,
+      "status": "VERIFIED-isolated-only"
+    },
+    {
+      "surface": "public",
+      "scenario": "lost-response-read-fails",
+      "formFactor": "Pixel7-emulated-web",
+      "postCount": 1,
+      "deleteCount": 0,
+      "followReads": 3,
+      "droppedCommittedResponses": [
+        {
+          "method": "POST",
+          "status": 200
+        }
+      ],
+      "firstValueReceipts": [
+        {
+          "newlyCompleted": true
+        }
+      ],
+      "serverFirstValueConfirmed": true,
+      "unrelatedDeepLinkPreserved": true,
+      "actualLogoutAndCookieAbsence": true,
+      "persistedAfterIndependentWebLogin": true,
+      "status": "VERIFIED-isolated-only"
+    },
+    {
+      "surface": "public",
+      "scenario": "before-commit",
+      "formFactor": "desktop-web",
+      "postCount": 2,
+      "deleteCount": 0,
+      "followReads": 3,
+      "droppedCommittedResponses": [],
+      "firstValueReceipts": [
+        {
+          "newlyCompleted": true
+        }
+      ],
+      "noRelationshipOrFirstValueAfterPreCommitFailure": true,
+      "serverFirstValueConfirmed": true,
+      "unrelatedDeepLinkPreserved": true,
+      "actualLogoutAndCookieAbsence": true,
+      "persistedAfterIndependentWebLogin": true,
+      "status": "VERIFIED-isolated-only"
+    },
+    {
+      "surface": "community",
+      "scenario": "lost-response",
+      "formFactor": "desktop-web",
+      "postCount": 2,
+      "deleteCount": 1,
+      "followReads": 4,
+      "droppedCommittedResponses": [
+        {
+          "method": "POST",
+          "status": 200
+        },
+        {
+          "method": "DELETE",
+          "status": 200
+        }
+      ],
+      "firstValueReceipts": [
+        {
+          "newlyCompleted": true
+        },
+        {
+          "newlyCompleted": false
+        }
+      ],
+      "serverFirstValueConfirmed": true,
+      "committedUnfollowRecoveredWithoutReplay": true,
+      "actualLogoutAndCookieAbsence": true,
+      "persistedAfterIndependentWebLogin": true,
+      "status": "VERIFIED-isolated-only"
+    },
+    {
+      "surface": "community",
+      "scenario": "lost-response-read-fails",
+      "formFactor": "Pixel7-emulated-web",
+      "postCount": 1,
+      "deleteCount": 0,
+      "followReads": 3,
+      "droppedCommittedResponses": [
+        {
+          "method": "POST",
+          "status": 200
+        }
+      ],
+      "firstValueReceipts": [
+        {
+          "newlyCompleted": true
+        }
+      ],
+      "serverFirstValueConfirmed": true,
+      "actualLogoutAndCookieAbsence": true,
+      "persistedAfterIndependentWebLogin": true,
+      "status": "VERIFIED-isolated-only"
+    },
+    {
+      "surface": "community",
+      "scenario": "before-commit",
+      "formFactor": "desktop-web",
+      "postCount": 2,
+      "deleteCount": 0,
+      "followReads": 3,
+      "droppedCommittedResponses": [],
+      "firstValueReceipts": [
+        {
+          "newlyCompleted": true
+        }
+      ],
+      "noRelationshipOrFirstValueAfterPreCommitFailure": true,
+      "serverFirstValueConfirmed": true,
+      "actualLogoutAndCookieAbsence": true,
+      "persistedAfterIndependentWebLogin": true,
+      "status": "VERIFIED-isolated-only"
+    }
+  ],
+  "scope": "Actual isolated API/PostgreSQL221 and candidate web. Response loss, pre-commit failure and read503 are explicit browser fault adapters; no real providers or human usability claim.",
+  "artistId": 4,
+  "browserClosed": true
+}

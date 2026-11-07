@@ -1,0 +1,1171 @@
+
+> tdf-app@0.2.0 quality:repo
+> bash scripts/quality-repo.sh
+
+▶ Verifying repository-wide invariants
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.004s
+
+OK
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.700s
+
+OK
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.006s
+
+OK
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 13.137s
+
+OK
+....
+----------------------------------------------------------------------
+Ran 4 tests in 6.754s
+
+OK
+✔ compiled branches retain authentication scope, captures, modifiers and original order (5.822827ms)
+✔ request bodies, query variants, multipart, remote host and NoContent survive reflection (1.129257ms)
+✔ opaque Raw mounts and capture-all remain explicit rather than invented GET endpoints (2.08492ms)
+✔ unknown or corrupted compiled branches cannot disappear silently (1.014078ms)
+✔ correspondence detects removed/extra routes, changed success status and ambiguous route declarations (2.096419ms)
+✔ capture spelling is retained as metadata but does not create false routing drift (0.52213ms)
+✔ capture-all cardinality cannot be normalized into a single-segment capture (0.505163ms)
+✔ compiled declaration gate rejects route, auth, parameter, body, response and raw mount drift (2.825532ms)
+✔ inspection binds captured snapshot bytes and rejects a baseline replacement during admission (2867.296396ms)
+✔ availability gate admits explicit deferral and rejects missing, mounted, stale or malformed exceptions (2.981582ms)
+✔ response-status admission rejects stale, broadened, missing and invented unavailable contracts (4.004215ms)
+✔ actual unavailable policy rejects wildcard and default success declarations (72.752431ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3151.621973
+{"status":"declaration-availability-checked","deferredOperations":["GET /merch/admin/reputation/cases","GET /merch/admin/reputation/category-suggestions","GET /merch/artists/{}/stores","GET /merch/orders/{}/reviews/eligibility","GET /merch/products/{}/reputation","GET /merch/products/{}/reviews","GET /merch/reputation/formula","GET /merch/reputation/notification-preferences","GET /merch/reputation/preferences/{}","GET /merch/seller/stores/{}/reputation","GET /merch/stores/{}/reputation","GET /merch/stores/{}/reviews","POST /merch/admin/reputation/appeals/{}/decision","POST /merch/admin/reputation/cases/{}/decision","POST /merch/admin/reputation/cases/{}/workflow","POST /merch/admin/reputation/category-suggestions/{}/decision","POST /merch/reputation/category-suggestions","POST /merch/reputation/decisions/{}/appeal","POST /merch/reputation/reports","PUT /merch/orders/{}/lines/{}/product-review","PUT /merch/orders/{}/review-buyer-claim","PUT /merch/orders/{}/store-review","PUT /merch/reputation/notification-preferences","PUT /merch/reputation/preferences/{}","PUT /merch/reviews/{}/response"],"unexpectedUnmounted":[],"limitations":"Explicit typed-route deferrals only; Raw mount behavior, production flags and authorization require separate evidence.","responseStatus":{"unavailableOperations":["GET /ddex/exports/{}/download","PATCH /ddex/import-plans/{}","POST /ddex/documents/{}/import-plans","POST /ddex/exports","POST /ddex/import-plans/{}/commit","POST /marketplace/cart/{}/stripe/payment-intent","POST /radio/transmissions","POST /social-events/events/{}/live-broadcasts"],"unexpectedStatusDifferences":[],"limitations":"Declared status correspondence only. Current handler/error, DTO codec and authorization evidence remains required."}}
+{"checks":[{"file":"package-lock.json","checked":20}],"limitation":"Known version floors only; fresh advisory scan and unresolved exposure review are separate gates."}
+✔ brace-expansion 1.1.21: accepts floor and rejects previous vulnerable release (11.751274ms)
+✔ brace-expansion 2.1.7: accepts floor and rejects previous vulnerable release (0.6361ms)
+✔ brace-expansion 5.0.12: accepts floor and rejects previous vulnerable release (0.521918ms)
+✔ fast-uri 3.1.8: accepts floor and rejects previous vulnerable release (0.482563ms)
+✔ js-yaml 3.15.2: accepts floor and rejects previous vulnerable release (0.606178ms)
+✔ js-yaml 4.3.2: accepts floor and rejects previous vulnerable release (1.737816ms)
+✔ moment 2.31.0: accepts floor and rejects previous vulnerable release (0.478144ms)
+✔ nanoid 3.3.18: accepts floor and rejects previous vulnerable release (0.370231ms)
+✔ tmp 0.2.6: accepts floor and rejects previous vulnerable release (0.543852ms)
+✔ @humanfs/node 0.16.8: accepts floor and rejects previous vulnerable release (0.664285ms)
+✔ @xmldom/xmldom 0.8.15: accepts floor and rejects previous vulnerable release (0.429644ms)
+✔ axios 1.20.0: accepts floor and rejects previous vulnerable release (0.332902ms)
+✔ baseline-browser-mapping 2.11.0: accepts floor and rejects previous vulnerable release (0.462736ms)
+✔ browserslist 4.28.7: accepts floor and rejects previous vulnerable release (0.342504ms)
+✔ joi 17.13.7: accepts floor and rejects previous vulnerable release (0.275987ms)
+✔ qs 6.16.0: accepts floor and rejects previous vulnerable release (0.275788ms)
+✔ undici 6.28.1: accepts floor and rejects previous vulnerable release (0.306196ms)
+✔ dompurify 3.4.17: accepts floor and rejects previous vulnerable release (0.307555ms)
+✔ ip-address 10.7.4: accepts floor and rejects previous vulnerable release (0.296843ms)
+✔ unreviewed major, prerelease and missing versions fail closed (0.774101ms)
+✔ removed dependencies do not require retaining a vulnerable package (0.267572ms)
+✔ malformed lock cannot silently report success (0.473235ms)
+✔ requested Mobile coverage cannot pass with absent Mobile lock (6.061115ms)
+✔ package aliases and nested aliases retain their actual package security floor (1.164129ms)
+✔ malformed package entry and unbounded version integers fail (0.618124ms)
+✔ present malformed policy series cannot silently disable a floor (0.936544ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 295.638238
+✔ counts both admitted negative helpers without interpreting raw errors as results (2.450186ms)
+✔ duplicates, conflicting classifications and malformed records reject (1.138291ms)
+✔ incomplete or historical unmarked logs do not fabricate model executions (1.45594ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 181.454905
+✔ every checked assertion has a mutation that preserves assertions and command scopes (19.583696ms)
+✔ mutations reject missing, duplicate, no-op, assertion, comment-only and unclosed targets (1.29722ms)
+✔ named completed results require matching solver receipts and SAT witnesses (3.583591ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 196.031652
+Build authority and explicit APT trust policy pass (source boundary only).
+✔ current image recipes and package authority satisfy their scoped contract (5.376395ms)
+✔ tdf-hq/Dockerfile: rejects unsigned repositories (1.767752ms)
+✔ tdf-hq/Dockerfile: rejects unauthenticated packages (0.57461ms)
+✔ tdf-hq/Dockerfile: rejects expired metadata (0.583348ms)
+✔ tdf-hq/Dockerfile: rejects override appended later (0.492638ms)
+✔ tdf-hq/Dockerfile: rejects trusted repository override (0.479662ms)
+✔ tdf-hq/Dockerfile: rejects transient mirror failure tolerated (2.285531ms)
+✔ tdf-hq/Dockerfile: rejects Deb822 trusted source (0.460549ms)
+✔ tdf-hq/Dockerfile: rejects Deb822 expired metadata (0.521154ms)
+✔ tdf-hq/Dockerfile: rejects Deb822 insecure source (0.70826ms)
+✔ tdf-hq/Dockerfile: rejects Deb822 weak source (0.505043ms)
+✔ tdf-hq/Dockerfile: rejects removed explicit policy (0.551883ms)
+✔ tdf-hq/Dockerfile.runtime: rejects unsigned repositories (0.335048ms)
+✔ tdf-hq/Dockerfile.runtime: rejects unauthenticated packages (0.299286ms)
+✔ tdf-hq/Dockerfile.runtime: rejects expired metadata (0.363726ms)
+✔ tdf-hq/Dockerfile.runtime: rejects override appended later (0.275195ms)
+✔ tdf-hq/Dockerfile.runtime: rejects trusted repository override (0.26154ms)
+✔ tdf-hq/Dockerfile.runtime: rejects transient mirror failure tolerated (0.475037ms)
+✔ tdf-hq/Dockerfile.runtime: rejects Deb822 trusted source (0.33245ms)
+✔ tdf-hq/Dockerfile.runtime: rejects Deb822 expired metadata (0.261323ms)
+✔ tdf-hq/Dockerfile.runtime: rejects Deb822 insecure source (0.263219ms)
+✔ tdf-hq/Dockerfile.runtime: rejects Deb822 weak source (0.25521ms)
+✔ tdf-hq/Dockerfile.runtime: rejects removed explicit policy (0.332205ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 202.296103
+✔ admits named local and explicitly opted-in CI fixtures (5.455797ms)
+✔ rejects unsafe fixture connection form: postgresql://127.0.0.1/local_test?host=remote.example (1.506926ms)
+✔ rejects unsafe fixture connection form: postgresql://127.0.0.1/local_test?dbname=production (0.480331ms)
+✔ rejects unsafe fixture connection form: postgresql://127.0.0.1/local_test?service=production (0.382447ms)
+✔ rejects unsafe fixture connection form: postgresql://localhost/local_test#ignored (0.396223ms)
+✔ rejects unsafe fixture connection form: postgresql://remote.example/local_test (0.394298ms)
+✔ rejects unsafe fixture connection form: postgresql://localhost:secret@db.example/orders_test (0.369926ms)
+✔ rejects unsafe fixture connection form: postgresql://127.0.0.1:5432@db.example/orders_test (0.351788ms)
+✔ rejects unsafe fixture connection form: postgresql://localhost:0/orders_test (0.454166ms)
+✔ rejects unsafe fixture connection form: postgresql://localhost:65536/orders_test (0.576461ms)
+✔ rejects unsafe fixture connection form:  postgresql://localhost/orders_test (1.440802ms)
+✔ rejects unsafe fixture connection form: postgresql://localhost/production (0.389712ms)
+✔ rejects unsafe fixture connection form: postgresql://localhost/path/local_test (0.313566ms)
+✔ rejects unsafe fixture connection form: postgresql://localhost/%70roduction_test (0.335918ms)
+✔ rejects unsafe fixture connection form: https://localhost/local_test (0.388737ms)
+✔ rejects unsafe fixture connection form: host=localhost dbname=production (1.710913ms)
+✔ CI service name is not a local default (0.400683ms)
+✔ rejects inherited libpq routing override PGHOSTADDR (0.379283ms)
+✔ rejects inherited libpq routing override PGSERVICE (0.336612ms)
+✔ rejects inherited libpq routing override PGSERVICEFILE (0.249957ms)
+✔ allows password and timeout without changing the connection destination (0.213504ms)
+✔ confirmation shell runner rejects unsafe routing before any database or Stack call (842.285278ms)
+✔ ticket payment runner validates routing before creating its fixture database (1407.872508ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2426.113102
+✔ readiness accepts output split across chunks and already emitted output (114.414691ms)
+✔ an early SQL-style error rejects readiness with its diagnostic (104.010692ms)
+✔ successful exit without a marker also rejects readiness (98.825468ms)
+✔ spawn errors reject readiness without an unhandled closed promise (2.174536ms)
+✔ a stalled child has a bounded readiness wait and is terminated (206.284783ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 698.179953
+✔ a channel with more than the warning window left is current (5.13216ms)
+✔ a channel inside the warning window is expiring, each platform on its own (0.669124ms)
+✔ a channel at or past validUntil is expired, matching the landing page boundary (0.443121ms)
+✔ a channel whose status offers no store link cannot lapse (0.426846ms)
+✔ a channel verified in the future fails, because the landing hides it until then (1.218589ms)
+✔ a beta channel withheld for capacity cannot lapse; a public one needs no capacity (0.700538ms)
+✔ the warning window is configurable and must be positive (0.50565ms)
+✔ fails for an accessible iOS status without a URL, as the landing does, instead of exiting green (0.612536ms)
+✔ fails for an accessible Android status without a URL, as the landing does, instead of exiting green (0.623598ms)
+✔ fails for a URL on a status that offers none, as the landing does, instead of exiting green (0.647915ms)
+✔ fails for an unknown status, as the landing does, instead of exiting green (0.414471ms)
+✔ fails for a Play status on iOS, as the landing does, instead of exiting green (0.354746ms)
+✔ fails for a TestFlight status on Android, as the landing does, instead of exiting green (0.316029ms)
+✔ fails for a missing platform, as the landing does, instead of exiting green (0.350862ms)
+✔ fails for validUntil not after verifiedAt, as the landing does, instead of exiting green (0.323237ms)
+✔ fails for an unparseable validUntil, as the landing does, instead of exiting green (0.315429ms)
+✔ fails for a numeric validUntil, as the landing does, instead of exiting green (0.269118ms)
+✔ fails for an unparseable verifiedAt, as the landing does, instead of exiting green (0.305309ms)
+✔ fails for a look-alike TestFlight host, as the landing does, instead of exiting green (0.308309ms)
+✔ fails for a TestFlight URL with a query, as the landing does, instead of exiting green (0.305863ms)
+✔ fails for credentials in the URL, as the landing does, instead of exiting green (0.300989ms)
+✔ fails for a non-https URL, as the landing does, instead of exiting green (0.35631ms)
+✔ fails for another Play package, as the landing does, instead of exiting green (0.318167ms)
+✔ fails for closed testing without an admission policy, as the landing does, instead of exiting green (0.32498ms)
+✔ fails for an unknown capacity, as the landing does, instead of exiting green (0.256413ms)
+✔ fails for an enrollment URL outside Google Groups, as the landing does, instead of exiting green (0.390757ms)
+✔ rejects a manifest that is not an object (0.321708ms)
+✔ accepts the public store destinations the landing accepts (0.427255ms)
+✔ the status lists are the ones the landing declares (0.647189ms)
+✔ messages say what the visitor loses and what the operator does (0.728032ms)
+✔ the command exits non-zero for a lapsing or invalid file and zero for a current one (423.907777ms)
+✔ the committed manifest passes the landing invariants (0.644234ms)
+✔ the scheduled workflow only reads the published manifest (0.556625ms)
+✔ warns at exactly 48 hours for the daily monitor (0.34964ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 644.023666
+✔ actual ticket admission fixture runner validates routing before its first SQL command (1674.372852ms)
+✔ actual ticket manual review fixture runner validates routing before its first SQL command (1957.228846ms)
+✔ actual merchandise fixture runner validates routing before its first SQL command (1195.770598ms)
+✔ actual provider retry fixture runner validates routing before its first SQL command (2493.516983ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7491.32853
+..................
+----------------------------------------------------------------------
+Ran 18 tests in 0.556s
+
+OK
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.375s
+
+OK
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.294s
+
+OK
+............
+----------------------------------------------------------------------
+Ran 12 tests in 0.254s
+
+OK
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.919s
+
+OK
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.018s
+
+OK
+sssssssssss
+----------------------------------------------------------------------
+Ran 11 tests in 0.001s
+
+OK (skipped=11)
+✔ retired Fly preflight and execution stop before any remote tool (284.646407ms)
+✔ inspector pins SSH target and suppresses raw failed-command output (970.030628ms)
+✔ inspection records stable source provenance (1492.420145ms)
+✔ inspection rejects changing source provenance (1009.101378ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3926.554364
+✔ migration contract binds every expanded SQL include and introduction to one revision (6.545869ms)
+✔ migration source negative controls reject missing ancestry, duplicates, bad checksums and escaped includes (6.447717ms)
+✔ ledger reconciliation retains manifest order and does not skip an unapplied hole (2.359747ms)
+✔ ledger negative controls reject unknown, changed, duplicate and malformed history (0.894231ms)
+✔ preparation records current drift and required CORS repair without enabling release or experiments (3.045391ms)
+✔ preparation accepts collector spellings without changing raw observations or enabling destructive flags (4.066667ms)
+✔ preparation preserves missing and present upload mounts without granting deployment (1.174567ms)
+✔ preparation negative controls reject stale/provenance/target/identity/destructive flag changes (10.126001ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 230.268151
+✔ the actual shell guard admits one writable mount and rejects ephemeral/ambiguous storage (172.707472ms)
+✔ every configured production application service persists private uploads (37.770543ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 517.269348
+...................
+----------------------------------------------------------------------
+Ran 19 tests in 1.088s
+
+OK
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 7.256s
+
+OK
+✔ restore launcher: pass (1234.075581ms)
+✔ restore launcher: dirty (349.367603ms)
+✔ restore launcher: existing (299.930996ms)
+✔ restore launcher: remote-error (1123.176075ms)
+✔ restore launcher: changed-source (1323.749944ms)
+✔ restore launcher: incomplete (1102.188906ms)
+✔ restore launcher: not-removed (1220.281301ms)
+✔ restore launcher: production-write (1167.67868ms)
+✔ candidate migration launcher: pass (2128.355383ms)
+✔ candidate migration launcher: wrong-sql (2462.833665ms)
+✔ candidate migration launcher: wrong-manifest (2010.375821ms)
+✔ candidate migration launcher: incomplete-ledger (2470.567722ms)
+✔ candidate migration launcher: canary-pass (2415.304715ms)
+✔ candidate migration launcher: canary-wrong-image (2340.449781ms)
+✔ candidate migration launcher: canary-not-removed (3427.601821ms)
+✔ candidate migration launcher: canary-provider-connectivity (2234.246464ms)
+✔ candidate migration launcher: canary-missing-pause (2413.855501ms)
+✔ candidate migration launcher: canary-wrong-binary (1992.018649ms)
+✔ candidate migration launcher: canary-wrong-image-id (2329.418646ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 34230.976706
+✔ migration rehearsal uses the canonical immutable batch and its schema verifier (8.325405ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 194.486186
+
+> tdf-app@0.2.0 generate:studio-internship-audit
+> node test/internships/studio-audit/generate-studio-audit.mjs
+
+Generated 130 inventory rows and 174 test cases.
+✔ staging Fly config pins the isolated volume and keeps unapproved reputation features dark (17.907989ms)
+✔ draft preparation sends credentials only to exact approved API hosts (2.151347ms)
+✔ draft preparation reuses only the exact approved assignee and plan configuration (1.485336ms)
+✔ web signup links the recorded account-policy version to account-specific documents (10.352861ms)
+✔ inventory has evidence and an explicit scope/platform decision for every feature (4.656591ms)
+✔ test plan is complete, stable, Spanish-visible, and fits the effort window (7.683162ms)
+✔ draft is non-active, non-notifying, runtime-verified, and cannot masquerade as assignment (4.131708ms)
+✔ staging fixture catalog is fictional, deterministic, and covers every requested domain (3.744277ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 230.906756
+✔ only exact loopback Vite module namespaces bypass the callback (2.708169ms)
+✔ foreign origins and lookalikes are intercepted even for module-shaped paths (0.525092ms)
+✔ missing, remote or ambiguous fixture bases fail closed (0.980612ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 275.081777
+(node:30025) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<workspace>/functions/eventos/%5BeventId%5D.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to <workspace>/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ renders real crawler metadata and JSON-LD without executable event content (5.566061ms)
+✔ rejects private previews, malformed ids, and unsafe image protocols (0.849702ms)
+✔ keeps an explicitly public cancelled event readable but marks its structured status (0.46014ms)
+✔ serves real values in the initial HTML response to a crawler request (59.431874ms)
+✔ uses the preview image fallback when no image is published (0.807978ms)
+✔ redirects the legacy production Pages host to the canonical site (1.267195ms)
+✔ keeps legacy-host redirects on the canonical site for double-slash paths (0.867423ms)
+✔ leaves the canonical site, branch previews and app-link files alone (1.05251ms)
+(node:30026) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<workspace>/functions/eventos/%5BeventId%5D/entradas.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to <workspace>/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ checkout and receipt suppress indexing/caching in the initial response (61.097457ms)
+✔ invalid event or order paths do not invoke the app shell (0.994974ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 265.850223
+(node:30029) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<workspace>/functions/descargar.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to <workspace>/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ aliases redirect to /app on the same origin and keep only campaign labels (2.791185ms)
+✔ drops labels that are not plain campaign tags (0.500169ms)
+✔ both aliases answer with an uncached temporary redirect on the request origin (66.716378ms)
+✔ a bare alias lands on the plain canonical page (0.72325ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 275.694208
+
+> tdf-app@0.2.0 verify:formal
+> npm run verify:auto-loop && npm run audit:formal -- --fail-on error
+
+
+> tdf-app@0.2.0 verify:auto-loop
+> node scripts/verify-improvement-loop.mjs
+
+Continuous improvement loop model verified.
+
+> tdf-app@0.2.0 audit:formal
+> node scripts/audit-formal-methods.mjs --fail-on error
+
+Formal methods audit passed.
+Findings: 12016 total, 0 critical, 0 errors, 544 warnings, 11472 info.
+Fail threshold: error.
+
+Top 25 findings:
+- [warning] scripts/social/FanEffectsBenchmark.hs:18 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/FanEffectsBenchmark.hs:19 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/FanEffectsSpec.hs:158 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/FanEffectsSpec.hs:207 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/FanEffectsSpec.hs:238 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/LegacyWriteSpec.hs:46 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/RelationshipReadSpec.hs:121 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/SessionSpec.hs:84 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] scripts/social/SessionSpec.hs:193 unbracketed-resource - Resource acquisition may lack guaranteed cleanup; prefer bracket or with-pattern.
+- [warning] tdf-hq-ui/src/api/socialV2.test.ts:7 missing-default-case - Lookup map "state" may be missing a default/fallback case; add exhaustive handling.
+- [warning] tdf-hq-ui/src/components/RouteErrorBoundary.tsx:26 unvalidated-state-mutation - State mutation lacks explicit validation; consider guarding against invalid transitions.
+- [warning] tdf-hq-ui/src/hooks/useChatKitScript.ts:25 unvalidated-state-mutation - State mutation lacks explicit validation; consider guarding against invalid transitions.
+- [warning] tdf-hq-ui/src/hooks/useChatKitScript.ts:30 unvalidated-state-mutation - State mutation lacks explicit validation; consider guarding against invalid transitions.
+- [warning] tdf-hq-ui/src/hooks/useChatKitScript.ts:35 unvalidated-state-mutation - State mutation lacks explicit validation; consider guarding against invalid transitions.
+- [warning] tdf-hq-ui/src/hooks/useChatKitScript.ts:40 unvalidated-state-mutation - State mutation lacks explicit validation; consider guarding against invalid transitions.
+- [warning] tdf-hq-ui/src/pages/CmsAdminPage.tsx:76 deep-nesting - Deeply nested control flow (depth 5); consider early returns or decomposition.
+- [warning] tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx:2321 deep-nesting - Deeply nested control flow (depth 68); consider early returns or decomposition.
+- [warning] tdf-hq-ui/src/pages/MerchSellerPage.tsx:143 deep-nesting - Deeply nested control flow (depth 5); consider early returns or decomposition.
+- [warning] tdf-hq-ui/src/routes/AppErrorBoundary.tsx:33 unvalidated-state-mutation - State mutation lacks explicit validation; consider guarding against invalid transitions.
+- [warning] tdf-hq/app/GenCatalogIntegrity.hs:2 implicit-module-exports - Module uses implicit exports; prefer an explicit export list to enforce invariants.
+- [warning] tdf-hq/app/GenCatalogMigration.hs:1 implicit-module-exports - Module uses implicit exports; prefer an explicit export list to enforce invariants.
+- [warning] tdf-hq/app/GenMigration.hs:1 implicit-module-exports - Module uses implicit exports; prefer an explicit export list to enforce invariants.
+- [warning] tdf-hq/app/Main.hs:2 implicit-module-exports - Module uses implicit exports; prefer an explicit export list to enforce invariants.
+- [warning] tdf-hq/app/MusicDdexRenderMain.hs:2 implicit-module-exports - Module uses implicit exports; prefer an explicit export list to enforce invariants.
+- [warning] tdf-hq/app/SeedCatalogFoundation.hs:1 implicit-module-exports - Module uses implicit exports; prefer an explicit export list to enforce invariants.
+
+> tdf-app@0.2.0 test:auto-loop
+> node --test scripts/__tests__/continuous-improvement-loop.test.mjs
+
+✔ expandTemplate substitutes known placeholders and leaves unknown ones intact (3.522584ms)
+✔ parseGitHubRemote supports ssh and https remotes (2.332789ms)
+✔ parseIdeaMarkdown extracts title and metadata fields (1.116527ms)
+✔ buildCommitContext prefers the idea title when staged files match the target (2.848128ms)
+✔ buildCommitContext falls back to the staged area when the target does not match (1.013646ms)
+✔ buildCommitContext ignores generic idea titles and uses target plus reason instead (0.855378ms)
+✔ resolveLoopPushBranch prefers configured pushBranch and otherwise uses the current branch (147.738209ms)
+✔ validateLoopConfig blocks main by default and allows explicit overrides (207.797138ms)
+✔ set-loop-github-polling toggles pollGitHub in a target config file (2467.845531ms)
+✔ summarizeWorkflowRuns separates pending, successful, and failed workflow runs (0.888901ms)
+✔ selectFlyctlDownloadUrl prefers amd64 Linux tarballs over weaker fallbacks (1.489056ms)
+✔ findExtractedFlyctlBinary ignores similarly named archives and only returns an executable binary (22.813792ms)
+✔ installFlyctl installs the extracted executable instead of the downloaded archive (1043.755551ms)
+✔ syncSubmodulesRecursively initializes nested submodules (2756.727343ms)
+✔ htmlToText strips tags and decodes common entities (0.854736ms)
+✔ verifyImprovementLoopModel passes its own safety checks (25.689911ms)
+✔ verifyDiscoveryPolicyModel passes its own fairness checks (19.395287ms)
+✔ chooseDiscoveryLane alternates equal-priority lanes and prefers the first tie for backend (0.37205ms)
+✔ chooseDiscoveryLane keeps critical audit precedence ahead of importance and rotation (0.279495ms)
+✔ buildDefaultIdea prefers a real UI finding over a backend fallback (246.809203ms)
+✔ discoverImprovementIdea persists backend and ui lane rotation between fallback iterations (414.901071ms)
+✔ auditUiSource flags unlabeled icon buttons and unlabeled images (1.217165ms)
+✔ auditUiSource does not treat arrow functions as the end of a labeled tag (0.385837ms)
+✔ auditUiSource recognizes accessible names passed through TextField inputProps (0.351102ms)
+✔ auditUiSource ignores commented-out pseudo-tags (0.256595ms)
+✔ auditUiSource ignores quoted pseudo-tags (0.269666ms)
+✔ buildDefaultIdea ignores TODO-like code literals and keeps real comment TODOs (242.352164ms)
+✔ buildDefaultIdea surfaces UI audit errors instead of hiding them behind TODO fallback (223.814839ms)
+✔ continuous-improvement-loop honors --allow-dirty for tracked baseline changes without committing them (4766.578648ms)
+[main 4fa8a94] chore(loop): checkpoint dirty worktree
+ 2 files changed, 2 insertions(+)
+ create mode 100644 untracked.txt
+To /var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/continuous-improvement-loop-dirty-checkpoint-test-mBJbaM/remote.git
+ ! [rejected]        HEAD -> main (fetch first)
+error: failed to push some refs to '/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/continuous-improvement-loop-dirty-checkpoint-test-mBJbaM/remote.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+From /var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/continuous-improvement-loop-dirty-checkpoint-test-mBJbaM/remote
+   63e60a7..f0be17f  main       -> origin/main
+From /var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/continuous-improvement-loop-dirty-checkpoint-test-mBJbaM/remote
+ * branch            main       -> FETCH_HEAD
+Rebasing (1/1)
+
+
+Successfully rebased and updated refs/heads/main.
+To /var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/continuous-improvement-loop-dirty-checkpoint-test-mBJbaM/remote.git
+   f0be17f..7457cb5  HEAD -> main
+✔ dirty-worktree checkpoint helper commits directly to main and keeps the loop branch clean (2229.557334ms)
+✔ dirty-worktree helper rebases onto main before falling back to merge recovery (1.690265ms)
+✔ continuous-improvement-loop stages tracked files modified during an iteration (4109.535734ms)
+✔ continuous-improvement-loop rebases onto the push branch before pushing a stale local branch (5049.344134ms)
+✔ reconcileNonMainBranchesOntoMain merges every non-main branch and prunes merged refs (3720.929824ms)
+✔ syncAndPollLatestRemoteCi uses the fetched remote head for latest-commit polling when local main is ahead (1918.284874ms)
+✔ continuous-improvement-loop blocks custom UI audit failures even when findings are empty (2833.472963ms)
+✔ continuous-improvement-loop blocks custom formal failures even when findings are empty (3122.570387ms)
+GitHub polling request failed for deadbeef: fetch failed
+✔ waitForGreenCi retries transient GitHub polling fetch failures (366.978886ms)
+✔ continuous-improvement-loop repairs the latest remote CI failure before idea discovery (1.643784ms)
+✔ continuous-improvement-loop prefers the stored gh login over a stale GH_TOKEN environment value (2.245192ms)
+✔ loop start path validates config before launching the supervisor (1.993346ms)
+✔ tdf-hq-ui Jest config keeps preset as a preset root specifier (14.224354ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 42
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 36210.463015
+
+> tdf-app@0.2.0 test:formal
+> node --test scripts/__tests__/formal-methods-audit.test.mjs
+
+✔ formal audit scans active source and skips archive or generated code (225.391065ms)
+✔ formal audit accepts multiline Haskell export lists and with-pattern resources (164.486495ms)
+✔ formal severity threshold helpers separate blocking findings from advisory debt (1.085801ms)
+✔ formal audit CLI exposes a nonblocking default and an explicit stricter gate (484.293128ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1052.147138
+
+> tdf-app@0.2.0 test:artist-enrichment
+> node --test scripts/__tests__/artist-enrichment.test.mjs
+
+{"timestamp":"2026-10-25T21:53:24.079Z","level":"warn","event":"external_provider_temporarily_unavailable","provider":"musicbrainz","failureClass":"http_503"}
+✔ normaliza capitalización, acentos y espacios para comparar sin alterar el nombre guardado (3.06988ms)
+✔ exige dos señales independientes y rechaza homónimos (1.524231ms)
+✔ bloquea variantes probables para revisión antes de crear otro perfil (0.72406ms)
+✔ calcula backoff exponencial acotado (0.308764ms)
+✔ aplica jitter determinista y respeta Retry-After con un límite estricto (0.599299ms)
+✔ reinicia el contador de errores al reanudar y conserva el historial (0.387122ms)
+✔ rota lotes diarios para no dejar perfiles posteriores al límite sin procesar (1.512063ms)
+✔ permite ampliar de forma segura el timeout de la API de TDF (1.017237ms)
+✔ redacta imágenes inline de los reportes sin alterar enlaces externos (0.61161ms)
+✔ bloquea ingestión de imágenes sin derechos y atribución explícitos (0.754646ms)
+✔ reintenta límites de proveedor y se recupera sin duplicar la solicitud exitosa (40.106933ms)
+✔ clasifica una caída transitoria de proveedor como evidencia degradada sin ocultar fallos permanentes (4.222885ms)
+✔ no atribuye resultados vacíos a proveedores que no estuvieron disponibles (0.934769ms)
+✔ ambas rutas de investigación conservan la clasificación de indisponibilidad (21.424167ms)
+✔ conserva como error una caída de red después de agotar el reintento acotado (1.050572ms)
+✔ propaga fallos del proxy de Google Drive sin incluir el token en el error (3634.616571ms)
+✔ no publica una URL de Drive cuando la política rechaza compartir el archivo (2.915374ms)
+✔ valida la firma real de imágenes y no confunde cualquier contenedor ISO con AVIF (0.528048ms)
+✔ rechaza una ejecución solapada con heartbeat reciente (2.273963ms)
+{"timestamp":"2026-10-25T21:53:27.753Z","level":"info","event":"artist_completed","artistId":7,"reliable":null,"suggestions":0,"media":0}
+{"timestamp":"2026-10-25T21:53:27.758Z","level":"info","event":"run_completed","runId":1,"artists":1,"errors":0,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-enrichment-test-74WBiC/report.json"}
+✔ audita, persiste checkpoints y finaliza el run sin consultar proveedores externos (14.98493ms)
+✔ genera WebP y AVIF decodificables dentro de dimensiones y presupuestos (4882.587138ms)
+{"timestamp":"2026-10-25T21:53:33.074Z","level":"error","event":"artist_failed","artistId":7,"message":"TDF API POST /admin/artists/enrichment/sources failed (400): {\"error\":\"synthetic source persistence rejection\"}"}
+{"timestamp":"2026-10-25T21:53:33.076Z","level":"error","event":"run_failed","runId":1,"artists":0,"errors":1,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-enrichment-failure-7FmLJh/report.json"}
+✔ a single failed item below the stop threshold records failure and rejects the worker result (434.182718ms)
+✔ scheduled enrichment targets canonical production and retains publication opt-in (28.674275ms)
+✔ manual enrichment uses the current API while retaining both explicit overrides (1.705034ms)
+✔ managed image recognition includes the canonical API without trusting lookalike hosts (0.43216ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9342.784145
+
+> tdf-app@0.2.0 test:production-release
+> node --test scripts/__tests__/production-entrypoint.test.mjs scripts/__tests__/production-release.test.mjs scripts/__tests__/provider-rollback.test.mjs
+
+✔ production entrypoint applies reviewed SQL then disables Persistent migrations (3484.054077ms)
+✔ production entrypoint fails before starting when the migration batch exits non-zero (3463.419434ms)
+✔ migration precheck verifies reviewed SQL without starting the backend (2446.215258ms)
+✔ production startup rejects ephemeral uploads before SQL, asset writes or server startup (64.929375ms)
+✔ production migration-only precheck does not require an application upload mount (1557.35466ms)
+✔ every backend production alias enforces the upload mount even with another development marker (1479.651007ms)
+✔ production entrypoint copies packaged assets into the served asset volume (2447.979056ms)
+✔ production entrypoint skips asset self-copy for equivalent paths (2138.951119ms)
+✔ production entrypoint starts when persistent assets cannot be seeded (4049.328034ms)
+✔ production entrypoint rejects inferred and reviewed migrations together (68.440452ms)
+✔ production entrypoint rejects invalid flags and a missing bundle (83.264592ms)
+✔ retired Fly CLI rejects legacy commands before any provider invocation (474.640029ms)
+✔ normalizeFullSha trims and lowercases an immutable full commit SHA (0.482096ms)
+✔ normalizeFullSha rejects mutable tags, abbreviated SHAs, and malformed values (1.251076ms)
+✔ production migration manifest uses immutable full commit SHAs (9.248708ms)
+✔ event schema prerequisites are registered once in dependency order (1.407981ms)
+✔ suppressed-event privacy migration is anchored to its released squash commit (2.054674ms)
+✔ Party selector rate-limit compatibility is anchored to its migration commit (0.986149ms)
+✔ already-applied production migrations retain their recorded checksums (8.029494ms)
+✔ notification repair checksum history advances through a new forward migration (1.233834ms)
+✔ production release refuses to omit a migration outside the release ancestry (1.218037ms)
+✔ production database SQL streams outside the flyctl argument vector (1.64382ms)
+✔ validateMigrationRelativePath accepts a dated SQL migration inside tdf-hq/sql (0.365367ms)
+✔ validateMigrationRelativePath rejects traversal, absolute, nested, and non-SQL paths (0.67413ms)
+✔ expandMigrationIncludes embeds same-directory SQL and rejects recursive includes (1.619513ms)
+✔ security emergency readiness parser accepts only aggregate read-only gate reports (0.946298ms)
+✔ security emergency readiness requires canonical coherence after migration (0.419424ms)
+✔ partial canonical security may resume from legacy paths but cannot pass the post-migration gate (0.295811ms)
+✔ partial canonical security cannot claim readiness without a coherent mapped target role (0.345206ms)
+✔ catalog locale resume migration only relaxes copied preference evidence columns (1.638713ms)
+✔ catalog writer resume migration only removes premature canonical triggers (0.805697ms)
+✔ catalog backfill locks pipeline writers around the transitional mapping (1.508944ms)
+✔ pending canonical cutovers relax legacy evidence columns before clearing them (2.254389ms)
+✔ social event cutovers remove transitional triggers before canonical updates (1.334952ms)
+✔ security readiness SQL keeps legacy recovery only as a pre-migration fallback (1.067726ms)
+✔ security emergency readiness parser rejects missing, writable, and malformed reports (0.697788ms)
+✔ validateFlyConfig accepts reviewed automatic SQL migrations in a staged rolling release (2.076648ms)
+✔ validateFlyConfig requires durable internal feedback evidence storage (1.275046ms)
+✔ validateFlyConfig fails closed when startup migrations are enabled (0.531116ms)
+✔ validateFlyConfig requires the reviewed automatic migration runner (0.501172ms)
+✔ validateFlyConfig fails closed when event discovery would start during the initial release (0.544117ms)
+✔ validateFlyConfig fails closed when event discovery could auto-publish during rollout (0.546309ms)
+✔ validateFlyConfig keeps contextual reputation dark without a production cohort gate (0.510407ms)
+✔ validateFlyConfig requires the separately authorized public projection gate (0.519657ms)
+✔ validateFlyConfig rejects the staging-only reputation worker in production (0.522117ms)
+✔ validateFlyConfig structurally identifies production reputation configuration (0.875964ms)
+✔ validateFlyConfig keeps the onboarding experiment paused until activation is approved (0.553216ms)
+✔ validateFlyConfig requires the persisted production default locale (0.886927ms)
+✔ buildMachineRollbackImage removes Fly Docker Hub mirror and duplicate digests (0.760773ms)
+✔ buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks (0.604976ms)
+✔ runtime preflight preserves a coherent captured contextual reputation gate (1.592953ms)
+✔ buildMachineDeployArgs can restore a captured contextual-reputation gate (0.327365ms)
+✔ validateFlyConfig requires an HTTP readiness check on /health (0.958599ms)
+✔ validateFlyConfig requires a one-at-a-time rolling deployment (0.819222ms)
+✔ validateFlyConfig reads safety keys from their actual TOML sections (0.853088ms)
+✔ validateFlyConfig refuses a different Fly application (0.488713ms)
+✔ buildMigrationBatchSql enables psql fail-fast behavior and preserves migration order (5.317225ms)
+✔ buildMigrationBatchSql validates every path before rendering psql input (0.416296ms)
+✔ buildMigrationBatchSql commits each ledger row together with its migration (0.728683ms)
+✔ every manifest migration can run inside the batch transaction (296.744398ms)
+✔ buildMigrationBatchSql rejects unexpanded include directives (0.636926ms)
+✔ buildSchemaVerificationSql fails closed over every registered runtime schema contract (8.306064ms)
+✔ buildSchemaPreflightSql is read-only and accepts unapplied release tables (1.45397ms)
+✔ buildReleaseSteps orders schema work before a single-machine canary and fleet rollout (2.040671ms)
+✔ buildReleaseSteps rolls the canary back to its captured image before any remaining-machine rollout (0.704498ms)
+✔ buildReleaseSteps refuses executable placeholders without rollback metadata (0.767629ms)
+✔ buildReleaseSteps refuses a canary when no untouched Machine remains (0.449215ms)
+✔ buildDeployPlan dry-run is descriptive but contains no mutating commands (0.950096ms)
+✔ buildDeployPlan validates Fly safety settings before producing a release plan (0.462879ms)
+✔ discovery gates are captured from a coherent fleet without enabling or disabling either flag (0.862292ms)
+✔ discovery preflight rejects inconsistent, unset or malformed fleet gates (0.69642ms)
+✔ runtime checks accept captured discovery settings and reject subsequent drift (0.609628ms)
+✔ release planning preserves captured discovery gates for canary, remaining machines and rollback (0.488018ms)
+✔ schema verification covers every music SQL function called at runtime (284.20217ms)
+✔ intake recovery cannot restore a provider-only writer that ignores submission receipts (3.823701ms)
+✔ each source request migration requires the reviewed combined writer before recovery can mutate (4.557698ms)
+✔ first provider rollout refuses the actual prior binary before any deploy callback (2.269072ms)
+✔ combined source-request requirements cannot weaken the identity recovery floor (0.915762ms)
+✔ compatible rollback preserves the deploy result and surfaces its failure (0.720018ms)
+✔ missing Git history and invalid source identifiers fail closed (1.036451ms)
+✔ earlier releases retain their existing rollback behavior (0.605351ms)
+✔ a compatible immutable fallback replaces only an unsafe prior image (1.553138ms)
+✔ bounded conformance: mixed machine histories, failure order and retries never deploy an unsafe prior (5.871353ms)
+✔ canary failure recovers untouched legacy replicas and all touched replicas (6.409385ms)
+✔ recovery attempts every required replica despite a failure and records incomplete recovery (0.873005ms)
+✔ pre-deployment failure does not mutate the untouched fleet (0.528665ms)
+✔ exact Git source rejects the previously eligible audit image after escrow disablement (1128.894116ms)
+✔ identity and financial-write protection must hold together before any recovery mutation (11.183116ms)
+✔ source read failure is inconclusive and cannot authorize recovery mutation (0.552123ms)
+✔ financial compatibility follows source, including squash and later reintroduction (8.294023ms)
+✔ actual recovery guard rejects safe unused stubs with financial routes rebound (9.826341ms)
+✔ recovery-expiry metadata never permits a pre-enforcement rollback (0.621231ms)
+ℹ tests 92
+ℹ suites 0
+ℹ pass 92
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21482.426546
+
+> tdf-app@0.2.0 test:ci-pipeline
+> node --test scripts/__tests__/ci-change-scope.test.mjs scripts/__tests__/ci-pipeline.test.mjs
+
+✔ UI-only changes do not compile backend or mobile (5.821114ms)
+✔ ordinary backend changes avoid UI, mobile, contracts and migrations (0.56501ms)
+✔ notification navigation drift is checked when only tdf-hq-ui/src/components/notificationTarget.ts changes (0.352446ms)
+✔ notification navigation drift is checked when only scripts/generate-notification-navigation.mjs changes (0.323667ms)
+✔ public booking HTTP concurrency harness selects backend validation (0.456954ms)
+✔ OpenAPI changes validate both generated clients (0.350202ms)
+✔ Mobile pins and contract definition changes select generated API validation (0.634143ms)
+✔ every event operations HTTP runner selects backend validation (0.474582ms)
+✔ schema model changes run backend and migration checks (0.372662ms)
+✔ merch checkout expiry runner and SQL assertions select migration validation (0.508606ms)
+✔ production migration runner changes run backend and migration checks (0.351056ms)
+✔ root dependency changes cover every JavaScript consumer (0.285885ms)
+✔ pipeline changes fail safe across every scope (0.333771ms)
+✔ backend artifact builds can force backend validation (0.257225ms)
+✔ declared lifecycle models and their bindings select migrated-schema checks (0.318039ms)
+✔ PostgreSQL runner uses the CI service and deletes only its newly created test database (57.512527ms)
+✔ API drift gate inspects the pinned Mobile repository rather than a root pathspec (16.622502ms)
+✔ UI quality keeps the lazy-validation regression and production artifact gate (2.883109ms)
+✔ backend CI retains event operations HTTP and runner-safety checks (1.665778ms)
+✔ CI splits component checks and preserves Stack build caches (2.655592ms)
+✔ safe-install CI permits missing scripts without masking script failures (2.294654ms)
+✔ configured Datadog checks fail when tests or results are missing (2.111942ms)
+✔ Datadog synthetic web test follows the Pages canonical redirect (4.36359ms)
+✔ migration CI runs the owning merch checkout expiry assertions without waiving failures (2.47892ms)
+✔ persona browser journeys are artifacted and gate aggregate quality (99.544868ms)
+✔ backend quality compiles, tests and exports the binary in one Stack pass (71.346241ms)
+✔ backend quality requires the canonical payment PostgreSQL regressions (31.678664ms)
+✔ backend quality requires real invitation and dependency PostgreSQL regressions (8.074595ms)
+✔ backend quality exercises public booking concurrency with its tested binary (3.106331ms)
+✔ change detection includes deleted paths (2.260514ms)
+✔ backend image packages the tested artifact instead of recompiling Haskell (2.515386ms)
+✔ image workflow grants the reusable native artifact job its required read permissions (3.237231ms)
+✔ automatic migration integration matches the persisted production locale (1.732951ms)
+✔ backend image receives deterministic, non-empty release metadata (2.250279ms)
+✔ source Dockerfile introduces changing release metadata after compilation (1.775257ms)
+✔ affected active workflow actions use Node 24 majors (7.608188ms)
+✔ native artifact admission rejects application drift while allowing only Maestro fixture changes (3406.487968ms)
+✔ backend runtime checks install declared parser dependencies on Node 22 (2.915128ms)
+✔ native PostgreSQL opt-in owns only successfully created loopback databases (104.325127ms)
+✔ every PR reaches specification admission, including previously omitted material roots (44.70184ms)
+✔ repository lane checks actual API availability policy without a backend build (2.883025ms)
+✔ repository image conformance installs and probes FFmpeg before running actual codecs (74.410654ms)
+✔ pinned Mobile main and release validation and configured synthetics fail closed (12.628649ms)
+ℹ tests 43
+ℹ suites 0
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4222.928176
+✔ accepts the CI browser user owning its mounted home (2.977609ms)
+✔ rejects the root process and regular-user home mismatch observed in Linux CI (2.458106ms)
+✔ rejects missing or invalid user/home ownership (0.87384ms)
+✔ accepts aligned immutable image, lockfile, installed packages and bundled metadata (0.759178ms)
+✔ rejects a lockfile upgrade without a matching image: @playwright/test (0.919658ms)
+✔ rejects a stale installed dependency: @playwright/test (0.610425ms)
+✔ rejects a lockfile upgrade without a matching image: playwright (0.472257ms)
+✔ rejects a stale installed dependency: playwright (0.458151ms)
+✔ rejects a lockfile upgrade without a matching image: playwright-core (0.560916ms)
+✔ rejects a stale installed dependency: playwright-core (0.651632ms)
+✔ rejects mutable tags, foreign registries, malformed digests and image-version drift (1.090273ms)
+✔ rejects stale or absent bundled metadata and redirected browser directories (1.623241ms)
+✔ launches and closes every required browser before returning a complete result (2.297447ms)
+✔ a browser launch failure rejects instead of emitting a partial success (1.037842ms)
+✔ closes a launched browser when reading its runtime version fails (1.670253ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 295.711631
+✔ accepts both clean generated clients at the exact Mobile pin (1129.315683ms)
+✔ checks the entire web contract beyond the child-process output limit (1702.943664ms)
+✔ checks the entire mobile contract beyond the child-process output limit (1891.340708ms)
+✔ rejects staged web drift after regenerating the working tree (1055.861325ms)
+✔ rejects unstaged web generated drift (885.393146ms)
+✔ rejects staged web generated drift (879.061244ms)
+✔ rejects staged mobile drift after regenerating the working tree (1018.899872ms)
+✔ rejects unstaged mobile generated drift (1026.417668ms)
+✔ rejects staged mobile generated drift (1163.048114ms)
+✔ rejects staged Mobile pin changes even with the committed checkout (942.285591ms)
+✔ rejects a different Mobile revision even if generated bytes agree (889.165684ms)
+✔ rejects an uninitialized Mobile checkout (677.874808ms)
+✔ rejects a missing generated client (1049.654467ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14528.347958
+✔ OperationsVersionedCommand accepts its mounted HTTP payload and forward-compatible fields (120.868882ms)
+✔ OperationsTransitionCommand accepts its mounted HTTP payload and forward-compatible fields (57.173356ms)
+✔ OperationsAssignmentCommand accepts its mounted HTTP payload and forward-compatible fields (49.451216ms)
+✔ OperationsPriorityCommand accepts its mounted HTTP payload and forward-compatible fields (49.189464ms)
+✔ a closed shared base detects the original impossible derived-schema defect (109.597379ms)
+✔ approval requests and decisions enforce declared representation constraints (97.114412ms)
+✔ manual request separates retry identity from projection-control metadata (49.421414ms)
+✔ notes and saved views use the representations admitted by the handlers (68.429788ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2268.417802
+
+> tdf-app@0.2.0 test:instagram-token-workflows
+> node --test scripts/__tests__/instagram-token-workflows.test.mjs
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.219Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.222Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.223Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.223Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.223Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.223Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.223Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.224Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.224Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.224Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.224Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.224Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.225Z]
+✅ All tokens are healthy. No action needed.
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.225Z]
+✅ All tokens are healthy. No action needed.
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.226Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.226Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.226Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.227Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.227Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.227Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.227Z]
+✅ All tokens are healthy. No action needed.
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.227Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.227Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.227Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.228Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.228Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.228Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.228Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.228Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+[2026-10-25T21:54:18.228Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+=== Messaging Token Health Check ===
+
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.229Z]
+⚠️ Token needs refresh
+[2026-10-25T21:54:18.229Z]
+✅ Refresh complete!
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.230Z]
+⚠️ Token needs refresh
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.230Z]
+⚠️ Token needs refresh
+[2026-10-25T21:54:18.230Z] ERROR: No token to refresh. Set INSTAGRAM_MESSAGING_TOKEN first.
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.230Z]
+⚠️ Token needs refresh
+[2026-10-25T21:54:18.230Z]
+✅ Refresh complete!
+[2026-10-25T21:54:18.230Z] ERROR: Refresh failed: Simulated refresh failure
+[2026-10-25T21:54:18.230Z] ERROR: Final verification failed
+=== Messaging Token Health Check ===
+
+[2026-10-25T21:54:18.231Z]
+=== Checking Instagram Messaging Token ===
+[2026-10-25T21:54:18.231Z]
+=== Checking Facebook Messaging Token ===
+[2026-10-25T21:54:18.231Z] ERROR: Instagram Messaging Token is not set
+[2026-10-25T21:54:18.231Z] ERROR: Facebook Messaging Token is not set
+[2026-10-25T21:54:18.232Z] ERROR: Read-only check failed: token maintenance is required; no credentials were changed.
+✔ manual messaging validation invokes an explicit read-only command (36.376314ms)
+✔ messaging CLI preserves legacy maintenance and rejects ambiguous arguments (1.234646ms)
+✔ read-only messaging checks both tokens but never refreshes unhealthy tokens (6.279671ms)
+✔ healthy messaging tokens pass without refresh in either mode (0.914824ms)
+✔ read-only invariant holds for every two-token validity/expiry combination (2.697717ms)
+✔ legacy messaging maintenance still refreshes when needed and verifies the result (0.753845ms)
+✔ legacy messaging maintenance retains missing-token and refresh failure exits (1.168384ms)
+✔ read-only CLI fails missing credentials without entering maintenance (7.050893ms)
+✔ scheduled and manual messaging checks cannot update retired Fly credentials (2.360032ms)
+✔ messaging workflow rejects unsupported actions before any credential step (57.762803ms)
+✔ numeric provider account IDs retain exact source digits beyond MAX_SAFE_INTEGER (0.951171ms)
+✔ numeric account IDs reject fractional, negative and exponent encodings (0.556988ms)
+✔ bootstrap preserves numeric wire identity through grant, checkpoint and live verification (42.957992ms)
+✔ OAuth bootstrap binds app ID, app secret, callback, provider user and permissions before recording expiry (2.034424ms)
+✔ expiry starts before the exchange request, never after network latency (1.273094ms)
+✔ bootstrap rejects missing code before network access (0.301903ms)
+✔ bootstrap rejects missing account pin before network access (0.241425ms)
+✔ bootstrap rejects non-HTTPS callback before network access (0.250476ms)
+✔ bootstrap rejects callback userinfo before network access (0.223456ms)
+✔ bootstrap rejects missing app before network access (0.192918ms)
+✔ bootstrap rejects missing secret before network access (0.187634ms)
+✔ bootstrap rejects provider missing identity (0.522778ms)
+✔ bootstrap rejects provider empty account array (0.302546ms)
+✔ bootstrap rejects provider ambiguous accounts (0.292744ms)
+✔ bootstrap rejects provider missing token (0.361983ms)
+✔ bootstrap rejects provider missing permissions (0.337959ms)
+✔ bootstrap rejects provider missing basic grant (0.320074ms)
+✔ provider lifetime fails closed: undefined (0.814704ms)
+✔ provider lifetime fails closed: 0 (0.583538ms)
+✔ provider lifetime fails closed: -1 (0.51804ms)
+✔ provider lifetime fails closed: 5183944 (0.526726ms)
+✔ provider lifetime fails closed: 1.5 (0.610366ms)
+✔ provider lifetime fails closed: Infinity (0.584025ms)
+✔ provider lifetime fails closed: 5184001 (2.585382ms)
+✔ failed code exchange is not retried and cannot leak provider-echoed credentials (0.799138ms)
+✔ bootstrap binds distinct app-scoped and professional IDs using the same short-token profile (1.08901ms)
+✔ a professional account mismatch fails before long-lived exchange despite a valid scoped mapping (0.794752ms)
+✔ the expected professional account cannot authorize a different or missing grant-scoped identity (0.952373ms)
+✔ read-only check rejects missing evidence without a provider request (0.551978ms)
+✔ read-only check rejects raw-token mismatch without a provider request (0.368858ms)
+✔ read-only check rejects wrong app without a provider request (0.319229ms)
+✔ read-only check rejects wrong approved account without a provider request (0.367274ms)
+✔ read-only check rejects missing ownership provenance without a provider request (0.308376ms)
+✔ read-only check rejects missing scoped identity evidence without a provider request (0.314584ms)
+✔ read-only check rejects mismatched grant owner without a provider request (0.390523ms)
+✔ read-only check rejects future issuance without a provider request (0.303701ms)
+✔ read-only check rejects future response without a provider request (0.330117ms)
+✔ read-only check rejects response before issuance without a provider request (0.309129ms)
+✔ read-only check rejects invalid grant timestamp without a provider request (0.29183ms)
+✔ read-only check rejects missing authoritative expiry without a provider request (0.285646ms)
+✔ read-only check rejects fabricated expiry without a provider request (0.282986ms)
+✔ read-only check rejects expired token without a provider request (0.281016ms)
+✔ read-only check rejects expired data grant without a provider request (0.275329ms)
+✔ read-only check rejects missing data evidence field without a provider request (0.450441ms)
+✔ read-only check rejects invalid scopes without a provider request (0.449832ms)
+✔ read-only check validates current account access without debugger, refresh, or expiry extension (1.828635ms)
+✔ live invalid, ambiguous or switched account fails closed: {} (1.274634ms)
+✔ live invalid, ambiguous or switched account fails closed: {"data":[]} (0.439404ms)
+✔ live invalid, ambiguous or switched account fails closed: {"data":[{"user_id":"456"},{"user_id":"789"}]} (0.455624ms)
+✔ live invalid, ambiguous or switched account fails closed: {"user_id":"789"} (0.358215ms)
+✔ expired/revoked live tokens fail without retries and never report healthy (0.655612ms)
+✔ read requests use bounded exponential jitter and ultimately fail closed (0.910372ms)
+✔ read requests recover after one infrastructure error (0.470972ms)
+✔ uncoded Meta system errors retain bounded retry coverage without echoing their message (1.120005ms)
+✔ Retry-After supports seconds/date and never retries sooner than a long server delay (0.441672ms)
+✔ network failures and malformed responses redact underlying sensitive details (0.923548ms)
+✔ refresh retains OAuth ownership and the earliest known data-access deadline (1.592195ms)
+✔ refresh carries forward a known data-access deadline when response omits it (0.786448ms)
+✔ a token younger than 24 hours cannot be refreshed (0.571753ms)
+✔ network delay cannot make a not-yet-24-hour-old token eligible for refresh (0.481701ms)
+✔ read-only checks retry malformed gateway responses with a bounded delay (0.551739ms)
+✔ failed refresh is not retried and leaves the existing bundle unchanged (0.702575ms)
+✔ encrypted state authenticates token/evidence and repository/application context (5.54529ms)
+[2026-10-25T21:54:18.487Z]
+=== Checking Test Token ===
+[2026-10-25T21:54:18.487Z] Valid: false
+[2026-10-25T21:54:18.487Z] Type: undefined
+[2026-10-25T21:54:18.487Z] Profile: N/A
+[2026-10-25T21:54:18.487Z] Scopes:
+[2026-10-25T21:54:18.488Z] ERROR: Token is invalid
+✔ atomic persistence writes only ciphertext with private permissions; check performs no writes (92.197224ms)
+✔ checkpoint ancestry lookup projects large comparison responses before the subprocess buffer (0.793257ms)
+✔ checkpoint run inventory projection retains every provenance field (0.556599ms)
+✔ checkpoint artifact projection retains identity, expiry and inventory bounds (0.424545ms)
+✔ metadata execution and JSON errors fail closed without echoing response content (1.045966ms)
+✔ checkpoint lookup accepts successful ancestor provenance and never follows unmerged sibling history (1.031723ms)
+✔ newest failed producer blocks older state: failure (0.316417ms)
+✔ newest failed producer blocks older state: cancelled (0.206918ms)
+✔ newest failed producer blocks older state: timed_out (0.220909ms)
+✔ missing/expired/ambiguous latest checkpoint cannot fall back: [] (0.313064ms)
+✔ missing/expired/ambiguous latest checkpoint cannot fall back: [{"id":1,"name":"instagram-lifecycle-v1","expired":true}] (0.235996ms)
+✔ missing/expired/ambiguous latest checkpoint cannot fall back: [{"id":1,"name":"instagram-lifecycle-v1"},{"id":2,"name":"instagram-lifecycle-v1"}] (0.25365ms)
+✔ read-only runs and current setup are not state producers; missing bootstrap fails explicitly (0.304779ms)
+✔ foreign repository producer is rejected (0.303636ms)
+✔ the existing Facebook messaging invalid-token regression remains enforced (0.834366ms)
+✔ workflow retains fail-closed notifications and scopes secrets away from checkout and read-only metadata lookup (9.713091ms)
+✔ token maintenance never invokes a shell, exposes prefixes, or deploys as part of lifecycle (2.227477ms)
+✔ social repair diagnostics use current callbacks without printing supplied credentials (150.455362ms)
+✔ social diagnostics reject stale or inactive callbacks and accept current active callbacks (421.294931ms)
+ℹ tests 92
+ℹ suites 0
+ℹ pass 92
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1097.968852
+
+> tdf-app@0.2.0 test:music-directory-visual-artifacts
+> node --test scripts/__tests__/music-directory-visual-artifacts.test.mjs
+
+✔ scoped captures preserve aggregate visual evidence (11.596462ms)
+✔ artifact path selection rejects unknown scopes (0.983378ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 204.505024
+
+> tdf-app@0.2.0 test:persona-program
+> node scripts/persona-test-program.mjs validate && node --test scripts/__tests__/persona-test-program.test.mjs
+
+Persona program valid: 26 personas, 78 stories, 17 epics.
+✔ validates the deterministic persona catalog and story coverage (142.476893ms)
+✔ generated scenarios contain complete lifecycle and evidence fields (12.522616ms)
+✔ traceability matrix has one row per story and every required column (2.441963ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 336.359276
+✔ import retries preserve source keys, explicit entity types, and avoid profile upserts (8437.313294ms)
+✔ an HTTP error stops the batch before another record (1050.538443ms)
+✔ missing reviewed entity types reject the import before network access (10.673859ms)
+✔ bundled importer defaults to the current API without changing its guarded payloads (5119.276308ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14814.605685
+✔ successful diagnostic performs only bounded reads and redacts reflected credentials (142.449317ms)
+✔ missing subscriptions produce safe canonical guidance and failing exit status (152.437309ms)
+✔ rejected provider result fails without credentials or a false pass (145.703735ms)
+✔ invalid provider result fails without credentials or a false pass (146.34246ms)
+✔ inactive provider result fails without credentials or a false pass (150.72522ms)
+✔ wrong-callback provider result fails without credentials or a false pass (143.811907ms)
+✔ wrong-host provider result fails without credentials or a false pass (146.139235ms)
+✔ throw provider result fails without credentials or a false pass (142.690578ms)
+✔ malformed provider result fails without credentials or a false pass (139.270377ms)
+✔ backend credential aliases work without exposing overridden or encoded secrets (264.678016ms)
+✔ missing app credentials or explicit graph version fail before any provider call (402.39485ms)
+✔ missing account ID fails without probing an undefined account (139.907658ms)
+✔ backend-normalized Graph bases retain the reviewed host and version (326.862298ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2641.880387
+✔ payment readiness reports actual health and never claims an unperformed payment test (1063.824781ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1258.258019
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.922s
+
+OK
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.149s
+
+OK
+✔ accepts a stable current API/database deployment (6.33996ms)
+✔ refuses mismatched public origin, unhealthy database, stale target and deployment races (1.156745ms)
+✔ dry-run SQL keeps bounded read-only and sensitive-column exclusions (169.858351ms)
+✔ rejects another deployment even when its Git SHA and health are identical (11.87627ms)
+✔ rejects mixed public DNS answers before accepting a matching peer (1.647457ms)
+✔ rechecks bound public health and version after inventory and rejects a mid-query change (5.376538ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 473.069464
+✔ retired refresher refuses manual token exchange without disclosing credentials (140.765291ms)
+✔ retired refresher refuses automatic token exchange without disclosing credentials (134.116736ms)
+✔ legacy Instagram diagnostic refuses without exposing supplied token prefixes (137.299872ms)
+✔ legacy stored-token helper refuses without reading or exposing token state (130.977236ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 746.145758

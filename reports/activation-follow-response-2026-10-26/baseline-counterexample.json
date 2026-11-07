@@ -1,0 +1,60 @@
+{
+  "source": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "sourceTree": "daec572a50cdde40d28400dcdb3b778d8a15df61",
+  "binaryRevision": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "actualVersion": {
+    "buildTime": "2026-10-26T02:41:57Z",
+    "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "status": "VERIFIED-isolated-response-loss-counterexample-only",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "databaseAssertions": {
+    "syntheticPairs": 1,
+    "followRows": 1,
+    "evidenceRows": 1,
+    "clubRows": 0,
+    "artistProfiles": 1,
+    "duplicateRows": 0
+  },
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "startedAt": "2026-10-26T06:49:40.405598+00:00",
+  "finishedAt": "2026-10-26T06:50:49.274719+00:00",
+  "scope": "Pre-change counterexample only: protecteded9 web, real native API/PG221. Response discarded after actual200 commit. Fictional accounts; no production, human or provider writes.",
+  "browser": {
+    "status": "VERIFIED-response-loss-counterexample-only",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "scope": "Clean protecteded9 web, qualified nativefe179 API and disposable PostgreSQL221. A real successful follow response is discarded after the API commits. No production, provider or human claim.",
+    "serverResponseWas200BeforeDiscard": true,
+    "serverRelationshipExists": true,
+    "uiStillOffersFollow": true,
+    "errorShownAfterCommit": true,
+    "browserDidNotReconcileAfterFailure": true,
+    "followPostCount": 1,
+    "browserFollowReadsBefore": 1,
+    "browserFollowReadsAfter": 1,
+    "browserClosed": true
+  },
+  "componentNegativeControl": {
+    "expectedFailures": 2,
+    "observedListFollowsCalls": 1,
+    "expectedCallsAfterAmbiguousWrite": 2,
+    "cases": [
+      "committed-follow-response-loss",
+      "committed-unfollow-response-loss"
+    ],
+    "implementation": "unchanged protecteded9 ArtistPublicPage",
+    "status": "VERIFIED-negative-control-only"
+  }
+}

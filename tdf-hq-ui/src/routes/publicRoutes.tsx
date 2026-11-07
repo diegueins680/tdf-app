@@ -9,6 +9,7 @@ import RouteLoadingFallback from './RouteLoadingFallback';
 
 const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
 const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
+const VideoCampaignsPage = lazy(() => import('../pages/VideoCampaignsPage'));
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
 const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const CourseProductionLandingPage = lazy(() => import('../pages/CourseProductionLandingPage'));
@@ -20,6 +21,8 @@ const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
 const DomoQuoteCheckoutPage = lazy(() => import('../pages/DomoQuoteCheckoutPage'));
 const DirectorySearchPage = lazy(() => import('../pages/DirectorySearchPage'));
 const DirectoryPublicDetailPage = lazy(() => import('../pages/DirectoryPublicDetailPage'));
+const EventCommunityEntry = lazy(() => import('./EventCommunityEntry'));
+const SocialEventWorkspacePage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
@@ -56,6 +59,19 @@ const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
 const TdfPlatformPage = lazy(() => import('../pages/TdfPlatformPage'));
+
+const DJ_BOOTH_SERVICE_CODE = 'dj-booth-practice';
+
+// DJ booth is an ordinary service in the public booking form. Keep the old
+// dedicated URL alive for published links by sending it to /reservar with the
+// service preselected (and any tracking params preserved).
+export function LegacyDjBoothRedirect() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  params.delete('service');
+  params.set('servicio', DJ_BOOTH_SERVICE_CODE);
+  return <Navigate to={{ pathname: '/reservar', search: `?${params.toString()}`, hash: location.hash }} replace />;
+}
 
 export function LegacySocialEventsRedirect() {
   const location = useLocation();
@@ -94,6 +110,9 @@ export function renderPublicRoutes() {
       <Route path="/directorio/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="profile" /></PublicBranding>} />
       <Route path="/clasificados/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="classified" /></PublicBranding>} />
       <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
+      <Route path="/social/eventos/:eventId" element={<EventCommunityEntry />}>
+        <Route index element={<SocialEventWorkspacePage />} />
+      </Route>
       <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/pagos/retorno" element={<PublicBranding><ProviderPaymentReturnPage /></PublicBranding>} />
@@ -101,6 +120,7 @@ export function renderPublicRoutes() {
       <Route path="/conversacion/:destinationKind/:destinationId" element={<PublicBranding><InteractionPage /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
+      <Route path="/mi-artista/campanas" element={<PublicBranding><VideoCampaignsPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
       <Route path="/artista/crear" element={<PublicBranding><ArtistOnboardingPage /></PublicBranding>} />
       <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
@@ -144,8 +164,8 @@ export function renderPublicRoutes() {
       <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
       <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
       <Route path="/reservas/orden/:bookingId" element={<PublicBranding><PublicBookingOrderTrackingPage /></PublicBranding>} />
-      <Route path="/dj-booth" element={<PublicBranding><PublicBookingPage preset="dj-booth" /></PublicBranding>} />
-      <Route path="/reservar/dj-booth" element={<Navigate to="/dj-booth" replace />} />
+      <Route path="/dj-booth" element={<LegacyDjBoothRedirect />} />
+      <Route path="/reservar/dj-booth" element={<LegacyDjBoothRedirect />} />
       <Route path="/domo-del-pululahua" element={<PublicBranding><DomoVenuePage /></PublicBranding>} />
       <Route path="/domo-del-pululahua/cotizaciones/:quoteId" element={<PublicBranding><DomoQuoteCheckoutPage /></PublicBranding>} />
       <Route path="/venues/domo-del-pululahua" element={<Navigate to="/domo-del-pululahua" replace />} />

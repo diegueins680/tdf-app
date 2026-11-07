@@ -16,7 +16,10 @@ LABEL = 'net.tdf.application-canary'
 MEMORY = 512 * 1024 * 1024
 ENVIRONMENT = {
     'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8',
-    'APP_ENV': 'production', 'APP_PORT': '8080', 'DB_HOST': '127.0.0.1', 'DB_PORT': '5432',
+    # This tool is pinned to TDF's deployment, whose persisted default is es.
+    # Preserve the regional boot guard rather than inheriting the host/default en.
+    'APP_ENV': 'production', 'APP_PORT': '8080', 'DEFAULT_LOCALE': 'es',
+    'DB_HOST': '127.0.0.1', 'DB_PORT': '5432',
     'DB_USER': 'postgres', 'DB_PASS': 'synthetic-isolated-canary', 'DB_NAME': 'tdf_hq',
     'DB_SSLMODE': 'disable', 'RUN_MIGRATIONS': 'false', 'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false',
     'RESET_DB': 'false', 'SEED_DB': 'false', 'ALLOW_ALL_ORIGINS': 'false',

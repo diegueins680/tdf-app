@@ -468,6 +468,11 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     };
   });
 
+  // AUTHORITY-094 (2026-11-01) adds four ownership columns and two Party
+  // foreign keys to social_sync_account. Production batches and synthetic
+  // batches over the current schema verify that shape; only a caller that
+  // renders a manifest prefix ending before that migration opts out.
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
@@ -491,9 +496,17 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       `SELECT NOT EXISTS (SELECT 1 FROM public.tdf_schema_migration WHERE migration_id = ${sqlLiteral(entry.id)}) AS ${applyVariable} \\gset`,
       `\\if :${applyVariable}`,
       `\\echo Applying migration ${entry.id}`,
-      entry.source,
+      // The ledger row and the migration's effects commit together: the row is
+      // inserted inside a transaction opened here, a migration's own BEGIN only
+      // warns, and its COMMIT (or the trailing one, for files without their own
+      // transaction) commits both. A failure anywhere leaves neither. Every
+      // manifest file ends with its COMMIT and uses no statement that refuses a
+      // transaction block (checked by production-release.test.mjs).
+      'BEGIN;',
       'INSERT INTO public.tdf_schema_migration (migration_id, checksum, source_commit)',
       `VALUES (${sqlLiteral(entry.id)}, ${sqlLiteral(entry.checksum)}, ${sqlLiteral(sourceCommit)});`,
+      entry.source,
+      'COMMIT;',
       '\\else',
       `\\echo Already applied ${entry.id}`,
       '\\endif',
@@ -512,11 +525,13 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     '  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
     ');',
     body,
-    buildSchemaVerificationSql({ includePsqlHeader: false }),
+    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded }),
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
-    '\\quit 3',
+    // psql's \quit takes no exit status (a numeric argument is ignored with a
+    // warning and the batch exited 0); an SQL error under ON_ERROR_STOP exits 3.
+    'DO $lock$ BEGIN RAISE EXCEPTION \'Another production schema migration is active; refusing to wait\'; END $lock$;',
     '\\endif',
     '',
   ].join('\n\n');
@@ -689,11 +704,13 @@ ROLLBACK;
 // from source and fails if a newly called function is missing here.
 export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
   'music_can(bigint,bigint,text)',
+  'music_checkout_payment_attempt_allowed(uuid)',
   'music_check_ddex_export(uuid)',
   'music_check_ddex_operation(uuid,uuid,uuid,text)',
   'music_check_submission(uuid)',
   'music_create_release_correction(uuid,uuid,bigint)',
   'music_merge_party_identifiers(jsonb,jsonb)',
+  'music_minor_units_json(bigint)',
   'music_preview_matches(uuid)',
   'music_preview_spec(bigint,bigint,bigint)',
   'music_public_asset_accessible(uuid,text)',
@@ -709,6 +726,10 @@ export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
 
 export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
+  // Production verification expects the full AUTHORITY-094 social shape; only a
+  // batch rendered from a manifest prefix that stops before that migration
+  // passes false (see buildMigrationBatchSql).
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
@@ -752,7 +773,9 @@ BEGIN
     SELECT 1 FROM (VALUES
       ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),
       ('commerce_checkout_line_item', 'trg_commerce_checkout_line_total', 'commerce_check_checkout_line_total', true, 5),
-      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19)
+      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19),
+      ('commerce_checkout_line_item', 'trg_commerce_checkout_line_fixed', 'commerce_reject_late_checkout_line', false, 7),
+      ('commerce_checkout_session', 'trg_commerce_checkout_created', 'commerce_register_checkout_creation', false, 5)
     ) expected(table_name, trigger_name, function_name, deferred, trigger_type)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
@@ -1625,7 +1648,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 13 OR (
+  ) <> ${socialDesignationIncluded ? 17 : 13} OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1647,7 +1670,11 @@ BEGIN
         ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
         ('social_sync_account', 'platform', 'character varying', 'NO'),
         ('social_sync_account', 'external_user_id', 'character varying', 'NO'),
-        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),${socialDesignationIncluded ? `
+        ('social_sync_account', 'delivery_designated', 'boolean', 'NO'),
+        ('social_sync_account', 'connected_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_at', 'timestamp with time zone', 'YES'),` : ''}
         ('social_sync_post', 'account_id', 'bigint', 'YES'),
         ('social_sync_post', 'platform', 'character varying', 'NO'),
         ('social_sync_post', 'external_post_id', 'character varying', 'NO'),
@@ -1705,7 +1732,7 @@ BEGIN
       'public.social_sync_post'::regclass,
       'public.social_discovery_review'::regclass
     ) AND contype = 'f' AND convalidated
-  ) <> 7 THEN
+  ) <> ${socialDesignationIncluded ? 9 : 7} THEN
     RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
   END IF;
 
@@ -1919,6 +1946,35 @@ BEGIN
        OR actual.is_nullable <> expected.is_nullable
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+    WHERE t.tgrelid=to_regclass('public.commerce_ledger_transaction')
+      AND t.tgname='trg_commerce_ledger_header_immutable'
+      AND p.oid=to_regprocedure('public.commerce_protect_posted_ledger_header()')
+      AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+      AND t.tgtype=19 AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND p.proconfig @> ARRAY['search_path=pg_catalog']::text[]
+      AND NOT p.prosecdef AND p.prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Posted ledger header immutability guard is missing or changed';
+  END IF;
+  -- Replaying an older CREATE OR REPLACE FUNCTION can discard proconfig while
+  -- leaving its migration receipt and trigger binding intact. Inspect both
+  -- installed lookup boundaries instead of trusting those receipts.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_validate_ledger_posting()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_protect_posted_ledger()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Ledger trigger trusted lookup settings are missing or changed';
   END IF;
   FOREACH commerce_table IN ARRAY ARRAY[
     'commerce_checkout_session',

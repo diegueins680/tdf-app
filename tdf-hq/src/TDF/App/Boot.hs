@@ -93,6 +93,7 @@ import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
+import TDF.MusicRelease.CredentialCache (musicCredentialCache)
 import TDF.App.StartupResponse (startupApp)
 import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException)
 import TDF.Trials.Models (migrateTrials)
@@ -120,7 +121,7 @@ runBootServer = do
         then send (responseLBS status200 [("Content-Type", "text/plain")] "ok")
         else next req send
     wrapApp :: Application -> Application
-    wrapApp = appCors . requestExceptionBoundary errorLogger . rootOk
+    wrapApp = musicCredentialCache . appCors . requestExceptionBoundary errorLogger . rootOk
   appRef <- newIORef (wrapApp startupApp)
 
   let setupApp = do

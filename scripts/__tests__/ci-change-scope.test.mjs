@@ -51,6 +51,30 @@ test('public booking HTTP concurrency harness selects backend validation', () =>
   });
 });
 
+test('music catalog search runner alone selects real PostgreSQL backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-catalog-search.mjs']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
+test('music source projection runner alone selects real PostgreSQL backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-source-projection.mjs']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
+test('music purchase asset query alone selects the real backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-purchase-asset-query.py']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
+test('music track search runner alone selects real PostgreSQL backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-track-search.mjs']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
 test('OpenAPI changes validate both generated clients', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/docs/openapi/api.yaml']), {
     repo: true,
@@ -115,6 +139,25 @@ test('production migration runner changes run backend and migration checks', () 
   });
 });
 
+test('ledger runtime and verification changes select the real PostgreSQL backend lane', () => {
+  for (const file of [
+    'scripts/lib/production-release.mjs',
+    'scripts/render-production-schema-verification.mjs',
+    'scripts/test-ledger-posting.sh',
+    'scripts/test-provider-retry-runtime.sh',
+    'scripts/verify-payment-intent-expiry.py',
+    'scripts/verify-checkout-money.py',
+    'scripts/test-checkout-money-verifier.py',
+    'scripts/verify-google-account-name.py',
+    'scripts/__tests__/ledger-posting-upgrade.py',
+    'scripts/__tests__/ledger-posting-snapshot.py',
+    'scripts/__tests__/ledger-posting-namespace.py',
+    'scripts/__tests__/ledger-startup-namespace.mjs',
+  ]) {
+    assert.equal(classifyChangedFiles([file]).backend, true, file);
+  }
+});
+
 test('root dependency changes cover every JavaScript consumer', () => {
   assert.deepEqual(classifyChangedFiles(['package-lock.json']), {
     repo: true,
@@ -127,7 +170,10 @@ test('root dependency changes cover every JavaScript consumer', () => {
 });
 
 test('pipeline changes fail safe across every scope', () => {
-  assert.deepEqual(classifyChangedFiles(['.github/workflows/ci.yml']), allChangeScopes());
+  for (const file of ['.github/workflows/ci.yml', 'scripts/ci-job-admission.mjs',
+    'scripts/__tests__/ci-job-admission.test.mjs']) {
+    assert.deepEqual(classifyChangedFiles([file]), allChangeScopes(), file);
+  }
 });
 
 test('backend artifact builds can force backend validation', () => {

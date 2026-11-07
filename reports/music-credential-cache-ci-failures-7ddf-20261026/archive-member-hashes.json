@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "archive": "original-ci-failures.tar.gz",
+  "sourceHead": "7ddfbd73bf08d007b4658b700bb9cbe289a6b480",
+  "members": {
+    "original-failure-receipt.json": {
+      "sha256": "866468aeb733fbf3ce841c0a3e5c061439762657b66592ee5cdd0b7d0be1c4c8",
+      "bytes": 23378
+    },
+    "persona-original-failure.log": {
+      "sha256": "47b284610f85eff993a625aa48a42cce5c7ee5210d9c3f24f0d86475b22efb84",
+      "bytes": 151152
+    },
+    "social-original-cancelled.log": {
+      "sha256": "599368aae0e53dccdb6284ec4790ef636e68b56bb6b911bf10d116160c9b70c7",
+      "bytes": 54604
+    },
+    "social-job-annotations.json": {
+      "sha256": "72b826f5216949c117a8d1b2fc64959fc35abd5c986ec8ae01ff9827f12c0ebd",
+      "bytes": 1432
+    },
+    "social-workflow-at7ddf.yml": {
+      "sha256": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
+      "bytes": 10036
+    }
+  }
+}

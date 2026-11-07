@@ -1,5 +1,10 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  logoutPending: 'You signed out of this app. We are confirming sign-out with the server.',
+  logoutUnconfirmed: 'You signed out of this app, but server sign-out is unconfirmed. Retry when connected.',
+  retryLogout: 'Retry sign-out',
+  featureMenu: 'Feature menu',
+  closeFeatureMenu: 'Close feature menu',
   claimReviewAfterSignup: 'Create your own account. You can then submit an access claim for the selected profile for review; signing up does not grant ownership.',
   "googleLinkTitle": "Connect your TDF account",
   "googleLinkExplanation": "Use your existing TDF credentials to connect Google. If you previously used only Google, reset your TDF password first. Create an account only if you do not already have one.",
@@ -105,6 +110,7 @@ export default {
   "createEnter": "Create account and sign in",
   "tdfAccount": "TDF account",
   "invalidReset": "This recovery link is incomplete. Request a new link.",
+  "resetTokenExpired": "This link is invalid or has expired. Request a new link to continue.",
   "passwordMismatch": "Passwords do not match.",
   "resetError": "Could not reset your password. Please try again.",
   "access": "Access",
@@ -145,7 +151,6 @@ export default {
   "help": "Get help",
   "createAccount": "Create an account",
   "signInAutofill": "Sign in to autofill",
-  "generalBooking": "General booking",
   "openCommunity": "Open community",
   "skipContent": "Skip to main content",
   "goTdf": "Go to TDF",
@@ -176,5 +181,16 @@ export default {
   "googleCreateWithGoogle": "Create my account with Google",
   "googleLinkInstead": "Already have a TDF account with a password? Connect it to Google:",
   "googleCreating": "Creating your account…",
-  "continueIntentInvitation": "After creating your account, we will continue to “{{intent}}” and activate your Artist access without an additional review."
+  "continueIntentInvitation": "After creating your account, we will continue to “{{intent}}” and activate your Artist access without an additional review.",
+  "signupPasswordHint": "At least 8 characters. This is a new password just for TDF — not your Google or email password.",
+  "inAppBrowserGenericApp": "this app",
+  "inAppBrowserTitle": "You are in the {{app}} browser",
+  "inAppBrowserBodyLogin": "Google does not allow signing in from here with a passkey or Face ID, which is why it asks for a password. Open this page in your browser and Google will sign you in as usual; or sign in right here with your TDF email and password.",
+  "inAppBrowserBodySignup": "Google does not allow creating the account from here with a passkey or Face ID, which is why it asks for a password. Open this page in your browser and Google will work as usual; or create your account right here with your email and a new password.",
+  "inAppBrowserOpenSafari": "Open in Safari",
+  "inAppBrowserOpenChrome": "Open in Chrome",
+  "inAppBrowserCopyLink": "Copy link",
+  "inAppBrowserCopied": "Link copied. Paste it into Safari or Chrome.",
+  "inAppBrowserCopyFailed": "Could not copy. Use the app's ⋯ menu and choose “Open in browser”.",
+  "inAppBrowserMenuHint": "You can also tap the app's ⋯ menu and choose “Open in browser”."
 } as const;

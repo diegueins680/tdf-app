@@ -1,0 +1,31 @@
+{
+  "startedAt": "2026-10-27T00:23:01.499951+00:00",
+  "sourceBefore": {
+    "package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+    "package-lock.json": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+    "src/api/generated/types.ts": "36e46d7af5ad300b8cfa91786439facf1daeb92b903571ab5d88f4476101564e",
+    "AGENTS.md": "207f0c767868d8e1ea71ee89333146055e3170ffe0f62c79a3f65d2827d48b41",
+    ".nvmrc": "9e4a98495fccf30bb42ef14acad25fde8d2d550d87c66120ae0478a5cfe2cce1"
+  },
+  "node": "v20.19.4",
+  "steps": [
+    {
+      "label": "release-check",
+      "exitCode": 0
+    },
+    {
+      "label": "jest",
+      "exitCode": 0
+    }
+  ],
+  "scope": "Actual Mobile checks on exact package+lock COW dependency copy, clean owned HOME/no dotenv, no network permitted. No native device or deployment claim.",
+  "sourceAfter": {
+    "package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+    "package-lock.json": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+    "src/api/generated/types.ts": "36e46d7af5ad300b8cfa91786439facf1daeb92b903571ab5d88f4476101564e",
+    "AGENTS.md": "207f0c767868d8e1ea71ee89333146055e3170ffe0f62c79a3f65d2827d48b41",
+    ".nvmrc": "9e4a98495fccf30bb42ef14acad25fde8d2d550d87c66120ae0478a5cfe2cce1"
+  },
+  "status": "PASS",
+  "finishedAt": "2026-10-27T00:25:29.583827+00:00"
+}

@@ -1,0 +1,4 @@
+Exact5768 post-welcome qualification. Reuse the unchanged run.py, smtp.py and loopback-bind.c from reports/account-recovery-evidence-20261026 in one new private temporary directory; place THIS browser.mjs beside them. The only driver change retains the still-active pre-reset login token and verifies that reset revokes it. All recorded script hashes are in account-recovery-after-welcome-2026-10-26.json.
+Use a clean checkout of5768d8fa227163c3aca183b366726105f53b5a5f, pinned Node22.14.0/dependencies, local PostgreSQL16 and the exact retained fe179/cfe718 native executable required by run.py.
+python3 /absolute/new/private/packet/run.py --source /absolute/clean/checkout --expected-source 5768d8fa227163c3aca183b366726105f53b5a5f
+The original README retains port, sandbox, synthetic inbox, resource cleanup and scope constraints. No production/provider/physical-device operation or ordinary session TTL claim. Never publish raw disposable mail/token contents.

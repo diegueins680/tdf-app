@@ -1,0 +1,38 @@
+{
+  "capturedAt": "2026-10-26T16:46:12.040197+00:00",
+  "status": "PARTIAL",
+  "finding": {
+    "thread": "PRRT_kwDOQPdUrM6wWAdY",
+    "comment": 4379510373,
+    "url": "https://github.com/diegueins680/tdf-app/pull/627#discussion_r4379510373",
+    "scope": "Comunidad membership query must retain the existing Fan/Customer capability; backend authorization unchanged."
+  },
+  "initialReadCounterexample": {
+    "pageSource": "4be1ae8cf3733995470362496d9ea2e1502f3056",
+    "failed": 2,
+    "passedCustomerControl": 1,
+    "reason": "Artist-only/Admin-only accounts with cached membership still queried the Fan/Customer-only endpoint.",
+    "logSha256": "d786d26d44fcc76dfa103ef1056c4ca4a73ce1cdf9bc631fddc7d890cee843bb"
+  },
+  "explicitRetryCounterexample": {
+    "scope": "Initial role gate already corrected, original broad hub retry handler retained for this negative control.",
+    "failed": 2,
+    "observedForbiddenMembershipReadsPerAccount": 1,
+    "expectedReads": 0,
+    "reason": "Retrying an owned artist-profile503 also refetched fan-only resources despite disabled queries.",
+    "logSha256": "0a13af71033dda3023ad3fa3d91806ce4a8e79eb24fceab9a7ef22a9f5585836"
+  },
+  "invalidPreparationRetained": "An earlier test tried to trigger the generic retry from a catalog-failure state where that button is intentionally absent. That invalid fixture was replaced by an owned artist-profile503; it is not counted as an application counterexample.",
+  "repair": [
+    "Reuse existing isFan predicate, which already includes Fan and Customer.",
+    "Apply the same capability to membership read, action handler and button disabled state, including pre-existing cached data.",
+    "Restrict explicit fan-profile/membership refetch to that same capability while public catalog and owned artist-profile retry remain available."
+  ],
+  "verification": {
+    "focusedPassed": 107,
+    "suites": 5,
+    "newRoleCases": 5,
+    "scope": "Actual component and QueryClient with API mocks; two unsupported roles, supported Artist+Customer and two retry denial cases. Native API/SQL qualification is separate."
+  },
+  "protectedIntegration": "New final head must include current protectedmain, exact-headCI, fresh independent review and actual resolved-thread evidence. Prior4be approvals/CI are not inherited."
+}

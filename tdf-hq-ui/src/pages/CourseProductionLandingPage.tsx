@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import {
   forwardRef,
   useCallback,
@@ -506,11 +507,16 @@ export default function CourseProductionLandingPage() {
       if (response.checkoutAvailable) {
         // The payment step lives on the order page; close the sheet and bring the order into view.
         enrollTriggerRef.current = null;
-        setEnrollOpen(false);
-        setPendingCheckoutFocus(true);
-        navigate(`/curso/${encodeURIComponent(selectedSlug)}/orden/${response.registrationId}`, {
-          replace: true,
-        });
+        returnFocusOnExitRef.current = false;
+        const orderPath = `/curso/${encodeURIComponent(selectedSlug)}/orden/${response.registrationId}`;
+        if (enrollmentPresentRef.current) {
+          checkoutNavigationOnExitRef.current = orderPath;
+          setEnrollOpen(false);
+        } else {
+          // A request may finish after the user has already closed the sheet.
+          setPendingCheckoutFocus(true);
+          navigate(orderPath, { replace: true });
+        }
       }
     },
     onError: (error) => {
@@ -658,11 +664,30 @@ export default function CourseProductionLandingPage() {
 
   const enrollTriggerRef = useRef<HTMLElement | null>(null);
   const returnFocusOnExitRef = useRef(false);
+  const enrollmentPresentRef = useRef(false);
+  const checkoutNavigationOnExitRef = useRef<string | null>(null);
   // Return focus explicitly once the dialog has left: Safari does not focus
   // buttons on click, so the dialog's own restore target can be <body>.
   const handleEnrollmentExited = () => {
+    enrollmentPresentRef.current = false;
+    const orderPath = checkoutNavigationOnExitRef.current;
+    checkoutNavigationOnExitRef.current = null;
+    if (orderPath) {
+      returnFocusOnExitRef.current = false;
+      setPendingCheckoutFocus(true);
+      navigate(orderPath, { replace: true });
+      return;
+    }
     if (!returnFocusOnExitRef.current) return;
     returnFocusOnExitRef.current = false;
+    // Finish the dialog exit before starting a router transition. Navigating
+    // while Slide is exiting can interrupt its completion and retain the modal.
+    const params = new URLSearchParams(location.search);
+    if (params.has(ENROLL_QUERY_PARAM)) {
+      params.delete(ENROLL_QUERY_PARAM);
+      const search = params.toString();
+      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
+    }
     const target = [enrollTriggerRef.current, heroCtaRef.current].find(
       (candidate) => candidate?.isConnected && !candidate.hasAttribute('disabled'),
     );
@@ -670,25 +695,21 @@ export default function CourseProductionLandingPage() {
   };
   const openEnrollment = (trigger?: HTMLElement | null) => {
     enrollTriggerRef.current = trigger ?? null;
+    enrollmentPresentRef.current = true;
     setEnrollOpen(true);
   };
 
   const closeEnrollment = useCallback(() => {
     setEnrollOpen(false);
     returnFocusOnExitRef.current = true;
-    const params = new URLSearchParams(location.search);
-    if (params.has(ENROLL_QUERY_PARAM)) {
-      params.delete(ENROLL_QUERY_PARAM);
-      const search = params.toString();
-      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
-    }
-  }, [location.pathname, location.search, navigate]);
+  }, []);
 
   // Deep link (?inscribirme=1), e.g. when coming back from login.
   useEffect(() => {
     if (routeRegistrationId) return;
     const params = new URLSearchParams(location.search);
     if (params.get(ENROLL_QUERY_PARAM) === '1') {
+      enrollmentPresentRef.current = true;
       setEnrollOpen(true);
     }
   }, [location.search, routeRegistrationId]);
@@ -1359,9 +1380,9 @@ function InstructorCard({ meta }: { meta?: CourseMetadata }) {
             </Typography>
           </Box>
         </Stack>
-        <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+        <MarkdownText variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
           {bio}
-        </Typography>
+        </MarkdownText>
       </CardContent>
     </Card>
   );
@@ -2153,10 +2174,10 @@ function EnrollmentDialog({
                     title="Términos del curso"
                     summary={`Versión ${checkoutTerms.termsVersion}`}
                   >
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.termsSummary}</Typography>
+                    <MarkdownText variant="body2">{checkoutTerms.termsSummary}</MarkdownText>
                   </LegalDisclosure>
                   <LegalDisclosure id="course-cancellation-policy" title="Política de cancelación">
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.cancellationPolicy}</Typography>
+                    <MarkdownText variant="body2">{checkoutTerms.cancellationPolicy}</MarkdownText>
                   </LegalDisclosure>
                 </Stack>
               )}

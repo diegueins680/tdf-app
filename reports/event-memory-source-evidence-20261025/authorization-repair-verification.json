@@ -1,0 +1,84 @@
+{
+  "observedAt": "2026-10-26T00:16:53.831829+00:00",
+  "scope": "synthetic local execution; no production qualification",
+  "sourceBase": "c6ecae133a93b6bab93c84cee4d72290f9e28982",
+  "sourceWorktreeDirtyDuringHttp": true,
+  "repairIntroducedBy": "c6ecae133a93b6bab93c84cee4d72290f9e28982",
+  "migrationCount": 216,
+  "sourceMigrationSha256": "6d704d98dae147297b5bb6c0b45277acc295d568cfeb812093e1d2e516dcc518",
+  "http": {
+    "status": "PASS",
+    "requests": 120,
+    "assertionGroups": 17,
+    "matchedRuntimeHashes": 23,
+    "externalProviderCalls": 0
+  },
+  "native": {
+    "commit": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "pr": 170,
+    "tests": 653,
+    "suites": 98,
+    "releaseCheck": "PASS",
+    "metroStatus": "running observed on owned offline port8116",
+    "androidBundleBytes": 15516511,
+    "androidBundleSha256": "4bdc5d6e059ef105547f3cffe68405ab9a8220d432124ee25faaca83bd6596f5",
+    "bundleLimit": "Compiled after source freeze, before commit; not physical Android/iOS/store acceptance",
+    "hostedRun": 40248248167,
+    "hostedResult": "SUCCESS"
+  },
+  "logoutComposition": {
+    "memoryHead": "e9db49c3424318f8bc795165a3cac543080020ee",
+    "logoutHead": "9e96e07f45118e41f3e5e97097b846196a27452a",
+    "uncommittedIsolatedMerge": true,
+    "tests": 3475,
+    "suites": 308,
+    "types": "PASS",
+    "lint": "PASS",
+    "scope": "Web runtime composition before authorization repair and new native pin; no hosted combined qualification"
+  },
+  "logs": {
+    "ownerlessPredecessor": {
+      "path": "/private/tmp/tdf-event-memory-null-organizer-negative-v2.log",
+      "sha256": "232b816f32cc4ed8af54ef7864f7554eb058cf38fdbdfbc82a6cfc0070791376"
+    },
+    "ownerlessCorrected": {
+      "path": "/private/tmp/tdf-event-memory-null-organizer-positive-v3.log",
+      "sha256": "23049857baa598c7aa13298b8bc2714b64dd1eb0053fafa7f8d0f86e599b3fa2"
+    },
+    "nativeAcknowledgementNegative": {
+      "path": "/private/tmp/tdf-native-memory-ack-negative-node20.log",
+      "sha256": "be1bfc7009581a30216ffdfee06d60de3daf1deac20fa100641401e1ddeecd73"
+    },
+    "nativeSessionNegative": {
+      "path": "/private/tmp/tdf-native-memory-session-negative-v2.log",
+      "sha256": "f56eca758b585a03ddd1528d901891083b4e76661fc35e337d847e2f316510c4"
+    },
+    "nativeTests": {
+      "path": "/private/tmp/tdf-native-memory-final-tests-v2.log",
+      "sha256": "3fdd2aab94a97c5c2d242676c68c63bb0e14d7619b31478821f4e99ae3918cb1"
+    },
+    "nativeRelease": {
+      "path": "/private/tmp/tdf-native-memory-final-release.log",
+      "sha256": "2d209cac3887f151b9fa2aa49d9afbed6cc143b656bfbf983cc0cfae1cb02d52"
+    },
+    "logoutCompositionUi": {
+      "path": "/private/tmp/tdf-event-memory-616-composition-full-ui.log",
+      "sha256": "606ab959db17b7b6ab12e0cbfce29bd878e33ea3d85cba1928afad8bbcf3d999"
+    },
+    "logoutCompositionTypes": {
+      "path": "/private/tmp/tdf-event-memory-616-composition-types.log",
+      "sha256": "374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3"
+    },
+    "logoutCompositionLint": {
+      "path": "/private/tmp/tdf-event-memory-616-composition-lint.log",
+      "sha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5"
+    }
+  },
+  "production": {
+    "invitationAttempts": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0,
+    "deploymentPerformed": false
+  }
+}

@@ -164,6 +164,7 @@ loadReconciliationEntries environment status checkout limit offset = do
       "ignored" -> "ignored"
       _ -> "unrecognized"
     safeReason reason = case reason of
+      "music_paid_closed_order" -> "music_paid_closed_order"
       "verified_payment_on_closed_checkout" -> "closed_checkout_approval"
       "scheduled_query_requires_review" -> "scheduled_query_review"
       "provider_query_binding_mismatch" -> "binding_mismatch"

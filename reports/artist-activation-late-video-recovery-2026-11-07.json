@@ -1,0 +1,119 @@
+{
+  "dateUTC": "2026-11-07",
+  "pullRequest": 667,
+  "parent": "5dc4df5a453116166522e23237398ab18e1fb32c",
+  "protectedMain": "7fd0c0d4b5b2bd01dbc33b7c3f172a5ad5505a81",
+  "sourceBeforeReceipt": "5caaced843172ecfdf1d5cb472e64f3cbbca0a0f",
+  "thread": "PRRT_kwDOQPdUrM60vhrq",
+  "problem": "An uploaded private YouTube video becomes unrecoverable after due_at+late_seconds; ordinary accepted Studio confirmation previously requeued verification that the unchanged deadline guard immediately blocked.",
+  "fix": {
+    "explicitApproval": "Owner chooses a future date within31 days and explicitly reapproves rights and schedule, binding campaign version, piece version, external video ID and exact previous due_at. The existing uploaded content version is preserved, not edited.",
+    "concurrency": "SQLite immediate transaction serializes approvals. One concurrent approval commits; stale previous-date/version requests fail. Closed campaigns and running/unknown/completed/cancelled verification cannot be reset by schedule recovery.",
+    "scope": "Only date, Studio consent/processing state and existing verification deadline/budget change; original upload job, video ID, provider session, payload and media/content approvals remain. No new upload/publication job. A paused campaign remains paused; verification does not run before the newly approved date.",
+    "tdf": "Non-admin TDF owner can approve schedule only. Studio consent stays false and verification blocked until authorized channel-admin confirmation; channel and exact-version execution guards remain.",
+    "ui": "Visible explicit reschedule action after expiry. Choosing a date and confirming rights/schedule precedes Studio confirmation for an own channel. Shared non-admin date approval does not claim Studio review. Cancel/invalid dates/nonowners do not make a request.",
+    "ordinaryExpiredConfirmation": "Rejected409 without requeue or mutation; recovery is offered instead of accepting a doomed job."
+  },
+  "qualification": {
+    "service": {
+      "tests": 141,
+      "status": "PASS",
+      "scope": "isolated SQLite, loopback HTTP and provider fixtures; no live provider operation"
+    },
+    "newRegressions": {
+      "methods": 6,
+      "parentAssertionFailures": 22,
+      "parentHarnessErrors": 0,
+      "source": "exact parent youtube_checks function against the same tests",
+      "coverage": "expiry denial atomicity, same-upload successful verification after chosen date, owner/version/video/date/rights bounds, invalid dates including nonfinite/huge integer, forbidden job states, separate TDF owner/admin authority, closed campaign denial and four concurrent confirmations"
+    },
+    "ui": {
+      "cases": 9,
+      "status": "PASS",
+      "newCases": 3,
+      "scope": "actual standalone app helper in JSDOM with synthetic API requests; explicit cancellation and shared-channel consent boundaries"
+    },
+    "qualityRepo": "COMPLETE PASS on final functional source with system Python3.13.5 and official pinned age1.3.2",
+    "inventory": "7PASS",
+    "conformance": "10PASS",
+    "model": "1024 states and negative controls PASS; bounded abstract dispatch, not a model of every recovery interleaving",
+    "freshnessAndMapping": "PASS after source sealing",
+    "generatedClients": {
+      "count": 2,
+      "status": "PASS",
+      "mobile": "0f57163cc9c489e22738cac3ff7985d8ca4b647c"
+    },
+    "catalog": "strict JSON/CSV PASS1405,0unreviewed/0stale; decision objects unchanged",
+    "web": "React source and e2e fixtures unchanged from5dc;4054/358 full web pass belongs to5dc composition, not a new execution for this fix",
+    "nativeAndBackend": "No new local compiled Haskell/Postgres/native or actual-browser execution. Fresh hosted CI/review is required."
+  },
+  "previousBrowserFailure": {
+    "head": "5dc4df5a453116166522e23237398ab18e1fb32c",
+    "run": 42316317095,
+    "job": 128230175547,
+    "passed": 753,
+    "skipped": 22,
+    "failed": 1,
+    "actualRequests": 11,
+    "maximumRequests": 10,
+    "artifact": 13552117750,
+    "artifactSha256FromHostedLog": "bb8c36238c4bcdea668b4c7c0735df2e17d466b0e8f0aca45142d383df7869a8",
+    "status": "FAIL retained; no retry, thumbnail runtime/test assertion/budget/fixture change or root-cause claim"
+  },
+  "sourceSha256": {
+    "services/campaign-platform/domain.py": "f858fd2422f6bf785cfb888213a6989d04c10c7e6813fdaf0aa881565ad35ffb",
+    "services/campaign-platform/tests/test_domain.py": "bbf1c589c5539ba6331cc9990cb0e652f1340b3d0295339b1ead66fa79ac52cb",
+    "services/campaign-platform/ui/app.js": "da2dde1d312be1bc2015b13edde4dbd7499216a22709eaa50c2d9180d83d3905",
+    "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
+    "docs/campaign-platform/operations.md": "66b5184c71903dd6d2e2688d826ab83fb2b16afd6784340b07e24b69d22777d9"
+  },
+  "localLogs": {
+    "suite-sealed": {
+      "localPath": "/tmp/pr667-late-suite-sealed.log",
+      "sha256": "031f54be5e63a16dea3eac681e5ba335964a0a24f9de386c6407f7596a8d7c3b"
+    },
+    "negative-six": {
+      "localPath": "/tmp/pr667-late-negative-six.log",
+      "sha256": "1c58388fc15912938a14f734f6d476cca8a8c9c4a8bfa1ec798d72ad985d90a5"
+    },
+    "ui": {
+      "localPath": "/tmp/pr667-late-ui.log",
+      "sha256": "cdb624b0c54a0c7b01ca6b1d47c4a3b6cc90390d6bf13aaeb8dab75bcc49f261"
+    },
+    "quality-final": {
+      "localPath": "/tmp/pr667-late-quality-final.log",
+      "sha256": "4660df8ea774b87a438d2c25bd041d7ee2a8d6c9c954cf9e37db9fa5ed970d9b"
+    },
+    "model": {
+      "localPath": "/tmp/pr667-late-model.log",
+      "sha256": "af6013484bae24b51cf30b36589859fd70502116e9295fdf7463990ef09ea350"
+    },
+    "inventory-tests": {
+      "localPath": "/tmp/pr667-late-inventory-tests.log",
+      "sha256": "2e2f0b524a242347c0fa771279b8949698f5c01ba5f33b8f7957d5df6ae2dd57"
+    },
+    "conformance-tests": {
+      "localPath": "/tmp/pr667-late-conformance-tests.log",
+      "sha256": "b55a96269cbbb7b08993aee08b3822d848f2f4535a3a22df1fb2139abe00a33f"
+    },
+    "catalog": {
+      "localPath": "/tmp/pr667-late-catalog.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "catalog-csv": {
+      "localPath": "/tmp/pr667-late-catalog-csv.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mapping": {
+      "localPath": "/tmp/pr667-late-mapping.json",
+      "sha256": "755c74fad6b6dd3bd57b13074ec8ae0008c777456123a925ccfe10b1effe020f"
+    }
+  },
+  "release": {
+    "draft": true,
+    "independentApproval": "required for new exact head; none inferred from Codex COMMENT",
+    "protectedAdmission": "required against current main after all required checks",
+    "production": "No merge/deploy/providerSMTP/campaign/publication/ID/schedule/account/follow write. Fixture schedule changes are not production changes or conversions.",
+    "mobile177": "separate"
+  }
+}

@@ -1,0 +1,605 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-26T22:16:37Z",
+  "purpose": "Preserve PR633 current-head original persona failure before any repeat; read-only diagnosis",
+  "repository": "diegueins680/tdf-app",
+  "pullRequest": 633,
+  "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+  "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "headMatchesExpected": true,
+  "testedMerge": {
+    "commit": "7b33eee0e3f2b95a8f6bb87227dc2aeb865e03b6",
+    "tree": "877c4172084a675042643a70e33f3d64dc346ab6",
+    "parents": [
+      "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "d7657f3daf7ee037703a327d840a67e29ac61099"
+    ]
+  },
+  "ci": {
+    "run": 40404888561,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "personaJob": 121860302331,
+    "qualityJob": 121870942245,
+    "stats": {
+      "total": 602,
+      "passed": 579,
+      "declaredSkips": 22,
+      "failed": 1
+    },
+    "failure": {
+      "project": "webkit-iphone",
+      "file": "e2e/web/marketplace-cart.spec.mjs",
+      "declarationLine": 116,
+      "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+      "message": "Test timeout of 30000ms exceeded.",
+      "failingAction": "UNVERIFIED: current log has no locator/action/source line beyond test declaration; trace required",
+      "timeoutMs": 30000,
+      "rendererOrProductRootCause": "UNVERIFIED",
+      "at": "2026-10-26T21:43:39.2459037Z"
+    },
+    "qualityPropagation": "Verified original quality job env PERSONA_WEB_E2E_RESULT=failure; CHANGES/REPO/NATIVE_MUSIC/BACKEND success and UI/MOBILE/NATIVE_ANDROID scope-skipped; aggregate exits1 because selected persona job failed",
+    "logs": [
+      {
+        "kind": "persona",
+        "path": "/private/tmp/tdf-633-d765-persona-original-failure-20261026.log",
+        "sha256": "c6a64b1358e3584e61c6044f01a7e62dad01db4c6ac9d9a80662aa93138fcd4f"
+      },
+      {
+        "kind": "quality",
+        "path": "/private/tmp/tdf-633-d765-quality-original-failure-20261026.log",
+        "sha256": "898cfed8ba0c2294000e3ed6d48345a9804f8917ef4fff79f764e378309b869b"
+      }
+    ],
+    "checkInventory": [
+      {
+        "name": "native-android-e2e",
+        "id": 121870944803,
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121870944803",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:53:19Z",
+        "completed": "2026-10-26T21:53:19Z"
+      },
+      {
+        "name": "quality",
+        "id": 121870942245,
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121870942245",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:53:22Z",
+        "completed": "2026-10-26T21:53:24Z"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "id": 121861072138,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/6a440d3c-5def-4827-8130-d75696da9991",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:32:26Z",
+        "completed": "2026-10-26T21:32:26Z"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "id": 121860638320,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://vercel.com/github",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:31Z",
+        "completed": "2026-10-26T21:31:31Z"
+      },
+      {
+        "name": "migration-tests",
+        "id": 121860305614,
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860305614",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:51Z",
+        "completed": "2026-10-26T21:30:51Z"
+      },
+      {
+        "name": "mobile-quality",
+        "id": 121860305238,
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860305238",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:51Z",
+        "completed": "2026-10-26T21:30:51Z"
+      },
+      {
+        "name": "api-contract-tests",
+        "id": 121860304979,
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860304979",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:51Z",
+        "completed": "2026-10-26T21:30:51Z"
+      },
+      {
+        "name": "ui-quality",
+        "id": 121860304866,
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860304866",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:51Z",
+        "completed": "2026-10-26T21:30:51Z"
+      },
+      {
+        "name": "production-migrations",
+        "id": 121860303380,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860303380",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:24Z",
+        "completed": "2026-10-26T21:31:27Z"
+      },
+      {
+        "name": "api-contracts",
+        "id": 121860303155,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860303155",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:32Z",
+        "completed": "2026-10-26T21:31:34Z"
+      },
+      {
+        "name": "native-music-e2e",
+        "id": 121860302703,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860302703",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:30Z",
+        "completed": "2026-10-26T21:38:35Z"
+      },
+      {
+        "name": "backend-quality",
+        "id": 121860302472,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860302472",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:18Z",
+        "completed": "2026-10-26T21:53:18Z"
+      },
+      {
+        "name": "repo-quality",
+        "id": 121860302437,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860302437",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:14Z",
+        "completed": "2026-10-26T21:33:28Z"
+      },
+      {
+        "name": "persona-web-e2e",
+        "id": 121860302331,
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121860302331",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:08Z",
+        "completed": "2026-10-26T21:52:05Z"
+      },
+      {
+        "name": "admission",
+        "id": 121860170872,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404922461/job/121860170872",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:54Z",
+        "completed": "2026-10-26T21:31:16Z"
+      },
+      {
+        "name": "build",
+        "id": 121859985852,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888513/job/121859985852",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:07Z",
+        "completed": "2026-10-26T21:36:14Z"
+      },
+      {
+        "name": "native-ios-e2e",
+        "id": 121859982168,
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888469/job/121859982168",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:12Z",
+        "completed": "2026-10-26T21:30:12Z"
+      },
+      {
+        "name": "postgres-properties",
+        "id": 121859980583,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888469/job/121859980583",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:51Z",
+        "completed": "2026-10-26T21:31:44Z"
+      },
+      {
+        "name": "payment-staging-inspection",
+        "id": 121859980130,
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121859980130",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:12Z",
+        "completed": "2026-10-26T21:30:12Z"
+      },
+      {
+        "name": "postgres-task-commit",
+        "id": 121859979655,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979655",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:53Z",
+        "completed": "2026-10-26T21:31:21Z"
+      },
+      {
+        "name": "postgres-task-revision",
+        "id": 121859979610,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979610",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:42Z",
+        "completed": "2026-10-26T21:31:03Z"
+      },
+      {
+        "name": "postgres-api",
+        "id": 121859979572,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979572",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:36Z",
+        "completed": "2026-10-26T21:31:04Z"
+      },
+      {
+        "name": "postgres-complete-schema",
+        "id": 121859979516,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979516",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:31:05Z",
+        "completed": "2026-10-26T21:31:31Z"
+      },
+      {
+        "name": "postgres-raci-reassignment",
+        "id": 121859979421,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979421",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:19Z",
+        "completed": "2026-10-26T21:31:29Z"
+      },
+      {
+        "name": "postgres-task-completion",
+        "id": 121859979417,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979417",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:14Z",
+        "completed": "2026-10-26T21:31:47Z"
+      },
+      {
+        "name": "specification-contracts",
+        "id": 121859979412,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979412",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:15Z",
+        "completed": "2026-10-26T21:35:01Z"
+      },
+      {
+        "name": "postgres-raci-editor-context",
+        "id": 121859979406,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979406",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:15Z",
+        "completed": "2026-10-26T21:31:11Z"
+      },
+      {
+        "name": "verify",
+        "id": 121859979401,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979401",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:14Z",
+        "completed": "2026-10-26T21:38:30Z"
+      },
+      {
+        "name": "postgres-task-read",
+        "id": 121859979390,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979390",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:15Z",
+        "completed": "2026-10-26T21:30:52Z"
+      },
+      {
+        "name": "postgres-task-revisioned-read",
+        "id": 121859979307,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979307",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:15Z",
+        "completed": "2026-10-26T21:30:48Z"
+      },
+      {
+        "name": "postgres-foundation",
+        "id": 121859979193,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888522/job/121859979193",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:15Z",
+        "completed": "2026-10-26T21:31:06Z"
+      },
+      {
+        "name": "changes",
+        "id": 121859978442,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/job/121859978442",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:14Z",
+        "completed": "2026-10-26T21:30:50Z"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "id": 121859978183,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888559/job/121859978183",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:15Z",
+        "completed": "2026-10-26T21:32:12Z"
+      },
+      {
+        "name": "real-raci-browser",
+        "id": 121859977702,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888487/job/121859977702",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:14Z",
+        "completed": "2026-10-26T21:32:23Z"
+      },
+      {
+        "name": "social-client",
+        "id": 121859976874,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888416/job/121859976874",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:14Z",
+        "completed": "2026-10-26T21:32:15Z"
+      },
+      {
+        "name": "models-and-postgres",
+        "id": 121859976805,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888416/job/121859976805",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:14Z",
+        "completed": "2026-10-26T21:33:01Z"
+      },
+      {
+        "name": "build",
+        "id": 121859976648,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888398/job/121859976648",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:14Z",
+        "completed": "2026-10-26T21:30:39Z"
+      },
+      {
+        "name": "admission",
+        "id": 121859956311,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404881136/job/121859956311",
+        "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "started": "2026-10-26T21:30:12Z",
+        "completed": "2026-10-26T21:30:34Z"
+      }
+    ],
+    "allOtherObservedTechnicalChecksSuccessOrScopedSkipped": true,
+    "noRunningChecks": true,
+    "followOnDefaultOffAndDiscovery": "Not claimed run after primary persona failure"
+  },
+  "source": {
+    "path": "e2e/web/marketplace-cart.spec.mjs",
+    "gitBlob": "440f1f3255fb013e4e1b21385862aaf6f667a15a",
+    "sameGitBlobAtPrevious7ddf": true,
+    "excerpt": {
+      "path": "/private/tmp/tdf-633-d765-cart-source-excerpt-20261026.json",
+      "sha256": "bbf6be126f34270a202d40ce5af9a70eb8b167198f227688e7e8ea923512471f",
+      "firstLine": 110,
+      "lastLine": 180
+    },
+    "boundary": "Same source file does not prove same failing action; current trace remains necessary"
+  },
+  "artifactInventory": {
+    "locallyDownloadedByThisAgent": false,
+    "shaVerification": "Immutable IDs/digests observed through GitHub artifact API; persona ZIP digest also matches upload log. No local ZIP hash or extracted trace inspection yet.",
+    "items": [
+      {
+        "id": 12691896566,
+        "name": "persona-web-e2e-40404888561",
+        "size_in_bytes": 70428099,
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691896566",
+        "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691896566/zip",
+        "expired": false,
+        "created_at": "2026-10-26T21:52:02Z",
+        "expires_at": "2026-11-09T21:51:58Z",
+        "updated_at": "2026-10-26T21:52:02Z",
+        "digest": "sha256:75d6a47be209899ba10ce34b28cce4f25d8b2edc2944c8be46458b2bc34e70b9",
+        "workflow_run": {
+          "id": 40404888561,
+          "repository_id": 1089950892,
+          "head_repository_id": 1089950892,
+          "head_branch": "fix/music-credential-cache-20261026",
+          "head_sha": "d7657f3daf7ee037703a327d840a67e29ac61099"
+        }
+      },
+      {
+        "id": 12691634122,
+        "name": "booking-conformance-7b33eee0e3f2b95a8f6bb87227dc2aeb865e03b6",
+        "size_in_bytes": 620096,
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691634122",
+        "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691634122/zip",
+        "expired": false,
+        "created_at": "2026-10-26T21:53:09Z",
+        "expires_at": "2026-11-02T21:53:08Z",
+        "updated_at": "2026-10-26T21:53:09Z",
+        "digest": "sha256:ab1ecb26e374646d315473ea3d6fd97bc84bef5c60a1f2e38b145736dab6364a",
+        "workflow_run": {
+          "id": 40404888561,
+          "repository_id": 1089950892,
+          "head_repository_id": 1089950892,
+          "head_branch": "fix/music-credential-cache-20261026",
+          "head_sha": "d7657f3daf7ee037703a327d840a67e29ac61099"
+        }
+      },
+      {
+        "id": 12691364230,
+        "name": "backend-version-rebuild-7b33eee0e3f2b95a8f6bb87227dc2aeb865e03b6-1",
+        "size_in_bytes": 8991,
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691364230",
+        "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691364230/zip",
+        "expired": false,
+        "created_at": "2026-10-26T21:53:07Z",
+        "expires_at": "2026-11-02T21:53:06Z",
+        "updated_at": "2026-10-26T21:53:07Z",
+        "digest": "sha256:5bc83b160df70bfff6654141d291da60ab0c287a8ea2194bca870a791739d450",
+        "workflow_run": {
+          "id": 40404888561,
+          "repository_id": 1089950892,
+          "head_repository_id": 1089950892,
+          "head_branch": "fix/music-credential-cache-20261026",
+          "head_sha": "d7657f3daf7ee037703a327d840a67e29ac61099"
+        }
+      },
+      {
+        "id": 12691004547,
+        "name": "compiled-api-7b33eee0e3f2b95a8f6bb87227dc2aeb865e03b6",
+        "size_in_bytes": 114263,
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691004547",
+        "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12691004547/zip",
+        "expired": false,
+        "created_at": "2026-10-26T21:53:08Z",
+        "expires_at": "2026-11-02T21:53:07Z",
+        "updated_at": "2026-10-26T21:53:08Z",
+        "digest": "sha256:38a4880ffe2f21bf8cc9614ee8caf514f86baed4d7f481eeec7287afc6f8a0f7",
+        "workflow_run": {
+          "id": 40404888561,
+          "repository_id": 1089950892,
+          "head_repository_id": 1089950892,
+          "head_branch": "fix/music-credential-cache-20261026",
+          "head_sha": "d7657f3daf7ee037703a327d840a67e29ac61099"
+        }
+      },
+      {
+        "id": 12690807822,
+        "name": "native-music-40404888561",
+        "size_in_bytes": 540301,
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12690807822",
+        "archive_download_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/artifacts/12690807822/zip",
+        "expired": false,
+        "created_at": "2026-10-26T21:38:32Z",
+        "expires_at": "2026-11-09T21:38:31Z",
+        "updated_at": "2026-10-26T21:38:32Z",
+        "digest": "sha256:d92701d4dad2d5c202f10a51267e4a93f56db1d13a9f367a8f258724e5d133c0",
+        "workflow_run": {
+          "id": 40404888561,
+          "repository_id": 1089950892,
+          "head_repository_id": 1089950892,
+          "head_branch": "fix/music-credential-cache-20261026",
+          "head_sha": "d7657f3daf7ee037703a327d840a67e29ac61099"
+        }
+      }
+    ]
+  },
+  "criticalTraceArtifact": {
+    "id": 12691896566,
+    "name": "persona-web-e2e-40404888561",
+    "bytes": 70428099,
+    "observedSha256": "75d6a47be209899ba10ce34b28cce4f25d8b2edc2944c8be46458b2bc34e70b9",
+    "url": "https://github.com/diegueins680/tdf-app/actions/runs/40404888561/artifacts/12691896566",
+    "createdAt": "2026-10-26T21:52:02Z",
+    "expiresAt": "2026-11-09T21:51:58Z",
+    "pathInside": "test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-webkit-iphone/trace.zip"
+  },
+  "review": {
+    "draft": true,
+    "merged": false,
+    "mergeableState": "blocked",
+    "currentHeadReviews": [
+      {
+        "id": 5659591597,
+        "state": "APPROVED",
+        "user": "tdfrecords",
+        "submittedAt": "2026-10-26T21:49:40Z",
+        "commit": "d7657f3daf7ee037703a327d840a67e29ac61099"
+      }
+    ],
+    "doesNotOverrideFailedCi": true
+  },
+  "previousEvidence": {
+    "original622": "/private/tmp/tdf-622-ci-merge-evidence-20261026.json",
+    "previous7ddf": "/private/tmp/tdf-633-7ddf-original-failures-20261026.json",
+    "comparison": "Third historical same testcase whole30s timeout signature;622/7ddf confirmed final close action in prior evidence, currentd765 action not inferred.",
+    "prior622PassingReplay": {
+      "durationMs": 28912,
+      "budgetMs": 30000,
+      "marginMs": 1088,
+      "notDeterministicRepair": true
+    }
+  },
+  "recommendation": [
+    "Do not reflexively rerun current failed persona job.",
+    "Root downloads exact immutable artifact12691896566 and verifies SHA256 before trace inspection.",
+    "Use trace to determine which action consumed budget and compare API/state/actionability durations; preserve this original outcome.",
+    "No assertion, timeout, skip, or product changes authorized by this diagnosis."
+  ],
+  "actions": {
+    "sourceOrTestEdits": 0,
+    "reruns": 0,
+    "reviewRequests": 0,
+    "merges": 0,
+    "pushes": 0,
+    "productionProbes": 0,
+    "largeArtifactDownloads": 0
+  }
+}
