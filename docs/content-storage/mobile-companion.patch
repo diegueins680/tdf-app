@@ -1,124 +1,24 @@
-diff --git a/src/api/generated/types.ts b/src/api/generated/types.ts
-index c6612a3..31d0dfe 100644
---- a/src/api/generated/types.ts
-+++ b/src/api/generated/types.ts
-@@ -4037 +4037 @@ export interface paths {
--         * @description Exchanges a Google OAuth code (PKCE) for Drive tokens.
-+         * @description Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
-@@ -4040 +4040,5 @@ export interface paths {
--        delete?: never;
-+        /**
-+         * Disconnect personal Google Drive
-+         * @description Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
-+         */
-+        delete: operations["disconnectDrive"];
-@@ -4057 +4061 @@ export interface paths {
--         * @description Refreshes a Google Drive access token using a refresh token.
-+         * @description Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
-@@ -14487,0 +14492 @@ export interface components {
-+        /** @description Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential. */
-@@ -27251,0 +27257,25 @@ export interface operations {
-+                };
-+                content?: never;
-+            };
-+        };
-+    };
-+    disconnectDrive: {
-+        parameters: {
-+            query?: never;
-+            header?: never;
-+            path?: never;
-+            cookie?: never;
-+        };
-+        requestBody?: never;
-+        responses: {
-+            /** @description Personal connection erased */
-+            204: {
-+                headers: {
-+                    [name: string]: unknown;
-+                };
-+                content?: never;
-+            };
-+            /** @description Current authenticated session required */
-+            401: {
-+                headers: {
-+                    [name: string]: unknown;
-diff --git a/src/api/upload.test.ts b/src/api/upload.test.ts
+# Functional companion based on compatible Mobile1c63; current compiled API generation and protected upstream composition are pending.
+# Existing src/api/upload.ts remains byte-exact1c63. New account helper is separately gated OFF.
+diff --git a/src/api/accountStorage.ts b/src/api/accountStorage.ts
 new file mode 100644
-index 0000000..417bebb
+index 0000000..6aebb37
 --- /dev/null
-+++ b/src/api/upload.test.ts
-@@ -0,0 +1,37 @@
-+jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
-+jest.mock('../lib/api', () => ({ API_BASE: 'https://api.tdf.test' }));
-+const mockBinding = { authorization: 'Bearer owner-a', signal: new AbortController().signal, version: 1 };
-+jest.mock('./client', () => ({
-+  getAuthToken: () => 'Bearer owner-a',
-+  captureAuthSession: () => mockBinding,
-+  assertAuthSession: jest.fn(),
-+}));
-+import { assertAuthSession } from './client';
-+import { uploadMedia, readPrivateStorageFile } from './upload';
-+
-+const fetchMock = jest.fn();
-+const input = { uri: 'file:///private.bin', destination: 'tdf' as const, idempotencyKey: 'a'.repeat(64) };
-+beforeEach(() => { jest.clearAllMocks(); global.fetch = fetchMock; });
-+
-+it('requires explicit destination, stable identity and owner-bound personal consent', async () => {
-+  await expect(uploadMedia({ uri: 'file:///private.bin' })).rejects.toThrow('Selecciona');
-+  await expect(uploadMedia({ ...input, idempotencyKey: undefined })).rejects.toThrow('identidad estable');
-+  await expect(uploadMedia({ ...input, destination: 'google_drive', connectionHandle: 'raw-google-token' })).rejects.toThrow('Conecta');
-+  await expect(uploadMedia({ ...input, connectionHandle: 'another-destination' })).rejects.toThrow('personal');
-+  expect(fetchMock).not.toHaveBeenCalled();
-+});
-+
-+it('preserves private links and request identity instead of advertising public access', async () => {
-+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ duFileId: 'file', duWebContentLink: '/storage/files/00000000-0000-4000-8000-000000000001', duPublicUrl: null }) });
-+  await expect(uploadMedia(input)).resolves.toContain('/storage/files/');
-+  expect(fetchMock).toHaveBeenCalledWith('https://api.tdf.test/drive/upload', expect.objectContaining({ signal: mockBinding.signal, headers: { Authorization: mockBinding.authorization } }));
-+  expect(assertAuthSession).toHaveBeenCalledTimes(2);
-+});
-+
-+it('does not read private bytes after a session changes', async () => {
-+  (assertAuthSession as jest.Mock).mockImplementationOnce(() => { throw new Error('session changed'); });
-+  const arrayBuffer = jest.fn();
-+  fetchMock.mockResolvedValue({ ok: true, arrayBuffer });
-+  await expect(readPrivateStorageFile('00000000-0000-4000-8000-000000000001')).rejects.toThrow('session changed');
-+  expect(arrayBuffer).not.toHaveBeenCalled();
-+});
-diff --git a/src/api/upload.ts b/src/api/upload.ts
-index cc67d4f..75156ce 100644
---- a/src/api/upload.ts
-+++ b/src/api/upload.ts
-@@ -2,2 +2,2 @@ import { Platform } from 'react-native';
--import { getAuthToken } from './client';
--import { UPLOAD_BASE } from '../lib/api';
++++ b/src/api/accountStorage.ts
+@@ -0,0 +1,82 @@
++import { Platform } from 'react-native';
 +import { assertAuthSession, captureAuthSession, getAuthToken } from './client';
 +import { API_BASE } from '../lib/api';
-@@ -5 +5,3 @@ import { UPLOAD_BASE } from '../lib/api';
--const UPLOAD_URL = UPLOAD_BASE;
++
 +export type StorageDestination = 'tdf' | 'google_drive';
 +export const isDriveConnectionHandle = (value: unknown): value is string =>
 +  typeof value === 'string' && /^tdf-vault-v1_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
-@@ -7,13 +9 @@ const UPLOAD_URL = UPLOAD_BASE;
--export type UploadResponse = {
--  publicUrl?: string;
--  webViewLink?: string;
--  webContentLink?: string;
--  fileId?: string;
--};
--
--export async function uploadMedia({
--  uri,
--  mimeType,
--  fileName,
--  uploadLabel = 'archivo',
--}: {
++
 +export type UploadInput = {
-@@ -24,3 +14,15 @@ export async function uploadMedia({
--}): Promise<string> {
--  if (!UPLOAD_URL) {
--    throw new Error(`No se ha configurado EXPO_PUBLIC_UPLOAD_URL para subir ${uploadLabel}s.`);
++  uri: string;
++  mimeType?: string;
++  fileName?: string;
++  uploadLabel?: string;
 +  destination?: StorageDestination;
 +  visibility?: 'private' | 'public';
 +  idempotencyKey?: string;
@@ -126,16 +26,17 @@ index cc67d4f..75156ce 100644
 +};
 +
 +// Callers must retain idempotencyKey for retry and ask for an explicit destination.
-+// Until native selection/consent UI ships, old callers fail before any network I/O.
-+export async function uploadMedia(input: UploadInput): Promise<string> {
++// Existing corporate uploads use the unchanged upload.ts adapter.
++// New account storage remains unavailable until explicit activation and UI/consent qualification.
++export async function uploadAccountMedia(input: UploadInput): Promise<string> {
++  if (process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED !== 'true') throw new Error('El almacenamiento de cuenta todavía no está habilitado.');
 +  const { uri, destination, visibility = 'private', idempotencyKey, connectionHandle } = input;
 +  if (!destination || !['tdf', 'google_drive'].includes(destination)) {
 +    throw new Error('Selecciona dónde guardar el archivo antes de subirlo.');
 +  }
 +  if (!idempotencyKey || !/^[a-f0-9]{64}$/.test(idempotencyKey)) {
 +    throw new Error('La carga necesita una identidad estable para poder recuperarse.');
-@@ -28 +30,7 @@ export async function uploadMedia({
--  const token = getAuthToken();
++  }
 +  if (destination === 'google_drive' && !isDriveConnectionHandle(connectionHandle)) {
 +    throw new Error('Conecta tu Google Drive personal antes de subir el archivo.');
 +  }
@@ -143,27 +44,12 @@ index cc67d4f..75156ce 100644
 +    throw new Error('La conexión personal no puede usarse para almacenamiento de TDF.');
 +  }
 +  const binding = captureAuthSession(getAuthToken());
-@@ -30,5 +37,0 @@ export async function uploadMedia({
--
--  const name = fileName ?? uri.split('/').pop() ?? 'upload.bin';
--  const type = mimeType || 'application/octet-stream';
--  const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
--
-@@ -36,3 +39,3 @@ export async function uploadMedia({
--    uri: uploadUri,
--    name,
--    type
++  const data = new FormData();
++  data.append('file', {
 +    uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
 +    name: input.fileName ?? uri.split('/').pop() ?? 'upload.bin',
 +    type: input.mimeType || 'application/octet-stream',
-@@ -40,7 +43,8 @@ export async function uploadMedia({
--
--  const res = await fetch(UPLOAD_URL, {
--    method: 'POST',
--    headers: {
--      ...(token ? { Authorization: token } : {})
--    },
--    body: data
++  } as unknown as Blob);
 +  data.append('destination', destination);
 +  data.append('authMode', destination === 'google_drive' ? 'user' : 'server');
 +  data.append('visibility', visibility);
@@ -172,16 +58,7 @@ index cc67d4f..75156ce 100644
 +  const res = await fetch(`${API_BASE}/drive/upload`, {
 +    method: 'POST', headers: { Authorization: binding.authorization },
 +    body: data, signal: binding.signal,
-@@ -48,9 +52,10 @@ export async function uploadMedia({
--
--  if (!res.ok) {
--    const text = await res.text().catch(() => res.statusText);
--    throw new Error(text || `No se pudo subir el ${uploadLabel}`);
--  }
--
--  const json = (await res.json().catch(() => ({}))) as UploadResponse;
--  const url = json.publicUrl || json.webViewLink || json.webContentLink;
--  if (!url) throw new Error('Subida exitosa pero no se devolvió URL pública');
++  });
 +  assertAuthSession(binding);
 +  if (!res.ok) throw new Error(res.status === 503
 +    ? 'Las cargas de archivos todavía no están habilitadas o el servicio no está disponible.'
@@ -192,14 +69,12 @@ index cc67d4f..75156ce 100644
 +  if (typeof url !== 'string' || !url) throw new Error('La carga no devolvió un enlace autorizado.');
 +  if (url.startsWith('/storage/files/')) return `${API_BASE}${url}`;
 +  if (!url.startsWith('https://')) throw new Error('Enlace de almacenamiento inválido.');
-@@ -60,5 +65 @@ export async function uploadMedia({
--export async function uploadImage(input: {
--  uri: string;
--  mimeType?: string;
--  fileName?: string;
--}): Promise<string> {
-+export async function uploadImage(input: UploadInput): Promise<string> {
-@@ -66,0 +68,13 @@ export async function uploadImage(input: {
++  return url;
++}
++
++export async function uploadAccountImage(input: UploadInput): Promise<string> {
++  return uploadAccountMedia({ ...input, uploadLabel: 'imagen' });
++}
 +
 +export async function readPrivateStorageFile(fileId: string): Promise<ArrayBuffer> {
 +  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(fileId)) throw new Error('Archivo inválido');
@@ -213,3 +88,80 @@ index cc67d4f..75156ce 100644
 +  assertAuthSession(binding);
 +  return bytes;
 +}
+diff --git a/src/api/accountStorage.test.ts b/src/api/accountStorage.test.ts
+new file mode 100644
+index 0000000..6278b35
+--- /dev/null
++++ b/src/api/accountStorage.test.ts
+@@ -0,0 +1,44 @@
++jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
++jest.mock('../lib/api', () => ({ API_BASE: 'https://api.tdf.test' }));
++const mockBinding = { authorization: 'Bearer owner-a', signal: new AbortController().signal, version: 1 };
++jest.mock('./client', () => ({
++  getAuthToken: () => 'Bearer owner-a',
++  captureAuthSession: () => mockBinding,
++  assertAuthSession: jest.fn(),
++}));
++import { assertAuthSession } from './client';
++import { uploadAccountMedia, readPrivateStorageFile } from './accountStorage';
++
++const fetchMock = jest.fn();
++const input = { uri: 'file:///private.bin', destination: 'tdf' as const, idempotencyKey: 'a'.repeat(64) };
++beforeEach(() => { jest.clearAllMocks(); global.fetch = fetchMock; process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED = 'true'; });
++afterAll(() => { delete process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED; });
++
++it('requires explicit destination, stable identity and owner-bound personal consent', async () => {
++  await expect(uploadAccountMedia({ uri: 'file:///private.bin' })).rejects.toThrow('Selecciona');
++  await expect(uploadAccountMedia({ ...input, idempotencyKey: undefined })).rejects.toThrow('identidad estable');
++  await expect(uploadAccountMedia({ ...input, destination: 'google_drive', connectionHandle: 'raw-google-token' })).rejects.toThrow('Conecta');
++  await expect(uploadAccountMedia({ ...input, connectionHandle: 'another-destination' })).rejects.toThrow('personal');
++  expect(fetchMock).not.toHaveBeenCalled();
++});
++
++it('preserves private links and request identity instead of advertising public access', async () => {
++  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ duFileId: 'file', duWebContentLink: '/storage/files/00000000-0000-4000-8000-000000000001', duPublicUrl: null }) });
++  await expect(uploadAccountMedia(input)).resolves.toContain('/storage/files/');
++  expect(fetchMock).toHaveBeenCalledWith('https://api.tdf.test/drive/upload', expect.objectContaining({ signal: mockBinding.signal, headers: { Authorization: mockBinding.authorization } }));
++  expect(assertAuthSession).toHaveBeenCalledTimes(2);
++});
++
++it('does not read private bytes after a session changes', async () => {
++  (assertAuthSession as jest.Mock).mockImplementationOnce(() => { throw new Error('session changed'); });
++  const arrayBuffer = jest.fn();
++  fetchMock.mockResolvedValue({ ok: true, arrayBuffer });
++  await expect(readPrivateStorageFile('00000000-0000-4000-8000-000000000001')).rejects.toThrow('session changed');
++  expect(arrayBuffer).not.toHaveBeenCalled();
++});
++
++it.each([undefined, 'false', 'TRUE', '1'])('keeps new account uploads unavailable before literal activation (%s)', async (value) => {
++  if (value === undefined) delete process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED; else process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED = value;
++  await expect(uploadAccountMedia(input)).rejects.toThrow('todavía no está habilitado');
++  expect(fetchMock).not.toHaveBeenCalled();
++});
+diff --git a/src/api/upload.compatibility.test.ts b/src/api/upload.compatibility.test.ts
+new file mode 100644
+index 0000000..6f28710
+--- /dev/null
++++ b/src/api/upload.compatibility.test.ts
+@@ -0,0 +1,21 @@
++jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
++jest.mock('../lib/api', () => ({ UPLOAD_BASE: 'https://api.tdf.test/assets/upload' }));
++jest.mock('./client', () => ({ getAuthToken: () => 'Bearer synthetic-owner' }));
++import { uploadImage, uploadMedia } from './upload';
++const fetchMock = jest.fn();
++beforeEach(() => {
++  jest.clearAllMocks(); global.fetch = fetchMock;
++  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ publicUrl: 'https://assets.example.test/synthetic' }) });
++});
++it.each([
++  { uri: 'file:///inventory.jpg', mimeType: 'image/jpeg', fileName: 'inventory.jpg' },
++  { uri: 'file:///inventory-receipt.pdf', mimeType: 'application/pdf', fileName: 'inventory-receipt.pdf' },
++])('preserves the corporate upload contract without a personal destination ($fileName)', async (input) => {
++  await expect(uploadMedia(input)).resolves.toBe('https://assets.example.test/synthetic');
++  expect(fetchMock).toHaveBeenCalledTimes(1);
++  expect(fetchMock).toHaveBeenCalledWith('https://api.tdf.test/assets/upload', expect.objectContaining({ headers: { Authorization: 'Bearer synthetic-owner' }, method: 'POST' }));
++});
++it('preserves the existing corporate image wrapper', async () => {
++  await expect(uploadImage({ uri: 'file:///inventory.jpg' })).resolves.toBe('https://assets.example.test/synthetic');
++  expect(fetchMock).toHaveBeenCalledTimes(1);
++});

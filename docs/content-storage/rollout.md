@@ -33,8 +33,13 @@ owner, session epoch and the exact stored connection before removing local state
 Provider-wide consent revocation remains a separate Google settings operation.
 
 `CONTENT_STORAGE_UPLOADS_ENABLED` remains disabled by default; only literal `true`
-admits account uploads. This flag does not gate the OAuth vault transition, so it
-cannot substitute for the backend-first vault/key preflight above. No personal
+admits account uploads and fresh OAuth code exchanges. Existing opaque-handle
+refresh does not use this upload flag; it still requires the current owner,
+session and valid encrypted vault connection. Key/client compatibility and
+coordinated rollout therefore remain separate checks. A client that omits the
+new explicit destination or stable request identity cannot use the new upload
+contract merely because it can store an opaque string. The complete old/new
+frontend/backend upload matrix remains unqualified. No personal
 upload falls back to a corporate account or folder. Native destination/consent
 screens and real-provider qualification remain unfinished. Existing corporate
 inventory upload callers must keep their current adapter; any new explicit
@@ -52,7 +57,10 @@ Historical integration403 was a limitation of an earlier connector. Current nati
 GitHub CLI authority has successfully published and protected-merged other Mobile
 work. It is not the current blocker. Reconcile this candidate's actual compiled
 API against a root-compatible Mobile snapshot and preserve current Mobile product
-work; its old14318a7 patch is historical and must not be blindly applied over newer
+work; the original14318a7 patch is historical. The updated functional patch based
+on compatible1c63 adds only a separately gated account helper and its tests,
+retaining the corporate adapter exactly. It still needs canonical API generation
+and qualified upstream composition, and must not be blindly applied over newer
 contracts. Actual protected upstream ancestry and current independent review/CI
 remain required before integrating a new root pin.
 

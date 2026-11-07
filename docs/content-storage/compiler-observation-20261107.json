@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "scope": "Current compiler-produced declaration adoption; not production activation or whole API conformance",
+  "actualBuildSource": "ac6d514e7ee9a3e43e16c41a339d4b15c18136ed",
+  "metadataDirtyAtRuntime": true,
+  "binarySha256": "0598f20a826b0069b1e5cc8064c84f0744dc5954204ee3d30ad38ae90b7cbfe3",
+  "testBinarySha256": "765a1ab63308fc27e38abddc38753d4d67abf490bbfefd55cc8b45824be865c6",
+  "nativeInputCount": 494,
+  "review": {
+    "status": "PASS_ACTUAL_COMPILER_DECLARATION_REVIEW_NOT_WHOLE_SCHEMA_OR_HANDLER_PROOF",
+    "atUTC": "2026-11-07T11:15:27.391Z",
+    "actualBuildSource": "ac6d514e7ee9a3e43e16c41a339d4b15c18136ed",
+    "binarySha256": "0598f20a826b0069b1e5cc8064c84f0744dc5954204ee3d30ad38ae90b7cbfe3",
+    "main": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+    "mainOperations": 927,
+    "currentOperations": 928,
+    "allOldCompleteDeclaredOperationsAndRelativeOrderPreservedIgnoringOrdinals": true,
+    "added": [
+      {
+        "ordinal": 616,
+        "path": "/drive/token",
+        "parameters": [],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "DELETE",
+        "successStatus": 204,
+        "contentTypes": [],
+        "responseType": null
+      }
+    ],
+    "otherRawSurfaceExactIgnoringOrdinals": true,
+    "snapshotSha256": "a43fafca23df05bb083bfafa827347a44be6507a3c83db89904deea60501e39e",
+    "limits": "NamedHaskellmethod/path/type/auth declaration only; JSONschemas/vault/ownership/filesystem/provider/restore require separate evidence. Does not upgrade undocumented or unavailable routes."
+  },
+  "localValidation": {
+    "fullHspec": {
+      "examples": 4294,
+      "failures": 0,
+      "pending": 23
+    },
+    "dedicatedOwnedPostgresSecurity": {
+      "examples": 10,
+      "failures": 0
+    }
+  },
+  "limitations": [
+    "Named Haskell declarations are not JSON-schema or implementation-refinement proof.",
+    "Actual native executions retain ac6 plus frozen494 inputs; subsequent metadata/client composition does not relabel those runs.",
+    "Provider consent, default ACL, native UI, restore, live mount/CDN and production operations remain unverified.",
+    "Strict actual Mobile-main ancestry, fresh hosted source checks and independent review remain required."
+  ]
+}
