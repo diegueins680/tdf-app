@@ -1,0 +1,47 @@
+Independent bounded final review of currency PR673 on qualified range parent, 2026-10-30.
+
+Qualified source:340be46ca3dda5a8376edbbeca2ed59528b02d47.
+Qualified range parent:1ffa7818204e46f9aa92e1657a12efe4a5ebd2c6.
+Protected main baseline:0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5.
+Previous published currency C3:c3a73b9400f7bd9c27b68105bcb462d4ea7fdaf5.
+
+Conclusion:zero remaining blocking defects found in reviewed ROOT-authored qualification, evidence controls, final seal and supplied raw receipts. This is bounded local engineering review, not current-head GitHub approval, merge permission, an independent test rerun or a complete implementation/refinement proof. I authored the isolated source reconciliation; ROOT independently reviewed it. My peer-review scope here is ROOT's qualification/seal machinery and actual result/source/artifact correspondence.
+
+Source correspondence independently checked: clean340be HEAD and normal parents[C3,1ffa]; owned SocialEventsHandlers/FollowHandlerSpec byte-exact C3; only those two backend paths differ from parent. All non-owned backend files, including four newer MusicRelease/OpenAPI files, are retained from parent/main. The complete backend is not described as exact old C3. Functional UI/workflows/scripts/ops/dependencies/Mobile remain exact parent. All160 parent requirement objects and all159 protected-main objects are separately preserved by value; unchanged currency requirement produces161 total. Range/currency contracts and auth/recovery source contexts remain their correct scoped versions. All16 historical range/currency report/archive/review/manifest blobs are byte-exact their parent bindings. No unmerged worker668, contract677, cleanup679/682 or browser-precision repair was imported.
+
+ROOT's actual canonical --force-dirty build/targeted/full exits are0. I read raw targeted names/counts:15 range plus14 currency examples,29/0/0 pending; full raw suffix4074/0/21 inherited pending. I rehashed the actual test binary50e678f429c516f76631166619ff6b69ade439c88d2f50d01bc5650dfd9a893e and actual test-target Version.o251c8807db05a0ba40bead46c8fed339d3134c21125ddf695dd65ffd2e1449ad. Both contain the340be source literal, and the build log explicitly compiles TDF.Version. This qualifies the native test target only; no serving executable, provider, deployment or production state is qualified.
+
+Independent read-only checks verified1,429 registered filesystem/Git/Mobile source bindings, the complete987-file tracked backend set,52 assurance evidence artifacts and16 historical evidence blobs. Source digest9638d480f84d803c1d2a6e3cfc125b10361d754da2123fd9e703d8d860249ed5 and files/revision/Mobile/clean provenance match current source and report. Root quality/admission/catalog8, strict1354 metadata and assurance completed with actual0. Their successful finite execution does not establish complete domain correctness.
+
+Nine in-memory corruptions of the actual AST-extracted seal-binding function were rejected with the intended assertions, with valid evidence accepted before/after and disk binary/object evidence unchanged. I inspected the function/control implementation, current control receipt and current script hashes. The corrected seal separately records actual0. The parent/main normative-count labeling issue found during review was fixed before packaging: final output explicitly distinguishes main159, parent160 and total161, independently compares both sets, and retains earlier unpublished label-stage script/results/controls as history. This was an evidence-label correction, not a product source, native test or theorem counterexample. No native rerun was necessary for that outside-source change.
+
+Formal limits independently checked:161 whole requirements and322 implementation/refinement obligations remain UNPROVEN. Eleven inherited conditional source-derived SMT claims retain their trusted-translation assumptions. Formal release remains BLOCKED and executionAllowed false. No new complete theorem is established by these controls or suites.
+
+Historical evidence limits: original13-case currency red8 assertion failures/5 compatibility passes, later14-case currency component, and two historical source faults with8+1 intended assertions remain historical, not rerun on this composition. Original range controls likewise remain source-bound to their dated executions. Exact owned source/test bytes support scoped reuse; current29/full4074 native execution separately checks the real new four-file backend build context. SQLite typed Handler fixtures do not establish authenticated HTTP, production PostgreSQL foreign-currency reachability, concurrent/serializable snapshots, historic data remediation or provider finality. Prewrite refusal concerns observed rows. Native SIGTERM cleanup entry was inspected but arbitrary interruption/process-tree cleanup is not fault-tested; no universal cancellation guarantee is granted.
+
+The supplied publisher design keeps the report-only child/evidence archive separate, preserves historical reports, and states fresh hosted current-head checks/review/FIFO remain required. Publisher/archive/containing-Git verification are future work at this review time and must succeed before publication. No old C3 approval is borrowed. Main/parent freshness and guarded normal advancement of the existing673 branch must be checked separately by ROOT. Prior worker30s timeout and accessibility failures remain UNKNOWN/unrepaired causes, even when later samples pass.
+
+Browser numeric precision and individual-entry CSV currency attribution are separate. This backend correction only binds contributing amounts in successful summary/budget totals. The newly investigated EUR-void CSV unit omission was reproduced in a separate owned source-function probe, without changing this source, original reviews or qualification artifacts. The common CSV column's prior schema meaning remains undocumented; no repair or production incident is claimed here. These separate observations do not weaken the current backend contract or promote it to full cross-layer correctness.
+
+No test, compiler, browser, database/server/provider execution or remote mutation was independently repeated in this final review. Commands were limited to read-only source/Git/receipt parsing and hashing. Detailed independent check receipt:/private/tmp/tdf-event-finance-currency-parent1ffa-independent-checks-20261030.json SHA256 4f1621882b01cbac672cb564208e7350fd631f42d09b1478706268e534a93860.
+
+Exact current receipt SHA256:
+- native-quality.json: 4867bf0b5f2fbf138df269fb26345ad03d6e3126f64844cd11e7e0638201e5f8
+- native-force-dirty-confirmed.json: 5d33f29018854a595e4612209dfef849ec7c62c5818206cba0843ae1ad0e2263
+- native-qualified-inputs.json: a2c7fb34106daba7ee1b617a570da17b39d9471ddb91588f487f861ae6e1ad55
+- qualified-build.log: b3a2be9a22f7b784009930d1e48de27703475153fdd1e0b1e87002f846546152
+- qualified-targeted.log: cc531233037cf19df0531d9cf76e011e7c328c2c1dd0cdcf92f875bf2f3747f8
+- qualified-full.log: 473e41a1919f8c4e581f75f56e2cbe8048ca82be845bb119d0d5cab0fdc0b6e8
+- root-quality-result.json: 904e7e0954cf1539642e4d0526b3bf8203da99be722e71368282aae0083be1cc
+- assurance-execution.json: 9e77fe40631281b14a881cc0d3bba998f968e10760ba9ab412e389d010809775
+- assurance-committed/sources.json: c14640a0be0d14b2f09a42ac8f262118e9660bf8b0a42a520ce77d25ef3b9f13
+- assurance-committed/report.json: 9bd0501763dd4c2485903b0d47d67b4915905f726b6809ce64bc818222edd842
+- source-correspondence.json: ebf64b2b0d7109ff6d7b2effa96481442fdc9ee06f424936c0fd941a1b33f651
+- seal-binding-controls.json: 8c0e3c69a65fada22d9a94d065c6a852062061118488c425b811fb85dced7250
+- seal-execution.json: 2551e73de36f60c2f08336633b5987fc9428786895f81f6f64c1c7249702ae23
+Reviewed ROOT harness SHA256:
+- tdf-event-finance-currency-parent1ffa-root-quality-20261030.py: afe4b72a696f17eaaf14f2a303a93707b58d8d9b0df17f3656e20503a2dc8361
+- tdf-event-finance-currency-parent1ffa-qualify-native-20261030.py: c69f75a1fc333a820dca4e16fb67824c17ec97d3e6362b672ef417b7dea72d3e
+- tdf-event-finance-currency-parent1ffa-seal-20261030.py: db559caaafa87d69279ba57741ff28ef8b261582bc64c14eef5efb1ca40cf61a
+- tdf-event-finance-currency-parent1ffa-seal-controls-20261030.py: 46dbb5f0f09bdf5f3897d13eb6e16d7f10fda92afaf66fc14f446d201ab0b66b
+- tdf-event-finance-currency-parent1ffa-publish-20261030.py: 13262dc1a58636230a9931193fdcd563fff7b649af54ca1d9b14c9a1187fb870
