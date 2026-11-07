@@ -79,7 +79,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
+import Servant (err400, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -348,6 +348,9 @@ import TDF.Server
     , validateCourseRegistrationFollowUpId
     , whatsAppConsentStatusFromRow
     , validateDriveAccess
+    , resolveDriveUploadVisibility
+    , resolveDriveUploadAuthority
+    , storageProviderError
     , resolveResourcesForBooking
     , runDb
     , resolvePackagePurchaseRefs
@@ -732,6 +735,28 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "served music credential cache boundary" $ do
+        forM_ ["GET", "HEAD"] $ \method ->
+            it ("protects the actual public asset-access route before UUID parsing for " <> show method) $ do
+                let env = Env (error "TEST_ONLY_UNUSED_DATABASE") (marketplaceTestConfig False)
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    original <- NotificationHTTP.parseRequest
+                        ("http://127.0.0.1:" <> show port <> "/music/assets/not-a-uuid/access")
+                    response <- NotificationHTTP.httpLbs
+                        (original { NotificationHTTP.method = method }) manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 400
+                    lookup "Cache-Control" (NotificationHTTP.responseHeaders response)
+                        `shouldBe` Just "private, no-store"
+        it "leaves catalog validation responses outside the credential cache policy" $ do
+            let env = Env (error "TEST_ONLY_UNUSED_DATABASE") (marketplaceTestConfig False)
+            testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                request <- NotificationHTTP.parseRequest
+                    ("http://127.0.0.1:" <> show port <> "/music/releases?limit=not-an-int")
+                response <- NotificationHTTP.httpLbs request manager
+                statusCode (NotificationHTTP.responseStatus response) `shouldBe` 400
+                lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Nothing
     describe "live database readiness" $ do
         it "returns503 rather than success when the handler cannot acquire its database" $ do
             let env = Env (error "PRIVATE_DATABASE_CONNECTION_DETAILS") (marketplaceTestConfig False)
@@ -7364,6 +7389,34 @@ spec = describe "TDF.Server helpers" $ do
                     [ "client_secret" .= ("session-secret" :: Text)
                     , "expires_after" .= object ["seconds" .= (0 :: Int)]
                     ])
+
+    describe "Drive storage failure isolation" $ do
+        it "defaults explicit personal destinations to private without changing legacy sharing" $ do
+            resolveDriveUploadVisibility (Just "google_drive") Nothing `shouldBe` Just "private"
+            resolveDriveUploadVisibility Nothing Nothing `shouldBe` Nothing
+
+        it "refuses missing personal credentials instead of selecting TDF credentials" $
+            case resolveDriveUploadAuthority (Just "user") Nothing of
+                Left failure -> do
+                    errHTTPCode failure `shouldBe` 409
+                    BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+                Right _ -> expectationFailure "Personal upload selected shared credentials"
+        it "recognizes an explicit personal upload" $
+            resolveDriveUploadAuthority (Just "user") (Just "personal") `shouldBe` Right True
+        it "rejects mixed service and personal authority" $
+            case resolveDriveUploadAuthority (Just "server") (Just "personal") of
+                Left failure -> errHTTPCode failure `shouldBe` 400
+                Right _ -> expectationFailure "Mixed authority accepted"
+        it "does not turn service revocation into an expired TDF session" $ do
+            let failure = storageProviderError False (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 503
+            BL8.unpack (errBody failure) `shouldContain` "storage_service_unavailable"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
+        it "offers personal reconnection without disclosing the provider payload" $ do
+            let failure = storageProviderError True (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 409
+            BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
 
     describe "DriveUploadForm FromMultipart" $ do
         it "trims optional upload fields before handler fallback resolution" $ do

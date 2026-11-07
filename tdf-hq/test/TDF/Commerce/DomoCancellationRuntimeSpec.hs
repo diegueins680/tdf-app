@@ -9,10 +9,13 @@ module TDF.Commerce.DomoCancellationRuntimeSpec (spec, databaseSpec) where
 import           Control.Exception (SomeException, try, bracket, bracket_)
 import           Control.Monad (void, forM_)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Concurrent.Async (mapConcurrently, concurrently)
+import           Control.Concurrent (newEmptyMVar, putMVar, takeMVar, threadDelay)
+import           Control.Concurrent.Async (mapConcurrently, concurrently, withAsync, wait)
+import           System.Timeout (timeout)
 import           Data.Either (isLeft)
 import           Data.IORef (newIORef, readIORef, writeIORef, atomicModifyIORef')
 import qualified TDF.Commerce.CheckoutStore as C
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.DomoRefundStore as D
 import qualified TDF.Commerce.RefundStore as R
 import qualified TDF.Commerce.RefundReconciliation as Recovery
@@ -29,10 +32,18 @@ import           Test.Hspec
 
 import           TDF.Commerce.DomoCancellation (Canceller (..))
 import           TDF.Commerce.DomoCancellationStore
+import           TDF.Commerce.RefundStore (RefundReference (..))
+import           TDF.Server.ServiceStorefront (ServicePaidCheckout (..), loadDomoCancellationRefund)
 
 import Control.Monad.Reader (runReaderT)
 import qualified Data.ByteString.Char8 as BS
 import qualified Network.HTTP.Client as HC
+import qualified Network.Wai.Handler.Warp as Warp
+import Network.HTTP.Types.Status (statusCode)
+import Data.Proxy (Proxy(..))
+import TDF.Config (loadConfig)
+import qualified TDF.Routes.DomoQuotes as PublicRoutes
+import qualified TDF.Server.DomoQuoteCheckout as PublicDomo
 import qualified TDF.Commerce.ProviderAdapter.Http as Http
 import qualified TDF.Server.DomoRefunds as API
 import TDF.Routes.DomoRefunds (ManualRefundEvidence(..), RefundProviderReference(..))
@@ -40,7 +51,7 @@ import TDF.Auth (AuthedUser(..), loadAuthedUser)
 import TDF.Models (RoleEnum(..))
 import TDF.DB (Env(..))
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
-import Servant ( errHTTPCode, runHandler, (:<|>)(..))
+import Servant ( errHTTPCode, runHandler, serve, hoistServer, (:<|>)(..))
 import System.Environment (getEnvironment, setEnv, unsetEnv)
 
 spec :: Spec
@@ -206,8 +217,145 @@ scalar pool sql params = do
 requireRight :: Show e => Either e a -> IO a
 requireRight = either (\e -> fail ("Unexpected Left: " <> show e)) pure
 
+payableFixture :: ConnectionPool -> IO Fixture
+payableFixture pool = do
+  fixture <- seedQuote pool 40 False
+  now <- getCurrentTime
+  runSqlPool (do
+    rawExecute "UPDATE domo_event_quote_runtime SET quote_status='accepted',terms_accepted_at=? WHERE id=?::uuid"
+      [PersistUTCTime now,PersistText (fxQuoteId fixture)]
+    rawExecute "UPDATE commerce_quote SET status='accepted',accepted_at=?,accepted_terms_version='domo-terms-legacy-draft-v1' WHERE id=(SELECT quote_id FROM domo_event_quote_runtime WHERE id=?::uuid)"
+      [PersistUTCTime now,PersistText (fxQuoteId fixture)]
+    rawExecute "UPDATE domo_event_quote_runtime SET quote_status='deposit_due' WHERE id=?::uuid"
+      [PersistText (fxQuoteId fixture)]
+    rawExecute "UPDATE commerce_checkout_session SET status='awaiting_payment' WHERE id=?::uuid"
+      [PersistText (fxCheckoutId fixture)]) pool
+  pure fixture
+
+captureCreation :: Fixture -> IO C.PaymentAttemptCreation
+captureCreation fixture = do
+  now <- getCurrentTime
+  identity <- toText <$> nextRandom
+  pure C.PaymentAttemptCreation
+    { C.pacCheckout = C.CheckoutReference (fxCheckoutId fixture)
+    , C.pacProvider = C.ProviderPayPal, C.pacEnvironment = C.CheckoutSandbox
+    , C.pacOperation = C.OperationCapture, C.pacAmountMinor = depositMinor
+    , C.pacCurrency = "USD", C.pacMerchantRef = "PAYPAL-SANDBOX"
+    , C.pacIdempotencyKey = "domo-bound-capture:" <> identity
+    , C.pacCreatedAt = now, C.pacCorrelationId = "synthetic-bound-capture:" <> identity
+    }
+
+bounded :: IO a -> IO a
+bounded action = timeout 5000000 action >>= maybe (fail "Domo admission barrier timed out") pure
+
+backendPid :: SqlPersistT IO Int
+backendPid = do
+  rows <- rawSql "SELECT pg_backend_pid()" []
+  case rows of
+    [Single identifier] -> pure identifier
+    _ -> fail "Expected one PostgreSQL backend identity"
+
+awaitBlockedBy :: ConnectionPool -> Int -> Int -> IO ()
+awaitBlockedBy pool owner waiter = bounded loop
+  where
+    loop = do
+      rows <- runSqlPool (rawSql "SELECT ?::integer=ANY(pg_blocking_pids(?::integer))"
+        [PersistInt64 (fromIntegral owner),PersistInt64 (fromIntegral waiter)]) pool :: IO [Single Bool]
+      if rows == [Single True] then pure () else threadDelay 10000 >> loop
+
 databaseSpec :: SpecWith ConnectionPool
 databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY-DOMO-CANCEL-001)" $ do
+  it "binds the post-save admission to its exact checkout without orphan intents or attempts" $ \pool -> do
+    configureRecovery pool
+    first <- payableFixture pool
+    other <- payableFixture pool
+    creation <- captureCreation other
+    entered <- newIORef False
+    refused <- runSqlPool (PaymentRuntime.beginPaymentAttemptGuarded
+      (liftIO (writeIORef entered True) >> domoPaymentAttemptAdmission
+        (fxQuoteId first) (fxCheckoutId other) C.OperationCapture) creation) pool
+    readIORef entered `shouldReturn` True
+    refused `shouldSatisfy` isLeft
+    scalar pool "SELECT count(*)::text FROM commerce_payment_attempt WHERE checkout_id IN (?::uuid,?::uuid)"
+      [PersistText (fxCheckoutId first),PersistText (fxCheckoutId other)] `shouldReturn` "0"
+    scalar pool "SELECT count(*)::text FROM commerce_payment_intent WHERE checkout_id IN (?::uuid,?::uuid)"
+      [PersistText (fxCheckoutId first),PersistText (fxCheckoutId other)] `shouldReturn` "0"
+
+  it "preserves expiry refusal and admits only one capture through the real payment bridge" $ \pool -> do
+    configureRecovery pool
+    expired <- payableFixture pool
+    runSqlPool (rawExecute "UPDATE commerce_checkout_session SET status='expired',expires_at=clock_timestamp()-interval '1 second' WHERE id=?::uuid"
+      [PersistText (fxCheckoutId expired)]) pool
+    expiredCreation <- captureCreation expired
+    entered <- newIORef False
+    refused <- runSqlPool (PaymentRuntime.beginPaymentAttemptGuarded
+      (liftIO (writeIORef entered True) >> domoPaymentAttemptAdmission
+        (fxQuoteId expired) (fxCheckoutId expired) C.OperationCapture) expiredCreation) pool
+    readIORef entered `shouldReturn` True
+    refused `shouldSatisfy` isLeft
+    scalar pool "SELECT count(*)::text FROM commerce_payment_attempt WHERE checkout_id=?::uuid"
+      [PersistText (fxCheckoutId expired)] `shouldReturn` "0"
+    scalar pool "SELECT count(*)::text FROM commerce_payment_intent WHERE checkout_id=?::uuid"
+      [PersistText (fxCheckoutId expired)] `shouldReturn` "0"
+    payable <- payableFixture pool
+    original <- captureCreation payable
+    let guard = domoPaymentAttemptAdmission (fxQuoteId payable) (fxCheckoutId payable) C.OperationCapture
+    admitted <- runSqlPool (PaymentRuntime.beginPaymentAttemptGuarded guard original) pool
+    void (requireRight admitted)
+    duplicate <- captureCreation payable
+    runSqlPool (PaymentRuntime.beginPaymentAttemptGuarded guard duplicate) pool >>= (`shouldSatisfy` isLeft)
+    scalar pool "SELECT count(*)::text FROM commerce_payment_attempt WHERE checkout_id=?::uuid"
+      [PersistText (fxCheckoutId payable)] `shouldReturn` "1"
+    scalar pool "SELECT count(*)::text FROM commerce_payment_intent WHERE checkout_id=?::uuid"
+      [PersistText (fxCheckoutId payable)] `shouldReturn` "1"
+
+  forM_ [False,True] $ \captureFirst ->
+    it ("orders real cancellation/capture transactions with observed lock waits; captureFirst=" <> show captureFirst) $ \pool -> do
+      configureRecovery pool
+      fixture <- payableFixture pool
+      creation <- captureCreation fixture
+      now <- getCurrentTime
+      ready <- newEmptyMVar
+      release <- newEmptyMVar
+      waiting <- newEmptyMVar
+      let guard = domoPaymentAttemptAdmission (fxQuoteId fixture) (fxCheckoutId fixture) C.OperationCapture
+          cancellation = cancelDomoQuote CancellationRequest
+            { crQuoteId=fxQuoteId fixture, crActor=CustomerActor, crCanceller=CancelledByCustomer
+            , crNote=Just "synthetic ordered admission", crNow=now }
+          classifyCapture = either (const ("refused" :: Text)) (const "admitted")
+          classifyCancel = either (const ("refused" :: Text)) (const "cancelled")
+          ownerAction = runSqlPool (do
+            pid <- backendPid
+            if captureFirst
+              then classifyCapture <$> PaymentRuntime.beginPaymentAttemptGuarded (do
+                refusal <- guard
+                liftIO (putMVar ready pid >> takeMVar release)
+                pure refusal) creation
+              else do
+                result <- cancellation
+                liftIO (putMVar ready pid >> takeMVar release)
+                pure (classifyCancel result)) pool
+          waiterAction = runSqlPool (do
+            pid <- backendPid
+            liftIO (putMVar waiting pid)
+            if captureFirst then classifyCancel <$> cancellation
+              else classifyCapture <$> PaymentRuntime.beginPaymentAttemptGuarded guard creation) pool
+      withAsync ownerAction $ \owner -> do
+        ownerPid <- bounded (takeMVar ready)
+        withAsync waiterAction $ \waiter -> do
+          waiterPid <- bounded (takeMVar waiting)
+          ownerPid `shouldNotBe` waiterPid
+          awaitBlockedBy pool ownerPid waiterPid
+          putMVar release ()
+          outcome <- (,) <$> bounded (wait owner) <*> bounded (wait waiter)
+          outcome `shouldBe` (if captureFirst then ("admitted","refused") else ("cancelled","refused"))
+      scalar pool "SELECT count(*)::text FROM commerce_payment_attempt WHERE checkout_id=?::uuid"
+        [PersistText (fxCheckoutId fixture)] `shouldReturn` (if captureFirst then "1" else "0")
+      scalar pool "SELECT count(*)::text FROM commerce_payment_intent WHERE checkout_id=?::uuid"
+        [PersistText (fxCheckoutId fixture)] `shouldReturn` (if captureFirst then "1" else "0")
+      scalar pool "SELECT count(*)::text FROM domo_quote_cancellation WHERE domo_quote_id=?::uuid"
+        [PersistText (fxQuoteId fixture)] `shouldReturn` (if captureFirst then "0" else "1")
+
   it "cancels an unpaid quote without a policy: hold released, checkout cancelled, zero obligation" $ \pool -> do
     fixture <- seedQuote pool 40 False
     record <- cancel pool fixture CustomerActor CancelledByCustomer >>= requireRight
@@ -226,6 +374,67 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
     dcrReplayed replay `shouldBe` True
     count <- scalar pool "SELECT count(*)::text FROM domo_quote_cancellation WHERE domo_quote_id=?::uuid" [PersistText (fxQuoteId fixture)]
     count `shouldBe` "1"
+
+  it "refuses in-flight and raw FAILED captures; a separate no-attempt quote remains cancellable" $ \pool -> do
+    fixture <- seedQuote pool 40 False
+    attemptId <- toText <$> nextRandom
+    runSqlPool (do
+      rawExecute "UPDATE commerce_checkout_session SET status='awaiting_payment' WHERE id=?::uuid"
+        [PersistText (fxCheckoutId fixture)]
+      -- A PayPal capture admitted just before the provider call: nothing is
+      -- collected yet, but the provider may still complete it.
+      rawExecute
+        "INSERT INTO commerce_payment_attempt(id, checkout_id, provider, environment, operation, status,\
+        \ amount_minor, currency, merchant_account_ref, idempotency_key)\
+        \ VALUES (?::uuid, ?::uuid, 'paypal', 'sandbox', 'capture', 'created', ?, 'USD', 'PAYPAL-SANDBOX', ?)"
+        [ PersistText attemptId, PersistText (fxCheckoutId fixture), PersistInt64 depositMinor
+        , PersistText ("domo-cancel-inflight:" <> fxQuoteId fixture) ]
+      ) pool
+    refused <- cancel pool fixture CustomerActor CancelledByCustomer
+    case refused of
+      Left (CancellationNotAllowed _) -> pure ()
+      other -> expectationFailure ("expected refusal while a capture is in flight, got " <> show other)
+    quoteStatus <- scalar pool "SELECT quote_status FROM domo_event_quote_runtime WHERE id=?::uuid" [PersistText (fxQuoteId fixture)]
+    quoteStatus `shouldNotBe` "cancelled"
+    -- A raw FAILED status is not an authoritative no-charge outcome. Preserve
+    -- that uncertainty through the actual public HTTP cancellation boundary.
+    runSqlPool (rawExecute "UPDATE commerce_payment_attempt SET status='failed' WHERE id=?::uuid"
+      [PersistText attemptId]) pool
+    before <- cancellationFinancialState pool fixture
+    withPublicCancellation pool fixture $ \request manager -> do
+      denied <- HC.httpLbs request { HC.requestHeaders = [("Content-Type","application/json"),
+        ("X-Order-Lookup-Token","incorrect-synthetic-token")] } manager
+      statusCode (HC.responseStatus denied) `shouldBe` 404
+      forM_ [1..3 :: Int] $ \_ -> do
+        response <- HC.httpLbs request manager
+        statusCode (HC.responseStatus response) `shouldBe` 409
+        cancellationFinancialState pool fixture `shouldReturn` before
+    -- The public cancellation path is database-only. Independently exercise
+    -- the real refund executor with an injected transport: absent a legitimate
+    -- cancellation/debt it must refuse before even writing a provider request.
+    user <- authenticatedAdmin pool
+    withPaypalConfig $ withWire [] $ \manager written -> do
+      let _read :<|> _approve :<|> execute :<|> _reconcile :<|> _manual :<|> _confirm :<|> _bind =
+            API.domoRefundAdminServerWithManager manager user (fxQuoteId fixture)
+      result <- runHandler (runReaderT execute (Env pool (error "No unrelated config needed")))
+      either errHTTPCode (const 200) result `shouldBe` 409
+      written `shouldReturn` ""
+      cancellationFinancialState pool fixture `shouldReturn` before
+    -- There is no canonical pre-provider abandonment operation; do not forge
+    -- a provider-confirmed cancellation. A distinct quote with NO attempt
+    -- establishes the legitimate unpaid-success precondition instead.
+    unpaid <- seedQuote pool 40 False
+    scalar pool "SELECT count(*)::text FROM commerce_payment_attempt WHERE checkout_id=?::uuid"
+      [PersistText (fxCheckoutId unpaid)] `shouldReturn` "0"
+    admittedBefore <- runSqlPool (domoAttemptAdmission (fxCheckoutId unpaid)) pool
+    admittedBefore `shouldBe` Nothing
+    record <- cancel pool unpaid CustomerActor CancelledByCustomer >>= requireRight
+    dcrQuoteStatus record `shouldBe` "cancelled"
+    dcrRefundDueMinor record `shouldBe` 0
+    -- The payment side of the fence: a capture that read the quote before the
+    -- cancellation committed is refused a new attempt afterwards.
+    admittedAfter <- runSqlPool (domoAttemptAdmission (fxCheckoutId unpaid)) pool
+    admittedAfter `shouldBe` Just "This Domo quote is no longer payable"
 
   it "records a customer cancellation's full-refund obligation and lets an operator settle it exactly once" $ \pool -> do
     fixture <- seedQuote pool 40 True
@@ -275,6 +484,20 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
     refundId <- maybe (fail "refund not linked") pure (dcrRefundId record)
     amount <- scalar pool "SELECT amount_minor::text FROM commerce_refund WHERE id=?::uuid" [PersistText refundId]
     amount `shouldBe` "100352"
+    -- The shared refund approval handler resolves this refund to its Domo quote
+    -- and binds it to the verified PayPal capture of the deposit checkout.
+    resolved <- runSqlPool (loadDomoCancellationRefund (RefundReference refundId)) pool
+    case resolved of
+      Just (quoteId, Right paid) -> do
+        quoteId `shouldBe` fxQuoteId fixture
+        spcCheckoutId paid `shouldBe` fxCheckoutId fixture
+        spcProvider paid `shouldBe` "paypal"
+        spcProviderResource paid `shouldBe` ("CAPTURE-" <> fxQuoteId fixture)
+        spcPaidMinor paid `shouldBe` depositMinor
+        spcReservedMinor paid `shouldBe` 100352
+      other -> expectationFailure ("expected the Domo refund to resolve, got " <> show (fmap (fmap (fmap spcAttemptId)) other))
+    unrelated <- runSqlPool (loadDomoCancellationRefund (RefundReference "00000000-0000-0000-0000-000000000000")) pool
+    fmap fst unrelated `shouldBe` Nothing
 
   it "a TDF cancellation two days ahead refunds the whole deposit" $ \pool -> do
     fixture <- seedQuote pool 2 True
@@ -497,6 +720,40 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
         T.count "/refund HTTP" requests `shouldBe` 1
         T.count "GET /v2/payments/refunds/" requests `shouldBe` 0
       outstanding pool fixture `shouldReturn` "1:0"
+
+-- Complete per-fixture observations before and after a refused cancellation.
+-- No aggregate global ledger count can be disturbed by unrelated fixtures.
+cancellationFinancialState :: ConnectionPool -> Fixture -> IO [Text]
+cancellationFinancialState pool fixture = sequence
+  [ scalar pool "SELECT quote_status||':'||fulfillment_status FROM domo_event_quote_runtime WHERE id=?::uuid" [quote]
+  , scalar pool "SELECT status||':'||refunded_minor::text FROM commerce_checkout_session WHERE id=?::uuid" [checkout]
+  , scalar pool "SELECT status FROM commerce_reservation_hold WHERE checkout_id=?::uuid" [checkout]
+  , scalar pool "SELECT count(*)::text FROM domo_quote_cancellation WHERE domo_quote_id=?::uuid" [quote]
+  , scalar pool "SELECT count(*)::text FROM commerce_refund WHERE checkout_id=?::uuid" [checkout]
+  , scalar pool "SELECT count(*)::text FROM commerce_ledger_transaction WHERE source_id IN (?,?)" [PersistText (fxQuoteId fixture),PersistText (fxCheckoutId fixture)]
+  ]
+  where
+    quote = PersistText (fxQuoteId fixture)
+    checkout = PersistText (fxCheckoutId fixture)
+
+withPublicCancellation :: ConnectionPool -> Fixture -> (HC.Request -> HC.Manager -> IO a) -> IO a
+withPublicCancellation pool fixture action = do
+  let token = "synthetic-lookup:" <> fxQuoteId fixture
+  runSqlPool (rawExecute
+    "UPDATE domo_event_quote_runtime SET lookup_token_hash=encode(digest(convert_to(?,'UTF8'),'sha256'),'hex') WHERE id=?::uuid"
+    [PersistText token,PersistText (fxQuoteId fixture)]) pool
+  cfg <- loadConfig
+  let env = Env pool cfg
+      api = Proxy :: Proxy PublicRoutes.PublicDomoQuotesAPI
+      app = serve api (hoistServer api (flip runReaderT env) PublicDomo.publicDomoQuotesServer)
+  Warp.testWithApplicationSettings (Warp.setHost "127.0.0.1" Warp.defaultSettings) (pure app) $ \port ->
+    bracket (HC.newManager HC.defaultManagerSettings) HC.closeManager $ \manager -> do
+      request <- HC.parseRequest ("http://127.0.0.1:" <> show port <>
+        "/public/domo/quotes/" <> T.unpack (fxQuoteId fixture) <> "/cancel")
+      action request { HC.method="POST", HC.requestHeaders=[("Content-Type","application/json"),
+        ("X-Order-Lookup-Token",BS.pack (T.unpack token))],
+        HC.requestBody=HC.RequestBodyBS "{\"confirmCancellation\":true}",
+        HC.checkResponse = \_ _ -> pure () } manager
 
 expectFailure :: IO a -> IO ()
 expectFailure action = do

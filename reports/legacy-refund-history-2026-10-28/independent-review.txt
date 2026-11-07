@@ -1,0 +1,19 @@
+Reviewer: existing independent_financial_review agent; read-only exact-source review.
+Baseline: 4d48e13556f3fb1a2756b30099f09a5992682ad3.
+Reviewed production history-guard diff, six original failing regressions and two
+additional lock-wait/canonical-replay controls. No blocking issue found.
+All-history select is nonlocking; single-element comparison needs no ordering.
+Explicit READ COMMITTED Event→Order transaction checks history after waiting,
+rechecks canonical binding/event association, and executes pending-only CAS.
+Provider runs only after commit. Existing processing state makes stale pending
+CAS refuse without unconditional request row-lock acquisition; no completion
+request→order deadlock introduced under non-expiring state assumptions.
+A hypothetical unconditional request FOR UPDATE was explicitly rejected in review.
+Canonical-bound branch structurally bypasses the guard; actual replay control
+uses two successive partial request identities and error-on-Stripe-config/callback.
+Limitations: manager/PI/currency initial snapshot fields are not newly authorized;
+direct deletion/reparenting, mixed old writers and external payment evidence are
+outside the cooperative protocol. SQL exceptions roll back before POST, though
+not every error maps to a domain409. Agent review is not a required GitHub approval.
+Later test fixture compile correction converts known bounded Int amounts to Int64;
+production control flow unchanged. Final test results recorded separately.

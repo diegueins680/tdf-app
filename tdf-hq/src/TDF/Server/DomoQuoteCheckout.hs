@@ -1016,7 +1016,9 @@ beginDomoPaymentAttempt
 beginDomoPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
   result <- runDB $ PaymentRuntime.beginPaymentAttemptGuarded
-    (CancellationStore.domoPaymentAdmission (dpcQuoteId context) operation) Checkout.PaymentAttemptCreation
+    (CancellationStore.domoPaymentAttemptAdmission (dpcQuoteId context)
+      (Checkout.checkoutReferenceId (dpcCheckout context)) operation)
+    Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = dpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = dpcEnvironment context
@@ -1123,7 +1125,7 @@ createPublicDomoDatafastCheckout rawQuoteId mLookupToken = do
   when (dpcCheckoutStatus context == "paid") $
     throwError (conflict "This Domo deposit is already paid")
   ensureNoOtherActiveAttempt context Checkout.ProviderDatafast
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireDomoProvider context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   attempt <- beginDomoPaymentAttempt context Checkout.ProviderDatafast
     Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"

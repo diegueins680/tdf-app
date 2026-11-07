@@ -18,3 +18,25 @@ export const formatTimestampForDisplay = (
   if (!parsed) return trimmed;
   return parsed.toLocaleString();
 };
+
+/**
+ * Format a date in an event's stored zone without letting an identifier that
+ * Intl rejects (for example a fixed offset such as "UTC+5", which Luxon and the
+ * backend accept) throw during render. Such zones fall back to the viewer's
+ * zone so the page still shows the activity instead of blanking.
+ */
+export const formatInEventTimeZone = (
+  date: Date,
+  locale: string | undefined,
+  timeZone: string | null | undefined,
+  options: Intl.DateTimeFormatOptions = {},
+): string => {
+  if (timeZone) {
+    try {
+      return date.toLocaleString(locale, { ...options, timeZone });
+    } catch {
+      // fall through to the viewer's zone
+    }
+  }
+  return date.toLocaleString(locale, options);
+};

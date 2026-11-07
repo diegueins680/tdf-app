@@ -9,6 +9,8 @@ Historical green results are not current-candidate evidence.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
+- [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks, with delegated management still pending.
+
 - [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence and explicit blocked release decision.
 - [receipt-admission.md](receipt-admission.md): source-bound consumer replay for every SMT suite, false-proof/refutation controls and an auditable synthetic counterexample.
 
@@ -18,6 +20,8 @@ Historical green results are not current-candidate evidence.
 - [fan-club-read-recovery.md](fan-club-read-recovery.md): distinguish read failures from confirmed missing clubs, retain artist/deep-link context and gate dependent content reads.
 
 - [follow-response-recovery.md](follow-response-recovery.md): reconcile ambiguous follow/unfollow responses with current account-scoped server truth and no automatic write replay.
+
+- [campaign-server.md](campaign-server.md): scoped multiuser campaign authority, durable execution, real-media drafts and explicit external provider/backup limitations.
 
 ## Executable gates
 
@@ -423,3 +427,5 @@ coordinator obligations. It remains a library, not a guarded production executor
 Catalog refresh must preserve historical retirement records and their original review evidence. `scripts/build-catalog-decisions.mjs` recomputes discovery counters while retaining reconciliation provenance. Source-specific decisions that require preservation use an explicit successor review method with hash-verified immutable ancestor references, so a deterministic-policy refresh cannot silently replace their priority or rationale. This is review-provenance preservation, not new product or release authority; `SYS-TRACE-001` maps its regression check.
 
 Event-memory source moderation: [contract and verification limits](event-memory-moderation.md).
+
+- [content-storage.md](content-storage.md): explicit storage authority, five-GB reservations, recovery and open production obligations (MEDIA-STORAGE-001).

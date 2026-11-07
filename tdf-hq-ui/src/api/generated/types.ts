@@ -4,6 +4,91 @@
  */
 
 export interface paths {
+    "/artists/video-campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List private video campaign drafts for the current artist or a strict administrator's selected artist */
+        get: operations["listVideoCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/video-campaigns/{campaignKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save a draft with revision checking; never publishes or schedules provider actions */
+        put: operations["saveVideoCampaign"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/video-campaigns/{campaignKey}/feature": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explicitly publish the reviewed video URL on the artist public TDF profile; no social provider action */
+        post: operations["featureVideoCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/video-campaigns/{campaignKey}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unique authenticated conversions verified against real account or follow creation */
+        get: operations["getVideoCampaignMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/video-campaigns/{campaignKey}/conversion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a viewer conversion only after a real account or follow was created within the last hour and after the campaign */
+        post: operations["recordVideoCampaignConversion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invoices": {
         parameters: {
             query?: never;
@@ -369,6 +454,75 @@ export interface paths {
          * @description Requires a different current Admin, Manager or Accounting actor in the same active organization/branch. The pending decision and audit commit together. Expiry is evaluated after lock waits. A terminal replay returns 409; decisions cannot reopen. Approval does not execute a payment or deletion.
          */
         patch: operations["operationsDecideApproval"];
+        trace?: never;
+    };
+    "/storage/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the current account's storage allowance and selected default */
+        get: operations["getContentStorageAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/me/destination": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change the default for future uploads without moving existing files */
+        put: operations["setContentStorageDestination"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List owned TDF uploads and pending cleanup intents */
+        get: operations["listContentStorageFiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download an owned private managed file; public files use the assets mount */
+        get: operations["downloadPrivateContentStorageFile"];
+        put?: never;
+        post?: never;
+        /** Persist an owner-authorized deletion intent and remove its managed bytes */
+        delete: operations["deleteContentStorageFile"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/drive/upload": {
@@ -9211,6 +9365,82 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        VideoCampaignWrite: {
+            /** Format: int64 */
+            expectedRevision: number;
+            document: components["schemas"]["VideoCampaignDocument"];
+        };
+        VideoCampaignDTO: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            artistId: number;
+            /** Format: int64 */
+            revision: number;
+            content: components["schemas"]["VideoCampaignDocument"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        VideoCampaignDocument: {
+            title: string;
+            /** @description Empty draft or HTTPS media URL; server never fetches this URL */
+            videoUrl: string;
+            coverUrl: string;
+            durationSeconds: number;
+            /** @enum {string} */
+            status: "draft" | "ready";
+            /** @description Optional inert date, YYYY-MM-DD; never schedules an external action */
+            proposedLaunchDate?: string;
+            credits?: string;
+            /** @description Required true on the saved revision for explicit TDF publication */
+            rightsConfirmed?: boolean;
+            /** @description Required true on the saved revision for explicit TDF publication */
+            technicalReviewed?: boolean;
+            channels: ("instagram" | "tiktok")[];
+            pieces: components["schemas"]["VideoCampaignPiece"][];
+        };
+        VideoCampaignPiece: {
+            id: string;
+            /** @enum {string} */
+            channel: "instagram" | "tiktok";
+            day: number;
+            format: string;
+            caption: string;
+            assetUrl: string;
+            sourceStart: number;
+            sourceEnd: number;
+            /** @enum {string} */
+            status: "draft" | "prepared" | "exported" | "published_manual";
+            /** @description Manual publication URL on the selected platform; export alone is not publication */
+            publishedUrl: string;
+        };
+        StorageFileDTO: {
+            /** Format: uuid */
+            fileId: string;
+            fileName: string;
+            /** Format: int64 */
+            byteSize: number;
+            /** @enum {string} */
+            status: "uploading" | "completed" | "cancelled";
+            /** @enum {string} */
+            visibility: "private" | "public";
+        };
+        StorageAccountDTO: {
+            /** @description Existing unmetered files require operator reconciliation before new TDF storage grows */
+            legacyUsageVerified: boolean;
+            /** Format: int64 */
+            allowanceBytes: number;
+            /** Format: int64 */
+            usedBytes: number;
+            /** Format: int64 */
+            reservedBytes: number;
+            /** @enum {string|null} */
+            defaultDestination: "tdf" | "google_drive" | null;
+            /** Format: int64 */
+            revision: number;
+        };
         InvoiceLineDTO: {
             /** Format: int64 */
             lineId: number;
@@ -16771,6 +17001,9 @@ export interface components {
         };
     };
     parameters: {
+        /** @description Defaults to authenticated party; another party requires strict administrator access */
+        VideoCampaignArtistId: number;
+        VideoCampaignKey: string;
         MerchCartId: string;
         /** @description Unguessable token returned once when a guest cart is created. */
         MerchCartLookupToken: string;
@@ -16831,6 +17064,288 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listVideoCampaigns: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted drafts, newest first; maximum 100 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCampaignDTO"][];
+                };
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist ownership or administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    saveVideoCampaign: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoCampaignWrite"];
+            };
+        };
+        responses: {
+            /** @description Saved draft or exact replay of the preceding save */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCampaignDTO"];
+                };
+            };
+            /** @description Invalid campaign document or revision */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist ownership or administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale revision; reload before saving */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    featureVideoCampaign: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    expectedRevision: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Only the selected artist featured-video field was updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign is not review-ready */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist ownership or strict administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reviewed revision changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getVideoCampaignMetrics: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description First attributed conversion per campaign, account and event kind */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        registrations: number;
+                        follows: number;
+                        byPiece?: {
+                            /** @enum {string} */
+                            source: "instagram" | "tiktok";
+                            piece: string;
+                            registrations: number;
+                            follows: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign owner access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordVideoCampaignConversion: {
+        parameters: {
+            query: {
+                artistId: number;
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    kind: "registration" | "follow";
+                    /** @enum {string} */
+                    source: "instagram" | "tiktok";
+                    piece: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Conversion recorded or already recorded; request attribution is not proof of causality */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not ready */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listInvoices: {
         parameters: {
             query?: never;
@@ -18502,6 +19017,200 @@ export interface operations {
             };
         };
     };
+    getContentStorageAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Decimal bytes, including capacity reserved by uncertain uploads */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageAccountDTO"];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setContentStorageDestination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    destination: "tdf" | "google_drive";
+                    /** Format: int64 */
+                    expectedRevision: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated account preference */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageAccountDTO"];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preference was edited concurrently; reread before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listContentStorageFiles: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account-scoped files, ordered by immutable ID */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageFileDTO"][];
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadPrivateContentStorageFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner-authenticated attachment */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: string;
+                    "X-Content-Type-Options"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description File missing or not owned by the current account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored bytes unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteContentStorageFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File deletion confirmed; metadata and tombstone retained */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No owned file */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Upload is still running; wait before retrying deletion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deletion intent retained for retry; cleanup unconfirmed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     uploadDriveFile: {
         parameters: {
             query?: never;
@@ -18519,6 +19228,18 @@ export interface operations {
                     folderId?: string;
                     name?: string;
                     accessToken?: string;
+                    /**
+                     * @description Explicit authority; user mode never falls back to TDF credentials
+                     * @enum {string}
+                     */
+                    authMode?: "user" | "server";
+                    /** @enum {string} */
+                    destination?: "tdf" | "google_drive";
+                    /**
+                     * @description New managed uploads default to private; public is restricted to passive image
+                     * @enum {string}
+                     */
+                    visibility?: "private" | "public";
                     idempotencyKey?: string;
                 };
             };

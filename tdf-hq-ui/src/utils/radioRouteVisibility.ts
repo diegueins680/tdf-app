@@ -4,6 +4,9 @@ const HIDDEN_RADIO_PATH_PREFIXES = [
   '/marketplace',
   '/inscripcion',
   '/configuracion/inscripciones-curso',
+  '/mi-artista/campanas',
+  '/a/',
+  '/artista/',
   '/whatsapp/consentimiento',
   '/whatsapp/ok',
 ];
@@ -25,6 +28,8 @@ export const shouldHideRadioForRoute = (pathname: string, hash = '') => (
   )
 );
 
+// Initial discovery policy. Once opened, RoutedRadioWidget retains playback
+// across these routes until the authenticated session ends.
 export const shouldRenderRadioWidget = (
   pathname: string,
   hash: string,

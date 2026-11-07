@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-02T04:10:54.991320+00:00",
+  "sourceCommit": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+  "baselineCommit": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+  "initialImplementationCommit": "5fbeb723ffa7e69249b1143546164d9763345dab",
+  "requirement": "SYS-UI-TEST-WORKER-001",
+  "contract": "formal/system/ui-test-worker-memory.md",
+  "classification": "Confirmed UI qualification reliability defect; no product business-rule change",
+  "problem": "A forced in-band Jest process exhausted its JavaScript heap before completing the selected UI suite.",
+  "baselineEvidence": {
+    "run": 41378484355,
+    "job": 125064289764,
+    "exit": 134,
+    "observed": "Fatal JavaScript heap allocation failure near4GB; no complete test summary",
+    "sha256": "273de45ca472ac6cc60c1a24c0cd61f376c9f019903402b16dc8677ad9ac7579",
+    "url": "https://github.com/diegueins680/tdf-app/actions/runs/41378484355/job/125064289764"
+  },
+  "repair": {
+    "serialWorkerSlots": 1,
+    "idleMemoryBudgetBytes": 1073741824,
+    "defaultForcedInBandRemoved": true,
+    "nodeHeapLimitRaised": false,
+    "assertionsTimeoutsAndTestSelectionRelaxed": false,
+    "newDependencies": false,
+    "scope": "Jest checks idle memory between files; no hard parent/single-file/OS memory bound or fix to underlying retention is claimed."
+  },
+  "assurance": "TESTED locally; fresh hosted Node22 qualification and review pending",
+  "controlledEvidence": {
+    "oldExactCommand": {
+      "passingControl": 1,
+      "failedPIDObligations": 2,
+      "probeVersion": "controlled-probe-version.mjs",
+      "observed": "One process for3files despite controlled1024byte threshold"
+    },
+    "finalGuards": {
+      "passed": 5,
+      "failed": 0,
+      "scope": [
+        "Actual defaultCLI serial/budget configuration",
+        "Three distinct PIDs through worker slot1",
+        "Forcedoldinband negativecontrol observesonePID",
+        "One assertion failure exits1 and all3files report",
+        "Persistentworkercrash yieldsfailedfile after retries; other2files pass"
+      ]
+    },
+    "productionBudgetRemovalMutation": {
+      "failedGuards": 1,
+      "passedGuards": 4,
+      "restoredResult": "5PASS"
+    },
+    "formalProofClaim": false
+  },
+  "fullLocalUI": {
+    "actualSource": "5fbeb723ffa7e69249b1143546164d9763345dab",
+    "suites": 328,
+    "tests": 3799,
+    "failures": 0,
+    "JestSeconds": 588.786,
+    "lintTypecheckBuildAndBundle": "PASS",
+    "initialGzipJSBytes": 388636,
+    "modulePreloads": 5,
+    "observedVMWorkerProcesses": 7,
+    "runtime": "Node24.13.1 on macOS",
+    "scope": "Fullquality script ran5fb with initial3guards. Laterfiveguard version tested separately. AllUI/product/test/config files and quality sequence remain exact; no source receipt is relabeled."
+  },
+  "sourceBinding": {
+    "source": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+    "parentImplementation": "5fbeb723ffa7e69249b1143546164d9763345dab",
+    "baseline": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+    "allUIProductTestsConfigTreeExactFullQualified5fb": true,
+    "qualitySequenceAndRootDependencyInputsExact5fb": true,
+    "backendTreeExactQualifiedB560": true,
+    "finalFiveGuardInputHashesBoundToImmutableSource": {
+      "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
+      "package-lock.json": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
+      "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
+      "tdf-hq-ui/package.json": "63cc9005b5071062ed1bcbb19ffb8e9b257ee4b022f810ae5829364b9ecc2450",
+      "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+      "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+      "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
+      "formal/system/requirements.json": "2662a4888d7296b63e1267e4ecb4148ebdbee548403211b147549c4bd1737dde",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "d048e3a88db5abdbbe2299a1158cd394f371afc26111c6d1f7af918ca678148d",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
+      "scripts/__tests__/ticket-admission-model.test.mjs": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
+      "tdf-hq/tdf-hq.cabal": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a",
+      "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+      "tdf-hq-ui/jest.config.cjs": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
+      "scripts/quality-ui.sh": "773e64774713cacd40af657c75966fd7aab5c1cabaa5eeb121092deb28f82ca9",
+      "scripts/__tests__/ui-worker-memory.test.mjs": "d7c89a32a50a693b71c509fd0145c295507d222bd1a8f438cad815da59fdbacf"
+    },
+    "controlledOldProbeMatchesRecordedRedGreenHash": true,
+    "fullUIReceiptActualSource": "5fbeb723ffa7e69249b1143546164d9763345dab",
+    "fullUISourceScope": "Fullscript ran5fb beforeonlyguard/docs/metadata follow-ups; final fiveguard run separately, allUIcode/config/selection unchanged. Do not relabel sourceAtStart receipts.",
+    "schemaChanges": false,
+    "newDependencies": false
+  },
+  "runtimeSetupLimit": "Borrowed unchanged ownedb560 root AND UIworkspace installed dependencies and exactofficialdarwin native1.11.1 supplement; fallbackdisabled. No freshcanonicalnative completeness or hostedLinux/Node22 credit.",
+  "toolchainIntegrity": {
+    "package": "@jest/core",
+    "lockedPackageVersion": "30.2.0",
+    "resolved": "https://registry.npmjs.org/@jest/core/-/core-30.2.0.tgz",
+    "lockSRI": "sha512-03W6IhuhjqTlpzh/ojut/pDB2LPRygyWX8ExpgHtQA8H/3K7+1vKmcINx5UzeOX1se6YEsBsOHQ1CRzf3fOwTQ==",
+    "officialArchiveMatchesLockSRI": true,
+    "installedBuildMatchesOfficialArchive": true,
+    "installedBuildSHA256": "0d9f6b0b60f13368d356534e17ab25b8fb73e08afbf58ec62470c252a9e2ce00",
+    "bundledDisplayVersion": "30.1.3",
+    "explanation": "Official30.2.0tarball embeds30.1.3metadata usedbygetVersion. No localtampering or upgrade inferred; actualpinnedfiles and behavior are verified.",
+    "earlierCheckLimitation": "First combined check failed only on an incorrectlyescaped text needle AFTER byte equality succeeded; reran exactSRI/equality and extracted actualembeddedJSONversion. No source/installer change."
+  },
+  "discardedProbeAttempts": [
+    "Missing borrowedworkspace React and relative-temp preset setup failures were not defect counterexamples.",
+    "Ambiguous1.1byte/proportion assumption was rejected; accepted controlled probe uses unambiguous1024bytes.",
+    "Initial official-archive text-needle assertion was incorrectlyescaped; exactSRI, byteequality and embeddedversion were subsequently verified. No source mutation was inferred."
+  ],
+  "crashAssumption": "PinnedJest permits up to3worker retries after unexpectedprocessfailure. Persistentcrash control verifies terminalfailure; no theorem that a transientcrash always fails the firstattempt.",
+  "formalAssurance": {
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 164,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 147,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 164,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 164,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "releaseDecision": "BLOCKED",
+    "scope": "InheritedconditionalSMT lemmas do not establish this memory property or wholeimplementation/refinement correctness."
+  },
+  "checks": {
+    "worker-fixed-probe-baseline": {
+      "exitCode": 1,
+      "sourceAtStart": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+      "sourceAtFinish": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+      "logSha256": "f35db46e047b78bb49c7ff9b6141afe8ca7259f9369c8bc072070ddd6671e349"
+    },
+    "worker-fixed-probe-repair": {
+      "exitCode": 0,
+      "sourceAtStart": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+      "sourceAtFinish": "b5609fdb1bc3bd9c5978d6b3ef81b8e80742c3f0",
+      "logSha256": "5267b0dd38694eebad946b8d556967a49848eeba6fe463ff735ed43c17fcaff4"
+    },
+    "full-ui-recycled": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "a155f7f09fb8c1fc4e94ddf04fce9f21f073d73b941fe7ecfd33d1bfcf3934bc"
+    },
+    "effective-default-jest-config": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "514ee918902a083b45b413b703f888883984d5f6f9e3f50afae996c95988c50e"
+    },
+    "final-missing-limit-mutation": {
+      "exitCode": 1,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "21bfc3565e93b5dfe494a534a818df988cf4c35d12be50484d2469ade3c98f34"
+    },
+    "final-five-guards": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "b16d3591cd1768391d5d90e98ae4d99cd36481c47e6e74c079aabc5dab338e26"
+    },
+    "frozen-admission": {
+      "exitCode": 0,
+      "sourceAtStart": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+      "sourceAtFinish": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+      "logSha256": "f29572a4e1e7b412cd4ccb4e1874559b98fbcbb96376087a9b011505476e91de"
+    },
+    "frozen-assurance": {
+      "exitCode": 0,
+      "sourceAtStart": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+      "sourceAtFinish": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+      "logSha256": "e6516814d1ea75b5445fe594db0fe819dc2916a2e6b9d0692611c185608e9391"
+    },
+    "frozen-repo-qa": {
+      "exitCode": 0,
+      "sourceAtStart": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+      "sourceAtFinish": "031f96427c2cf2b514a1ec70cbf2af6ff9e5d0b2",
+      "logSha256": "55fc4916cc4706fa583d2f40da206117fe126afa72e15e0e5fc4f3b983614f5c"
+    },
+    "final-metadata-0": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "final-metadata-1": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "final-metadata-2": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5"
+    },
+    "final-metadata-3": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6"
+    },
+    "final-metadata-4": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d"
+    },
+    "final-metadata-5": {
+      "exitCode": 0,
+      "sourceAtStart": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "sourceAtFinish": "5fbeb723ffa7e69249b1143546164d9763345dab",
+      "logSha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e"
+    }
+  },
+  "scorecard": {
+    "confirmedDefectsSelected": 1,
+    "implementedCorrections": 1,
+    "integratedIntoMain": 0,
+    "actualCommandGuards": 5,
+    "productionSettingRemovalDetected": true,
+    "unchangedProductTestsPassed": 3799,
+    "formalProofsForNewMemoryProperty": 0,
+    "freshHostedQualification": "PENDING",
+    "requiredReview": "PENDING"
+  },
+  "parentFinancialScope": "Parent652 backend and55refund cases passed onb560; this child leaves its backend tree exact. That is parent evidence, not a new backend execution on this source.",
+  "integration": "Focused prerequisite for652. Draft until fresh hosted qualification; no oldreview reused, no protection/admission changes, no mainmerge or production operation. Main671 reconciliation16b is separate/unpublished and needs joint qualification.",
+  "relatedWork": "During final duplicate check,672 independently added --max-old-space-size=6144 while retaining inbandexecution. This correction provides a distinct selected worker-recycling policy and fault controls. Its1GiB idle budget is an operational choice, not a uniquelycorrect business value. Preserve compatible672capacityflags when composing and requalify the joint configuration; no672branch/source was modified.",
+  "next": "Fresh hostedNode22/fullUI and requiredreview; then reconcile qualifiedworker correction with currentmain and652, requalify required20contexts andfinancial55/schema227 before safe integration.",
+  "evidence": {
+    "archive": "reports/ui-test-worker-memory-2026-11-02/evidence.tar.gz",
+    "sha256": "08c1d24e54dd6eecf1f03f471d158de44b32540cf4276ee23823d522e45f6d4d",
+    "regularFiles": 91,
+    "manifestEntries": 90
+  }
+}

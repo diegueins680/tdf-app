@@ -1,18 +1,18 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "f4c7aba45dc153db8809dbe194bc826ff615ef88",
+  "mobileRevision": "0f57163cc9c489e22738cac3ff7985d8ca4b647c",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
       ".github/workflows/build.yml",
+      ".github/workflows/campaign-platform.yml",
       ".github/workflows/catalog-list-audit.yml",
       ".github/workflows/check-messaging-token.yml",
       ".github/workflows/check-mobile-distribution.yml",
       ".github/workflows/ci-safe-install.yml",
       ".github/workflows/ci.yml",
       ".github/workflows/datadog-synthetics.yml",
-      ".github/workflows/domo-refund-validation.yml",
       ".github/workflows/event-operations-formal.yml",
       ".github/workflows/event-raci-browser.yml",
       ".github/workflows/interaction-verification.yml",
@@ -49,8 +49,10 @@
       "e2e/web/event-task-view.spec.mjs",
       "e2e/web/fanhub-onboarding.spec.mjs",
       "e2e/web/fixtures/native-music-setup.mjs",
+      "e2e/web/helpers/campaign-accessibility.mjs",
       "e2e/web/helpers/local-api-fixture.mjs",
       "e2e/web/helpers/review-paint.mjs",
+      "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
       "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
@@ -64,10 +66,13 @@
       "e2e/web/persona-public.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
       "e2e/web/public-welcome.spec.mjs",
+      "e2e/web/radio-navigation.spec.mjs",
       "e2e/web/records-thumbnails.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
+      "e2e/web/storage-upload-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
       "e2e/web/ticket-credential.spec.mjs",
+      "e2e/web/video-campaigns.spec.mjs",
       "e2e/web/webtorrent-browser.spec.mjs"
     ],
     "fly.toml": [
@@ -106,6 +111,8 @@
       "ops/hetzner/recovery-tools.json",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/hetzner/release-journal.py",
+      "ops/hetzner/tdf-postgres-backup.service",
+      "ops/hetzner/tdf-postgres-backup.timer",
       "ops/privacy/request-workflow.json"
     ],
     "package-lock.json": [
@@ -120,10 +127,12 @@
       "scripts/__tests__/app-smart-link.test.mjs",
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
+      "scripts/__tests__/artist-image-download.test.mjs",
       "scripts/__tests__/artist-import-idempotency.test.mjs",
       "scripts/__tests__/browser-vendor.test.mjs",
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
+      "scripts/__tests__/campaign-tiktok-ui.test.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
@@ -131,6 +140,8 @@
       "scripts/__tests__/ci-job-admission.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/compiled-api-surface.test.mjs",
+      "scripts/__tests__/content-storage-model.test.mjs",
+      "scripts/__tests__/content-storage-reconciliation.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "scripts/__tests__/dependency-security.test.mjs",
       "scripts/__tests__/diagnose-social.test.mjs",
@@ -143,6 +154,7 @@
       "scripts/__tests__/event-operations-http-runner.test.mjs",
       "scripts/__tests__/event-operations-pluscal.test.mjs",
       "scripts/__tests__/event-operations-schema-rehearsal.test.mjs",
+      "scripts/__tests__/event-planning-ux-model.test.mjs",
       "scripts/__tests__/event-preview.test.mjs",
       "scripts/__tests__/event-raci-browser-runner.test.mjs",
       "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
@@ -153,6 +165,7 @@
       "scripts/__tests__/event-task-completion-runner.test.mjs",
       "scripts/__tests__/event-task-revision-runner.test.mjs",
       "scripts/__tests__/event-task-revisioned-read-runner.test.mjs",
+      "scripts/__tests__/experiment-http-cleanup.test.mjs",
       "scripts/__tests__/experiment-http-runtime.mjs",
       "scripts/__tests__/fixtures/artist-management-claim.sql",
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -194,8 +207,10 @@
       "scripts/__tests__/music-test-database.test.mjs",
       "scripts/__tests__/music-track-search-model.test.mjs",
       "scripts/__tests__/music-worker-build.test.mjs",
+      "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
       "scripts/__tests__/music-worker-timing.test.mjs",
       "scripts/__tests__/music-worker-upload.test.mjs",
+      "scripts/__tests__/native-resolver-lock.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
       "scripts/__tests__/operations-api-schema.test.mjs",
@@ -218,12 +233,15 @@
       "scripts/__tests__/studio-internship-audit.test.mjs",
       "scripts/__tests__/test-child-completion.test.mjs",
       "scripts/__tests__/test-process-session.test.mjs",
+      "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
+      "scripts/__tests__/ui-worker-memory.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
       "scripts/__tests__/verification-evidence.test.mjs",
+      "scripts/__tests__/video-campaign-access.test.mjs",
       "scripts/ai-workflow-doctor.mjs",
       "scripts/archive/backfill-meta-inbox.sh",
       "scripts/archive/change-venue-to-domo.py",
@@ -235,6 +253,7 @@
       "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
       "scripts/archive/test-follow.sh",
       "scripts/artist-enrichment.mjs",
+      "scripts/artist-image-download.mjs",
       "scripts/audit-feature-registry.mjs",
       "scripts/audit-formal-methods.mjs",
       "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -253,14 +272,17 @@
       "scripts/check-messaging-token.mjs",
       "scripts/check-mobile-distribution.mjs",
       "scripts/check-mobile-gitlink-ancestry.sh",
+      "scripts/check-native-resolver-lock.mjs",
       "scripts/check-new-specification-surfaces.py",
       "scripts/check-public-routes.py",
+      "scripts/check-route-requirements.py",
       "scripts/check-state-machines.py",
       "scripts/check-webhook-signatures.py",
       "scripts/ci-change-scope.mjs",
       "scripts/ci-job-admission.mjs",
       "scripts/codex-logical-correctness-loop.sh",
       "scripts/codex-loop-worker.sh",
+      "scripts/content-storage-model.mjs",
       "scripts/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/continuous-improvement-loop-forever.mjs",
       "scripts/continuous-improvement-loop-supervisor.sh",
@@ -273,6 +295,7 @@
       "scripts/diagnose-social.mjs",
       "scripts/discover-improvement-idea.mjs",
       "scripts/eas-build-ios-preview.sh",
+      "scripts/event-planning-ux-model.mjs",
       "scripts/fetch-ddex-ern432-schema.sh",
       "scripts/fixtures/artist-merch-mobile.mjs",
       "scripts/fixtures/merch-reputation-mobile.mjs",
@@ -358,6 +381,7 @@
       "scripts/operations-load-test.mjs",
       "scripts/order-catalog-foundation-seed.mjs",
       "scripts/persona-test-program.mjs",
+      "scripts/prepare-content-storage-reconciliation.mjs",
       "scripts/prepare-event-draft.mjs",
       "scripts/prepare-hetzner-release.mjs",
       "scripts/prepare-portable-restore.mjs",
@@ -484,6 +508,7 @@
       "scripts/test-checkout-terms-history.sh",
       "scripts/test-checkout-terms-upgrade-concurrency.py",
       "scripts/test-community-search.py",
+      "scripts/test-content-storage-postgres.mjs",
       "scripts/test-contextual-reputation-worker-migration.sh",
       "scripts/test-course-checkout-runtime-migration.sh",
       "scripts/test-course-identity.sh",
@@ -494,6 +519,7 @@
       "scripts/test-directory-saved-search-parity.mjs",
       "scripts/test-distribution-accounting-migration.sh",
       "scripts/test-distribution-product-seeds-migration.sh",
+      "scripts/test-domo-deposit-policy-validator.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
       "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-memories-http.py",
@@ -598,9 +624,11 @@
       "scripts/test-recovery-tools.py",
       "scripts/test-release-journal.py",
       "scripts/test-requirement-declarations.py",
+      "scripts/test-route-requirements.py",
       "scripts/test-service-booking-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-phase0-migration.sh",
+      "scripts/test-session-invoice-issue.sh",
       "scripts/test-social-designation-postgres.sh",
       "scripts/test-social-event-optional-end-migration.sh",
       "scripts/test-specification-conformance.py",
@@ -653,7 +681,62 @@
       "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
+      "scripts/verify-video-campaign-access.mjs",
       "scripts/wrap-catalog-canonical-schema.mjs"
+    ],
+    "services": [
+      "services/campaign-platform/backup.py",
+      "services/campaign-platform/backup_control.py",
+      "services/campaign-platform/backup_crypto.py",
+      "services/campaign-platform/deploy.py",
+      "services/campaign-platform/deploy_sandbox.py",
+      "services/campaign-platform/domain.py",
+      "services/campaign-platform/drive_backup.py",
+      "services/campaign-platform/facebook.py",
+      "services/campaign-platform/graphics.py",
+      "services/campaign-platform/import_rojo.py",
+      "services/campaign-platform/media.py",
+      "services/campaign-platform/model_check.py",
+      "services/campaign-platform/monitor.py",
+      "services/campaign-platform/notifications.py",
+      "services/campaign-platform/planning.py",
+      "services/campaign-platform/providers.py",
+      "services/campaign-platform/qualify_media.py",
+      "services/campaign-platform/requirements.txt",
+      "services/campaign-platform/schema.sql",
+      "services/campaign-platform/server.py",
+      "services/campaign-platform/stream_backup_object.py",
+      "services/campaign-platform/tdf-campaign-api.service",
+      "services/campaign-platform/tdf-campaign-backup-request.service",
+      "services/campaign-platform/tdf-campaign-backup-request.timer",
+      "services/campaign-platform/tdf-campaign-backup.service",
+      "services/campaign-platform/tdf-campaign-backup.timer",
+      "services/campaign-platform/tdf-campaign-monitor.service",
+      "services/campaign-platform/tdf-campaign-monitor.timer",
+      "services/campaign-platform/tdf-campaign-worker.service",
+      "services/campaign-platform/tests/test_backups.py",
+      "services/campaign-platform/tests/test_domain.py",
+      "services/campaign-platform/tests/test_facebook.py",
+      "services/campaign-platform/tests/test_http.py",
+      "services/campaign-platform/tests/test_notifications.py",
+      "services/campaign-platform/tests/test_planning.py",
+      "services/campaign-platform/tests/test_tiktok.py",
+      "services/campaign-platform/tests/test_tiktok_sandbox.py",
+      "services/campaign-platform/tests/test_videos.py",
+      "services/campaign-platform/tiktok.py",
+      "services/campaign-platform/tiktok_environment.py",
+      "services/campaign-platform/tiktok_token.py",
+      "services/campaign-platform/ui/app.js",
+      "services/campaign-platform/ui/index.html",
+      "services/campaign-platform/ui/style.css",
+      "services/campaign-platform/ui/tdf-logo.png",
+      "services/campaign-platform/ui/tdf-logo.svg",
+      "services/campaign-platform/ui/tiktok.js",
+      "services/campaign-platform/ui/videos.js",
+      "services/campaign-platform/verify_drive_backup.py",
+      "services/campaign-platform/videos.py",
+      "services/campaign-platform/worker.py",
+      "services/campaign-platform/youtube_upload.py"
     ],
     "streaming": [
       "streaming/docker-compose.streaming.yml",
@@ -662,6 +745,7 @@
     "tdf-hq-ui": [
       "tdf-hq-ui/.eslintrc.cjs",
       "tdf-hq-ui/Dockerfile.staging",
+      "tdf-hq-ui/e2e/storage-upload.tsx",
       "tdf-hq-ui/jest.config.cjs",
       "tdf-hq-ui/jest.polyfills.cjs",
       "tdf-hq-ui/package.json",
@@ -743,6 +827,7 @@
       "tdf-hq-ui/src/api/cms.ts",
       "tdf-hq-ui/src/api/commerceOperations.test.ts",
       "tdf-hq-ui/src/api/commerceOperations.ts",
+      "tdf-hq-ui/src/api/contentStorage.ts",
       "tdf-hq-ui/src/api/contracts.ts",
       "tdf-hq-ui/src/api/courses.ts",
       "tdf-hq-ui/src/api/ddex.ts",
@@ -784,6 +869,7 @@
       "tdf-hq-ui/src/api/internships.ts",
       "tdf-hq-ui/src/api/inventory.ts",
       "tdf-hq-ui/src/api/inventory.upload.test.ts",
+      "tdf-hq-ui/src/api/invoices.test.ts",
       "tdf-hq-ui/src/api/invoices.ts",
       "tdf-hq-ui/src/api/label.ts",
       "tdf-hq-ui/src/api/liveSessions.test.ts",
@@ -848,6 +934,11 @@
       "tdf-hq-ui/src/api/studioAudit.test.ts",
       "tdf-hq-ui/src/api/trials.ts",
       "tdf-hq-ui/src/api/types.ts",
+      "tdf-hq-ui/src/api/uploadFailure.test.ts",
+      "tdf-hq-ui/src/api/uploadFailure.ts",
+      "tdf-hq-ui/src/api/uploadQueue.test.ts",
+      "tdf-hq-ui/src/api/uploadQueue.ts",
+      "tdf-hq-ui/src/api/videoCampaigns.ts",
       "tdf-hq-ui/src/api/whatsappConsent.ts",
       "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
       "tdf-hq-ui/src/bootSafety.tsx",
@@ -867,6 +958,10 @@
       "tdf-hq-ui/src/components/ArtistFansList.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+      "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
+      "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
+      "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
+      "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
       "tdf-hq-ui/src/components/AssetDialogs.tsx",
       "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
       "tdf-hq-ui/src/components/BrandLogo.tsx",
@@ -874,7 +969,9 @@
       "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
+      "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
+      "tdf-hq-ui/src/components/InAppBrowserNotice.tsx",
       "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
       "tdf-hq-ui/src/components/KeyboardShortcutsDialog.tsx",
       "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx",
@@ -912,10 +1009,14 @@
       "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
       "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
       "tdf-hq-ui/src/components/RouteErrorBoundary.tsx",
+      "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
       "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
       "tdf-hq-ui/src/components/SessionGate.tsx",
       "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
       "tdf-hq-ui/src/components/SessionMenu.tsx",
+      "tdf-hq-ui/src/components/SessionVideoPreview.campaign.test.tsx",
+      "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+      "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
       "tdf-hq-ui/src/components/SidebarNav.test.tsx",
       "tdf-hq-ui/src/components/SidebarNav.tsx",
       "tdf-hq-ui/src/components/StreamingPlayer.tsx",
@@ -949,6 +1050,8 @@
       "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx",
       "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
       "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+      "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
+      "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
       "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
@@ -956,6 +1059,7 @@
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
       "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
       "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
+      "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
       "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
@@ -1001,6 +1105,10 @@
       "tdf-hq-ui/src/contexts/ToastContext.tsx",
       "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
       "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.ts",
+      "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+      "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+      "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+      "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
       "tdf-hq-ui/src/features/ddex/DdexDocumentPage.tsx",
       "tdf-hq-ui/src/features/ddex/DdexInboxPage.tsx",
       "tdf-hq-ui/src/features/ddex/PartnerManagementPage.tsx",
@@ -1254,6 +1362,7 @@
       "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
       "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
       "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+      "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
       "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
       "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
       "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
@@ -1275,6 +1384,7 @@
       "tdf-hq-ui/src/pages/PartiesPage.tsx",
       "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts",
+      "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
       "tdf-hq-ui/src/pages/PaymentsPage.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
@@ -1336,6 +1446,8 @@
       "tdf-hq-ui/src/pages/UserActivityPage.tsx",
       "tdf-hq-ui/src/pages/UxOptionsPage.test.tsx",
       "tdf-hq-ui/src/pages/UxOptionsPage.tsx",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+      "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
       "tdf-hq-ui/src/pages/WhatsAppConsentPage.tsx",
       "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
       "tdf-hq-ui/src/pages/bookingsPageLogic.test.ts",
@@ -1386,6 +1498,7 @@
       "tdf-hq-ui/src/routes/protectedRoutes.tsx",
       "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
       "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
       "tdf-hq-ui/src/services/googleDrive.ts",
       "tdf-hq-ui/src/services/instagramAuth.test.ts",
       "tdf-hq-ui/src/services/instagramAuth.ts",
@@ -1406,7 +1519,11 @@
       "tdf-hq-ui/src/session/logoutIntent.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.ts",
+      "tdf-hq-ui/src/session/recoverableDraft.test.ts",
+      "tdf-hq-ui/src/session/recoverableDraft.ts",
       "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
+      "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
+      "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
       "tdf-hq-ui/src/session/useSessionOwner.ts",
       "tdf-hq-ui/src/test/accessibility.ts",
       "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
@@ -1457,6 +1574,10 @@
       "tdf-hq-ui/src/utils/eventSharing.ts",
       "tdf-hq-ui/src/utils/eventTaskRoutes.test.ts",
       "tdf-hq-ui/src/utils/eventTaskRoutes.ts",
+      "tdf-hq-ui/src/utils/eventTicketPricing.test.ts",
+      "tdf-hq-ui/src/utils/eventTicketPricing.ts",
+      "tdf-hq-ui/src/utils/externalTicketing.test.ts",
+      "tdf-hq-ui/src/utils/externalTicketing.ts",
       "tdf-hq-ui/src/utils/formatPhone.ts",
       "tdf-hq-ui/src/utils/formatters.test.ts",
       "tdf-hq-ui/src/utils/formatters.ts",
@@ -1464,6 +1585,8 @@
       "tdf-hq-ui/src/utils/googleIdToken.ts",
       "tdf-hq-ui/src/utils/ids.test.ts",
       "tdf-hq-ui/src/utils/ids.ts",
+      "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+      "tdf-hq-ui/src/utils/inAppBrowser.ts",
       "tdf-hq-ui/src/utils/incrementalSha256.test.ts",
       "tdf-hq-ui/src/utils/incrementalSha256.ts",
       "tdf-hq-ui/src/utils/instagramTraffic.test.ts",
@@ -1515,6 +1638,10 @@
       "tdf-hq-ui/src/utils/torrentAudio.ts",
       "tdf-hq-ui/src/utils/vcard.test.ts",
       "tdf-hq-ui/src/utils/vcard.ts",
+      "tdf-hq-ui/src/utils/videoSource.test.ts",
+      "tdf-hq-ui/src/utils/videoSource.ts",
+      "tdf-hq-ui/src/utils/videoWatch.test.ts",
+      "tdf-hq-ui/src/utils/videoWatch.ts",
       "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js",
       "tdf-hq-ui/src/vite-env.d.ts",
       "tdf-hq-ui/tsconfig.app.json",
@@ -1981,6 +2108,7 @@
       "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
       "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
       "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+      "tdf-hq/sql/2026-10-20_video_campaigns.sql",
       "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
       "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
       "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
@@ -2005,10 +2133,28 @@
       "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql",
       "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
       "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
-      "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
-      "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
       "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
       "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
+      "tdf-hq/sql/2026-11-04_content_storage.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_accounting.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_accounting_rollback.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_delete_capacity_rollback.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_deletion.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_deletion_rollback.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_drive.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_drive_rollback.sql",
+      "tdf-hq/sql/2026-11-04_content_storage_rollback.sql",
+      "tdf-hq/sql/2026-11-04_contract_store.sql",
+      "tdf-hq/sql/2026-11-04_contract_store_rollback.sql",
+      "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+      "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql",
+      "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
+      "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql",
+      "tdf-hq/sql/2026-11-04_session_invoice_issue.sql",
+      "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql",
+      "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+      "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2020,6 +2166,7 @@
       "tdf-hq/src/TDF/API/Catalog.hs",
       "tdf-hq/src/TDF/API/Chat.hs",
       "tdf-hq/src/TDF/API/CommerceOperations.hs",
+      "tdf-hq/src/TDF/API/ContentStorage.hs",
       "tdf-hq/src/TDF/API/DDEX.hs",
       "tdf-hq/src/TDF/API/Directory.hs",
       "tdf-hq/src/TDF/API/Drive.hs",
@@ -2081,11 +2228,11 @@
       "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
       "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
       "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
+      "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
       "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
       "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
-      "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
       "tdf-hq/src/TDF/Commerce/EventTickets.hs",
       "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
       "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -2111,7 +2258,9 @@
       "tdf-hq/src/TDF/Commerce/RefundStore.hs",
       "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
       "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+      "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs",
       "tdf-hq/src/TDF/Config.hs",
+      "tdf-hq/src/TDF/ContentStorage.hs",
       "tdf-hq/src/TDF/Contracts/API.hs",
       "tdf-hq/src/TDF/Contracts/Server.hs",
       "tdf-hq/src/TDF/Contracts/Types.hs",
@@ -2164,6 +2313,7 @@
       "tdf-hq/src/TDF/Invoice/Datil.hs",
       "tdf-hq/src/TDF/Invoice/Receipt.hs",
       "tdf-hq/src/TDF/Invoice/SRI.hs",
+      "tdf-hq/src/TDF/Invoice/SessionIssue.hs",
       "tdf-hq/src/TDF/Leads/Model.hs",
       "tdf-hq/src/TDF/LogBuffer.hs",
       "tdf-hq/src/TDF/Merch/Reputation.hs",
@@ -2172,6 +2322,7 @@
       "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
       "tdf-hq/src/TDF/ModelsExtra.hs",
       "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
+      "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
       "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
       "tdf-hq/src/TDF/MusicRelease/Domain.hs",
       "tdf-hq/src/TDF/MusicRelease/Money.hs",
@@ -2190,7 +2341,6 @@
       "tdf-hq/src/TDF/Routes/Academy.hs",
       "tdf-hq/src/TDF/Routes/Courses.hs",
       "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
-      "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
       "tdf-hq/src/TDF/Routes/EventTickets.hs",
       "tdf-hq/src/TDF/Seed.hs",
       "tdf-hq/src/TDF/Server.hs",
@@ -2200,7 +2350,6 @@
       "tdf-hq/src/TDF/Server/DDEX.hs",
       "tdf-hq/src/TDF/Server/Directory.hs",
       "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "tdf-hq/src/TDF/Server/DomoRefunds.hs",
       "tdf-hq/src/TDF/Server/EventResearch.hs",
       "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
       "tdf-hq/src/TDF/Server/Merch.hs",
@@ -2270,6 +2419,7 @@
       "tdf-hq/src/TDF/UUIDInstances.hs",
       "tdf-hq/src/TDF/UserActivity.hs",
       "tdf-hq/src/TDF/Version.hs",
+      "tdf-hq/src/TDF/VideoCampaigns.hs",
       "tdf-hq/src/TDF/WhatsApp/Client.hs",
       "tdf-hq/src/TDF/WhatsApp/History.hs",
       "tdf-hq/src/TDF/WhatsApp/Service.hs",
@@ -2282,6 +2432,7 @@
       "tdf-hq/test/EventPilotCountMain.hs",
       "tdf-hq/test/EventRaciBrowserMain.hs",
       "tdf-hq/test/MusicCorsProbeMain.hs",
+      "tdf-hq/test/MusicCredentialCacheMain.hs",
       "tdf-hq/test/MusicDdexCreditsFixtureMain.hs",
       "tdf-hq/test/MusicReleaseSpecMain.hs",
       "tdf-hq/test/MusicS3ProbeMain.hs",
@@ -2300,6 +2451,7 @@
       "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+      "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
       "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
       "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
       "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs",
@@ -2310,6 +2462,7 @@
       "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
       "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
       "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+      "tdf-hq/test/TDF/Contracts/StoreSpec.hs",
       "tdf-hq/test/TDF/CorsPropertiesSpec.hs",
       "tdf-hq/test/TDF/CorsSpec.hs",
       "tdf-hq/test/TDF/CourseIdentitySpec.hs",
@@ -2330,6 +2483,7 @@
       "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
       "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
+      "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
       "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
       "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
       "tdf-hq/test/TDF/LedgerPostingSpec.hs",
@@ -2337,6 +2491,7 @@
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
       "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
+      "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
       "tdf-hq/test/TDF/MusicPublicationSpec.hs",
       "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
       "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
@@ -2375,6 +2530,7 @@
       "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+      "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
       "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
@@ -2868,9 +3024,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1b60139feb4d9fb0",
+      "path": ".github/workflows/campaign-platform.yml",
+      "sha256": "285bec8277f776afd71d0659e48497e6ad070c766a3070b2025252832b17826e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e322a9d58d6bbd4b",
       "path": ".github/workflows/catalog-list-audit.yml",
-      "sha256": "041b23f7325b9960d0f8158e15a154cd205b02ae742c64dc37f65cd7b52e20f5",
+      "sha256": "8f40aa2c4caffde1bc8ab4e39c63d113d47483cd1683c92d489936af3768f17f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2888,13 +3050,13 @@
     {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
-      "sha256": "277c4885e728801f8089f8dd2c01e29d91947e6372fcab241860648a2e9d0fd3",
+      "sha256": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3af8f14857331f45406effcbc1885cac962da3616de6f7d20a3ab65037612311",
+      "sha256": "7adbcaa1fdd69b2639c0f6a17d55b5cf38a37631b2499ef834f3789e658266e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2904,15 +3066,9 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-6e2aa20fed937be2",
-      "path": ".github/workflows/domo-refund-validation.yml",
-      "sha256": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "ce62f78ad76541eb7718e42497c2ea6d961e4aa63d3bc6341c664b8c0d84d62f",
+      "sha256": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2990,7 +3146,7 @@
     {
       "id": "SURFACE-21d4d7e18c516e29",
       "path": "e2e/web/artist-follow.spec.mjs",
-      "sha256": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
+      "sha256": "ed6c600fc6928a8c7a273aca09fdcc1bf9231602bf13dbd89e3e5c468c3d8a83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3020,7 +3176,7 @@
     {
       "id": "SURFACE-99efca801c54dd18",
       "path": "e2e/web/campaign-accessibility.spec.mjs",
-      "sha256": "a139094a63cf3084ff1f5a47c7d282db5864e9ba9a052dd55df2087984904f95",
+      "sha256": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3044,7 +3200,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
+      "sha256": "5330e8d056e9ef1407f7a3e711bd7b88fde84795896409db2b43164c69efc161",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3102,6 +3258,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ff05b940eefd8fe4",
+      "path": "e2e/web/helpers/campaign-accessibility.mjs",
+      "sha256": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-acbdfac127b57e53",
       "path": "e2e/web/helpers/local-api-fixture.mjs",
       "sha256": "82657a35a6509869a03044e08dfb321ac44fa7df48c29b609e4d4c122d2c7038",
@@ -3114,6 +3276,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6596022002894a3",
+      "path": "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
+      "sha256": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-829d3149f60357d4",
       "path": "e2e/web/legacy-provider-playback.spec.mjs",
       "sha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
@@ -3122,7 +3290,7 @@
     {
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
-      "sha256": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
+      "sha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3192,15 +3360,27 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ca746d31fe23acf5",
+      "path": "e2e/web/radio-navigation.spec.mjs",
+      "sha256": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
-      "sha256": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
+      "sha256": "53bff5d1d66f9ee34b8d177f04c1aa0d53e42129bb230d4774a0fe15970b2821",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d3c9dbc473fd46d6",
       "path": "e2e/web/service-storage-recovery.spec.mjs",
       "sha256": "0835af52620bc38d91fdb715ab54cfd92b6c572f849288dd8debeb1c9d93c53d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0e316b7ebb7a6b2c",
+      "path": "e2e/web/storage-upload-recovery.spec.mjs",
+      "sha256": "9ba8f8b0971a3568352fb46ffc77e5091c49ac50ec5f8a9b0dcc0c09603823dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3213,6 +3393,12 @@
       "id": "SURFACE-d249a5ea8a3f2986",
       "path": "e2e/web/ticket-credential.spec.mjs",
       "sha256": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9561c312584f3d24",
+      "path": "e2e/web/video-campaigns.spec.mjs",
+      "sha256": "4028aeb82bc7d91c568672124ce308acf27ed2626bf36167546bcca46e12a2cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3408,6 +3594,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8b539014a90ca8b5",
+      "path": "ops/hetzner/tdf-postgres-backup.service",
+      "sha256": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-98b8d3b883a561d9",
+      "path": "ops/hetzner/tdf-postgres-backup.timer",
+      "sha256": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9c4c4880c3a2f1b4",
       "path": "ops/privacy/request-workflow.json",
       "sha256": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -3416,13 +3614,13 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "6e2f30481e4776efa79acd565aba5b1f95a141b99cb044388fad111ded60f530",
+      "sha256": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "effcac45802b7b89a8661117275f1e6bdca1e60d7a4e7d38c16f9493d832ec42",
+      "sha256": "1bc10b69030ac6d05d41c5948ecc745783b5b00ee796a266d0bd5d14cb743073",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3452,7 +3650,13 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
+      "sha256": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-60afa946698ccfd4",
+      "path": "scripts/__tests__/artist-image-download.test.mjs",
+      "sha256": "fe0af2d7a4754bfaeadeec4000974c2d3ebaa8642d2197ae5471989f679352de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3480,9 +3684,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f351982a52e6f37a",
+      "path": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+      "sha256": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "1f67672f249515c71c59bcf2461d6aa8832ceebae03a28fe392a6088167462ff",
+      "sha256": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3512,13 +3722,25 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
+      "sha256": "881b8fa0370c349ee8bc734eec59b730f2103ad8b9dee267e63de0eab89da0c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
       "sha256": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6c158384179c0360",
+      "path": "scripts/__tests__/content-storage-model.test.mjs",
+      "sha256": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-22a8b48a2672efff",
+      "path": "scripts/__tests__/content-storage-reconciliation.test.mjs",
+      "sha256": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3560,7 +3782,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
+      "sha256": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3591,6 +3813,12 @@
       "id": "SURFACE-fb39164e1682672b",
       "path": "scripts/__tests__/event-operations-schema-rehearsal.test.mjs",
       "sha256": "7201b8c500ad22b4fce41e1b8e2f7135be289257a54c120d1404785cb7bd2615",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a432a0571d727a20",
+      "path": "scripts/__tests__/event-planning-ux-model.test.mjs",
+      "sha256": "cabef2dc377be8160232951cdfb2c4eaa1b16f99ed104c409dd2649859ec01af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3654,9 +3882,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f7856cacfae2c515",
+      "path": "scripts/__tests__/experiment-http-cleanup.test.mjs",
+      "sha256": "2f41b3eb6a220db965e96b65f81bb57bc3009862a77f5d702d69777451cf56c1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-73c3a6d820b99df5",
       "path": "scripts/__tests__/experiment-http-runtime.mjs",
-      "sha256": "0d103b159d28a3930b52a12534d380bb7289a4e6db84e03f7faa674ab3fc4fa8",
+      "sha256": "886cfb653ebd0a545af85954868e33ae2a9c0bf67bbac1387b945bc59af58659",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3710,7 +3944,7 @@
     {
       "id": "SURFACE-d09bf04096bd6964",
       "path": "scripts/__tests__/formal-methods-audit.test.mjs",
-      "sha256": "8c2234cb42c2d631ef9523eb9d15b52908d28b98a8499c7e3e7a79119a2745bc",
+      "sha256": "130513a03b99243c8992dc830b3f27ada4ec3e19faaa36422c815f6fd2382baa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3848,7 +4082,7 @@
     {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
-      "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
+      "sha256": "2a3c464d094671845d92968a2230aca06da67fbe07adc046e45d0ce6d5578d6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3900,6 +4134,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6545235ef8b425c",
+      "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
+      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c8ab8af4db77fc7",
       "path": "scripts/__tests__/music-worker-timing.test.mjs",
       "sha256": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
@@ -3909,6 +4149,12 @@
       "id": "SURFACE-942d7c9491988878",
       "path": "scripts/__tests__/music-worker-upload.test.mjs",
       "sha256": "85b62ef8c0264b420667a9c519c86cc73aaa926f585638fb97f9b5a70751d005",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-968418b6459c1f09",
+      "path": "scripts/__tests__/native-resolver-lock.test.mjs",
+      "sha256": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4034,7 +4280,7 @@
     {
       "id": "SURFACE-a1dd9455f7a2ce96",
       "path": "scripts/__tests__/test-child-completion.test.mjs",
-      "sha256": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+      "sha256": "5b6b04119090e05d9931a04993e0b8b4d2779b30513145da54485fd35f6c9a4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4044,9 +4290,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7bc4681a8149dda7",
+      "path": "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
+      "sha256": "dac0014a94862b79c1ecf385194e60747ec31ce2300c00d6d0cf6a0df88c25cc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a",
+      "sha256": "65be9ba3fa99bbe0307c4a26cd3358c043b35f8af7d0141e7ebcc629013f6f8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4059,6 +4311,12 @@
       "id": "SURFACE-d6cb46e6ca8e56e0",
       "path": "scripts/__tests__/ui-validation-bundle.test.mjs",
       "sha256": "952e9c7fae5dc7697bc2b65c455db2545e59f6c99509cd74e57e422ff49e8e4e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9c653300b0234205",
+      "path": "scripts/__tests__/ui-worker-memory.test.mjs",
+      "sha256": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4077,6 +4335,12 @@
       "id": "SURFACE-ba099638d09bac1d",
       "path": "scripts/__tests__/verification-evidence.test.mjs",
       "sha256": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-767f37f563e0a8fa",
+      "path": "scripts/__tests__/video-campaign-access.test.mjs",
+      "sha256": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4142,7 +4406,13 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
+      "sha256": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-857fd880b06a69c4",
+      "path": "scripts/artist-image-download.mjs",
+      "sha256": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4154,7 +4424,7 @@
     {
       "id": "SURFACE-d112ef0e073bf0c4",
       "path": "scripts/audit-formal-methods.mjs",
-      "sha256": "7690517d3d5923af926d7b441ed815d093adbb011670536dd74d13c60066895b",
+      "sha256": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4254,6 +4524,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0575a70cb91a6ce5",
+      "path": "scripts/check-native-resolver-lock.mjs",
+      "sha256": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-04e9e43c20bee09d",
       "path": "scripts/check-new-specification-surfaces.py",
       "sha256": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
@@ -4263,6 +4539,12 @@
       "id": "SURFACE-4c692dca29529ca7",
       "path": "scripts/check-public-routes.py",
       "sha256": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fbfd163470f37a47",
+      "path": "scripts/check-route-requirements.py",
+      "sha256": "8ff8f425dffcdda7e12d938ed019d638fca5efdb1649cda8e27d535784026730",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4299,6 +4581,12 @@
       "id": "SURFACE-6c037a47184dd0e1",
       "path": "scripts/codex-loop-worker.sh",
       "sha256": "6da47a449c7eebca4b1c1deab3a459a42d72f3472c04b71e5588b800b2c7f405",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-83f641016de23f49",
+      "path": "scripts/content-storage-model.mjs",
+      "sha256": "9334e46e43c6b6e8dde89381f7fffd024af979e073dd659176f73add943892c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4374,6 +4662,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a67bc20cfe2afc3b",
+      "path": "scripts/event-planning-ux-model.mjs",
+      "sha256": "2b95df24f81b818fa00017e2a00e1a6c0397c212ebebcc3bb9af26869fc60406",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-dcae70b991cf88b5",
       "path": "scripts/fetch-ddex-ern432-schema.sh",
       "sha256": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
@@ -4400,7 +4694,7 @@
     {
       "id": "SURFACE-66e87273aace5273",
       "path": "scripts/generate-identity-party-reference-view.mjs",
-      "sha256": "90787b7d8ba17874a1e3940d5916e7652e5c19b0731982ab72cc1c243195fd77",
+      "sha256": "980ebaec42704393878751e4dd40238f02f64ada510b3a02d60154d884b07493",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4598,7 +4892,7 @@
     {
       "id": "SURFACE-16c0274ca9b29448",
       "path": "scripts/lib/formal-methods-audit.mjs",
-      "sha256": "c3585c015a51d155a06adda4740ac42fd8ee3dfa1930a8febcae06c60e30afb9",
+      "sha256": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4784,7 +5078,7 @@
     {
       "id": "SURFACE-0ebd44c86ad332c6",
       "path": "scripts/lib/test-child-completion.mjs",
-      "sha256": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+      "sha256": "73f6d1e064be16aed833091c25a0dcf526b9e59dd6c19dc4a5712f5afe7c1da0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4884,6 +5178,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-38dc5c7409d83e8e",
+      "path": "scripts/prepare-content-storage-reconciliation.mjs",
+      "sha256": "8032784954c085896cee00ab69bea66037443e6ff522941aa55ea244706dad57",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-676b7216bda83497",
       "path": "scripts/prepare-event-draft.mjs",
       "sha256": "ecb45725bfe81c59823cef0cb06afe63ab8136ee3c09651ea8019becd366c3c6",
@@ -4940,7 +5240,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a32f5e235b22554fea54c4209eadcdb188555d4e204e04c604d9d6412a6da775",
+      "sha256": "b4b40f427e0d440ff0d3c54ecfeed00086cb857501627cd6a2684c277a058360",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4958,7 +5258,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
+      "sha256": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4976,13 +5276,13 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "6171954f6314882c0d68232a7fbd1e1faf080d1555bfdfdde70e38cf888bdcf1",
+      "sha256": "a294b53a8d4b6587c4fe5a53146ddf855cc147afcc5d9afb05f82a3c707df216",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
-      "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "sha256": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5054,7 +5354,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5456,7 +5756,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
+      "sha256": "717ca96ab62100ea5bd349ad0365a0906461ea1d55e170c1b9e605b72c3404ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5640,6 +5940,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0b89edc194bc4b58",
+      "path": "scripts/test-content-storage-postgres.mjs",
+      "sha256": "3c68a16e43c08e6d241a4b5bc39c5b0b08d625bffa740dcd6c8b1916c2cf074d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9d1fe37e56cb7506",
       "path": "scripts/test-contextual-reputation-worker-migration.sh",
       "sha256": "2e8b71b4f9773e9271351c105c2158a3e255264c924eba039e2c2023cc63aa95",
@@ -5697,6 +6003,12 @@
       "id": "SURFACE-c3644dae3f31864c",
       "path": "scripts/test-distribution-product-seeds-migration.sh",
       "sha256": "9aee4d09cabce943396f94a8d45558ad747808e189cd7d6febe6a49193c5b7a9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9ec05a1e031f6838",
+      "path": "scripts/test-domo-deposit-policy-validator.sh",
+      "sha256": "b664c8bb09120a506c27f406967a7408e326281d311fcc562f52a97a1720d509",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5882,7 +6194,7 @@
     {
       "id": "SURFACE-f86d69da75ef0aa1",
       "path": "scripts/test-identity-reconciliation.sh",
-      "sha256": "7a0a057ed0d5aa4c453a7ca50ab81a644f0ff184c664b16f2c131ac577b04175",
+      "sha256": "68ef02f07b10ee6d6eb8d4bf5f95dab2d8791f54e34a3ffd68a7a61726a57cef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6086,7 +6398,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
+      "sha256": "ecc0d5ee612ca12e9ce2168bd489a2d1e0c24f9277fbcf76f42b29dc663d19c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6098,7 +6410,7 @@
     {
       "id": "SURFACE-b7ace60c7f571ef1",
       "path": "scripts/test-music-source-projection.mjs",
-      "sha256": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "sha256": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6158,13 +6470,13 @@
     {
       "id": "SURFACE-5c0faab232af0d35",
       "path": "scripts/test-persistent-uploads-container-diagnostics.py",
-      "sha256": "a2e35a6d897b0cfeeaa5f8ccfd60b3f33ea896399e4c8b3172c2cdfb6bcd0da7",
+      "sha256": "9d53526e954744bf8bb9b8ae9520d3edc781e19baea9e85dfe4796fbf8a582ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
-      "sha256": "29f52440066cf054433220032739ba270253a37bb39f5f01c694827eb87cdc30",
+      "sha256": "3e2657400ab6306b4b6f89568cefb5bbec665db31dc87ff006460d889612de1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6206,7 +6518,7 @@
     {
       "id": "SURFACE-7d9c91182787e22c",
       "path": "scripts/test-provider-domain-harness.py",
-      "sha256": "1724bf07b1531dc9a52ac5b0df68875c51390bc598988a493cc2a9a050ce6191",
+      "sha256": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6230,7 +6542,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "1a0c7d6c1df4bed918bfff6c91a81add3275e2bcf003c82fd2748d93a12c7e38",
+      "sha256": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6324,6 +6636,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5067a6940763ffc3",
+      "path": "scripts/test-route-requirements.py",
+      "sha256": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b888f3a6579f797c",
       "path": "scripts/test-service-booking-checkout-runtime-migration.sh",
       "sha256": "2b1f708b0a4181e61e05c65133f52a4d8cfef6fd65a2f62df61627922a394004",
@@ -6339,6 +6657,12 @@
       "id": "SURFACE-829614625675f708",
       "path": "scripts/test-service-storefront-phase0-migration.sh",
       "sha256": "0c2d454fa580dc1b3476526cd0f7cf89baa572e3d102de0edc372961718e53bc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7b01e95a2191ef5a",
+      "path": "scripts/test-session-invoice-issue.sh",
+      "sha256": "c19f451e8899fab4bc6d76e3c97ad73b1f927e1beccae501d32f0c3fce663fc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6362,7 +6686,7 @@
     {
       "id": "SURFACE-0d2014021bc7262a",
       "path": "scripts/test-specification-inventory.py",
-      "sha256": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
+      "sha256": "803f1a3ba0e54e29c3f7ea8fcc2c7e263a0b1c450c0e358912091bd745332369",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6380,7 +6704,7 @@
     {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
-      "sha256": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
+      "sha256": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6578,7 +6902,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "3f3a34833332539d133a7ad622355465f5ad1599d85a15f08437dfcf81ca20e9",
+      "sha256": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6654,9 +6978,327 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-00216ea4e77a05b4",
+      "path": "scripts/verify-video-campaign-access.mjs",
+      "sha256": "0b6a82b0c2472d1735cbe9e0f84b2ecc1d513c3fa81b853bd2d7a932cea6ace7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-531960a153f9c90c",
       "path": "scripts/wrap-catalog-canonical-schema.mjs",
       "sha256": "ed89532f6e41753b0b766025eb962809bca9908e45fd4c3d6d1746bb06747b9b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9063cab573083a3b",
+      "path": "services/campaign-platform/backup.py",
+      "sha256": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b8887d3370b10421",
+      "path": "services/campaign-platform/backup_control.py",
+      "sha256": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-18debf63a647c391",
+      "path": "services/campaign-platform/backup_crypto.py",
+      "sha256": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bf7873f7b8d0b162",
+      "path": "services/campaign-platform/deploy.py",
+      "sha256": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2f4e2a6c9efb2ce4",
+      "path": "services/campaign-platform/deploy_sandbox.py",
+      "sha256": "5df04f820eb7c868703359feec18848063ddb9183f4c4a57fb50f5f091d299f2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4d817f76014e9965",
+      "path": "services/campaign-platform/domain.py",
+      "sha256": "f858fd2422f6bf785cfb888213a6989d04c10c7e6813fdaf0aa881565ad35ffb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-26928743f6259303",
+      "path": "services/campaign-platform/drive_backup.py",
+      "sha256": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-876aa897d40f19b7",
+      "path": "services/campaign-platform/facebook.py",
+      "sha256": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-111d11475a9b877e",
+      "path": "services/campaign-platform/graphics.py",
+      "sha256": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3989ae6c13229e72",
+      "path": "services/campaign-platform/import_rojo.py",
+      "sha256": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-00d53256ed14388b",
+      "path": "services/campaign-platform/media.py",
+      "sha256": "6f1a170104b165432d897e2c2427453c031fe989d691b752fb0cd07029b1e6a9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c882a5d167f0f60d",
+      "path": "services/campaign-platform/model_check.py",
+      "sha256": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a282a0c72e09f7fd",
+      "path": "services/campaign-platform/monitor.py",
+      "sha256": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-03f680412847c2c7",
+      "path": "services/campaign-platform/notifications.py",
+      "sha256": "a8ad191a4c81e5752819ee486c679cd1093af716d3dd250f9a8652c1ef288efb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9bb212c5068f9498",
+      "path": "services/campaign-platform/planning.py",
+      "sha256": "473d7a9fadf0b13998072eb30d463e6eff0f0dbfc9663b44f61d650229d6ab87",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dd915c4b36f5a11e",
+      "path": "services/campaign-platform/providers.py",
+      "sha256": "d1ad2e1e217950dd696fcfb644b405e95b31dbd03837c72ba9fbb09d41b29fc9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-15fcf4a4a5ebcfd1",
+      "path": "services/campaign-platform/qualify_media.py",
+      "sha256": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9797e32784d6619e",
+      "path": "services/campaign-platform/requirements.txt",
+      "sha256": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a81a32947bfdf9ef",
+      "path": "services/campaign-platform/schema.sql",
+      "sha256": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-046f5b5bc5783c06",
+      "path": "services/campaign-platform/server.py",
+      "sha256": "ddddea97c6a601ef1833585b6b00c9a90cdaaf77724b6e303cc8a9defa0a5df9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f0b93350834777ea",
+      "path": "services/campaign-platform/stream_backup_object.py",
+      "sha256": "4c12c6d15fb8a656e350a341c3840ab08fad59525f277b0f55a4b863c4ed611c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-66651f2b3df90bd7",
+      "path": "services/campaign-platform/tdf-campaign-api.service",
+      "sha256": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a50ac0975f1b039f",
+      "path": "services/campaign-platform/tdf-campaign-backup-request.service",
+      "sha256": "c7de57347a940bce347d2b09b57af48ce86f9dcd1a77da01fe8baa828b75ea71",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-18bb8ba5386eb726",
+      "path": "services/campaign-platform/tdf-campaign-backup-request.timer",
+      "sha256": "c0b20d73362c8138c3b217b2c5d99347b3f19441b0c67c3d76424c86bb8c65e6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7bb29e6f7830138a",
+      "path": "services/campaign-platform/tdf-campaign-backup.service",
+      "sha256": "467d499ec9c0091c612ec1448dca9c39d5eaffbde3b213fb28d853e3cb0a0ae6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5f0fe5c5ea932bb1",
+      "path": "services/campaign-platform/tdf-campaign-backup.timer",
+      "sha256": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c1cfa7121a40fc4e",
+      "path": "services/campaign-platform/tdf-campaign-monitor.service",
+      "sha256": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-83ba6d77e61aa929",
+      "path": "services/campaign-platform/tdf-campaign-monitor.timer",
+      "sha256": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c5b1752afe7e5770",
+      "path": "services/campaign-platform/tdf-campaign-worker.service",
+      "sha256": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ecde5cc0775d2f56",
+      "path": "services/campaign-platform/tests/test_backups.py",
+      "sha256": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1d9e726769e9e1db",
+      "path": "services/campaign-platform/tests/test_domain.py",
+      "sha256": "bbf1c589c5539ba6331cc9990cb0e652f1340b3d0295339b1ead66fa79ac52cb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e9f572da30bc74b8",
+      "path": "services/campaign-platform/tests/test_facebook.py",
+      "sha256": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-682ec32ac659d8cb",
+      "path": "services/campaign-platform/tests/test_http.py",
+      "sha256": "86cf231e96ae998d3367502e0a309e486f7ec9f4543320fef1f83947cd11721c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-94000502e03a4809",
+      "path": "services/campaign-platform/tests/test_notifications.py",
+      "sha256": "aa5b5f2e6e9998a3d1b0fe7c09ea26f98a52d6e675d0555afa9b8b8e60a27055",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-00c5232ba68bd496",
+      "path": "services/campaign-platform/tests/test_planning.py",
+      "sha256": "7cb8abc3d7d9953070a1c78c301e3b539b752ca6eb731558630978f1ef3d0595",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bfa885cfbaf8b851",
+      "path": "services/campaign-platform/tests/test_tiktok.py",
+      "sha256": "6db5a180bbf3e7e9ace7b70fefe0fe4a9156f0fadf792936cabe6f0f3f56381c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-72f554acbb1033be",
+      "path": "services/campaign-platform/tests/test_tiktok_sandbox.py",
+      "sha256": "ade2a1116695b18b0b5baa687977ba2ec8114561498f64a6e9aa8f19f8be9cf6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-be1020a9cb770e68",
+      "path": "services/campaign-platform/tests/test_videos.py",
+      "sha256": "80986e29d86f8be7bb02ff4e70aff6872162926ee441d1c7e15af8a307d00b92",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9a16e9f2b660bf49",
+      "path": "services/campaign-platform/tiktok.py",
+      "sha256": "b66fa94ec5e2c2fb7d6887cc0a1971bad6b9f51ea399fe6e80e2151c4cd39ead",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-84fa59a6dd1219e2",
+      "path": "services/campaign-platform/tiktok_environment.py",
+      "sha256": "100ddc29190a7d964b5a905958834b89908ce430e9aee7452fd50ab7d1b0e572",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dbce437071d03bba",
+      "path": "services/campaign-platform/tiktok_token.py",
+      "sha256": "58d634247f9e327db9333ca61b6f2df6ca7bc74eac894b2ff500901dc89b6a35",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-39b88f2b72e34e12",
+      "path": "services/campaign-platform/ui/app.js",
+      "sha256": "da2dde1d312be1bc2015b13edde4dbd7499216a22709eaa50c2d9180d83d3905",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3921e200531965a2",
+      "path": "services/campaign-platform/ui/index.html",
+      "sha256": "ae47068e6e3f1b826c3de752be4cd53d7354c89a8dfd8501a7b7c40cfc91cf19",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-28072cb5d8ec61ba",
+      "path": "services/campaign-platform/ui/style.css",
+      "sha256": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3219b339bd433408",
+      "path": "services/campaign-platform/ui/tdf-logo.png",
+      "sha256": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d483edd735c01f0f",
+      "path": "services/campaign-platform/ui/tdf-logo.svg",
+      "sha256": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0988cfc5d5669fc0",
+      "path": "services/campaign-platform/ui/tiktok.js",
+      "sha256": "2f810ccb4c4d8723a1e81aa0f86da761ce11291c5e58987c4ee779b75814f26d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f5253bb272c24440",
+      "path": "services/campaign-platform/ui/videos.js",
+      "sha256": "9864db3a462cfbf66f8ee0e1bf7e9545f394ccce6056145242a4e0c92ebafadc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cec7709e0bd0d7c4",
+      "path": "services/campaign-platform/verify_drive_backup.py",
+      "sha256": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5042d29800bb8c72",
+      "path": "services/campaign-platform/videos.py",
+      "sha256": "61f02272783a7e52953f01f3dc2f29cbe5e5044ea28c09390e43e417d0482287",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-eabde3f755919b20",
+      "path": "services/campaign-platform/worker.py",
+      "sha256": "0941e599fbe6a9a2d63fcf1e261fb937b5fb71e33ad74b67ea2ac24de06fa83d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4a81d91536277a61",
+      "path": "services/campaign-platform/youtube_upload.py",
+      "sha256": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6684,9 +7326,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8f308d59f0e073ad",
+      "path": "tdf-hq-ui/e2e/storage-upload.tsx",
+      "sha256": "db97a876b5beb240476600ccdeff7e3dfaf0dc81a628379b43e0070d3a7cf082",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4573385494ace809",
       "path": "tdf-hq-ui/jest.config.cjs",
-      "sha256": "d0a187ea1fdc08a114cd4ed0040c22b0dbb695dd3a3bd7d2c0b3e4e597b3f8f6",
+      "sha256": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6698,7 +7346,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "ca24e657486cbffd37a60f196f273a87b1a00d70a3064b237de293408254065d",
+      "sha256": "c5775b009397ad7f8e873c032fafdea5a2242cc1c6fb5888b383955633b09382",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6806,7 +7454,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "sha256": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6830,7 +7478,7 @@
     {
       "id": "SURFACE-9f2d7ab39b8a5348",
       "path": "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
-      "sha256": "1677552be22ab91821cfc54b6e485403cf02574dbcb22091b45601c81c008f18",
+      "sha256": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6848,7 +7496,7 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
+      "sha256": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6866,7 +7514,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
+      "sha256": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7170,6 +7818,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f5e3b068d2a95882",
+      "path": "tdf-hq-ui/src/api/contentStorage.ts",
+      "sha256": "9cb3ce56f763354e9651e4f32d0066b73d6deaf409b306b7c440305b9a0d56e1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-84a69840be37d47e",
       "path": "tdf-hq-ui/src/api/contracts.ts",
       "sha256": "e61d8f36ed7991814332fd72451bb715f535a73a15728ec5dc8fbe50b18e9819",
@@ -7214,7 +7868,7 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "58ddf0aba81ae1ca1cf67d400b6826cca57aab890a7120dd48efe28aa49c8e7c",
+      "sha256": "6bff25b244765346986e765a7ae1685a732656d296f0c0e3be75f1619844b934",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7364,7 +8018,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "3b55256d7f2e90634fcda1e8dc920db836681091f3cfa68473e3f5011f7b1af4",
+      "sha256": "157a680d2edbd9895297be8adf4b70bedad1ae723a53482594970bb41efc84bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7406,19 +8060,25 @@
     {
       "id": "SURFACE-4f584dc31d92ebd7",
       "path": "tdf-hq-ui/src/api/inventory.ts",
-      "sha256": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
+      "sha256": "6ae18f71871c7dfcebff6c55180ecadb1791feb220e35e6c24009f59b2030799",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4bd49968c033f10e",
       "path": "tdf-hq-ui/src/api/inventory.upload.test.ts",
-      "sha256": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
+      "sha256": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-09824a09519e957e",
+      "path": "tdf-hq-ui/src/api/invoices.test.ts",
+      "sha256": "1cfc1c3eb6516b154cffe34a7f1c3823d8b3164e7b15a5e36f139b852fa76419",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8954d786b64d481b",
       "path": "tdf-hq-ui/src/api/invoices.ts",
-      "sha256": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
+      "sha256": "9ae14d68a08dc280f8b126b12d347377f7bed729cef316fe18849e4657e4476b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7800,6 +8460,36 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-447fe75998ac5f43",
+      "path": "tdf-hq-ui/src/api/uploadFailure.test.ts",
+      "sha256": "89b50f48d905bb134f2e2a9e43691c564cc1c18cca298998ced25527d2957d11",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-485f7d06c6238719",
+      "path": "tdf-hq-ui/src/api/uploadFailure.ts",
+      "sha256": "dd706a5810a388dd56d44142e9ab8e7fd1ace3612c18b87cf0cd1fe8113214d9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0d53ea9d90d3f52e",
+      "path": "tdf-hq-ui/src/api/uploadQueue.test.ts",
+      "sha256": "64a4197e7bcbf2c1c9e4a180453c4ebffbf5c109a8c9b1967f186752ff8b0e8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-106a01501a1a2d18",
+      "path": "tdf-hq-ui/src/api/uploadQueue.ts",
+      "sha256": "518ff9a043e587d3721814372de69cf238ee962d3df9b48ef369b72c5810b22e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-354e08be89f91765",
+      "path": "tdf-hq-ui/src/api/videoCampaigns.ts",
+      "sha256": "8ee7fef3bd2d796b66f216817fe73d2e0638f0ddadd76e0f615d75bd4a7b6c64",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8843dbd0dcd5f79a",
       "path": "tdf-hq-ui/src/api/whatsappConsent.ts",
       "sha256": "612191ba968e3dced6db6f7b5d8a6d06ea96e0e3ae92af92a0f9d4ecd6d6fbfb",
@@ -7914,6 +8604,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-907e3863c296aefd",
+      "path": "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
+      "sha256": "826bfe01af0ec470ce6a8096068960b87b61df5f6a582568bfbfadfcbc950b0a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9641be0a0cab4f6d",
+      "path": "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
+      "sha256": "3c8e49833a85f3220ca06125db816d25bfbd6a465abc82f300be2d0759cb1370",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-52978cc467763ee4",
+      "path": "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
+      "sha256": "5dcab0089505cd3c7a6e207e40a966f64804f40d8dfe4310bc1357ff525d4a6f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-57b1a4ec1eee9541",
+      "path": "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
+      "sha256": "12b5c7fbb55aaaa9df265c3feb6832c61d75bfe45050f1459304f73f3b21cbcc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a37d1951f47fee63",
       "path": "tdf-hq-ui/src/components/AssetDialogs.tsx",
       "sha256": "5cec6e044fd431b439f7be38b89b4d9f1d6622dbcd544ad9fac47b42a26c5aed",
@@ -7956,9 +8670,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e0b55665797583ff",
+      "path": "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
+      "sha256": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0918e49c017af22f",
       "path": "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
-      "sha256": "319ac333d7de5352db59a9458f4fe9e9db7b1f25174af087600a2b33fff663f0",
+      "sha256": "b61a8194d526d08b5f86a3bccbd9029c3666b4d9a349001498fadde1c1197958",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a584422b5e9c02af",
+      "path": "tdf-hq-ui/src/components/InAppBrowserNotice.tsx",
+      "sha256": "ee2e97283f584ae5028f15da77b1b9783b8dcc7c03a4b6678feeede6a887775b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8126,7 +8852,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "45fd9f08f7ab9a1e2b7cacc770541dc8e9de76a87ea5a1ba6d846588e603f573",
+      "sha256": "0dee9eea31b4c0550c930568b3f9794f141d0d021e5d0f6aa9741efba97e2dac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8184,9 +8910,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-30ea18f2f9ded258",
+      "path": "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+      "sha256": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d9960955f95c03fb",
       "path": "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
-      "sha256": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+      "sha256": "c63efc0a19273be2c831bc5d020f250c1ee563bcc4f7b397f42a4000b2240a12",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8198,13 +8930,31 @@
     {
       "id": "SURFACE-dbd54bd3d14b1e80",
       "path": "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
-      "sha256": "2683fde25d4ef574d96b2f757f72dfcd7a31970e3e1501776284d58ded446c52",
+      "sha256": "1aaae8879191fc359cbd7689c402d1bc95febad1673418a27dd30718c7b363f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5db1e9afd0ec5152",
       "path": "tdf-hq-ui/src/components/SessionMenu.tsx",
       "sha256": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7c930e978718826f",
+      "path": "tdf-hq-ui/src/components/SessionVideoPreview.campaign.test.tsx",
+      "sha256": "4945d715b69fe77bdcd52e84df20c812c28793b62abd984b07fb475f313553c0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2d575081440ad9a8",
+      "path": "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+      "sha256": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a64f86cb6be0afe2",
+      "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+      "sha256": "6b84cf452d35810cd5fc3d2117dabb518ed9babe6cba469ee3796f8a8ea24c83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8360,7 +9110,7 @@
     {
       "id": "SURFACE-b9a225105c7c3965",
       "path": "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
-      "sha256": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
+      "sha256": "dee2406544003d535d637f676003536c5268358eb2795bf2156a534da54d1996",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8406,6 +9156,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2cea66b752634961",
+      "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
+      "sha256": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e16e275f767e9623",
+      "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
+      "sha256": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7bdff475261102de",
       "path": "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
       "sha256": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
@@ -8445,6 +9207,12 @@
       "id": "SURFACE-bd86c3cf4fc0c63b",
       "path": "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
       "sha256": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a7bd488bbc0b8861",
+      "path": "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
+      "sha256": "168852f9c75ee621dbc6c673d26d1b48443c85c45fd75f0ec86c1375b425b5e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8718,6 +9486,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-642ed18b72816afb",
+      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+      "sha256": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-68c571b55ae56bd8",
+      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+      "sha256": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ef8d7dd772a97cb8",
+      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+      "sha256": "ea50012625c3e00735db60556e8400db0b697c859d029c8ce398376f1d44fba2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6552f4e924597742",
+      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+      "sha256": "7aab0af6588a6b078fe8ea4136fd6b9656c7d2996d19e3913041f01125c0d50b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-82b624b8fce7891b",
       "path": "tdf-hq-ui/src/features/ddex/DdexDocumentPage.tsx",
       "sha256": "c99cd6181ff4c0f036abdc0e19d10132ef5a6241467260ace89eeff4fd1ff8c8",
@@ -8744,7 +9536,7 @@
     {
       "id": "SURFACE-7c62d34c2753965f",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
-      "sha256": "c3f65ad27e67860b59a5af6153b39a177655a02a129fe7b3632fd96165ffdb51",
+      "sha256": "eab1076340f853beda8044ffe0b7fa249d5f714d3a825a561a4120569db32f95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8774,7 +9566,7 @@
     {
       "id": "SURFACE-10d683e3558c7c8e",
       "path": "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
-      "sha256": "f575f669d2ff5287ffc09c45a68469f467fd9661648d67c3a54d81702bd4a6e1",
+      "sha256": "08ee7bc678eafa92b7b188ce770e91f90c5f418447c024553101e2555961fda2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8864,7 +9656,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "7f091bdd2722c7eeea2a7003f098a6a265c6f2d1f8f6b7fc15288d009cebec33",
+      "sha256": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8972,13 +9764,13 @@
     {
       "id": "SURFACE-1feafb0155431191",
       "path": "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
-      "sha256": "a7b88782f84756ef1415d3ec5dda3e2a889ed9301e82e7a575f9349beef3f2cd",
+      "sha256": "02a247376b7685688d733469e04a0c9444e7042db2f17e8a0097782a3d674c68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bc9ff13b8be69b37",
       "path": "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-      "sha256": "48cc1faecfd1913daafdb769cf68385a8011660e0c486e86802e90a77d526ee7",
+      "sha256": "44f25abf3cfe930e761a895e3884ef483d08da3a8e4058312e78df6573b31c67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9032,7 +9824,7 @@
     {
       "id": "SURFACE-bed1b6650305b76c",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-      "sha256": "0999d2b2db2baad0fbb2a9dc1c0c9e73263fd14b5f94c0231c94a64fdf1c2856",
+      "sha256": "e9a42c05107105e1fb5959ac88c5cb7260e72cdd665065025eb3534188e66a5a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9146,13 +9938,13 @@
     {
       "id": "SURFACE-f6f49d0601363c2e",
       "path": "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
-      "sha256": "3babeeb1c94a7e77919e7aaa9d817be2a7232f918d34080b5c1e5fedbd5eab82",
+      "sha256": "74e0e9bbd074c245150edef4b0561ad2c700064a9300024201611188b3e28e86",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-21774e08e94e915e",
       "path": "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts",
-      "sha256": "23203cbcc0b00ae2b5f79e08befce330b9849497dd82cf264ff886fee4e8466d",
+      "sha256": "96b4122312d56f09d7c3a1e0b84796547020c2adf32b3bf7e8cff77449ac5d03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9218,13 +10010,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "31583e47dca59d77c2e7e74b50ff4672ac2ebbdaae21240669a8a46408b78868",
+      "sha256": "db8231f6f28f7b0827e057e9d9b150b5678de60b2ef4e55486443708023fd7f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "78299818099457a78e8e76f5aa63d06e416aa16a59bf470c88d3390296bff21a",
+      "sha256": "b918d1907be49f093999c63c94b79fd42dec140a67727c77c8c2753581ec84d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9248,13 +10040,13 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "65ef7322cc01f8c6d9c8f496dadb2b89311ec6f5e2f5088781dfa40604b99252",
+      "sha256": "02a8564ad6079993d42e0837b6b6880c9f77c54dd99ee7952be6c60514460e08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "75f958cbd570b2c704926c6a9c79e369cb34c4f18576ec3c77133d82415a3d4a",
+      "sha256": "bc8f467f4a10a129ab45e4e630fd676547fc5516f3c96e008c8dff0e8e468a2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9458,19 +10250,19 @@
     {
       "id": "SURFACE-feace0cde60c7f70",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-      "sha256": "ace8b67c3391736605ace8d1a41410228923a104396fbc8bdc0c46474c81abd3",
+      "sha256": "1699b33488035a15f8334b5247518efcca4fe2bbd745454887ce744de37665d9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-67734f5e4107b4c6",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
-      "sha256": "7e537b013a74c5b1ce6f3b1908618ab1b4c6eb46512422126f0ffbcbb08f5ad5",
+      "sha256": "60afc03d528b10685cde5973a8a66d4e1b81d296663c6dc4360ab3280a269786",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "f495b4c2284936cf7010edff245283e085d301551f5cbe6aff0b1534f74167f2",
+      "sha256": "d34c07f4c77465f5235473d8e40e504bfe55bf6dce6df130a194d1de5d27fd83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9572,7 +10364,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "5e5ff8ee4b92f3ca00ce5470713703ce9b67701d5a231177fb7f48cc846c2426",
+      "sha256": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9656,7 +10448,7 @@
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "ddf36752ceba68694516754fc162e4b5687e0be1b8d538cb6c9a7edd724be1b4",
+      "sha256": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9698,13 +10490,13 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "10fec38f28a13275f31d9ea60b6d95a8a500e92a7ed3a9e45a746beaa5812d6c",
+      "sha256": "07a61e85fa89ddb7e1c4de1c1f20617c9ac6bb9690aca35daccd914e1422c81d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "cec63ae59dea7d81153c31a5247364e784dceb3fb136bed5ad3d81b6d02d5dc7",
+      "sha256": "526d99c969b397ff9531d01ca361f63932a2e4859e937eff2d44db6ef606a3a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9716,13 +10508,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "a524c317e8cf5ea1a6ee07e84a7c8f9271b01d7e30e58eede4785a1d1e3b6ab1",
+      "sha256": "56c4aff0100456653063d72ec6a392d08b0c0124cf3b123cd4cee07b9a8df4ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "584d216cc04cbbc7bbfbc2d81fce93b342a4f9c235fa1c0eb8fa5ad406b966fc",
+      "sha256": "616aa6312dcd76618f16cca64231e91b6c85844514ab1010013781dc099cf1bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9746,7 +10538,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "368cf95d866c0b1c5651a6fc4a90f4dd9a36d4f1ea23b0a51c891f9355e595cd",
+      "sha256": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9782,7 +10574,7 @@
     {
       "id": "SURFACE-bc6d085a2f18921b",
       "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
-      "sha256": "ce0dac04ee6d29378f3385d36a42cdac3ae7dd7e4deb4bcb4c764088f206a4f9",
+      "sha256": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9818,7 +10610,7 @@
     {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "630e98dd3a83ffae2e58cac0433be3b46eaf779c369d96bf16edf4b3aedc3bbf",
+      "sha256": "546c843c331c1c3fa6cde2e5ed8aec89c573b79ea428c45fa098f83dd1b2b6c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9830,7 +10622,7 @@
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "faadd0d1757c9485eea6a145ebddbcb5e5b35367736019bcbfc099a08a57a785",
+      "sha256": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9842,13 +10634,13 @@
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
+      "sha256": "ed81c8122a6debedadbc37dd221096ea424f4c6f482bcb05ee96562704f28b7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "dd8323102fb64e439cf22889690bf47ea90decfa21083dfe76f509e64cbeccdf",
+      "sha256": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9896,7 +10688,7 @@
     {
       "id": "SURFACE-74b074b0cbc3a92d",
       "path": "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx",
-      "sha256": "d3c90c7827cc865b4fdbc2b47120d8fa404ffe9740d5cae508c8f3907e3f635c",
+      "sha256": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10004,7 +10796,7 @@
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "1bd0d8a91586592f415dcc2197057ac480563cbf03a8e2cb8d3e64621ae9a340",
+      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10016,7 +10808,7 @@
     {
       "id": "SURFACE-44ac4b25200a0ba1",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-      "sha256": "796d78d3f0af0b5c2627f0dbbfa05ab6762ef9e3f75250c6b65689504abb77d9",
+      "sha256": "e99b58d699ef63f0a51d91450dea034229fde9f79b2cc262d619de1ddc7f7876",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10088,13 +10880,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "424eb5cbb64ff0bdfe6bd7b42a5a675485d04c36d9fa5486789d2b404f3aa5a2",
+      "sha256": "71f1ed772a76a0fb6544caa20fb23bf87809972979b6401ba54e08da718f495b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "9cccc4c45c2497fbf70418f149871d0682166252954bad338361de2532d8a252",
+      "sha256": "58e1f9a2962556913c7540cf9db152866b824323007a5ba7b2eb3b49cf907a8b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10136,7 +10928,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "1dfede490dd0a8731d5fedd8929358c8c2e4815e9106341225e6d970b4a9fda0",
+      "sha256": "a84f06a4b102f43f604bbaeb42f2386b418e1845196d73cb9929bbe74999597f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10233,6 +11025,12 @@
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
       "sha256": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b372c70ee4eae69c",
+      "path": "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
+      "sha256": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10362,9 +11160,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6e21d53461f37190",
+      "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
+      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "86e805816efc7115aae0429ab80b093cdd06696a7bf4a42d9ccfbc0c7139696c",
+      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10394,7 +11198,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "2fa370e096abaf8acad3ff12c7aef6e51af67631cf5c562a4f484d91add873d0",
+      "sha256": "e93f211a8931ebbf60d9c32ecfcdd05066712610e16e505201dc7bcfc288e3c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10472,7 +11276,7 @@
     {
       "id": "SURFACE-56568ee47192d217",
       "path": "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-      "sha256": "3bd6c293b2481dac3648c418221946d2fd0c5db859928a22eb0414f4f52e0b98",
+      "sha256": "5bffd54fb89d208c192a607c5e921f7c7c862555c7d922dad018d43088a3b85a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10580,7 +11384,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "c2bba11f658bb5593beadf3478e116ddc3d96a5b5862da7c7bcb95c9d0c33a52",
+      "sha256": "3417cb970648efc1d1634a24792e9b69aeb441d9d1eb76ea7de7e7b135ef6985",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10658,7 +11462,7 @@
     {
       "id": "SURFACE-a8a994f85758ab3a",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-      "sha256": "2819d1faed38a5727f09f8b7085553ad10e00954da29e4c149ceded3fb339232",
+      "sha256": "0e33d6390625cc6b44a98f9bb32b10897613b33ee1fa2260d6e1c49d3d9c8fea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10728,6 +11532,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d3678204a317aed3",
+      "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+      "sha256": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1e42b51a3ed57a58",
+      "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+      "sha256": "d3a2149f3bdde2e710a920fca3d2dc43e3085615c54b4c3685502bc894f5d7bb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-757870367be1e0b7",
       "path": "tdf-hq-ui/src/pages/WhatsAppConsentPage.tsx",
       "sha256": "8ea97fe260d32e3182cb58da0c45b6f77ee15bd9d3fa8439a46e63863e89bd05",
@@ -10790,13 +11606,13 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "cb6b0bab9610883bd777a3b35685616813ac058a1aa245c33135f4cf4eb8e96e",
+      "sha256": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "c713d44bd331eb574c5dd39a9d17818cfd0be0192d549c952c6bdbfb6afa7f11",
+      "sha256": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11012,7 +11828,7 @@
     {
       "id": "SURFACE-f0dfc7a18e8b49c7",
       "path": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
-      "sha256": "7841629427f2d73e5732da6c16cb8be991bbbb624c5e51d3e963c247520b71fb",
+      "sha256": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11024,13 +11840,19 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "c54a0dc6ef927f03e02245cb993c860e1cab71d1c5d89904d1aea4d0885bf8cf",
+      "sha256": "6455e176ec494303d64d2df941508ae30c8ac1b623958a4f36eaeb77d49a2b13",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3d3e102f806c7ccf",
+      "path": "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
+      "sha256": "8d744d712781a4756296d0dc5b3f091a73d64d957c6a822ab1be84990098dc23",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-06ba6461b3eb1e56",
       "path": "tdf-hq-ui/src/services/googleDrive.ts",
-      "sha256": "a692fff68a9e93de49266764a6e366d5bb45ab9b857a7c40fe1effe8a9c1b602",
+      "sha256": "ed44e11b16626de36b079d14cfdc446412576a8d83a983d251e8965296cc1d76",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11072,7 +11894,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "31ad1065781ceee0927d9809041e5fe374a54210feeacca396c5c22ad13d42ca",
+      "sha256": "51eae9d230aa7381f0e5e7d9e767b6f8fe668d31d253a8ba60ea8579d7626048",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11148,15 +11970,39 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1dcd8996debce99a",
+      "path": "tdf-hq-ui/src/session/recoverableDraft.test.ts",
+      "sha256": "74a2130d7ab7fa6b45cbcca45d8080e7dfdcb7e8379c5fd93372f8e45c99fadd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b1b44d308f8404bf",
+      "path": "tdf-hq-ui/src/session/recoverableDraft.ts",
+      "sha256": "9f3c8f793e1138da42b1d71d087a6c0f6efe34af3070f76ca2fbe0ff9436c549",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0f84d06d90d8be5b",
       "path": "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
-      "sha256": "12932fe83acc0e61f601f14444a8744909d75e9e9ae2c115f86b832e1c2bb41f",
+      "sha256": "299dfe92522c7ef2fc3b60eca92270cf5ff7987cf0b86467fccb57b2e42dd5d0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bf6c079a13281e3a",
+      "path": "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
+      "sha256": "97a7079c197f0e17bd1a8385c1819a6c5be5814975d4230301b4804761e9c3ca",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b12e0a33377148e8",
+      "path": "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
+      "sha256": "dc6ef35ba25ea48639b1f533540a6aa7592b7a0df3e0efde8bc3b63ce785af22",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-555b680c01a119b6",
       "path": "tdf-hq-ui/src/session/useSessionOwner.ts",
-      "sha256": "5259fc1b40271bb60e2c5e680e8c60bdb51d1d10f198005ffae01d8dab3af67d",
+      "sha256": "5d95885c49fe3980687031db118bfe03714cb317d5bb749c791f322abe44ef5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11222,19 +12068,19 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "b083bf356f9f680ac942fc93cada1458bb5f950327553b59de0b8bd5fefd82e3",
+      "sha256": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "febf0b3f20ca2b38ac86b84d17d8144292a87d6aefc5218de2b28e3461c07e6b",
+      "sha256": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-82c93d101af35fb3",
       "path": "tdf-hq-ui/src/utils/artistFollowIntent.ts",
-      "sha256": "8077586ebdf5e74094bff753c78297378baa3147a42414b6bb985bf3410a89d2",
+      "sha256": "8df56d639e7ff6dcace64d8bcf1fc3169a054781c9d69aefa83fea45eaf8fb77",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11348,13 +12194,13 @@
     {
       "id": "SURFACE-76b45ed05166b0e0",
       "path": "tdf-hq-ui/src/utils/dateTime.test.ts",
-      "sha256": "ac0f2ee9be5e1731e471ac1d3b6596fc45d3b25cc79a610439f23a54483ae453",
+      "sha256": "5e479a281af5c04429783198977cc0592c08639d49d023b5227c6e13e6c6c855",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9267af1df09b8b64",
       "path": "tdf-hq-ui/src/utils/dateTime.ts",
-      "sha256": "d2a1970f1fda3c180bfd429a3102e0f0caa0f158ba5daab4a9f34439764aaa57",
+      "sha256": "a75595587356dd2dd3561264d04ea323aa2589f1e739645b103b5799a6ce9677",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11454,6 +12300,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c91fb176c6133265",
+      "path": "tdf-hq-ui/src/utils/eventTicketPricing.test.ts",
+      "sha256": "47839fafa6fba96ca8fc8f0692d751f1f2f92a3e20fb86d5d32b11633582478f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6b2a9195c4ff9137",
+      "path": "tdf-hq-ui/src/utils/eventTicketPricing.ts",
+      "sha256": "4ead75fcba5dc203faa93b300fd0db26f3ea7e28d3bf6772e7f1891dbf8e4abf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a666759a8b6c1e76",
+      "path": "tdf-hq-ui/src/utils/externalTicketing.test.ts",
+      "sha256": "58c361d381fda49a14c4335aecbf3e10f353e53fce94ac615d26bf9d277ca729",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7fcb560ad8ca2dcb",
+      "path": "tdf-hq-ui/src/utils/externalTicketing.ts",
+      "sha256": "1224ccc2f203440828c55c99dc50b60f02b3a36747c2fa63826c73fde51ed8d5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4b024b3ba00e8b9b",
       "path": "tdf-hq-ui/src/utils/formatPhone.ts",
       "sha256": "5c420c8770bc316a54a2b9a878b2af6ba7ccf0f5382406b80a37cd2b247c23ae",
@@ -11493,6 +12363,18 @@
       "id": "SURFACE-516f5dcef1b03f0a",
       "path": "tdf-hq-ui/src/utils/ids.ts",
       "sha256": "3a8eba76d9745d714b0f80c48268f8ea23837657983d93a2e40488424b4de9e3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-65a6b6a33e93f554",
+      "path": "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+      "sha256": "1bc37ad8648797a57854e8c8e7d1ddb65e071c483b28aead5b2571545b24dcd2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4e949bac98e59738",
+      "path": "tdf-hq-ui/src/utils/inAppBrowser.ts",
+      "sha256": "e8cf3a4277519ec11f07f2533ff28a113595a2156406bd95d08162edbc793924",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11552,13 +12434,13 @@
     {
       "id": "SURFACE-f57ff394c49a306f",
       "path": "tdf-hq-ui/src/utils/loginRouting.test.ts",
-      "sha256": "56165bbe1cc06b179403af52cdd1ca6a1ffca655d6394f68dc5d4d6fbb9a9ea9",
+      "sha256": "8fabb75d7f986e9d7bf8f24b2a6a71f786e08fcae9718b8d22ede42eaf89f617",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2c5199a5b87938cc",
       "path": "tdf-hq-ui/src/utils/loginRouting.ts",
-      "sha256": "8b3a0d840447645830d58ac497690cc6a6289ebfe37acb4fd640e35956d5d38a",
+      "sha256": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11684,13 +12566,13 @@
     {
       "id": "SURFACE-a415ee89925f5e2f",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
-      "sha256": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
+      "sha256": "e588d8dc3d90d1c59f88b833ccce51a34c129c42153f3bb560017432000109df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ee5ba63310165c5c",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
-      "sha256": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
+      "sha256": "e106acc20d3913b5612806e9ebbfd83fcf1944dea00e1d696357184e84fef647",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11799,6 +12681,30 @@
       "id": "SURFACE-6caada1aa8461942",
       "path": "tdf-hq-ui/src/utils/vcard.ts",
       "sha256": "04eea6981d1563e975359f94e9dce5c7556254cf03c98f36284d66fd3fd04c05",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-33e8ab09eb16f28c",
+      "path": "tdf-hq-ui/src/utils/videoSource.test.ts",
+      "sha256": "25de3e8d4d4c7ccbc796883f6e841a57905884f51612ec926e4166cbf673bdea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e52d4966809bc086",
+      "path": "tdf-hq-ui/src/utils/videoSource.ts",
+      "sha256": "93c12314e6f0009ea067553ab7b96b6c97d0c19e3b87a75ff3cfac1668d4cebc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c120593856f9bc7a",
+      "path": "tdf-hq-ui/src/utils/videoWatch.test.ts",
+      "sha256": "2a39fa6986883d674162a323039841cd3632b715c789423bd996e1d75c3f6db3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9b31515413260d07",
+      "path": "tdf-hq-ui/src/utils/videoWatch.ts",
+      "sha256": "cdd77bc2ebca7c28f41954b8b43233d60f9bfe563355ed2d2365b328d607632c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11924,7 +12830,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "0930159122e545da4166de525b05449b4b22f5207f0bf645ae90d0bb7eee1e92",
+      "sha256": "599d5043999681fa29685122f17e5383cca4d27a3df7022538dd4a8d5e863b87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11984,7 +12890,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "4b4ff05ff423779aaf634b0e6acc204a210fbd08f678ed1e40610f7ea90a67b2",
+      "sha256": "4ca7920bde8ef05dd5181334f9b0ef1bbb8cff1e591e9bf2d532a989520336cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14586,6 +15492,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-36cd1387d7bbca80",
+      "path": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+      "sha256": "6d79f7b97f10d7ea72f057b3bff3c0a4a89cebc5ec531346d3780078f35c27a6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-485e38bfb3a8d257",
       "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
       "sha256": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694",
@@ -14730,18 +15642,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-6af2fb60590d5f42",
-      "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
-      "sha256": "889d9636c32bd4fdd78eb8e51590954cf150d71db07ec416a80acdddd7b1ea80",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-4e65b4accc811245",
-      "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
-      "sha256": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-2bd4ac88b05a1b49",
       "path": "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
       "sha256": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
@@ -14751,6 +15651,126 @@
       "id": "SURFACE-ebdef71b5b10574e",
       "path": "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
       "sha256": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5e915c9291c4c355",
+      "path": "tdf-hq/sql/2026-11-04_content_storage.sql",
+      "sha256": "dc48d8a2849069de750861f0c23265665fb3af0d6fb21550e82229c3ef29e7e1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c5c88f4c70fa0bec",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_accounting.sql",
+      "sha256": "63541c66b0cbfcad3be42bb3bb18e9d7748e07d876bb093eed0536f8f663c5ee",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dad1ef004364bc36",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_accounting_rollback.sql",
+      "sha256": "c8216053c5216b00cfd8a18028161446b8419e1569a7e867fae1ff5c397b1a95",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9d59f941bcc7c76e",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql",
+      "sha256": "a28a0f06f2496de45400dbe181cd5303381c3e2f9cf78cbc0f4bf035c3efdd4f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ea008ab9ca0703c3",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_delete_capacity_rollback.sql",
+      "sha256": "6ea9f088af10e00d2bbae4fb1784cbc1f7bfaf524bdfa3c4b2a603aa1606e5ac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0ed1498d362d0c94",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_deletion.sql",
+      "sha256": "ca04f854a4b40c2c63b27d0a2b9d942c1aaf5156ab34c811170500574c4f066b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f0b1978b0819358b",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_deletion_rollback.sql",
+      "sha256": "df3cc43dbaf01e853ad5df6e638118986c61792f27d999f59a3e55044f08a61a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4279f6889fd07270",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_drive.sql",
+      "sha256": "e273ee78ef3d5294a3b20566fc917a9565e8f9e61885f58fe3af517134e8c4a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-742421cb844f2620",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_drive_rollback.sql",
+      "sha256": "63a91c6b2010c8ae8fafc02de698dfcb856d5d518e37d8fc32cb465b1ba9f854",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5b3a7610add1270d",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_rollback.sql",
+      "sha256": "61894c9b16bc846c57125e124e332796479269c336eb9a4e87eb91c058706c63",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6c176f8ee82653bf",
+      "path": "tdf-hq/sql/2026-11-04_contract_store.sql",
+      "sha256": "bb78553729d9008d6773689f68f4cd6c5d179d05a0c77285313d50cdcf9bd895",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1deb1759f1e1045f",
+      "path": "tdf-hq/sql/2026-11-04_contract_store_rollback.sql",
+      "sha256": "f2d7c4f61e2083e50fe5b25dd7a631950c1f8fc5303c0e5a96e653f2cbd62b65",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dd7c870605dfa5cd",
+      "path": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+      "sha256": "658b6ba4a3f537968aa0302c6272d06fa30c617edda131dbcc8d5b918bcbef2d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-756ba92161ce68f1",
+      "path": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending_rollback.sql",
+      "sha256": "2985ea1ff62fb0225f48149544c863ecc88b8821cb1518eacf950dcdb6e12405",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7a6c5f66e689fe76",
+      "path": "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
+      "sha256": "097e5dbae5df96fa33c94071c5f734b84963a27187e906baf294c366f427f3f7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3c2852d7fc6bf0e3",
+      "path": "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql",
+      "sha256": "25e481954ec23478d7636d28754d5578f397e02094487279bedb527ba790e251",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d42e26733ec08dae",
+      "path": "tdf-hq/sql/2026-11-04_session_invoice_issue.sql",
+      "sha256": "edd0e25051291561a1fbe2cfaf37c7956c10475814fc72570a8af31af5729298",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b0e6b6cf85f9cc7b",
+      "path": "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql",
+      "sha256": "e2ae1da6c06c7d68b8a17a1b20ebf1903be36adc0c64447d8eb319dd430f3000",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6c31eed2462274ac",
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+      "sha256": "02185d6050fe65042d41f79e6b3ab26ea6c71fe3b8d47b298698cbf736d25407",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-90d083a2052615df",
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+      "sha256": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14780,13 +15800,13 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "21206a27a841d24759917b0ad59d402971bcf45f15ef7e3537804b8e92f191f2",
+      "sha256": "c5a3b1529b86339f16f10d2697107df71d932a93564021a3fc4c7ba37ecf8016",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dfe3755c60d368f8",
       "path": "tdf-hq/src/TDF/API/Admin.hs",
-      "sha256": "6bdbea3f4b2cccc20247f1e4d9a77dcefe0545b4158ff546312ffe7d59db825e",
+      "sha256": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14820,6 +15840,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-77e6dc58f58192d7",
+      "path": "tdf-hq/src/TDF/API/ContentStorage.hs",
+      "sha256": "252b724cba9b5a963757472792a4073f8562e7e1819b6e6840ca270dc5bf9f9b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-683194622d5a1036",
       "path": "tdf-hq/src/TDF/API/DDEX.hs",
       "sha256": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -14834,7 +15860,7 @@
     {
       "id": "SURFACE-bb66af5ab40dbff1",
       "path": "tdf-hq/src/TDF/API/Drive.hs",
-      "sha256": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
+      "sha256": "d8ff95acf253404a8f83d28885b4107b89c60a9ee37da3364737bab07c15ceea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15056,7 +16082,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
+      "sha256": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15080,7 +16106,7 @@
     {
       "id": "SURFACE-97b434e9aaa0711b",
       "path": "tdf-hq/src/TDF/Artists/Enrichment.hs",
-      "sha256": "8784bd92474de4bb98246c7b13ba5db6af85b6be8718616debfa1c3cb50e4f45",
+      "sha256": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15092,7 +16118,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "d53995a2b132bf8c71389cb755fabc3c63d18e65059f0d1725344184a72279b7",
+      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15164,13 +16190,13 @@
     {
       "id": "SURFACE-f423f120377b48f6",
       "path": "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
-      "sha256": "8a50636ce52c2003f812737b424370b5a1c8c9170b0e4260af6b11fc5046e5ce",
+      "sha256": "023febe6a6fc4a1dd49f9d463a6f673572e80b08901df77f72b67f020cc60fdb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-29114654bb1575ce",
       "path": "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
-      "sha256": "904a12195f63b47f44286560f466e6686c97e44333f864ba2434a77003472382",
+      "sha256": "2963db1597da29ad46498dd329df42ed521f314ff091f03113d6cd6acb36e7af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15183,6 +16209,12 @@
       "id": "SURFACE-ee01356d907d3fc2",
       "path": "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
       "sha256": "89f7c69cf5cf176c890e0cd09f1a0e561ab0fe3e45e9f14fc738b9479a5df917",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7c1a166cb87f734e",
+      "path": "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+      "sha256": "a708439f9fc84fe89ce099f9bbc3078c17afaa274767e636fcaddc7a9bd2e564",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15200,19 +16232,13 @@
     {
       "id": "SURFACE-52b27b4edfde0af0",
       "path": "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
-      "sha256": "0a025b50986c4b714c80dc405f967eb2e1dbcb26db80058d9b55da134fc966ee",
+      "sha256": "401427a5cd152d90cf83ae378c70b09e7ff1dad7dd9902212295df32eda1a3e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-764d135c920e69a2",
       "path": "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
       "sha256": "54da88fdabb8ad1160224d3b930dfa1d44cd656cf491e74cfb0dba35c353eef4",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-7c2de260230baa84",
-      "path": "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
-      "sha256": "eec807766b70146349a81cbb529017ac26692157e0cdbc61016cc302c0739881",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15344,13 +16370,13 @@
     {
       "id": "SURFACE-dc866f2ee69c9dff",
       "path": "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-      "sha256": "92c1c8b67ba216a4a5a3f563260f4a83beef6628cfdbbbcb9711b9f6b8bf55ec",
+      "sha256": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1ed705f31fa3ad8e",
       "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
+      "sha256": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15366,9 +16392,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-224b93ff1ac2bb0b",
+      "path": "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs",
+      "sha256": "f0ddbaf6649a0830f2743a520e5e7cd00e989a049e7d85eb65b08dd3fb3892ac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
       "sha256": "18085ab24c01e2fdf4320d904a4e7f4d6c8eb32e51d76c95c5b1cd8074ba5fd2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2b23cc9a08067b9e",
+      "path": "tdf-hq/src/TDF/ContentStorage.hs",
+      "sha256": "4c39f039f1a81aa2b5d42db562063edfc569e651ad4bdb0afec5796aaa906634",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15380,7 +16418,7 @@
     {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
-      "sha256": "000e0da46d1d410af6798ed5ef07a13b69191128225587399990097bdac7638d",
+      "sha256": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15524,7 +16562,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
+      "sha256": "90b7f5a64a919d401338ab13c0763fa383095edd67531888ce97075ae888844b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15572,7 +16610,7 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
+      "sha256": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15684,6 +16722,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f85df2cd606d32e8",
+      "path": "tdf-hq/src/TDF/Invoice/SessionIssue.hs",
+      "sha256": "a9abe069d6ea72ca291c7d7fd28ab73c060497be4a349182b50227b28b5f842a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-dd73bca7a3d77f4e",
       "path": "tdf-hq/src/TDF/Leads/Model.hs",
       "sha256": "ea5f992febe5cbd9bcfa85edabfae1c3c88443764f653dd68578cb01aab2ebcc",
@@ -15722,13 +16766,19 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "e4a48fe6160fa869ba8d5afecd5310e1c2e6124ecc59f4bebfe436e7e8f538f8",
+      "sha256": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0ed2ffb65d91ae5d",
       "path": "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
       "sha256": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a1ed5e92fc4d243e",
+      "path": "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+      "sha256": "69301329d82629dd98495bc6d921a7c63cc10a6a5785cb49e705d0aa8ffa555d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15836,13 +16886,7 @@
     {
       "id": "SURFACE-21573408c23f618c",
       "path": "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
-      "sha256": "6ec0f3d0ef1406872f0bc8c2f23c8b683f0f45274e07539a4e14158a7bca3345",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-20cea45d38504230",
-      "path": "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
-      "sha256": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
+      "sha256": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15860,7 +16904,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "5f8b478f482f4773abe4ee5d62ee5f0037384b5b20b22e3b85404c35645c248c",
+      "sha256": "43e2d3af37007f738bac8c8a8af8f5333e809c7d70d05d943a870a2c377c88be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15878,7 +16922,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
+      "sha256": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15896,13 +16940,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "c72ca5b42dd22cb1e88233888113f35620f4bbc5b48017a35222eccb713e14d9",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ad9b4538d376377d",
-      "path": "tdf-hq/src/TDF/Server/DomoRefunds.hs",
-      "sha256": "e52fa4d635b8917a322f5a83bfa7f9ced168c834d48c34abc653676cd1bfe0c7",
+      "sha256": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15914,7 +16952,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "bfb6201b750b256d8247ef84551ff44076137fc97cff54d59b22b3a575c083ea",
+      "sha256": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15950,7 +16988,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "8d8fe192caa40d561ba1b25016e3ad7555e1bff84374bb5b32ab88b9a548257e",
+      "sha256": "4051230476f98bb4be15d001553c7d0241e5978b3568140e8b5a546bcd98ed44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15968,7 +17006,7 @@
     {
       "id": "SURFACE-576775b1139a1557",
       "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-      "sha256": "6a159b7cfc3e9ba3f21c74de7191d7cfa6b4fcea2242334bfb055296575f9489",
+      "sha256": "f0e50cb9103b6da489980440202a50e7c4431bc19f0fdce666be6f738bb763ef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16004,7 +17042,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "21d925c8a2f7e23a0899c2bca93cce92cdeaf23d94e14598cb0ecd499cd9dd45",
+      "sha256": "512078d56c654f9fcacf1e31884bdb270eef6501323c10bbf0c13159022f1ba0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16016,7 +17054,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "00059dc5f98811642658e3ac63a94de4d2105e217616314b10bdbbf06eefc821",
+      "sha256": "3d19610d2adc4a4d435872fd7594359febaffd7c20238d966b290d67a8b93b95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16052,7 +17090,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "397c41c1f616c2062196817fd1e0657c6a122e49c4b35f315b759a4533c159a2",
+      "sha256": "a5dcf135b5ebd9682a0029979bbe5468e5845e2fac662505a87a17db02a80a8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16088,7 +17126,7 @@
     {
       "id": "SURFACE-b0f11c67be4fa672",
       "path": "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
-      "sha256": "281784ebbcd00541f402b67b1cd284d79693c935c1f4d7cab25b31bf862b436f",
+      "sha256": "e663522c1efc4eae60d077274478c68b14e6edf779c7fe083692339323fb4355",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16190,7 +17228,7 @@
     {
       "id": "SURFACE-e7cca2eec6466e79",
       "path": "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
-      "sha256": "c3f8f3e427eee3af103b53563c2dfbddbc25869c859d1d92eff7471611a24478",
+      "sha256": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16256,7 +17294,7 @@
     {
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
-      "sha256": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
+      "sha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16320,6 +17358,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-53869c6b64312cae",
+      "path": "tdf-hq/src/TDF/VideoCampaigns.hs",
+      "sha256": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5460b30af99d955f",
       "path": "tdf-hq/src/TDF/WhatsApp/Client.hs",
       "sha256": "3d4f77df3147460fc741b21537b7cd74762fd672d15513089649e85075f55aff",
@@ -16358,7 +17402,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0fca404814dcffc2412c0c089958f836ae7af4868c0c8af3d1a94ca10776ef2b",
+      "sha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16389,6 +17433,12 @@
       "id": "SURFACE-27858c425701c951",
       "path": "tdf-hq/test/MusicCorsProbeMain.hs",
       "sha256": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d95951135775b873",
+      "path": "tdf-hq/test/MusicCredentialCacheMain.hs",
+      "sha256": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16430,19 +17480,19 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "9723e655346ffa752904bdd308b1b17de9b0f3204f9412ec9ae978677e46cb29",
+      "sha256": "80be4edb2ff1c92f6bbd28252df2b075531c13784032284dd106e9a069268f14",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
+      "sha256": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-112ccf8551193c94",
       "path": "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-      "sha256": "c57529be84bc8967f4478a7d39305227a48cf03a7ac1db20cc246f7997c459fa",
+      "sha256": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16484,19 +17534,25 @@
     {
       "id": "SURFACE-4ef1e9594dedfc53",
       "path": "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
-      "sha256": "cfb10f13b75d4955f378f3e31c9e022bbc84b1b08d408ab4f5b8cf5c8407fc46",
+      "sha256": "ad485e08cc1c0433c8cfeb343d07feff37287d4fc63143126e827580776728c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ca89e954244ca188",
       "path": "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
-      "sha256": "66516405eb2b4213b72be45b0b7035b8c29fe05df3f898c48e9f4b06c1732b4c",
+      "sha256": "821455528e37e95f4baab3ec32621766ce289b8eefd5033186d03571c0cd875f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-841860cc12b9ab42",
       "path": "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "sha256": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5d41f627dd70058b",
+      "path": "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
+      "sha256": "24df855e975e3512b11056f3513864c31a3451ad98c0a615b89d5a2c5222a473",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16508,7 +17564,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "818ccc61e212c8dd7d4fb9637874daaefea4c18dae70d82941d8bc8d87ce5acd",
+      "sha256": "a4f7f070b8f1d569415a4e82b3a9c2671ada7dcd411e2b9ce9ddd9af9e700e8b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16538,7 +17594,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "e1b2c728091cab528d8d247fca3b14e947f972612f5e3ba9cb05770e26983a93",
+      "sha256": "7e6a9ed3c904d29d54e0b38c9aba972b1086e45edc369101c29f65cfd5e9d989",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16557,6 +17613,12 @@
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
       "sha256": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-83dc1bd4fe1e5da0",
+      "path": "tdf-hq/test/TDF/Contracts/StoreSpec.hs",
+      "sha256": "302ab1c3c85ff1bfa9b3b514ed4373d13197df7bc1f12b78283b3a24cbf23579",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16616,7 +17678,7 @@
     {
       "id": "SURFACE-93ad4526d09f9815",
       "path": "tdf-hq/test/TDF/DriveReplaySpec.hs",
-      "sha256": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
+      "sha256": "006a2eec086a2d350f9da2e7806eab0fd8846f195b84402557f6d71528e41ecb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16680,6 +17742,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-aa67c20f02cbb260",
+      "path": "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
+      "sha256": "6ef7262c00b740b6fa54ba22425d349b1f2d83d2736fdeebf85f9d3ef2113dc2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1bf88093e2bf7bcc",
       "path": "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
       "sha256": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
@@ -16718,7 +17786,13 @@
     {
       "id": "SURFACE-6bdd1107c7329e40",
       "path": "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
-      "sha256": "238b986d66985827a5c2532e8ae6d83a863c34d11a05933ac6dd01903e6d7b87",
+      "sha256": "6f440b98f7d532b31c37c1a7e22af4cf11affd21c38ce845fc49b86f50901389",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d7d438e63b2b6932",
+      "path": "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+      "sha256": "4385c3797470d22b173b2552916a06fe60ec7d04afc20d470b2792648e977385",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16826,7 +17900,7 @@
     {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
-      "sha256": "5957cc34b09649f00e1d8973936621d7342969c9e4797bc739bd8d4cc1847b8f",
+      "sha256": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16856,7 +17930,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "e12c6566816f79f93bc0a589383891837156c9e46ff910303530cd30a3fb1701",
+      "sha256": "52ec1c55e972f115f2a59b3d53ac6e16fa24934b729eddd72da0a478bfbdf60c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16886,7 +17960,7 @@
     {
       "id": "SURFACE-84995ad64af241c6",
       "path": "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs",
-      "sha256": "3bb7fed5db5bb1da6b772bbaf5ee3da77bf03cb33c4ab9348f5826dca0072575",
+      "sha256": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16928,7 +18002,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "772dbe703b1b80ffa120ab9a5a4cf6cb97f808eb0e1a837ee710d6cb48dfd4e5",
+      "sha256": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16947,6 +18021,12 @@
       "id": "SURFACE-15bc343962df8561",
       "path": "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "sha256": "f74652162b14f0fe4516da6cb4aa45806d75cd9eae289935b6fcd37f35f713bb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7881cee644a10784",
+      "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
+      "sha256": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17498,7 +18578,7 @@
     {
       "id": "SURFACE-fff0fc437764ddd9",
       "path": "tdf-hq/test/sql/identity_reconciliation.sql",
-      "sha256": "828c7f39954946095a3a6ab2aee2337bd41c36ed8b6bd2319c1295f26000b224",
+      "sha256": "03917f0481ccaeb39cbd5338efe34361e231e20b8ce1ad1317a0fb21a933342c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18818,7 +19898,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "374315e841ab82b9714c6f399caa8c871d566271581eeecba6dad057e27b2272",
+      "sha256": "157a680d2edbd9895297be8adf4b70bedad1ae723a53482594970bb41efc84bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19166,7 +20246,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "f9bd8a81e1e95afb53af970c6e3b165b1777ef709183528cac7126c3f08f72fe",
+      "sha256": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20388,7 +21468,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "ca9048fc7127144f831667d69d4ba1184698f8205ba9bd0f8eed96179347ac40",
+      "sha256": "8da89361a61a7404f93547ddf4937c5ee0f0813eab7d807ac068e0119ebd3b6e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20464,8 +21544,22 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/artists/platform-videos.md",
+      "sha256": "963bdbf2e2d8a8b3a732a00b76d7fdf509106cf378ad96617584fc57cc968b75",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/artists/self-service.md",
       "sha256": "7057b32d70354e16b1df03df32eba25c46ff70f2c68e28d473d6f8502032f2fe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/artists/video-campaigns.md",
+      "sha256": "5866bd513e11117068b894b4ec804c9a29757a859c3c2ec5ee396ba0321b44c8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20480,6 +21574,13 @@
     {
       "path": "docs/campaign-automation.md",
       "sha256": "ce072923638a314b0820af65f3cf1e4c48fd8ac9b1137cdba9989c4de63d1ef5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/campaign-platform/operations.md",
+      "sha256": "66b5184c71903dd6d2e2688d826ab83fb2b16afd6784340b07e24b69d22777d9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20580,6 +21681,13 @@
       "sha256": "00fef0a2badae8ec2045ad3738bbb027672b236f01e5c8f217adef7b3b81fd52",
       "authority": "inferred",
       "authorityBasis": "Status: candidate implementation and disposable PostgreSQL 17 rehearsal complete; production has",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/content-storage/rollout.md",
+      "sha256": "bc5456f180ee4400ca1c2c2544f542745cd6ddde2fb8edab07f782faef26585a",
+      "authority": "inferred",
+      "authorityBasis": "Status: implementation candidate; production activation blocked by the open",
       "kind": "requirement-candidate"
     },
     {
@@ -21837,7 +22945,7 @@
     },
     {
       "path": "docs/music-directory/formal-model.yaml",
-      "sha256": "1ab48c140b5c722d8e50a5b26d564b107e9eacb5a69d9db1914055b6286cfde3",
+      "sha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21928,7 +23036,7 @@
     },
     {
       "path": "docs/music-releases/authorized-source-projection.md",
-      "sha256": "5e36cc49df752de95f6c58360dd5fb48bcb9beb89f5e0bc5170e39b405ce8f64",
+      "sha256": "1a87a10c9b39653e0dca044be6a325d2c84b85ff25017c35e20ebea663b903a7",
       "authority": "inferred",
       "authorityBasis": "Status: source controls tested; exact-candidate compiled CI and release evidence pending.",
       "kind": "requirement-candidate"
@@ -21964,6 +23072,13 @@
     {
       "path": "docs/music-releases/correction-concurrency.md",
       "sha256": "76d2b272a632d6c0632c7a571c2e3a84fbccb2eb0eb3931fb65adb6d9ad986fc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/credential-cache-control.md",
+      "sha256": "843cceb2b3aa73c494b0b94cf501b56baab32327b9f73bb6958ad7ef140be12a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22145,7 +23260,7 @@
     },
     {
       "path": "docs/music-releases/track-search-delivery-2026-10-26.md",
-      "sha256": "6487399e88d7a5001fca907e10cb36578eafd555544dbe5eb057ea6cd381a0c1",
+      "sha256": "111dc05e5e7a75ee95ab9535e544f5fb6c996a5af44b9d8b2945c951cfde775a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22321,13 +23436,6 @@
     {
       "path": "docs/payments/consolidation-2026-10-15.md",
       "sha256": "916e3353e262c64f53b869ccb3a3c6ca3dcaa628fe0c7dae3013723ccf859896",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "docs/payments/domo-refunds-2026-11-02.md",
-      "sha256": "44af7b9311e3b7ed57b34cf5e059801a9ecd5d7a09d862ae0078793f55595b6d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23335,10 +24443,38 @@
     },
     {
       "path": "formal/auth/README.md",
-      "sha256": "1743478fb001d54a2bb63d6c9e5c1bede4de9137683c2c8456d2576b4591ad8c",
+      "sha256": "c371c5f49065c86d2d87266885308ab09b994d3ae935faebfbc53ba671249a48",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/auth/SessionExpiry.cfg",
+      "sha256": "b8936d2defa9518abacb8c798c3f433e5da351e4fe60d41df5544a53ada2f463",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/auth/SessionExpiry.tla",
+      "sha256": "bc8137a81818acbb2053db4492e7d12f1d07e776778011132b456d2497f94be5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/auth/SessionExpiryNotFailClosed.cfg",
+      "sha256": "0854f54ef09c0a026fb9c30035e1aaecdc7d099dd911f5aa5d9647f558029643",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/auth/SessionExpiryTtlUnchecked.cfg",
+      "sha256": "6af7e21df343586718a513499c973a2db71548496407e17f25506c5044dd7102",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessCodeValidation.cfg",
@@ -27590,6 +28726,34 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/payments/ContractSend.cfg",
+      "sha256": "d342b91cf28fa7d84f99297328eeda876d0aefdbc339e6a5927b90d13af6bda5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/payments/ContractSend.tla",
+      "sha256": "dfbadd379f4483a913275990701ad966c7f2a2bd360ff4f50aef9cdaa9bf8b7f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/payments/ContractSendRecordAfter.cfg",
+      "sha256": "6347e73e94283b295279c05a6844960aea2bae6dae038653d42481e30017c0db",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/payments/ContractSendUnconfigured.cfg",
+      "sha256": "9438778049d047d69bfc43d1ef8f88e9b13185a76beefaaaedf6d762e8acfb7b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/payments/ProviderInbox.cfg",
       "sha256": "c338fd5ea2fc6cb09f6b3c84757a49607180238a24816a60abd8ed81a688b716",
       "authority": "inferred",
@@ -27612,10 +28776,31 @@
     },
     {
       "path": "formal/payments/README.md",
-      "sha256": "b94715c52ea54336f63575430736ed7a7f16d09d785cc61717c1301be8e9320c",
+      "sha256": "7c61d0016ed8bcb4d8e0096459ef238b3177c2557ed5a2f7f56fcdc50ef3617f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/payments/SessionInvoiceIssue.cfg",
+      "sha256": "b9da745eb534c1954d4f92a055f7ad3125aa2a3c31b1e681ad13c21d9d2e60e5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/payments/SessionInvoiceIssue.tla",
+      "sha256": "71248054a117343d326429b386b748652a404610858c25a45b6beaaa05255132",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/payments/SessionInvoiceIssueNoLock.cfg",
+      "sha256": "659966a61804b11cf79f0322288936292c15bd4c41ebffa23212296492f31a2f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
     },
     {
       "path": "formal/payments/StripeIntentOutcome.cfg",
@@ -28060,7 +29245,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "848d1a2fc80c87d45c8af70db82d1cc31abf33e4447dee9fd4638a651ba6e503",
+      "sha256": "daede6c26a448b034729db6a263acc506a4788f3c25e1c1a1f681a5217455e00",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -28088,14 +29273,14 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/auth-predicates.md",
-      "sha256": "1870e7fcd2ec932ea7568c95b2715a5d2ccbc18e28f5a82af840c9a90a9d29df",
+      "sha256": "49ea19c9ada5e64b7ffbab7b8477d8ed65b46aabb6d39fd0aab97cb8cdc4d6f6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28157,6 +29342,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/campaign-accessibility-evidence.md",
+      "sha256": "db5a9d3dc2ff37687b8064a4ed0b1a1ca1441dd6eb8d350516430a3538e969ff",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/campaign-server.md",
+      "sha256": "2000c808032593c908e8c27e0005e03733c0eb3650f6f5bf8e263f538b7d6738",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/catalog-reorder.md",
       "sha256": "580ced6527529065e1cae981e56fcdf0943d2548c3c0a08074879d9afa188dad",
       "authority": "inferred",
@@ -28179,7 +29378,7 @@
     },
     {
       "path": "formal/system/ci-selected-job-admission.md",
-      "sha256": "af0eae67852ec12417d34a8d70e41ae4598af4d331954ab373ef4a46642f5a8b",
+      "sha256": "0a6d7ec9e126c7eed7dd6efe4098ab2ced33d6be1f374a2afda8ca7941bb9c81",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28200,7 +29399,14 @@
     },
     {
       "path": "formal/system/container-cleanup-evidence.md",
-      "sha256": "06459f62da7706bcb864b47748f04995b393a4332193b81fcfdba94afc634e11",
+      "sha256": "181744cbbb5ca91a21ed3b209d883e802906db9a0a4b8149d133127c98be9e0e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/content-storage.md",
+      "sha256": "d5afefe6db26b6bc497bb48bbf73e7c10157214f730a9544a4c6b631d26a53f7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28208,6 +29414,13 @@
     {
       "path": "formal/system/cors-boundary.md",
       "sha256": "d426b708f015c87949a58f254dbbad3dbdc39aea26e92a2131e5808123a9c019",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/datafast-merchant-metadata.md",
+      "sha256": "fba22e8741f2d272a0c806cd7ec60b3859021d09035e47384a22ce7ce0f8ed73",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28299,6 +29512,13 @@
     {
       "path": "formal/system/event-organizer-assignment.md",
       "sha256": "71f6f3da069ad720ab63d42217a987e35857a90e294aeb107c4030e926d01fcd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/event-planning-ux.md",
+      "sha256": "34e9daf04d23eb1050aeeacac807a2737f4f62c986e7be23594a4b2ab4ebba9f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28416,6 +29636,27 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-refund-history.md",
+      "sha256": "9957d1dc5550ae031d91978e8ef395f48f1dee027a8dbcefb61f63b934819722",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-refund-inventory.md",
+      "sha256": "4d4cac202a7dcf05bf7c84f9d1c07640d59285bbf9dcefeda4c624da70f4131b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-refund-request-creation.md",
+      "sha256": "64d2baa61de0b56918d4ff9eda7d61f542831b33dc295014ddb0911dcd9ba801",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-release-playback.md",
       "sha256": "3a98924b03c94913d8aa90f67a4bace35034dff00230924a87ad14cbf416f792",
       "authority": "inferred",
@@ -28423,8 +29664,57 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-stripe-refund-completion.md",
+      "sha256": "28fa11ac539b9ca33fa82c6083f4944d0e7b6df9282a8d23252712b6fe2d0fed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-stripe-refund.md",
-      "sha256": "b446020753cb696c990bfb051fb280e181d8f4ad0e09d52d4498f883c29d376c",
+      "sha256": "dbdec24fc40b1d16d50eff0e4da5cc962aa6a3151f2d6bfae4274692f55d616b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-eligibility.md",
+      "sha256": "6e8b8a85a3567cd7a55401ffe39a58f6cbd44c5302b8f65e0409c3724063033c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-final-amount.md",
+      "sha256": "8557565e0d0569ffdacd366aa7e01a5550c9f165c4ff799e2a3ac734a6a5055d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-inventory.md",
+      "sha256": "0eff6e9390028e946b58b2adf53950dea3eacde38e623097f4757bc303b8d244",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-pricing-snapshot.md",
+      "sha256": "0628da96785aaecbad74314e0f531baa54ff9191911ea6144727066c1e6e6092",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-promo-limit.md",
+      "sha256": "6d582deba26d8b346e73532712219d4b4f92e528488869e348b67ff3cf3128cf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-ticket-promo-snapshot.md",
+      "sha256": "678b95ce33ec5e279320fc6ccec500f35f16bff877f336527be64aac87eee9f3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28494,7 +29784,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "f3310c0937814a94d95e9f879a7b3402e6a055f13d56d6b5d65ed03b9d2983ee",
+      "sha256": "d5997cfed6cae6fd93e2961fd9a3ed08476c58f83f1601f7bced5cebf95b6f99",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28523,6 +29813,13 @@
     {
       "path": "formal/system/music-catalog-discovery.md",
       "sha256": "89b69792aecab79c7d376b5b1e26deac0d64388543c724369096f7cc87970d0f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-credential-cache.md",
+      "sha256": "09fa05398500cbc3406312104139a6252d66852a61c29573baf425872c290c0f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28571,7 +29868,7 @@
     },
     {
       "path": "formal/system/music-source-projection.md",
-      "sha256": "7dc84ab24d3b9ac9741d1fe66fa3050100726f00695240fb58c2e97b29adb25f",
+      "sha256": "e4f9b3d7783a3df8ab2a0068d080a79f0dc798ac71d9e6bc283e9228c697b805",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28600,6 +29897,20 @@
     {
       "path": "formal/system/music-worker-completion-observation.md",
       "sha256": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-worker-heartbeat-shutdown.md",
+      "sha256": "94e3d66490bc334092ae4ae8160ae688be56b9128621c20dce1f0dc393022a28",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/native-resolver-lock.md",
+      "sha256": "925543ae11d162c986df95a23a95835d2644ce3ff02e78cf721b62d3db241c89",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28697,7 +30008,7 @@
     },
     {
       "path": "formal/system/player-session.md",
-      "sha256": "1b42df5d646e6c417de273e4b3e3ddd38017a5142becda4fe40dd772e267b2a0",
+      "sha256": "03510ba14584b6be7077f0860aa5b806e28c6686eac3c8b9c09c237802ec09a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28774,7 +30085,7 @@
     },
     {
       "path": "formal/system/recovery-expiry-arithmetic.md",
-      "sha256": "69aefe4d6ce765a0d2e41874f6070f7ca0bedc14cd0a00a0eb1491a88fb53f7e",
+      "sha256": "38450b4c3de997915bb03efe5c79fe025c0072fca129bcf409ee74c8dc43cc08",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28802,7 +30113,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "993813c5b312f002779ed314d885e022bd25d33d507aeee0966a8f96405b6a2e",
+      "sha256": "e6b3865ef19f7182968ff49a080df3a4bffa6385798dadc48d462329758e2d7d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28885,8 +30196,22 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/ticket-reservation-clock.md",
+      "sha256": "8e25fe8724f48710dfa8e31237bc10023123717bb9601859dfcc4e537266be80",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/ui-fixture-boundaries.md",
       "sha256": "9c01ca66e0f5be626b294bd426a91f0d349f53833af30f96a4c6ada5be1cb11d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ui-test-worker-memory.md",
+      "sha256": "f3fcc4520c26967111489988a67ad527973fec4158abe19222ed8e8f1a6bc8bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29180,7 +30505,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "4b4ff05ff423779aaf634b0e6acc204a210fbd08f678ed1e40610f7ea90a67b2",
+      "sha256": "4ca7920bde8ef05dd5181334f9b0ef1bbb8cff1e591e9bf2d532a989520336cc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -34538,7 +35863,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -34569,7 +35894,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -34600,7 +35925,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -34631,7 +35956,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -34662,7 +35987,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -34693,7 +36018,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -34724,7 +36049,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -34755,7 +36080,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -34786,7 +36111,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -34817,7 +36142,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -34848,7 +36173,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -34879,7 +36204,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -34908,7 +36233,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -34937,7 +36262,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -34966,7 +36291,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -34995,7 +36320,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -35024,7 +36349,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -35053,7 +36378,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -35082,7 +36407,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -35111,7 +36436,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -35140,7 +36465,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "8869d04cf7b4ad753a9f09ed8a17cb9f5d863e742d11d8339f1731a8b73edc1e",
+      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",
@@ -36696,6 +38021,66 @@
         "CONSTANTS",
         "  Fence = FALSE",
         "  MaxRevisions = 3",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/auth/SessionExpiry.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  FailClosed = TRUE",
+        "  TtlChecked = TRUE",
+        "  CookieMaxAge = 3",
+        "  Ttl = 2",
+        "  MaxTime = 5",
+        "  TimeDomain = {0, 1, 2, 3, 4, 5}",
+        "  Tokens = {1, 2, 3}",
+        "  Legacy = {1}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/auth/SessionExpiryNotFailClosed.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  FailClosed = FALSE",
+        "  TtlChecked = TRUE",
+        "  CookieMaxAge = 3",
+        "  Ttl = 2",
+        "  MaxTime = 5",
+        "  TimeDomain = {0, 1, 2, 3, 4, 5}",
+        "  Tokens = {1, 2, 3}",
+        "  Legacy = {1}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/auth/SessionExpiryTtlUnchecked.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  FailClosed = TRUE",
+        "  TtlChecked = FALSE",
+        "  CookieMaxAge = 3",
+        "  Ttl = 4",
+        "  MaxTime = 5",
+        "  TimeDomain = {0, 1, 2, 3, 4, 5}",
+        "  Tokens = {1, 2, 3}",
+        "  Legacy = {1}",
         "INIT Init",
         "NEXT Next",
         "INVARIANTS TypeOK Safe",
@@ -44547,6 +45932,51 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/payments/ContractSend.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RecordFirst = TRUE",
+        "  EmailConfigured = TRUE",
+        "  Requests = {1, 2, 3}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/ContractSendRecordAfter.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RecordFirst = FALSE",
+        "  EmailConfigured = TRUE",
+        "  Requests = {1}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/ContractSendUnconfigured.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RecordFirst = TRUE",
+        "  EmailConfigured = FALSE",
+        "  Requests = {1, 2, 3}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/payments/ProviderInbox.cfg",
       "declarations": [
         "CONSTANTS",
@@ -44570,6 +46000,36 @@
         "  Workers = {1, 2}",
         "  MaxAttempts = 8",
         "  MaxClaims = 4",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/SessionInvoiceIssue.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Lock = TRUE",
+        "  Requests = {1, 2, 3}",
+        "  Keys = {1, 2, 3}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/payments/SessionInvoiceIssueNoLock.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Lock = FALSE",
+        "  Requests = {1, 2}",
+        "  Keys = {1, 2}",
         "INIT Init",
         "NEXT Next",
         "INVARIANTS TypeOK Safe",

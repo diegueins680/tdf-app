@@ -184,7 +184,7 @@ describe('DomoQuoteCheckoutPage verified deposit boundary', () => {
         retainedMinor: 0, refundDueMinor: 200704, currency: 'USD', refundStatus, alreadyCancelled: true },
     }));
     await renderTracking(`/domo-del-pululahua/cotizaciones/${quoteId}`);
-    await waitForExpectation(() => expect(container.textContent).toContain('Esta cotización está cancelada'));
+    await waitForExpectation(() => expect(container.textContent).toContain('Esta cotización fue cancelada y la fecha quedó liberada'));
     expect(container.textContent).toContain('Reembolso debido:');
     expect(container.textContent).not.toContain('No está reservada y el depósito no está pagado');
     expect(container.textContent).not.toContain('El servidor verificó el depósito y reservó la fecha');
@@ -226,5 +226,22 @@ describe('DomoQuoteCheckoutPage verified deposit boundary', () => {
     expect(container.textContent).toContain('Retenido según política');
     expect(container.textContent).toContain('Devolución pendiente de confirmación.');
     expect(container.textContent).toContain('Cotización: cancelled');
+  });
+  it('shows the recorded cancellation outcome when a cancelled quote is reopened', async () => {
+    getQuoteMock.mockResolvedValue(quoteFixture({
+      quoteStatus: 'cancelled', paymentStatus: 'paid', fulfillmentStatus: 'cancelled', paymentMethods: [],
+    }));
+    cancelQuoteMock.mockResolvedValue({
+      quoteId, quoteStatus: 'cancelled', canceller: 'customer', policyVersion: 1, cancelledAt: '2030-01-02T10:00:00Z',
+      leadDays: 8, inProgress: false, retainedBasisPoints: 5000, depositCollectedMinor: 200704, balanceCollectedMinor: 0,
+      retainedMinor: 100352, refundDueMinor: 100352, currency: 'USD', refundStatus: 'awaiting_operator', alreadyCancelled: true,
+    });
+    await renderTracking(`/domo-del-pululahua/cotizaciones/${quoteId}`);
+    // The page replays the holder's cancellation (idempotent) to recover the record.
+    await waitForExpectation(() => expect(cancelQuoteMock).toHaveBeenCalledWith(quoteId, 'secure-lookup-token', undefined));
+    await waitForExpectation(() => expect(container.textContent).toContain('Retenido según política'));
+    expect(container.textContent).toContain('Esta cotización fue cancelada y la fecha quedó liberada');
+    expect(container.textContent).not.toContain('No está reservada y el depósito no está pagado');
+    expect(Array.from(container.querySelectorAll('button')).some((button) => button.textContent === 'Cancelar cotización')).toBe(false);
   });
 });

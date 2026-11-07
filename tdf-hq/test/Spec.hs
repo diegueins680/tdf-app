@@ -47,11 +47,13 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
+import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
@@ -137,6 +139,8 @@ import qualified TDF.CorsSpec as CorsSpec
 import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import qualified TDF.ReadinessSpec as ReadinessSpec
 import qualified TDF.Invoice.ReceiptSpec as ReceiptSpec
+import qualified TDF.Invoice.SessionIssueSpec as SessionIssueSpec
+import qualified TDF.Contracts.StoreSpec as ContractStoreSpec
 import TDF.Cors
     ( corsPolicy,
       isAccountDeletionRequestAllowed,
@@ -650,6 +654,7 @@ import qualified TDF.LedgerPostingSpec as LedgerPostingSpec
 import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
+import qualified TDF.MusicCredentialCacheSpec as MusicCredentialCacheSpec
 import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
 import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
 import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
@@ -902,9 +907,12 @@ main = hspec $ do
     FailureBoundarySpec.spec
     ReadinessSpec.spec
     ReceiptSpec.spec
+    SessionIssueSpec.spec
+    ContractStoreSpec.spec
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
+    DatafastConfigSpec.spec
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
@@ -2776,10 +2784,23 @@ main = hspec $ do
                       , ("DATAFAST_BASE_URL", Just "https://eu-test.oppwa.com")
                       , ("DATAFAST_ENV", Just "sandbox")
                       , ("DATAFAST_TEST_MODE", Nothing)
+                      , ("DATAFAST_MID", Just "1234567890")
+                      , ("DATAFAST_TID", Just "PD123456")
+                      , ("DATAFAST_PSERV", Just "12345678")
+                      , ("DATAFAST_USER_DATA2", Just "Synthetic Merchant")
+                      , ("DATAFAST_VERSIONDF", Just "2")
                       ]
                 -- Only local environment parsing and SQLite queries; no provider requests.
                 withEnvOverrides (fixture "merchant-A") $
                   checkBoth [CheckoutStore.ProviderPayPal] [CheckoutStore.ProviderDatafast]
+                -- API credentials alone do not make a certifiable Dataweb request.
+                forM_ ["DATAFAST_MID", "DATAFAST_TID", "DATAFAST_PSERV", "DATAFAST_USER_DATA2"] $ \field ->
+                  withEnvOverrides (fixture "merchant-A") $
+                    withEnvOverrides [(field, Nothing)] $ do
+                      checkBoth [CheckoutStore.ProviderPayPal] []
+                      statusConfig <- runHandler $ runReaderT ServiceStorefront.loadServiceDatafastEnv
+                        (error "Status configuration must not read unrelated application configuration")
+                      fmap ServiceStorefront.sdfEntityId statusConfig `shouldBe` Right "merchant-A"
                 withEnvOverrides (fixture "merchant-B") $ checkBoth [] []
                 withEnvOverrides (fixture "") $ checkBoth [] []
                 withEnvOverrides (fixture "merchant-A") $
@@ -10747,6 +10768,7 @@ main = hspec $ do
         it "keeps the internal evidence subtree outside the public raw asset route" $ do
             assetsServePathAllowed [] `shouldBe` True
             assetsServePathAllowed ["inventory", "fixture.png"] `shouldBe` True
+            assetsServePathAllowed [".content-storage-staging", "partial.pending"] `shouldBe` False
             assetsServePathAllowed [".internal-feedback"] `shouldBe` False
             assetsServePathAllowed [".internal-feedback", "report", "evidence.png"] `shouldBe` False
 
@@ -12869,6 +12891,17 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 409
                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+
+    describe "event logistics timezone inheritance" $ do
+        it "inherits an event's clock instead of the server default for a new plan" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") Nothing
+                `shouldBe` "America/Guayaquil"
+        it "preserves an explicitly saved logistics timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "UTC" (Just "America/Guayaquil") (Just "Europe/Berlin")
+                `shouldBe` "Europe/Berlin"
+        it "keeps the configured default for legacy events without a timezone" $
+            EventMetadataServer.resolveLogisticsTimezone "America/Guayaquil" Nothing Nothing
+                `shouldBe` "America/Guayaquil"
 
     describe "stored discovery ownership metadata boundary" $ do
         it "accepts internal evidence without exposing it through the public projection" $ do
@@ -17993,6 +18026,7 @@ main = hspec $ do
     EventOperationsTypesSpec.spec
     EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
+    VideoCampaignsSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
@@ -18009,6 +18043,7 @@ main = hspec $ do
       describe "music-unit-content" MusicContentSpec.spec
       describe "music-unit-ddex" MusicErn432Spec.spec
       describe "music-unit-storage" MusicS3Spec.spec
+      describe "music-unit-credential-cache" MusicCredentialCacheSpec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec

@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001.
+PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001, PAY-DOMAIN-BINDING-001.
 
 ## Contract
 
@@ -125,3 +125,156 @@ authenticated. Money conversion round-trips every minor amount and rejects
 sub-cent precision. These are properties, not proofs: they cover the generated
 response shapes.
 
+
+## Session invoice issuance (PAY-INVOICE-ISSUE-001)
+
+`SessionInvoiceIssue.tla` models requests to `POST /invoices/{sessionId}/generate`
+for one session and one request fingerprint. Each request carries an idempotency
+key and may carry portal verification. The SRI portal is not idempotent, so an
+attempt answered with an error or an unconfirmed status counts as unresolved, as
+does a reservation with no answer. Requests may stop at any step.
+
+| Variant | Meaning |
+|---|---|
+| `Lock = TRUE` | current code: key lookup, sibling check and reservation in one transaction after `pg_advisory_xact_lock` |
+| `Lock = FALSE` | check and reservation as separate steps (negative control) |
+
+`Safe` = `OneRunPerKey` (the SRI script starts at most once per key) and
+`NoBlindDuplicate` (two unresolved attempts under different keys are never open
+together unless one was made after verifying the portal).
+
+| Obligation | Tool | Owner-reported result; current execution unverified |
+|---|---|---|
+| Bounded exploration, 3 requests, 3 keys, current code | TLC 1.7.2 | no violation (12,139 states) |
+| Separate check and reservation, 2 requests, 2 keys | TLC | `Safe` violated, as expected: both requests pass the check before either reserves |
+| `Init ⇒ IndInv`, `IndInv ∧ Next ⇒ IndInv′`, `IndInv ⇒ Safe`, current code | Apalache 0.62.4 | **proved** for any nonempty sets of up to four requests and four keys |
+| Separate check and reservation: reachable violation | Apalache | counterexample found, as expected |
+
+These are owner-reported abstract-model results, not independently replayed in
+the 2026-11-06 consolidation: pinned TLC/Apalache were unavailable. Fresh
+hosted execution of both models and their negative controls remains required.
+The claimed inductive scope covers executions of any length. Equating one transaction under the
+advisory lock with one atomic step, and the code with the model, is established
+by review; the PostgreSQL lock/two-key race test
+(`scripts/test-session-invoice-issue.sh`) is newly wired into CI and was not
+executed during this consolidation. Its positive-example/pending guards were
+tested with isolated command stubs, which provide no PostgreSQL execution
+evidence. Fresh hosted execution of its two real cases remains required.
+There is no mechanical refinement. A
+second document issued deliberately after a settled attempt, or by staff after
+verifying the portal, is allowed by design.
+
+## Contract delivery by email (CONTRACT-SEND-001)
+
+`ContractSend.tla` models `POST /contracts/{id}/send` (`sendH` in
+`TDF.Contracts.Server`): 503 without email configuration, otherwise a
+`contract_delivery` row, the SMTP call, and the row marked accepted ("sent") or
+failed (502). Requests may stop at any step. It sits here because the proof
+runner covers this directory; it is not a payment.
+
+`Safe` = `SentMeansAccepted` ("sent" only after the transport accepted the PDF and
+the row says accepted), `NoUnrecordedMail` (every accepted message has a row),
+`AcceptedMeansMailed` and `UnavailableIsInert` (503 records and sends nothing).
+
+| Obligation | Tool | Owner-reported result; current execution unverified |
+|---|---|---|
+| Bounded exploration, 3 requests, configured and unconfigured | TLC 1.7.2 | no violation |
+| Row written after SMTP, 1 request | TLC | `Safe` violated, as expected: a stop after SMTP accepted leaves no row |
+| `Init ⇒ IndInv`, `IndInv ∧ Next ⇒ IndInv′`, `IndInv ⇒ Safe`, current code | Apalache 0.62.4 | **proved** for any nonempty set of up to four requests, configured or not |
+| Row written after SMTP: reachable violation | Apalache | counterexample found, as expected |
+
+Not covered: a transport that accepts the message and then raises (the row is
+then marked failed although mail went out), and delivery beyond SMTP acceptance.
+
+## Merchandise money (PAY-CHECKOUT-003)
+
+`merch_money_arithmetic.py` (Z3 4.13.3, pinned) assumes exactly the guards of
+`TDF.Commerce.Merch.calculateMerchMoney` on Int64 inputs and proves over
+unbounded integers that:
+
+- the commission is the floor of `(subtotal - discount) * bps / 10000`, lies within
+  `0..subtotal - discount` and never exceeds the exact share;
+- commission, seller net and payable total all fit Int64 (total at least 1);
+- `commission + processorFee + sellerNet = total`;
+- in `checkedMerchSubtotals`, every line amount of an accepted cart lies within the
+  accepted sum, so it fits Int64.
+
+Witnesses show an ordinary order and a full-commission order are accepted. Controls
+drop one guard each (rate above 10000, discount above subtotal, no seller-net guard,
+no total bound) and find the value each lemma excludes. The lemmas are about the
+function's arithmetic; that the handler persists these values unchanged is covered
+by `tdf-hq/test` and the `2026-10-04_merch_commission_exact` constraints, not here.
+
+## Checkout line products and totals (PAY-CHECKOUT-001)
+
+`checkout_money_arithmetic.py` (Z3 4.13.3, pinned) assumes exactly the guards of
+`TDF.Commerce.Money` and proves over unbounded integers that:
+
+- for canonical checkouts of 1 to 6 lines, every accepted line amount is positive,
+  at most the parent amount and unchanged by narrowing to Int64, and the narrowed
+  lines still sum to the parent; a step lemma extends this to any number of lines;
+- legacy cart products and sums of nonnegative amounts that pass the bound narrow
+  unchanged (host Int assumed 64-bit), and each amount lies within the total.
+
+Controls show why the code computes before narrowing: with Int64 wrap-around, a line
+whose true product overflows can match the parent amount, and three in-range cart
+amounts can wrap to a nonnegative wrong total. Atomic rejection of an overflowing
+cart (no partial rows) is a property of the calling transaction, tested in
+`tdf-hq/test`, not proved here.
+
+## Deposit policy (PAY-DEPOSIT-POLICY-001)
+
+`deposit_policy_arithmetic.py` (Z3 4.13.3, pinned) encodes
+`TDF.Commerce.DepositPolicy.applyDepositPolicy` for any policy that
+`validateDepositPolicy` accepts and any Int64 total and computed deposit, and
+proves that an admitted deposit:
+
+- leaves a balance of at least 1 minor unit (so a deposit is never the whole price);
+- is within the approved share (`deposit * 10000 <= total * fullPaymentAboveBps`);
+- is never below the minimum or the computed deposit;
+
+that a nonpositive total always charges the total, and that raising the minimum
+never turns a full payment into a deposit. Witnesses with the default policy (5.00,
+90%) reach a plain deposit, a deposit raised to the minimum and a full payment.
+Without the `raised >= total` guard a 100% threshold admits a zero-balance deposit;
+without the share guard a deposit exceeds the share. Which policy version the
+callers load is covered by the course and Domo tests and triggers, not here.
+
+## Provider binding admission (PAY-DOMAIN-BINDING-001)
+
+`provider_binding_admission.py` (Z3 4.13.3, pinned) encodes
+`commerce_checkout_has_verified_payment` from
+`tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql` conjunct by conjunct,
+over one checkout, attempt, binding and, for hosted providers, create operation and
+intent. It refuses to run if that migration's sha256 changes or another forward
+migration redefines the predicate, so the hand encoding cannot silently drift.
+
+- **Hosted (PlaceToPay session, PayPhone sale):** admitted evidence agrees on
+  checkout, provider, account, environment, provider reference, provider resource,
+  currency and amount, as the requirement states; the provider reference may differ
+  from the internal order id.
+- **Direct (Datafast, PayPal, Stripe):** the binding's reference is the checkout's
+  domain order id, the resource type is the provider's, and environment, amount and
+  currency agree.
+- A non-succeeded attempt, or one of another environment, amount or currency, is
+  never admitted.
+- **Necessity:** dropping any one of the 25 hosted-branch conjuncts breaks the
+  agreement, so none is redundant; the result is pinned so a change is reviewed.
+
+The manual-evidence branch (bank transfer, cash, POS with two different reviewers)
+and the Domo date-hold guard are not encoded here; they are covered by the
+PostgreSQL matrix in `scripts/test-provider-domain-binding.py`.
+
+## Execution evidence for the 2026-11-06 consolidation
+
+The four new Z3 4.13.3 programs (`checkout_money_arithmetic.py`,
+`merch_money_arithmetic.py`, `deposit_policy_arithmetic.py`, and
+`provider_binding_admission.py`) actually exited successfully on clean source
+`743c5c995538420f6702c6df1ae002792f7e1eaa`; their source files and financial
+implementation inputs are unchanged by the subsequent evidence-wording update.
+This is local solver execution, not hosted CI or mechanical implementation
+refinement. The two new TLA models and the two real PostgreSQL invoice cases
+were not executed in this consolidation. No prior immutable PostgreSQL job/log
+receipt was found for the new two-case claim; owner prose is retained as a
+reported result, not substituted for execution evidence. Existing inherited
+SQLite/migration evidence remains separately scoped to the earlier audit.

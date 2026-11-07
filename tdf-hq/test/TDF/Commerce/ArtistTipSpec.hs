@@ -93,7 +93,7 @@ spec = describe "TDF.Commerce.ArtistTip (PAY-TIP-001)" $ do
         `shouldNotBe` tipRequestFingerprint 1 100 "usd" (Just "") Nothing Nothing
       tipRequestFingerprint 1 100 "usd" (Just "ab") (Just "c") Nothing
         `shouldNotBe` tipRequestFingerprint 1 100 "usd" (Just "a") (Just "bc") Nothing
-    it "replays only the same request with a bound PaymentIntent, and never a failed or unbound attempt" $ do
+    it "replays only a bound PaymentIntent, holds an unbound attempt in progress and never reuses a failed one" $ do
       let fp = tipRequestFingerprint 1 100 "usd" Nothing Nothing Nothing
           other = tipRequestFingerprint 1 200 "usd" Nothing Nothing Nothing
       decideTipReplay fp Nothing `shouldBe` TipCreateNew
@@ -101,8 +101,9 @@ spec = describe "TDF.Commerce.ArtistTip (PAY-TIP-001)" $ do
       decideTipReplay fp (Just (fp, Just "pi_1", "paid")) `shouldBe` TipReplayIntent "pi_1"
       decideTipReplay fp (Just (other, Just "pi_1", "pending")) `shouldSatisfy` isConflict
       decideTipReplay fp (Just (fp, Just "pi_1", "failed")) `shouldSatisfy` isConflict
-      decideTipReplay fp (Just (fp, Nothing, "pending")) `shouldSatisfy` isConflict
-      decideTipReplay fp (Just (fp, Just "", "pending")) `shouldSatisfy` isConflict
+      decideTipReplay fp (Just (fp, Nothing, "pending")) `shouldBe` TipReplayInProgress
+      decideTipReplay fp (Just (fp, Just "", "pending")) `shouldBe` TipReplayInProgress
+      decideTipReplay fp (Just (fp, Nothing, "failed")) `shouldSatisfy` isConflict
     it "never creates a new charge when a row for the key exists" $
       property $ \(Positive n) mIntent status ->
         let fp = tipRequestFingerprint 1 n "usd" Nothing Nothing Nothing

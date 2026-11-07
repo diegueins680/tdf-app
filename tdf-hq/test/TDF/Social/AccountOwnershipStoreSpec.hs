@@ -55,8 +55,8 @@ connect isAdmin caller at account = do
   case planned of
     Left message -> pure (Left (show message))
     Right plan -> do
-      _ <- applyInstagramConnections at caller plan
-      pure (Right (map pcDecision plan))
+      applied <- applyInstagramConnections at caller plan
+      pure (either (Left . show) (const (Right (map pcDecision plan))) applied)
 
 account :: Db SocialSyncAccount
 account = do
@@ -109,6 +109,32 @@ spec = describe "Instagram connection persistence (AUTH-SOCIAL-OAUTH-001, databa
       socialSyncAccountAccessToken stored `shouldBe` Just "token-a"
     recorded <- events
     liftIO (length recorded `shouldBe` 1)
+
+  it "refuses a stale reconnect plan after a concurrent admin rebind and keeps the new owner's token" $ withDb $ do
+    _ <- connect False alice t0 input
+    -- Alice plans a token refresh while she still owns the account ...
+    stalePlan <- planInstagramConnections False alice [input { caiAccessToken = "token-alice-late" }]
+    -- ... an administrator rebinds it to Bob before Alice's plan is applied ...
+    _ <- connect True bob t1 input { caiAccessToken = "token-bob" }
+    -- ... so applying Alice's plan must not write her token over Bob's account.
+    applied <- either (fail . show) (applyInstagramConnections t1 alice) stalePlan
+    stored <- account
+    eventCount <- length <$> events
+    liftIO $ do
+      either (const True) (const False) applied `shouldBe` True
+      socialSyncAccountPartyId stored `shouldBe` Just bob
+      socialSyncAccountAccessToken stored `shouldBe` Just "token-bob"
+      eventCount `shouldBe` 2
+
+  it "refuses a stale new-account plan when someone else connected the account first" $ withDb $ do
+    stalePlan <- planInstagramConnections False bob [input { caiAccessToken = "token-bob" }]
+    _ <- connect False alice t0 input
+    applied <- either (fail . show) (applyInstagramConnections t1 bob) stalePlan
+    stored <- account
+    liftIO $ do
+      either (const True) (const False) applied `shouldBe` True
+      socialSyncAccountPartyId stored `shouldBe` Just alice
+      socialSyncAccountAccessToken stored `shouldBe` Just "token-a"
 
   it "an administrator rebinds with an audit event and the account loses artist binding and designation" $ withDb $ do
     _ <- connect False alice t0 input

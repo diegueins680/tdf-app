@@ -88,6 +88,14 @@ export default function DomoQuoteCheckoutPage() {
         setQuote(response);
         setCancellation(response.cancellation ?? null);
         if (resourcePath) navigate(location.pathname, { replace: true });
+        // A cancelled quote keeps its recorded outcome on the server. Replaying
+        // the holder's cancellation is idempotent and returns that record
+        // unchanged, so a reload shows what was collected, retained and owed.
+        if (response.quoteStatus === 'cancelled' && !response.cancellation) {
+          DomoQuotes.cancelQuote(response.quoteId, lookupToken)
+            .then((outcome) => setCancellation(outcome))
+            .catch(() => setCancellation(null));
+        }
       })
       .catch(() => setMessage(english
         ? 'The server could not verify this quote. No date or payment is shown as confirmed.'
@@ -268,6 +276,7 @@ export default function DomoQuoteCheckoutPage() {
   const expired = quote.quoteStatus === 'expired' || quote.paymentStatus === 'expired';
   const canAccept = ['sent', 'viewed'].includes(quote.quoteStatus) && !expired;
   const awaitingPayment = quote.quoteStatus === 'deposit_due' && !paid && !expired;
+  const cancelled = quote.quoteStatus === 'cancelled';
   const canCancel = !expired && !['cancelled', 'completed', 'expired'].includes(quote.quoteStatus) && quote.paymentStatus !== 'processing';
   const returnUrl = typeof window === 'undefined'
     ? ''
@@ -294,8 +303,8 @@ export default function DomoQuoteCheckoutPage() {
                   <Chip label={quote.eventType} variant="outlined" />
                 </Stack>
                 {quote.quoteStatus === 'cancelled' ? <Alert severity="info">{english
-                  ? 'This quote is cancelled and the date is released. Collected payments remain recorded; any refund is tracked separately below.'
-                  : 'Esta cotización está cancelada y la fecha está liberada. Los cobros permanecen registrados; cualquier devolución se detalla por separado abajo.'}</Alert>
+                  ? 'This quote was cancelled and the date was released. Any collected payment is handled by the recorded cancellation outcome below.'
+                  : 'Esta cotización fue cancelada y la fecha quedó liberada. Cualquier pago cobrado se gestiona según el resultado de cancelación registrado abajo.'}</Alert>
                   : paid ? <Alert severity="success">{english
                   ? 'The server verified the deposit and reserved the date. This does not mean the event is completed; the remaining balance and fulfillment continue separately.'
                   : 'El servidor verificó el depósito y reservó la fecha. Esto no significa que el evento esté completado; el saldo y el cumplimiento continúan por separado.'}</Alert>

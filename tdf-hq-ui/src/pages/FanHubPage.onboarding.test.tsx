@@ -41,7 +41,10 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key }),
+  useTranslation: () => ({
+    t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key,
+    i18n: { language: 'es' },
+  }),
 }));
 
 jest.unstable_mockModule('../api/session', () => ({
@@ -517,7 +520,8 @@ describe('artist photo continuity in Community', () => {
       fireEvent.change(input, { target: { value: 'https://cdn.example.test/new-photo.jpg' } });
       fireEvent.click(screen.getByRole('button', { name: 'Actualizar perfil de artista' }));
       await waitFor(() => expect(updateMyArtistProfileMock.mock.calls.at(-1)?.[0]).toEqual(expect.objectContaining({ apuArtistId: 42, apuHeroImageUrl: 'https://cdn.example.test/new-photo.jpg' })));
-      await waitFor(() => expect(image.getAttribute('src')).toBe('https://cdn.example.test/new-photo.jpg'));
+      // Source versions deliberately get a fresh img so retired errors cannot invalidate the replacement.
+      await waitFor(() => expect(card.querySelector('img')?.getAttribute('src')).toBe('https://cdn.example.test/new-photo.jpg'));
       expect(view.queryClient.getQueryState(['public-artist', 'new-artist'])?.isInvalidated).toBe(true);
       expect(view.queryClient.getQueryState(['public-artist', '42'])?.isInvalidated).toBe(true);
     } finally { view.queryClient.clear(); imageLoader.mockRestore(); }

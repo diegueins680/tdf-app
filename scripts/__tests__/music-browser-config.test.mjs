@@ -4,7 +4,7 @@ import base from '../../playwright.config.mjs';
 import native from '../../playwright.music-native.config.mjs';
 
 test('general browser command excludes suites that need dedicated infrastructure', () => {
-  for (const file of ['music-player-native.spec.mjs', 'music-player-integration.spec.mjs']) {
+  for (const file of ['music-player-native.spec.mjs', 'music-player-integration.spec.mjs', 'radio-navigation.spec.mjs']) {
     assert.ok(base.testIgnore.some((pattern) => pattern.test(file)));
   }
   assert.ok(!base.testIgnore.some((pattern) => pattern.test('music-player.spec.mjs')));
@@ -19,6 +19,7 @@ test('dedicated configs restore their complete test selection with no inherited 
     const { default: integrated } = await import('../../playwright.music-integration.config.mjs');
     assert.deepEqual(native.testIgnore, []);
     assert.ok(native.testMatch.test('music-player-native.spec.mjs'));
+    assert.ok(native.testMatch.test('radio-navigation.spec.mjs'));
     assert.deepEqual(integrated.testIgnore, []);
     assert.ok(integrated.testMatch.test('music-player-integration.spec.mjs'));
     assert.equal(integrated.webServer.reuseExistingServer, false);

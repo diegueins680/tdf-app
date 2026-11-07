@@ -34,12 +34,14 @@ class ContainerCleanupError(RuntimeError):
 
 
 def confirms_container_absent(name, result):
-    # Docker versions differ in capitalization. Admit only the exact inspected
-    # nonce name, expected failure code and empty result; daemon/transport errors
+    # Docker diagnostic prefixes differ in capitalization; names are case-sensitive.
+    # Admit only the exact inspected nonce name, expected failure code and empty
+    # result; daemon/transport errors
     # mentioning a missing file are not evidence that the container is absent.
     return (result.returncode == 1
             and result.stdout.strip() in ('', '[]')
-            and result.stderr.strip().casefold() == f'error: no such object: {name}'.casefold())
+            and result.stderr.strip().casefold() == f'error: no such object: {name}'.casefold()
+            and result.stderr.strip().endswith(f': {name}'))
 
 
 def main():

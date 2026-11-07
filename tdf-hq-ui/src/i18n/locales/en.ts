@@ -203,6 +203,7 @@ const en = {
     stateError: 'We could not check whether you follow this artist.',
     retry: 'Retry',
     authCta: 'Create an account or sign in to follow',
+    benefit: 'Follow {{artist}} to find them again in your community. You can watch their videos without creating an account.',
     resumeMessage: 'You are signed in. Continue where you left off and follow {{artist}}.',
     resumeAction: 'Follow now',
     resumeError: 'We could not follow {{artist}}. Check your connection and try again.',

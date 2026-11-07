@@ -1,0 +1,10 @@
+{
+  "ownedDataDirectory": "/private/tmp/tdf-correctness-cycle-pg-20261028",
+  "port": 55728,
+  "disposableDatabase": "tdf_provider_retry_test",
+  "preservedPreviousDatabase": "tdf_provider_retry_before_clock_20261029_test",
+  "freshUTF8Template0": true,
+  "fullSchemaAppliedAndReplayed": 227,
+  "domainFixture": "PASS",
+  "productionWrites": false
+}

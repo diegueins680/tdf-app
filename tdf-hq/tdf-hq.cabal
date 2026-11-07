@@ -57,6 +57,8 @@ library
     TDF.API.Merch
     TDF.API.Label
     TDF.API.Drive
+    TDF.API.ContentStorage
+    TDF.ContentStorage
     TDF.API.Rooms
     TDF.API.Services
     TDF.API.Sessions
@@ -84,6 +86,7 @@ library
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
+    TDF.VideoCampaigns
     TDF.Auth.AccountName
     TDF.CampaignAutomation
     TDF.Commerce.Money
@@ -111,6 +114,8 @@ library
     TDF.Commerce.ProviderExecutionStore
     TDF.Commerce.ProviderReconciliation
     TDF.Commerce.ProviderRuntimeConfig
+    TDF.Commerce.DatafastConfig
+    TDF.Commerce.TicketBuyerContact
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
@@ -139,6 +144,7 @@ library
     TDF.Invoice.BuyerIdentity
     TDF.Invoice.Datil
     TDF.Invoice.SRI
+    TDF.Invoice.SessionIssue
     TDF.Internationalization
     TDF.LogBuffer
     TDF.Meta
@@ -148,6 +154,7 @@ library
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
     TDF.MusicRelease.Money
+    TDF.MusicRelease.CredentialCache
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
     TDF.API.MusicRelease
@@ -318,6 +325,7 @@ library
     , transformers
     , mtl
     , network
+    , network-uri
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -384,6 +392,7 @@ test-suite tdf-hq-test
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
     TDF.MusicPurchaseSpec
+    TDF.MusicCredentialCacheSpec
     TDF.DriveReplaySpec
     TDF.WhatsAppRedeliverySpec
     TDF.CourseIdentitySpec
@@ -393,9 +402,12 @@ test-suite tdf-hq-test
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
+    TDF.Commerce.DatafastConfigSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
+    TDF.Invoice.SessionIssueSpec
+    TDF.Contracts.StoreSpec
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
@@ -407,6 +419,7 @@ test-suite tdf-hq-test
     TDF.IndexDeclarationSpec
     TDF.InvoiceWorkerSpec
     TDF.APITypesSpec
+    TDF.VideoCampaignsSpec
     TDF.Artists.PromotionSpec
     TDF.Artists.EnrichmentSpec
     TDF.MusicRelease.DDEX.ERN432Spec
