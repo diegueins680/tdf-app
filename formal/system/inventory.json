@@ -36,6 +36,7 @@
       "e2e/web/booking-catalog-recovery.spec.mjs",
       "e2e/web/booking-timezone.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
+      "e2e/web/chat-mobile-follow.spec.mjs",
       "e2e/web/chat-notification-navigation.spec.mjs",
       "e2e/web/checkout-readiness.spec.mjs",
       "e2e/web/community-discovery.spec.mjs",
@@ -3185,9 +3186,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-36d988b722d46f36",
+      "path": "e2e/web/chat-mobile-follow.spec.mjs",
+      "sha256": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2b332f1e11171387",
       "path": "e2e/web/chat-notification-navigation.spec.mjs",
-      "sha256": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
+      "sha256": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3325,7 +3332,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78",
+      "sha256": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6463,7 +6470,7 @@
     {
       "id": "SURFACE-b6c843c3e1881f94",
       "path": "scripts/test-payment-arithmetic-verifier.py",
-      "sha256": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+      "sha256": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6511,7 +6518,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+      "sha256": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6793,7 +6800,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+      "sha256": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6853,7 +6860,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+      "sha256": "f42ff320583223be02b63438108ef11eb55ff8a385d169fa3435248097b53686",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6931,7 +6938,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+      "sha256": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10339,13 +10346,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
+      "sha256": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "554957039d5b90e5368a42c627ce91b4d39dcf7b5cec55816b91f1e8f4de423b",
+      "sha256": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29280,7 +29287,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "4a0d9d4106d22569b697c5c0747ac1d938dc51e0a56ddc2db25074a8af3ea149",
+      "sha256": "f17d2e0a91caa999a1717b45d3b3548a58cc1bd2a38bcdef4226548454daab80",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -29308,7 +29315,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "4349c7c347ca316e62a8068867c9d63390834b8360702f45c80200a9fb865ee1",
+      "sha256": "1e4474ed41bc00682d9459c32c748d05f891fbe8950ef199463ce42f807bfbeb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30085,7 +30092,7 @@
     },
     {
       "path": "formal/system/payment-arithmetic.md",
-      "sha256": "12a4062aaf08facfbb3ecdb71ddc105b71a72009f1bdf607db4aac0bf48274c0",
+      "sha256": "49d57299ce6abd59eb2ad54e4d314fdb9cbc223dacfa9eacd63d2159919c20c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30141,7 +30148,7 @@
     },
     {
       "path": "formal/system/proof-certificates.md",
-      "sha256": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
+      "sha256": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30190,7 +30197,7 @@
     },
     {
       "path": "formal/system/receipt-admission.md",
-      "sha256": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
+      "sha256": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30232,7 +30239,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "88f393e5222e7560eaa2f6706200283dafa2dcfc5dcf644909306804ce92aafb",
+      "sha256": "876b7e583d6aedc5154d53d303312687a9c9f936d0d722476b06f087d6ead6e8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

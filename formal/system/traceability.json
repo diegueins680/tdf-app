@@ -214,7 +214,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence, SAT witnesses and negative controls; actual Haskell boundary oracle. Caller preconditions manually inspected; SQL/whole-program proof open.",
+      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence and outer-validator sign-precondition implication, SAT witnesses/source mutations and negative controls; independent CPC refutations; actual Haskell boundary oracle. Translation/composition, dispatch, SQL and whole-program refinement remain open.",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -277,7 +277,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Same full-width source-derived SMT and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
+      "verification": "Same full-width source-derived SMT, outer-validator sign-precondition, independent CPC and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -11005,7 +11005,8 @@
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "tdf-hq/test/integration/interactions/notification-properties.sql",
-        "e2e/web/chat-notification-navigation.spec.mjs"
+        "e2e/web/chat-notification-navigation.spec.mjs",
+        "e2e/web/chat-mobile-follow.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/ChatNotificationAuthorization.tla",
@@ -22915,7 +22916,8 @@
     "e2e/web/booking-catalog-recovery.spec.mjs": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
     "e2e/web/booking-timezone.spec.mjs": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
     "e2e/web/campaign-accessibility.spec.mjs": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
-    "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
+    "e2e/web/chat-mobile-follow.spec.mjs": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+    "e2e/web/chat-notification-navigation.spec.mjs": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "5330e8d056e9ef1407f7a3e711bd7b88fde84795896409db2b43164c69efc161",
     "e2e/web/directory-entry.spec.mjs": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
@@ -22932,7 +22934,7 @@
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
-    "e2e/web/music-player-native.spec.mjs": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78",
+    "e2e/web/music-player-native.spec.mjs": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
@@ -23263,10 +23265,10 @@
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
     "formal/system/compiled-api-surface.json": "c592780532eff39cd73ee7a2878b2120e3f09ad2684bd2dfcd1d45db99fcf09b",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
-    "formal/system/proof-certificates.md": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
+    "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
-    "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
+    "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
     "formal/system/recovery-expiry-arithmetic.json": "0a529bbda939368c78f53435d3adba1d7fb991d4e0fee72b7259d2e917df216c",
     "formal/system/route-requirements.json": "4bc73457a782d55e147a544e5ae4581fe606f02c8d74c5df967e32b0031ce8b0",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
@@ -23569,14 +23571,14 @@
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
-    "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+    "scripts/test-payment-arithmetic-verifier.py": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
     "scripts/test-persistent-uploads-container-diagnostics.py": "9d53526e954744bf8bb9b8ae9520d3edc781e19baea9e85dfe4796fbf8a582ce",
     "scripts/test-persistent-uploads-container.py": "3e2657400ab6306b4b6f89568cefb5bbec665db31dc87ff006460d889612de1b",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
-    "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+    "scripts/test-proof-certificates.py": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
     "scripts/test-provider-domain-binding.py": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
     "scripts/test-provider-domain-harness.py": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
     "scripts/test-provider-event-operations-migration.sh": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -23612,13 +23614,13 @@
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
     "scripts/test-trial-identity.sh": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
-    "scripts/test-verification-report.py": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+    "scripts/test-verification-report.py": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+    "scripts/verification-report.py": "f42ff320583223be02b63438108ef11eb55ff8a385d169fa3435248097b53686",
     "scripts/verify-alloy-controls.mjs": "3a609d6e22e004563fba4a4c58ec9e62267b1db572b073d880bd7feb19870e9c",
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
@@ -23630,7 +23632,7 @@
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
-    "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+    "scripts/verify-payment-arithmetic.py": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
     "scripts/verify-payment-intent-expiry.py": "7eefe7a53984897caed042f9eff42c2cdd654412239600af4cea4a8f4f1aab09",
     "scripts/verify-playwright-image.mjs": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
     "scripts/verify-proof-certificates.py": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
@@ -23955,8 +23957,8 @@
     "tdf-hq-ui/src/pages/BrainAdminPage.tsx": "f24310153284767120713e59c948cac1fc37b7e32c994906523ff3fdad515feb",
     "tdf-hq-ui/src/pages/CalendarSyncPage.tsx": "ba4bd9df779670c1cbb0079297a84f7a3b1b87dc501d32d2946563b9bc057c56",
     "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx": "436a6542811cca0cef5c33ef4979487907e967ef8ac74756fc05c0fa7fb42226",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "554957039d5b90e5368a42c627ce91b4d39dcf7b5cec55816b91f1e8f4de423b",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
@@ -36772,6 +36774,12 @@
         "relationship": "tests"
       }
     ],
+    "e2e/web/chat-mobile-follow.spec.mjs": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ChatNotificationAuthorization.tla": [
       {
         "requirement": "MSG-NOTIFY-001",
@@ -41184,9 +41192,21 @@
       ]
     },
     {
+      "id": "SURFACE-36d988b722d46f36",
+      "path": "e2e/web/chat-mobile-follow.spec.mjs",
+      "sha256": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2b332f1e11171387",
       "path": "e2e/web/chat-notification-navigation.spec.mjs",
-      "sha256": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
+      "sha256": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41440,7 +41460,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78",
+      "sha256": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47524,7 +47544,7 @@
     {
       "id": "SURFACE-b6c843c3e1881f94",
       "path": "scripts/test-payment-arithmetic-verifier.py",
-      "sha256": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+      "sha256": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47623,7 +47643,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+      "sha256": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48208,7 +48228,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+      "sha256": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48316,7 +48336,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+      "sha256": "f42ff320583223be02b63438108ef11eb55ff8a385d169fa3435248097b53686",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48595,7 +48615,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+      "sha256": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54791,7 +54811,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
+      "sha256": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54803,7 +54823,7 @@
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "554957039d5b90e5368a42c627ce91b4d39dcf7b5cec55816b91f1e8f4de423b",
+      "sha256": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76576,7 +76596,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "88f393e5222e7560eaa2f6706200283dafa2dcfc5dcf644909306804ce92aafb",
+      "sourceSha256": "876b7e583d6aedc5154d53d303312687a9c9f936d0d722476b06f087d6ead6e8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -76604,7 +76624,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "88f393e5222e7560eaa2f6706200283dafa2dcfc5dcf644909306804ce92aafb",
+      "sourceSha256": "876b7e583d6aedc5154d53d303312687a9c9f936d0d722476b06f087d6ead6e8",
       "definition": {
         "states": [
           "absent",
@@ -76634,7 +76654,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "88f393e5222e7560eaa2f6706200283dafa2dcfc5dcf644909306804ce92aafb",
+      "sourceSha256": "876b7e583d6aedc5154d53d303312687a9c9f936d0d722476b06f087d6ead6e8",
       "definition": {
         "export": [
           "queued",
