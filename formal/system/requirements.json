@@ -17008,7 +17008,8 @@
         "tdf-mobile/__tests__/appleSignIn.test.ts",
         "tdf-mobile/scripts/tests/test_ios_signing.py",
         "scripts/verify-request-failures.py",
-        "scripts/verify-cors-boundary.py"
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
