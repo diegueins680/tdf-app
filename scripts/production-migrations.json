@@ -1268,6 +1268,11 @@
       "id": "2026-11-06_music_legacy_source_compatibility",
       "path": "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
       "introducedBy": "51a4813e992c9466f85e8fc7d701bf3369c2dbf5"
+    },
+    {
+      "id": "2026-11-07_music_featured_source_health",
+      "path": "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
+      "introducedBy": "566dd05c4f630ffdbdb9f0c4a38260cd5274197e"
     }
   ]
 }

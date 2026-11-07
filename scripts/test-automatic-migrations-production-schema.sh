@@ -115,7 +115,8 @@ done
 # correctly remains in the rolled-back health state despite its retained ledger.
 psql "${database_url}" -X -v ON_ERROR_STOP=1 \
   -f "${repo_root}/tdf-hq/sql/2026-11-06_music_media_health.sql" \
-  -f "${repo_root}/tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql" >/dev/null
+  -f "${repo_root}/tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql" \
+  -f "${repo_root}/tdf-hq/sql/2026-11-07_music_featured_source_health.sql" >/dev/null
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 echo "PASS historical rollback detection and current media policy restoration"
@@ -196,6 +197,7 @@ SQL
 }
 
 assert_gate_rejected 'CREATE OR REPLACE FUNCTION music_public_asset_accessible(target_asset_id uuid,territory_code text) RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;' "Music source health policy or schema is missing"
+assert_gate_rejected 'CREATE OR REPLACE FUNCTION music_artist_featured_track_eligible(target_artist bigint,target_recording uuid,target_legacy bigint,territory text) RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;' "Music source health policy or schema is missing"
 assert_gate_rejected "ALTER TABLE google_calendar_config DROP COLUMN access_token;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_config DISABLE TRIGGER identity_archive_reference_guard;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_event DROP CONSTRAINT unique_calendar_event;" "Calendar runtime columns or archived-owner guard are incompatible"

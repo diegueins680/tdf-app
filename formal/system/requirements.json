@@ -16592,7 +16592,8 @@
         "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql",
         "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
-        "tdf-hq-ui/src/components/SessionVideoPreview.tsx"
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        "tdf-hq/sql/2026-11-07_music_featured_source_health.sql"
       ],
       "tests": [
         "scripts/test-music-media-health.mjs",
@@ -16620,7 +16621,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented bounded persisted validation, server projection and owner revalidation; local SQL, safe-probe and authenticated HTTP tests pass. Hosted CI, full storage ingestion, catalog provenance, provider/device and production acceptance remain pending."
       },
-      "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities.",
+      "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
       "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
     },

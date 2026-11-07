@@ -23,7 +23,7 @@ const REGISTRY_REFRESH_ENTRY = '2026-09-18_identity_review_dependencies';
 // interleaved at index 227, ahead of the seven audit migrations. The audit's
 // earlier reviews are verified over the manifest without that entry.
 const SESSION_EXPIRY_ENTRY = '2026-10-31_api_token_session_expiry';
-const playerMigrationIds = new Set(['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility']);
+const playerMigrationIds = new Set(['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility','2026-11-07_music_featured_source_health']);
 const historicalReview = (entry, count) => {
   while (entry && entry.evidence?.valueCount !== count) entry = entry.previousDecision;
   assert.ok(entry, `Missing exact reviewed ${count}-entry predecessor`);
@@ -438,13 +438,13 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
   assert.equal(pointer.currentId, latestCurrent.id);
-  assert.equal(pointer.valueCount, 249);
+  assert.equal(pointer.valueCount, 250);
   assert.equal(historicalReview(latestCurrent, 246).evidence.valueCount, 246);
   assert.equal(pointer.change, latestCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, latestCurrent.id);
   assert.equal(retirement.currentResolution.id, latestCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 249);
+  assert.equal(retirement.currentResolution.valueCount, 250);
   assert.equal(retirement.reason, latestCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
@@ -789,11 +789,12 @@ test('player migration extension preserves the exact reviewed current-main prefi
   const extension=document.reconciliation.universalPlayerMain20261106;
   const prior=JSON.parse((await execFileAsync('git',['show',`${extension.sourceMain}:scripts/production-migrations.json`],{cwd:workspaceRoot})).stdout).migrations;
   const current=JSON.parse(await fs.readFile(path.join(workspaceRoot,'scripts/production-migrations.json'),'utf8')).migrations;
-  assert.equal(prior.length,246); assert.equal(current.length,249);
+  assert.equal(prior.length,246); assert.equal(current.length,250);
   assert.deepEqual(current.slice(0,246),prior);
   assert.deepEqual(current.slice(246).map(row=>row.id),[...playerMigrationIds]);
-  const tip=active.find(row=>row.id===extension.currentDecisionId);
-  assert.equal(tip.evidence.valueCount,249);
+  const tip=active.find(row=>row.id===successors.find(item=>item.name==='migrations').currentId);
+  assert.equal(tip.previousDecision.id,extension.currentDecisionId);
+  assert.equal(tip.evidence.valueCount,250);
   assert.equal(successors.find(row=>row.name==='migrations').currentId,tip.id);
   assert.ok(!active.some(row=>row.id===tip.previousDecision.id));
   assert.equal(extension.executionAllowed,false);

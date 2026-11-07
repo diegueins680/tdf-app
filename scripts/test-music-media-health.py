@@ -83,6 +83,13 @@ class Checks(unittest.TestCase):
         with self.assertRaises(health.ProbeFailure) as error:
             self.fetch([Response(headers={'Content-Type':'text/html'},body=b'<html>login</html>')])
         self.assertEqual(error.exception.reason,'unsupported')
+    def test_drive_html_is_inconclusive_not_global_quarantine(self):
+        failure=health.ProbeFailure('unsupported',permanent=True)
+        for url in ['https://drive.google.com/uc?export=download&id=private','https://drive.usercontent.google.com/download?id=expired']:
+            with patch.object(health,'fetch_prefix',side_effect=failure):
+                self.assertEqual(health.probe(url),('temporary','inconclusive'))
+        with patch.object(health,'fetch_prefix',side_effect=failure):
+            self.assertEqual(health.probe('https://drive.google.com.evil.example/a'),('permanent','unsupported'))
     def test_timeout_is_temporary(self):
         with patch.object(health,'fetch_prefix',side_effect=socket.timeout):
             self.assertEqual(health.probe('https://media.example/a'),('temporary','timeout'))

@@ -624,10 +624,10 @@ for(const query of ['limit=0','limit=501','afterKind=asset','afterId=source','af
  await request('/music/media-health?'+query,{token:artist.token,expected:400});
 }
 console.log('PASS HTTP health pagination: >500 sources, page bounds, stable complete traversal and revoked team isolation');
-const healthClaim = () => {
+const healthClaim = (kind = 'asset', identity = streamAssetId) => {
   const token = randomUUID();
   sql(`UPDATE music_media_health SET next_check_at=NOW()+interval '1 day',lease_token=NULL,lease_until=NULL;
-    UPDATE music_media_health SET next_check_at=NOW()-interval '1 second' WHERE source_kind='asset' AND source_id='${streamAssetId}';
+    UPDATE music_media_health SET next_check_at=NOW()-interval '1 second' WHERE source_kind='${kind}' AND source_id='${identity}';
     SELECT music_media_claim('${token}');`);
   return token;
 };
@@ -642,6 +642,20 @@ await request(`/music/assets/${streamAssetId}/access`, { country: 'EC', expected
 healthToken = healthClaim();
 sql(`SELECT music_media_observe('${healthToken}','valid','decodable');`);
 await request(`/music/assets/${streamAssetId}/access`, { country: 'EC' });
+const featuredLegacySource=sql(`SELECT source_id FROM music_media_source WHERE source_kind='legacy' AND artist_party_id=${artist.partyId} ORDER BY source_id LIMIT 1`);
+const featuredLegacyId=Number(featuredLegacySource.split(':')[0]);
+await request('/music/me/featured-track',{token:artist.token,method:'PUT',json:{artistPartyId:artist.partyId,recordingId:null,legacyReleaseId:featuredLegacyId}});
+assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available,true);
+healthToken=healthClaim('legacy',featuredLegacySource);
+sql(`SELECT music_media_observe('${healthToken}','permanent','missing'); UPDATE music_media_health SET first_failure_at=NOW()-interval '31 minutes' WHERE source_kind='legacy' AND source_id='${featuredLegacySource}'`);
+healthToken=healthClaim('legacy',featuredLegacySource);sql(`SELECT music_media_observe('${healthToken}','permanent','missing')`);
+const unavailableFeatured=await request(`/music/artists/${artist.partyId}/featured-track`);
+assert.equal(unavailableFeatured.available,false);assert.equal(unavailableFeatured.legacyReleaseId,null);
+assert.equal((await request('/music/me/featured-track',{token:artist.token})).legacyReleaseId,featuredLegacyId);
+await request('/music/me/featured-track',{token:artist.token,method:'PUT',expected:400,json:{artistPartyId:artist.partyId,recordingId:null,legacyReleaseId:featuredLegacyId}});
+healthToken=healthClaim('legacy',featuredLegacySource);sql(`SELECT music_media_observe('${healthToken}','valid','decodable')`);
+assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available,true);
+console.log('PASS HTTP featured health: invalid reference hidden, owner preference retained, invalid reselection denied and successful validation restored');
 console.log('PASS HTTP media health: session, owner/team/admin isolation, sanitized diagnostics, suppression, queued revalidation and restoration');
 if (realS3) {
   for (const [id, access] of [[coverDisplayAssetId, coverAccess], [streamAssetId, streamAccess]]) {

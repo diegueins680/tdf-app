@@ -2778,6 +2778,7 @@ BEGIN
     OR to_regclass('public.music_media_health_due') IS NULL
     OR to_regprocedure('public.music_public_asset_accessible_before_health(uuid,text)') IS NULL
     OR position('music_media_eligible' IN pg_get_functiondef('public.music_public_asset_accessible(uuid,text)'::regprocedure))=0
+    OR position('music_media_eligible' IN pg_get_functiondef('public.music_artist_featured_track_eligible(bigint,uuid,bigint,text)'::regprocedure))=0
   THEN RAISE EXCEPTION 'Music source health policy or schema is missing'; END IF;
   IF to_regclass('public.artist_invitation_link') IS NULL
      OR NOT EXISTS (
