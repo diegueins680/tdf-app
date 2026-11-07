@@ -17033,9 +17033,9 @@
       ],
       "authorization": "Creation grants only the Customer role through the account.apple.customer automatic policy; linking requires existing credentials.",
       "privacy": "Apple verified relay/contact email is stored as the private primary email; both Google and Apple use canonical initialAccountName when a provider name is absent, never an email as the public display-name fallback. Tokens and raw nonces are never logged.",
-      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses single-flight through a cancellation-safe lock. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts.",
+      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses single-flight through a cancellation-safe lock. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
       "idempotency": "Repeated login for a bound subject reuses the credential.",
-      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed.",
+      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
       "recovery": "After key retrieval failure or cancellation, fail closed during the attempt cooldown; retry key retrieval after the cooldown. Existing cached tokens still require an unexpired valid signature/claims, or the user can use email and password or link an existing account.",
       "observability": "login_apple auth activity and rejected-token warnings without token content.",
       "source": "App Store Connect rejection notice relayed by the product owner",
@@ -17071,7 +17071,8 @@
         "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
         "tdf-mobile/src/localization/onboardingCopy.ts",
         "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
-        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql"
+        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql",
+        "tdf-mobile/.env.example"
       ],
       "tests": [
         "tdf-hq/test/TDF/AppleSignInSpec.hs",
@@ -17085,11 +17086,12 @@
         "scripts/verify-request-failures.py",
         "scripts/verify-cors-boundary.py",
         "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "confidence": "Source-bound compiled verifier/request/session-window/DTO/configuration cases and owned PostgreSQL lifecycle/issuer migration controls. Production provider configuration and physical-device/capability checks remain unverified release validation; no whole-system proof.",
+      "confidence": "Source-bound compiled verifier/request/session-window/DTO/configuration cases, owned PostgreSQL lifecycle/issuer controls, and compatible Mobile710unit/89focused/type/lint/release/Metro plus12signing tests. Production provider configuration and physical-device/capability checks remain unverified release validation; no whole-system proof.",
       "ambiguity": [
         "Services ID audiences for web are configurable but not exercised.",
         "Inherited known-kid cache entries have no residence TTL; signature and token expiry are rechecked, but this repair does not prove prompt provider key-revocation freshness."
