@@ -36,6 +36,42 @@ class CorrespondenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             proof.verify(text.replace("newCaptured = paymentCapturedMinor lifecycle + amount", "newCaptured = abs amount"))
 
+    def test_weakened_caller_validator_refutes_precondition(self):
+        source = proof.SOURCE.read_text()
+        for selector in ('paymentAuthorizedMinor', 'paymentRefundedMinor'):
+            if selector == 'paymentAuthorizedMinor':
+                changed = source.replace('[ paymentAuthorizedMinor lifecycle\n      , paymentCapturedMinor lifecycle',
+                                         '[ paymentCapturedMinor lifecycle')
+            else:
+                changed = source.replace('      , ' + selector + ' lifecycle\n', '')
+            with self.subTest(selector=selector):
+                self.assertNotEqual(changed, source)
+                # This must be a solver counterexample, not unsupported syntax.
+                with self.assertRaises(AssertionError):
+                    proof.verify(changed)
+
+    def test_redundant_captured_sign_guard_is_not_a_false_counterexample(self):
+        changed = proof.SOURCE.read_text().replace('      , paymentCapturedMinor lifecycle\n', '')
+        # Refunded >= 0 and refunded <= captured still imply captured >= 0.
+        for helper in ('capture', 'refund'):
+            admitted, precondition, _ = proof.caller_obligation(changed, helper)
+            proof.check(proof.z3.And(admitted, proof.z3.Not(precondition)), 'unsat')
+
+    def test_validator_bypass_or_extra_clause_is_unsupported(self):
+        source = proof.SOURCE.read_text()
+        for changed in (
+            source.replace('| otherwise = applyPaymentEvent lifecycle event',
+                           '| otherwise = Right lifecycle'),
+            source.replace('| otherwise = applyPaymentEvent lifecycle event',
+                           '| paymentAmountMinor lifecycle == 42 = Right lifecycle\n'
+                           '  | otherwise = applyPaymentEvent lifecycle event'),
+            source.replace('paymentAuthorizedMinor lifecycle\n      , paymentCapturedMinor lifecycle',
+                           'abs (paymentAuthorizedMinor lifecycle)\n      , paymentCapturedMinor lifecycle'),
+        ):
+            with self.subTest(source=changed):
+                with self.assertRaises(ValueError):
+                    proof.caller_obligation(changed, 'capture')
+
 
 if __name__ == "__main__":
     unittest.main()
