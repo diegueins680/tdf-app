@@ -145718,6 +145718,24 @@
         "valueCount": 2
       },
       "technicalBoundary": "OIDC provider identity cryptographic issuer boundary"
+    },
+    {
+      "id": "906b499a299d6ddf200a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-isolated-schema-corruption-test-fixtures",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "These DDL mutants must never be used as production migration or provider-issuer configuration. A fixture setup failure is not evidence that the verifier rejected the intended state.",
+      "justification": "Six explicit owned PostgreSQL corruption cases exercise the recorded Apple issuer boundary: missing/unvalidated/broadened/Google-only constraint and nullable/missing issuer column. Each exact selected SQL entry produced old-verifier false PASS and current specific rejection, with rollback restoration. The nullable fixture drops its own primary key only inside the rolled-back test transaction. This list is test data, not a production business/security allowlist; full248/explicitlegacy247 and retained-ledger empty rollback controls are separate actual executions.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-and-actual-postgresql-counterexamples",
+      "reviewBatch": "apple-issuer-startup-guard-20261107",
+      "evidence": {
+        "file": "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "cases",
+        "valueCount": 6
+      }
     }
   ]
 }
