@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T01:02:58.462Z",
+  "generatedAt": "2026-11-07T02:13:35.765Z",
   "repositoryRoot": ".",
-  "filesScanned": 2633,
+  "filesScanned": 2634,
   "candidateCount": 1405,
   "byClassification": {
     "dynamic-business-catalog": 920,
@@ -91591,7 +91591,7 @@
       "lines": [
         14896
       ],
-      "consumerCount": 380,
+      "consumerCount": 381,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
