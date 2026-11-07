@@ -24,7 +24,7 @@ import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
-import Database.Persist (Entity (..), count, get, insert, insertKey, selectList, toPersistValue, (==.))
+import Database.Persist (Entity (..), Filter, count, get, insert, insertKey, selectList, toPersistValue, (==.))
 import Database.Persist.Sql (Single (..), rawSql, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -46,10 +46,13 @@ import TDF.API.SocialEventsAPI
     , EventImageUploadForm (..)
     , validateEventImageUploadForm
     )
+import qualified TDF.DTO.SocialEventsDTO as CityDTO
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO (..)
     , ArtistFollowerDTO (..)
     , EventBudgetLineDTO (..)
+    , EventCityInputDTO (..)
+    , EventCitySubscriptionUpdateDTO (..)
     , EventFinanceSummaryDTO (..)
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
@@ -488,6 +491,39 @@ spec = describe "social event handler helpers" $ do
             "Stored event metadata contains unknown fields: curency"
         assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
         assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
+
+    it "does not let one user's city subscription rename a shared city or change its timezone" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool
+            (do
+                rawExecute
+                    "CREATE TABLE \"event_city\" (\"id\" INTEGER PRIMARY KEY, \"name\" VARCHAR NOT NULL,\
+                    \ \"normalized_name\" VARCHAR NOT NULL, \"country_code\" VARCHAR NOT NULL, \"time_zone\" VARCHAR NULL,\
+                    \ \"created_at\" TIMESTAMP NOT NULL, \"updated_at\" TIMESTAMP NOT NULL,\
+                    \ CONSTRAINT \"unique_event_city\" UNIQUE (\"normalized_name\", \"country_code\"))" []
+                rawExecute
+                    "CREATE TABLE \"event_city_subscription\" (\"id\" INTEGER PRIMARY KEY, \"party_id\" VARCHAR NOT NULL,\
+                    \ \"city_id\" INTEGER NOT NULL REFERENCES \"event_city\", \"created_at\" TIMESTAMP NOT NULL,\
+                    \ CONSTRAINT \"unique_event_city_subscription\" UNIQUE (\"party_id\", \"city_id\"))" []
+            )
+            pool
+        let env = Env { envPool = pool, envConfig = error "envConfig is unused by city subscriptions" }
+            subscribe partyId name zone =
+                runHandler $ runReaderT
+                    (socialEventCitySubscriptionHandlerFor (socialEventUser partyId)
+                        (EventCitySubscriptionUpdateDTO [EventCityInputDTO name "EC" (Just zone)]))
+                    env
+        first <- subscribe 2 "Quito" "America/Guayaquil"
+        fmap (map (\c -> (CityDTO.eventCityName c, CityDTO.eventCityTimeZone c))) first
+            `shouldBe` Right [("Quito", Just "America/Guayaquil")]
+        second <- subscribe 3 "QUITO" "UTC"
+        fmap (map (\c -> (CityDTO.eventCityName c, CityDTO.eventCityTimeZone c, CityDTO.eventCitySubscribed c))) second
+            `shouldBe` Right [("Quito", Just "America/Guayaquil", True)]
+        cities <- runSqlPool (selectList [] []) pool
+        map ((\c -> (eventCityName c, eventCityTimeZone c)) . entityVal) cities
+            `shouldBe` [("Quito", Just "America/Guayaquil")]
+        subscriptions <- runSqlPool (count ([] :: [Filter EventCitySubscription])) pool
+        subscriptions `shouldBe` 2
 
     describe "event finance report range" $ do
         it "rejects overflowing budget actuals rather than reporting a negative sum" $
@@ -2301,6 +2337,17 @@ spec = describe "social event handler helpers" $ do
         liftIO $ do
             (afFollowId first) `shouldSatisfy` (/= Nothing)
             (afFollowId second) `shouldSatisfy` (/= Nothing)
+
+socialEventCitySubscriptionHandlerFor
+    :: AuthedUser
+    -> EventCitySubscriptionUpdateDTO
+    -> ReaderT Env Handler [CityDTO.EventCityDTO]
+socialEventCitySubscriptionHandlerFor user =
+    case socialEventsServer user of
+        _events :<|> citiesServer :<|> _ ->
+            case citiesServer of
+                _listCities :<|> _mySubscriptions :<|> replaceSubscriptions ->
+                    replaceSubscriptions
 
 socialEventUpdateHandlerFor
     :: AuthedUser

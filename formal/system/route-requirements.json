@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 14,
+    "named": 59,
     "path-named": 1,
-    "reviewed": 0,
-    "unspecified": 501,
-    "covered": 15
+    "reviewed": 26,
+    "unspecified": 430,
+    "covered": 86
   },
   "routes": [
     {
@@ -2483,290 +2483,400 @@
     {
       "method": "POST",
       "path": "/social-events/artists",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-PROFILE-WRITE-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/artists/{artistId}/follow",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-FOLLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/artists/{artistId}/follow",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-FOLLOW-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/artists/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-PROFILE-WRITE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/event-research/candidates",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-research/candidates/{candidateId}/materialize",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-research/pilot/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-research/runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/event-research/runs/{runId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-sources",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/event-sources/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-CREATE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/budget-lines",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-FINANCE-ENTRY-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/budget-lines/{lineId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-EVENT-REPORT-RANGE-001"
+      ],
+      "note": "PAY-EVENT-REPORT-RANGE-001 requires rejecting a budget-line edit with an unreportable actual before its first write; updateBudgetLine does so."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/finance-entries",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-FINANCE-ENTRY-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/finance-entries/{entryId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-FINANCE-ENTRY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-INVITATION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/invitations/{invitationId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-INVITATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/live-broadcasts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies native creation failing 503 without persistence, broadcaster-only end and the event/follower guards these handlers apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/end",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies native creation failing 503 without persistence, broadcaster-only end and the event/follower guards these handlers apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies native creation failing 503 without persistence, broadcaster-only end and the event/follower guards these handlers apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/activities",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/logistics/activities/{activityId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/activities/{activityId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/activities/{activityId}/verify-route",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/members",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/logistics/members/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/members/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/places",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/logistics/places/{placeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/places/{placeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/settings",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/verify-routes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/memory-invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-INVITATION-001"
+      ],
+      "note": "SOCIAL-EVENT-INVITATION-001 specifies the organizer campaign setting, recipient consent and opening attribution these SQL-backed handlers implement."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/memory-invitations/{deliveryId}/open",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-INVITATION-001"
+      ],
+      "note": "SOCIAL-EVENT-INVITATION-001 specifies the organizer campaign setting, recipient consent and opening attribution these SQL-backed handlers implement."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/image",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/media",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/moments/{momentId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/moments/{momentId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/{momentId}/comments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-EVENT-INTERACTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/{momentId}/reactions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-EVENT-INTERACTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/promo-codes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/promo-codes/{codeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/refunds/{refundId}/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/refunds/{refundId}/bank-transfer-complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-MANUAL-001"
+      ],
+      "note": "EVT-TICKET-MANUAL-001 specifies staff verification with separation of duties, which this handler enforces (TicketManualPayments.decide / RefundStore)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/refunds/{refundId}/reject",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/rsvp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RSVP-WITHDRAW-001"
+      ]
     },
     {
       "method": "PUT",
@@ -2779,140 +2889,198 @@
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/tax-documents/{documentId}/retry",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-OPS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-orders",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-MANUAL-001"
+      ],
+      "note": "EVT-TICKET-MANUAL-001 specifies staff verification with separation of duties, which this handler enforces (TicketManualPayments.decide / RefundStore)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/refund",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-tiers",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/ticket-tiers/{tierId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/tickets/check-in",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/tickets/{ticketId}/transfer",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/waitlist",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-WAITLIST-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/waitlist/{entryId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-WAITLIST-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/waitlist/{entryId}/notify",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-WAITLIST-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-OWNER-CLAIM-001"
+      ],
+      "note": "EVT-OWNER-CLAIM-001 specifies organizer-only editing, strict-administrator assignment on edit and administrative deletion, as editAccess / validateEventDeleteAccess apply."
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-OWNER-CLAIM-001"
+      ],
+      "note": "EVT-OWNER-CLAIM-001 specifies organizer-only editing, strict-administrator assignment on edit and administrative deletion, as editAccess / validateEventDeleteAccess apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{id}/image",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-OWNER-CLAIM-001"
+      ],
+      "note": "EVT-OWNER-CLAIM-001 specifies organizer-only editing, strict-administrator assignment on edit and administrative deletion, as editAccess / validateEventDeleteAccess apply."
     },
     {
       "method": "PUT",
       "path": "/social-events/me/city-subscriptions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-CITY-SUBSCRIPTION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/me/memory-invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-INVITATION-001"
+      ],
+      "note": "SOCIAL-EVENT-INVITATION-001 specifies the organizer campaign setting, recipient consent and opening attribution these SQL-backed handlers implement."
     },
     {
       "method": "POST",
       "path": "/social-events/stripe/create-payment-intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/stripe/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STRIPE-WEBHOOK-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/ticket-transfers/{transferCode}/accept",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/ticket-transfers/{transferCode}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-OPS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/venues",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-VENUE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/venues/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-VENUE-001"
+      ]
     },
     {
       "method": "POST",

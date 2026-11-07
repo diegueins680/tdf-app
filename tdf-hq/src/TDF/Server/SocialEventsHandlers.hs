@@ -110,6 +110,7 @@ module TDF.Server.SocialEventsHandlers (
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
+    validateArtistProfilePartyChange,
     validateAuthenticatedPartyReference,
     validateEventDeleteAccess,
     requireEventManager,
@@ -505,6 +506,17 @@ validateArtistProfileWriteAccess :: AuthedUser -> Maybe T.Text -> Either ServerE
 validateArtistProfileWriteAccess user ownerPartyId
     | ownerPartyId == Just (renderPartyId user) || hasStrictAdminAccess user = Right ()
     | otherwise = Left err403{errBody = "Artist profile ownership is required"}
+
+-- | The party an edited artist profile ends up attached to. Only a strict
+-- administrator may move a profile to another party, as only an administrator
+-- may create one for another party; an owner keeps the stored party.
+validateArtistProfilePartyChange :: AuthedUser -> Maybe T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateArtistProfilePartyChange user storedPartyId requestedPartyId
+    | hasStrictAdminAccess user = Right (cleanedRequest <|> storedPartyId)
+    | maybe True (\requested -> Just requested == storedPartyId) cleanedRequest = Right storedPartyId
+    | otherwise = Left err403{errBody = "Only an administrator can move an artist profile to another party"}
+  where
+    cleanedRequest = cleanMaybeText requestedPartyId
 
 validateAuthenticatedPartyReference :: AuthedUser -> T.Text -> Either ServerError ()
 validateAuthenticatedPartyReference user referencedPartyId
@@ -2690,14 +2702,10 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         forM validated $ \(name, normalizedName, countryCode, timeZone) -> do
                             existing <- getBy (UniqueEventCity normalizedName countryCode)
                             case existing of
-                                Just (Entity cityKey _) -> do
-                                    update
-                                        cityKey
-                                        [ EventCityName =. name
-                                        , EventCityTimeZone =. timeZone
-                                        , EventCityUpdatedAt =. now
-                                        ]
-                                    pure cityKey
+                                -- A city row is shared by every subscriber and by
+                                -- event search; one user's subscription must not
+                                -- rename it or change its timezone for everyone.
+                                Just (Entity cityKey _) -> pure cityKey
                                 Nothing ->
                                     insert
                                         EventCity
@@ -3735,7 +3743,9 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         resolvedGenres <-
             liftIO (runSqlPool (resolvePublishedArtistGenres (artistGenreIds dto)) envPool)
                 >>= either (throwError . invalidArtistGenreIdsError) pure
-        let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
+        nextPartyId <-
+            either throwError pure
+                (validateArtistProfilePartyChange user (artistProfilePartyId existing) (artistPartyId dto))
         liftIO $ runSqlPool
             ( do
                 update

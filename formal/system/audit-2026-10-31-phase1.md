@@ -480,3 +480,22 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
 **Seguridad del runner PostgreSQL (consolidación):** no borra ninguna base antes de crear; instala la limpieza únicamente tras crear con éxito su nombre exclusivo. Rechaza `PGHOSTADDR`, `PGSERVICE`, `PGSERVICEFILE`, hosts ajenos a loopback (salvo `postgres` con `CI=true`) y puertos inválidos antes de invocar comandos de base. La conexión de `SessionIssueSpec` recibe solo `dbname=nombre_exclusivo`; host, puerto y credenciales permanecen en el entorno libpq sin concatenación. Los controles usan ejecutables propios simulados: no ejecutan PostgreSQL. El runner anterior y las mutaciones de limpieza prematura, nombre compartido y DSN con credenciales fallan esas regresiones.
 - **Integración de `main` (PR #599, campañas de video):** `main` añadió tres rutas mutantes (`PUT /artists/video-campaigns/{campaignKey}`, `POST …/conversion`, `POST …/feature`). El gate de rutas las rechazó hasta clasificarlas, como debe; quedan como `unspecified`. Recuento actual: 15 de **516** rutas atribuidas, **501** sin requisito. Los informes de catálogo y los índices de especificación se regeneraron con las herramientas del repositorio.
 - **`ID-SESSION-004` (expiración de sesiones interactivas):** `formal/auth/SessionExpiry.tla` modela los tokens (interactivos, de servicio y de restablecimiento), la ventana de validez en el reloj de la base de datos, las sesiones heredadas sin expiración y un reloj que puede moverse a cualquier valor, también hacia atrás. Apalache demuestra inductivamente que todo uso aceptado de una sesión interactiva ocurre antes de su expiración, que una sesión interactiva sin expiración nunca se acepta, que toda ventana dura entre 1 segundo y el Max-Age de la cookie, y que los tokens de restablecimiento nunca autentican (hasta cuatro tokens, cualquier movimiento del reloj). Un testigo de alcanzabilidad descarta que la prueba sea vacía. Controles: aceptar tokens sin expiración o admitir un TTL mayor que el Max-Age viola `Safe`. Quedan **63** requisitos críticos sin modelo.
+
+## 44. F-05 — requisitos de las rutas `/social-events` (2026-11-07)
+
+- **Decisión del responsable (2026-11-07):** especificar primero el dominio `/social-events`, a partir del comportamiento actual de los manejadores, para que el responsable lo revise.
+- **Cobertura:** las 72 rutas mutantes de `/social-events` quedan atribuidas.
+  - 26 se vinculan, revisadas y con nota, a requisitos existentes que ya especifican su comportamiento: `EVT-TICKET-001`, `EVT-TICKET-MANUAL-001`, `PAY-EVENT-REPORT-RANGE-001`, `MEDIA-STREAM-001`, `SOCIAL-EVENT-INVITATION-001`, `SOCIAL-EVENT-MEMORY-001` y `EVT-OWNER-CLAIM-001`.
+  - 46 las nombran 15 requisitos nuevos, más el ya existente `EVT-DISCOVERY-001`. Los requisitos nuevos tienen estado `implemented but unspecified` y conformidad `IMPLEMENTED BUT UNSPECIFIED`: describen lo que hace el código, no una especificación aprobada.
+  - Recuento global: 86 de 516 rutas mutantes atribuidas; **430** sin requisito.
+- **Documento para revisión:** `formal/system/social-events-routes.md` recoge la autorización, validación, efectos y concurrencia de cada ruta (leídos del código) y los comportamientos que parecen no intencionados.
+- **Defectos corregidos:**
+  1. `PUT /social-events/artists/{id}` aceptaba `artistPartyId` del cuerpo sin comprobarlo, así que un propietario podía mover su perfil de artista a cualquier otra parte. Ahora solo un administrador estricto puede hacerlo, igual que al crear (`validateArtistProfilePartyChange`, con pruebas en `Spec.hs`).
+  2. `PUT /social-events/me/city-subscriptions` sobrescribía el nombre y la zona horaria de una ciudad compartida con lo que enviaba el suscriptor. Ahora reutiliza la fila existente sin cambiarla (prueba de manejador en `FollowHandlerSpec`).
+- **Pendiente de decisión** (campos `ambiguity`; lista completa en el documento de revisión):
+  - el webhook de Stripe heredado no registra una excepción de conciliación cuando la evidencia no coincide (`PAY-STRIPE-WEBHOOK-001`, crítico);
+  - los códigos promocionales son únicos entre todos los eventos;
+  - la lista de espera admite duplicados concurrentes;
+  - cualquier cuenta puede crear eventos;
+  - fuera del modo canónico, los comentarios guardan un nombre de autor que envía el cliente;
+  - «notificar» en la lista de espera e invitar a un evento no envían mensajes.
