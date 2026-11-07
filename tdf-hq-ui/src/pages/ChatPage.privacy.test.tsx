@@ -40,9 +40,45 @@ function setup(path = '/chat', seed?: (client: QueryClient) => void, staleTime =
 beforeEach(() => {
   partyId = 1; jest.clearAllMocks(); window.localStorage.clear();
   Element.prototype.scrollIntoView = jest.fn();
+  Element.prototype.scrollTo = jest.fn();
   listThreads.mockResolvedValue([thread]); listMessages.mockResolvedValue([message]); sendMessage.mockResolvedValue(message);
 });
 afterEach(() => { cleanup(); clients.splice(0).forEach((client) => client.clear()); onlineManager.setOnline(true); });
+it('follows incoming messages inside their viewport without scrolling ancestors', async () => {
+  const { client } = setup();
+  await screen.findByText('Private body');
+  const scroll = Element.prototype.scrollTo as jest.Mock;
+  const viewport = scroll.mock.contexts[0] as HTMLElement;
+  expect(viewport).toBeInstanceOf(HTMLElement);
+  expect(viewport.contains(screen.getByText('Private body'))).toBe(true);
+  expect(getComputedStyle(viewport).overflowY).toBe('auto');
+  Object.defineProperty(viewport, 'scrollHeight', { configurable: true, value: 900 });
+  expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ block: 'end', behavior: 'instant' });
+  (Element.prototype.scrollIntoView as jest.Mock).mockClear();
+  scroll.mockClear();
+  listMessages.mockResolvedValue([message, { ...message, cmId: 2, cmBody: 'Incoming message' }]);
+  await act(async () => { await client.refetchQueries({ queryKey: ['chat-messages', 1, 10] }); });
+  await screen.findByText('Incoming message');
+  await waitFor(() => expect(scroll).toHaveBeenCalledWith({ top: 900, behavior: 'smooth' }));
+  expect(scroll.mock.contexts.every((target) => target === viewport)).toBe(true);
+  expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+});
+it('reveals a same-thread notification once before following later messages locally', async () => {
+  const { client } = setup();
+  await screen.findByText('Private body');
+  const reveal = Element.prototype.scrollIntoView as jest.Mock;
+  await waitFor(() => expect(reveal).toHaveBeenCalledTimes(1));
+  reveal.mockClear();
+  fireEvent.click(screen.getByRole('button', { name: 'Open chat notification' }));
+  await waitFor(() => expect(screen.getByTestId('location').textContent).toBe(''));
+  await waitFor(() => expect(reveal).toHaveBeenCalledTimes(1));
+  expect(reveal).toHaveBeenCalledWith({ block: 'end', behavior: 'instant' });
+  reveal.mockClear();
+  listMessages.mockResolvedValue([message, { ...message, cmId: 2, cmBody: 'Later message' }]);
+  await act(async () => { await client.refetchQueries({ queryKey: ['chat-messages', 1, 10] }); });
+  await screen.findByText('Later message');
+  expect(reveal).not.toHaveBeenCalled();
+});
 it('hides cached previews, headers, bodies and unread counts after a denied thread refetch', async () => {
   const { client } = setup();
   await screen.findByText('Private body');
