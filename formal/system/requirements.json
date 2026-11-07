@@ -16260,7 +16260,8 @@
         "tdf-hq-ui/src/services/storageCredentials.ts",
         "docs/catalog-persistence/storage-security-successor-20261106.json",
         "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
-        "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql"
+        "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql",
+        "tdf-mobile/src/api/accountStorage.ts"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -16289,7 +16290,9 @@
         "tdf-hq-ui/src/services/storageCredentials.test.ts",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "tdf-hq-ui/src/services/googleDrive.compatibility.test.ts",
-        "tdf-hq/test/sql/content_storage_archived_identity.sql"
+        "tdf-hq/test/sql/content_storage_archived_identity.sql",
+        "tdf-mobile/src/api/accountStorage.test.ts",
+        "tdf-mobile/src/api/upload.compatibility.test.ts"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"

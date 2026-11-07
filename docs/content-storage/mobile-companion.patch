@@ -1,5 +1,53 @@
-# Functional companion based on compatible Mobile1c63; current compiled API generation and protected upstream composition are pending.
-# Existing src/api/upload.ts remains byte-exact1c63. New account helper is separately gated OFF.
+diff --git a/src/api/accountStorage.test.ts b/src/api/accountStorage.test.ts
+new file mode 100644
+index 0000000..6278b35
+--- /dev/null
++++ b/src/api/accountStorage.test.ts
+@@ -0,0 +1,44 @@
++jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
++jest.mock('../lib/api', () => ({ API_BASE: 'https://api.tdf.test' }));
++const mockBinding = { authorization: 'Bearer owner-a', signal: new AbortController().signal, version: 1 };
++jest.mock('./client', () => ({
++  getAuthToken: () => 'Bearer owner-a',
++  captureAuthSession: () => mockBinding,
++  assertAuthSession: jest.fn(),
++}));
++import { assertAuthSession } from './client';
++import { uploadAccountMedia, readPrivateStorageFile } from './accountStorage';
++
++const fetchMock = jest.fn();
++const input = { uri: 'file:///private.bin', destination: 'tdf' as const, idempotencyKey: 'a'.repeat(64) };
++beforeEach(() => { jest.clearAllMocks(); global.fetch = fetchMock; process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED = 'true'; });
++afterAll(() => { delete process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED; });
++
++it('requires explicit destination, stable identity and owner-bound personal consent', async () => {
++  await expect(uploadAccountMedia({ uri: 'file:///private.bin' })).rejects.toThrow('Selecciona');
++  await expect(uploadAccountMedia({ ...input, idempotencyKey: undefined })).rejects.toThrow('identidad estable');
++  await expect(uploadAccountMedia({ ...input, destination: 'google_drive', connectionHandle: 'raw-google-token' })).rejects.toThrow('Conecta');
++  await expect(uploadAccountMedia({ ...input, connectionHandle: 'another-destination' })).rejects.toThrow('personal');
++  expect(fetchMock).not.toHaveBeenCalled();
++});
++
++it('preserves private links and request identity instead of advertising public access', async () => {
++  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ duFileId: 'file', duWebContentLink: '/storage/files/00000000-0000-4000-8000-000000000001', duPublicUrl: null }) });
++  await expect(uploadAccountMedia(input)).resolves.toContain('/storage/files/');
++  expect(fetchMock).toHaveBeenCalledWith('https://api.tdf.test/drive/upload', expect.objectContaining({ signal: mockBinding.signal, headers: { Authorization: mockBinding.authorization } }));
++  expect(assertAuthSession).toHaveBeenCalledTimes(2);
++});
++
++it('does not read private bytes after a session changes', async () => {
++  (assertAuthSession as jest.Mock).mockImplementationOnce(() => { throw new Error('session changed'); });
++  const arrayBuffer = jest.fn();
++  fetchMock.mockResolvedValue({ ok: true, arrayBuffer });
++  await expect(readPrivateStorageFile('00000000-0000-4000-8000-000000000001')).rejects.toThrow('session changed');
++  expect(arrayBuffer).not.toHaveBeenCalled();
++});
++
++it.each([undefined, 'false', 'TRUE', '1'])('keeps new account uploads unavailable before literal activation (%s)', async (value) => {
++  if (value === undefined) delete process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED; else process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED = value;
++  await expect(uploadAccountMedia(input)).rejects.toThrow('todavía no está habilitado');
++  expect(fetchMock).not.toHaveBeenCalled();
++});
 diff --git a/src/api/accountStorage.ts b/src/api/accountStorage.ts
 new file mode 100644
 index 0000000..6aebb37
@@ -88,56 +136,76 @@ index 0000000..6aebb37
 +  assertAuthSession(binding);
 +  return bytes;
 +}
-diff --git a/src/api/accountStorage.test.ts b/src/api/accountStorage.test.ts
-new file mode 100644
-index 0000000..6278b35
---- /dev/null
-+++ b/src/api/accountStorage.test.ts
-@@ -0,0 +1,44 @@
-+jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
-+jest.mock('../lib/api', () => ({ API_BASE: 'https://api.tdf.test' }));
-+const mockBinding = { authorization: 'Bearer owner-a', signal: new AbortController().signal, version: 1 };
-+jest.mock('./client', () => ({
-+  getAuthToken: () => 'Bearer owner-a',
-+  captureAuthSession: () => mockBinding,
-+  assertAuthSession: jest.fn(),
-+}));
-+import { assertAuthSession } from './client';
-+import { uploadAccountMedia, readPrivateStorageFile } from './accountStorage';
-+
-+const fetchMock = jest.fn();
-+const input = { uri: 'file:///private.bin', destination: 'tdf' as const, idempotencyKey: 'a'.repeat(64) };
-+beforeEach(() => { jest.clearAllMocks(); global.fetch = fetchMock; process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED = 'true'; });
-+afterAll(() => { delete process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED; });
-+
-+it('requires explicit destination, stable identity and owner-bound personal consent', async () => {
-+  await expect(uploadAccountMedia({ uri: 'file:///private.bin' })).rejects.toThrow('Selecciona');
-+  await expect(uploadAccountMedia({ ...input, idempotencyKey: undefined })).rejects.toThrow('identidad estable');
-+  await expect(uploadAccountMedia({ ...input, destination: 'google_drive', connectionHandle: 'raw-google-token' })).rejects.toThrow('Conecta');
-+  await expect(uploadAccountMedia({ ...input, connectionHandle: 'another-destination' })).rejects.toThrow('personal');
-+  expect(fetchMock).not.toHaveBeenCalled();
-+});
-+
-+it('preserves private links and request identity instead of advertising public access', async () => {
-+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ duFileId: 'file', duWebContentLink: '/storage/files/00000000-0000-4000-8000-000000000001', duPublicUrl: null }) });
-+  await expect(uploadAccountMedia(input)).resolves.toContain('/storage/files/');
-+  expect(fetchMock).toHaveBeenCalledWith('https://api.tdf.test/drive/upload', expect.objectContaining({ signal: mockBinding.signal, headers: { Authorization: mockBinding.authorization } }));
-+  expect(assertAuthSession).toHaveBeenCalledTimes(2);
-+});
-+
-+it('does not read private bytes after a session changes', async () => {
-+  (assertAuthSession as jest.Mock).mockImplementationOnce(() => { throw new Error('session changed'); });
-+  const arrayBuffer = jest.fn();
-+  fetchMock.mockResolvedValue({ ok: true, arrayBuffer });
-+  await expect(readPrivateStorageFile('00000000-0000-4000-8000-000000000001')).rejects.toThrow('session changed');
-+  expect(arrayBuffer).not.toHaveBeenCalled();
-+});
-+
-+it.each([undefined, 'false', 'TRUE', '1'])('keeps new account uploads unavailable before literal activation (%s)', async (value) => {
-+  if (value === undefined) delete process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED; else process.env.EXPO_PUBLIC_CONTENT_STORAGE_ENABLED = value;
-+  await expect(uploadAccountMedia(input)).rejects.toThrow('todavía no está habilitado');
-+  expect(fetchMock).not.toHaveBeenCalled();
-+});
+diff --git a/src/api/generated/types.ts b/src/api/generated/types.ts
+index 9aae99b..31b88fa 100644
+--- a/src/api/generated/types.ts
++++ b/src/api/generated/types.ts
+@@ -4119,10 +4119,14 @@ export interface paths {
+         put?: never;
+         /**
+          * Exchange Google Drive OAuth code
+-         * @description Exchanges a Google OAuth code (PKCE) for Drive tokens.
++         * @description Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
+          */
+         post: operations["exchangeDriveToken"];
+-        delete?: never;
++        /**
++         * Disconnect personal Google Drive
++         * @description Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
++         */
++        delete: operations["disconnectDrive"];
+         options?: never;
+         head?: never;
+         patch?: never;
+@@ -4139,7 +4143,7 @@ export interface paths {
+         put?: never;
+         /**
+          * Refresh Google Drive access token
+-         * @description Refreshes a Google Drive access token using a refresh token.
++         * @description Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
+          */
+         post: operations["refreshDriveToken"];
+         delete?: never;
+@@ -14621,6 +14625,7 @@ export interface components {
+         DriveTokenRefreshRequest: {
+             refreshToken: string;
+         };
++        /** @description Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential. */
+         DriveTokenResponse: {
+             accessToken: string;
+             refreshToken?: string | null;
+@@ -27675,6 +27680,31 @@ export interface operations {
+             };
+         };
+     };
++    disconnectDrive: {
++        parameters: {
++            query?: never;
++            header?: never;
++            path?: never;
++            cookie?: never;
++        };
++        requestBody?: never;
++        responses: {
++            /** @description Personal connection erased */
++            204: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++            /** @description Current authenticated session required */
++            401: {
++                headers: {
++                    [name: string]: unknown;
++                };
++                content?: never;
++            };
++        };
++    };
+     refreshDriveToken: {
+         parameters: {
+             query?: never;
 diff --git a/src/api/upload.compatibility.test.ts b/src/api/upload.compatibility.test.ts
 new file mode 100644
 index 0000000..6f28710
@@ -165,3 +233,92 @@ index 0000000..6f28710
 +  await expect(uploadImage({ uri: 'file:///inventory.jpg' })).resolves.toBe('https://assets.example.test/synthetic');
 +  expect(fetchMock).toHaveBeenCalledTimes(1);
 +});
+diff --git a/src/features/generatedFeatureRegistry.ts b/src/features/generatedFeatureRegistry.ts
+index e9813fa..584695d 100644
+--- a/src/features/generatedFeatureRegistry.ts
++++ b/src/features/generatedFeatureRegistry.ts
+@@ -1,5 +1,5 @@
+ /* This file is generated by scripts/generate-mobile-feature-registry.mjs. */
+-export const MOBILE_FEATURE_REGISTRY_SOURCE_SHA256 = 'aba65a9e4137be69f82e891fcabf77880d9e97078b4b54d2e0a57ea75a4eb602' as const;
++export const MOBILE_FEATURE_REGISTRY_SOURCE_SHA256 = '599d5043999681fa29685122f17e5383cca4d27a3df7022538dd4a8d5e863b87' as const;
+ export const MOBILE_FEATURE_REGISTRY_VERSION = "2026-09-08" as const;
+ export const mobileFeatureGroups = [
+   {
+@@ -13173,5 +13173,77 @@ export const mobileFeatureRegistry = [
+     "searchable": true,
+     "safeLockedDisclosure": true,
+     "aliases": []
++  },
++  {
++    "id": "social.music-campaigns",
++    "parentId": "social",
++    "webRoute": "/social/campanas",
++    "routeType": "important-submodule",
++    "classification": "important-submodule",
++    "label": {
++      "es": "Campañas musicales",
++      "en": "Music campaigns"
++    },
++    "synonyms": {
++      "es": [
++        "lanzamiento",
++        "campaña",
++        "promoción musical"
++      ],
++      "en": [
++        "release",
++        "campaign",
++        "music promotion"
++      ]
++    },
++    "keywords": [
++      "campaign",
++      "music",
++      "release",
++      "youtube",
++      "instagram",
++      "facebook",
++      "tiktok"
++    ],
++    "description": {
++      "es": "Función de la plataforma TDF.",
++      "en": "TDF platform feature."
++    },
++    "navigationGroup": "people",
++    "icon": "campaign",
++    "breadcrumb": [
++      "social"
++    ],
++    "requiredAuth": "authenticated",
++    "routeAction": "view",
++    "requiredRoles": [],
++    "requiredModules": [],
++    "permissions": {
++      "discover": {},
++      "view": {},
++      "create": {},
++      "edit": {},
++      "approve": {},
++      "publish": {}
++    },
++    "featureFlag": null,
++    "maturity": "stable",
++    "globalMenu": true,
++    "quickCreate": null,
++    "favoriteEligible": true,
++    "pinEligible": true,
++    "recentBehavior": "feature",
++    "mobilePresentation": {
++      "kind": "web-only",
++      "destination": null,
++      "documentedException": "Campaign creation and review are available through the responsive web interface."
++    },
++    "mobileAliases": [],
++    "telemetryId": "social.music-campaigns",
++    "accessRequestEligible": true,
++    "technical": false,
++    "searchable": true,
++    "safeLockedDisclosure": true,
++    "aliases": []
+   }
+ ] as const;

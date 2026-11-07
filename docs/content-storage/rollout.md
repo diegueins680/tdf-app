@@ -59,9 +59,11 @@ work. It is not the current blocker. Reconcile this candidate's actual compiled
 API against a root-compatible Mobile snapshot and preserve current Mobile product
 work; the original14318a7 patch is historical. The updated functional patch based
 on compatible1c63 adds only a separately gated account helper and its tests,
-retaining the corporate adapter exactly. It still needs canonical API generation
-and qualified upstream composition, and must not be blindly applied over newer
-contracts. Actual protected upstream ancestry and current independent review/CI
+retaining the corporate adapter exactly. Current compatible source `f2be0239`
+was generated from the actual compiled928-operation context and passed695 Mobile
+tests, typecheck and release checks. It still needs qualified upstream composition
+and legitimate protected-main reachability, and must not be blindly applied over
+newer contracts. Actual protected upstream ancestry and current independent review/CI
 remain required before integrating a new root pin.
 
 ## Required operational evidence
@@ -91,7 +93,19 @@ remain required before integrating a new root pin.
   Direct static/CDN mount access bypasses that authorization boundary and blocks
   activation. Purge pre-existing caches and prove private/staging denial.
 
-Current local follow-up validation: canonical GHC9.10.3 compiled the backend
+Current local validation on built source `ac6d514e`: canonical Stack/GHC9.10.3
+compiled the application and test executable. The complete Hspec run passed4294
+examples with23 explicitly pending external-runner cases. The dedicated owned
+PostgreSQL16 security runner passed10 cases, including actual loopback authenticated
+HTTP assertions. The reviewed928-operation declaration preserves all927 existing
+named contracts and adds only bearer-authenticated `DELETE /drive/token`. All494
+compiled inputs remain unchanged through the metadata/client composition. These
+results do not establish image, provider, native consent UI, restore or production
+acceptance. See `compiler-observation-20261107.json`.
+
+## Historical November6 follow-up (source ca293581)
+
+Prior local follow-up validation: canonical GHC9.10.3 compiled the backend
 and Hspec passed 4,270 examples, zero failures and 22 pending. The dedicated
 PostgreSQL16 runner passed ten security cases including the real loopback HTTP
 owner/foreign-account/resource-reader/session-revocation/static-path assertions.
