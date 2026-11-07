@@ -1131,6 +1131,18 @@
       "conflict": "The directory claim machine made approved terminal, so a claim approved by mistake or fraud could not be revoked and the manager grants it created could only be withdrawn by direct SQL (audit Q3).",
       "authority": "Product owner accepted the audit recommendation on 2026-11-01.",
       "resolution": "approved -> revoked is added to the canonical claim machine. Only an administrator with the Admin role and module who is not the claimant may revoke, a non-empty reason is mandatory, every manager grant created by the claim is deactivated in the same transaction (the database refuses a revoked claim with an active grant), the transition is audited as claim.revoked and revoked is terminal; the claimant may submit a new claim."
+    },
+    {
+      "id": "AUTHORITY-URI-DECODE-001",
+      "sources": [
+        "formal/system/dependency-security.md",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/vendor/decode-uri-component/index.cjs",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
+      ],
+      "conflict": "Earlier dependency notes asserted current React Navigation/Expo incoming query parsing reached decoder0.2.2 and left0.5 compatibility unresolved. Fresh exact-version source inspection shows different incoming parsers, while query-string7 still installs and exposes the affected decoder; a direct0.5 override is not a callable CommonJS export.",
+      "authority": "The user-authorized security repair preserves supported caller behavior and follows the maintainer fix; fresh version-bound source and actual-consumer tests govern reachability claims rather than historical prose.",
+      "resolution": "Pin unchanged official upstream0.5.1 under an explicit npm alias, bind query-string7 to a private callable adapter through a root dependency-reference override, retain original0.2.2/namespace controls and add the actual0.5.0 distinct-run regression control. The original0.5.0 choice predates GHSA-qr28-fpjm-wq7f and its historical qualification does not qualify this successor. Narrow the old current incoming attack-path claim; preserve separately required audit/distribution gates."
     }
   ]
 }
