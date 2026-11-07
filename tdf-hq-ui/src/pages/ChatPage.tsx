@@ -631,7 +631,8 @@ function ChatWorkspace() {
         </Card>
 
         <Card sx={{ flex: 1, minWidth: 0 }}>
-          <CardContent sx={{ display: 'flex', flexDirection: 'column', height: { xs: 'auto', md: 600 } }}>
+          {/* A bounded card keeps the message viewport as the scroll owner on mobile too. */}
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', height: 600 }}>
             <Box sx={{ mb: 1 }}>
               {selectedThread && conversationAllowed ? (() => {
                 const threadDisplayName = selectedThread.ctOtherDisplayName.trim();
