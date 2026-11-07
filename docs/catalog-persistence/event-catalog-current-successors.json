@@ -382,12 +382,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "806180f5957fc4a7520f",
+      "currentId": "43457df535d339e95879",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 246,
-      "change": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver.",
+      "valueCount": 248,
+      "change": "Preserve every current protected-main246 entry, complete prior decision/history graph and all existing SQL bytes. Append only original service-authentication SQL introduced at1cb1dada1ec2bfdd1abc3d4d4053979ba482f287 and the additive archived-curator write guard introduced at06d425070c47b1668c9136d5258656d98a9eb158. The guard locks the existing table, validates its real required bigint Party FK and delegates to the canonical identity archive guard. Actual owned PostgreSQL16.13 complete248 apply/replay, unchanged original constraint/revocation witnesses and guard-absence RED/current-GREEN controls passed. No fake Persistent model, identity merge, live credential, deployment, provider action or release waiver.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -507,6 +507,17 @@
           "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+        },
+        {
+          "sourceRevision": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "563d2efb379f54280759fca652c53eeb3a60dd2d189b58a394080a729eb7a06e",
+          "sourceEntry": {
+            "id": "806180f5957fc4a7520f"
+          },
+          "sourceEntryCanonicalSha256": "3cac1756d5703059ce08c0f061a96e955684c142d540a34c57a641b23b544505",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire protected-main246 review retained byte-exact as previousDecision; this successor does not infer independent approval or permission to execute migrations."
         }
       ],
       "previousCurrentIds": [
@@ -536,7 +547,8 @@
         "d7fc1df6cbade4a92d25",
         "255ec943da9a86e36cc7",
         "be0b1503a04f9fa295ee",
-        "969410f2f45854cc54fc"
+        "969410f2f45854cc54fc",
+        "806180f5957fc4a7520f"
       ],
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
@@ -7989,7 +8001,13 @@
           ]
         }
       ],
-      "previousCurrentId": "969410f2f45854cc54fc"
+      "previousCurrentId": "806180f5957fc4a7520f",
+      "eventWatchPreviousResolution": {
+        "currentId": "806180f5957fc4a7520f",
+        "valueCount": 246,
+        "change": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver.",
+        "previousCurrentId": "969410f2f45854cc54fc"
+      }
     }
   ]
 }

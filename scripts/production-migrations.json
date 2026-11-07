@@ -1253,6 +1253,16 @@
       "id": "2026-11-06_video_campaign_identity_references",
       "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
       "introducedBy": "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
+    },
+    {
+      "id": "2026-10-21_event_watch_service_auth",
+      "path": "tdf-hq/sql/2026-10-21_event_watch_service_auth.sql",
+      "introducedBy": "1cb1dada1ec2bfdd1abc3d4d4053979ba482f287"
+    },
+    {
+      "id": "2026-11-07_event_watch_archived_actor_guard",
+      "path": "tdf-hq/sql/2026-11-07_event_watch_archived_actor_guard.sql",
+      "introducedBy": "06d425070c47b1668c9136d5258656d98a9eb158"
     }
   ]
 }

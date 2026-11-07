@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+    "tdf-hq/src/TDF/Auth.hs": "24977fc698d44538fe807870197dd8b6d4a92cee70ff0107dc5a3785f1e8cdd9",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b"
+    "tdf-hq/tdf-hq.cabal": "7290e4635a3ee4059c4a9b48c4ff57d52e0f2f213fbd1782165af607d09070ab"
   },
   "obligations": [
     {
@@ -393,6 +393,24 @@
       "change": "Compose protected main video-campaign registrations with the two Datafast library modules and DatafastConfigSpec test registration.",
       "semanticReview": "Removing exactly the three Datafast module-registration lines reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match both parents. Both original context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "06d425070c47b1668c9136d5258656d98a9eb158",
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "previousSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "currentSha256": "24977fc698d44538fe807870197dd8b6d4a92cee70ff0107dc5a3785f1e8cdd9",
+      "change": "Only broaden purpose-label rejection from normalized password-reset prefix to password-reset OR event-watch. Removing that exact change reproduces main Auth.hs byte-for-byte, so scoped strict-admin/module/ingestion helper bodies are unchanged.",
+      "semanticReview": "Independent current-context source review against protected main f615. Existing seven ordinary authorization/recovery projections, source-translator grammar and all other active reviewed source pins remain unchanged. The newtype-distinct service AuthHandler coexists with the unchanged AuthedUser handler. All earlier context-review entries are retained verbatim.",
+      "qualification": "Source context only, not a GitHub approval or proof of service endpoint admission, transaction expiry or revocation. Fresh source-derived solver/replay/control execution and actual HTTP/PostgreSQL service tests remain separately required."
+    },
+    {
+      "reviewedAgainst": "06d425070c47b1668c9136d5258656d98a9eb158",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "7290e4635a3ee4059c4a9b48c4ff57d52e0f2f213fbd1782165af607d09070ab",
+      "change": "Only library EventWatch and EventWatchSpec registration. Removing exact two lines reproduces main Cabal; no compiler, dependency, CPP, source path, alias or toolchain changes.",
+      "semanticReview": "Independent current-context source review against protected main f615. Existing seven ordinary authorization/recovery projections, source-translator grammar and all other active reviewed source pins remain unchanged. The newtype-distinct service AuthHandler coexists with the unchanged AuthedUser handler. All earlier context-review entries are retained verbatim.",
+      "qualification": "Source context only, not a GitHub approval or proof of service endpoint admission, transaction expiry or revocation. Fresh source-derived solver/replay/control execution and actual HTTP/PostgreSQL service tests remain separately required."
     }
   ]
 }

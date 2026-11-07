@@ -435,6 +435,13 @@ jobs:
           mkdir -p tmp/specification
           node scripts/inspect-compiled-api.mjs --binary "$BACKEND_BINARY_OUT" --output tmp/specification/compiled-api
 
+      - name: Verify isolated event-watch HTTP revocation and namespace transactions
+        env:
+          TDF_TEST_POSTGRES_PASSWORD: postgres
+        run: |
+          node --test scripts/event-watch-client.test.mjs scripts/event-watch-auth-model.test.mjs scripts/__tests__/event-watch-http-runner.test.mjs
+          python3 scripts/test-event-watch-http.py --binary "$BACKEND_BINARY_OUT" --database-url postgresql://postgres@postgres:5432/tdf_event_watch_http_test --output tmp/specification/event-watch-http
+
       - name: Verify booking object scope and concurrent resource calendar
         env:
           TDF_BOOKING_TEST_PG_HOST: postgres

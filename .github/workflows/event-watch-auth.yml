@@ -1,0 +1,42 @@
+name: Event watch service authentication
+on:
+  pull_request:
+    paths:
+      - 'tdf-hq/src/TDF/EventWatch.hs'
+      - 'tdf-hq/sql/2026-10-21_event_watch_service_auth.sql'
+      - 'tdf-hq/test/sql/event_watch_service_auth.sql'
+      - 'scripts/event-watch-*.mjs'
+      - '.github/workflows/event-watch-auth.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  service-credentials:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: event-watch-test
+          POSTGRES_DB: event_watch_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d event_watch_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: {node-version: 22}
+      - run: node --test scripts/event-watch-client.test.mjs scripts/event-watch-auth-model.test.mjs
+      - name: Check schema replay and revocation in disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: event-watch-test
+          PGDATABASE: event_watch_test
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -c 'CREATE TABLE party(id BIGINT PRIMARY KEY); INSERT INTO party VALUES(910001);'
+          psql -X -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-10-21_event_watch_service_auth.sql
+          psql -X -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-10-21_event_watch_service_auth.sql
+          psql -X -v ON_ERROR_STOP=1 -f tdf-hq/test/sql/event_watch_service_auth.sql
