@@ -26,8 +26,8 @@ particular, the older URI reachability claim was too broad: current Expo incomin
 query parsing uses `URLSearchParams`, and React Navigation has its own parser.
 The installed query-string7 decoder is replaced under the scoped
 [URI compatibility contract](uri-decoder.md). Its explicit adapter preserves the
-CommonJS caller while selecting unchanged upstream0.5.0; actual-consumer tests and
-two negative controls cover that boundary. No incoming deep-link exploit or
+CommonJS caller while selecting unchanged upstream0.5.1; actual-consumer tests and
+affected-release and namespace negative controls cover those finite boundaries. No incoming deep-link exploit or
 complete dependency clearance is claimed.
 Metro image-size1.2.1 similarly cannot be blindly replaced with its changed2.x
 export API. Forge verification exists in Expo signing tooling; no reachability

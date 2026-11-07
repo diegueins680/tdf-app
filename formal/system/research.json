@@ -766,6 +766,16 @@
       "decision": "adopted",
       "rationale": "The adapter selects default; an actual-consumer namespace substitution fails in the negative control. Native Metro/Hermes qualification remains separate from Node interoperability.",
       "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-URI-DECODE-004",
+      "source": "https://github.com/advisories/GHSA-qr28-fpjm-wq7f",
+      "title": "Subsequent quadratic percent-run replacement advisory",
+      "recommendation": "Use official patched0.5.1; versions through0.5.0 remain affected.",
+      "applicability": "The old0.5.0 algorithm used by original Mobile165 and private6fb has a distinct-run fallback gap not covered by the repeated-%FF family. Current incoming app exploit reachability remains unproven.",
+      "decision": "adopted",
+      "rationale": "Preserve unchanged official0.5.1 and caller adapter; retain original24 tests, add finite distinct-run work/output and one-level-decoding controls against genuine old0.5.0, and require fresh revision-bound qualification. No universal complexity or device/security clearance is inferred.",
+      "verifiedAt": "2026-11-07"
     }
   ]
 }

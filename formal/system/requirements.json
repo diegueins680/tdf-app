@@ -16768,7 +16768,7 @@
     {
       "id": "SYS-URI-DECODE-001",
       "title": "Patched URI decoding preserves the installed CommonJS caller",
-      "statement": "The exact pinned Mobile query-string7 decoder must use the integrity-pinned upstream0.5.0 algorithm through a callable adapter, preserving literal-plus normalization, valid Unicode and non-string rejection; the named repeated-invalid-byte regression oracle must reject the legacy0.2.2 implementation.",
+      "statement": "The exact pinned Mobile query-string7 decoder must use integrity-pinned upstream0.5.1 through a callable adapter, preserving literal-plus normalization, valid Unicode, non-string rejection and one-level percent decoding; the named repeated-invalid-byte and distinct-percent-run regression oracles must reject their respective affected0.2.2 and0.5.0 implementations.",
       "domain": "SYS",
       "critical": false,
       "actors": [
@@ -16803,7 +16803,7 @@
       "privacy": "Neither the adapter nor its evidence collection logs real URI payloads; regression inputs are synthetic.",
       "concurrency": "Synchronous calls per JavaScript runtime; instrumentation is confined to serialized tests and always restored.",
       "idempotency": "The same input and pinned decoder yield the same output without persistent effects.",
-      "failure": "Non-string values raise TypeError; no silent legacy fallback. The budget is an executable test oracle, not a production timeout or input-size limit.",
+      "failure": "Non-string values raise TypeError; no silent legacy fallback. The instrumented budgets are finite executable test oracles, not production timeouts, input-size limits or universal complexity bounds.",
       "recovery": "Retain the matched reviewed adapter/upstream pair and reproducible lock; repair compatibility rather than restoring the affected algorithm.",
       "observability": "Record exact Mobile/root revisions, lock integrity, clean-install result, client gates, scoped negative-control results and bundle evidence.",
       "source": "User audit sections10,18,21-25; upstream GHSA-vcc3-ghjq-m6fr; npm override documentation; fresh inspection of installed Expo6.0.24 and React Navigation parser sources.",
@@ -16817,22 +16817,23 @@
       ],
       "tests": [
         "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
-        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs"
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js"
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "confidence": "High for the actual installed consumer and stated empirical domains; no universal decoder or app attack-path proof.",
+      "confidence": "Scoped actual-consumer and finite regression obligations; candidate0.5.1 evidence must be recorded at its exact revision. No universal decoder, advisory-free app, attack-path or device proof.",
       "ambiguity": [
         "Device/store distribution remains separately qualified.",
         "Source inspection does not prove every possible future or dynamic parser call is unreachable."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Canonical catalog declares the obligation; PASS belongs only in an exact-revision execution receipt. Mobile7d9481d scoped codec/client/native-bundle checks pass; global dependency security and device/store distribution remain separate."
+        "reason": "PARTIAL canonical obligation. Original Mobile7d9481d and baseline6fb0.5.0 codec/client/bundle observations retain historical source identity; fresh audit GHSA-qr28-fpjm-wq7f invalidates security clearance for that algorithm. Candidate0.5.1 requires fresh exact-source codec, client, audit and bundle evidence. Global dependency security and device/store distribution remain separate."
       },
       "authority": "approved",
-      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves the input and makes1..8N+8 built-in decode calls; legacy0.2.2 violates that same oracle atN=32. Actual query-string7 remains callable and preserves covered query semantics.",
-      "verification": "Actual-consumer Jest tests, deterministic Unicode properties, genuine old-release and unadapted-namespace controls; clean npm installation and native bundle checks.",
+      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves input and makes1..8N+8 built-in decode calls; actual0.2.2 violates that oracle atN=32. For N in{32,64}, the distinct runs %00%<two-digit hex>x followed by%zz decode to the exact expected string while summed UTF16 receiver lengths across synchronous String.replace calls are positive and <=4 times input length; actual0.5.0 violates the same budget atN=32. The installed query-string7 caller stays callable, and covered produced percent text is decoded only once. These finite families do not establish universal complexity.",
+      "verification": "Actual-consumer Jest and seeded Unicode tests; original0.2.2 call-budget and unadapted-namespace controls;0.5.0 distinct-run replacement-work negative control; one-level percent/BOM/truncated-byte cases; fresh exact-source clean locked install, client gates, audit and native bundles. Historical executions do not qualify changed source.",
       "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
     }
   ]
