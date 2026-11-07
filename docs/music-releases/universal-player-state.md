@@ -93,7 +93,7 @@ unchanged. Embedded video keeps current explicit user intent, permissions,
 watch/attribution behavior and source-navigation cleanup.
 
 The featured preference's raw Party FK receives the canonical archive guard in
-forward250 after every original249 migration. Its table is locked before FK and
+forward251 after every published owner250 migration. Its table is locked before FK and
 helper validation. Active references and unchanged historical archived
 references retain normal semantics; new/reassigned archived references fail.
 Populated rollback refuses before removing protection; empty rollback retains
@@ -101,9 +101,15 @@ the table/data model and allows reviewed reinstallation. The model-only Party
 registry stays231, since actual-FK discovery already detects this dependency.
 Canonical schema verification also rejects a missing or incompatible guard.
 
-Current qualification uses synthetic owned fixtures. The full250 manifest is
+Current qualification uses synthetic owned fixtures. The historical250 manifest was
 applied/replayed and checked on PostgreSQL16.13 without starting backend workers;
 controlled missing-protection and old-schema counterexamples are retained.
 These finite checks do not establish production correspondence, HTTP access,
 provider availability or complete media/authorization refinement. Fresh final
 source hosted checks and independent review remain required.
+
+Owner/team/admin diagnostics use stable source-kind/source-ID cursors, default100 rows and at most500 per request. Each page rechecks current permissions; changing a health verdict does not move its identity across pages. The UI requests more rows only by explicit action and retains earlier diagnoses after a page failure. A traversal is not a snapshot: refresh to see newly inserted identities before an existing cursor. Account changes reset the displayed pages.
+
+The legacy featured-reference predicate uses the same current source-health gate: invalid sources do not become publicly available through a saved preference; successful validation restores eligibility without replacing the saved choice. Known Drive viewer/login HTML remains inconclusive rather than a permanent media verdict.
+
+The historical archive-guard250 execution predates the owner source-health250; their normal composition appends the guard as251. Actual combined251 application/replay must be recorded separately, without relabelling those earlier results.

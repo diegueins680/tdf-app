@@ -1069,11 +1069,25 @@ getLegacyMediaAccess sourceId = do
     [PersistText sourceId,PersistInt64 artistId]
   pure (addHeader ("private, no-store" :: Text) value)
 
-listMediaHealth :: AuthedUser -> AppM (Headers '[Header "Cache-Control" Text] [Value])
-listMediaHealth user = do
+-- Stable keyset pagination prevents checked_at updates from moving identities
+-- between pages. Permission is checked again in every page query, including cursors.
+listMediaHealth :: AuthedUser -> Maybe Int -> Maybe Text -> Maybe Text
+  -> AppM (Headers '[Header "Cache-Control" Text] [Value])
+listMediaHealth user requestedLimit afterKind afterId = do
+  let pageSize = fromMaybe 100 requestedLimit
+      validCursor = case (afterKind, afterId) of
+        (Nothing, Nothing) -> True
+        (Just kind, Just identity) -> kind `elem` ["asset", "legacy"]
+          && not (T.null identity) && T.length identity <= 128
+        _ -> False
+  unless (pageSize >= 1 && pageSize <= 500 && validCursor) $
+    throwError (badRequest "Use limit 1..500 and a complete media source cursor.")
   values <- jsonRows
-    "SELECT jsonb_build_object('sourceKind',s.source_kind,'sourceId',s.source_id,'sourceVersion',s.source_version,'artistPartyId',s.artist_party_id,'status',COALESCE(h.status,'pending'),'reason',h.reason,'checkedAt',h.checked_at,'nextCheckAt',h.next_check_at) FROM music_media_source s LEFT JOIN music_media_health h USING(source_kind,source_id,source_version) WHERE ?::boolean OR s.artist_party_id=? OR music_can(?,s.artist_party_id,'release.read') ORDER BY h.checked_at DESC NULLS FIRST,s.source_kind,s.source_id LIMIT 500"
-    [PersistBool (hasStrictAdminAccess user),PersistInt64 (currentPartyId user),PersistInt64 (currentPartyId user)]
+    "SELECT jsonb_build_object('sourceKind',s.source_kind,'sourceId',s.source_id,'sourceVersion',s.source_version,'artistPartyId',s.artist_party_id,'status',COALESCE(h.status,'pending'),'reason',h.reason,'checkedAt',h.checked_at,'nextCheckAt',h.next_check_at) FROM music_media_source s LEFT JOIN music_media_health h USING(source_kind,source_id,source_version) WHERE (?::boolean OR s.artist_party_id=? OR music_can(?,s.artist_party_id,'release.read')) AND (?::text IS NULL OR (s.source_kind COLLATE \"C\",s.source_id COLLATE \"C\") > (?::text COLLATE \"C\",?::text COLLATE \"C\")) ORDER BY s.source_kind COLLATE \"C\",s.source_id COLLATE \"C\" LIMIT ?"
+    [ PersistBool (hasStrictAdminAccess user), PersistInt64 (currentPartyId user)
+    , PersistInt64 (currentPartyId user), maybe PersistNull PersistText afterKind
+    , maybe PersistNull PersistText afterKind, maybe PersistNull PersistText afterId
+    , PersistInt64 (fromIntegral pageSize) ]
   pure (addHeader ("private, no-store" :: Text) values)
 
 revalidateMediaHealth :: AuthedUser -> Text -> Text

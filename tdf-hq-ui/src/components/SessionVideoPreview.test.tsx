@@ -94,6 +94,7 @@ it('hands native video playback to and from the global transport without overlap
   const pause = jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
   render(<SessionVideoPreview url="https://media.example.com/session.mp4" title="Video handoff" />);
   fireEvent.click(screen.getByRole('button', { name: 'Ver video aquí' }));
+  playerPause.mockClear(); // Explicit opening already pauses; assert the native play boundary independently.
   fireEvent.play(screen.getByLabelText('Video handoff'));
   expect(playerPause).toHaveBeenCalledTimes(1);
   window.dispatchEvent(new CustomEvent(PLAYER_TAKEOVER_EVENT));

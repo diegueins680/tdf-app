@@ -24,9 +24,17 @@ paths:
     get:
       operationId: listOwnMusicMediaHealth
       security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+        - name: afterKind
+          in: query
+          required: false
+          description: Last returned source kind; must be paired with afterId
+          schema: { $ref: '#/components/schemas/MusicMediaSourceKind' }
+        - { name: afterId, in: query, required: false, description: Last returned source ID; must be paired with afterKind, schema: { type: string, minLength: 1, maxLength: 128 } }
       responses:
         '200':
-          description: At most 500 current owner/team sources; administrators may inspect all sources
+          description: One bounded page of current owner/team sources; administrators may traverse all sources. Stable source-kind/ID ordering; pass the last returned identity as cursor when the page fills the requested limit. Every page rechecks current permission. A page sequence is not a database snapshot.
           headers:
             Cache-Control: { schema: { type: string } }
           content:
@@ -35,12 +43,13 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/MusicMediaHealth' }
         '401': { description: Authentication required }
+        '400': { description: 'Invalid limit, incomplete cursor or unsupported source kind' }
   /music/media-health/{sourceKind}/{sourceId}/revalidate:
     post:
       operationId: revalidateOwnMusicMedia
       security: [{ bearerAuth: [] }]
       parameters:
-        - { name: sourceKind, in: path, required: true, schema: { type: string, enum: [asset, legacy] } }
+        - { name: sourceKind, in: path, required: true, schema: { $ref: '#/components/schemas/MusicMediaSourceKind' } }
         - { name: sourceId, in: path, required: true, schema: { type: string } }
       responses:
         '200':
@@ -57,11 +66,14 @@ paths:
         '404': { description: Source missing or caller cannot manage its artist }
 components:
   schemas:
+    MusicMediaSourceKind:
+      type: string
+      enum: [asset, legacy]
     MusicMediaHealth:
       type: object
       required: [sourceKind, sourceId, sourceVersion, artistPartyId, status, reason, checkedAt, nextCheckAt]
       properties:
-        sourceKind: { type: string, enum: [asset, legacy] }
+        sourceKind: { $ref: '#/components/schemas/MusicMediaSourceKind' }
         sourceId: { type: string }
         sourceVersion: { type: string }
         artistPartyId: { type: integer, format: int64 }

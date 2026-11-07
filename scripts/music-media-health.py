@@ -166,6 +166,11 @@ def probe(url, *, signed=False, env=None):
                 return 'valid', 'decodable'
         return ('permanent', 'unsupported') if complete else ('temporary', 'inconclusive')
     except ProbeFailure as error:
+        # Drive may return an HTML viewer, consent or login page with200 after
+        # a grant expires. This is not evidence that its underlying audio is bad.
+        host=(urlsplit(url).hostname or '').rstrip('.').lower()
+        if error.reason == 'unsupported' and host in ('drive.google.com','drive.usercontent.google.com'):
+            return 'temporary', 'inconclusive'
         return ('permanent' if error.permanent else 'temporary'), error.reason
     except (TimeoutError, subprocess.TimeoutExpired, socket.timeout):
         return 'temporary', 'timeout'

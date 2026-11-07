@@ -1,3 +1,17 @@
+## Continuation — 7 November2026
+
+Executed in this continuation:363 UI suites/4,112 tests;4,275 backend examples with0 failures and23 declared pending;42 native AAC/FLAC Chromium desktop/phone-viewport/Firefox journeys;250-migration full-schema application/replay/startup and guard-removal controls; actual HTTP pagination and featured-reference health suppression/restoration;13 bounded probe tests. Mobile182 merged normally asd238ca8 after current approval and hosted validate; its pinned20daa1b passed685 tests/99 suites, release checks and offline Metro startup locally. WebKit/device/real-provider/storage acceptance remains separate.
+
+A direct PostgreSQL counterexample also reproduced the original featured function retaining available=true for a confirmed-invalid legacy source. The forward250th migration fixes it without deleting owner preferences. Real HTTP verifies public omission, private retention, rejected invalid reselection and successful restoration. Drive viewer/login HTML is now treated as inconclusive, so it cannot newly quarantine valid provider audio; malformed actual media remains a permanent-failure candidate.
+
+Published105c0501c completed35 substantive hosted checks and obtained independent approval; its production hold remained. This continuation normally reconciles protected mainccea8c4, preserving the consent-gated campaign video controls and the global/native/provider playback handoff. Native session/song PR706 was inspected; it is still separate unmerged work and its video/chapter engine changes are not claimed here.
+
+Reproduced a large-catalog failure with actual HTTP against the prior backend: a request for100 diagnostics returned500, while the old UI had no next-page action. New owner diagnostics use stable bounded cursors and expose subsequent pages, page retries and exact-source revalidation. The HTTP regression creates501 legacy sources, checks complete duplicate-free traversal and revokes team access between pages. Verification outcomes are recorded after execution; a fixture setup failure and the intentional baseline failure remain in task-local logs.
+
+The focused Mobile companion182 is based on protected2c72f22 and changes only generated pagination declarations. It preserves the decoder repair already merged in Mobile165; the existing SYS-URI-DECODE-001 specification is reused without weakening its qualifications. Current client tests and startup are distinct from native-device or store delivery.
+
+A read-only diagnostic explains two canonical collector refusals: the API configured image lacks a registry digest and its Compose-file label differs from the required canonical path. Database/edge pass those particular identity checks. This is a small allowlisted observation, not a replacement valid runtime receipt or release-readiness claim. No production configuration, data, flags or media were changed. The guarded routine release executor, coordinated recovery/storage acceptance and backend-first rollout remain required.
+
 # Unified playback — implementation and remaining obligations
 
 ## Delivery candidate — 6 November 2026

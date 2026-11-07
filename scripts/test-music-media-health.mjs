@@ -62,11 +62,23 @@ try {
   assert.equal(sql(`SELECT music_public_asset_accessible('${asset}',NULL)`),'f','Health never grants publication rights');
   const legacy=sql(`INSERT INTO artist_release(artist_party_id,title,spotify_url) VALUES (${artist},'Health legacy','https://media.example/a.mp3') RETURNING id`);
   const id=legacy+':spotify';
+  apply('2026-10-30_artist_featured_track.sql');
+  assert.equal(sql(`SELECT music_set_artist_featured_track(${artist},NULL,${legacy},NULL)`),'t');
   assert.equal(health('legacy',id).status,'pending','Ingestion queues its exact source');
   for (const reason of ['timeout','server','authentication','offline','transport']) {
     due('legacy',id);t=token();claim(t);observe(t,'temporary',reason);
     assert.equal(eligible('legacy',id),true,reason+' is not a permanent verdict');
   }
+  due('legacy',id);t=token();claim(t);observe(t,'permanent','missing');
+  sql(`UPDATE music_media_health SET first_failure_at=now()-interval '31 minutes' WHERE source_kind='legacy' AND source_id='${id}'`);
+  due('legacy',id);t=token();claim(t);observe(t,'permanent','missing');
+  assert.equal(eligible('legacy',id),false);
+  assert.equal(sql(`SELECT music_artist_featured_track_eligible(${artist},NULL,${legacy},NULL)`),'t','Original preference function reproduces stale availability');
+  apply('2026-11-07_music_featured_source_health.sql');apply('2026-11-07_music_featured_source_health.sql');
+  assert.equal(sql(`SELECT music_artist_featured_track_eligible(${artist},NULL,${legacy},NULL)`),'f','Featured references obey the same confirmed-invalid gate');
+  assert.equal(sql(`SELECT legacy_release_id FROM music_artist_featured_track WHERE artist_party_id=${artist}`),legacy,'Owner preference is preserved');
+  due('legacy',id);t=token();claim(t);observe(t,'valid','decodable');
+  assert.equal(sql(`SELECT music_artist_featured_track_eligible(${artist},NULL,${legacy},NULL)`),'t','Successful validation restores featured eligibility');
   due('legacy',id);t=token();const old=claim(t);
   sql(`UPDATE artist_release SET spotify_url='https://media.example/b.mp3' WHERE id=${legacy}`);
   assert.equal(observe(t,'permanent','missing'),'f','Old source result cannot overwrite replacement');

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, Button, Stack, Typography } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { get, post } from '../api/client';
 import { useSession } from '../session/SessionContext';
 
@@ -18,18 +18,31 @@ const reason: Record<string, string> = {
 };
 export default function MediaHealthPanel() {
   const { session } = useSession();
+  if (!session || !Number.isSafeInteger(session.partyId) || (session.partyId ?? 0) <= 0) return null;
+  return <OwnerMediaHealth key={session.partyId} ownerId={session.partyId!} />;
+}
+function OwnerMediaHealth({ ownerId }: { ownerId: number }) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
-  const health = useQuery({ queryKey: ['music-media-health', session?.partyId],
-    queryFn: ({ signal }) => get<MediaHealth[]>('/music/media-health', { signal }), enabled: Boolean(session), retry: false });
-  if (!session) return null;
+  const health = useInfiniteQuery({
+    queryKey: ['music-media-health', ownerId],
+    initialPageParam: null as Pick<MediaHealth, 'sourceKind' | 'sourceId'> | null,
+    queryFn: ({ pageParam, signal }) => {
+      const query = new URLSearchParams({ limit: '100' });
+      if (pageParam) { query.set('afterKind', pageParam.sourceKind); query.set('afterId', pageParam.sourceId); }
+      return get<MediaHealth[]>(`/music/media-health?${query}`, { signal });
+    },
+    getNextPageParam: (last) => last.length === 100 ? last.at(-1) : undefined,
+    retry: false,
+  });
+  const sources = health.data?.pages.flat() ?? [];
   return <Stack spacing={1} sx={{ mt: 2 }}>
     <Typography component="h2" variant="h6">Estado de los archivos de música</Typography>
     <Typography variant="body2">Los archivos confirmados como no reproducibles se conservan aquí y se ocultan del audio público. Una comprobación correcta los vuelve a habilitar.</Typography>
     <Button onClick={() => { void health.refetch(); }} disabled={health.isFetching}>Actualizar comprobaciones</Button>
     {message && <Alert severity="info">{message}</Alert>}
-    {health.isError && <Alert severity="warning">No pudimos consultar los archivos. Intenta actualizar.</Alert>}
-    {health.data?.filter((item) => item.status !== 'valid').map((item) => {
+    {health.isError && !health.isFetchNextPageError && <Alert severity="warning">No pudimos consultar los archivos. Intenta actualizar.</Alert>}
+    {sources.filter((item) => item.status !== 'valid').map((item) => {
       const id = `${item.sourceKind}:${item.sourceId}`;
       return <Alert key={id} severity={item.status === 'invalid' ? 'error' : 'warning'}
         action={<Button disabled={pending !== null} onClick={() => {
@@ -43,6 +56,10 @@ export default function MediaHealthPanel() {
         {item.checkedAt && <Typography variant="caption">Última comprobación: {new Date(item.checkedAt).toLocaleString()}</Typography>}
       </Alert>;
     })}
-    {health.data?.length === 500 && <Typography variant="caption">Se muestran los primeros 500 archivos. Otros archivos siguen en la cola de comprobación.</Typography>}
+    {health.isFetchNextPageError && <Alert severity="warning">No pudimos cargar los siguientes archivos. Las comprobaciones anteriores siguen disponibles.</Alert>}
+    {health.hasNextPage && <Button disabled={health.isFetchingNextPage} onClick={() => { void health.fetchNextPage(); }}>
+      {health.isFetchingNextPage ? 'Cargando archivos…' : health.isFetchNextPageError ? 'Reintentar archivos' : 'Cargar más archivos'}
+    </Button>}
+    {health.data && <Typography variant="caption">{sources.length} archivos consultados. Cada página comprueba tus permisos actuales.</Typography>}
   </Stack>;
 }

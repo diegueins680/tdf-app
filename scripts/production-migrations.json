@@ -1270,6 +1270,11 @@
       "introducedBy": "51a4813e992c9466f85e8fc7d701bf3369c2dbf5"
     },
     {
+      "id": "2026-11-07_music_featured_source_health",
+      "path": "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
+      "introducedBy": "566dd05c4f630ffdbdb9f0c4a38260cd5274197e"
+    },
+    {
       "id": "2026-11-07_artist_featured_identity_guard",
       "path": "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
       "introducedBy": "6d7bf89fc4ab5127549f67c5e044f69007f1ac2c"
