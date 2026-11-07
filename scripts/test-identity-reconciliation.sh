@@ -21,6 +21,9 @@ SQL
 "${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-09-17_identity_reconciliation.sql"
 "${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-09-18_identity_review_dependencies.sql"
 "${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-09-18_identity_review_dependencies.sql"
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-10-20_video_campaigns.sql"
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql"
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql"
 "${psql_cmd[@]}" -f "$root/tdf-hq/test/sql/identity_reconciliation.sql"
 # Real concurrent connections: both transactions must return the same ID.
 work=$(mktemp -d "${TMPDIR:-/tmp}/tdf-identity-concurrency.XXXXXX")
@@ -48,4 +51,17 @@ DO $$ BEGIN
 END $$;
 ROLLBACK;
 SQL
-printf '%s\n' 'Identity reconciliation migration, replay, concurrency and access checks passed.'
+# A populated draft must prevent a destructive registry rollback.
+"${psql_cmd[@]}" -c "INSERT INTO video_campaign(artist_party_id,campaign_key,revision,document,created_at,updated_at) VALUES(1,'identity-rollback-fixture',1,'{\"status\":\"draft\"}',now(),now())"
+if "${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql"; then
+  printf '%s\n' 'Unsafe populated video identity rollback succeeded' >&2
+  exit 1
+fi
+test "$("${psql_cmd[@]}" -Atc "SELECT count(*) FROM video_campaign WHERE campaign_key='identity-rollback-fixture'")" = 1
+"${psql_cmd[@]}" -c "DELETE FROM video_campaign WHERE campaign_key='identity-rollback-fixture'"
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql"
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql"
+test "$("${psql_cmd[@]}" -Atc "SELECT count(*) FROM identity_known_party_reference WHERE table_name IN ('video_campaign','video_campaign_conversion')")" = 0
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql"
+test "$("${psql_cmd[@]}" -Atc "SELECT count(*) FROM identity_known_party_reference WHERE table_name IN ('video_campaign','video_campaign_conversion')")" = 2
+printf '%s\n' 'Identity reconciliation, video guards, replay, concurrency and safe rollback checks passed.'
