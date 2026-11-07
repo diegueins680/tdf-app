@@ -244,6 +244,8 @@ import TDF.Server
     , resolveMarketplaceOrderPaidAtForStatus
     , validateOptionalMarketplacePaymentProviderUpdate
     , validateMarketplaceStripeAdminUpdate
+    , publicBookingSqlConflict
+    , validatePublicManualPaymentSelection
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationStoredName
     , resolveCourseRegistrationAttachmentName
@@ -530,6 +532,7 @@ import TDF.Services.InstagramSync
     , buildUserMediaRequestUrl
     )
 import Test.Hspec
+import Database.PostgreSQL.Simple (SqlError (..), ExecStatus (FatalError))
 import Web.PathPieces (PathPiece, fromPathPiece, toPathPiece)
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -10073,6 +10076,26 @@ spec = describe "TDF.Server helpers" $ do
             resolveMarketplaceOrderPaidAtForStatus now "processing" Nothing Nothing Nothing
                 `shouldBe` Right Nothing
             validateMarketplaceOrderUpdateStatus (Just "awaiting_payment") `shouldSatisfy` isLeft
+
+    describe "publicBookingSqlConflict" $ do
+        it "maps calendar, lifecycle and serialization failures to 409 and leaves the rest" $ do
+            let withState st = SqlError st FatalError "" "" ""
+            fmap errHTTPCode (publicBookingSqlConflict (withState "23P01")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "23514")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "40001")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "40P01")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "23505")) `shouldBe` Nothing
+
+    describe "validatePublicManualPaymentSelection" $ do
+        it "refuses bank transfer on a paid deposit like the online rails do" $
+            either errHTTPCode (const 0) (validatePublicManualPaymentSelection "paid" "bank_transfer")
+                `shouldBe` 409
+        it "refuses other methods and a processing rail, and admits the rest" $ do
+            either errHTTPCode (const 0) (validatePublicManualPaymentSelection "awaiting_payment" "card")
+                `shouldBe` 400
+            either errHTTPCode (const 0) (validatePublicManualPaymentSelection "processing" "bank_transfer")
+                `shouldBe` 409
+            validatePublicManualPaymentSelection "awaiting_payment" " Bank_Transfer " `shouldBe` Right ()
 
     describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
         it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do

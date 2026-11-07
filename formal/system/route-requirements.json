@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 294,
+    "named": 302,
     "path-named": 1,
-    "reviewed": 66,
-    "unspecified": 155,
-    "covered": 361
+    "reviewed": 68,
+    "unspecified": 145,
+    "covered": 371
   },
   "routes": [
     {
@@ -646,62 +646,84 @@
     {
       "method": "POST",
       "path": "/bookings",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-BOOK-001"
+      ],
+      "note": "AUTH-BOOK-001 and BOOK-CALENDAR-001 specify the staff routes: Scheduling admission, studio roles or the stored customer or engineer identity, a current-session fence, exclusion-backed calendar edits and 404 for foreign updates."
     },
     {
       "method": "POST",
       "path": "/bookings/public",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/manual-payment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/manual-payment/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/bookings/{bookingId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-BOOK-001"
+      ],
+      "note": "AUTH-BOOK-001 and BOOK-CALENDAR-001 specify the staff routes: Scheduling admission, studio roles or the stored customer or engineer identity, a current-session fence, exclusion-backed calendar edits and 404 for foreign updates."
     },
     {
       "method": "POST",
       "path": "/bookings/{bookingId}/manual-payment/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-MANUAL-REVIEW-001"
+      ]
     },
     {
       "method": "POST",

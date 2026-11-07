@@ -13882,7 +13882,7 @@
     {
       "id": "PAY-CAPTURE-RECON-001",
       "title": "Captured provider money is always verified or reconciled",
-      "statement": "When a provider reports authoritative captured money (server-to-server or signature-verified evidence, positive amount) for a Domo quote, course registration, event ticket order, marketplace order, service storefront order or music purchase, the payment is either admitted as a verified checkout payment or an open reconciliation exception is recorded in the same transaction. A rejected admission is never only an error response.",
+      "statement": "When a provider reports authoritative captured money (server-to-server or signature-verified evidence, positive amount) for a Domo quote, course registration, event ticket order, marketplace order, service storefront order, service booking deposit or music purchase, the payment is either admitted as a verified checkout payment or an open reconciliation exception is recorded in the same transaction. A rejected admission is never only an error response.",
       "domain": "PAY",
       "authority": "Audit finding F-14 (formal/system/audit-2026-10-31-phase1.md); existing payment_after_*_hold_expiry reconciliation intent in each handler; owner mandate 2026-10-31 (money first).",
       "source": "formal/system/audit-2026-10-31-phase1.md (F-14); formal/payments/README.md",
@@ -21262,6 +21262,233 @@
         "Anonymous unbounded inserts, 10 MB disk writes and three outbound emails per request with no throttle in the application.",
         "Oversized bodies are spooled to disk before the size check because no body limit is configured.",
         "public-routes.json records the boundary as handler-session although the handler accepts anonymous submissions; public-intake describes it more precisely."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "BOOK-PUBLIC-INTAKE-001",
+      "title": "Public tentative booking and deposit checkout",
+      "statement": "A visitor reserves studio time under an idempotency key, either as a legacy tentative booking without payment or as a deposit checkout with a reservation hold and a lookup token. Routes: POST /bookings/public; POST /bookings/public/checkout.",
+      "domain": "BOOK",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
+      "source": "formal/system/bookings-routes.md",
+      "contract": "formal/system/bookings-routes.md",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); an engineer email is sent only for a newly created booking.",
+      "actors": [
+        "Anonymous customer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /bookings/public",
+        "POST /bookings/public/checkout"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party",
+        "booking",
+        "booking_resource and service_booking_resource_allocation",
+        "service_order",
+        "commerce_checkout_session",
+        "service_booking_checkout_runtime",
+        "service_booking_tentative_request",
+        "service_booking_event",
+        "engineer email"
+      ],
+      "authorization": "None beyond the key (public-intake).",
+      "privacy": "Stores customer contact details from anonymous input.",
+      "concurrency": "Advisory lock on the key, resources FOR UPDATE, GiST exclusion on allocations.",
+      "idempotency": "Replay by request hash; a different payload under the same key answers 409.",
+      "failure": "400 invalid; 409 hash, policy or calendar conflict; 422 offering or price; 503 domain disabled.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/test-public-booking-http-concurrency.sh",
+        "scripts/test-public-booking-tentative-idempotency-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",
+      "evidence": "formal/system/bookings-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The legacy route lets an anonymous caller hold a resource as reserved until the slot ends with no payment and no expiry.",
+        "The lookup token is sha256(\"service-booking-order-lookup:\" + Idempotency-Key) with no server secret, so it is derivable from the client-chosen key (same pattern as courses).",
+        "A new party is created on every booking; email is never used to reuse one."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "BOOK-PUBLIC-PAYMENT-001",
+      "title": "Public booking deposit payment rails and bank transfer",
+      "statement": "A customer holding the lookup token pays the deposit through Datafast or PayPal, or selects a bank transfer and reports its reference. Routes: POST /bookings/public/orders/{bookingId}/datafast/checkout; POST /bookings/public/orders/{bookingId}/paypal/create; POST /bookings/public/orders/{bookingId}/paypal/capture; POST /bookings/public/orders/{bookingId}/manual-payment; POST /bookings/public/orders/{bookingId}/manual-payment/evidence.",
+      "domain": "BOOK",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
+      "source": "formal/system/bookings-routes.md",
+      "contract": "formal/system/bookings-routes.md",
+      "property": "Every route needs X-Order-Lookup-Token whose SHA-256 matches service_booking_checkout_runtime.lookup_token_hash (404 otherwise). requireServiceBookingPaymentContext: an expired hold on a holding, awaiting_payment or failed checkout expires every hold and answers 409; a status outside holding, awaiting_payment, processing, failed or paid answers 409; environment, domain and provider enablement answer 503. Datafast and PayPal creation refuse a paid deposit and submitted manual evidence (409), begin a payment attempt under a deterministic key (replayed), reuse an existing provider binding instead of calling the provider, record failures and bind the resource. Capture returns a paid deposit without a provider call, requires the bound order (409), validates amount, currency and merchant (reconciliation exception and 502 on mismatch) and admits money with recordVerifiedPaymentOrReconcile; the database then confirms the booking and marks the deposit paid. Bank-transfer selection accepts only bank_transfer, refuses a paid deposit and a processing rail (validatePublicManualPaymentSelection) and an active online attempt (409), and records the manual attempt with an awaiting-evidence row. Evidence needs a reference of 3..120 safe characters (400), the single manual attempt locked FOR UPDATE (409 otherwise), the booking party as submitter, replays an identical reference and refuses a different one under review (409).",
+      "actors": [
+        "Anonymous customer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /bookings/public/orders/{bookingId}/datafast/checkout",
+        "POST /bookings/public/orders/{bookingId}/paypal/create",
+        "POST /bookings/public/orders/{bookingId}/paypal/capture",
+        "POST /bookings/public/orders/{bookingId}/manual-payment",
+        "POST /bookings/public/orders/{bookingId}/manual-payment/evidence"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_payment_attempt and intent",
+        "commerce_provider_binding",
+        "commerce_manual_payment_evidence",
+        "checkout payment or reconciliation exception",
+        "booking, runtime and service order status by trigger",
+        "provider calls"
+      ],
+      "authorization": "Lookup token possession.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Attempt keys are deterministic per booking, provider and operation; hold, status and evidence checks run outside the checkout lock; evidence locks attempt and evidence rows.",
+      "idempotency": "Creation replays the binding; capture of a paid deposit is a no-op; selection replays the attempt; identical evidence replays.",
+      "failure": "400 invalid; 404 token; 409 hold, state, attempt or binding; 502 capture validation; 503 provider.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "verification": "validatePublicManualPaymentSelection is tested in tdf-hq/test/TDF/ServerSpec.hs; the rest is read from the handlers.",
+      "evidence": "formal/system/bookings-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Whether two concurrent first creations can each create a provider checkout and bind twice depends on a binding uniqueness constraint that was not identified.",
+        "A trigger rejection on the evidence table surfaces as 500.",
+        "PAY-CAPTURE-RECON-001 names every other domain but not service-booking deposits, although the capture path uses the same admission."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "BOOK-MANUAL-REVIEW-001",
+      "title": "Staff review of a booking bank-transfer deposit",
+      "statement": "Invoicing staff approve or reject a reported bank transfer; approval admits the deposit through the canonical checkout and never by the reviewer who submitted it. Routes: POST /bookings/{bookingId}/manual-payment/review.",
+      "domain": "BOOK",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
+      "source": "formal/system/bookings-routes.md",
+      "contract": "formal/system/bookings-routes.md",
+      "property": "The route needs ModuleInvoicing (403), an action of approve or reject and notes of 3..2000 safe characters (400). Under FOR UPDATE on runtime, checkout, attempt and evidence it refuses no or several manual attempts, a missing submitter, submitter = reviewer (also a trigger), review by another reviewer, a decision already taken in the other direction and a checkout outside awaiting_payment, failed or processing (409); an already paid checkout or an expired hold on approval records a reconciliation exception and answers 409. Rejection records a payment failure; approval binds the evidence and admits the deposit with recordApprovedManualPayment (attempt succeeded, checkout paid, ledger and receipt); any refusal rolls back to the savepoint.",
+      "actors": [
+        "Invoicing staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /bookings/{bookingId}/manual-payment/review"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_manual_payment_evidence",
+        "commerce_payment_attempt",
+        "checkout payment, ledger and receipt",
+        "commerce_reconciliation_exception",
+        "booking and service order status by trigger"
+      ],
+      "authorization": "ModuleInvoicing only; no studio role or ownership check; submitter never reviews.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Row locks on runtime, checkout, attempt and evidence; the session is not re-validated inside the transaction (plain runDB, unlike runBookingTransaction).",
+      "idempotency": "Replaying the same decision returns the current state; the opposite decision answers 409.",
+      "failure": "400 invalid; 403 module; 404 booking; 409 every refusal above.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/bookings-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The route is gated by the invoicing module alone and runs without the current-session fence that POST and PUT /bookings use (AUTH-BOOK-001); the marketplace review sibling behaves the same.",
+        "Money is admitted with recordApprovedManualPayment rather than recordVerifiedPaymentOrReconcile by design (staff-verified evidence is non-authoritative)."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",

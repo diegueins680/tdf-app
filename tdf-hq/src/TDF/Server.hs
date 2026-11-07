@@ -11318,12 +11318,8 @@ selectPublicBookingManualPayment
 selectPublicBookingManualPayment
     rawBookingId mLookupToken Api.PublicBookingManualPaymentReq{..} = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
-  let method = T.toLower (T.strip pbmprPaymentMethod)
-  unless (method == "bank_transfer") $
-    throwError err400 { errBody = "Only bank transfer is available for public manual payment" }
-  when (sbpcCheckoutStatus context == "processing") $
-    throwError err409
-      { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  either throwError pure
+    (validatePublicManualPaymentSelection (sbpcCheckoutStatus context) pbmprPaymentMethod)
   ensureNoActiveServiceBookingOnlineAttempt context
   requireServiceBookingProvider
     context (sbpcEnvironment context) Checkout.ProviderBankTransfer
@@ -11554,10 +11550,9 @@ createServiceBookingCheckoutTransaction
     Right value -> pure value
     Left exception -> case fromException exception :: Maybe SomeAsyncException of
       Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+      Nothing -> case fromException exception >>= publicBookingSqlConflict of
+        Just conflict -> pure (Left conflict)
+        Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -11794,6 +11789,31 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
   when createdNow (notifyEngineerIfNeeded dto)
   pure dto
 
+-- | SQL failures a public booking transaction turns into 409 instead of a
+-- generic 500: the calendar exclusion (23P01), the lifecycle and snapshot
+-- triggers (23514) and serialization or deadlock aborts (40001, 40P01), the
+-- same set the staff path maps in runBookingTransaction.
+publicBookingSqlConflict :: SqlError -> Maybe ServerError
+publicBookingSqlConflict sqlError
+  | sqlState sqlError == "23P01" =
+      Just err409 { errBody = "The selected room or resource was reserved by another request" }
+  | sqlState sqlError `elem` ["23514", "40001", "40P01"] =
+      Just err409 { errBody = "Booking conflicts with the resource calendar or checkout lifecycle" }
+  | otherwise = Nothing
+
+-- | Admission for a public bank-transfer selection: only bank transfer, never
+-- on a paid deposit, and not while another rail is processing.
+validatePublicManualPaymentSelection :: Text -> Text -> Either ServerError ()
+validatePublicManualPaymentSelection checkoutStatus rawMethod
+  | T.toLower (T.strip rawMethod) /= "bank_transfer" =
+      Left err400 { errBody = "Only bank transfer is available for public manual payment" }
+  | checkoutStatus == "paid" =
+      Left err409 { errBody = "This booking deposit is already paid" }
+  | checkoutStatus == "processing" =
+      Left err409
+        { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  | otherwise = Right ()
+
 createPublicTentativeBookingTransaction
   :: Text
   -> Text
@@ -11814,10 +11834,9 @@ createPublicTentativeBookingTransaction
     Right value -> pure value
     Left exception -> case fromException exception :: Maybe SomeAsyncException of
       Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+      Nothing -> case fromException exception >>= publicBookingSqlConflict of
+        Just conflict -> pure (Left conflict)
+        Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
