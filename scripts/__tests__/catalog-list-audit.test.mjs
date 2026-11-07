@@ -23,7 +23,8 @@ const REGISTRY_REFRESH_ENTRY = '2026-09-18_identity_review_dependencies';
 // interleaved at index 227, ahead of the seven audit migrations. The audit's
 // earlier reviews are verified over the manifest without that entry.
 const SESSION_EXPIRY_ENTRY = '2026-10-31_api_token_session_expiry';
-const playerMigrationIds = new Set(['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility','2026-11-07_music_featured_source_health']);
+const playerMigrationIds = new Set(['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility']);
+const playerForwardMigrationIds = new Set([...playerMigrationIds, '2026-11-07_music_featured_source_health', '2026-11-07_artist_featured_identity_guard']);
 const historicalReview = (entry, count) => {
   while (entry && entry.evidence?.valueCount !== count) entry = entry.previousDecision;
   assert.ok(entry, `Missing exact reviewed ${count}-entry predecessor`);
@@ -154,7 +155,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.ok(!active.some(entry => entry.id === previous.id));
   const storageMerge = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
   const rawManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => !playerMigrationIds.has(entry.id) && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && !storageMerge.storageMigrationIds.includes(entry.id));
+    'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => !playerForwardMigrationIds.has(entry.id) && entry.id !== '2026-11-07_artist_featured_identity_guard' && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && !storageMerge.storageMigrationIds.includes(entry.id));
   const manifest = asReviewedBeforeRegistryRefresh(rawManifest);
   assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
   assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
@@ -438,13 +439,13 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
   assert.equal(pointer.currentId, latestCurrent.id);
-  assert.equal(pointer.valueCount, 250);
+  assert.equal(pointer.valueCount, 251);
   assert.equal(historicalReview(latestCurrent, 246).evidence.valueCount, 246);
   assert.equal(pointer.change, latestCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, latestCurrent.id);
   assert.equal(retirement.currentResolution.id, latestCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 250);
+  assert.equal(retirement.currentResolution.valueCount, 251);
   assert.equal(retirement.reason, latestCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
@@ -735,7 +736,7 @@ test('ticket main merge retains stale approvals only as provenance', async () =>
 
 test('storage/main integration preserves both exact parent reviews and manifest views', async () => {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => !playerMigrationIds.has(entry.id) && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references');
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => !playerForwardMigrationIds.has(entry.id) && entry.id !== '2026-11-07_artist_featured_identity_guard' && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references');
   const { active, successors } = await readReconciliation();
   const extension = active.find(entry => entry.id === successors.find(item => item.name === 'migrations').currentId);
   const current = historicalReview(extension, 244);
@@ -757,7 +758,7 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   const main = 'e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324';
   const introduction = '4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5';
   const old = JSON.parse((await execFileAsync('git', ['show', `${main}:scripts/production-migrations.json`], { cwd: workspaceRoot })).stdout).migrations;
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => !playerMigrationIds.has(entry.id));
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => !playerForwardMigrationIds.has(entry.id) && entry.id !== '2026-11-07_artist_featured_identity_guard');
   const decisionsPath = 'docs/catalog-persistence/catalog-list-decisions.json';
   const priorDecisions = JSON.parse((await execFileAsync('git', ['show', `${main}:${decisionsPath}`], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout);
   const decisions = JSON.parse(await fs.readFile(path.join(workspaceRoot, decisionsPath), 'utf8'));
@@ -788,14 +789,37 @@ test('player migration extension preserves the exact reviewed current-main prefi
   const document=JSON.parse(await fs.readFile(path.join(workspaceRoot,'docs/catalog-persistence/catalog-list-decisions.json'),'utf8'));
   const extension=document.reconciliation.universalPlayerMain20261106;
   const prior=JSON.parse((await execFileAsync('git',['show',`${extension.sourceMain}:scripts/production-migrations.json`],{cwd:workspaceRoot})).stdout).migrations;
-  const current=JSON.parse(await fs.readFile(path.join(workspaceRoot,'scripts/production-migrations.json'),'utf8')).migrations;
-  assert.equal(prior.length,246); assert.equal(current.length,250);
+  const current=JSON.parse(await fs.readFile(path.join(workspaceRoot,'scripts/production-migrations.json'),'utf8')).migrations.slice(0,249);
+  assert.equal(prior.length,246); assert.equal(current.length,249);
   assert.deepEqual(current.slice(0,246),prior);
   assert.deepEqual(current.slice(246).map(row=>row.id),[...playerMigrationIds]);
-  const tip=active.find(row=>row.id===successors.find(item=>item.name==='migrations').currentId);
-  assert.equal(tip.previousDecision.id,extension.currentDecisionId);
-  assert.equal(tip.evidence.valueCount,250);
-  assert.equal(successors.find(row=>row.name==='migrations').currentId,tip.id);
+  const activeTip=active.find(row=>row.id===successors.find(row=>row.name==='migrations').currentId);
+  const tip=historicalReview(activeTip,249);
+  assert.equal(tip.id,extension.currentDecisionId);
+  assert.equal(tip.evidence.valueCount,249);
+  assert.equal(successors.find(row=>row.name==='migrations').currentId,activeTip.id);
   assert.ok(!active.some(row=>row.id===tip.previousDecision.id));
   assert.equal(extension.executionAllowed,false);
+});
+
+
+test('featured archive guard follows the exact published owner250 manifest and review', async () => {
+  const current=JSON.parse(await fs.readFile(path.join(workspaceRoot,'scripts/production-migrations.json'),'utf8')).migrations;
+  const source='0dad14c4300bb618908e491c3e15a921389f1e84';
+  const prior=JSON.parse((await execFileAsync('git',['show',`${source}:scripts/production-migrations.json`],{cwd:workspaceRoot})).stdout).migrations;
+  assert.equal(current.length,251); assert.equal(prior.length,250);
+  assert.deepEqual(current.slice(0,250),prior);
+  const entry=current[250];
+  assert.equal(entry.id,'2026-11-07_artist_featured_identity_guard');
+  assert.equal(entry.path,'tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql');
+  await execFileAsync('git',['merge-base','--is-ancestor',entry.introducedBy,'HEAD'],{cwd:workspaceRoot});
+  assert.equal(await fs.readFile(path.join(workspaceRoot,entry.path),'utf8'),(await execFileAsync('git',['show',`${entry.introducedBy}:${entry.path}`],{cwd:workspaceRoot})).stdout);
+  const {active,successors}=await readReconciliation();
+  const tip=active.find(row=>row.id===successors.find(row=>row.name==='migrations').currentId);
+  assert.equal(tip.evidence.valueCount,251);
+  const sourceDocument=JSON.parse((await execFileAsync('git',['show',`${source}:docs/catalog-persistence/catalog-list-decisions.json`],{cwd:workspaceRoot,maxBuffer:32*1024*1024})).stdout);
+  const sourceReview=sourceDocument.decisions.find(row=>row.evidence?.file==='scripts/production-migrations.json' && row.evidence?.valueCount===250);
+  assert.deepEqual(tip.previousDecision,sourceReview);
+  const archive=JSON.parse(await fs.readFile(path.join(workspaceRoot,'docs/catalog-persistence/player-owner-source-review-history-20261107.json'),'utf8'));
+  assert.deepEqual(archive,sourceDocument);
 });

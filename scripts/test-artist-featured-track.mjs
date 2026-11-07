@@ -51,11 +51,18 @@ const database = `tdf_music_worker_${process.pid}_${randomUUID().replaceAll('-',
 const command = (program, args, options = {}) => execFileSync(program, args, { env, encoding: 'utf8',
   timeout: 90000, maxBuffer: 8 * 1024 * 1024, ...options }).trim();
 const owner = disposableMusicDatabase({ database, command, env });
-const args = ['-XAtq', '-v', 'ON_ERROR_STOP=1', '-d', database];
+const args = ['-XAtq', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', '-d', database];
 const sql = input => command('psql', args, { input });
 const apply = file => command('psql', [...args, '-f', join(root, 'tdf-hq/sql', file)]);
 const migration = '2026-10-30_artist_featured_track.sql';
 const rollback = '2026-10-30_artist_featured_track_rollback.sql';
+const identityForward = '2026-11-07_artist_featured_identity_guard.sql';
+const identityRollback = '2026-11-07_artist_featured_identity_guard_rollback.sql';
+const canonicalIdentity = readFileSync(join(root, 'tdf-hq/sql/2026-09-17_identity_reconciliation.sql'), 'utf8');
+const canonicalGuard = canonicalIdentity.slice(canonicalIdentity.indexOf('CREATE OR REPLACE FUNCTION identity_reject_archived_reference()'),
+  canonicalIdentity.indexOf('CREATE OR REPLACE FUNCTION identity_reject_archived_party_write()'));
+assert(canonicalGuard.startsWith('CREATE OR REPLACE FUNCTION identity_reject_archived_reference()'));
+const withoutIdentityGuard = process.argv.includes('--without-identity-guard-negative-control');
 const quote = value => value === null ? 'NULL' : typeof value === 'boolean' ? String(value)
   : typeof value === 'number' ? String(value) : `'${value.replaceAll("'", "''")}'`;
 function read(artist, privateView = false, territory = 'EC') {
@@ -83,6 +90,8 @@ try {
   const other = Number(sql("INSERT INTO party(display_name) VALUES ('Synthetic unrelated artist') RETURNING id"));
   const recording = sql(`SELECT recording_id FROM music_release_track WHERE release_version_id='${version}' LIMIT 1`);
   apply(migration); apply(migration);
+  sql('CREATE TABLE identity_party_archive(party_id BIGINT PRIMARY KEY REFERENCES party(id));\n' + canonicalGuard);
+  if (!withoutIdentityGuard) { apply(identityForward); apply(identityForward); }
   assert.equal(set(actor, recording, null, 'US'), false, 'Approved is not published');
   sql(`UPDATE music_release_version SET state='scheduled',scheduled_by=created_by,release_at_utc=clock_timestamp()+interval '1 millisecond',release_timezone='UTC' WHERE id='${version}'`);
   sql('SELECT pg_sleep(0.02); SELECT music_publish_due(100)');
@@ -111,4 +120,52 @@ try {
   assert.equal(read(actor, true).recordingId, null);
   assert.equal(sql('SELECT count(*) FROM music_artist_featured_track'), '0');
   console.log('PASS actual PostgreSQL: publication, canonical/legacy membership, ambiguity, territory, private diagnostics, withdrawal, clear and preserving rollback');
+  // These are fresh, test-owned rows in this run's unique disposable database.
+  const archived = Number(sql("INSERT INTO party(display_name) VALUES ('Synthetic archived preference subject') RETURNING id"));
+  sql(`INSERT INTO identity_party_archive(party_id) VALUES (${archived})`);
+  const denied = action => assert.throws(action, error => typeof error.stderr === 'string'
+    && error.stderr.includes('55000') && error.stderr.includes('archived contact requires administrative resolution'));
+  denied(() => sql(`INSERT INTO music_artist_featured_track(artist_party_id,legacy_release_id) VALUES (${archived},${legacy})`));
+  console.log('PASS featured identity archived INSERT denied55000');
+  sql(`INSERT INTO music_artist_featured_track(artist_party_id,legacy_release_id) VALUES (${actor},${legacy})`);
+  apply(identityForward); apply(identityForward);
+  assert.equal(sql('SELECT count(*) FROM music_artist_featured_track'), '1');
+  console.log('PASS featured identity active INSERT and forward replay retain preference');
+  sql(`INSERT INTO identity_party_archive(party_id) VALUES (${actor}); UPDATE music_artist_featured_track SET updated_at=clock_timestamp() WHERE artist_party_id=${actor}`);
+  assert.equal(sql('SELECT artist_party_id FROM music_artist_featured_track'), String(actor));
+  console.log('PASS featured identity unchanged historical archived reference remains writable');
+  denied(() => sql(`UPDATE music_artist_featured_track SET artist_party_id=${archived} WHERE artist_party_id=${actor}`));
+  assert.equal(sql('SELECT artist_party_id FROM music_artist_featured_track'), String(actor));
+  console.log('PASS featured identity archived reassignment denied55000 with prior row retained');
+  const guard = () => sql("SELECT tgenabled::text || '|' || encode(tgargs,'hex') FROM pg_trigger WHERE tgrelid='music_artist_featured_track'::regclass AND tgname='identity_archive_reference_guard'");
+  const expectedGuard = 'O|' + Buffer.from('artist_party_id\0').toString('hex');
+  assert.equal(guard(), expectedGuard);
+  assert.throws(() => apply(identityRollback), error => typeof error.stderr === 'string'
+    && error.stderr.includes('55000') && error.stderr.includes('Featured preference evidence exists; use a forward identity repair'));
+  assert.equal(sql('SELECT artist_party_id FROM music_artist_featured_track'), String(actor));
+  assert.equal(guard(), expectedGuard);
+  console.log('PASS featured identity populated rollback refuses55000 before dropping protection');
+  sql(`DELETE FROM music_artist_featured_track WHERE artist_party_id=${actor}`);
+  apply(identityRollback); apply(identityRollback);
+  assert.equal(guard(), '');
+  assert.equal(sql("SELECT to_regclass('music_artist_featured_track') IS NOT NULL"), 't');
+  apply(identityForward); apply(identityForward);
+  assert.equal(guard(), expectedGuard);
+  console.log('PASS featured identity owned empty rollback/reinstall preserves table and canonical guard');
+  apply(identityRollback);
+  sql('DROP FUNCTION identity_reject_archived_reference()');
+  assert.throws(() => apply(identityForward), error => typeof error.stderr === 'string'
+    && error.stderr.includes('55000') && error.stderr.includes('requires the canonical archived-reference guard'));
+  assert.equal(guard(), '');
+  sql(canonicalGuard); apply(identityForward);
+  console.log('PASS featured identity missing canonical helper fails closed then restores');
+  apply(identityRollback);
+  sql('ALTER TABLE music_artist_featured_track DROP CONSTRAINT music_artist_featured_track_artist_party_id_fkey');
+  assert.throws(() => apply(identityForward), error => typeof error.stderr === 'string'
+    && error.stderr.includes('55000') && error.stderr.includes('requires the original NOT NULL BIGINT Party FK'));
+  assert.equal(guard(), '');
+  sql('ALTER TABLE music_artist_featured_track ADD CONSTRAINT music_artist_featured_track_artist_party_id_fkey FOREIGN KEY(artist_party_id) REFERENCES party(id) ON DELETE CASCADE');
+  apply(identityForward); assert.equal(guard(), expectedGuard);
+  console.log('PASS featured identity missing expected FK fails closed then restores');
+
 } finally { await owner.cleanup(); }
