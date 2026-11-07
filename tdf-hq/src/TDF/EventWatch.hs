@@ -222,36 +222,39 @@ eventWatchServer = exchange :<|> protected
               _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
                 [PersistText ("event-watch:" <> ident)] :: SqlPersistT IO [Single Int64]
               now <- liftIO getCurrentTime
-              Entity runId _ <- Research.createRunDb actor
+              Entity runId run <- Research.createRunDb actor
                 ("event-watch:" <> ident <> ":" <> request.runKey) True Nothing now
-              let scoped = request.candidate
-                    { erCandidateProvider=providerFor ident
-                    , erCandidateRunId=T.pack (show (fromSqlKey runId))
-                    , erCandidateSourceId=Nothing }
-              case Research.validateEventResearchCandidate scoped of
-                Left _ -> pure (Left err400{errBody="Invalid event candidate; check source evidence and required fields"})
-                Right validated
-                  | validated.erCandidateCountryCode /= "EC" -> pure (Left err403)
-                  | otherwise -> do
-                      saved <- Research.upsertCandidateDb validated now
-                      case saved of
-                        Left failure -> pure (Left failure)
-                        Right entity@(Entity candidateId _) ->
-                          case Research.candidateEntityToDTO entity of
-                            Left _ -> pure (Left err503)
-                            Right dto -> if not request.materialize
-                              then pure (Right (ImportResponse dto Nothing))
-                              else do
-                                link <- Research.materializeCandidateDb actor candidateId runId
-                                  (EventResearchMaterializationRequestDTO
-                                    (T.pack (show (fromSqlKey runId))) request.publish) now
-                                case link of
-                                  Left failure -> pure (Left failure)
-                                  Right value -> do
-                                    updated <- getJust candidateId
-                                    pure $ case Research.candidateEntityToDTO (Entity candidateId updated) of
-                                      Left _ -> Left err503
-                                      Right current -> Right (ImportResponse current (Just value))
+              if eventResearchRunCreatedByPartyId run /= actor
+                then pure (Left err409{errBody="Curator changed; use a new run key"})
+                else do
+                  let scoped = request.candidate
+                        { erCandidateProvider=providerFor ident
+                        , erCandidateRunId=T.pack (show (fromSqlKey runId))
+                        , erCandidateSourceId=Nothing }
+                  case Research.validateEventResearchCandidate scoped of
+                    Left _ -> pure (Left err400{errBody="Invalid event candidate; check source evidence and required fields"})
+                    Right validated
+                      | validated.erCandidateCountryCode /= "EC" -> pure (Left err403)
+                      | otherwise -> do
+                          saved <- Research.upsertCandidateDb validated now
+                          case saved of
+                            Left failure -> pure (Left failure)
+                            Right entity@(Entity candidateId _) ->
+                              case Research.candidateEntityToDTO entity of
+                                Left _ -> pure (Left err503)
+                                Right dto -> if not request.materialize
+                                  then pure (Right (ImportResponse dto Nothing))
+                                  else do
+                                    link <- Research.materializeServiceCandidateDb actor (providerFor ident) candidateId runId
+                                      (EventResearchMaterializationRequestDTO
+                                        (T.pack (show (fromSqlKey runId))) request.publish) now
+                                    case link of
+                                      Left failure -> pure (Left failure)
+                                      Right value -> do
+                                        updated <- getJust candidateId
+                                        pure $ case Research.candidateEntityToDTO (Entity candidateId updated) of
+                                          Left _ -> Left err503
+                                          Right current -> Right (ImportResponse current (Just value))
       pure (noStore result)
 
 providerFor :: T.Text -> T.Text

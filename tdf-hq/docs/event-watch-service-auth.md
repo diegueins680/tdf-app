@@ -7,8 +7,12 @@ messages, modify payments, or grant access to other application routes.
 
 ## Deployment and provisioning
 
-1. Deploy the reviewed migration `2026-10-21_event_watch_service_auth` through
-   the canonical Hetzner migration/release lane. Keep `RUN_MIGRATIONS=false`.
+1. Deploy the reviewed `2026-10-21_event_watch_service_auth` and following
+   `2026-11-07_event_watch_archived_actor_guard` migrations through the canonical
+   Hetzner migration/release lane. Keep `RUN_MIGRATIONS=false`. The later guard
+   rejects new credentials or actor reassignment to archived contacts, while
+   retaining historical actor references on unrelated updates. Neither migration
+   provisions a client or grants an application/security role.
 2. Use a dedicated Party named **Agenda de terceros — TDF** for audit/record
    ownership, without a password, API token or security-role assignment. This is
    the curator account, not a claim that TDF produces the events. Include the
@@ -30,6 +34,10 @@ messages, modify payments, or grant access to other application routes.
    provisioning alone does not connect ChatGPT scheduled tasks to that store.
 5. Approve the existing research pilot through the interactive administrative
    lane if it is not already approved. Service credentials cannot approve it.
+   Materialization retains the existing pilot-only eligibility policy: capture
+   eligible pilot candidates before approval; approving the pilot does not make
+   subsequent non-pilot candidates eligible. Do not change that policy implicitly
+   while configuring this service.
 
 ## Request contract
 
@@ -68,6 +76,23 @@ candidate for review. Same candidate identity and payload replay through the
 existing dedupe and audit logic. A run is a durable open ingestion batch; this
 minimal service lane does not expose general run administration or pilot approval.
 
+Materializing an existing event additionally requires its current organizer to
+equal the current curator Party and an existing reference in this client's
+server-owned provider namespace. Sharing one audit Party does not share authority
+between clients. The event and qualifying reference remain locked through the
+transaction, including replay after ownership changes. Foreign or unexpected
+matches require operator review; the service does not create another event to
+evade that conflict. The ordinary administrative materializer retains its
+separate authority. Existing venues and legacy social artist profiles are not
+overwritten, and a denied event target creates no external references or lineup
+associations. Allowed service-owned draft/public materialization and manual-field
+replay retain the existing behavior.
+
+Changing a client's curator does not rewrite the creator of an old ingestion
+batch or transfer ownership of old events. Use a new `runKey` after that change;
+reusing a batch created by another curator returns409 without candidate/audit
+writes. Existing historical records remain intact.
+
 ## Revocation and failure handling
 
 ```sh
@@ -82,9 +107,10 @@ commit, including after lock waits. Tokens exist only as hashes in the dedicated
 table and never enter `api_token`. Cookies and interactive sessions cannot access
 this lane. At most four recent sessions are retained for each client.
 
-401 means missing/invalid/expired credentials; 403 means publication or country
-scope denied; 400 means invalid input; 409 means existing research publication
-or identity blockers; 503 means unavailable schema/database. Errors exclude SQL
+401 means missing/invalid/expired credentials; 403 means publication, country or
+existing-event ownership/namespace scope denied; 400 means invalid input; 409
+means existing research publication/identity blockers or a curator-changed batch
+requiring a new run key; 503 means unavailable schema/database. Errors exclude SQL
 and secret values. Successful credential/data responses have `Cache-Control:
 no-store` and `Pragma: no-cache`. Use HTTPS and an edge rate limit on the token
 endpoint; rate limiting is an operational prerequisite, not implemented here.
@@ -98,3 +124,34 @@ PostgreSQL database. The SQL fixture verifies hash constraints, foreign keys,
 expiry bounds and revocation on rotation/permission changes. A real concurrent
 HTTP/database test and deployed job secret delivery are separate release gates;
 unit properties do not establish those boundaries.
+
+The canonical backend CI also runs the actual compiled application against a
+newly created, fully migrated `_test` database:
+
+```sh
+python3 scripts/test-event-watch-http.py --binary /path/to/tested/tdf-hq-exe \
+  --database-url postgresql://fixture@127.0.0.1:5432/event_watch_http_test \
+  --output /path/to/new-private-test-output
+```
+
+This runner validates the complete URL before creating a database, rejects
+libpq routing overrides, strips inherited provider settings, and removes only
+the database and processes it created. It uses disposable synthetic secrets and
+loopback HTTP, with no live credential provisioning or provider requests.
+It checks two-client isolation, server-owned candidate/run/source scope,
+interactive-token separation, session retention, publication/pilot gates,
+materialization and manual-field replay, rotation/deactivation, and expiry during
+observed database row/advisory lock waits. The unchanged original SQL witnesses
+and a missing-archive-guard negative control run on the complete schema.
+These finite execution cases do not establish every schedule, replica clock
+behavior, or whole-program refinement. The application checks its clock before
+and after the transaction action; this is not an attestation of a physical
+commit-time clock measurement. Fresh canonical CI and independent source review
+remain required for each published composition.
+
+An application rollback retains both isolated tables and the archive guard.
+An authorized operator can revoke clients before restoring the previous binary;
+the old binary does not expose these routes. Preserve credential/audit evidence
+and the canonical migration ledger rather than dropping tables or guards.
+Deployment, rollback execution, secret delivery and pilot approval require their
+separate operational authorization; this document performs none of them.

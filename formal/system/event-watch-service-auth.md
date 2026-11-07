@@ -10,6 +10,15 @@ Publishing additionally requires the current client's publication grant and all
 existing research eligibility checks. Rotation, revocation and permission changes
 invalidate all prior sessions. The service cannot approve the pilot.
 
+An existing materialization target must belong to the current curator and the
+current service-provider namespace. Current event ownership and a qualifying
+provider reference are checked under retained row locks before any target
+reference/artist mutation or response association data. Sharing a curator Party
+does not share client authority. A transferred or unexpected target requires
+operator review, without a force-created duplicate. The separate administrative
+entry point retains its existing authority in the same materialization engine.
+An old run's creator is immutable: a reassigned curator must select a new run key.
+
 Implementation uses an isolated `AuthProtect "event-watch"` context, separate
 tables, parent-before-session row locks held through the import transaction, and
 another expiry check after all event lock waits. Client updates conflict with
@@ -22,7 +31,8 @@ contract, not instantaneous interruption of a transaction already admitted.
 Evidence: Hspec lifetime/hash/payload properties, provisioning-tool negative
 tests, SQL fixture for schema and revocation triggers, and a bounded 128-case
 admission model with three failing guard-removal controls. The abstract model is
-not mechanically extracted from the Haskell implementation. Embedded PostgreSQL
+not mechanically extracted from the Haskell implementation and does not model
+the event-owner/provider-reference checks. Embedded PostgreSQL
 can check the SQL fixture, but does not establish multi-connection concurrency.
 Release still requires real PostgreSQL HTTP tests for concurrent rotation,
 lock-wait expiry, namespace isolation and absence of interactive authority;
