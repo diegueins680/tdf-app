@@ -17920,6 +17920,1152 @@
       "historicalStatus": null
     },
     {
+      "id": "MKT-MERCH-CART-001",
+      "title": "Anonymous storefront carts held by a lookup token",
+      "statement": "Anyone creates a cart for a published storefront and edits its lines with the lookup token the cart returned; a cart holds one seller only. Routes: POST /merch/carts; PUT /merch/carts/{cartId}/items; DELETE /merch/carts/{cartId}/items/{variantId}.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Creation needs a published storefront; line writes need the token, an active unexpired cart, an active variant of a published product of the same store and available stock, and set the quantity (1..100) rather than adding to it; the one-seller rule is a database trigger.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Published storefront; merch.storefronts and merch.public_catalog flags"
+      ],
+      "inputs": [
+        "POST /merch/carts",
+        "PUT /merch/carts/{cartId}/items",
+        "DELETE /merch/carts/{cartId}/items/{variantId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_cart and merch_cart_item"
+      ],
+      "authorization": "Capability only: the X-Cart-Lookup-Token / X-Order-Lookup-Token must hash-match the stored token. Creation needs nothing.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single statements; the stock check is advisory until checkout reserves.",
+      "idempotency": "Line writes are set-semantics; creation makes a new cart every call.",
+      "failure": "400 bad slug, quantity or missing token; 404 storefront; 409 unavailable variant; 503 feature off.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Cart creation has no rate limit.",
+        "Line deletion does not check the feature flag that line insertion checks."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-MERCH-CHECKOUT-001",
+      "title": "Converting a cart into an order with a stock hold",
+      "statement": "A cart is converted into an order and a holding commerce checkout under an Idempotency-Key, with stock reserved and money computed server side. Routes: POST /merch/carts/{cartId}/checkout.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Needs the cart token, a key of at least 8 characters, an Ecuadorian recipient and a configured payment method. In one transaction the cart and variants are locked, the per-store buyer limit is checked under an advisory lock on (store, email), lines are priced from stored variants, calculateMerchMoney (PAY-CHECKOUT-003) computes subtotal, shipping, commission and seller net, stock is reserved with a 20-minute hold, and the order, lines and checkout are written. Replay by (store, key) returns the order only when the request fingerprint matches.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Cart with lines; configured payment method; merch flags"
+      ],
+      "inputs": [
+        "POST /merch/carts/{cartId}/checkout"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_order and lines, commerce_checkout_session (holding) and line items, stock reservation, cart converted, fulfillment event"
+      ],
+      "authorization": "Capability only: the X-Cart-Lookup-Token / X-Order-Lookup-Token must hash-match the stored token.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Cart FOR UPDATE, variants FOR UPDATE, advisory lock per (store, email), unique (store, key).",
+      "idempotency": "Replay by key with fingerprint comparison.",
+      "failure": "400 invalid input; 404 cart; 409 any invariant failure (stock, limit, policy, money, fingerprint); 503 feature or payment method.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+        "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+        "scripts/test-artist-merch-runtime.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The idempotency scope is (store, key), not (cart, key): two buyers reusing a key at one store collide.",
+        "The buyer limit counts prior orders whose payment is still pending, including abandoned holds."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-BUYER-001",
+      "title": "Buyer favorites, order issues and unpaid-order cancellation",
+      "statement": "Signed-in buyers keep product favorites; order holders open issues and cancel unpaid orders with their order token. Routes: PUT /merch/favorites/{productId}; DELETE /merch/favorites/{productId}; POST /merch/orders/{orderId}/issues; POST /merch/orders/{orderId}/cancel.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Favorites are keyed by the session party and accept only public products (silently no-op otherwise). Issues and cancellation need the order token and an Idempotency-Key and replay by (order, key) with a fingerprint check. Cancellation applies only to a created, payment-pending, fulfillment-pending order whose checkout is holding or awaiting payment, and cancels the checkout (releasing reservations), the order and writes the events in one transaction.",
+      "actors": [
+        "Authenticated buyer",
+        "Order holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "PUT /merch/favorites/{productId}",
+        "DELETE /merch/favorites/{productId}",
+        "POST /merch/orders/{orderId}/issues",
+        "POST /merch/orders/{orderId}/cancel"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_favorite",
+        "merch_order_issue",
+        "checkout and order cancelled, fulfillment events, audit"
+      ],
+      "authorization": "Favorites: own party. Issues and cancel: Capability only: the X-Cart-Lookup-Token / X-Order-Lookup-Token must hash-match the stored token.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Cancellation locks order and checkout; issues are one upsert statement.",
+      "idempotency": "Favorites idempotent; issues and cancellation replay by key.",
+      "failure": "400 invalid; 404 order or token; 409 not cancellable or fingerprint; 503 feature.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Favoriting an unknown product answers 204 without a row.",
+        "A buyer can open unlimited issues per order.",
+        "A duplicate-key race on cancellation surfaces as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-SELLER-STORE-001",
+      "title": "Seller store applications, settings, members, policies and shipping zones",
+      "statement": "A directory profile manager applies for a store; members with can_settings edit the store, invite and manage members, publish policy versions and add shipping zones. Routes: POST /merch/seller/applications; PUT /merch/seller/stores/{storeId}; POST /merch/seller/stores/{storeId}/members; PATCH /merch/seller/stores/{storeId}/members/{memberId}; POST /merch/seller/stores/{storeId}/policies; POST /merch/seller/stores/{storeId}/shipping-zones.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Applications need an active directory profile manager with can_manage, an eligible published profile (database trigger) and an Idempotency-Key; the trigger adds the owner membership. Invitations create a pending 7-day collaborator membership (unique per store and party); an invitee accepts or declines their own invitation; the owner row is immutable. Policies supersede the active version; shipping zones are Ecuador only.",
+      "actors": [
+        "Directory profile manager",
+        "Store member with can_settings",
+        "Invitee"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/seller/applications",
+        "PUT /merch/seller/stores/{storeId}",
+        "POST /merch/seller/stores/{storeId}/members",
+        "PATCH /merch/seller/stores/{storeId}/members/{memberId}",
+        "POST /merch/seller/stores/{storeId}/policies",
+        "POST /merch/seller/stores/{storeId}/shipping-zones"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_store (requested) and owner membership",
+        "store fields and audit",
+        "merch_store_member",
+        "merch_store_policy versions",
+        "merch_shipping_zone"
+      ],
+      "authorization": "Application: directory_profile_manager with can_manage. Store, members, policies, zones: requireStorePermission: an accepted merch_store_member of the store holding the named can_* permission; no role check and no expiry check beyond the invitation status.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Application: check-then-insert with unique keys and a race re-lookup. Store, member, policy and zone writes have no version check or lock.",
+      "idempotency": "Application and invitation replay by key; store update is naturally idempotent; policies and zones are not.",
+      "failure": "400 invalid; 403 permission; 404 member; 409 duplicate or state; 503 feature.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A can_settings holder can grant can_settings and can_finance to anyone and revoke any other manager; there is no owner-only escalation guard.",
+        "Self-acceptance ignores the invitation expiry, and a settings holder can set a pending member to accepted without the invitee.",
+        "No notification is sent to an invitee.",
+        "Concurrent policy versions can collide on the unique version and surface as 500.",
+        "Store membership checks ignore expires_at and revoked_at beyond the invitation status."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-SELLER-CATALOG-001",
+      "title": "Seller products, variants, images, status and stock",
+      "statement": "Store members manage products and variants, upload product images, move products through their states and adjust variant stock under optimistic concurrency. Routes: POST /merch/seller/stores/{storeId}/products; PUT /merch/seller/stores/{storeId}/products/{productId}; POST /merch/seller/stores/{storeId}/products/{productId}/images; PATCH /merch/seller/stores/{storeId}/products/{productId}/status; PATCH /merch/seller/stores/{storeId}/variants/{variantId}/stock.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Product writes need can_catalog and can_stock and validate slug, name, category, visibility, 1..100 variants with unique SKUs, positive USD prices and weights; creation replays by (store, key). Images need can_catalog, JPEG or PNG up to 10 MB and 40 MP, and are written as an original plus 480/960/1600 variants before the row. Status changes follow the seller transition list and submitting for review needs an active variant, a clean image and an active policy. Stock updates need can_stock, the current version, and keep stock at or above reserved plus sold.",
+      "actors": [
+        "Store member with can_catalog and can_stock"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/seller/stores/{storeId}/products",
+        "PUT /merch/seller/stores/{storeId}/products/{productId}",
+        "POST /merch/seller/stores/{storeId}/products/{productId}/images",
+        "PATCH /merch/seller/stores/{storeId}/products/{productId}/status",
+        "PATCH /merch/seller/stores/{storeId}/variants/{variantId}/stock"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_product, merch_product_variant, merch_product_image",
+        "files under assets/merch/{store}/{product}",
+        "audit rows"
+      ],
+      "authorization": "requireStorePermission: an accepted merch_store_member of the store holding the named can_* permission; no role check and no expiry check beyond the invitation status.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Stock updates compare-and-swap on version; product status updates and product upserts have no status or version guard.",
+      "idempotency": "Product creation replays by key; stock updates are version-guarded; images are not idempotent.",
+      "failure": "400 invalid; 403 permission; 404 missing; 409 state, stale version or duplicate sort order; 500 on unique races.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A product update upserts variants with the request's stock_on_hand, bypassing the version-guarded stock route and its reserved-plus-sold floor.",
+        "Variants omitted from a product update stay active.",
+        "A client-supplied variant id owned by another store silently updates nothing.",
+        "Status changes read then write without a status guard, so a stale transition can overwrite an administrator's review.",
+        "Images are stored with scan_status clean without a scanner."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-SELLER-ORDERS-001",
+      "title": "Seller fulfillment updates and issue handling",
+      "statement": "Store members advance order fulfillment and answer buyer issues within the seller transition rules. Routes: PATCH /merch/seller/stores/{storeId}/orders/{orderId}/fulfillment; PATCH /merch/seller/stores/{storeId}/issues/{issueId}.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Fulfillment needs can_fulfillment, an order of the store, a seller-allowed transition, a paid order for preparing/ready/shipped/delivered, pickup method for ready_for_pickup and carrier plus tracking for shipped; it writes the status, a fulfillment event and a shipment. Issues need can_orders, an issue of the store's order, the seller transition rules (staff-only types cannot be closed by the seller) and a public response of at least 10 characters for terminal states; the update is conditional on the current status.",
+      "actors": [
+        "Store member with can_fulfillment or can_orders"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "PATCH /merch/seller/stores/{storeId}/orders/{orderId}/fulfillment",
+        "PATCH /merch/seller/stores/{storeId}/issues/{issueId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_order fulfillment fields, fulfillment events, merch_shipment",
+        "merch_order_issue",
+        "audit"
+      ],
+      "authorization": "requireStorePermission: an accepted merch_store_member of the store holding the named can_* permission; no role check and no expiry check beyond the invitation status.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Issue updates are conditional on status. Fulfillment locks the order in one transaction and writes in another without a status guard.",
+      "idempotency": "Repeating an issue update is 409; fulfillment repeats may re-apply.",
+      "failure": "400 invalid; 403 permission; 404 not of the store; 409 transition.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Fulfillment reads under a lock in one transaction and writes in another, so a concurrent transition or payment change can be overwritten.",
+        "returned is allowed without any issue or refund linkage.",
+        "No buyer notification on fulfillment or issue updates."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-ADMIN-REVIEW-001",
+      "title": "Administrator review of stores, products and issues",
+      "statement": "Strict administrators approve, reject, suspend or reactivate stores (optionally overriding the commission), publish or reject products submitted for review, and handle any issue. Routes: POST /merch/admin/stores/{storeId}/review; POST /merch/admin/products/{productId}/review; PATCH /merch/admin/issues/{issueId}.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Store decisions are state-guarded updates; a commission override (0..10000 bps with a reason) closes the active commission policy and inserts a new one. Product review applies only while pending_review and publishing marks clean images allowed. Issue updates follow the staff transition rules.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/admin/stores/{storeId}/review",
+        "POST /merch/admin/products/{productId}/review",
+        "PATCH /merch/admin/issues/{issueId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_store, merch_commission_policy",
+        "merch_product and image moderation",
+        "merch_order_issue",
+        "audit"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Conditional updates on the current state.",
+      "idempotency": "Repeated decisions are 409.",
+      "failure": "400 invalid; 403 not strict admin; 404 missing; 409 state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Publishing a product does not re-check that its store is operational; checkout blocks later.",
+        "A single administrator approves a store; there is no two-person rule.",
+        "A concurrent commission override collides on the unique active policy and surfaces as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-MERCH-REFUND-001",
+      "title": "Administrator refund requests and their approval",
+      "statement": "A strict administrator requests a refund against a paid merch order, allocated across its checkout lines, and a different administrator approves or cancels it; no provider execution happens here. Routes: POST /merch/admin/orders/{orderId}/refunds; PATCH /merch/admin/refunds/{refundId}/status.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Requests need an Idempotency-Key (16..128), a validated reason, exactly one succeeded payment attempt bound to the checkout, an amount at most paid minus refunded minus reserved, allocation across lines, and a financial issue in staff_review; the refund store locks the checkout and records the request with the merch refund case. Review needs an approver different from the requester and follows requested -> approved -> cancelled rules; succeeded and failed refunds are immutable.",
+      "actors": [
+        "Strict administrator (requester)",
+        "Strict administrator (approver)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/admin/orders/{orderId}/refunds",
+        "PATCH /merch/admin/refunds/{refundId}/status"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_refund and allocations, merch_refund_case, order refund status, fulfillment event, audit"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess. Approver must differ from the requester (RefundStore).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Checkout FOR UPDATE in the refund store; issue and case rows FOR UPDATE.",
+      "idempotency": "Requests replay by key with a fingerprint; repeated reviews change nothing.",
+      "failure": "400 invalid; 403 not strict admin; 409 any store or state refusal; 503 feature.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Approval moves no money: no execution path for merch refunds exists in this module, so refunds stay approved until another process executes them.",
+        "A refund can be requested on an order already settled to the seller; clawback is manual.",
+        "The handler's reserved-amount preview excludes failed refunds while the store includes them (messages differ; the store is authoritative)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-MERCH-SETTLEMENT-001",
+      "title": "Seller settlements: preparation, approval and payment evidence",
+      "statement": "A strict administrator prepares a settlement of delivered paid orders for a store and period, a different administrator approves or holds it, and payment is recorded with a private evidence image. Routes: POST /merch/admin/settlements; PATCH /merch/admin/settlements/{settlementId}/status; POST /merch/admin/settlements/{settlementId}/payment-evidence.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Preparation locks the named orders and admits them only when every one is of the store, in the period, paid or partially refunded, delivered or returned, not already settled, without pending refunds, disputes or open financial issues; it stores gross, commission, refunds, adjustments and seller net. Approval or hold requires a reviewer other than the preparer and the current status under_review or held. Payment evidence requires an approved settlement, a recorder other than the preparer, a paid time at or after approval, a globally unique external reference and a JPEG/PNG written to the private evidence directory; the database trigger marks the settlement and its orders paid.",
+      "actors": [
+        "Strict administrator (preparer)",
+        "Strict administrator (reviewer)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/admin/settlements",
+        "PATCH /merch/admin/settlements/{settlementId}/status",
+        "POST /merch/admin/settlements/{settlementId}/payment-evidence"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_settlement, merch_settlement_order, order settlement status",
+        "merch_settlement_payment_evidence and a private evidence file",
+        "audit"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess. Reviewer and payer must differ from the preparer.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Orders FOR UPDATE at preparation; conditional status updates; unique order per settlement; evidence unique per settlement and key.",
+      "idempotency": "Preparation is not idempotent; evidence replays by key; repeated status changes are 409.",
+      "failure": "400 invalid; 403 not strict admin or preparer; 409 ineligible orders or state; 503 evidence directory.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Orders whose refund failed (needing reconciliation) are eligible for settlement.",
+        "The external payment reference is globally unique, so a bank reference legitimately reused is refused.",
+        "The approver may also record the payment; the two-person rule only excludes the preparer.",
+        "The evidence file is written before the row, so a crash in between leaves an orphan file.",
+        "The period compares created_at with date-only bounds at UTC midnight."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FAN-PROFILE-001",
+      "title": "Fan and artist self-profiles and fan role requests",
+      "statement": "A fan edits their own profile, an artist edits their own artist profile, and any signed-in party requests the Fan role for review. Routes: PUT /fans/me/profile; PUT /fans/me/artist-profile; POST /fans/me/role-request.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "Fan profile: requireFanAccess (Fan or Customer role), display name validated, published genres, upsert of the caller's row. Artist profile: requireArtistAccess, the artist id forced to the caller, slug and URLs validated, party display name updated. Role request: reason, platform and correlation id validated; refused when the role is not self-assignable, already held, or a review is pending; answered 202 with the review revision and a security audit event.",
+      "actors": [
+        "Fan",
+        "Artist",
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /fans/me/profile",
+        "PUT /fans/me/artist-profile",
+        "POST /fans/me/role-request"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanProfile and genre memberships",
+        "ArtistProfile, Party display name, genre memberships",
+        "SecurityGrantRevision in review and a security audit event"
+      ],
+      "authorization": "requireFanAccess / requireArtistAccess; role requests need only authentication.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Upserts without version checks; the pending-request check is check-then-act across transactions.",
+      "idempotency": "Profile writes are idempotent upserts; role requests are unique per correlation id.",
+      "failure": "400 invalid; 403 role; 409 pending or duplicate; 503 Fan role missing.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Profiles/ArtistSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Bio, city and avatar URL of the fan profile are not validated or bounded.",
+        "Two concurrent role requests with different correlation ids can both create pending reviews."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FAN-FOLLOW-001",
+      "title": "Following and unfollowing artists from the fan workspace",
+      "statement": "A fan follows or unfollows an artist as themself under a locked current session. Routes: POST /fans/me/follows/{artistId}; DELETE /fans/me/follows/{artistId}.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "requireFanAccess; the artist must have an eligible profile and differ from the caller; in one transaction the fan-effects lock is taken, the session is re-validated under row locks, the FanFollow row is inserted or deleted and an engagement event is written; in legacy mode a follow also notifies the artist and creates the club member profile.",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/follows/{artistId}",
+        "DELETE /fans/me/follows/{artistId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanFollow, EngagementEvent",
+        "Legacy mode: Notification and FanClubMemberProfile"
+      ],
+      "authorization": "requireFanAccess; own party only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "social_v2_lock_fan_effects and withCurrentSession WriteSession row locks.",
+      "idempotency": "Unique (artist, follower); unfollow is idempotent.",
+      "failure": "400 bad id or self; 403 role; 404 artist; 503 serialization or missing functions.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Social/FanEffects.hs",
+        "tdf-hq/src/TDF/Social/Session.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Unfollowing leaves club membership, officer and candidacy rows intact."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FAN-NOTIFICATION-001",
+      "title": "Marking own notifications read",
+      "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "Updates are scoped to NotificationRecipientPartyId = caller; a foreign or unknown id changes nothing and answers 204.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/notifications/{notifId}/read",
+        "POST /fans/me/notifications/read-all"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Notification isRead"
+      ],
+      "authorization": "Own rows only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single updates.",
+      "idempotency": "Idempotent.",
+      "failure": "None beyond 401.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "An unknown or foreign id answers 204 rather than 404."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-PARTICIPATION-001",
+      "title": "Fan club member profiles, memories, reactions, reports and inbox",
+      "statement": "Signed-in parties keep a member profile in an artist's club, publish and react to club memories, report memories, and write to the club inbox. Routes: PUT /fans/me/clubs/{artistId}/member-profiles/me; POST /fans/me/clubs/{artistId}/memories; POST /fans/me/clubs/{artistId}/memories/{memoryId}/react; POST /fans/me/clubs/{artistId}/memories/{memoryId}/report; POST /fans/me/clubs/{artistId}/inbox.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "The club must exist (404). Memories validate title, description and media URLs and create the member profile on demand. Reactions toggle one reaction per party with an active published reaction type; in canonical interaction mode they go through the interaction command ledger (write budget, 429). Reports need a reason up to 500 characters. Inbox messages validate subject and body and are stored unread.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /fans/me/clubs/{artistId}/member-profiles/me",
+        "POST /fans/me/clubs/{artistId}/memories",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/react",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/report",
+        "POST /fans/me/clubs/{artistId}/inbox"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubMemberProfile",
+        "FanClubMemory",
+        "FanClubMemoryReaction and reaction type usage counts",
+        "FanClubMemoryReport",
+        "FanClubInboxMessage"
+      ],
+      "authorization": "Authentication only: no follow, membership or role check on these routes (in canonical mode reactions are gated by the interaction SQL).",
+      "privacy": "Reporter identity is stored with each report.",
+      "concurrency": "Member profile and memory inserts are check-then-insert without locks; non-canonical reactions have no row lock.",
+      "idempotency": "Member profile update is repeatable; memories, reports and inbox messages are not deduplicated.",
+      "failure": "400 invalid; 404 club or memory; 422 reaction type; 429 budget in canonical mode.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/sql/2026-09-28_interaction_compatibility.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Any signed-in account can enrol as a member of, publish memories into, and message any club without following it.",
+        "Handle, bio and avatar of the member profile are not validated.",
+        "Reports are unlimited per reporter and reach no moderation queue or audit.",
+        "Reacting does not check whether the memory is hidden or deleted.",
+        "Inbox messages notify no officer and have no rate limit outside canonical mode."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-POSTS-001",
+      "title": "Fan club posts and reactions by followers",
+      "statement": "Followers, officers and the artist post in the club and react to posts. Routes: POST /fans/me/clubs/{artistId}/posts; POST /fans/me/clubs/{artistId}/posts/{postId}/react.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "requireFanClubPostAccess: the artist, an officer, Admin or Agency role, or a follower (403). Posts validate title, content and up to 10 media URLs; a reply must target a top-level post of the same club and, in canonical mode, goes through the interaction command ledger. Reactions toggle one reaction per party with an active reaction type.",
+      "actors": [
+        "Follower",
+        "Officer",
+        "Artist"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/clubs/{artistId}/posts",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/react"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubPost",
+        "FanClubPostReaction and usage counts"
+      ],
+      "authorization": "requireFanClubPostAccess; in canonical mode the interaction SQL re-checks the post's club.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Canonical replies and reactions lock through the interaction ledger; otherwise no locks.",
+      "idempotency": "Posts are not deduplicated; reactions toggle.",
+      "failure": "400 invalid; 403 access; 404 club or post; 422 reaction type; 429 budget.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Non-canonical concurrent reaction toggles can collide on the unique key and surface as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-OFFICER-001",
+      "title": "Officer moderation, inbox handling and club events",
+      "statement": "Club officers (and Admin or Agency roles) pin and hide posts, hide and delete memories, answer and triage the inbox, and create club events. Routes: POST /fans/me/clubs/{artistId}/posts/{postId}/pin; POST /fans/me/clubs/{artistId}/posts/{postId}/unpin; POST /fans/me/clubs/{artistId}/posts/{postId}/hide; POST /fans/me/clubs/{artistId}/posts/{postId}/unhide; POST /fans/me/clubs/{artistId}/memories/{memoryId}/hide; POST /fans/me/clubs/{artistId}/memories/{memoryId}/unhide; POST /fans/me/clubs/{artistId}/memories/{memoryId}/delete; POST /fans/me/clubs/{artistId}/inbox/{messageId}/reply; POST /fans/me/clubs/{artistId}/inbox/{messageId}/status; POST /fans/me/clubs/{artistId}/events.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "checkIsOfficer: Admin or Agency role, or a FanClubOfficer row for the club (403). Targets must belong to the club (404). Hiding a reply in canonical mode goes through the interaction ledger's canManage rule. Replies overwrite the stored reply and set status replied; status accepts unread, opened, replied, archived without transition rules. Events validate title, description, location and time range.",
+      "actors": [
+        "Club officer",
+        "Admin or Agency role"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/pin",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/unpin",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/hide",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/unhide",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/hide",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/unhide",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/delete",
+        "POST /fans/me/clubs/{artistId}/inbox/{messageId}/reply",
+        "POST /fans/me/clubs/{artistId}/inbox/{messageId}/status",
+        "POST /fans/me/clubs/{artistId}/events"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubPost isPinned / isHidden",
+        "FanClubMemory isHidden / isDeleted",
+        "FanClubInboxMessage reply and status",
+        "FanClubEvent"
+      ],
+      "authorization": "checkIsOfficer.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unconditional updates; no locks or version checks.",
+      "idempotency": "Flag changes repeat harmlessly; replies overwrite.",
+      "failure": "400 invalid; 403 not an officer; 404 club or target.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two officers replying concurrently overwrite each other silently, and the fan is never notified.",
+        "Memory authors cannot delete their own memories; hides and deletes record no reason or audit.",
+        "Replies can be pinned; status can be set to replied without a reply."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-ELECTION-001",
+      "title": "Fan club elections: creation, candidacy and voting inside their windows",
+      "statement": "Officers create one election per club and year with optional candidacy and voting windows; parties stand and vote only while the matching window is open and the election is not closed. Routes: POST /fans/me/clubs/{artistId}/elections; POST /fans/me/clubs/{artistId}/elections/{electionId}/candidacy; POST /fans/me/clubs/{artistId}/elections/{electionId}/vote.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "Creation needs an officer and a free year. Candidacy and votes need an election of the club and, since 2026-11-07, validateFanClubElectionPhase: refused (409) once the election is Closed, before a set window starts or at and after its end. A party stands once per role; a ballot has 1..5 candidacies of the election, at most one per role, and a second ballot for a role is silently ignored.",
+      "actors": [
+        "Club officer",
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/clubs/{artistId}/elections",
+        "POST /fans/me/clubs/{artistId}/elections/{electionId}/candidacy",
+        "POST /fans/me/clubs/{artistId}/elections/{electionId}/vote"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubElection",
+        "FanClubCandidacy",
+        "FanClubVote"
+      ],
+      "authorization": "Creation: checkIsOfficer. Candidacy and voting: authentication only, plus the election phase rule.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique (club, year), (election, party, role) candidacy and (election, voter, role) vote; no locks; the phase check reads the election in the same transaction as the target lookup.",
+      "idempotency": "Creation is idempotent per year; repeated candidacy is 400; repeated votes are ignored.",
+      "failure": "400 invalid, duplicate year or candidacy; 403 not an officer; 404 election; 409 phase.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "ServerFanClubSpec: validateFanClubElectionPhase accepts without windows, refuses a closed election, and accepts candidacy and votes only inside their windows (4 examples); existing cases cover election and candidacy targets and ballot validation.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Before 2026-11-07 candidacy and votes were accepted at any time regardless of status or windows.",
+        "Window ordering is not validated at creation, and the status is never advanced automatically.",
+        "Voter eligibility (follower or member) and self-votes are not restricted; a changed ballot is silently discarded; no audit.",
+        "Manifestos are unbounded."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",

@@ -17921,6 +17921,1152 @@
       "historicalStatus": null
     },
     {
+      "id": "MKT-MERCH-CART-001",
+      "title": "Anonymous storefront carts held by a lookup token",
+      "statement": "Anyone creates a cart for a published storefront and edits its lines with the lookup token the cart returned; a cart holds one seller only. Routes: POST /merch/carts; PUT /merch/carts/{cartId}/items; DELETE /merch/carts/{cartId}/items/{variantId}.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Creation needs a published storefront; line writes need the token, an active unexpired cart, an active variant of a published product of the same store and available stock, and set the quantity (1..100) rather than adding to it; the one-seller rule is a database trigger.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Published storefront; merch.storefronts and merch.public_catalog flags"
+      ],
+      "inputs": [
+        "POST /merch/carts",
+        "PUT /merch/carts/{cartId}/items",
+        "DELETE /merch/carts/{cartId}/items/{variantId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_cart and merch_cart_item"
+      ],
+      "authorization": "Capability only: the X-Cart-Lookup-Token / X-Order-Lookup-Token must hash-match the stored token. Creation needs nothing.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single statements; the stock check is advisory until checkout reserves.",
+      "idempotency": "Line writes are set-semantics; creation makes a new cart every call.",
+      "failure": "400 bad slug, quantity or missing token; 404 storefront; 409 unavailable variant; 503 feature off.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Cart creation has no rate limit.",
+        "Line deletion does not check the feature flag that line insertion checks."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-MERCH-CHECKOUT-001",
+      "title": "Converting a cart into an order with a stock hold",
+      "statement": "A cart is converted into an order and a holding commerce checkout under an Idempotency-Key, with stock reserved and money computed server side. Routes: POST /merch/carts/{cartId}/checkout.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Needs the cart token, a key of at least 8 characters, an Ecuadorian recipient and a configured payment method. In one transaction the cart and variants are locked, the per-store buyer limit is checked under an advisory lock on (store, email), lines are priced from stored variants, calculateMerchMoney (PAY-CHECKOUT-003) computes subtotal, shipping, commission and seller net, stock is reserved with a 20-minute hold, and the order, lines and checkout are written. Replay by (store, key) returns the order only when the request fingerprint matches.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Cart with lines; configured payment method; merch flags"
+      ],
+      "inputs": [
+        "POST /merch/carts/{cartId}/checkout"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_order and lines, commerce_checkout_session (holding) and line items, stock reservation, cart converted, fulfillment event"
+      ],
+      "authorization": "Capability only: the X-Cart-Lookup-Token / X-Order-Lookup-Token must hash-match the stored token.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Cart FOR UPDATE, variants FOR UPDATE, advisory lock per (store, email), unique (store, key).",
+      "idempotency": "Replay by key with fingerprint comparison.",
+      "failure": "400 invalid input; 404 cart; 409 any invariant failure (stock, limit, policy, money, fingerprint); 503 feature or payment method.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+        "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+        "scripts/test-artist-merch-runtime.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The idempotency scope is (store, key), not (cart, key): two buyers reusing a key at one store collide.",
+        "The buyer limit counts prior orders whose payment is still pending, including abandoned holds."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-BUYER-001",
+      "title": "Buyer favorites, order issues and unpaid-order cancellation",
+      "statement": "Signed-in buyers keep product favorites; order holders open issues and cancel unpaid orders with their order token. Routes: PUT /merch/favorites/{productId}; DELETE /merch/favorites/{productId}; POST /merch/orders/{orderId}/issues; POST /merch/orders/{orderId}/cancel.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Favorites are keyed by the session party and accept only public products (silently no-op otherwise). Issues and cancellation need the order token and an Idempotency-Key and replay by (order, key) with a fingerprint check. Cancellation applies only to a created, payment-pending, fulfillment-pending order whose checkout is holding or awaiting payment, and cancels the checkout (releasing reservations), the order and writes the events in one transaction.",
+      "actors": [
+        "Authenticated buyer",
+        "Order holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "PUT /merch/favorites/{productId}",
+        "DELETE /merch/favorites/{productId}",
+        "POST /merch/orders/{orderId}/issues",
+        "POST /merch/orders/{orderId}/cancel"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_favorite",
+        "merch_order_issue",
+        "checkout and order cancelled, fulfillment events, audit"
+      ],
+      "authorization": "Favorites: own party. Issues and cancel: Capability only: the X-Cart-Lookup-Token / X-Order-Lookup-Token must hash-match the stored token.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Cancellation locks order and checkout; issues are one upsert statement.",
+      "idempotency": "Favorites idempotent; issues and cancellation replay by key.",
+      "failure": "400 invalid; 404 order or token; 409 not cancellable or fingerprint; 503 feature.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Favoriting an unknown product answers 204 without a row.",
+        "A buyer can open unlimited issues per order.",
+        "A duplicate-key race on cancellation surfaces as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-SELLER-STORE-001",
+      "title": "Seller store applications, settings, members, policies and shipping zones",
+      "statement": "A directory profile manager applies for a store; members with can_settings edit the store, invite and manage members, publish policy versions and add shipping zones. Routes: POST /merch/seller/applications; PUT /merch/seller/stores/{storeId}; POST /merch/seller/stores/{storeId}/members; PATCH /merch/seller/stores/{storeId}/members/{memberId}; POST /merch/seller/stores/{storeId}/policies; POST /merch/seller/stores/{storeId}/shipping-zones.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Applications need an active directory profile manager with can_manage, an eligible published profile (database trigger) and an Idempotency-Key; the trigger adds the owner membership. Invitations create a pending 7-day collaborator membership (unique per store and party); an invitee accepts or declines their own invitation; the owner row is immutable. Policies supersede the active version; shipping zones are Ecuador only.",
+      "actors": [
+        "Directory profile manager",
+        "Store member with can_settings",
+        "Invitee"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/seller/applications",
+        "PUT /merch/seller/stores/{storeId}",
+        "POST /merch/seller/stores/{storeId}/members",
+        "PATCH /merch/seller/stores/{storeId}/members/{memberId}",
+        "POST /merch/seller/stores/{storeId}/policies",
+        "POST /merch/seller/stores/{storeId}/shipping-zones"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_store (requested) and owner membership",
+        "store fields and audit",
+        "merch_store_member",
+        "merch_store_policy versions",
+        "merch_shipping_zone"
+      ],
+      "authorization": "Application: directory_profile_manager with can_manage. Store, members, policies, zones: requireStorePermission: an accepted merch_store_member of the store holding the named can_* permission; no role check and no expiry check beyond the invitation status.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Application: check-then-insert with unique keys and a race re-lookup. Store, member, policy and zone writes have no version check or lock.",
+      "idempotency": "Application and invitation replay by key; store update is naturally idempotent; policies and zones are not.",
+      "failure": "400 invalid; 403 permission; 404 member; 409 duplicate or state; 503 feature.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A can_settings holder can grant can_settings and can_finance to anyone and revoke any other manager; there is no owner-only escalation guard.",
+        "Self-acceptance ignores the invitation expiry, and a settings holder can set a pending member to accepted without the invitee.",
+        "No notification is sent to an invitee.",
+        "Concurrent policy versions can collide on the unique version and surface as 500.",
+        "Store membership checks ignore expires_at and revoked_at beyond the invitation status."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-SELLER-CATALOG-001",
+      "title": "Seller products, variants, images, status and stock",
+      "statement": "Store members manage products and variants, upload product images, move products through their states and adjust variant stock under optimistic concurrency. Routes: POST /merch/seller/stores/{storeId}/products; PUT /merch/seller/stores/{storeId}/products/{productId}; POST /merch/seller/stores/{storeId}/products/{productId}/images; PATCH /merch/seller/stores/{storeId}/products/{productId}/status; PATCH /merch/seller/stores/{storeId}/variants/{variantId}/stock.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Product writes need can_catalog and can_stock and validate slug, name, category, visibility, 1..100 variants with unique SKUs, positive USD prices and weights; creation replays by (store, key). Images need can_catalog, JPEG or PNG up to 10 MB and 40 MP, and are written as an original plus 480/960/1600 variants before the row. Status changes follow the seller transition list and submitting for review needs an active variant, a clean image and an active policy. Stock updates need can_stock, the current version, and keep stock at or above reserved plus sold.",
+      "actors": [
+        "Store member with can_catalog and can_stock"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/seller/stores/{storeId}/products",
+        "PUT /merch/seller/stores/{storeId}/products/{productId}",
+        "POST /merch/seller/stores/{storeId}/products/{productId}/images",
+        "PATCH /merch/seller/stores/{storeId}/products/{productId}/status",
+        "PATCH /merch/seller/stores/{storeId}/variants/{variantId}/stock"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_product, merch_product_variant, merch_product_image",
+        "files under assets/merch/{store}/{product}",
+        "audit rows"
+      ],
+      "authorization": "requireStorePermission: an accepted merch_store_member of the store holding the named can_* permission; no role check and no expiry check beyond the invitation status.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Stock updates compare-and-swap on version; product status updates and product upserts have no status or version guard.",
+      "idempotency": "Product creation replays by key; stock updates are version-guarded; images are not idempotent.",
+      "failure": "400 invalid; 403 permission; 404 missing; 409 state, stale version or duplicate sort order; 500 on unique races.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A product update upserts variants with the request's stock_on_hand, bypassing the version-guarded stock route and its reserved-plus-sold floor.",
+        "Variants omitted from a product update stay active.",
+        "A client-supplied variant id owned by another store silently updates nothing.",
+        "Status changes read then write without a status guard, so a stale transition can overwrite an administrator's review.",
+        "Images are stored with scan_status clean without a scanner."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-SELLER-ORDERS-001",
+      "title": "Seller fulfillment updates and issue handling",
+      "statement": "Store members advance order fulfillment and answer buyer issues within the seller transition rules. Routes: PATCH /merch/seller/stores/{storeId}/orders/{orderId}/fulfillment; PATCH /merch/seller/stores/{storeId}/issues/{issueId}.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Fulfillment needs can_fulfillment, an order of the store, a seller-allowed transition, a paid order for preparing/ready/shipped/delivered, pickup method for ready_for_pickup and carrier plus tracking for shipped; it writes the status, a fulfillment event and a shipment. Issues need can_orders, an issue of the store's order, the seller transition rules (staff-only types cannot be closed by the seller) and a public response of at least 10 characters for terminal states; the update is conditional on the current status.",
+      "actors": [
+        "Store member with can_fulfillment or can_orders"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "PATCH /merch/seller/stores/{storeId}/orders/{orderId}/fulfillment",
+        "PATCH /merch/seller/stores/{storeId}/issues/{issueId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_order fulfillment fields, fulfillment events, merch_shipment",
+        "merch_order_issue",
+        "audit"
+      ],
+      "authorization": "requireStorePermission: an accepted merch_store_member of the store holding the named can_* permission; no role check and no expiry check beyond the invitation status.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Issue updates are conditional on status. Fulfillment locks the order in one transaction and writes in another without a status guard.",
+      "idempotency": "Repeating an issue update is 409; fulfillment repeats may re-apply.",
+      "failure": "400 invalid; 403 permission; 404 not of the store; 409 transition.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Fulfillment reads under a lock in one transaction and writes in another, so a concurrent transition or payment change can be overwritten.",
+        "returned is allowed without any issue or refund linkage.",
+        "No buyer notification on fulfillment or issue updates."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-MERCH-ADMIN-REVIEW-001",
+      "title": "Administrator review of stores, products and issues",
+      "statement": "Strict administrators approve, reject, suspend or reactivate stores (optionally overriding the commission), publish or reject products submitted for review, and handle any issue. Routes: POST /merch/admin/stores/{storeId}/review; POST /merch/admin/products/{productId}/review; PATCH /merch/admin/issues/{issueId}.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Store decisions are state-guarded updates; a commission override (0..10000 bps with a reason) closes the active commission policy and inserts a new one. Product review applies only while pending_review and publishing marks clean images allowed. Issue updates follow the staff transition rules.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/admin/stores/{storeId}/review",
+        "POST /merch/admin/products/{productId}/review",
+        "PATCH /merch/admin/issues/{issueId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_store, merch_commission_policy",
+        "merch_product and image moderation",
+        "merch_order_issue",
+        "audit"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Conditional updates on the current state.",
+      "idempotency": "Repeated decisions are 409.",
+      "failure": "400 invalid; 403 not strict admin; 404 missing; 409 state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Publishing a product does not re-check that its store is operational; checkout blocks later.",
+        "A single administrator approves a store; there is no two-person rule.",
+        "A concurrent commission override collides on the unique active policy and surfaces as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-MERCH-REFUND-001",
+      "title": "Administrator refund requests and their approval",
+      "statement": "A strict administrator requests a refund against a paid merch order, allocated across its checkout lines, and a different administrator approves or cancels it; no provider execution happens here. Routes: POST /merch/admin/orders/{orderId}/refunds; PATCH /merch/admin/refunds/{refundId}/status.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Requests need an Idempotency-Key (16..128), a validated reason, exactly one succeeded payment attempt bound to the checkout, an amount at most paid minus refunded minus reserved, allocation across lines, and a financial issue in staff_review; the refund store locks the checkout and records the request with the merch refund case. Review needs an approver different from the requester and follows requested -> approved -> cancelled rules; succeeded and failed refunds are immutable.",
+      "actors": [
+        "Strict administrator (requester)",
+        "Strict administrator (approver)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/admin/orders/{orderId}/refunds",
+        "PATCH /merch/admin/refunds/{refundId}/status"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_refund and allocations, merch_refund_case, order refund status, fulfillment event, audit"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess. Approver must differ from the requester (RefundStore).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Checkout FOR UPDATE in the refund store; issue and case rows FOR UPDATE.",
+      "idempotency": "Requests replay by key with a fingerprint; repeated reviews change nothing.",
+      "failure": "400 invalid; 403 not strict admin; 409 any store or state refusal; 503 feature.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Approval moves no money: no execution path for merch refunds exists in this module, so refunds stay approved until another process executes them.",
+        "A refund can be requested on an order already settled to the seller; clawback is manual.",
+        "The handler's reserved-amount preview excludes failed refunds while the store includes them (messages differ; the store is authoritative)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-MERCH-SETTLEMENT-001",
+      "title": "Seller settlements: preparation, approval and payment evidence",
+      "statement": "A strict administrator prepares a settlement of delivered paid orders for a store and period, a different administrator approves or holds it, and payment is recorded with a private evidence image. Routes: POST /merch/admin/settlements; PATCH /merch/admin/settlements/{settlementId}/status; POST /merch/admin/settlements/{settlementId}/payment-evidence.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/merch-routes.md.",
+      "source": "formal/system/merch-routes.md",
+      "contract": "formal/system/merch-routes.md",
+      "property": "Preparation locks the named orders and admits them only when every one is of the store, in the period, paid or partially refunded, delivered or returned, not already settled, without pending refunds, disputes or open financial issues; it stores gross, commission, refunds, adjustments and seller net. Approval or hold requires a reviewer other than the preparer and the current status under_review or held. Payment evidence requires an approved settlement, a recorder other than the preparer, a paid time at or after approval, a globally unique external reference and a JPEG/PNG written to the private evidence directory; the database trigger marks the settlement and its orders paid.",
+      "actors": [
+        "Strict administrator (preparer)",
+        "Strict administrator (reviewer)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated",
+        "merch feature flags enabled where the route checks them (503 otherwise)"
+      ],
+      "inputs": [
+        "POST /merch/admin/settlements",
+        "PATCH /merch/admin/settlements/{settlementId}/status",
+        "POST /merch/admin/settlements/{settlementId}/payment-evidence"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "merch_settlement, merch_settlement_order, order settlement status",
+        "merch_settlement_payment_evidence and a private evidence file",
+        "audit"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess. Reviewer and payer must differ from the preparer.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Orders FOR UPDATE at preparation; conditional status updates; unique order per settlement; evidence unique per settlement and key.",
+      "idempotency": "Preparation is not idempotent; evidence replays by key; repeated status changes are 409.",
+      "failure": "400 invalid; 403 not strict admin or preparer; 409 ineligible orders or state; 503 evidence directory.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/merch-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Orders whose refund failed (needing reconciliation) are eligible for settlement.",
+        "The external payment reference is globally unique, so a bank reference legitimately reused is refused.",
+        "The approver may also record the payment; the two-person rule only excludes the preparer.",
+        "The evidence file is written before the row, so a crash in between leaves an orphan file.",
+        "The period compares created_at with date-only bounds at UTC midnight."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FAN-PROFILE-001",
+      "title": "Fan and artist self-profiles and fan role requests",
+      "statement": "A fan edits their own profile, an artist edits their own artist profile, and any signed-in party requests the Fan role for review. Routes: PUT /fans/me/profile; PUT /fans/me/artist-profile; POST /fans/me/role-request.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "Fan profile: requireFanAccess (Fan or Customer role), display name validated, published genres, upsert of the caller's row. Artist profile: requireArtistAccess, the artist id forced to the caller, slug and URLs validated, party display name updated. Role request: reason, platform and correlation id validated; refused when the role is not self-assignable, already held, or a review is pending; answered 202 with the review revision and a security audit event.",
+      "actors": [
+        "Fan",
+        "Artist",
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /fans/me/profile",
+        "PUT /fans/me/artist-profile",
+        "POST /fans/me/role-request"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanProfile and genre memberships",
+        "ArtistProfile, Party display name, genre memberships",
+        "SecurityGrantRevision in review and a security audit event"
+      ],
+      "authorization": "requireFanAccess / requireArtistAccess; role requests need only authentication.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Upserts without version checks; the pending-request check is check-then-act across transactions.",
+      "idempotency": "Profile writes are idempotent upserts; role requests are unique per correlation id.",
+      "failure": "400 invalid; 403 role; 409 pending or duplicate; 503 Fan role missing.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Profiles/ArtistSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Bio, city and avatar URL of the fan profile are not validated or bounded.",
+        "Two concurrent role requests with different correlation ids can both create pending reviews."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FAN-FOLLOW-001",
+      "title": "Following and unfollowing artists from the fan workspace",
+      "statement": "A fan follows or unfollows an artist as themself under a locked current session. Routes: POST /fans/me/follows/{artistId}; DELETE /fans/me/follows/{artistId}.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "requireFanAccess; the artist must have an eligible profile and differ from the caller; in one transaction the fan-effects lock is taken, the session is re-validated under row locks, the FanFollow row is inserted or deleted and an engagement event is written; in legacy mode a follow also notifies the artist and creates the club member profile.",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/follows/{artistId}",
+        "DELETE /fans/me/follows/{artistId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanFollow, EngagementEvent",
+        "Legacy mode: Notification and FanClubMemberProfile"
+      ],
+      "authorization": "requireFanAccess; own party only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "social_v2_lock_fan_effects and withCurrentSession WriteSession row locks.",
+      "idempotency": "Unique (artist, follower); unfollow is idempotent.",
+      "failure": "400 bad id or self; 403 role; 404 artist; 503 serialization or missing functions.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Social/FanEffects.hs",
+        "tdf-hq/src/TDF/Social/Session.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Unfollowing leaves club membership, officer and candidacy rows intact."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FAN-NOTIFICATION-001",
+      "title": "Marking own notifications read",
+      "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "Updates are scoped to NotificationRecipientPartyId = caller; a foreign or unknown id changes nothing and answers 204.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/notifications/{notifId}/read",
+        "POST /fans/me/notifications/read-all"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Notification isRead"
+      ],
+      "authorization": "Own rows only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single updates.",
+      "idempotency": "Idempotent.",
+      "failure": "None beyond 401.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "An unknown or foreign id answers 204 rather than 404."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-PARTICIPATION-001",
+      "title": "Fan club member profiles, memories, reactions, reports and inbox",
+      "statement": "Signed-in parties keep a member profile in an artist's club, publish and react to club memories, report memories, and write to the club inbox. Routes: PUT /fans/me/clubs/{artistId}/member-profiles/me; POST /fans/me/clubs/{artistId}/memories; POST /fans/me/clubs/{artistId}/memories/{memoryId}/react; POST /fans/me/clubs/{artistId}/memories/{memoryId}/report; POST /fans/me/clubs/{artistId}/inbox.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "The club must exist (404). Memories validate title, description and media URLs and create the member profile on demand. Reactions toggle one reaction per party with an active published reaction type; in canonical interaction mode they go through the interaction command ledger (write budget, 429). Reports need a reason up to 500 characters. Inbox messages validate subject and body and are stored unread.",
+      "actors": [
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /fans/me/clubs/{artistId}/member-profiles/me",
+        "POST /fans/me/clubs/{artistId}/memories",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/react",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/report",
+        "POST /fans/me/clubs/{artistId}/inbox"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubMemberProfile",
+        "FanClubMemory",
+        "FanClubMemoryReaction and reaction type usage counts",
+        "FanClubMemoryReport",
+        "FanClubInboxMessage"
+      ],
+      "authorization": "Authentication only: no follow, membership or role check on these routes (in canonical mode reactions are gated by the interaction SQL).",
+      "privacy": "Reporter identity is stored with each report.",
+      "concurrency": "Member profile and memory inserts are check-then-insert without locks; non-canonical reactions have no row lock.",
+      "idempotency": "Member profile update is repeatable; memories, reports and inbox messages are not deduplicated.",
+      "failure": "400 invalid; 404 club or memory; 422 reaction type; 429 budget in canonical mode.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/sql/2026-09-28_interaction_compatibility.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Any signed-in account can enrol as a member of, publish memories into, and message any club without following it.",
+        "Handle, bio and avatar of the member profile are not validated.",
+        "Reports are unlimited per reporter and reach no moderation queue or audit.",
+        "Reacting does not check whether the memory is hidden or deleted.",
+        "Inbox messages notify no officer and have no rate limit outside canonical mode."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-POSTS-001",
+      "title": "Fan club posts and reactions by followers",
+      "statement": "Followers, officers and the artist post in the club and react to posts. Routes: POST /fans/me/clubs/{artistId}/posts; POST /fans/me/clubs/{artistId}/posts/{postId}/react.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "requireFanClubPostAccess: the artist, an officer, Admin or Agency role, or a follower (403). Posts validate title, content and up to 10 media URLs; a reply must target a top-level post of the same club and, in canonical mode, goes through the interaction command ledger. Reactions toggle one reaction per party with an active reaction type.",
+      "actors": [
+        "Follower",
+        "Officer",
+        "Artist"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/clubs/{artistId}/posts",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/react"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubPost",
+        "FanClubPostReaction and usage counts"
+      ],
+      "authorization": "requireFanClubPostAccess; in canonical mode the interaction SQL re-checks the post's club.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Canonical replies and reactions lock through the interaction ledger; otherwise no locks.",
+      "idempotency": "Posts are not deduplicated; reactions toggle.",
+      "failure": "400 invalid; 403 access; 404 club or post; 422 reaction type; 429 budget.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Non-canonical concurrent reaction toggles can collide on the unique key and surface as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-OFFICER-001",
+      "title": "Officer moderation, inbox handling and club events",
+      "statement": "Club officers (and Admin or Agency roles) pin and hide posts, hide and delete memories, answer and triage the inbox, and create club events. Routes: POST /fans/me/clubs/{artistId}/posts/{postId}/pin; POST /fans/me/clubs/{artistId}/posts/{postId}/unpin; POST /fans/me/clubs/{artistId}/posts/{postId}/hide; POST /fans/me/clubs/{artistId}/posts/{postId}/unhide; POST /fans/me/clubs/{artistId}/memories/{memoryId}/hide; POST /fans/me/clubs/{artistId}/memories/{memoryId}/unhide; POST /fans/me/clubs/{artistId}/memories/{memoryId}/delete; POST /fans/me/clubs/{artistId}/inbox/{messageId}/reply; POST /fans/me/clubs/{artistId}/inbox/{messageId}/status; POST /fans/me/clubs/{artistId}/events.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "checkIsOfficer: Admin or Agency role, or a FanClubOfficer row for the club (403). Targets must belong to the club (404). Hiding a reply in canonical mode goes through the interaction ledger's canManage rule. Replies overwrite the stored reply and set status replied; status accepts unread, opened, replied, archived without transition rules. Events validate title, description, location and time range.",
+      "actors": [
+        "Club officer",
+        "Admin or Agency role"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/pin",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/unpin",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/hide",
+        "POST /fans/me/clubs/{artistId}/posts/{postId}/unhide",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/hide",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/unhide",
+        "POST /fans/me/clubs/{artistId}/memories/{memoryId}/delete",
+        "POST /fans/me/clubs/{artistId}/inbox/{messageId}/reply",
+        "POST /fans/me/clubs/{artistId}/inbox/{messageId}/status",
+        "POST /fans/me/clubs/{artistId}/events"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubPost isPinned / isHidden",
+        "FanClubMemory isHidden / isDeleted",
+        "FanClubInboxMessage reply and status",
+        "FanClubEvent"
+      ],
+      "authorization": "checkIsOfficer.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unconditional updates; no locks or version checks.",
+      "idempotency": "Flag changes repeat harmlessly; replies overwrite.",
+      "failure": "400 invalid; 403 not an officer; 404 club or target.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two officers replying concurrently overwrite each other silently, and the fan is never notified.",
+        "Memory authors cannot delete their own memories; hides and deletes record no reason or audit.",
+        "Replies can be pinned; status can be set to replied without a reply."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-CLUB-ELECTION-001",
+      "title": "Fan club elections: creation, candidacy and voting inside their windows",
+      "statement": "Officers create one election per club and year with optional candidacy and voting windows; parties stand and vote only while the matching window is open and the election is not closed. Routes: POST /fans/me/clubs/{artistId}/elections; POST /fans/me/clubs/{artistId}/elections/{electionId}/candidacy; POST /fans/me/clubs/{artistId}/elections/{electionId}/vote.",
+      "domain": "COMMUNITY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/fans-routes.md.",
+      "source": "formal/system/fans-routes.md",
+      "contract": "formal/system/fans-routes.md",
+      "property": "Creation needs an officer and a free year. Candidacy and votes need an election of the club and, since 2026-11-07, validateFanClubElectionPhase: refused (409) once the election is Closed, before a set window starts or at and after its end. A party stands once per role; a ballot has 1..5 candidacies of the election, at most one per role, and a second ballot for a role is silently ignored.",
+      "actors": [
+        "Club officer",
+        "Authenticated party"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /fans/me/clubs/{artistId}/elections",
+        "POST /fans/me/clubs/{artistId}/elections/{electionId}/candidacy",
+        "POST /fans/me/clubs/{artistId}/elections/{electionId}/vote"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "FanClubElection",
+        "FanClubCandidacy",
+        "FanClubVote"
+      ],
+      "authorization": "Creation: checkIsOfficer. Candidacy and voting: authentication only, plus the election phase rule.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique (club, year), (election, party, role) candidacy and (election, voter, role) vote; no locks; the phase check reads the election in the same transaction as the target lookup.",
+      "idempotency": "Creation is idempotent per year; repeated candidacy is 400; repeated votes are ignored.",
+      "failure": "400 invalid, duplicate year or candidacy; 403 not an officer; 404 election; 409 phase.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFanClub.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerFanClubSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "ServerFanClubSpec: validateFanClubElectionPhase accepts without windows, refuses a closed election, and accepts candidacy and votes only inside their windows (4 examples); existing cases cover election and candidacy targets and ballot validation.",
+      "evidence": "formal/system/fans-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Before 2026-11-07 candidacy and votes were accepted at any time regardless of status or windows.",
+        "Window ordering is not validated at creation, and the status is never advanced automatically.",
+        "Voter eligibility (follower or member) and self-votes are not restricted; a changed ballot is silently discarded; no audit.",
+        "Manifestos are unbounded."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
@@ -19690,7 +20836,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "0a529bbda939368c78f53435d3adba1d7fb991d4e0fee72b7259d2e917df216c",
-    "formal/system/route-requirements.json": "82bbd627edf7ef3c293a125326b9e59a30c9f66b02c75b44d76a1bac9103fb54",
+    "formal/system/route-requirements.json": "496e409013d9ca37387b8a3877cee120d05e5ef3f4c3bf1cb26adb6cbc7b0a83",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -20602,6 +21748,7 @@
     "tdf-hq/scripts/create_artists_from_list.sh": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
     "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql": "38bb4dbd9368562c8b78eff933ced68df3bf7c6d65e32d14d7403bf61e6126cb",
     "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
+    "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql": "699100a59dc180e12cc0c13d5053a6aab002c9ff891672411ac6ea3d67f771db",
     "tdf-hq/sql/2026-09-11_music_release_platform.sql": "c33f6809232734b64685811d230c3d34d187cbab037b3d509ed58bc3f7e81fc2",
     "tdf-hq/sql/2026-09-11_music_release_platform_rollback.sql": "0edba6b1d000b2d11944a59fe3aaa02b616fef2c9713d7d19abd1192a15d1a95",
     "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql": "0e29380aaba2feaf34103c03c737f4eda6e21c9f0383fd1bb98a6102b467d09d",
@@ -20626,6 +21773,7 @@
     "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql": "0e68b6729957823cdcc98f37a859678a94843489a93b2091f44e65921effdaec",
     "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
     "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql": "e7028f7235ad54eb41ac72856dbc3ec343c08983520b35b6b9136d73f3db1b18",
+    "tdf-hq/sql/2026-09-28_interaction_compatibility.sql": "bc82cacf16a2e4cf9b501436907376f47bc4c6be177feadb9e6c8b8fd0fde38d",
     "tdf-hq/sql/2026-09-28_interaction_integrity.sql": "4bddd12c17e189286b4fa468ede50e27a471f370ced44224118e46fef3e1b019",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
@@ -20876,7 +22024,7 @@
     "tdf-hq/src/TDF/ServerAdmin.hs": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
     "tdf-hq/src/TDF/ServerAuth.hs": "9666d010cc08c4755e4ba46a26f5e925c64d8af003e489cd1dccc3784bc5f0f5",
     "tdf-hq/src/TDF/ServerExtra.hs": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
-    "tdf-hq/src/TDF/ServerFanClub.hs": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
+    "tdf-hq/src/TDF/ServerFanClub.hs": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": "e663522c1efc4eae60d077274478c68b14e6edf779c7fe083692339323fb4355",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
@@ -20887,6 +22035,7 @@
     "tdf-hq/src/TDF/Social/AccountOwnership.hs": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
+    "tdf-hq/src/TDF/Social/FanEffects.hs": "a55587dcef94c2f5efe35da182a3cd934ca705dc5a685b5ab15eccb89f3a7b26",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
@@ -20961,6 +22110,7 @@
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
+    "tdf-hq/test/TDF/Profiles/ArtistSpec.hs": "012311f9c2954e1611e71c80b53eb4107a8f24cc8b1955a1b692265267f06429",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
@@ -20968,6 +22118,7 @@
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
+    "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerSpec.hs": "52ec1c55e972f115f2a59b3d53ac6e16fa24934b729eddd72da0a478bfbdf60c",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
@@ -21633,6 +22784,10 @@
       {
         "requirement": "PAY-STOREFRONT-ADMIN-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-REFUND-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": [
@@ -22052,6 +23207,18 @@
       },
       {
         "requirement": "COURSE-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-PROFILE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-NOTIFICATION-001",
         "relationship": "implementation"
       },
       {
@@ -23395,6 +24562,10 @@
       {
         "requirement": "MSG-ACCESS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/Spec.hs": [
@@ -23681,6 +24852,10 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MERCH-CHECKOUT-001",
+        "relationship": "tests"
       }
     ],
     "scripts/verify-checkout-money.py": [
@@ -23791,11 +24966,67 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-CHECKOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-BUYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-ORDERS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/Merch.hs": [
       {
         "requirement": "PAY-CHECKOUT-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-CART-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-CHECKOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-BUYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-ORDERS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-REFUND-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-SETTLEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -23809,6 +25040,42 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-MERCH-CART-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MERCH-CHECKOUT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-MERCH-BUYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-STORE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-ORDERS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MERCH-REFUND-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MERCH-SETTLEMENT-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-artist-merch-runtime.sh": [
@@ -23819,6 +25086,10 @@
       {
         "requirement": "SYS-VERIFY-004",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-CHECKOUT-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/merch-commission-postgres.mjs": [
@@ -23936,6 +25207,10 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": [
       {
         "requirement": "REF-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MERCH-REFUND-001",
         "relationship": "tests"
       }
     ],
@@ -25572,6 +26847,10 @@
     "tdf-hq/src/TDF/Server/Catalog.hs": [
       {
         "requirement": "REC-CATALOG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-PROFILE-001",
         "relationship": "implementation"
       }
     ],
@@ -30849,6 +32128,10 @@
       {
         "requirement": "ART-ADMIN-CATALOG-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-PROFILE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/session.ts": [
@@ -33989,6 +35272,22 @@
       {
         "requirement": "ART-PUBLIC-VISIBILITY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-POSTS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-OFFICER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-ELECTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": [
@@ -35111,6 +36410,80 @@
       {
         "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql": [
+      {
+        "requirement": "MKT-MERCH-CART-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-CHECKOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-BUYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-REFUND-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MERCH-SETTLEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Profiles/ArtistSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FAN-PROFILE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/FanEffects.hs": [
+      {
+        "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/ServerFanClubSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-POSTS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-OFFICER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-CLUB-ELECTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/sql/2026-09-28_interaction_compatibility.sql": [
+      {
+        "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Invoice/SessionIssue.hs": [
@@ -41697,6 +43070,10 @@
         {
           "requirement": "SYS-VERIFY-004",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-CHECKOUT-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -56532,7 +57909,40 @@
       "path": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
       "sha256": "699100a59dc180e12cc0c13d5053a6aab002c9ff891672411ac6ea3d67f771db",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MKT-MERCH-CART-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-CHECKOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-BUYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-REFUND-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-SETTLEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-31d0cba70e3e2793",
@@ -57462,7 +58872,12 @@
       "path": "tdf-hq/sql/2026-09-28_interaction_compatibility.sql",
       "sha256": "bc82cacf16a2e4cf9b501436907376f47bc4c6be177feadb9e6c8b8fd0fde38d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-93a0914067a29a94",
@@ -60023,6 +61438,26 @@
         {
           "requirement": "PAY-CHECKOUT-003",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-CHECKOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-BUYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-ORDERS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -60253,6 +61688,10 @@
         },
         {
           "requirement": "PAY-STOREFRONT-ADMIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-REFUND-001",
           "relationship": "implementation"
         }
       ]
@@ -61206,6 +62645,10 @@
         {
           "requirement": "ART-ADMIN-CATALOG-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FAN-PROFILE-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -61470,6 +62913,18 @@
           "relationship": "implementation"
         },
         {
+          "requirement": "COMMUNITY-FAN-PROFILE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FAN-FOLLOW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FAN-NOTIFICATION-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "implementation"
         },
@@ -61507,6 +62962,10 @@
       "requirements": [
         {
           "requirement": "REC-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FAN-PROFILE-001",
           "relationship": "implementation"
         }
       ]
@@ -61683,6 +63142,42 @@
       "requirements": [
         {
           "requirement": "PAY-CHECKOUT-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-CART-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-CHECKOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-BUYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-STORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-ORDERS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-REFUND-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MERCH-SETTLEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -62295,11 +63790,27 @@
     {
       "id": "SURFACE-5cfb0ad2589bfb68",
       "path": "tdf-hq/src/TDF/ServerFanClub.hs",
-      "sha256": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
+      "sha256": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ART-PUBLIC-VISIBILITY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-POSTS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-OFFICER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-ELECTION-001",
           "relationship": "implementation"
         }
       ]
@@ -62522,7 +64033,12 @@
       "path": "tdf-hq/src/TDF/Social/FanEffects.hs",
       "sha256": "a55587dcef94c2f5efe35da182a3cd934ca705dc5a685b5ab15eccb89f3a7b26",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-FOLLOW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-85aae9756eda5339",
@@ -62564,6 +64080,10 @@
         },
         {
           "requirement": "MSG-ACCESS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FAN-FOLLOW-001",
           "relationship": "implementation"
         }
       ]
@@ -63225,6 +64745,10 @@
         {
           "requirement": "PAY-CHECKOUT-003",
           "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-MERCH-CHECKOUT-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -63396,6 +64920,10 @@
       "requirements": [
         {
           "requirement": "REF-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-MERCH-REFUND-001",
           "relationship": "tests"
         }
       ]
@@ -63954,7 +65482,12 @@
       "path": "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
       "sha256": "012311f9c2954e1611e71c80b53eb4107a8f24cc8b1955a1b692265267f06429",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-PROFILE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2c52ef8d86b87df6",
@@ -64018,6 +65551,42 @@
       "requirements": [
         {
           "requirement": "PAY-CHECKOUT-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-MERCH-CART-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-MERCH-CHECKOUT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-MERCH-BUYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-STORE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-CATALOG-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-MERCH-SELLER-ORDERS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-MERCH-ADMIN-REVIEW-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-MERCH-REFUND-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-MERCH-SETTLEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -64120,9 +65689,30 @@
     {
       "id": "SURFACE-fa6329758744ce4e",
       "path": "tdf-hq/test/TDF/ServerFanClubSpec.hs",
-      "sha256": "a0193d767b3a8a85862f7266233b84a8bdae45af9130a01555016371b87151e1",
+      "sha256": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-FOLLOW-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-POSTS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-OFFICER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COMMUNITY-CLUB-ELECTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c6b62f6ae6aecf86",
@@ -69532,7 +71122,6 @@
     "SURFACE-4914939755dc02db",
     "SURFACE-6d09e6856f00b8d5",
     "SURFACE-9eeeaf61e004ca73",
-    "SURFACE-383ebe51a10dcfeb",
     "SURFACE-31d0cba70e3e2793",
     "SURFACE-c4a19303898fde0d",
     "SURFACE-4fd31699db22a83c",
@@ -69622,7 +71211,6 @@
     "SURFACE-0a5e45c122c6cb8c",
     "SURFACE-43a1373a9beef2e5",
     "SURFACE-c3b2661a522a349e",
-    "SURFACE-f77dd8256eb59e76",
     "SURFACE-93a0914067a29a94",
     "SURFACE-2df92b383bb2165c",
     "SURFACE-c9888142d2a310ea",
@@ -69754,7 +71342,6 @@
     "SURFACE-b4b451c7f0a9bfab",
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
-    "SURFACE-b16b93ab1b670275",
     "SURFACE-85aae9756eda5339",
     "SURFACE-5f3c565954968d6a",
     "SURFACE-effe2030880b0cfd",
@@ -69782,11 +71369,9 @@
     "SURFACE-b7c5b68652826d3d",
     "SURFACE-5c7c5fe961161133",
     "SURFACE-14c41dc429bf98d1",
-    "SURFACE-ccb30943a385e6b2",
     "SURFACE-705eb0208602ff31",
     "SURFACE-85348e5ee1e69142",
     "SURFACE-c823af87bc95031c",
-    "SURFACE-fa6329758744ce4e",
     "SURFACE-c6b62f6ae6aecf86",
     "SURFACE-916f8955abd0c6a2",
     "SURFACE-eef0c0019f0d35ca",
@@ -70125,7 +71710,8 @@
     "SYS-UI-FIXTURE-001",
     "EVT-WAITLIST-001",
     "EVT-VENUE-001",
-    "EVT-RESEARCH-001"
+    "EVT-RESEARCH-001",
+    "COMMUNITY-FAN-NOTIFICATION-001"
   ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
@@ -70192,6 +71778,9 @@
     "COURSE-ADMIN-001",
     "PAY-STOREFRONT-ADMIN-001",
     "PAY-PROVIDER-EVENT-REPLAY-001",
+    "PAY-MERCH-CHECKOUT-001",
+    "PAY-MERCH-REFUND-001",
+    "PAY-MERCH-SETTLEMENT-001",
     "CONTRACT-STORE-001",
     "ID-PARTY-REFERENCE-REGISTRY-001",
     "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
@@ -71312,7 +72901,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c7d3a9a58c23e7cbadb4406885d40aee5548d2be18102d0d334d6e5786274925",
+      "sourceSha256": "bb4a3efc1d70fcfc6644638c866203c53a0910882e454f4d5468a949e20fdead",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -71340,7 +72929,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c7d3a9a58c23e7cbadb4406885d40aee5548d2be18102d0d334d6e5786274925",
+      "sourceSha256": "bb4a3efc1d70fcfc6644638c866203c53a0910882e454f4d5468a949e20fdead",
       "definition": {
         "states": [
           "absent",
@@ -71370,7 +72959,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c7d3a9a58c23e7cbadb4406885d40aee5548d2be18102d0d334d6e5786274925",
+      "sourceSha256": "bb4a3efc1d70fcfc6644638c866203c53a0910882e454f4d5468a949e20fdead",
       "definition": {
         "export": [
           "queued",
@@ -94320,7 +95909,7 @@
   ],
   "conformanceCounts": {
     "FAIL": 0,
-    "IMPLEMENTED BUT UNSPECIFIED": 34,
+    "IMPLEMENTED BUT UNSPECIFIED": 50,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
     "PARTIAL": 198,

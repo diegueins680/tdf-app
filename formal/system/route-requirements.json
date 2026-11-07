@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 122,
+    "named": 178,
     "path-named": 1,
     "reviewed": 50,
-    "unspecified": 343,
-    "covered": 173
+    "unspecified": 287,
+    "covered": 229
   },
   "routes": [
     {
@@ -1108,164 +1108,218 @@
     {
       "method": "PUT",
       "path": "/fans/me/artist-profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-PROFILE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/elections",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-ELECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/elections/{electionId}/candidacy",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-ELECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/elections/{electionId}/vote",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-ELECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/inbox",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/inbox/{messageId}/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/inbox/{messageId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/fans/me/clubs/{artistId}/member-profiles/me",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/delete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/hide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/react",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/report",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/unhide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-POSTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/hide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/pin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/react",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-POSTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/unhide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/unpin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/fans/me/follows/{artistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-FOLLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/follows/{artistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-FOLLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/notifications/read-all",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-NOTIFICATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/notifications/{notifId}/read",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-NOTIFICATION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/fans/me/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-PROFILE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/role-request",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-PROFILE-001"
+      ]
     },
     {
       "method": "POST",
@@ -1688,176 +1742,234 @@
     {
       "method": "PATCH",
       "path": "/merch/admin/issues/{issueId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-ADMIN-REVIEW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/orders/{orderId}/refunds",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-REFUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/products/{productId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-ADMIN-REVIEW-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/admin/refunds/{refundId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-REFUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/settlements",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-SETTLEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/settlements/{settlementId}/payment-evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-SETTLEMENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/admin/settlements/{settlementId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-SETTLEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/stores/{storeId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-ADMIN-REVIEW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/carts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-CART-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/carts/{cartId}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-CHECKOUT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/carts/{cartId}/items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-CART-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/merch/carts/{cartId}/items/{variantId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-CART-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/merch/favorites/{productId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/favorites/{productId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/orders/{orderId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/orders/{orderId}/issues",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/applications",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/seller/stores/{storeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/issues/{issueId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/members",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/members/{memberId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/orders/{orderId}/fulfillment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/policies",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/products",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/seller/stores/{storeId}/products/{productId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/products/{productId}/images",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/products/{productId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/shipping-zones",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/variants/{variantId}/stock",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
