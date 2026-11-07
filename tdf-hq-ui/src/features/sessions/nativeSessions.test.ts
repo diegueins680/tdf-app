@@ -81,3 +81,13 @@ it('keeps equal chapter IDs in distinct publications separate without changing b
   expect(firstTrack.recordingId).toBe('song-id');
   expect(secondTrack.recordingId).toBe('song-id');
 });
+
+
+it('refuses an explicitly unavailable TDF resource even when its native metadata is ready', () => {
+  expect(readNativeSession({ ...resource(), availability: 'unavailable' }, entity, 'recording')).toBeNull();
+});
+
+it('retains available and unspecified native delivery independently of provider embed metadata', () => {
+  expect(readNativeSession({ ...resource(), availability: 'available', providerMetadata: { tdfNative: metadata(), embeddable: false } }, entity, 'recording')?.state).toBe('ready');
+  expect(readNativeSession(resource(), entity, 'recording')?.state).toBe('ready');
+});

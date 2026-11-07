@@ -1,6 +1,7 @@
 import { NativeSessionCard } from '../features/sessions/NativeSessionCard';
 import { nativePublicationKey, nativeSessionsFromFeed } from '../features/sessions/nativeSessions';
 import MarkdownText from '../components/MarkdownText';
+import SessionVideoPreview from '../components/SessionVideoPreview';
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import RecordThumbnail from '../features/records/RecordThumbnail';
@@ -774,6 +775,7 @@ const RecordingsGrid = ({ items, selection }: { items: RecordingItem[]; selectio
             <RecordThumbnail resource={item.resource} title={item.title} />
           </Box>
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {item.url && item.resource.availability !== 'unavailable' && item.resource.providerMetadata?.['embeddable'] !== false && <SessionVideoPreview url={item.url} title={item.title} />}
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip label={item.vibe} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
               {(item.duration ?? item.recordedAt) && (

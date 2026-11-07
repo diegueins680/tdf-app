@@ -1,8 +1,9 @@
 import { jest } from '@jest/globals';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { RecordsFeedDTO } from '../api/records';
+import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from '../player/types';
 import type { InteractionIdentity, InteractionSummary } from '../api/interactions';
 
 const getFeed = jest.fn<() => Promise<RecordsFeedDTO>>();
@@ -110,4 +111,50 @@ test('keeps an authorized selected-publication fallback for feed entries without
   expect(summary).toHaveBeenCalledTimes(1);
   expect(summary.mock.calls[0]?.slice(0, 2)).toEqual([{ kind: 'recording', entityKey: id }, false]);
   expect(screen.getAllByTestId('publication-panel')).toHaveLength(1);
+});
+
+
+function readyNativeMetadata() {
+  return { ...nativeMetadata, state: 'ready', sources: [
+    { url: 'https://media.invalid/native.mp4', quality: 'high', mediaType: 'video/mp4' },
+    { url: 'https://media.invalid/native.m4a', quality: 'high', mediaType: 'audio/mp4' },
+  ] };
+}
+
+test('keeps the legacy publication without native controls when its TDF resource is explicitly unavailable', async () => {
+  const publication = item('Unavailable native', readyNativeMetadata());
+  publication.resources = publication.resources.map(resource => resource.providerCode === 'tdf'
+    ? { ...resource, availability: 'unavailable' } : resource);
+  view(feed({ recordings: [publication] }));
+  const panel = await screen.findByTestId('publication-panel');
+  expect(screen.queryByRole('article', { name: 'Unavailable native' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Ver sesión', exact: true })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Escuchar', exact: true })).toBeNull();
+  expect(panel.getAttribute('data-kind')).toBe('recording');
+  expect(panel.getAttribute('data-key')).toBe(id);
+  expect(screen.getAllByTestId('publication-panel')).toHaveLength(1);
+  expect((await screen.findByRole('link', { name: 'Ver video', exact: true })).getAttribute('href')).toBe('https://www.youtube.com/watch?v=Synthetic001');
+});
+
+test('keeps independent native playback when the YouTube resource is unavailable and its embed flag is denied', async () => {
+  const publication = item('Independent native', readyNativeMetadata());
+  publication.resources = publication.resources.map(resource => resource.providerCode === 'youtube'
+    ? { ...resource, availability: 'unavailable' }
+    : { ...resource, availability: 'available', providerMetadata: { ...resource.providerMetadata, embeddable: false } });
+  const playback = jest.fn<(event: Event) => void>();
+  window.addEventListener(PLAYER_LOAD_TRACK_EVENT, playback);
+  try {
+    view(feed({ recordings: [publication] }));
+    const article = await screen.findByRole('article', { name: 'Independent native' });
+    expect(article.contains(screen.getByTestId('publication-panel'))).toBe(true);
+    const listen = screen.getByRole('button', { name: 'Escuchar', exact: true });
+    expect((listen as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(listen);
+    expect(playback).toHaveBeenCalledTimes(1);
+    const detail = (playback.mock.calls[0]![0] as CustomEvent<LoadPlayerTrackDetail>).detail;
+    expect(detail.mediaMode).toBe('audio');
+    expect(detail.track.id).toBe(`records:recording:${id}:full`);
+    expect(detail.track.sources).toHaveLength(2);
+    expect(detail.track.sources.every(source => source.url.startsWith('https://media.invalid/native.'))).toBe(true);
+  } finally { window.removeEventListener(PLAYER_LOAD_TRACK_EVENT, playback); }
 });

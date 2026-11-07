@@ -81,7 +81,9 @@ const workerEnv = {
   MUSIC_S3_REGION: 'us-east-1', MUSIC_S3_MASTER_BUCKET: 'music-test-master',
   MUSIC_S3_DERIVATIVE_BUCKET: 'music-test-derivatives', MUSIC_S3_DDEX_BUCKET: 'music-test-ddex',
   MUSIC_TEST_OBJECTS: objects, MUSIC_TEST_TRACE: trace,
-  MUSIC_WORKER_DIAGNOSTICS: process.env.MUSIC_WORKER_DIAGNOSTICS ?? 'false',
+  // Synthetic fixture only: preserve fixed-stage timing before failure cleanup.
+  // Explicit false remains available; never turn on shell argument tracing.
+  MUSIC_WORKER_DIAGNOSTICS: process.env.MUSIC_WORKER_DIAGNOSTICS ?? 'true',
   // Quotes and psql metacharacters must remain data through -v substitution.
   MUSIC_WORKER_ID: "worker's :quoted \\ identity",
 };

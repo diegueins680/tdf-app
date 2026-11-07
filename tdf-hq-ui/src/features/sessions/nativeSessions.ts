@@ -29,7 +29,7 @@ export function nativeMediaUrl(v: unknown): string | undefined {
 
 /** Records is the source of truth: match explicit artist IDs, never titles or names. */
 export function readNativeSession(resource: RecordsResourceDTO, entity: { id: string; title: string; description?: string }, kind: NativePublicationKind): NativeSession | null {
-  if (resource.providerCode !== 'tdf' || !text(entity.id)) return null;
+  if (resource.providerCode !== 'tdf' || resource.availability === 'unavailable' || !text(entity.id)) return null;
   const data = object(resource.providerMetadata?.['tdfNative']);
   if (data?.['schemaVersion'] !== 1 || data['kind'] !== 'session' || data['isTrack'] === true) return null;
   if (!Array.isArray(data['artistPartyIds']) || !data['artistPartyIds'].length

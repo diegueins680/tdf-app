@@ -61,6 +61,7 @@ jest.unstable_mockModule('react-i18next', () => ({
     i18n: { language: 'es', resolvedLanguage: 'es' },
     t: (key: string, options?: { artist?: string }) => ({
       'artistFollow.authCta': 'Crear cuenta o ingresar para seguir',
+      'artistFollow.benefit': `Sigue a ${options?.artist ?? ''} para volver a encontrarlo en tu comunidad. Puedes ver sus videos sin crear una cuenta.`,
       'artistFollow.resumeAction': 'Seguir ahora',
       'artistFollow.resumeMessage': `Ya ingresaste. Continúa donde estabas y sigue a ${options?.artist ?? ''}.`,
       'artistFollow.resumeError': `No pudimos seguir a ${options?.artist ?? ''}. Revisa tu conexión e inténtalo de nuevo.`,
@@ -166,6 +167,7 @@ describe('ArtistPublicPage follow continuity', () => {
     const view = renderPage('/a/las-sinteticas');
 
     const follow = await screen.findByRole('link', { name: 'Crear cuenta o ingresar para seguir' });
+    expect(screen.getByText('Sigue a Las Sintéticas para volver a encontrarlo en tu comunidad. Puedes ver sus videos sin crear una cuenta.')).toBeTruthy();
     const authUrl = new URL(follow.getAttribute('href') ?? '', 'https://tdf.example.test');
     expect(authUrl.pathname).toBe('/login');
     expect(authUrl.searchParams.get('signup')).toBe('1');
@@ -175,6 +177,20 @@ describe('ArtistPublicPage follow continuity', () => {
     await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
     await expectNoSeriousAccessibilityViolations(view.container);
     view.queryClient.clear();
+  });
+
+  it('returns a guest to the exact session after signup without copying private query data', async () => {
+    const view = renderPage('/a/las-sinteticas?video=youtube%3AuRNyIMLiqU8&utm_source=instagram&token=private-value#artist-session');
+    const follow = await screen.findByRole('link', { name: 'Crear cuenta o ingresar para seguir' });
+    const authUrl = new URL(follow.getAttribute('href') ?? '', 'https://tdf.example.test');
+    const target = new URL(authUrl.searchParams.get('redirect') ?? '', 'https://tdf.example.test');
+    expect(target.searchParams.get('video')).toBe('youtube:uRNyIMLiqU8');
+    expect(target.searchParams.get('utm_source')).toBe('instagram');
+    expect(target.searchParams.get('artistId')).toBe('17');
+    expect(target.searchParams.has('token')).toBe(false);
+    expect(target.hash).toBe('#artist-session');
+    expect(followMock).not.toHaveBeenCalled();
+    view.unmount(); view.queryClient.clear();
   });
 
   it('follows only after explicit confirmation and clears the resume query on success', async () => {

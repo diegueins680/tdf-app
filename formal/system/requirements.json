@@ -1246,7 +1246,9 @@
         "scripts/test-auth-predicates.py",
         "scripts/check-admin-guards.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "scripts/verify-auth-predicates.py"
+      ],
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for inspected predicates and targeted registry tests; per-handler HTTP denial execution remains open.",
@@ -1692,12 +1694,14 @@
         "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
-      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test Formal model formal/auth/SessionExpiry.tla: Apalache proves WithinWindowAtUse, LegacyInteractiveFailsClosed, TtlBoundedByCookie and ResetNeverAuthenticates inductively for up to four tokens and any clock movement; TLC explores 2,046,828 states; accepting tokens without expiry, or admitting a TTL above the cookie Max-Age, violates Safe in both tools; a reachability witness shows a minted session is accepted (scripts/verify-inductive-proofs.sh).",
       "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
       "observability": "No token in production receipts; retain migration identity and exact tested source.",
-      "formalModels": [],
+      "formalModels": [
+        "formal/auth/SessionExpiry.tla"
+      ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/Spec.hs",
@@ -1958,8 +1962,10 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/test-checkout-money-verifier.py"
       ],
-      "formalModels": [],
-      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "formalModels": [
+        "formal/payments/checkout_money_arithmetic.py"
+      ],
+      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration. Z3 (formal/payments/checkout_money_arithmetic.py, pinned 4.13.3, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): under the exact TDF.Commerce.Money guards, accepted canonical lines (1 to 6, plus a step lemma for any length) are positive, within the parent, unchanged by Int64 narrowing and sum to the parent; accepted legacy cart amounts narrow unchanged; controls show that wrap-around before checking would accept wrong amounts.",
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",
@@ -2118,8 +2124,10 @@
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/test-checkout-money-verifier.py"
       ],
-      "formalModels": [],
-      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "formalModels": [
+        "formal/payments/merch_money_arithmetic.py"
+      ],
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration. Z3 (formal/payments/merch_money_arithmetic.py, pinned 4.13.3, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): under the exact calculateMerchMoney guards, commission is the floor share within 0..base, stored fields fit Int64, commission + fee + seller net = total, and accepted cart lines fit within the accepted sum; four controls show each guard is needed.",
       "evidence": "merch-money-controls.json; merch-commission-postgres.log",
       "critical": true,
       "status": "specified and implemented",
@@ -10888,7 +10896,9 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         ".github/workflows/ci.yml",
-        "tdf-hq-ui/src/components/ArtistFansList.tsx"
+        "tdf-hq-ui/src/components/ArtistFansList.tsx",
+        "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -10905,7 +10915,11 @@
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "playwright.discovery.config.mjs",
         "tdf-hq-ui/src/api/directory.test.ts",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-migration.sh",
+        "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
+        "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts"
       ],
       "formalModels": [
         "formal/event-operations/DiscoveryFallbackPrivacy.tla",
@@ -12687,8 +12701,10 @@
         ".github/workflows/ci.yml",
         "scripts/test-provider-domain-harness.py"
       ],
-      "formalModels": [],
-      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
+      "formalModels": [
+        "formal/payments/provider_binding_admission.py"
+      ],
+      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required. Z3 (formal/payments/provider_binding_admission.py, pinned 4.13.3, source sha256 pinned, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): the encoded admission predicate implies the stated agreement for hosted and direct evidence and refuses non-succeeded or mismatched attempts; each of the 25 hosted-branch conjuncts is necessary. Manual evidence and the Domo hold guard are not encoded.",
       "evidence": "formal/system/evidence/2026-10-26-provider-domain-main/ records clean223-schema qualification atcb777,317 compiled cases, independent optimized-harness counterexamples, failed earlier attempts and exact scoped integration hashes. Fresh final-head CI/review remain separate.",
       "critical": true,
       "status": "specified and implemented",
@@ -13429,13 +13445,15 @@
         ".github/workflows/ci.yml",
         "scripts/ci-job-admission.mjs",
         "package.json",
-        "scripts/ci-change-scope.mjs"
+        "scripts/ci-change-scope.mjs",
+        "scripts/__tests__/experiment-http-runtime.mjs"
       ],
       "tests": [
         "scripts/__tests__/ci-job-admission.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        "scripts/__tests__/experiment-http-cleanup.test.mjs"
       ],
       "formalModels": [],
       "ambiguity": [
@@ -14009,7 +14027,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas proved unbounded; the composition into calculateDomoQuote is checked by properties, not mechanically refined.",
       "ambiguity": [
         "The Domo quote lifecycle (DomoQuoteState) and its refund policy after deposit_paid -> cancelled are not specified here.",
@@ -14234,7 +14254,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas unbounded, composition property-tested.",
       "ambiguity": [
         "A deposit course whose total is at most 50.00 can have a zero balance, so the deposit equals the full price; whether such courses should use the deposit mode is a business decision (F-20)."
@@ -14405,7 +14427,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_cancellation_refund.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable. A requested Domo cancellation refund is approved and executed by a different strict administrator with the Admin module through the shared PayPal refund approval (POST /admin/services/storefront/refunds/{refundId}/approve), bound to the deposit checkout's verified PayPal capture; Datafast refunds remain unsupported (503).",
@@ -14496,7 +14520,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/deposit_policy_arithmetic.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable.",
@@ -14552,7 +14578,7 @@
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql"
       ],
-      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
+      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals). Z3 (formal/payments/deposit_policy_arithmetic.py, pinned 4.13.3, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): for every valid policy and Int64 inputs, an admitted deposit leaves a positive balance, stays within the approved share and is not below the minimum or computed deposit; a higher minimum never turns full payment into a deposit; controls show both full-payment guards are needed.",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
@@ -15514,6 +15540,80 @@
       }
     },
     {
+      "id": "SYS-ROUTE-REQUIREMENTS-001",
+      "title": "Every mutating compiled route is attributed to requirements or listed as unspecified",
+      "statement": "Each POST, PUT, PATCH and DELETE operation in the compiled API surface must have exactly one entry in formal/system/route-requirements.json, naming the requirements that cover it or marking it unspecified, and CI must fail when a mutating route is added, removed or renamed without updating the ledger.",
+      "domain": "SYS",
+      "authority": "Formal audit 2026-10-31 finding F-05 (407 of 508 mutating routes unmapped by a heuristic; the exact number to be fixed by a per-route mapping); formal/system/audit-2026-10-31-phase1.md section 42.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "The ledger's route set equals the mutating operations of formal/system/compiled-api-surface.json, without duplicates. An entry is named (a requirement names METHOD and path, parameters compared by position), path-named (a requirement names the path and it is the only mutating method on it), reviewed (requirements plus a written note) or unspecified (no requirements). Named and path-named entries are recomputed from requirements.json on every check, so they cannot drift from the text; a reviewed entry is refused once the text names the route. Every listed requirement exists, and the summary counts match the entries.",
+      "actors": [
+        "Maintainer adding or changing a route",
+        "CI",
+        "Reviewer attributing a route"
+      ],
+      "preconditions": [
+        "Current compiled API surface snapshot",
+        "formal/system/requirements.json"
+      ],
+      "inputs": [
+        "formal/system/compiled-api-surface.json",
+        "formal/system/requirements.json",
+        "formal/system/route-requirements.json",
+        "--write option"
+      ],
+      "state": {
+        "initial": "Ledger and surface on disk",
+        "terminal": [
+          "Ledger accepted",
+          "Check failed with the offending routes"
+        ]
+      },
+      "allowedTransitions": [
+        "Regenerate named and path-named entries from requirement text",
+        "Keep reviewed entries across regeneration"
+      ],
+      "forbiddenTransitions": [
+        "Accept a mutating route missing from the ledger",
+        "Accept a stale or duplicate entry",
+        "Accept coverage the requirement text does not support, or a reviewed entry without a note",
+        "Count an attribution as conformance"
+      ],
+      "effects": [
+        "Read-only check; --write rewrites only the ledger file"
+      ],
+      "authorization": "Local tool; no network or credentials.",
+      "privacy": "Route paths and requirement identifiers only.",
+      "concurrency": "Single sequential run.",
+      "idempotency": "--write on an unchanged surface, requirements and ledger reproduces the ledger byte for byte.",
+      "failure": "Each inconsistency is printed and the exit status is 1.",
+      "recovery": "Run with --write, then review entries that remain unspecified or add a reviewed attribution with a note.",
+      "observability": "The ledger summary counts named, path-named, reviewed and unspecified routes.",
+      "implementation": [
+        "scripts/check-route-requirements.py",
+        "formal/system/route-requirements.json"
+      ],
+      "tests": [
+        "scripts/test-route-requirements.py"
+      ],
+      "formalModels": [],
+      "verification": "8 unit tests: build and bases on a synthetic surface, positional parameter matching, the two-method path rule, a missing new route, a stale route, requirement text changes, unsupported coverage, reviewed entries (note, unknown requirement, kept by --write), duplicates and summary drift, and the repository ledger being current. CI runs the check and the tests in the formal workflow.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 42",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Exact over the compiled snapshot; attribution comes from requirement text, not from handler analysis.",
+      "ambiguity": [
+        "The compiled description carries no handler names, so a route is attributed by the requirement text that names it, not by the handler that serves it.",
+        "A requirement that names a route is not evidence that the handler conforms to it.",
+        "Read-only GET routes are out of scope."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Complete and gated attribution ledger; 501 of 516 mutating routes remain unspecified debt."
+      }
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
@@ -15580,11 +15680,15 @@
       "tests": [
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs"
+        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
+        "scripts/test-session-invoice-issue.sh",
+        "scripts/__tests__/disposable-postgres-url.test.mjs"
       ],
-      "formalModels": [],
-      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse.",
-      "evidence": "formal/system/audit-2026-10-31-phase1.md section 40",
+      "formalModels": [
+        "formal/payments/SessionInvoiceIssue.tla"
+      ],
+      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. Added PostgreSQL validation recipe: scripts/test-session-invoice-issue.sh selects the two real SessionIssueSpec cases for the advisory-lock query API and concurrent new-key reservation, rejects pending examples and zero successful examples, and is wired into backend CI. The runner creates a unique owned database without an initial drop, installs cleanup only after successful creation, validates local/CI routing and port, rejects libpq routing overrides, and passes credentials only through environment variables; isolated PATH-stub regressions exercise those guards and cleanup, not PostgreSQL semantics. These two PostgreSQL cases were not executed during the 2026-11-06 consolidation; fresh hosted execution remains required. SessionInvoiceIssue.tla encodes OneRunPerKey and NoBlindDuplicate; scripts/verify-inductive-proofs.sh configures TLC exploration, Apalache induction and the split-check/reservation negative control. Owner-reported model results have not been independently replayed in this consolidation; no current TLC/Apalache pass is claimed. The model-to-implementation correspondence is by review, not mechanical refinement.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md sections 40 and 43; formal/payments/README.md",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "Unit and SQLite reservation tests; no end-to-end run against the SRI portal.",
@@ -15595,7 +15699,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Server-side reservation tested on SQLite and the migration on PostgreSQL; no portal or concurrent HTTP run."
+        "reason": "Server-side reservation tested on SQLite and the migration on PostgreSQL; no portal or concurrent HTTP run. The newly wired two-case PostgreSQL CI run and TLC/Apalache model executions remain unverified for this candidate; wrapper controls alone do not execute PostgreSQL."
       }
     },
     {
@@ -15681,7 +15785,9 @@
         "Mobile contracts client"
       ],
       "authorization": "Unchanged: validateContractsAccess requires the operations role for create, PDF and send.",
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/ContractSend.tla"
+      ],
       "critical": true,
       "status": "specified and implemented",
       "implementation": [
@@ -15697,7 +15803,7 @@
       "tests": [
         "tdf-hq/test/TDF/Contracts/StoreSpec.hs"
       ],
-      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41; formal/system/audit-2026-10-31-phase1.md section 43; formal/payments/README.md",
       "id": "CONTRACT-SEND-001",
       "title": "A contract is reported as sent only after the mail transport accepts it",
       "statement": "POST /contracts/{id}/send must email the contract PDF to the recipient and answer status sent only after SMTP accepted the message; without email configuration it must refuse with 503 instead of claiming success.",
@@ -15736,7 +15842,7 @@
       "failure": "Not configured 503; transport refusal 502 with the failure recorded.",
       "recovery": "A delivery left without outcome means the process stopped during SMTP; staff resend after checking the recipient.",
       "observability": "contract_delivery rows plus the existing [Email] smtp_attempt and smtp_accepted logs.",
-      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id.",
+      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id. ContractSend.tla encodes SentMeansAccepted, NoUnrecordedMail, AcceptedMeansMailed and UnavailableIsInert; scripts/verify-inductive-proofs.sh configures TLC exploration, Apalache induction for up to four requests, and the row-after-SMTP negative control. Owner-reported model results have not been independently replayed in this consolidation; no current TLC/Apalache pass or mechanical implementation refinement is claimed.",
       "confidence": "Handler tests with an injected transport; no live SMTP run.",
       "ambiguity": [
         "SMTP acceptance is not delivery to the inbox.",
@@ -16280,6 +16386,394 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Scoped response boundary and42 finite WAI/public-router examples pass in canonical Stack. Actual mkApp cases, aggregate/current-candidate HTTP checks, CI, independent review and deployment remain pending; this is not formal proof or global cache-policy verification."
+      }
+    },
+    {
+      "id": "MEDIA-VIDEO-CAMPAIGN-001",
+      "title": "Artists prepare durable organic video launch campaigns",
+      "statement": "An authenticated artist can save, resume, duplicate and export private video campaign drafts for their own artist identity. Strict administrators with the Admin module and current resource managers may select another existing artist; manager access requires the canonical subject association and current private-view/edit grants, and public featuring additionally requires publication capability and eligible profile state. Saving, preparing for review and exporting never publish, schedule provider actions or spend money.",
+      "domain": "MEDIA",
+      "actors": [
+        "Artist",
+        "Strict administrator",
+        "Prospective follower",
+        "Currently authorized directory manager"
+      ],
+      "preconditions": [
+        "Artist profile exists. Current session and authoritative role/module grants remain valid. Additive campaign migration is applied."
+      ],
+      "inputs": [
+        "Video and media HTTPS links",
+        "Campaign UUID and expected revision",
+        "Instagram/TikTok copy and relative calendar",
+        "Explicit follow command",
+        "Allowlisted campaign attribution",
+        "Editable primary campaign objective, retained on save/resume and template import/export"
+      ],
+      "state": {
+        "initial": "draft",
+        "states": [
+          "draft",
+          "ready",
+          "piece-draft",
+          "piece-prepared",
+          "piece-exported",
+          "piece-published-manually"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid revisions save drafts atomically.",
+        "A lost-save exact replay returns the preceding result.",
+        "Complete media and copy permit review-ready status.",
+        "Manual publication records require a URL on the selected platform.",
+        "An explicit command on a locked review-ready revision updates only the public TDF featured-video field; no external platform publication occurs."
+      ],
+      "forbiddenTransitions": [
+        "A caller without current artist ownership, strict administrator capability or the corresponding live directory grant manages another artist campaign.",
+        "Stale revisions overwrite newer edits.",
+        "Saving or exporting starts a provider publication or paid advertisement.",
+        "Unauthenticated or unverified conversions inflate account/follow counters."
+      ],
+      "effects": [
+        "PostgreSQL stores campaign documents and unique verified conversion events.",
+        "An exported plan contains per-piece attribution links.",
+        "An explicitly approved command can expose the selected video on the artist public TDF profile."
+      ],
+      "authorization": "Current-session/current-role locks cover all management. Self artist or strict administrator is checked first; otherwise the current canonical directory subject, manager actor, active private-view/edit grants and eligible profile state are rechecked under manager/profile shared locks in the same transaction. Featuring additionally requires can_publish, published/allowed profile visibility, saved rights/technical checks and the exact campaign revision.",
+      "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration. Both new Party references participate in canonical identity dependency discovery and reject inserts/reassignments to archived identities.",
+      "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
+      "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
+      "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
+      "recovery": "Retry an uncertain save with the same UUID, body and expected revision. Reconcile a changed saved version rather than overwrite it.",
+      "observability": "Owner metrics show historical verified registration/follow creations; existing configured analytics can record profile views. External reach and causal attribution are not claimed. Per-piece source breakdown is additive; shared bio destinations cannot identify distinct posts.",
+      "source": "Diego approved organic registrations/follows campaign prompt on 2026-10-17 and requested execution on 2026-10-20.",
+      "implementation": [
+        "tdf-hq/src/TDF/VideoCampaigns.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+        "tdf-hq-ui/src/api/videoCampaigns.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/utils/artistFollowIntent.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "scripts/verify-video-campaign-access.mjs",
+        "scripts/quality-repo.sh",
+        ".github/workflows/catalog-list-audit.yml",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+        "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
+        "e2e/web/video-campaigns.spec.mjs",
+        "e2e/web/artist-follow.spec.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "scripts/__tests__/video-campaign-access.test.mjs",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
+      ],
+      "formalModels": [
+        "scripts/verify-video-campaign-access.mjs"
+      ],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "critical": false,
+      "ambiguity": [
+        "Production deployment and an authenticated campaign save are not verified.",
+        "Video encoding and provider publishing are not background services in this implementation.",
+        "One-hour authenticated attribution is first accepted piece and does not prove causality or cross-device returns.",
+        "The finite manager abstraction and SQL examples do not prove full HTTP authorization interleavings or production deployment."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused web tests pass; backend and hosted verification remain required. No formal proof or production rollout is claimed."
+      },
+      "authority": "Approved Liquid Paper Girl launch prompt and repository authorization/storage boundaries.",
+      "property": "Artist-scoped drafts are durable and publishing remains explicitly separate from preparation.",
+      "contract": "docs/artists/video-campaigns.md",
+      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused. Finite 16,384-case manager predicate and 13 guard-removal controls, source-presence binding and actual PostgreSQL directory-grant examples; not full implementation/interleaving refinement.",
+      "evidence": "PR #599, paired Mobile contract PR and current-revision test receipts. Historical media measurements are retained but original and derivative bytes are unavailable in this run."
+    },
+    {
+      "id": "CAMP-SERVER-001",
+      "title": "Server-owned musical campaign execution with scoped authorization",
+      "statement": "Any registered user may prepare and execute musical campaigns on their own connected accounts; TDF posts require current admin approval, and execution survives browser disconnection without automatically replaying uncertain provider effects.",
+      "authority": "approved",
+      "source": "Diego explicit campaign-platform implementation instruction, 2026-10-29; docs/campaign-platform/operations.md",
+      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits; persisted provider sessions also prohibit replacing a resumable piece version before a final external ID exists; successful pending verification polls do not exhaust consecutive-error retries; email eligibility precedes its batch limit while delivered or uncertain claims remain non-replayable; generated plan graphics may attach only to the unchanged unapproved piece IDs created by that plan, preserving manual/concurrent revisions; completed clip renders attach at most once to an unchanged initial unapproved draft, preserving subsequent manual media and metadata revisions; absent or non-object Core sessions return401 without creating an actor, while upstream availability/JSON failures retain503; expired uploaded YouTube schedules require explicit owner date/rights reapproval bound to current campaign/piece versions, prior date and exact external video, preserving upload/session identities and separate TDF Studio authority without replaying running or uncertain verification",
+      "contract": "formal/system/campaign-server.md",
+      "implementation": [
+        ".github/workflows/campaign-platform.yml",
+        "scripts/quality-repo.sh",
+        "services/campaign-platform/backup.py",
+        "services/campaign-platform/backup_control.py",
+        "services/campaign-platform/backup_crypto.py",
+        "services/campaign-platform/deploy.py",
+        "services/campaign-platform/deploy_sandbox.py",
+        "services/campaign-platform/domain.py",
+        "services/campaign-platform/drive_backup.py",
+        "services/campaign-platform/facebook.py",
+        "services/campaign-platform/graphics.py",
+        "services/campaign-platform/import_rojo.py",
+        "services/campaign-platform/media.py",
+        "services/campaign-platform/model_check.py",
+        "services/campaign-platform/monitor.py",
+        "services/campaign-platform/notifications.py",
+        "services/campaign-platform/planning.py",
+        "services/campaign-platform/providers.py",
+        "services/campaign-platform/qualify_media.py",
+        "services/campaign-platform/requirements.txt",
+        "services/campaign-platform/schema.sql",
+        "services/campaign-platform/server.py",
+        "services/campaign-platform/stream_backup_object.py",
+        "services/campaign-platform/tdf-campaign-api.service",
+        "services/campaign-platform/tdf-campaign-backup-request.service",
+        "services/campaign-platform/tdf-campaign-backup-request.timer",
+        "services/campaign-platform/tdf-campaign-backup.service",
+        "services/campaign-platform/tdf-campaign-backup.timer",
+        "services/campaign-platform/tdf-campaign-monitor.service",
+        "services/campaign-platform/tdf-campaign-monitor.timer",
+        "services/campaign-platform/tdf-campaign-worker.service",
+        "services/campaign-platform/tiktok.py",
+        "services/campaign-platform/tiktok_environment.py",
+        "services/campaign-platform/tiktok_token.py",
+        "services/campaign-platform/ui/app.js",
+        "services/campaign-platform/ui/index.html",
+        "services/campaign-platform/ui/style.css",
+        "services/campaign-platform/ui/tdf-logo.png",
+        "services/campaign-platform/ui/tdf-logo.svg",
+        "services/campaign-platform/ui/tiktok.js",
+        "services/campaign-platform/verify_drive_backup.py",
+        "services/campaign-platform/worker.py",
+        "services/campaign-platform/youtube_upload.py",
+        "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook protocols retain controlled mocks; two explicitly selected TDF Pages now have live server-side identity/permission checks and two real approved text/link posts, one attempt each, verified by provider readback and native Page views with the exact YouTube route. Other Facebook formats and external-user review remain unqualified. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no production/public TikTok posting or app-audit qualification. Isolated private-only sandbox policy has separate HTTP/admin, provider-username, environment/client binding and real UI tests; production audit remains required. A separate authorized personal-account sandbox send completed once as SELF_ONLY with read-only status confirmation and authenticated owner HD playback; this does not establish production audit, public or anonymous playback, photo sending or auditory synchronization. November 6 review regressions use a stalled HTTP upload body while another user and the worker write, competing upload/deletion refusal, mid-upload editor revocation, a real SQLite commit-abort/retry, TikTok photo references across publication states and blocked-video Studio recovery. The original implementation is retained as a three-case negative control. A mocked resumable YouTube protocol pauses after the first 8 MiB checkpoint, refuses an in-place edit, and resumes the unchanged suffix with one initialization. TikTok worker regressions cover healthy pending polls, a transient error, recovery/completion, and the unchanged three-retry failure bound. SMTP fixtures cover delivered/ineligible cross-user batch starvation, expired notices, uncertain failures and concurrent durable claims without sending real mail. Plan regressions preserve pre-existing manual Facebook carousels and matching Story names, bind generated images only to new IDs, retain template metadata and reject late attachment after human edits or approval.",
+      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run; reports/campaign-platform-tiktok-2026-10-29.json; reports/campaign-platform-current-main-2026-10-30.json; reports/campaign-platform-facebook-current-main-2026-10-30.json",
+      "status": "specified and implemented",
+      "critical": true,
+      "domain": "CAMP",
+      "actors": [
+        "Authenticated campaign owner",
+        "Explicit campaign team member",
+        "Strict TDF administrator",
+        "Durable server worker"
+      ],
+      "preconditions": [
+        "A canonical TDF session identifies the actor",
+        "External providers grant the required application and account permissions"
+      ],
+      "inputs": [
+        "Master and derivative media, rights consent, connected accounts, text, dates with IANA timezone, exact-version approval"
+      ],
+      "state": {
+        "campaign": [
+          "draft",
+          "approved",
+          "active",
+          "paused",
+          "cancelled",
+          "completed"
+        ],
+        "job": [
+          "queued",
+          "running",
+          "completed",
+          "blocked",
+          "unknown",
+          "failed",
+          "cancelled"
+        ],
+        "storage": "SQLite WAL metadata and separately retained file objects"
+      },
+      "allowedTransitions": [
+        "draft -> approved only for current reviewed versions",
+        "approved -> active subject to quotas",
+        "queued -> running through one transactional claim",
+        "uncertain publication -> unknown with manual reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "Cross-user access without explicit team authority",
+        "Publication to TDF without current admin approval",
+        "Automatic replay after uncertain publication",
+        "Public YouTube release before HD and exact-video Studio confirmation"
+      ],
+      "effects": [
+        "Private uploads, derived real media, approved supported publications, explicit assisted tasks, durable notifications and measurement checkpoints"
+      ],
+      "authorization": "Canonical TDF session; owner and per-campaign roles; independent TDF and private-message approvals. Admin alone does not grant blanket private-campaign access. The isolated TikTok sandbox restricts entry to its designated administrator, verifies its configured creator username and account scope, and preserves personal ownership for a private test account.",
+      "privacy": "Provider credentials stay encrypted on server; export and logs omit credentials; media capabilities expire. Private Drive backup is restricted to its admin custodian, encrypted before upload, with separately held recovery key and owner-only folder.",
+      "concurrency": "SQLite immediate transactions serialize local claims/reservations. No distributed exactly-once guarantee across provider boundaries.",
+      "idempotency": "Imported existing publications never create new publication jobs. Unique piece/kind jobs preserve identity. Unknown provider effects cannot auto-retry.",
+      "failure": "Fail closed on missing credentials, expired dates, quota, unavailable providers or stale authorization; retain uncertain results for review.",
+      "recovery": "Systemd restarts local services; uncertain publications require reconciliation. Independent private Drive backup resumes acknowledged encrypted ranges and commits manifest last; recovery qualification is scoped to captured ready objects, configuration and isolated campaign SQLite. Core PostgreSQL, production failover and incomplete uploads are excluded.",
+      "observability": "Versioned audit records, server heartbeat, independent monitor, notifications, per-provider status and metric availability.",
+      "tests": [
+        "services/campaign-platform/tests/test_backups.py",
+        "services/campaign-platform/tests/test_domain.py",
+        "services/campaign-platform/tests/test_facebook.py",
+        "services/campaign-platform/tests/test_http.py",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "services/campaign-platform/tests/test_tiktok.py",
+        "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "services/campaign-platform/tests/test_tiktok_sandbox.py",
+        "services/campaign-platform/tests/test_notifications.py",
+        "services/campaign-platform/tests/test_planning.py"
+      ],
+      "formalModels": [
+        "services/campaign-platform/model_check.py"
+      ],
+      "confidence": "Observed finite implementation boundaries and bounded design model; external provider completeness and unbounded refinement not established.",
+      "ambiguity": [
+        "Google/Meta/TikTok verification and native assisted features remain external prerequisites.",
+        "Push/WhatsApp notifications and physical capacity for larger tiers remain pending. Key replacement, retention deletion and full-host disaster recovery require separate procedures.",
+        "Native web route requires normal protected integration; live standalone panel is independently deployed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped local/server checks cover authorization and recovery boundaries. Full refinement, unrestricted provider automation, protected frontend rollout and full-host failover remain unestablished."
+      }
+    },
+    {
+      "id": "ART-VIDEO-001",
+      "title": "Canonical artist videos and explicit follow journey",
+      "domain": "ART",
+      "statement": "Show public artist videos in TDF using existing canonical identity and explicit authenticated follows, with server-owned hosted media and permission-checked publication.",
+      "authority": "Diego explicit implementation instruction 2026-11-02 after approving TDF custody, real stills, all sources, web/native and campaign edits with existing controls preserved.",
+      "source": "docs/artists/platform-videos.md",
+      "contract": "docs/artists/platform-videos.md",
+      "actors": [
+        "Anonymous viewer",
+        "Registered artist",
+        "Verified current manager",
+        "TDF administrator"
+      ],
+      "preconditions": [
+        "Canonical Core artist identity exists",
+        "Normal campaign membership and current artist authority verified",
+        "External rights and insertion availability reviewed"
+      ],
+      "inputs": [
+        "Canonical artist Party",
+        "Current authenticated session",
+        "Official provider URL or finished same-campaign asset",
+        "Exact video version and rights/technical confirmations",
+        "Explicit viewer play/follow action",
+        "Optional exact published session or matching approved featured-provider identity"
+      ],
+      "state": {
+        "video": "Private version or exact published version",
+        "follow": "Existing canonical fan relationship; no new implicit state",
+        "media": "Existing quota-reserved assets and unchanged originals",
+        "selection": "Requested session bound to this canonical artist; changing featured video cannot substitute a different shared session."
+      },
+      "allowedTransitions": [
+        "Own artist or current manager plus campaign editor saves private version",
+        "Exact current version plus rights/technical review and campaign approval publishes; TDF scope additionally requires current strict admin",
+        "Edit clears publication approval",
+        "Authorized exact-version unpublish withdraws new public reads",
+        "Anonymous viewer opens player; explicit authenticated follow uses existing reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "Publish a stale version or foreign campaign asset",
+        "Grant management by profile-name match, signup or unapproved claim",
+        "Treat TDF admin status as blanket campaign membership",
+        "Publish TDF scope without current TDF admin",
+        "Create followers on playback or signup",
+        "Replay existing external publications or change approved schedule times",
+        "Count iframe load as actual watch time",
+        "Replace a requested unavailable session with another featured video or interpret a query as an arbitrary player URL"
+      ],
+      "effects": [
+        "Versioned video metadata and audit in existing SQLite",
+        "Anonymous read of only approved public metadata and linked media",
+        "Existing consent-controlled analytics; no provider view inference"
+      ],
+      "authorization": "Current Core canonical artist and Party/admin or exact managed-directory edit capability; existing campaign membership independently required. TDF scope needs current strict admin for publication.",
+      "privacy": "No credential copy or arbitrary iframe HTML; public projection excludes owner, campaign and original paths. No source URLs or private Vimeo hashes in analytics. Existing auth/follow session ownership preserved.",
+      "concurrency": "SQLite immediate transaction serializes source deduplication and optimistic version changes; file probe precedes exact transactional version readback.",
+      "idempotency": "Unique artist/provider-source identity reuses identical create; conflicting duplicates and stale updates fail. No external provider publication is executed.",
+      "failure": "Unavailable embeds retain a truthful fallback; failed authority reads fail closed; wrong codecs stay private without changing original.",
+      "recovery": "Withdraw current public version, repair a new version and re-review. Already downloaded bytes cannot be revoked. Existing backup snapshot covers metadata and assets.",
+      "observability": "Source tests distinguish URL safety, current manager capabilities, version/deduplication, HTTP anonymous/media/range boundaries and follow continuation; device/prod/provider qualification recorded separately.",
+      "implementation": [
+        "services/campaign-platform/videos.py",
+        "services/campaign-platform/domain.py",
+        "services/campaign-platform/server.py",
+        "services/campaign-platform/ui/videos.js",
+        "services/campaign-platform/ui/app.js",
+        "services/campaign-platform/ui/index.html",
+        "tdf-hq-ui/src/utils/videoSource.ts",
+        "tdf-hq-ui/src/utils/videoWatch.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+        "tdf-mobile/app/(tabs)/social.tsx",
+        "tdf-mobile/src/navigation/deepLinks.ts",
+        "tdf-mobile/package.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/.github/workflows/interaction-simulator.yml",
+        "tdf-hq-ui/src/utils/artistFollowIntent.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts"
+      ],
+      "tests": [
+        "services/campaign-platform/tests/test_videos.py",
+        "services/campaign-platform/tests/test_http.py",
+        "tdf-hq-ui/src/utils/videoSource.test.ts",
+        "tdf-hq-ui/src/utils/videoWatch.test.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
+        "tdf-mobile/__tests__/DeepLinks.test.ts",
+        "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
+        "e2e/web/artist-follow.spec.mjs",
+        "tdf-hq-ui/src/components/SessionVideoPreview.campaign.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped source implementation; finite tests and actual deployment/device evidence are distinct.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source implementation prepared; hosted CI, independent review, protected deployment and public playback/device qualification still required. No whole-program refinement claim."
+      },
+      "property": "No public draft or stale version, unauthorized artist/campaign mutation, implicit follow, duplicated provider-source identity or iframe-load watch claim. Shared-session links preserve canonical artist/source identity, credits and playback continuity across metadata resolution; Mobile retains only bounded public acquisition fields.",
+      "verification": "Finite source and HTTP/UI tests; actual local embed preview and Metro bundles recorded separately from protected deploy and device qualification.",
+      "evidence": "Current-run receipts are private; source checks do not claim production deployment, external-provider progress SDK qualification or physical-device playback.",
+      "pendingPairedMobileWork": {
+        "pullRequest": "https://github.com/diegueins680/tdf-mobile/pull/177",
+        "scope": "Separate unmerged Mobile work, absent from the preserved main Mobile pin. These references are pending, not current implementation evidence.",
+        "implementation": [
+          "tdf-mobile/app/artistPublic.tsx",
+          "tdf-mobile/src/components/ArtistPublicWebView.tsx",
+          "tdf-mobile/src/components/ArtistPublicWebView.web.tsx",
+          "tdf-mobile/src/lib/artistPublicUrl.ts"
+        ],
+        "tests": [
+          "tdf-mobile/__tests__/ArtistPublicUrl.test.ts"
+        ]
       }
     }
   ]
