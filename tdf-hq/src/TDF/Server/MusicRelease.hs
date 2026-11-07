@@ -1018,6 +1018,9 @@ getArtistFeaturedTrack :: Bool -> Int64 -> Maybe Text
 getArtistFeaturedTrack includeUnavailable artistId edgeCountry = do
   requirePublicFeature
   when (artistId <= 0) (throwError err400)
+  unless includeUnavailable $ do
+    listed <- runDB (ArtistVisibility.artistPartyPubliclyListed (toSqlKey artistId))
+    unless listed (throwError err404)
   territory <- Assets.trustedEdgeTerritory edgeCountry
   value <- jsonOne err404
     "SELECT jsonb_build_object('artistPartyId',?::bigint,\
