@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "kind": "course_dialog_browser_readiness",
+  "at": "2026-10-30T18:31:24.757094+00:00",
+  "sourceParent": "c7d414bfd3ea640c179728b184b87f075d5b4aa6",
+  "originalHosted": {
+    "workflowHead": "c7d414bfd3ea640c179728b184b87f075d5b4aa6",
+    "testedPullMerge": "ec866a8908c9153fa08d9b7f1ad58f562f953120",
+    "entireTestedTreeEqualsHead": true,
+    "backendJob": 124216353279,
+    "backendConclusion": "success",
+    "personaJob": 124216353429,
+    "personaConclusion": "failure",
+    "personaSummary": {
+      "passed": 656,
+      "failed": 1,
+      "skipped": 22
+    },
+    "failedCase": "course-enrollment.spec.mjs:212 sticky CTA closes enrollment",
+    "closeTargetClick": {
+      "x": 328,
+      "y": 80.66,
+      "traceTime": 89623.27
+    },
+    "dialogMotionStyle": "transform 225ms cubic-bezier(0, 0, 0.2, 1)",
+    "haskellExamples": {
+      "examples": 4045,
+      "failures": 0,
+      "pending": 21
+    },
+    "artifactId": 12997884696,
+    "artifactSha256": "9cd536dbbd7fce34eed01358b4859739fb8be0eef5aebc352764a93bc141b924",
+    "personaLogSha256": "4946151111d9aa9e3dd08299b73cef0a355901d89279781a0e5f65a4825d9fc1",
+    "backendLogSha256": "d47a09a270ea27972495b2575dd5d269879293d8fc5174f4b50fc4ad18553b2e",
+    "interpretation": "Trace shows a moving dialog when the input-visibility readiness check had already passed. Exact pointer event delivery is not independently instrumented."
+  },
+  "correction": "The sticky-CTA browser journey explicitly allows normal motion and requires the complete dialog to be inside the viewport before clicking its moving close control. The original close assertion still requires the dialog to disappear.",
+  "wait": "Playwright toBeInViewport ratio1; existing8s expectation budget unchanged",
+  "newRetries": 0,
+  "fixedSleeps": 0,
+  "forcedClicks": false,
+  "applicationChanges": false,
+  "workflowChanges": false,
+  "existingTestCodePreserved": true,
+  "relatedRequirement": "COURSE-ENROLL-001; existing test mapping, policy and conformance unchanged",
+  "localNative": {
+    "cases": 32,
+    "passed": 25,
+    "browserLaunchFailures": 7,
+    "commandExit": 1,
+    "missingBrowser": "Playwright1.59.1 WebKit on mac12 unsupported",
+    "changedStickyCasePasses": 4,
+    "passedProjects": [
+      "android-chrome-small",
+      "chromium-desktop",
+      "chromium-phone",
+      "chromium-tablet",
+      "firefox-critical"
+    ]
+  },
+  "localNativeLimits": "Overall command exit1:25 actual Chromium/Firefox passes and7 WebKit launch failures. Installing the pinned WebKit was attempted and refused because mac12 is unsupported. Full Linux WebKit validation remains required.",
+  "scopeLimits": "Original hosted persona job remains failed. Its656 passes/22 skips do not establish a fresh whole-persona success. Original backend success belongs to c7d/ec866a; no new compilation is claimed.",
+  "recovery": "Run the unchanged complete persona/browser gate on the new pushed revision and obtain new independent exact-head review.",
+  "logSha256": {
+    "final-native.log": "30f8722cc733d8c4cf3cf29b8f72b934df297bf2178be50799181beada20ca30",
+    "webkit-install.log": "96c865a312add0cb2872dc43dc91c2d73e3c2dcabceafaf4bce59f2f4ef401a0"
+  },
+  "repositoryQuality": {
+    "exitCode": 0,
+    "inheritedPlatformSkips": 11,
+    "logSha256": "7b418a2ec993048656faabc7474b55129bf8c8fe2fa45e148c1373e6e862d8c3"
+  },
+  "strictCatalog": {
+    "candidates": 1355,
+    "sameCandidateIdentitiesValuesAndDecisions": true,
+    "decisionsFileExact": true,
+    "changedCandidateFields": [
+      "automationConsumers",
+      "consumerCount"
+    ],
+    "filesScanned": 2463,
+    "additionalFile": "previously committed experiment-http-cleanup.test.mjs now included by tracked-file discovery",
+    "canonicalCsvSameStrictJsonSha256": "911c6470daa1caff11f790756ab0e75f6481755ab0d4df2198da3a6133bec0bf"
+  },
+  "applicationWorkflowsAndMobileExactParent": true,
+  "all160RequirementsExactParent": true,
+  "canonicalIndices": "Regenerated; checked before committing"
+}

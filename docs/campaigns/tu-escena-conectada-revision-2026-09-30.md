@@ -1,4 +1,35 @@
-# Tu escena, conectada — lote para aprobación, 1 de octubre de 2026
+# Tu escena, conectada — seguimiento del piloto TDF-TEC-20261001-01
+
+## Punto de reanudación — observaciones del 5 de noviembre de 2026
+
+**Estado: revisión del CRM completada; lectura de respuestas en Instagram pendiente de autenticación.** Este apartado tiene prioridad sobre los estados históricos que aparecen más abajo. No constituye una nueva autorización de mensajes ni acredita una reactivación programada.
+
+### Estado conciliado
+
+- El lote original de 20 está agotado: 19 invitaciones con envío confirmado en el registro histórico y un intento fallido excluido. Las cuatro invitaciones que el encabezado antiguo aún llama pendientes se completaron el 4/oct. No repetirlas.
+- Los dos seguimientos aprobados se consumieron el 5/oct. No quedan recordatorios aprobados pendientes.
+- El CRM autenticado conserva actividad posterior al cierre del 5/oct de este archivo. Revisar sus notas actuales antes de preparar una respuesta: ese cierre no representa por sí solo el último intercambio operativo. Los textos privados y los datos de contacto permanecen en el CRM.
+- Las conversaciones con Quito Bohemio y Quito Ska Society requieren lectura actual de sus hilos y conciliación con el CRM. Las condiciones de colaboración siguen sujetas a decisión de Diego; no inferir aceptación, publicación o entrega de materiales a partir de una propuesta.
+
+### Comprobaciones realizadas y límites
+
+| Comprobación | Resultado observado |
+| --- | --- |
+| Acceso a TDF y al CRM | Sesión autenticada operativa; pantalla de Contactos con API online y 528 contactos. Este total no mide captación de campaña. |
+| Contactos de los dos aliados | Una coincidencia exacta por Instagram para cada uno; notas consultadas sin guardarlas ni modificarlas. |
+| Instagram | Reconoce la cuenta de campaña, pero solicita contraseña. El ingreso no se completó; bandeja, respuestas recientes y restricciones actuales no comprobadas. |
+| Comunidad web | La ruta canónica carga con la sesión existente. No se probó un alta nueva, OAuth ni instalación móvil. |
+| Resultados de captación | Clics atribuibles, registros vinculados, perfiles completos y activaciones no revalidados. Los conteos anteriores siguen siendo históricos. |
+| Acciones de esta continuación | Cero mensajes enviados, cero contactos creados y cero cambios CRM; sin publicaciones ni programación nueva. |
+
+### Siguiente ejecución
+
+1. Completar el ingreso normal a Instagram en el navegador autorizado y verificar la cuenta de campaña. Conservar la operación exclusivamente por navegador y CRM.
+2. Leer los dos hilos pendientes y las notas actuales antes de cualquier composición; descartar duplicados, bajas, respuestas ya gestionadas y propuestas ya enviadas.
+3. Escalar a Diego cualquier condición comercial nueva. Si no hay respuesta nueva, mantener el estado pendiente sin reiterar invitaciones ni propuestas por silencio.
+4. Para un eventual mensaje autorizado, respetar 08:00–22:00 America/Guayaquil, máximo 10 invitaciones al día y 5 mensajes por bloque, dominio canónico y verificación individual del envío antes de registrarlo.
+
+## Archivo histórico de ejecución — septiembre y octubre de 2026
 
 **Lote TDF-TEC-20261001-01 · 20 destinatarios · A10/B10 aprobados · en ejecución.** Estado al 3/oct 17:01 Ecuador: 15 contactos con envío confirmado sin fallo observado (A8/B7); un intento no entregado a Hugo (fan B), excluido sin reintento; cuatro aprobados pendientes (#16,18,19,20). Último bloque cerrado con cinco invitaciones. Hoy: ocho intentos de invitación (incluido Hugo) y dos respuestas de ayuda; diez salidas en total, cierre conservador de envíos por hoy. Cuatro respuestas escritas de tono positivo acumuladas, una neutral, sin activación verificada. Todos los enlaces vigentes usan www.tdfrecords.net. El Reel ya está publicado, no volver a publicar: https://www.instagram.com/tdf.records.label/reel/Dd71zzlt8TD/ . Documento de revisión e informe; el CRM conserva la gestión operativa.
 

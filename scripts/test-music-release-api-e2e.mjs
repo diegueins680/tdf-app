@@ -593,6 +593,37 @@ assert.ok((await request('/music/media-health', { token: admin.token })).some((i
 for (const row of ownerHealth) {
   assert.deepEqual(Object.keys(row).sort(), ['artistPartyId','checkedAt','nextCheckAt','reason','sourceId','sourceKind','sourceVersion','status'].sort());
 }
+// More than the old500-source cap: every identity must be reachable without disclosure after revocation.
+sql(`INSERT INTO artist_release(artist_party_id,title,spotify_url)
+ SELECT ${artist.partyId},'Health page '||i,'https://media.example/health-page-'||i||'.mp3'
+ FROM generate_series(1,501) i;`);
+const expectedHealthKeys=sql(`SELECT source_kind||':'||source_id FROM music_media_source
+ WHERE artist_party_id=${artist.partyId} ORDER BY source_kind COLLATE "C",source_id COLLATE "C"`).split('\n');
+assert.ok(expectedHealthKeys.length>500);
+const healthPageUrl=last=>'/music/media-health?'+new URLSearchParams({limit:'100',...(last?{afterKind:last.sourceKind,afterId:last.sourceId}:{})});
+const firstHealthPage=await request(healthPageUrl(),{token:artist.token});
+assert.equal(firstHealthPage.length,100,'Health queries must honor bounded page size');
+const memberHealthPage=await request(healthPageUrl(),{token:member.token});
+assert.equal(memberHealthPage.length,100);
+try {
+ sql(`UPDATE artist_release_team_member SET revoked_at=NOW() WHERE artist_party_id=${artist.partyId} AND member_party_id=${member.partyId}`);
+ const revokedPage=await request(healthPageUrl(memberHealthPage.at(-1)),{token:member.token});
+ assert.ok(revokedPage.every(row=>!expectedHealthKeys.includes(row.sourceKind+':'+row.sourceId)),'Every page rechecks team permission');
+} finally {
+ sql(`UPDATE artist_release_team_member SET revoked_at=NULL WHERE artist_party_id=${artist.partyId} AND member_party_id=${member.partyId}`);
+}
+const pagedHealthKeys=[]; let healthPage=firstHealthPage;
+for(let pages=0;pages<20;pages++) {
+ pagedHealthKeys.push(...healthPage.map(row=>row.sourceKind+':'+row.sourceId));
+ if(healthPage.length<100)break;
+ healthPage=await request(healthPageUrl(healthPage.at(-1)),{token:artist.token});
+}
+assert.deepEqual(pagedHealthKeys,expectedHealthKeys,'All owner identities are reachable once and in stable cursor order');
+assert.equal(new Set(pagedHealthKeys).size,pagedHealthKeys.length);
+for(const query of ['limit=0','limit=501','afterKind=asset','afterId=source','afterKind=unknown&afterId=source','afterKind=asset&afterId=']) {
+ await request('/music/media-health?'+query,{token:artist.token,expected:400});
+}
+console.log('PASS HTTP health pagination: >500 sources, page bounds, stable complete traversal and revoked team isolation');
 const healthClaim = () => {
   const token = randomUUID();
   sql(`UPDATE music_media_health SET next_check_at=NOW()+interval '1 day',lease_token=NULL,lease_until=NULL;

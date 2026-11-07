@@ -128,7 +128,7 @@ try {
   console.log('Experiment HTTP/PostgreSQL: paused/no-write, signup eligibility, account isolation, 16 concurrent assignments/exposures, completion/expiry lock contention and revocation passed.');
   console.log(`Isolated evidence: ${runtime}`);
 } finally {
-  for (const child of children) if (child.exitCode === null) child.kill('SIGTERM');
-  for (const child of children) if (child.exitCode === null) await once(child, 'exit');
+  for (const child of children) if (child.exitCode === null && child.signalCode === null) child.kill('SIGTERM');
+  for (const child of children) if (child.exitCode === null && child.signalCode === null) await once(child, 'exit');
   files.forEach(closeSync);
 }
