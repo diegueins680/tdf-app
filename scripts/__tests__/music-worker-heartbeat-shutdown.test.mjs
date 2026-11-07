@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { completedTestChild, observeTestChild } from '../lib/test-child-completion.mjs';
+import { completedTestChild, observeTestChild, createTestStopTraceForwarder, completedTestChildWithStopTrace } from '../lib/test-child-completion.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const source = readFileSync(join(root, 'scripts/run-music-release-worker-once.sh'), 'utf8');
@@ -16,6 +16,88 @@ const helpers = ['psql_db', 'trace_heartbeat_stop', 'stop_heartbeat', 'request_h
 const guard = source.slice(source.indexOf("lease_guard_sql='"), source.indexOf('\npsql_db()'));
 assert.ok(guard.startsWith("lease_guard_sql='"));
 const quote = text => `'${text.replaceAll("'", "'\\''")}'`;
+
+const stopLine = (stage = 'wait', heartbeatPid = 123, status = 0) =>
+  JSON.stringify({ event: 'music_worker_stop', stage, heartbeatPid, status });
+test('diagnostic forwarding retains successful worker stop records with canonical fields only', () => {
+  const output = [], forward = createTestStopTraceForwarder({ enabled: true, emit: line => output.push(line) });
+  assert.deepEqual(forward(`unrelated stderr\n${stopLine('start')}\n${stopLine('term', 123, 7)}\n${stopLine('wait', 123, 143)}\n`),
+    { forwarded: 3, truncated: false });
+  assert.deepEqual(output, [stopLine('start'), stopLine('term', 123, 7), stopLine('wait', 123, 143)]);
+});
+test('disabled forwarding stays silent even with oversized or nonstring stderr', () => {
+  for (const enabled of [false, undefined, 'true']) {
+    const output = [], forward = createTestStopTraceForwarder({ enabled, emit: line => output.push(line) });
+    assert.deepEqual(forward('private-payload'.repeat(10000) + stopLine()), { forwarded: 0, truncated: false });
+    assert.deepEqual(forward({ toString() { throw new Error('must not inspect'); } }), { forwarded: 0, truncated: false });
+    assert.deepEqual(output, []);
+  }
+});
+test('forwarding rejects extra fields, secret payloads and noncanonical protocol values', () => {
+  const output = [], forward = createTestStopTraceForwarder({ enabled: true, emit: line => output.push(line) });
+  const invalid = [stopLine('unknown'), stopLine('wait', 0), stopLine('wait', -1), stopLine('wait', 1.5),
+    stopLine('wait', 123, 256), stopLine('wait', 123, -1),
+    stopLine().replace('"status":0', '"status":0,"secret":"private-payload"'),
+    stopLine().replace('"heartbeatPid":123', '"heartbeatPid":"private-payload"'),
+    stopLine().replace('"status":0', '"status":00'),
+    stopLine().replace('"stage":"wait"', '"stage":"wait","stage":"private-payload"'),
+    `SQL private-payload ${stopLine()}`];
+  assert.deepEqual(forward(invalid.join('\n')), { forwarded: 0, truncated: false });
+  assert.deepEqual(output, []);
+});
+test('forwarding caps per-worker/global output and reports truncation without payloads', () => {
+  const output = [], forward = createTestStopTraceForwarder({ enabled: true, emit: line => output.push(line) });
+  for (let i = 0; i < 129; i += 1) forward(`${stopLine('start')}\n${stopLine('term')}\n${stopLine()}\n`);
+  const records = output.filter(line => line.startsWith('{'));
+  assert.equal(records.length, 384);
+  assert.equal(output.length, 385);
+  assert.equal(output.at(-1), 'Music worker stop diagnostics truncated by fixed capture limits.');
+  const perWorker = [], limited = createTestStopTraceForwarder({ enabled: true, emit: line => perWorker.push(line) });
+  assert.deepEqual(limited(Array(5).fill(stopLine()).join('\n')), { forwarded: 3, truncated: true });
+  assert.equal(perWorker.length, 4);
+});
+test('oversized capture keeps complete bounded tail records without leaking discarded text', () => {
+  const output = [], forward = createTestStopTraceForwarder({ enabled: true, emit: line => output.push(line) });
+  assert.deepEqual(forward('private-payload'.repeat(6000) + '\n' + stopLine()), { forwarded: 1, truncated: true });
+  assert.deepEqual(output, [stopLine(), 'Music worker stop diagnostics truncated by fixed capture limits.']);
+  const overlong = [], bounded = createTestStopTraceForwarder({ enabled: true, emit: line => overlong.push(line) });
+  bounded('{"event":"music_worker_stop","secret":"' + 'private-payload'.repeat(100) + '"}\n');
+  assert.deepEqual(overlong, ['Music worker stop diagnostics truncated by fixed capture limits.']);
+});
+test('async completion forwards successful and failed snapshots without changing result or error identity', async () => {
+  const output = [], forward = createTestStopTraceForwarder({ enabled: true, emit: line => output.push(line) });
+  const result = { status: 17, stdout: 'unchanged', stderr: stopLine() };
+  const fake = { snapshot: () => ({ stderr: stopLine('term', 124, 1) }) };
+  assert.equal(await completedTestChildWithStopTrace(fake, forward, { complete: async () => result }), result);
+  const original = new Error('original failure');
+  await assert.rejects(completedTestChildWithStopTrace(fake, forward, { complete: async () => { throw original; } }), error => error === original);
+  assert.deepEqual(output, [stopLine(), stopLine('term', 124, 1)]);
+});
+test('diagnostic sink and snapshot failures cannot replace completion success or rejection', async () => {
+  const forward = createTestStopTraceForwarder({ enabled: true, emit: () => { throw new Error('sink private-payload'); } });
+  const result = { status: 0, stderr: stopLine() }, fake = { snapshot() { throw new Error('snapshot failure'); } };
+  assert.equal(await completedTestChildWithStopTrace(fake, forward, { complete: async () => result }), result);
+  const original = new Error('original failure');
+  await assert.rejects(completedTestChildWithStopTrace(fake, forward, { complete: async () => { throw original; } }), error => error === original);
+});
+test('real sibling child completions expose validated stderr while retaining zero/nonzero exits', { timeout: 10_000 }, async () => {
+  const output = [], forward = createTestStopTraceForwarder({ enabled: true, emit: line => output.push(line) });
+  const children = [0, 17].map(status => observeTestChild(spawn(process.execPath, ['-e',
+    `process.stderr.write('private-payload\\n'+JSON.stringify({event:'music_worker_stop',stage:'wait',heartbeatPid:process.pid,status:${status}})+'\\n');process.exitCode=${status};`,
+  ], { stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: '/usr/bin:/bin' } })));
+  try {
+    const results = await Promise.all(children.map(child => completedTestChildWithStopTrace(child, forward)));
+    assert.deepEqual(results.map(result => result.status), [0, 17]);
+    assert.deepEqual(output.map(line => JSON.parse(line)).sort((a, b) => a.status - b.status),
+      children.map((child, index) => ({ event: 'music_worker_stop', stage: 'wait', heartbeatPid: child.child.pid, status: index === 0 ? 0 : 17 })));
+    assert.doesNotMatch(output.join('\n'), /private-payload/);
+  } finally {
+    for (const child of children) if (child.snapshot().processState !== 'closed') {
+      child.child.kill('SIGKILL');
+      await completedTestChild(child, { timeoutMs: 1000 });
+    }
+  }
+});
 const signalGroup = (pid, signal = 'SIGTERM') => {
   if (!Number.isSafeInteger(pid) || pid <= 0) return;
   try { process.kill(-pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
