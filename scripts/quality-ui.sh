@@ -13,6 +13,8 @@ run_npm() {
 }
 
 echo "▶ Linting, type-checking, testing and building tdf-hq-ui"
+export SKIP_UNRS_RESOLVER_FALLBACK=1
+node "$ROOT/scripts/check-native-resolver-lock.mjs" --probe
 node --test "$ROOT/scripts/__tests__/ui-validation-bundle.test.mjs"
 node --test "$ROOT/scripts/__tests__/ui-worker-memory.test.mjs"
 run_npm run lint --workspace=tdf-hq-ui --prefix "$ROOT"
