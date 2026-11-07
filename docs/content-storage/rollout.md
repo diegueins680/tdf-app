@@ -1,51 +1,60 @@
 # Storage rollout and recovery
 
-Production activation remains blocked. PR703 and Mobile179 are already merged;
-this security follow-up starts from root main c47c2a8d8851a58a828dec830704f8c352496c20
-and its exact Mobile14318a7 pin. The candidate also retains the subsequent
-main7a41f893 music-credential cache protection from PR633. No production upload, deployment, inventory
-application or provider operation is performed by this change.
+The current repair normally incorporates protected main
+`f615c862b1a7d50406cc0506d21d7650e607fa5f`. Earlier source receipts below retain
+their actual commit identity; they do not qualify this combined candidate.
+Production activation remains blocked. No deployment, provider operation,
+production migration, inventory application or flag change is performed here.
 
-The candidate adds `CONTENT_STORAGE_UPLOADS_ENABLED` (disabled by default),
-server-only `CONTENT_STORAGE_VAULT_KEY` (32 random bytes encoded as 64 hex digits),
-AEAD-encrypted delegated credentials, account-bound opaque handles, authenticated
-private readers and transactional canonical attachment references. Keep the key
-out of public environment variables, logs and DB backups. Independently protect
-and test recovery of the key with the matching database/files backup. Rotation
-requires a reviewed re-encryption/reconnect procedure; replacing the key alone
-makes old envelopes unavailable and never falls back to plaintext credentials.
-Disconnect erases the active envelope; backups follow their retention policy.
-Users can separately revoke the application's Google consent in Google settings.
+The new backend always encrypts delegated credentials with owner/provider/connection
+bound AES-256-GCM and returns an opaque handle. Before installing that backend,
+configure the server-only `CONTENT_STORAGE_VAULT_KEY` (32 random bytes as 64 hex
+characters) and rehearse coordinated recovery of the key, database and files.
+Missing or replaced keys fail closed; no new backend plaintext fallback exists.
+Keep keys outside public frontend configuration, logs and database backups.
 
-All account uploads stay disabled until the historical inventory is reviewed,
-canonical publication body/manifest accounting and routing is reconciled, the
-native selection/consent UI is complete, exact-image HTTP/provider/persistence
-and coordinated restore tests pass, and required independent review/CI are green.
-A root flag or successful build is not that evidence. Keep `RUN_MIGRATIONS=false`.
-Legacy operational Drive writes also require the activation gate; a service
-folder cannot accept a private account upload through the legacy fallback.
-Private uploads require the explicit managed or personal destination.
-The additive November 6 migration follows the five unchanged November 4 steps;
-preserve its introduction commit and the entire ordered migration manifest.
+For staged frontend/backend compatibility, `VITE_DRIVE_VAULT_REQUIRED` defaults
+off and only literal `true` activates strict credential retirement. Staged mode
+accepts the pre-existing bounded owner-scoped provider descriptor through the
+same authenticated `/drive/upload` proxy as main. It never accepts unbound
+credentials, mismatched owners, malformed vault identities, mixed opaque/raw
+pairs or stale asynchronous writes. This mode preserves historical browser
+provider secrets and is explicitly NOT vault-retirement acceptance evidence.
+Strict mode retires all raw provider descriptors and requires renewed consent.
+Deploy the configured backend and verify its vault/recovery behavior before
+activating strict frontend mode. An old frontend's local disconnect cannot
+establish revocation of a new server vault connection; complete coordinated
+client rollout and explicit server disconnection testing before security acceptance.
 
-Mobile main has subsequently integrated an independent artist-launch contract
-(PR180), while the root's shipped pin is Mobile14318a7. The security companion is
-rooted at that exact pin and preserves the tested root contract. Before merging
-it into newer Mobile main, reconcile that successor's additional generated
-contracts against their authoritative backend branch; do not remove them as an
-incidental storage change. This cross-branch dependency blocks independent Mobile
-activation and is distinct from the already completed Mobile179 merge.
+A legacy descriptor disconnect remains local while staged, because the old backend
+has no vault revocation endpoint. Opaque descriptors always use `DELETE /drive/token`;
+a denied revocation never falls back to local success. Pending disconnection checks
+owner, session epoch and the exact stored connection before removing local state.
+Provider-wide consent revocation remains a separate Google settings operation.
 
-The current connected GitHub integration again rejected Mobile blob publication
-with HTTP403 (`Resource not accessible by integration`). The reviewed local
-companion is preserved in `mobile-companion.patch`, based on published14318a7;
-root intentionally retains that published gitlink. TDF-mobile is absent from the GitHub installation74714092 repository selection;
-the account owner must add it before publication is possible. Apply the patch
-only to a clean14318a7 checkout from root using
-`git -C tdf-mobile apply --unidiff-zero ../docs/content-storage/mobile-companion.patch`.
-The patch contains regenerated
-API types plus native authority/session tests. Its publication and successor
-contract reconciliation remain blocked; do not point root at an unpublished SHA.
+`CONTENT_STORAGE_UPLOADS_ENABLED` remains disabled by default; only literal `true`
+admits account uploads. This flag does not gate the OAuth vault transition, so it
+cannot substitute for the backend-first vault/key preflight above. No personal
+upload falls back to a corporate account or folder. Native destination/consent
+screens and real-provider qualification remain unfinished. Existing corporate
+inventory upload callers must keep their current adapter; any new explicit
+account-storage helper is separate and unavailable until its own activation.
+
+The immutable canonical main246 migration prefix and original November6 security
+migration are preserved. A new forward identity guard protects the raw credential
+owner and attachment binder references. Apply the full reviewed248-step batch in
+order with original introductions retained; do not rewrite old applied SQL or
+squash introduction ancestors. Two tables are locked before guard shape checks.
+Populated rollback refuses to remove admission while preserving historical rows.
+The model-owned Party-reference registry remains231, rather than inventing ORM rows.
+
+Historical integration403 was a limitation of an earlier connector. Current native
+GitHub CLI authority has successfully published and protected-merged other Mobile
+work. It is not the current blocker. Reconcile this candidate's actual compiled
+API against a root-compatible Mobile snapshot and preserve current Mobile product
+work; its old14318a7 patch is historical and must not be blindly applied over newer
+contracts. Actual protected upstream ancestry and current independent review/CI
+remain required before integrating a new root pin.
 
 ## Required operational evidence
 

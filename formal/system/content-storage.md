@@ -70,8 +70,12 @@ malware and playable-content verification is not established.
 
 This delivery remains PARTIAL and production activation is blocked. The November 6
 security follow-up is a candidate on top of merged main; it does not repeat PR703
-or Mobile179. It replaces delegated provider credentials in clients with nonsecret
-owner-bound TDFConnection handles. AES-256-GCM uses fresh 96-bit nonces, a 128-bit
+or Mobile179. The new backend replaces returned provider credentials with nonsecret
+owner-bound TDFConnection handles. Strict client retirement is activated only
+with literal `VITE_DRIVE_VAULT_REQUIRED=true`, after backend/key recovery
+qualification. Default-off staged compatibility retains the existing owner-scoped
+provider descriptor for the current backend proxy and does not meet strict
+vault-retirement acceptance; malformed vault identities never downgrade. AES-256-GCM uses fresh 96-bit nonces, a 128-bit
 tag and authenticated owner/provider/connection binding. The 32-byte key is supplied
 only through `CONTENT_STORAGE_VAULT_KEY` (64 hexadecimal characters), outside the
 DB and frontend. Current-session and connection-row locks cover refresh; reconnect
@@ -86,8 +90,9 @@ merely by pasting its URL. Domain staff readers require a current Admin module
 grant AND a live bound resource; unrelated staff cannot browse arbitrary files.
 Read failures return no body bytes, and successful downloads use attachment,
 no-store and nosniff headers. Clients download authenticated blobs and suppress
-late delivery after a session change. The native helper fails before network I/O
-without explicit destination/consent/request identity. Native destination/consent
+late delivery after a session change. A separate new native account-storage helper must require explicit
+destination/consent/request identity and activation before network I/O. Existing
+corporate inventory upload consumers retain their established adapter. Native destination/consent
 screens, store/device builds and provider reads still need end-to-end qualification.
 
 Managed public static reads consult the completed/public registry. A pre-commit
