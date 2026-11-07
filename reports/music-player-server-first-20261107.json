@@ -1,14 +1,14 @@
 {
-  "baseMain": "ccea8c487c9fcdc73a85a9583ee2d257f6ba41d4",
+  "baseMain": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
   "qualifiedFullPlayerSource": "0dad14c4300bb618908e491c3e15a921389f1e84",
   "frontendAndBrowserChanges": [
     "tdf-hq-ui/src/api/generated/types.ts"
   ],
   "runtimeFrontendChanged": false,
-  "equivalentBackendTrees": {
+  "executionScope": "Historical full-player results retain their original source scope. Backend trees matched that source before the latest normal main merge. Current candidate requires a new Stack build and tests; no whole-binary attestation or production readiness is inferred.",
+  "productionChanged": false,
+  "equivalentBackendTreesBeforeMainReconciliation": {
     "tdf-hq": "9ef8cc7b0af172634a9d7a58ddfd53d5a0006d29",
     "scripts": "92bf9a86eb69ad1b58aba4e52c6b6c7c668de8fa"
-  },
-  "executionScope": "Backend Hspec/HTTP/SQL/probe results were executed on the identical source inputs in the full-player checkout. No new backend-branch execution or whole-binary attestation is inferred. Fresh hosted CI/review required.",
-  "productionChanged": false
+  }
 }

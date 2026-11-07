@@ -16270,7 +16270,8 @@
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx"
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
@@ -16300,11 +16301,11 @@
       "title": "Artist-owned persisted featured recording preference",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One preference per artist references an owned canonical recording or legacy public release. Public reads recheck reference eligibility and conceal unavailable IDs/timestamps; authenticated owner reads retain the saved choice. Only the authenticated Party matching the explicit expected artist can write or clear it. The player prioritizes only a matching eligible queue item, retains other order and bounds optional preference lookup. Saving does not interrupt current playback.",
+      "statement": "One preference per artist references an owned canonical recording or eligible legacy public release. Public reads recheck eligibility and conceal unavailable IDs and timestamps; authenticated owner reads retain the saved choice. Only the authenticated Party matching the expected artist can write or clear it. Player ordering and editor behavior remain in dependent PR670.",
       "authority": "Explicit user instruction to begin artist profiles with the artist-selected featured track and then public playable music.",
       "source": "docs/music-releases/artist-featured-track.md",
       "contract": "docs/music-releases/artist-featured-track.md",
-      "property": "An accepted preference mutation has authenticated actor=expected artist and at most one owned source identity; public unavailable selections reveal no reference or timestamp; stale UI receipts cannot acknowledge a different account.",
+      "property": "An accepted mutation has authenticated actor=expected artist and at most one owned source identity; unavailable public selections expose no reference or timestamp; confirmed-invalid legacy sources cannot be selected until valid revalidation.",
       "actors": [
         "Artist owner",
         "Public listener"
@@ -16325,20 +16326,12 @@
           "unset",
           "selected",
           "unavailable"
-        ],
-        "editor": [
-          "loading",
-          "ready",
-          "saving",
-          "failed",
-          "saved"
         ]
       },
       "allowedTransitions": [
         "Owner selects a currently eligible owned reference -> persist -> authoritative receipt.",
         "Owner clears an unavailable reference -> default catalogue order.",
-        "Withdrawal or territory denial -> hide public reference while retaining it for the owner.",
-        "Next profile visit -> move matching featured item first; keep remaining order."
+        "Withdrawal or territory denial -> hide public reference while retaining it for the owner."
       ],
       "forbiddenTransitions": [
         "A switched-account command mutates another artist preference.",
@@ -16349,12 +16342,11 @@
         "Saving forces an automatic playback restart."
       ],
       "effects": [
-        "Persist reference preference only; no media grant or publication.",
-        "Reorder an existing artist-scoped player queue."
+        "Persist reference preference only; no media grant or publication."
       ],
       "authorization": "Servant protected routes derive the database actor from AuthedUser and compare the required expected artist ID. Canonical reference eligibility reuses music_public_asset_accessible and the public release view. Legacy eligibility establishes existing public-release membership; direct-media classification and decoding remain player responsibilities. PUT /music/me/featured-track derives the authenticated artist Party and never grants publication or media access.",
       "privacy": "Public responses conceal unavailable source IDs and their timestamps; settings are scoped to the authenticated Party. Success responses use private, no-store. No signed URL is persisted or returned by preference endpoints.",
-      "concurrency": "Last successful server write wins. Editor requests are aborted and receipts fenced by session identity and component generation; the expected-owner field also guards the server-side account boundary.",
+      "concurrency": "Last successful authorized server write wins. Dependent frontend account-generation fencing remains outside this backend delivery stage.",
       "idempotency": "Repeated selection has the same chosen reference; clearing an absent choice succeeds. Timestamp may change on an explicit repeated save.",
       "failure": "Owner settings read failure blocks writes until retry. Public preference read aborts after two seconds and falls back to the normal catalogue. No authoritative media-health verdict is inferred.",
       "recovery": "Retry settings read/write; replace or clear unavailable selection. Rollback preserves preference rows for reapplication.",
@@ -16377,7 +16369,7 @@
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "verification": "Rendered owner/session regression cases and queue-priority tests; type/build/lint and generated contract comparison; actual SQL/binding guard-removal controls. Full PostgreSQL and compiled-handler/native evidence require hosted CI.",
+      "verification": "PostgreSQL owner/canonical/legacy/public-denial and health-restoration scenarios, HTTP authenticated preference/availability checks, schema rehearsal and generated-client conformance. Fresh candidate CI and review are separate; browser behavior remains in PR670.",
       "evidence": "docs/music-releases/artist-featured-track.md; PR #670 validation.",
       "confidence": "Client execution and source-level backend correspondence only until hosted backend/PostgreSQL qualification.",
       "ambiguity": [
@@ -16451,12 +16443,12 @@
         "Queue at most 100 unobserved identities and validate one due source per worker iteration."
       ],
       "authorization": "HTTP owner/team/admin checks derive actor identity from the session; public legacy grants recheck exact current source membership and artist visibility. Canonical signatures retain the existing publication/territory gate. Worker credentials never follow redirects. POST /music/media-health/{sourceKind}/{sourceId}/revalidate derives the actor from authentication and requires current source ownership, release.edit permission or strict administrator access.",
-      "privacy": "Listening state remains listener-scoped. Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
+      "privacy": "Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
       "concurrency": "Database row claims use SKIP LOCKED and a 90s token lease. Observation requires the active token and current source version. Source replacement retains historical observations without inheriting their verdict.",
       "idempotency": "Source kind/ID/version is the primary key; ingestion and reconciliation insert with conflict coalescing. Revalidation changes only due time and cannot clear verdicts.",
       "failure": "Network samples stop at 1MiB and a 25s deadline; DNS and local media commands have separate short deadlines. Two spaced missing/unsupported observations confirm invalidity; inconclusive partial containers, transport, timeouts and authentication remain temporary.",
       "recovery": "A valid observation restores only its current source version. Worker crashes leave a reclaimable lease; source history and the public suppression gate survive application rollback.",
-      "observability": "Owner/admin panel and no-store APIs provide kind/ID/version, status, fixed reason and timestamps. Worker logs fixed result codes without locations or credentials.",
+      "observability": "No-store diagnostics APIs provide kind/ID/version, status, fixed reason and timestamps. Worker logs fixed result codes without locations or credentials. The frontend diagnostic panel remains in PR670.",
       "implementation": [
         "tdf-hq/sql/2026-11-06_music_media_health.sql",
         "scripts/music-media-health.py",
@@ -17036,6 +17028,156 @@
       "property": "For N in{4,8,16,32}, decoding repeated%FF preserves input and makes1..8N+8 built-in decode calls; actual0.2.2 violates that oracle atN=32. For N in{32,64}, the distinct runs %00%<two-digit hex>x followed by%zz decode to the exact expected string while summed UTF16 receiver lengths across synchronous String.replace calls are positive and <=4 times input length; actual0.5.0 violates the same budget atN=32. The installed query-string7 caller stays callable, and covered produced percent text is decoded only once. These finite families do not establish universal complexity.",
       "verification": "Actual-consumer Jest and seeded Unicode tests; original0.2.2 call-budget and unadapted-namespace controls;0.5.0 distinct-run replacement-work negative control; one-level percent/BOM/truncated-byte cases; fresh exact-source clean locked install, client gates, audit and native bundles. Historical executions do not qualify changed source.",
       "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
+    },
+    {
+      "id": "PAY-DATAFAST-001",
+      "title": "Shared Dataweb merchant metadata and saved ticket contact",
+      "statement": "New Datafast checkout creation requires configured merchant MID, TID, PSERV and USER_DATA2, sends the same validated protocol metadata in every domain, preserves UTF-8 form values and does not make existing payment status configuration depend on creation metadata. Ticket payment creation retains the validated optional phone saved at order creation; absent or invalid stored phones stay absent. Both Datafast request builders preserve supplied buyer name tokens without placeholder names or duplicated single-name surnames.",
+      "domain": "PAY",
+      "authority": "User request to finish Datafast payments and prepare onboarding; published Datafast Dataweb field requirements.",
+      "source": "User request 2026-10-29; https://developers.datafast.com.ec/Index.aspx",
+      "property": "Incomplete merchant metadata denies a fresh checkout before provider attempt allocation or gateway creation; existing status configuration remains usable. Stored ticket phone input survives the payment context and uses the initial order validation boundary.",
+      "contract": "formal/system/datafast-merchant-metadata.md",
+      "actors": [
+        "Checkout customer",
+        "Configured Dataweb merchant",
+        "Payment reconciliation operator"
+      ],
+      "preconditions": [
+        "Existing checkout authorization, immutable money/provider binding and capability gates remain authoritative.",
+        "Merchant credentials and environment are independently validated."
+      ],
+      "inputs": [
+        "Required merchant configuration, optional protocol version, UTF-8 checkout form fields"
+      ],
+      "state": {
+        "boundary": "Pure metadata admission and create-versus-status configuration; no additional lifecycle states."
+      },
+      "allowedTransitions": [
+        "Valid configured creation metadata may reach existing checkout admission.",
+        "Missing or malformed creation metadata denies new checkout availability."
+      ],
+      "forbiddenTransitions": [
+        "API credentials alone imply certified merchant readiness.",
+        "Missing creation metadata disables the base configuration used for existing status queries.",
+        "A buyer value changes the HTTP form parameter structure."
+      ],
+      "invariants": [
+        "Metadata field names and environment checks remain consistent across creation handlers.",
+        "Validation diagnostics do not echo configured values.",
+        "Free-text buyer name projection never adds or removes a supplied name token; absent name components stay empty without a fictitious fallback."
+      ],
+      "authorization": "Existing customer, merchant, capability and payment-attempt authorization is unchanged; this contract grants no provider activation.",
+      "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only.",
+      "concurrency": "No cross-process environment rotation or payment state-machine guarantee is introduced.",
+      "idempotency": "Existing operation identities, attempt locks and replay behavior remain unchanged.",
+      "failure": "Reject invalid metadata before creating a provider attempt or contacting the gateway.",
+      "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization.",
+      "observability": "Retain actual regression, fixed test outputs, source identity and explicit external blockers.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/config/default.env.example",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification.",
+      "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped local contract only; actual merchant sandbox and all-domain request qualification remain unverified.",
+      "ambiguity": [
+        "Buyer identity, address/IP, cart and tax fields still require applicable provider certification and implementation review.",
+        "No production activation, credentialed sandbox transaction, 3DS result or charge is established.",
+        "Free-text first/rest name projection is not structured or verified legal identity; provider handling of incomplete or single-name profiles remains unqualified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local configuration and form transport boundary only; onboarding, merchant credentials and provider certification are external blockers."
+      },
+      "effects": [
+        "Validate merchant metadata before a new provider attempt or checkout request; keep existing status configuration independent of creation metadata.",
+        "Project the optional stored ticket buyer_phone to the Datafast payment request without fallback or new collection.",
+        "Use one supplied-name projection in shared service and marketplace Datafast request builders, preserving existing multi-component behavior without invented data."
+      ]
+    },
+    {
+      "id": "SYS-NATIVE-RESOLVER-001",
+      "title": "Lock optional native resolver dependencies and refuse runtime installation during verification",
+      "statement": "The canonical test resolver must load from a complete lock-based install with runtime package downloads disabled. Its published exact optional binding declarations must have matching locked package records.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Use the committed npm v3 workspace lock and canonical npmrc; installed unrs-resolver matches its locked version.",
+        "Trust npm registry metadata and archive SRI; native code and the platform runtime remain assumptions."
+      ],
+      "inputs": [
+        "package-lock.json",
+        "node_modules/unrs-resolver/package.json"
+      ],
+      "state": {
+        "boundary": "formal/system/native-resolver-lock.md"
+      },
+      "allowedTransitions": [
+        "Refresh the same pinned module through npm, preserving existing package records and manifests while restoring missing optional dependency records."
+      ],
+      "forbiddenTransitions": [
+        "Omit or mismatch an exact optional binding lock record.",
+        "Allow the canonical UI verifier or Safe Install to lazily download missing native packages during tests.",
+        "Treat structural lock checks as executed compatibility on all recorded platforms."
+      ],
+      "effects": [
+        "Fail repository checks on incomplete resolver lock evidence; fail UI verification before running suites when the host resolver cannot load without runtime downloads."
+      ],
+      "authorization": "This test-tool repair authorizes no product, provider or deployment operations.",
+      "privacy": "Registry requests contain public package identities only; test probes require no application data or credentials.",
+      "concurrency": "Probe in a fresh process against the immutable candidate; installations and missing-binary controls use isolated owned workspaces.",
+      "idempotency": "Structural verification is deterministic for fixed files; runtime load depends on the documented platform.",
+      "failure": "Reject missing declarations, pins, archive integrity or native initialization without lazy installation.",
+      "recovery": "Restore the npm-generated reviewed lock records and reinstall; do not add manual native copies to claim a canonical install pass.",
+      "observability": "Retain old-lock install/load counterexample, corrected clean-install/load result, missing-binary fault and restoration, source hashes and platform limits.",
+      "source": "Canonical npm ci CI recipes and confirmed successful pristine install followed by failed native resolver initialization without runtime fallback; user reliability and verification mission.",
+      "contract": "formal/system/native-resolver-lock.md",
+      "implementation": [
+        "package-lock.json",
+        "scripts/check-native-resolver-lock.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/quality-ui.sh",
+        ".github/workflows/ci-safe-install.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/native-resolver-lock.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite lock controls and actual host startup/failure probes; no complete transitive graph or supply-chain proof.",
+      "ambiguity": [
+        "Other native platforms require actual execution evidence; recorded platform entries alone do not establish compatibility."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Structural/host controls implemented; candidate-specific clean-install, fault and hosted evidence are separately recorded."
+      },
+      "authority": "Engineering invariant derived from the authorized correctness mission and canonical install recipe; required GitHub approval remains separate.",
+      "property": "Every installed resolver exact optional binding is present with matching version and archive integrity in the lock; canonical verification refuses runtime binding downloads.",
+      "verification": "Deterministic negative fixtures, clean npmci and native probe with fallback disabled, reversible missing-binary fault; no mathematical proof.",
+      "evidence": "scripts/__tests__/native-resolver-lock.test.mjs; candidate-source install/probe receipts separately recorded."
     }
   ]
 }
