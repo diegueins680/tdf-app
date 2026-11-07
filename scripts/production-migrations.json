@@ -1253,6 +1253,16 @@
       "id": "2026-11-06_video_campaign_identity_references",
       "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
       "introducedBy": "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
+    },
+    {
+      "id": "2026-10-13_apple_sign_in_policy",
+      "path": "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+      "introducedBy": "161cb8666ed1e96520850df2f985dd14f4bfebdf"
+    },
+    {
+      "id": "2026-11-07_apple_provider_identity_issuer",
+      "path": "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
+      "introducedBy": "7c1525edf0f02fe53f985c24862940b91c11cdfa"
     }
   ]
 }

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+    "tdf-hq/src/TDF/Auth.hs": "178d4a18c47f24e99ab05359a0ce5479f25a7b87a68764dad7c74f062717439e",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b"
+    "tdf-hq/tdf-hq.cabal": "7a789fa08b3a500760ff7fe56418eb1cc255b2f9c5bb1fe19634ea485d726e01"
   },
   "obligations": [
     {
@@ -393,6 +393,26 @@
       "change": "Compose protected main video-campaign registrations with the two Datafast library modules and DatafastConfigSpec test registration.",
       "semanticReview": "Removing exactly the three Datafast module-registration lines reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match both parents. Both original context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "d25abd6c3bebe85b5e88e75cce75454814d7f54d",
+      "source": "tdf-hq/src/TDF/Auth.hs",
+      "previousSha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "currentSha256": "178d4a18c47f24e99ab05359a0ce5479f25a7b87a68764dad7c74f062717439e",
+      "change": "Normally reconcile original Apple sign-in with protected Main f615 session-expiry and private-data-safe account naming.",
+      "semanticReview": "Reverse exactly the Apple interactive-prefix, revocation-label and credential-label branches reproduces Main Auth bytes. All strict-admin/module-access/ingestion primitive projection definitions and existing imports/bindings are unchanged. New Apple expiry classification is separately tested, not proven by these three authorization obligations.",
+      "independentReviewReceiptSha256": "efe64fbdda8887eafd488d03ea10296dfe34eb093cda423169650764927a85de",
+      "qualification": "Narrow independent source-context correspondence only; no GitHub approval, whole Apple/JWT/cache/lifecycle proof or provider/deployment claim. Fresh source-bound solver/witness/mutation/replay execution remains required."
+    },
+    {
+      "reviewedAgainst": "d25abd6c3bebe85b5e88e75cce75454814d7f54d",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "7a789fa08b3a500760ff7fe56418eb1cc255b2f9c5bb1fe19634ea485d726e01",
+      "change": "Normally reconcile original Apple sign-in with protected Main f615 session-expiry and private-data-safe account naming.",
+      "semanticReview": "Remove only exposed TDF.AppleSignIn and test TDF.AppleSignInSpec registrations to reproduce exact Main Cabal. Dependencies, flags, source directories, resolver, language settings and authoritative primitive modules stay unchanged.",
+      "independentReviewReceiptSha256": "efe64fbdda8887eafd488d03ea10296dfe34eb093cda423169650764927a85de",
+      "qualification": "Narrow independent source-context correspondence only; no GitHub approval, whole Apple/JWT/cache/lifecycle proof or provider/deployment claim. Fresh source-bound solver/witness/mutation/replay execution remains required."
     }
   ]
 }
