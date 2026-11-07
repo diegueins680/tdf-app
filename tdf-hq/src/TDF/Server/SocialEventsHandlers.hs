@@ -231,6 +231,7 @@ import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.Internationalization (normalizeCurrencyCode)
 import TDF.DB (Env (..))
+import TDF.Contracts.EventWorkspace (eventWorkspaceServer)
 import TDF.FeatureRegistry (findRegistryFeature, registryFeatureAllows)
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO (..),
@@ -2313,6 +2314,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         :<|> financeServer
         :<|> logisticsServer
         :<|> memoryInvitationsServer
+        :<|> eventWorkspaceServer user
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user

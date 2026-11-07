@@ -10423,6 +10423,235 @@ paths:
         '503':
           description: Persisted automatic assignment policy is unavailable or inconsistent
 
+  /social-events/events/{eventId}/workspace:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - Event agreements
+      operationId: getEventWorkspace
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: Private account-scoped workspace snapshot
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventWorkspaceSnapshot'
+        '400':
+          description: Malformed or overposted command
+        '401':
+          description: Current authenticated session required
+        '403':
+          description: Event organizer or designated recipient required
+        '404':
+          description: No accessible document
+        '409':
+          description: Stale version, incomplete scope or invalid transition
+        '503':
+          description: Migration or document generation temporarily unavailable
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - Event agreements
+      operationId: mutateEventWorkspace
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventWorkspaceCommand'
+      responses:
+        '200':
+          description: Private account-scoped workspace snapshot
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventWorkspaceSnapshot'
+        '400':
+          description: Malformed or overposted command
+        '401':
+          description: Current authenticated session required
+        '403':
+          description: Event organizer or designated recipient required
+        '404':
+          description: No accessible document
+        '409':
+          description: Stale version, incomplete scope or invalid transition
+        '503':
+          description: Migration or document generation temporarily unavailable
+  /social-events/events/{eventId}/workspace/plan.pdf:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - Event agreements
+      operationId: downloadEventPlan
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: Private PDF of the exact document or accepted version and annex
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Malformed or overposted command
+        '401':
+          description: Current authenticated session required
+        '403':
+          description: Event organizer or designated recipient required
+        '404':
+          description: No accessible document
+        '409':
+          description: Stale version, incomplete scope or invalid transition
+        '503':
+          description: Migration or document generation temporarily unavailable
+  /social-events/events/{eventId}/workspace/agreements/{agreementId}/{version}/document.pdf:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - Event agreements
+      operationId: downloadEventAgreement
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: agreementId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: Private PDF of the exact document or accepted version and annex
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Malformed or overposted command
+        '401':
+          description: Current authenticated session required
+        '403':
+          description: Event organizer or designated recipient required
+        '404':
+          description: No accessible document
+        '409':
+          description: Stale version, incomplete scope or invalid transition
+        '503':
+          description: Migration or document generation temporarily unavailable
+  /social-events/events/{eventId}/workspace/agreements/{agreementId}/acceptance.pdf:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - Event agreements
+      operationId: downloadEventAgreementAcceptance
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: agreementId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Private PDF of the exact document or accepted version and annex
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Malformed or overposted command
+        '401':
+          description: Current authenticated session required
+        '403':
+          description: Event organizer or designated recipient required
+        '404':
+          description: No accessible document
+        '409':
+          description: Stale version, incomplete scope or invalid transition
+        '503':
+          description: Migration or document generation temporarily unavailable
+
 security:
   - bearerAuth: [ ]
 
@@ -19017,3 +19246,478 @@ components:
           type: string
           format: uuid
           description: Returned only at issuance; only its SHA-256 digest is stored.
+
+    EventPlanContent:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        overview:
+          type: string
+          maxLength: 50000
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        activities:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 4000
+              start:
+                type: string
+                maxLength: 4000
+              end:
+                type: string
+                maxLength: 4000
+              responsible:
+                type: string
+                maxLength: 4000
+              notes:
+                type: string
+                maxLength: 4000
+            required:
+            - title
+            - start
+            - end
+            - responsible
+            - notes
+            additionalProperties: false
+          maxItems: 200
+        budget:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+                minLength: 1
+                maxLength: 200
+              amountCents:
+                type: integer
+                format: int64
+                minimum: 0
+                maximum: 9007199254740991
+                nullable: true
+              basis:
+                type: string
+                maxLength: 2000
+            required:
+            - label
+            - amountCents
+            - basis
+            additionalProperties: false
+          maxItems: 200
+        budgetCapCents:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9007199254740991
+          nullable: true
+        deliverables:
+          type: array
+          items:
+            type: string
+          maxItems: 200
+        pending:
+          type: array
+          items:
+            type: string
+          maxItems: 200
+      required:
+      - title
+      - overview
+      - currency
+      - activities
+      - budget
+      - budgetCapCents
+      - deliverables
+      - pending
+      additionalProperties: false
+    EventPlanVersion:
+      type: object
+      required:
+      - event_id
+      - revision
+      - recipient_party_id
+      - content
+      - document_hash
+      - created_by
+      - created_at
+      properties:
+        event_id:
+          type: integer
+          format: int64
+          minimum: 1
+        revision:
+          type: integer
+          format: int64
+          minimum: 1
+        recipient_party_id:
+          type: integer
+          format: int64
+          minimum: 1
+        content:
+          $ref: '#/components/schemas/EventPlanContent'
+        document_hash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        created_by:
+          type: integer
+          format: int64
+          minimum: 1
+        created_at:
+          type: string
+          format: date-time
+    EventAgreementDraft:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        body:
+          type: string
+          minLength: 1
+          maxLength: 100000
+        recipientLegalName:
+          type: string
+          minLength: 1
+          maxLength: 160
+        pendingFields:
+          type: array
+          items:
+            type: string
+          maxItems: 100
+      required:
+      - title
+      - body
+      - recipientLegalName
+      - pendingFields
+      additionalProperties: false
+    EventAgreementVersion:
+      type: object
+      required:
+      - version
+      - content
+      - document_hash
+      - approved_by
+      - approved_at
+      - sent_at
+      - created_at
+      properties:
+        version:
+          type: integer
+          format: int64
+          minimum: 1
+        content:
+          type: object
+          required:
+          - title
+          - body
+          - recipientLegalName
+          - pendingFields
+          - plan
+          properties:
+            title:
+              type: string
+              minLength: 1
+              maxLength: 200
+            body:
+              type: string
+              minLength: 1
+              maxLength: 100000
+            recipientLegalName:
+              type: string
+              minLength: 1
+              maxLength: 160
+            pendingFields:
+              type: array
+              items:
+                type: string
+              maxItems: 100
+            plan:
+              $ref: '#/components/schemas/EventPlanVersion'
+        document_hash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        approved_by:
+          type: integer
+          format: int64
+          minimum: 1
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    EventWorkspaceAction:
+      type: object
+      required:
+      - id
+      - version
+      - actor_party_id
+      - action
+      - comment
+      - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        version:
+          type: integer
+          format: int64
+          minimum: 1
+        actor_party_id:
+          type: integer
+          format: int64
+          minimum: 1
+        action:
+          type: string
+        comment:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    EventAgreementAcceptance:
+      type: object
+      nullable: true
+      required:
+      - version
+      - accepted_by
+      - accepted_name
+      - accepted_at
+      - document_hash
+      properties:
+        version:
+          type: integer
+          format: int64
+          minimum: 1
+        accepted_by:
+          type: integer
+          format: int64
+          minimum: 1
+        accepted_name:
+          type: string
+        accepted_at:
+          type: string
+          format: date-time
+        document_hash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+    EventAgreement:
+      type: object
+      required:
+      - id
+      - recipient_party_id
+      - current_version
+      - state
+      - parent_id
+      - versions
+      - actions
+      - acceptance
+      properties:
+        id:
+          type: string
+          format: uuid
+        recipient_party_id:
+          type: integer
+          format: int64
+          minimum: 1
+        current_version:
+          type: integer
+          format: int64
+          minimum: 1
+        state:
+          type: string
+          enum:
+          - draft
+          - sent
+          - changes_requested
+          - accepted
+          - rejected
+          - withdrawn
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventAgreementVersion'
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventWorkspaceAction'
+        acceptance:
+          $ref: '#/components/schemas/EventAgreementAcceptance'
+    EventWorkspaceCommand:
+      type: object
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum:
+          - plan.save
+          - plan.comment
+          - agreement.create
+          - agreement.revise
+          - agreement.approve
+          - agreement.send
+          - agreement.withdraw
+          - agreement.comment
+          - agreement.request_changes
+          - agreement.reject
+          - agreement.accept
+        version:
+          type: integer
+          minimum: 0
+          maximum: 999999999
+        agreementId:
+          type: string
+          format: uuid
+        hash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        recipientPartyId:
+          type: string
+          pattern: ^[1-9][0-9]{0,17}$
+        parentId:
+          type: string
+          format: uuid
+        content:
+          oneOf:
+          - $ref: '#/components/schemas/EventPlanContent'
+          - $ref: '#/components/schemas/EventAgreementDraft'
+        comment:
+          type: string
+          maxLength: 4000
+        acceptedName:
+          type: string
+          minLength: 1
+          maxLength: 160
+        consent:
+          type: boolean
+      required:
+      - requestId
+      - action
+      - version
+      additionalProperties: false
+      description: Version-bound command. A repeated requestId replays the same intent;
+        conflicting reuse returns 409. Approval and sending require a complete scope,
+        full integer-cent budget and exact documented cap. Accept requires the authenticated
+        designated recipient and the current approved/sent version; no external email
+        delivery is performed.
+      oneOf:
+      - properties:
+          action:
+            type: string
+            enum:
+            - plan.save
+          content:
+            $ref: '#/components/schemas/EventPlanContent'
+        required:
+        - recipientPartyId
+        - content
+      - properties:
+          action:
+            type: string
+            enum:
+            - plan.comment
+        required:
+        - comment
+      - properties:
+          action:
+            type: string
+            enum:
+            - agreement.create
+          content:
+            $ref: '#/components/schemas/EventAgreementDraft'
+        required:
+        - content
+      - properties:
+          action:
+            type: string
+            enum:
+            - agreement.revise
+          content:
+            $ref: '#/components/schemas/EventAgreementDraft'
+        required:
+        - agreementId
+        - hash
+        - content
+      - properties:
+          action:
+            type: string
+            enum:
+            - agreement.approve
+            - agreement.send
+            - agreement.withdraw
+            - agreement.reject
+        required:
+        - agreementId
+        - hash
+      - properties:
+          action:
+            type: string
+            enum:
+            - agreement.comment
+            - agreement.request_changes
+        required:
+        - agreementId
+        - hash
+        - comment
+      - properties:
+          action:
+            type: string
+            enum:
+            - agreement.accept
+          consent:
+            type: boolean
+            enum:
+            - true
+        required:
+        - agreementId
+        - hash
+        - acceptedName
+        - consent
+    EventWorkspaceSnapshot:
+      type: object
+      required:
+      - eventId
+      - owner
+      - plan
+      - agreements
+      - planComments
+      properties:
+        eventId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+        owner:
+          type: boolean
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/EventPlanVersion'
+          nullable: true
+        agreements:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventAgreement'
+        planComments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventWorkspaceAction'

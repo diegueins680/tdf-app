@@ -9221,6 +9221,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEventWorkspace"];
+        put?: never;
+        post: operations["mutateEventWorkspace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/workspace/plan.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["downloadEventPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/workspace/agreements/{agreementId}/{version}/document.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["downloadEventAgreement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/workspace/agreements/{agreementId}/acceptance.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["downloadEventAgreementAcceptance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -15851,6 +15915,156 @@ export interface components {
              * @description Returned only at issuance; only its SHA-256 digest is stored.
              */
             token: string;
+        };
+        EventPlanContent: {
+            title: string;
+            overview: string;
+            currency: string;
+            activities: {
+                title: string;
+                start: string;
+                end: string;
+                responsible: string;
+                notes: string;
+            }[];
+            budget: {
+                label: string;
+                /** Format: int64 */
+                amountCents: number | null;
+                basis: string;
+            }[];
+            /** Format: int64 */
+            budgetCapCents: number | null;
+            deliverables: string[];
+            pending: string[];
+        };
+        EventPlanVersion: {
+            /** Format: int64 */
+            event_id: number;
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            recipient_party_id: number;
+            content: components["schemas"]["EventPlanContent"];
+            document_hash: string;
+            /** Format: int64 */
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        EventAgreementDraft: {
+            title: string;
+            body: string;
+            recipientLegalName: string;
+            pendingFields: string[];
+        };
+        EventAgreementVersion: {
+            /** Format: int64 */
+            version: number;
+            content: {
+                title: string;
+                body: string;
+                recipientLegalName: string;
+                pendingFields: string[];
+                plan: components["schemas"]["EventPlanVersion"];
+            };
+            document_hash: string;
+            /** Format: int64 */
+            approved_by: number | null;
+            /** Format: date-time */
+            approved_at: string | null;
+            /** Format: date-time */
+            sent_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        EventWorkspaceAction: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            version: number;
+            /** Format: int64 */
+            actor_party_id: number;
+            action: string;
+            comment: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        EventAgreementAcceptance: {
+            /** Format: int64 */
+            version: number;
+            /** Format: int64 */
+            accepted_by: number;
+            accepted_name: string;
+            /** Format: date-time */
+            accepted_at: string;
+            document_hash: string;
+        } | null;
+        EventAgreement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            recipient_party_id: number;
+            /** Format: int64 */
+            current_version: number;
+            /** @enum {string} */
+            state: "draft" | "sent" | "changes_requested" | "accepted" | "rejected" | "withdrawn";
+            /** Format: uuid */
+            parent_id: string | null;
+            versions: components["schemas"]["EventAgreementVersion"][];
+            actions: components["schemas"]["EventWorkspaceAction"][];
+            acceptance: components["schemas"]["EventAgreementAcceptance"];
+        };
+        /** @description Version-bound command. A repeated requestId replays the same intent; conflicting reuse returns 409. Approval and sending require a complete scope, full integer-cent budget and exact documented cap. Accept requires the authenticated designated recipient and the current approved/sent version; no external email delivery is performed. */
+        EventWorkspaceCommand: {
+            /** Format: uuid */
+            requestId: string;
+            /** @enum {string} */
+            action: "plan.save" | "plan.comment" | "agreement.create" | "agreement.revise" | "agreement.approve" | "agreement.send" | "agreement.withdraw" | "agreement.comment" | "agreement.request_changes" | "agreement.reject" | "agreement.accept";
+            version: number;
+            /** Format: uuid */
+            agreementId?: string;
+            hash?: string;
+            recipientPartyId?: string;
+            /** Format: uuid */
+            parentId?: string;
+            content?: components["schemas"]["EventPlanContent"] | components["schemas"]["EventAgreementDraft"];
+            comment?: string;
+            acceptedName?: string;
+            consent?: boolean;
+        } & ({
+            /** @enum {string} */
+            action?: "plan.save";
+            content: components["schemas"]["EventPlanContent"];
+        } | {
+            /** @enum {string} */
+            action?: "plan.comment";
+        } | {
+            /** @enum {string} */
+            action?: "agreement.create";
+            content: components["schemas"]["EventAgreementDraft"];
+        } | {
+            /** @enum {string} */
+            action?: "agreement.revise";
+            content: components["schemas"]["EventAgreementDraft"];
+        } | {
+            /** @enum {string} */
+            action?: "agreement.approve" | "agreement.send" | "agreement.withdraw" | "agreement.reject";
+        } | {
+            /** @enum {string} */
+            action?: "agreement.comment" | "agreement.request_changes";
+        } | {
+            /** @enum {string} */
+            action?: "agreement.accept";
+            /** @enum {boolean} */
+            consent: true;
+        });
+        EventWorkspaceSnapshot: {
+            eventId: string;
+            owner: boolean;
+            plan: components["schemas"]["EventPlanVersion"] | null;
+            agreements: components["schemas"]["EventAgreement"][];
+            planComments: components["schemas"]["EventWorkspaceAction"][];
         };
         SocialV2Me: {
             discoverable: boolean;
@@ -38590,6 +38804,343 @@ export interface operations {
                 content?: never;
             };
             /** @description Persisted automatic assignment policy is unavailable or inconsistent */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private account-scoped workspace snapshot */
+            200: {
+                headers: {
+                    /** @description private, no-store */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventWorkspaceSnapshot"];
+                };
+            };
+            /** @description Malformed or overposted command */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event organizer or designated recipient required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No accessible document */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale version, incomplete scope or invalid transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Migration or document generation temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mutateEventWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventWorkspaceCommand"];
+            };
+        };
+        responses: {
+            /** @description Private account-scoped workspace snapshot */
+            200: {
+                headers: {
+                    /** @description private, no-store */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventWorkspaceSnapshot"];
+                };
+            };
+            /** @description Malformed or overposted command */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event organizer or designated recipient required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No accessible document */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale version, incomplete scope or invalid transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Migration or document generation temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadEventPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private PDF of the exact document or accepted version and annex */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Malformed or overposted command */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event organizer or designated recipient required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No accessible document */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale version, incomplete scope or invalid transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Migration or document generation temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadEventAgreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                agreementId: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private PDF of the exact document or accepted version and annex */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Malformed or overposted command */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event organizer or designated recipient required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No accessible document */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale version, incomplete scope or invalid transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Migration or document generation temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadEventAgreementAcceptance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private PDF of the exact document or accepted version and annex */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Malformed or overposted command */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event organizer or designated recipient required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No accessible document */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale version, incomplete scope or invalid transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Migration or document generation temporarily unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;

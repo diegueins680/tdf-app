@@ -11686,6 +11686,71 @@
       ],
       "recordScope": "owner-and-explicit-team",
       "requiredAuth": "authenticated"
+    },
+    {
+      "id": "social.event.agreements",
+      "parentId": "social.event.detail",
+      "webRoute": "/social/eventos/:eventId/acuerdos",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "Acuerdos y plan del evento",
+        "en": "Event agreements and plan"
+      },
+      "synonyms": {
+        "es": [
+          "contratos",
+          "propuestas",
+          "aceptación"
+        ],
+        "en": [
+          "contracts",
+          "proposals",
+          "acceptance"
+        ]
+      },
+      "keywords": [
+        "agreement",
+        "plan",
+        "event"
+      ],
+      "navigationGroup": "people",
+      "icon": "description",
+      "breadcrumb": [
+        "social",
+        "social.events",
+        "social.event.detail"
+      ],
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "permissions": {
+        "discover": {},
+        "view": {
+          "recordScope": "event-owner-or-designated-recipient"
+        },
+        "submit": {
+          "recordScope": "event-owner-or-designated-recipient"
+        },
+        "export": {
+          "recordScope": "event-owner-or-designated-recipient"
+        }
+      },
+      "mobilePresentation": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "apiScopes": [
+        {
+          "pathPrefix": "/social-events/events",
+          "pathContains": "/workspace",
+          "methods": {
+            "GET": "view",
+            "POST": "submit"
+          }
+        }
+      ]
     }
   ]
 }

@@ -194,6 +194,12 @@
       "table": "commerce_ledger_transaction",
       "column": "status",
       "decision": "AUTHORITY-069"
+    },
+    "EVT-AGREEMENT-001": {
+      "source": "formal/system/requirements.json",
+      "table": "event_agreement",
+      "column": "state",
+      "decision": "formal/system/event-agreements.md"
     }
   },
   "unbound": {
