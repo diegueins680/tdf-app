@@ -22672,6 +22672,1819 @@
       "historicalStatus": null
     },
     {
+      "id": "AUTH-CREDENTIAL-INTAKE-001",
+      "title": "Password login, Google login and password signup",
+      "statement": "Visitors log in with a password or a Google ID token and create password accounts; every success mints a database-clock session. Routes: POST /login; POST /login/google; POST /signup; POST /v1/signup.",
+      "domain": "AUTH",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
+      "source": "formal/system/identity-routes.md",
+      "contract": "formal/system/identity-routes.md",
+      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, answers 401 \"Account disabled\" for an inactive credential and 401 \"Invalid username or password\" otherwise, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome.",
+      "actors": [
+        "Anonymous visitor"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /login",
+        "POST /login/google",
+        "POST /signup",
+        "POST /v1/signup"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "api_token",
+        "user_activity",
+        "party",
+        "party_security_role",
+        "user_credential",
+        "fan_profile",
+        "auth_provider_identity",
+        "fan_follow",
+        "welcome email"
+      ],
+      "authorization": "None (credential-intake).",
+      "privacy": "Stores credentials, names and phones from anonymous input.",
+      "concurrency": "Row locks on party and credential; advisory lock per Google identity; signup existence check and insert are not serialized.",
+      "idempotency": "Every login mints a new token; signup is unkeyed and a racing duplicate email hits the unique username (500).",
+      "failure": "400 invalid; 401 credentials, disabled or token; 409 existing email; 500 unconfigured Google; 503 policy.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/identity-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "No rate limit, lockout or failed-attempt counter exists anywhere, so online password guessing is unbounded.",
+        "Login discloses that a disabled account exists (\"Account disabled\" vs \"Invalid username or password\").",
+        "A racing duplicate signup answers 500 instead of 409.",
+        "A Google account may share a primary email with a password account, after which email login for that address matches two parties and fails."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "AUTH-PASSWORD-RECOVERY-001",
+      "title": "Password reset issuance, confirmation and password change",
+      "statement": "A visitor requests a reset email, confirms a reset token once within its window, or changes a password with the current one; every replacement revokes interactive sessions. Routes: POST /v1/password-reset; POST /v1/password-reset/confirm; POST /v1/password/change; POST /password/change.",
+      "domain": "AUTH",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
+      "source": "formal/system/identity-routes.md",
+      "contract": "formal/system/identity-routes.md",
+      "property": "Reset issuance needs a valid email (400) and always answers 204; for an active credential it deactivates older reset tokens and creates a password-reset token with a 900-second database-clock window and a recovery challenge row, then emails it (ID-SESSION-003). Confirmation needs a UUID token and a valid password (400), locks the credential, requires an active account (403), consumes the token with a conditional update inside the window (400 otherwise), replaces the password, revokes password, Google and reset tokens and mints a session (ID-SESSION-001/002). Change takes a username in the body or the bearer token (Cookie is never read), validates both passwords (400), answers 403 for a disabled account before checking the password and 401 for unknown or wrong credentials, then replaces the password, revokes interactive sessions and mints a session.",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /v1/password-reset",
+        "POST /v1/password-reset/confirm",
+        "POST /v1/password/change",
+        "POST /password/change"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "api_token",
+        "auth_recovery_challenge",
+        "user_credential",
+        "reset email"
+      ],
+      "authorization": "Reset: none. Confirm: token possession. Change: current password (with the username in the body no session is needed) or the bearer session.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Credential and token rows locked FOR UPDATE; the reset token is consumed by a conditional update.",
+      "idempotency": "Issuance supersedes older tokens; confirmation is single-use; change is idempotent by content.",
+      "failure": "400 invalid or expired token; 401 credentials; 403 disabled.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAuthSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/identity-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "No rate limit on reset emails or current-password guessing.",
+        "With a username in the body the change route needs no session, which contradicts its registered handler-session boundary; the Cookie header is never read.",
+        "The change route answers 403 \"Account disabled\" for any known disabled username without a password.",
+        "No audit or activity row records a password change."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
+      "title": "Feature access request creation, cancellation and decision",
+      "statement": "A signed-in party requests feature access (artist onboarding is self-service), cancels its own pending request, and a distinct reviewer decides reviewed requests. Routes: POST /access-requests; PATCH /access-requests/{requestId}/cancel; PATCH /access-requests/{requestId}/decision.",
+      "domain": "AUTH",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
+      "source": "formal/system/identity-routes.md",
+      "contract": "formal/system/identity-routes.md",
+      "property": "artist.onboarding/create runs the self-service activation (AUTH-ACCESS-PROVISION-001, ART-SELF-SERVICE-001) and records the request approved by system-policy; any failure answers 403. Other requests need a requestable feature and action (400), no existing allowance (409), a justification of at most 2000 characters (400) and no pending request (409, also by partial unique index); the row is inserted pending with a 30-day expiry, history, requester notification, audit and reviewer notifications. Cancel is requester-only (404 otherwise), takes a note (400) and moves a pending request by a conditional update under FOR UPDATE (409 otherwise). Decision needs a feature reviewer whose modules match their roles (403), a reviewer distinct from the requester (403), Admin for grant-bearing pairs (403), approved or rejected with notes on rejection (400), a pending unexpired request (409) and, on approval of artist onboarding, publishes a sensitive security grant revision under the global advisory lock.",
+      "actors": [
+        "Requester",
+        "Feature reviewer"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /access-requests",
+        "PATCH /access-requests/{requestId}/cancel",
+        "PATCH /access-requests/{requestId}/decision"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "feature_access_requests and history",
+        "notification",
+        "audit_log",
+        "party_security_role",
+        "security_grant_revision"
+      ],
+      "authorization": "Create: any session. Cancel: requester. Decision: Admin, Manager or StudioManager with coherent modules, never the requester, Admin for grants.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Row FOR UPDATE with lazy expiry and conditional status updates; grants under the security advisory lock.",
+      "idempotency": "Self-service creation replays the approved row; reviewed creation answers 409 on a pending duplicate; cancel and decision replay as 409.",
+      "failure": "400 invalid; 403 reviewer rules or activation; 404 request; 409 state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/identity-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Cancel writes its history and audit in a second transaction after the transition.",
+        "A reviewer who cannot see a request answers 403 rather than 404 on a sequential id."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "CRM-PARTY-INTAKE-001",
+      "title": "Referral claims, CRM contact creation and bands",
+      "statement": "A signed-in party claims a referral code for its own email; CRM staff create contacts under an idempotency key and bands with members. Routes: POST /referrals/claim; POST /parties; POST /bands.",
+      "domain": "CRM",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
+      "source": "formal/system/identity-routes.md",
+      "contract": "formal/system/identity-routes.md",
+      "property": "Referral claim needs a strict body with a valid email equal to the signed-in party's primary email (403; 409 without one) and a known code (404) and upserts the claim per code and email. Party creation needs ModuleCRM (403), an Idempotency-Key of 16..128 safe characters, a display name and a valid email (400) and calls identity_create_contact under an advisory lock per actor and key: an identical body replays the party, a different body or an archived party answers 409. Band creation needs ModuleCRM, a non-blank name and distinct existing member ids (400), a canonically unique name (409) and inserts the organization party, band and members in one transaction.",
+      "actors": [
+        "Account holder",
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /referrals/claim",
+        "POST /parties",
+        "POST /bands"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "referral_claim",
+        "party",
+        "identity_contact_request",
+        "band",
+        "band_member"
+      ],
+      "authorization": "Referral: own email. Parties and bands: ModuleCRM.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Referral upsert and the contact function are race-safe; band name check and insert are separate.",
+      "idempotency": "Referral claims replay (resetting claimed_at); parties replay by key and body; bands are unkeyed.",
+      "failure": "400 invalid; 403 module or email; 404 code; 409 replay conflict, archived party or duplicate band.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/identity-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A referral owner may claim their own code; claims per email are uncapped and a repeat resets claimed_at.",
+        "An exact-name band race answers 500; case variants can both be inserted."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SOCIAL-RELATIONSHIP-WRITES-001",
+      "title": "Legacy friend edges, social v2 relationships and preferences",
+      "statement": "A signed-in party adds or removes mutual friend edges (legacy, retired once social v2 is live) and issues social v2 relationship commands and preferences. Routes: POST /social/friends/{partyId}; DELETE /social/friends/{partyId}; POST /social/vcard-exchange; POST /social/v2/relationships/{partyId}; PUT /social/v2/preferences.",
+      "domain": "SOCIAL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "Legacy writes re-validate the session under FOR UPDATE, refuse self or invalid targets (400), unknown parties (404) and answer 410 once the v2 runtime was ever activated, a canonical pair exists or a party is closed; they upsert or delete both party_follow directions (vcard sets the NFC flag). V2 commands need SOCIAL_V2_ENABLED and a live runtime (404), a strict body with one of eleven operations and a request key of 1..80 (400), both parties live and no block for most operations; social_v2_mutate locks the pair, enforces 60 commands per minute (429), replays an identical request key and answers 409 on revision or key conflicts. Preferences are stored through social_v2_preferences.",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /social/friends/{partyId}",
+        "DELETE /social/friends/{partyId}",
+        "POST /social/vcard-exchange",
+        "POST /social/v2/relationships/{partyId}",
+        "PUT /social/v2/preferences"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party_follow",
+        "social_v2_pair",
+        "social_v2_command",
+        "social_v2_preference"
+      ],
+      "authorization": "Self only; session re-validated inside the transaction.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Party, credential and pair rows locked; serialization failures answer 503 with Retry-After.",
+      "idempotency": "Legacy writes are naturally idempotent; v2 commands replay by (actor, request key).",
+      "failure": "400 invalid; 404 party or disabled runtime; 409 revision or key; 410 retired; 429 rate; 503 retry.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/RelationshipWrites.hs",
+        "tdf-hq/src/TDF/Social/Server.hs",
+        "tdf-hq/src/TDF/Social/Session.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The v2 preferences route skips the process-level SOCIAL_V2_ENABLED gate and relies on the runtime row."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SOCIAL-STAFF-TOOLS-001",
+      "title": "Social discovery review, ChatKit sessions, social sync ingest and Meta backfill",
+      "statement": "Strict administrators review discovered posts, ingest social posts and backfill Meta inboxes; operations staff mint ChatKit sessions. Routes: PUT /social-discovery/posts/{postId}/review; POST /chatkit/sessions; POST /social-sync/social-sync/ingest; POST /meta/backfill.",
+      "domain": "SOCIAL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "Discovery review needs hasSocialSyncAccess (strict admin, 403), a positive id (400), a status of pending, approved or dismissed with notes up to 2000 (400), an Instagram post (404) with event terms (409), and inserts or updates the review. ChatKit needs ops or admin access (403), a workflow id (400), an OpenAI key (503) and calls the ChatKit API (502 on failure) without database writes. Ingest needs strict admin, 1..max unique posts with bounded fields and resolvable artists (400/404) and updates or inserts each social_sync_post plus a run row. Backfill needs the Admin role (403), a platform and limits (400) and reads designated connected accounts plus the environment token through the Graph API, storing inbound rows once (MSG-META-REDELIVERY-001).",
+      "actors": [
+        "Strict administrator",
+        "Operations staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /social-discovery/posts/{postId}/review",
+        "POST /chatkit/sessions",
+        "POST /social-sync/social-sync/ingest",
+        "POST /meta/backfill"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "social_discovery_review",
+        "social_sync_post",
+        "social_sync_run",
+        "instagram_message",
+        "facebook_message",
+        "ChatKit and Graph API calls"
+      ],
+      "authorization": "Strict admin for review and ingest; ops or admin for ChatKit; Admin role for backfill.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Review and ingest read then insert in separate transactions without a lock; backfill is store-once.",
+      "idempotency": "Review is last-writer-wins; ingest re-runs update; backfill is naturally idempotent.",
+      "failure": "400 invalid; 403 access; 404 post or artist; 409 no event terms; 502/503 upstream.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
+        "tdf-hq/src/TDF/Server/SocialSync.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Concurrent first reviews of a post or ingests of a new post race into unique constraints (500).",
+        "The ingest path carries a duplicated social-sync segment.",
+        "Backfill is gated by the plain Admin role while delivery designation requires a strict admin."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-CHAT-WRITES-001",
+      "title": "Direct-message thread opening and message sending",
+      "statement": "A signed-in party opens a direct-message thread and sends messages under the canonical chat policy. Routes: POST /chat/threads/dm/{otherPartyId}; POST /chat/threads/{threadId}/messages.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "The adapter path (whenever the social v2 chat functions exist) re-validates the session under locks, requires participant membership and social_v2_chat_can_send (bilateral consent, no block, live parties when governance applies; mutual follow or Admin otherwise), validates ids (400) and a body of 1..5000 safe characters (400), inserts the thread with ON CONFLICT DO NOTHING and the message, and rolls back on a denied result (MSG-ATOMIC-001); the recipient notification is written by trigger (MSG-NOTIFY-001). The legacy path is used only without the foundation.",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /chat/threads/dm/{otherPartyId}",
+        "POST /chat/threads/{threadId}/messages"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "chat_thread",
+        "chat_message",
+        "notification by trigger"
+      ],
+      "authorization": "Participant with chat permission (MSG-ACCESS-001).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Locks via the session helper; the DM write guard trigger enforces policy at the database.",
+      "idempotency": "Thread opening is idempotent; sending has no key, so a retry can duplicate a message.",
+      "failure": "400 invalid; 403 forbidden; 404 unavailable or not a participant; 503 serialization.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/Chat.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The legacy thread-open path (foundation absent) races into UniqueChatThread (500)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SOC-INTERACTION-WRITES-001",
+      "title": "Interaction commands, blocks and notification preferences",
+      "statement": "A signed-in party reacts, comments, reports and edits through interaction commands, blocks or unblocks peers and sets notification preferences, under a per-minute write budget. Routes: POST /interactions/targets/{targetId}/commands; PUT /interactions/blocks/{partyId}; PUT /interactions/preferences.",
+      "domain": "SOC",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "Every route re-validates the session, needs the interaction runtime installed and enabled (404) and a live actor. Commands need UUID target and request key (400), a payload of at most 32 KiB (413) and run interaction_command under an advisory lock per actor with the target FOR UPDATE, request-key replay with fingerprint check, 30 per minute and per-operation policy (403, 422, 409, 429). Blocks need a positive party and expectedVersion (400), lock party, credential and pair, replay by key and check the revision. Preferences need exactly the four booleans within 1 KiB (400/413) and upsert. The write budget is charged after session confirmation and before the write and survives a refusal (SOC-ABUSE-001).",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /interactions/targets/{targetId}/commands",
+        "PUT /interactions/blocks/{partyId}",
+        "PUT /interactions/preferences"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "interaction_request, comment, reaction, reports and audit",
+        "social_v2_pair block flags and command",
+        "directory_profile_block",
+        "interaction_notification_preference",
+        "interaction_event by trigger"
+      ],
+      "authorization": "Self; per-operation policy inside SQL.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Advisory and row locks; savepoint keeps the budget charge on failure.",
+      "idempotency": "Commands and blocks replay by key; preferences are idempotent.",
+      "failure": "400/413 invalid; 403 forbidden; 404 runtime; 409 revision or key; 422 reaction; 429 budget; 503 retry.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Interactions/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "REP-SELF-SERVICE-001",
+      "title": "Reputation consents and personal preferences",
+      "statement": "A pilot participant grants or revokes reputation consents and saves personal ranking preferences. Routes: PUT /reputation/consents; PUT /reputation/preferences.",
+      "domain": "REP",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "Consents need a non-empty unique list of known kinds (400); grants need the current copy version and locale (400), the contextual reputation flag plus pilot cohort membership (404) and adult age assurance or guardian consent (403); revocations need neither. The consent state is upserted per kind with a version bump on change and an event appended. Preferences need an Idempotency-Key of 8..160 safe characters, a revision, at most 10 unique categories with weights 0..100 (400), the flag and cohort (404), and call reputation_save_personal_preference (409 on a changed revision or reused key).",
+      "actors": [
+        "Pilot participant"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /reputation/consents",
+        "PUT /reputation/preferences"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "reputation_consent_state",
+        "reputation_consent_event",
+        "reputation_personal_preference and categories"
+      ],
+      "authorization": "Self; grants and preferences need the pilot cohort and age assurance.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Preferences are keyed and revision-checked in SQL; consents are conditional upserts without a list lock.",
+      "idempotency": "Consents are idempotent; preferences replay by key.",
+      "failure": "400 invalid; 403 age; 404 pilot; 409 revision or key.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Reviews.hs",
+        "tdf-hq/src/TDF/Reputation.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "NAV-PREFERENCES-001",
+      "title": "Navigation feature preferences and visits",
+      "statement": "A signed-in party pins or favorites features it may use and records visits. Routes: PUT /navigation/preferences/{featureId}; POST /navigation/preferences/{featureId}/visit.",
+      "domain": "NAV",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "The feature must exist in the registry, be allowed for the caller's roles and modules and not be technical or broken (404); favorite and pin eligibility and pinOrder 0..1000 are validated (400); a visit needs a feature with recent-behaviour tracking (400). Both upsert the party's row; visits increment use_count atomically.",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /navigation/preferences/{featureId}",
+        "POST /navigation/preferences/{featureId}/visit"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "feature_navigation_preferences"
+      ],
+      "authorization": "Self; feature allowed for the caller.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single upsert per call.",
+      "idempotency": "Preferences are last-writer-wins; visits are safe to repeat.",
+      "failure": "400 invalid; 404 feature unavailable.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-STAFF-OUTBOUND-001",
+      "title": "Staff WhatsApp, Instagram and Facebook replies and operator questions",
+      "statement": "Social inbox staff reply to inbound messages and ask the operator a question; administrators capture or withdraw WhatsApp consent on behalf of a contact. Routes: POST /whatsapp/reply; POST /whatsapp/operator-question; POST /whatsapp/consent; POST /whatsapp/opt-out; POST /instagram/reply; POST /facebook/reply.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false.",
+      "actors": [
+        "Social inbox staff",
+        "Administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /whatsapp/reply",
+        "POST /whatsapp/operator-question",
+        "POST /whatsapp/consent",
+        "POST /whatsapp/opt-out",
+        "POST /instagram/reply",
+        "POST /facebook/reply"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "whats_app_message",
+        "instagram_message",
+        "facebook_message",
+        "whats_app_consent",
+        "provider sends"
+      ],
+      "authorization": "hasSocialInboxAccess for replies and questions; Admin role for consent and opt-out (PRIV-WHATSAPP-001 staff capture).",
+      "privacy": "Sends messages to contacts' phones and social accounts.",
+      "concurrency": "No locks; the send precedes the record.",
+      "idempotency": "None: a retry sends twice; two concurrent Meta replies both send.",
+      "failure": "400 invalid; 403 access; 404 message; 503 unconfigured.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "WhatsApp replies never consult whats_app_consent, so staff can message an opted-out number, and do not mark the inbound message replied.",
+        "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
+        "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "LIVE-SESSION-INTAKE-001",
+      "title": "Live session intake",
+      "statement": "A signed-in party submits a live-session intake with musicians, songs and a rider under an idempotency key. Routes: POST /live-sessions/intake.",
+      "domain": "LIVE",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
+      "source": "formal/system/social-messaging-routes.md",
+      "contract": "formal/system/social-messaging-routes.md",
+      "property": "The request needs an Idempotency-Key of 16..128 safe characters, band name, terms acceptance with version, emails, at least one musician with distinct party ids, active published genre and instrument ids and a rider of at most 10 MB with a safe name (400); referencing another existing musician party needs ModuleCRM (403) and a matching email (400); several parties per email answer 409. Under pg_advisory_xact_lock per party and key an identical payload replays (204) and a different one answers 409; otherwise it inserts the intake, musicians (creating parties for unknown ones), songs and the identity receipt and stores the rider content-addressed under uploads/live-sessions.",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /live-sessions/intake"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "live_session_intake",
+        "live_session_musician",
+        "party",
+        "live_session_song",
+        "identity_live_intake_request",
+        "rider file"
+      ],
+      "authorization": "Any session; CRM module to reference other parties.",
+      "privacy": "Stores musician contact details.",
+      "concurrency": "Advisory lock per party and key in one transaction.",
+      "idempotency": "Replay by stored payload.",
+      "failure": "400 invalid; 403 module; 409 payload or email conflict.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerLiveSessions.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/social-messaging-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Any account can create party rows for unknown musicians without a rate limit."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-HOSTED-SESSION-001",
+      "title": "Hosted provider payment sessions",
+      "statement": "A buyer holding the checkout lookup token starts a PlaceToPay or PayPhone session for an open checkout. Routes: POST /commerce/checkouts/{checkoutId}/payment-sessions.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "source": "formal/system/commerce-integration-routes.md",
+      "contract": "formal/system/commerce-integration-routes.md",
+      "property": "The checkout id must be a UUID (400); X-Checkout-Lookup-Token (16..512) is hashed and matched to the checkout, which must be awaiting payment, processing or failed and unexpired (404); Idempotency-Key (16..128) and User-Agent are required (400); provider and method are validated (400); ticket checkouts need open sales (409, re-checked under the event lock); provider readiness and merchant configuration answer 503. The handler begins a guarded payment attempt and intent, prepares and claims a provider operation, calls the provider once, records the binding and result, and marks ambiguous outcomes (503) instead of retrying.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /commerce/checkouts/{checkoutId}/payment-sessions"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_payment_attempt and intent",
+        "commerce_provider_operation",
+        "commerce_provider_binding",
+        "provider call"
+      ],
+      "authorization": "Checkout lookup token (capability-header).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Operation claim serializes concurrent calls; a busy claim returns the in-flight state.",
+      "idempotency": "Replay by operation key returns the stored result; changed payloads answer 409 (PAY-RETRY-001).",
+      "failure": "400 invalid; 404 token or state; 409 replay or sales; 503 provider, config or ambiguity.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/commerce-integration-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The lookup token is verified by SQL equality on its SHA-256 hash rather than a constant-time compare in the handler."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-HOSTED-NOTIFICATIONS-001",
+      "title": "PlaceToPay and PayPhone notifications",
+      "statement": "Provider notifications are authenticated or classified as untrusted, stored once in the provider inbox and applied by the worker after a server-to-server query; the handlers move no money. Routes: POST /commerce/provider-notifications/placetopay; POST /commerce/provider-notifications/payphone; POST /NotificacionPago.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "source": "formal/system/commerce-integration-routes.md",
+      "contract": "formal/system/commerce-integration-routes.md",
+      "property": "PlaceToPay needs the feature flag (503), a body of at most 1 MiB (400) and a sha256 signature over requestId, status, date and the secret compared in constant time (401); the event is stored signature-verified with an encrypted payload. PayPhone callbacks (both paths) carry no signature: the adapter classifies them untrusted and query-required (400 otherwise), the store id must match (400) and the transaction ids must already match an immutable binding (404) before the event is stored untrusted; the worker queries the provider before admitting money (PAY-ADAPTER-BINDING-001).",
+      "actors": [
+        "PlaceToPay",
+        "PayPhone"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /commerce/provider-notifications/placetopay",
+        "POST /commerce/provider-notifications/payphone",
+        "POST /NotificacionPago"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_provider_event_inbox"
+      ],
+      "authorization": "Signed provider callback or provider query-back (AUTH-PUBLIC-001).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "ON CONFLICT DO NOTHING per provider, environment, merchant and event id; worker lease and attempt fencing (PAY-PROVIDER-INBOX-001).",
+      "idempotency": "Exactly one inbox row per event id; a later PayPhone callback for the same transaction is dropped.",
+      "failure": "400 body or classification; 401 signature; 404 unbound; 409 store; 503 flag or config.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/commerce-integration-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The hosted worker path (ProviderReconciliation) admits money with recordVerifiedPayment and dead-letters a rejected admission without a reconciliation exception, so PAY-CAPTURE-RECON-001 is not met literally there; the inbox row remains replayable.",
+        "/NotificacionPago is an undocumented alias of the PayPhone handler."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-LEGACY-RECORDS-001",
+      "title": "Legacy payments, invoices, receipts and package purchases",
+      "statement": "Staff record payments, create draft invoices, issue receipts and register package purchases outside the canonical checkout. Routes: POST /payments; POST /invoices; POST /receipts; POST /packages/purchases.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "source": "formal/system/commerce-integration-routes.md",
+      "contract": "formal/system/commerce-integration-routes.md",
+      "property": "Payments need ModuleAdmin (403), a strict body with positive amount, non-future date, supported currency and consistent party, order and invoice references (400), and insert a legacy payment row. Invoices need ModuleInvoicing (re-checked inside the transaction), an existing customer (422), valid lines, totals and currency (400) and insert the draft invoice with lines and an optional receipt; SQL conflicts answer 409. Receipts need ModuleInvoicing, an existing invoice (404) with matching currency (422) and issue at most one receipt per invoice under FOR UPDATE with an annual number (PAY-INVOICE-001; 409 on a differing replay). Purchases need ModulePackages, an existing buyer and product (422), an active product and positive validity (409) and insert the purchase with a price snapshot and expiry (PKG-PURCHASE-EXPIRY-001).",
+      "actors": [
+        "Administrator",
+        "Invoicing staff",
+        "Packages staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /payments",
+        "POST /invoices",
+        "POST /receipts",
+        "POST /packages/purchases"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "payment",
+        "invoice and invoice_line",
+        "receipt and receipt_line",
+        "package_purchase"
+      ],
+      "authorization": "Module gates as stated; no ownership binding.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Receipts lock the invoice; the other three have no lock or key.",
+      "idempotency": "Receipts are idempotent per invoice; payments, invoices and purchases duplicate on retry.",
+      "failure": "400 invalid; 403 module; 404 invoice; 409 conflict or inactive; 422 references.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/commerce-integration-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Payments, invoices and purchases record money or entitlement with no canonical checkout, attempt or ledger linkage and no request idempotency.",
+        "Foreign-key races surface as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ACADEMY-ACCOUNT-001",
+      "title": "Academy enrollment and lesson progress",
+      "statement": "A signed-in party enrolls itself in the academy and records lesson completion for its own email. Routes: POST /academy/enroll; POST /academy/progress.",
+      "domain": "ACADEMY",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "source": "formal/system/commerce-integration-routes.md",
+      "contract": "formal/system/commerce-integration-routes.md",
+      "property": "The body email must equal the party's primary email (403; 409 without one); the role must be artist or manager and slugs and day positive (400); unknown users, courses or lessons answer 404. Enrollment inserts or updates academy_user (and upserts a referral claim); progress upserts academy_progress by user and lesson.",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /academy/enroll",
+        "POST /academy/progress"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "academy_user",
+        "referral_claim",
+        "academy_progress"
+      ],
+      "authorization": "Own email only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Get then insert without a unique-violation handler on enrollment.",
+      "idempotency": "Both idempotent by upsert.",
+      "failure": "400 invalid; 403 email; 404 unknown; 409 no email.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/commerce-integration-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Concurrent first enrollments can race into the unique email (500)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "INTEG-GOOGLE-CALENDAR-001",
+      "title": "Google Calendar connection and sync",
+      "statement": "Strict administrators obtain the Google authorization URL, exchange a code for calendar tokens and sync events. Routes: POST /calendar/v1/auth-url; POST /calendar/v1/tokens; POST /calendar/v1/sync.",
+      "domain": "INTEG",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "source": "formal/system/commerce-integration-routes.md",
+      "contract": "formal/system/commerce-integration-routes.md",
+      "property": "Every route needs a strict administrator (403) and the Google client configuration (503). Token exchange validates the code and redirect URI (400), calls Google and stores access and refresh tokens on google_calendar_config. Sync needs a known calendar (404) and a refresh token (401), refreshes the access token when expired, lists events from Google (502 on failure) and upserts google_calendar_event with the cursor.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /calendar/v1/auth-url",
+        "POST /calendar/v1/tokens",
+        "POST /calendar/v1/sync"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "google_calendar_config",
+        "google_calendar_event",
+        "Google OAuth and Calendar calls"
+      ],
+      "authorization": "requireStrictAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No lock around sync; concurrent syncs can interleave cursor writes.",
+      "idempotency": "Token exchange overwrites the calendar's config; sync is re-runnable.",
+      "failure": "400 invalid; 401 no refresh token; 403 access; 404 calendar; 502/503 Google or config.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Calendar/Models.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/commerce-integration-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Access and refresh tokens are stored in plain text, unlike the encrypted provider inbox payloads."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-STORAGE-WRITES-001",
+      "title": "Drive token exchange, uploads, file deletion and storage destination",
+      "statement": "A signed-in party exchanges or refreshes its own Google Drive tokens, uploads to TDF storage or Drive, deletes its TDF files and chooses its storage destination. Routes: POST /drive/token; POST /drive/token/refresh; POST /drive/upload; DELETE /storage/files/{fileId}; PUT /storage/me/destination.",
+      "domain": "MEDIA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "source": "formal/system/commerce-integration-routes.md",
+      "contract": "formal/system/commerce-integration-routes.md",
+      "property": "Token routes need a coherent scope (403), validate the PKCE request (400), call Google and return the tokens without storing them (Google errors map to 409 reconnect, 403, 429 or 503). TDF uploads need server auth mode, a 64-hex idempotency key, up to 50 MiB, a visibility and recognized media for public files (400/413), reserve through content_storage_reserve, stage the file and complete under a lease (409 while in progress, 503 on integrity failure). Drive uploads need ops, admin or Artist access or a personal token (403), bind a drive attempt per owner and request key, and reuse an entry only on a matching fingerprint (MEDIA-DRIVE-001). Delete is owner-scoped (404), fences the row cancelled under FOR UPDATE, removes the file and marks it deleted. Destination needs tdf or google_drive and a revision (400) and is a conditional update (409).",
+      "actors": [
+        "Account holder",
+        "Operations staff",
+        "Artist"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /drive/token",
+        "POST /drive/token/refresh",
+        "POST /drive/upload",
+        "DELETE /storage/files/{fileId}",
+        "PUT /storage/me/destination"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "content_storage_upload and account",
+        "content_storage_drive_attempt",
+        "files under the assets or private root",
+        "Google Drive calls"
+      ],
+      "authorization": "Own tokens and files; Drive server credential needs ops access.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Leases and FOR UPDATE on storage rows; optimistic revision on the destination.",
+      "idempotency": "TDF uploads replay by key with on-disk hash verification; Drive uploads reuse by fingerprint; delete and destination are idempotent or 409.",
+      "failure": "400/413 invalid; 403 scope; 404 file; 409 lease, reconnect or revision; 503 provider or integrity.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ContentStorage.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/commerce-integration-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Legacy Drive uploads with no explicit visibility and no destination default to anyone-with-link sharing.",
+        "MEDIA-STORAGE-001 is still registered as specified but missing although ContentStorage.hs implements allowance, lease and retry identity."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "AI-STAFF-ASSISTANTS-001",
+      "title": "Tidal agent and ads assistant",
+      "statement": "Operations staff ask the Tidal agent; social inbox staff draft ad replies with retrieval context. Routes: POST /tidal-agent; POST /ads/assist.",
+      "domain": "AI",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "source": "formal/system/commerce-integration-routes.md",
+      "contract": "formal/system/commerce-integration-routes.md",
+      "property": "Tidal needs ops or admin access (403), a prompt of 1..2000 safe characters (400) and an OpenAI key (503), and calls chat completions (502 on failure) without database writes. Ads assist needs hasSocialInboxAccess (403), a message of 1..2000 safe characters, positive ids, a channel and no partyId (400); it reads the ad and its examples, retrieves public course context (PRIV-RAG-001) and calls the model (502, or a canned Spanish fallback without a key).",
+      "actors": [
+        "Operations staff",
+        "Social inbox staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /tidal-agent",
+        "POST /ads/assist"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "model calls only"
+      ],
+      "authorization": "Module and inbox gates as stated.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Stateless.",
+      "idempotency": "Not idempotent but effect-free.",
+      "failure": "400 invalid; 403 access; 502 upstream; 503 key.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/commerce-integration-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The forwarded customer message is placed verbatim in the prompt with no delimiting, so the model can be steered; the output is a staff draft without tool use."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "CMS-CONTENT-ADMIN-001",
+      "title": "CMS content drafting, publishing and archiving",
+      "statement": "Administrators and the webmaster draft CMS content versions, publish a draft authored by someone else and archive unpublished versions. Routes: POST /cms/admin/content; POST /cms/admin/content/{id}/publish; DELETE /cms/admin/content/{id}.",
+      "domain": "CMS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
+      "source": "formal/system/content-ops-routes.md",
+      "contract": "formal/system/content-ops-routes.md",
+      "property": "All need the Admin or Webmaster role (403). Creation needs a strict body with status draft (409 otherwise), an active authored content with an active page type and published workflow states (404, 409, 503 on missing registry rows), validated locale, title and payload against the persisted schema (400), and inserts the next version as draft. Publish needs an existing authored row (404, 409 for legacy rows) created by someone else (403) and, in one transaction, archives the published rows for the same content and locale and marks this row published. Delete archives an unpublished row (409 when published).",
+      "actors": [
+        "Administrator",
+        "Webmaster"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /cms/admin/content",
+        "POST /cms/admin/content/{id}/publish",
+        "DELETE /cms/admin/content/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "cms_content"
+      ],
+      "authorization": "Roles only, no module; publisher distinct from the author.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Next version computed and inserted in separate transactions; publish has no row lock.",
+      "idempotency": "Creation is unkeyed; publish and delete are harmless to repeat.",
+      "failure": "400 invalid; 403 role or self-publish; 404 missing; 409 status; 503 registry.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/CMS/Models.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/content-ops-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Publish does not check the row's current status, so an archived or already published row can be (re)published and two publishers can race.",
+        "Concurrent creates race into the unique version (500)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PIPELINE-CARDS-001",
+      "title": "Pipeline card creation, update and deletion",
+      "statement": "Scheduling staff holding pipeline capabilities create, move and delete cards on an active workflow. Routes: POST /pipelines/{workflowId}; PATCH /pipelines/{workflowId}/{cardId}; DELETE /pipelines/{workflowId}/{cardId}.",
+      "domain": "PIPELINE",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
+      "source": "formal/system/content-ops-routes.md",
+      "contract": "formal/system/content-ops-routes.md",
+      "property": "Every route needs ModuleScheduling and a live pipeline.create, update or delete grant (403), canonical ids (400) and an active workflow with offerings and states (404). Creation needs a safe title, a non-negative sort order, an offering bound to the workflow and an active state or the single initial state (400). Update needs a patch intent and allows a state change only along a direct active transition; a missing card, a card of another workflow or an invalid transition answer 400. Delete is a hard delete (404 otherwise). The integrity trigger re-checks offering, state and transition and the workflow revision is bumped.",
+      "actors": [
+        "Scheduling staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /pipelines/{workflowId}",
+        "PATCH /pipelines/{workflowId}/{cardId}",
+        "DELETE /pipelines/{workflowId}/{cardId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "pipeline_card",
+        "workflow_definition.cache_revision"
+      ],
+      "authorization": "ModuleScheduling plus pipeline.* capability.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No row lock or version on update; a racing transition fails in the trigger (500).",
+      "idempotency": "Creation is unkeyed; update is last-writer-wins.",
+      "failure": "400 invalid, missing card or transition; 403 capability; 404 workflow or card.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/content-ops-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Missing cards and invalid transitions are collapsed into 400 instead of 404 and 409.",
+        "Deleting a card referenced by a proposal surfaces the foreign key as 500."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PROPOSAL-AUTHORING-001",
+      "title": "Proposals and proposal versions",
+      "statement": "CRM staff create proposals from inline LaTeX or a template, edit them and add versions; stored LaTeX is compiled without shell escape. Routes: POST /proposals; PATCH /proposals/{proposalId}; POST /proposals/{proposalId}/versions.",
+      "domain": "PROPOSAL",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
+      "source": "formal/system/content-ops-routes.md",
+      "contract": "formal/system/content-ops-routes.md",
+      "property": "All need ModuleCRM (403). Creation needs a strict body with a safe title of 1..160, status draft or sent, contact validators, an existing client party and pipeline card (400) and exactly one of latex or a template key whose file exists (400/404); it inserts the proposal and version 1 in two transactions. Update needs a canonical UUID and at least one field (400) and updates the row (sentAt on draft to sent). Versions insert the next version and touch the proposal. The PDF route compiles stored LaTeX with tectonic (no -Z shell-escape) or xelatex -no-shell-escape (tectonicArguments, xelatexArguments).",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /proposals",
+        "PATCH /proposals/{proposalId}",
+        "POST /proposals/{proposalId}/versions"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "proposal",
+        "proposal_version"
+      ],
+      "authorization": "ModuleCRM only; no ownership or role check.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No lock or version; version numbers are read then inserted in separate transactions.",
+      "idempotency": "Creation and versions are unkeyed; update is last-writer-wins.",
+      "failure": "400 invalid; 403 module; 404 proposal or template.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerProposals.hs",
+        "tdf-hq/src/TDF/Handlers/InputList.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerProposalsSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "tectonicArguments and xelatexArguments are tested in tdf-hq/test/TDF/ServerProposalsSpec.hs; the rest is read from the handlers.",
+      "evidence": "formal/system/content-ops-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A failure between the two creation transactions leaves a proposal without a version; concurrent versions race into the unique number (500).",
+        "Authorization is the CRM module alone, weaker than CMS and pipelines."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "EVT-OPERATIONS-COMMANDS-001",
+      "title": "Event transitions, task completion and RACI reassignment",
+      "statement": "Authorized actors move an event through its operational states, complete tasks and reassign RACI roles through idempotent SQL commands. Routes: POST /event-operations/events/{eventId}/transitions; POST /event-operations/events/{eventId}/tasks/{activityId}/complete; POST /event-operations/events/{eventId}/tasks/{activityId}/raci/reassign.",
+      "domain": "EVT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
+      "source": "formal/system/content-ops-routes.md",
+      "contract": "formal/system/content-ops-routes.md",
+      "property": "Every route needs a UUID Idempotency-Key (400), the event.operations.api flag (404) and re-validates the bound token FOR SHARE inside the command transaction (401). Authorization lives in SQL: unreadable callers answer 404 with a private audit row, authority refusals 403. Transitions lock the event state, replay an identical request hash, answer 409 on idempotency, version, policy, effects or separation-of-duties conflicts (approval needs an actor other than the review requester) and 400 when a rollback reason is missing. Completion and reassignment validate ids, reasons and correlation ids (400), lock metadata, activity and assignment rows and answer 409 on version, dependency, accountability or assignment conflicts; decoders verify the expected revision increments.",
+      "actors": [
+        "Event operator",
+        "Event approver"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /event-operations/events/{eventId}/transitions",
+        "POST /event-operations/events/{eventId}/tasks/{activityId}/complete",
+        "POST /event-operations/events/{eventId}/tasks/{activityId}/raci/reassign"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "event_operation_event_state and transition",
+        "event task metadata and assignments",
+        "audit and command receipts (immutable)"
+      ],
+      "authorization": "SQL authority functions; approver distinct from the review requester.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Row locks and receipts inside SQL; database unavailability answers 503.",
+      "idempotency": "Replay by actor and request hash; conflicting keys answer 409.",
+      "failure": "400 invalid; 401 stale session; 403 forbidden; 404 flag or unreadable; 409 conflicts; 503 database.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/EventOperations/Server.hs",
+        "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
+        "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
+        "tdf-hq/test/EventOperationsHttpMain.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/content-ops-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-SEED-ROUTES-001",
+      "title": "Operator seeding routes",
+      "statement": "Operators holding the seed secret load demo data, inventory assets and the demo session; the routes are disabled without the secret and refused in hosted or production runtimes. Routes: POST /seed; POST /input-list/inventory/seed; POST /input-list/sessions/seed.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
+      "source": "formal/system/content-ops-routes.md",
+      "contract": "formal/system/content-ops-routes.md",
+      "property": "requireSeedToken answers 403 when SEED_TRIGGER_TOKEN is unset, 401 without X-Seed-Token, 400 for a malformed header and 403 on mismatch (constant-time compare); the configuration refuses the token at startup when hosted-platform markers or a production environment name are present. /seed runs seedAll in one transaction (demo credentials only when allowed); the inventory and session seeds upsert assets and insert the demo session if absent.",
+      "actors": [
+        "Operator"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /seed",
+        "POST /input-list/inventory/seed",
+        "POST /input-list/sessions/seed"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party, roles, catalog and records",
+        "asset",
+        "session, session_room, input rows"
+      ],
+      "authorization": "Operator secret (AUTH-PUBLIC-001 operator-secret boundary).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No serialization between concurrent seeds.",
+      "idempotency": "Upserts and select-then-insert.",
+      "failure": "400 header; 401 missing; 403 disabled or mismatch.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/src/TDF/Config.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/content-ops-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The routes are weaker than POST /admin/seed, which also requires a strict administrator and ModuleAdmin.",
+        "The production guard relies on platform markers; a self-hosted box without them can enable seeding.",
+        "No audit row records a seed run."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "SCHED-ROOMS-SESSIONS-001",
+      "title": "Rooms and recording sessions administration",
+      "statement": "Scheduling staff create and edit rooms and recording sessions. Routes: POST /rooms; PATCH /rooms/{id}; POST /sessions; PATCH /sessions/{id}.",
+      "domain": "SCHED",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
+      "source": "formal/system/content-ops-routes.md",
+      "contract": "formal/system/content-ops-routes.md",
+      "property": "All need ModuleScheduling (403). Rooms need a safe name of 1..120 (400) unique ignoring case (409) and a field on patch (400). Sessions need a strict body, distinct existing rooms and band (400), a known status, service, engineer, audio settings and an end after the start (400); creation inserts the session with its rooms in one transaction and patch updates it, replacing rooms when given.",
+      "actors": [
+        "Scheduling staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /rooms",
+        "PATCH /rooms/{id}",
+        "POST /sessions",
+        "PATCH /sessions/{id}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "room",
+        "session",
+        "session_room"
+      ],
+      "authorization": "ModuleScheduling (any holder, including Engineer and Teacher).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Name check and insert in separate transactions; no lock or version on updates.",
+      "idempotency": "Creation is unkeyed; patch is last-writer-wins.",
+      "failure": "400 invalid; 403 module; 404 missing; 409 duplicate room.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/content-ops-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Sessions have no room or engineer overlap check and no status transition rules.",
+        "An exact-name room race answers 500; case variants can both be inserted."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "REVIEW-PUBLIC-SUBMIT-001",
+      "title": "Verified experience reviews",
+      "statement": "A signed-in party reviews an event, listing, offering or package it completed, once per target, under an idempotency key and a daily limit. Routes: POST /reviews.",
+      "domain": "REVIEW",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
+      "source": "formal/system/content-ops-routes.md",
+      "contract": "formal/system/content-ops-routes.md",
+      "property": "The request needs an Idempotency-Key of 8..160, a target kind and matching source kind with valid ids, a rating of 1..5 and a body of 10..2000 safe characters (400); the key replays an identical body and answers 409 for a different one; the target must be public (404), the author eligible by the SQL rule (409), under 10 reviews per day (429, consumed before the insert) and not already reviewing the target (409, ON CONFLICT DO NOTHING); the trigger re-validates eligibility.",
+      "actors": [
+        "Account holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /reviews"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "experience_review",
+        "directory_idempotency",
+        "directory_rate_limit"
+      ],
+      "authorization": "Any session; eligibility from the author's own completed interaction.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique index on source, target and author.",
+      "idempotency": "Replay by key and body.",
+      "failure": "400 invalid; 404 target; 409 eligibility, duplicate or key; 429 rate.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Reviews.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/content-ops-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The body parser accepts unknown fields."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",

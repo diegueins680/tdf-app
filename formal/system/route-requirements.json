@@ -3,48 +3,60 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 355,
-    "path-named": 1,
-    "reviewed": 77,
-    "unspecified": 83,
-    "covered": 433
+    "named": 434,
+    "path-named": 0,
+    "reviewed": 82,
+    "unspecified": 0,
+    "covered": 516
   },
   "routes": [
     {
       "method": "POST",
       "path": "/NotificacionPago",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-NOTIFICATIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/academy/enroll",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ACADEMY-ACCOUNT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/academy/progress",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ACADEMY-ACCOUNT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/access-requests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-ACCESS-REQUEST-LIFECYCLE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/access-requests/{requestId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-ACCESS-REQUEST-LIFECYCLE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/access-requests/{requestId}/decision",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-ACCESS-REQUEST-LIFECYCLE-001"
+      ]
     },
     {
       "method": "POST",
@@ -381,7 +393,8 @@
       "path": "/admin/seed",
       "basis": "named",
       "requirements": [
-        "OPS-ADMIN-MAINTENANCE-001"
+        "OPS-ADMIN-MAINTENANCE-001",
+        "OPS-SEED-ROUTES-001"
       ]
     },
     {
@@ -492,9 +505,9 @@
     {
       "method": "POST",
       "path": "/ads/assist",
-      "basis": "path-named",
+      "basis": "named",
       "requirements": [
-        "AUTH-PUBLIC-001"
+        "AI-STAFF-ASSISTANTS-001"
       ]
     },
     {
@@ -687,8 +700,10 @@
     {
       "method": "POST",
       "path": "/bands",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CRM-PARTY-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
@@ -775,20 +790,26 @@
     {
       "method": "POST",
       "path": "/calendar/v1/auth-url",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INTEG-GOOGLE-CALENDAR-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/calendar/v1/sync",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INTEG-GOOGLE-CALENDAR-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/calendar/v1/tokens",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INTEG-GOOGLE-CALENDAR-001"
+      ]
     },
     {
       "method": "POST",
@@ -897,56 +918,74 @@
     {
       "method": "POST",
       "path": "/chat/threads/dm/{otherPartyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-CHAT-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/chat/threads/{threadId}/messages",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-CHAT-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/chatkit/sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/cms/admin/content",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CMS-CONTENT-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/cms/admin/content/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CMS-CONTENT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/cms/admin/content/{id}/publish",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CMS-CONTENT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/commerce/checkouts/{checkoutId}/payment-sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-SESSION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/commerce/provider-notifications/payphone",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-NOTIFICATIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/commerce/provider-notifications/placetopay",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-NOTIFICATIONS-001"
+      ]
     },
     {
       "method": "POST",
@@ -1212,50 +1251,67 @@
     {
       "method": "POST",
       "path": "/drive/token",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/drive/token/refresh",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/drive/upload",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/event-operations/events/{eventId}/tasks/{activityId}/complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-OPERATIONS-COMMANDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/event-operations/events/{eventId}/tasks/{activityId}/raci/reassign",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-OPERATIONS-COMMANDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/event-operations/events/{eventId}/transitions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-OPERATIONS-COMMANDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/facebook/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/facebook/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "POST",
@@ -1566,20 +1622,27 @@
     {
       "method": "POST",
       "path": "/hooks/whatsapp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "POST",
       "path": "/input-list/inventory/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-SEED-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/input-list/sessions/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-SEED-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
@@ -1592,32 +1655,43 @@
     {
       "method": "POST",
       "path": "/instagram/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/instagram/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "PUT",
       "path": "/interactions/blocks/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOC-INTERACTION-WRITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/interactions/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOC-INTERACTION-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/interactions/targets/{targetId}/commands",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOC-INTERACTION-WRITES-001"
+      ]
     },
     {
       "method": "POST",
@@ -1790,8 +1864,10 @@
     {
       "method": "POST",
       "path": "/invoices",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
@@ -1852,20 +1928,26 @@
     {
       "method": "POST",
       "path": "/live-sessions/intake",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LIVE-SESSION-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/login",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/login/google",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
@@ -2006,8 +2088,11 @@
     {
       "method": "POST",
       "path": "/mcp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-PUBLIC-001"
+      ],
+      "note": "AUTH-PUBLIC-001 registers /mcp as public-diagnostic: JSON-RPC exposing only tdf_health_check, no database or external effect."
     },
     {
       "method": "PATCH",
@@ -2244,8 +2329,10 @@
     {
       "method": "POST",
       "path": "/meta/backfill",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "POST",
@@ -2543,14 +2630,18 @@
     {
       "method": "PUT",
       "path": "/navigation/preferences/{featureId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "NAV-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/navigation/preferences/{featureId}/visit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "NAV-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",
@@ -2654,14 +2745,18 @@
     {
       "method": "POST",
       "path": "/packages/purchases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/parties",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CRM-PARTY-INTAKE-001"
+      ]
     },
     {
       "method": "PUT",
@@ -2674,50 +2769,66 @@
     {
       "method": "POST",
       "path": "/password/change",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/payments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/pipelines/{workflowId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PIPELINE-CARDS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/pipelines/{workflowId}/{cardId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PIPELINE-CARDS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/pipelines/{workflowId}/{cardId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PIPELINE-CARDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/proposals",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PROPOSAL-AUTHORING-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/proposals/{proposalId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PROPOSAL-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/proposals/{proposalId}/versions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PROPOSAL-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
@@ -2947,50 +3058,66 @@
     {
       "method": "POST",
       "path": "/receipts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/referrals/claim",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CRM-PARTY-INTAKE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/reputation/consents",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REP-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/reputation/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REP-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/reviews",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REVIEW-PUBLIC-SUBMIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/rooms",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/rooms/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-SEED-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
@@ -3166,26 +3293,34 @@
     {
       "method": "POST",
       "path": "/sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/sessions/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/signup",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-discovery/posts/{postId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "POST",
@@ -3792,56 +3927,74 @@
     {
       "method": "POST",
       "path": "/social-sync/social-sync/ingest",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social/friends/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social/friends/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social/v2/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social/v2/relationships/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social/vcard-exchange",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/storage/files/{fileId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/storage/me/destination",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/tidal-agent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AI-STAFF-ASSISTANTS-001"
+      ]
     },
     {
       "method": "POST",
@@ -3998,56 +4151,75 @@
     {
       "method": "POST",
       "path": "/v1/password-reset",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/v1/password-reset/confirm",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/v1/password/change",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/v1/signup",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/webhooks/whatsapp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "POST",
       "path": "/whatsapp/consent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/whatsapp/operator-question",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/whatsapp/opt-out",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/whatsapp/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     }
   ]
 }
