@@ -3,6 +3,7 @@ import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/a
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { loadArtistCatalog } from '../api/artistCatalog';
 import MarkdownText from '../components/MarkdownText';
+import ArtistVideoLibrary from '../components/ArtistVideoLibrary';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -41,6 +42,8 @@ import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
+import { recordVideoConversion, videoAttribution } from '../features/campaigns/videoAttribution';
+import { VideoCampaigns } from '../api/videoCampaigns';
 import { safeArtistId, buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 export { buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 import { useTranslation } from 'react-i18next';
@@ -50,6 +53,7 @@ interface ReleaseCardProps {
 }
 
 interface FollowCommand {
+  attributionSearch: string;
   artistId: number;
   viewerId: number;
   segment: string;
@@ -190,6 +194,11 @@ export default function ArtistPublicPage() {
   });
 
   const artistId = artistQuery.data?.apArtistId ?? null;
+  const campaignAccess = useQuery({
+    queryKey: ['artist-launch-access', viewerId, artistId],
+    queryFn: () => VideoCampaigns.list(artistId!),
+    enabled: Boolean(hasToken && artistId), retry: false,
+  });
   const profileLink = useMemo(() => {
     const artist = artistQuery.data;
     if (!artist) return null;
@@ -234,9 +243,15 @@ export default function ArtistPublicPage() {
     return followsQuery.data?.some((follow) => follow.ffArtistId === artistId) ?? false;
   }, [artistId, followsQuery.data]);
 
+  useEffect(() => {
+    if (!artistId || !videoAttribution(location.search)) return;
+    getAnalyticsClient().capture('video_campaign_profile_view', { ...videoAttribution(location.search), artistId });
+    if (session?.partyId) void recordVideoConversion(location.search, artistId, 'registration').catch(() => undefined);
+  }, [artistId, location.search, session?.partyId]);
   const acceptConfirmedState = (command: FollowCommand) => {
     if (!command.ownsProfile()) return;
     if (!command.wasFollowing) {
+      void recordVideoConversion(command.attributionSearch, command.artistId, 'follow').catch(() => undefined);
       // The completion endpoint checks actual server event evidence and only
       // its newlyCompleted receipt can emit first-value analytics.
       void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
@@ -282,7 +297,7 @@ export default function ArtistPublicPage() {
       && viewRef.current.pathname === pathname && viewRef.current.generation === generation;
     pendingRef.current = true;
     followMutation.mutate({
-      artistId, viewerId, segment, wasFollowing: isFollowing, resume: resumeFollow,
+      artistId, viewerId, segment, attributionSearch: location.search, wasFollowing: isFollowing, resume: resumeFollow,
       ownsProfile, ownsSession: () => getActiveSession() === session,
       isCurrent: () => ownsProfile() && viewRef.current.key === key,
     });
@@ -446,7 +461,7 @@ export default function ArtistPublicPage() {
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to={buildArtistFollowAuthPath(profileLink, artistId)}
+                    to={buildArtistFollowAuthPath(profileLink, artistId, { search: location.search, hash: location.hash })}
                     startIcon={<FavoriteBorderIcon />}
                     sx={{ textTransform: 'none' }}
                   >
@@ -466,12 +481,17 @@ export default function ArtistPublicPage() {
                     aria-label={isFollowing ? `Dejar de seguir a ${artist.apDisplayName}` : resumeFollow ? t('artistFollow.resumeAction') : `Seguir a ${artist.apDisplayName}`}
                     sx={{ textTransform: 'none' }}
                   >
-                    {isFollowing ? 'Siguiendo' : resumeFollow ? t('artistFollow.resumeAction') : 'Seguir'}
+                    {isFollowing ? 'Dejar de seguir' : resumeFollow ? t('artistFollow.resumeAction') : 'Seguir'}
                   </Button>
                 )}
                 {isSelf && (
                   <Button variant="outlined" component={RouterLink} to="/mi-artista" startIcon={<LaunchIcon />} sx={{ textTransform: 'none' }}>
                     Editar perfil
+                  </Button>
+                )}
+                {hasToken && campaignAccess.isSuccess && Array.isArray(campaignAccess.data) && (
+                  <Button component={RouterLink} to={`/mi-artista/campanas?artistId=${artist.apArtistId}`} variant="outlined">
+                    Crear campaña
                   </Button>
                 )}
                 <Button
@@ -489,8 +509,14 @@ export default function ArtistPublicPage() {
           </Stack>
         </Box>
         </section>
+
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           <Stack spacing={2.5}>
+            {!hasToken && (
+              <Typography variant="body2" color="text.secondary">
+                {t('artistFollow.benefit', { artist: artist.apDisplayName })}
+              </Typography>
+            )}
             {resumeFollow && !isFollowing && (
               <Alert severity="info">{t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}</Alert>
             )}
@@ -531,6 +557,7 @@ export default function ArtistPublicPage() {
               </Alert>
             )}
 
+            <ArtistVideoLibrary artistId={artist.apArtistId} featuredUrl={artist.apFeaturedVideoUrl} featuredPoster={artist.apHeroImageUrl} artistName={artist.apDisplayName} requestedVideo={new URLSearchParams(location.search).get('video')} />
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography component="h2" variant="h6" fontWeight={800}>

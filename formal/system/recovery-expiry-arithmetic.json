@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "0bd93299339758b3e6ca27f6a960b7d6d4ad319f68c4df17559ebbd8ae7f2068",
+    "tdf-hq/tdf-hq.cabal": "268b65a01160a575b03a636ee2051495bdc93dc62218d0f4d7a041a1c87d617c",
     "formal/system/identity-lifecycle.md": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440"
   },
   "obligations": [
@@ -347,6 +347,24 @@
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "ba78293ff4d336cf07c6b78ff8ae5fe72497885ca5c5046f4380e396adeafdbc",
+      "change": "MEDIA-VIDEO-CAMPAIGN-001 adds TDF.VideoCampaigns and TDF.VideoCampaignsSpec module registrations and the library network-uri dependency.",
+      "semanticReview": "Removing exactly these three added lines reproduces protected main Cabal bytes. Existing compiler flags, source paths, language settings and prior dependency declarations are unchanged. network-uri was already a test dependency and is resolved by the unchanged Stack snapshot. The new module imports existing authorization helpers but does not redefine their predicates; URL parsing does not enter the verified authorization or recovery expressions. Every other reviewed source hash remains unchanged.",
+      "qualification": "Snapshot review only; no broader authentication, endpoint or release proof. Fresh solver execution, serialized replay, source mutation controls and independent protected review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "02df9d6c6410b0f14e014e8348fafedf3cea42bc",
+      "previousSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "currentSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "change": "Normal composition retains the protected music credential-cache modules/tests and adds only TDF.VideoCampaigns, TDF.VideoCampaignsSpec and the library network-uri declaration.",
+      "semanticReview": "Removing exactly these three launch additions reproduces current protected Main Cabal bytes. Existing dependency declarations, flags, extensions and source paths are retained. Every other reviewed source hash matches protected Main. Both parent context histories are retained; the added URL parser does not enter authorization/recovery predicate expressions.",
+      "qualification": "Context correspondence only, not whole-system proof or release authorization. Fresh bound solver execution/replay and protected review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "c6c519e7e9baf1bf3f00165eb4e945ac0c1d08ac",
       "previousSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
       "currentSha256": "0ad432ae63df95570343809ec585e90de2da1cda2cdde9f60116fcc336fbcd2e",
@@ -368,6 +386,16 @@
       "currentSha256": "0bd93299339758b3e6ca27f6a960b7d6d4ad319f68c4df17559ebbd8ae7f2068",
       "change": "Preserve exact main Cabal including credential-cache registrations, plus only the existing704 SQL-query extra-source-files declaration.",
       "semanticReview": "Exact byte comparison after removing this single non-Haskell packaging line reproduces protected main. No module, dependency, flags or predicate implementation changes. Fresh source verifiers required; no release or implementation-refinement proof implied."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "f19bb30e9eab8622dae5fc2bff308ca6025edd6b",
+      "retainedSource": "e4b804b35b2e2ede4bb01f4ba1e8363a04ff6070",
+      "previousSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "currentSha256": "268b65a01160a575b03a636ee2051495bdc93dc62218d0f4d7a041a1c87d617c",
+      "change": "Normal current-main composition retains all protected declarations and adds only the existing704 extra-source-files: sql/queries/social-event-city-match.sql declaration. Removing exactly that one non-Haskell packaging line reproduces mainf19 Cabal bytes.",
+      "semanticReview": "No existing module registration, dependency, bound, source directory, compiler/CPP option or Stack input changes. Every other reviewed source matches current main exactly. Both parents source-context histories and all obligations/claims/assumptions remain intact. The embedded city query is not a source of the conditional authorization predicates or recovery arithmetic. This packaging correspondence does not establish integrated handler, SQL, HTTP or whole-program correctness.",
+      "qualification": "Fresh current-source hosted solver/replay/negative controls and independent protected review remain required. No prior solver/native/browser result is relabelled as current execution; full implementation/refinement remains UNPROVEN and no merge/deployment authority is granted."
     }
   ]
 }

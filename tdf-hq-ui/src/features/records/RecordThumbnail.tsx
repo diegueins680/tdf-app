@@ -41,7 +41,7 @@ function ThumbnailAttempt({ title, compact, sources, unavailable, resource }: Pr
       {src ? <>
         {!loaded && <Skeleton variant="rectangular" aria-label={t('records.loadingThumbnail', 'Cargando miniatura')}
           sx={{ position: 'absolute', inset: 0, height: '100%' }} />}
-        <Box component="img" key={src} src={src} alt={title} loading="lazy" decoding="async"
+        <Box component="img" key={src} src={src} alt={title} loading={index === 0 ? 'lazy' : 'eager'} decoding="async"
           onError={failed}
           onLoad={(event) => {
             if (isProviderPlaceholder(src, event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)) failed();

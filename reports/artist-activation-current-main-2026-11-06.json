@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-06",
+  "pullRequest": 667,
+  "previousRemoteHead": "ec9ecad402cb55e5111a2b7b2511917ee93cd2b4",
+  "protectedMain": "7a41f893ee14b4346907e9d53b65c2aa54506cfb",
+  "upstreamPreserved": "PR633 credential cache source, package and test entry points, source-bound predicate/expiry evidence, contracts, storage manifest/immutable ancestors and Mobile14318a7. All unrelated current-main obligations and catalog decisions remain exact.",
+  "reviewFix": {
+    "thread": "PRRT_kwDOQPdUrM60ZVHw",
+    "change": "Filter recent eligible email opt-ins with a recipient and no prior email claim before LIMIT50. Preserve the existing pre-SMTP durable claim and unknown-outcome no-replay rule.",
+    "sourceSha256": {
+      "services/campaign-platform/notifications.py": "a8ad191a4c81e5752819ee486c679cd1093af716d3dd250f9a8652c1ef288efb",
+      "services/campaign-platform/tests/test_notifications.py": "aa5b5f2e6e9998a3d1b0fe7c09ea26f98a52d6e675d0555afa9b8b8e60a27055"
+    }
+  },
+  "qualification": {
+    "service": {
+      "passed": 118,
+      "failures": 0,
+      "logSha256": "c304877fe526adc7ec3c207b6e5e3a68f149e696c8b9485d229754941897886a",
+      "scope": "Local HTTP/SQLite/filesystem and mocked provider/SMTP boundaries. Same service source after main reconciliation."
+    },
+    "negativeControls": {
+      "selectedTests": 2,
+      "bothRejectPreviousSelection": true,
+      "logSha256": "7fdcaf2d7d9496705bd5adc39cf5d2ce009c2c2682d168f0d16a6b5c6bdce80b"
+    },
+    "smtpCases": [
+      "50 delivered notices do not hide a newer pending notice",
+      "100 older opted-out/empty-recipient notices do not suppress another user",
+      "Expired, previously delivered and uncertain notices are not replayed",
+      "An uncertain SMTP failure is claimed once and retained for review",
+      "Concurrent ticks do not duplicate delivery or hold SQLite across SMTP"
+    ],
+    "web": "4,011 web tests/354 suites, production typecheck/build and serial lint passed previously; all web application source remains unchanged. Protected-main marketplace browser regression is retained.",
+    "repository": "The full repository-quality lane passed on ec9ecad with system Python3.13.5 and pinned age1.3.2; the current main composition needs fresh hosted checks.",
+    "catalog": {
+      "result": "PASS JSON and CSV strict scans",
+      "candidates": 1395,
+      "unreviewed": 0,
+      "stale": 0,
+      "jsonSha256": "96b5c974df32183dfe410a3e7138606d999cdaa494fd08f73e007c00117b391f",
+      "csvSha256": "3fe89c489dbe8f7a0aaa473591a620e9a871f3729c129db7993a9c44bac8bfbb"
+    },
+    "currentSpecification": {
+      "inventoryControls": 7,
+      "conformanceControls": 10,
+      "freshnessChecks": "PASS",
+      "generatedClients": 2,
+      "mobileRevision": "14318a730f96b2053f71885091bbc05cffc3294d"
+    }
+  },
+  "native": "Mobile14318a7 preserved; native player PR177 remains separate.",
+  "release": "No merge, deployment, account/follow creation or provider/SMTP/business-data write occurred. Current-head hosted checks, independent approval and admission remain required. Public playback and authentication return are not qualified by these fixtures."
+}
