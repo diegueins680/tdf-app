@@ -3,12 +3,13 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-module TDF.Contracts.EventWorkspace (eventWorkspaceServer, workspaceDocumentLines, escapeDocumentText) where
+module TDF.Contracts.EventWorkspace (eventWorkspaceServer, workspaceDocumentLines, escapeDocumentText, workspacePdfResponse) where
 
 import Control.Exception (try)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
+import Control.Monad.Trans.Class (lift)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Key as K
 import qualified Data.Aeson.KeyMap as KM
@@ -98,17 +99,22 @@ eventWorkspaceServer user ev = readH :<|> writeH :<|> planPdf :<|> agreementPdf 
       ] <> hashLines acceptance <>
       ["Aceptación registrada desde la cuenta TDF del destinatario.", ""] <> agreementLines content <> ["Metadatos de la propuesta"] <> metadataLines version
   renderPdf :: Text -> [Text] -> AppM WorkspacePDF
-  renderPdf name linesValue = do
-    let latex = T.unlines (["\\documentclass[a4paper,11pt]{article}","\\usepackage[utf8]{inputenc}","\\usepackage[T1]{fontenc}","\\usepackage[margin=22mm]{geometry}","\\usepackage{parskip}","\\begin{document}"]
-           <> map (\line -> escapeDocumentText line<>"\\par") linesValue <> ["\\end{document}"])
-    result <- liftIO (InputList.generateInputListPdf latex)
-    case result of
-      Left _ -> throwError err503{errBody="No se pudo generar el PDF. El acuerdo permanece guardado; reintenta la descarga.",errHeaders=[("Cache-Control","no-store")]}
-      Right pdf -> pure (addHeader ("private, no-store" :: Text) (addHeader ("attachment; filename=\""<>name<>"\"" :: Text) pdf))
+  renderPdf name linesValue = lift (workspacePdfResponse InputList.generateInputListPdf name linesValue)
   findAgreement :: UUID.UUID -> A.Value -> AppM A.Value
   findAgreement uuid state = maybe (throwError err404) pure $ F.find (\a -> textField "id" a == UUID.toText uuid) (arrayField "agreements" state)
   requireField :: Text -> A.Value -> AppM A.Value
   requireField key value = case field key value of Just found | found/=A.Null -> pure found; _ -> throwError err404
+
+-- The injectable boundary is shared by the real workspace handlers and isolated
+-- tests. It performs no record lookup or authorization bypass.
+workspacePdfResponse :: (Text -> IO (Either Text BL.ByteString)) -> Text -> [Text] -> Handler WorkspacePDF
+workspacePdfResponse renderer name linesValue = do
+  let latex = T.unlines (["\\documentclass[a4paper,11pt]{article}","\\usepackage[utf8]{inputenc}","\\usepackage[T1]{fontenc}","\\usepackage[margin=22mm]{geometry}","\\usepackage{parskip}","\\begin{document}"]
+         <> map (\line -> escapeDocumentText line<>"\\par") linesValue <> ["\\end{document}"])
+  result <- liftIO (renderer latex)
+  case result of
+    Left _ -> throwError err503{errBody="No se pudo generar el PDF. El acuerdo permanece guardado; reintenta la descarga.",errHeaders=[("Cache-Control","no-store")]}
+    Right pdf -> pure (addHeader ("private, no-store" :: Text) (addHeader ("attachment; filename=\""<>name<>"\"" :: Text) pdf))
 
 field :: Text -> A.Value -> Maybe A.Value
 field key (A.Object fields) = KM.lookup (K.fromText key) fields
