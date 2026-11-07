@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "0f57163cc9c489e22738cac3ff7985d8ca4b647c",
+  "mobileRevision": "1c63eb038ba230005ee77afbe081a0d98bf18b92",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -2818,6 +2818,8 @@
       "tdf-mobile/scripts/check-ios-iphone16-smoke-lane.sh",
       "tdf-mobile/scripts/check-release-assets.mjs",
       "tdf-mobile/scripts/check-vcard-release-truth.sh",
+      "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+      "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js",
       "tdf-mobile/scripts/generate-release-assets.mjs",
       "tdf-mobile/scripts/generate-release-assets.py",
       "tdf-mobile/scripts/generate_release_assets.py",
@@ -2920,6 +2922,7 @@
       "tdf-mobile/src/hooks/useSessionOwnership.ts",
       "tdf-mobile/src/hooks/useToast.ts",
       "tdf-mobile/src/i18n/index.ts",
+      "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
       "tdf-mobile/src/lib/api.ts",
       "tdf-mobile/src/lib/assertNever.ts",
       "tdf-mobile/src/lib/authConfig.ts",
@@ -2987,7 +2990,9 @@
       "tdf-mobile/src/theme/designTokens.ts",
       "tdf-mobile/src/types/index.ts",
       "tdf-mobile/src/utils/haptics.ts",
-      "tdf-mobile/tsconfig.json"
+      "tdf-mobile/tsconfig.json",
+      "tdf-mobile/vendor/decode-uri-component/index.cjs",
+      "tdf-mobile/vendor/decode-uri-component/package.json"
     ],
     "test": [
       "test/fixtures/music-worker/curl.mjs",
@@ -19670,7 +19675,7 @@
     {
       "id": "SURFACE-724d67db609973ab",
       "path": "tdf-mobile/jest.config.js",
-      "sha256": "eddb3b1783f7b56c7470c9c29b98dca2946dab618ad0d69b6c2b38471dffa413",
+      "sha256": "b8a9bb07eccf8b0264cde1f9f2f4b1db7e11a9586e3db480c66f09d6bf90813d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19688,13 +19693,13 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+      "sha256": "bf72d22e7893c2736a55be44f390a4a0209771ceed95025a7f765e4c6408d4d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "80a86ed8d138c9e66e33ba42ef90ab19e61a4e591ceec7dcac95f1b1a2166a80",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19737,6 +19742,18 @@
       "id": "SURFACE-7067508915fffa03",
       "path": "tdf-mobile/scripts/check-vcard-release-truth.sh",
       "sha256": "ffc92945ac0a97d84202b2c4d2744d075fd5def7c0a17bbd190dfded0893fb8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2725976c616ae240",
+      "path": "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+      "sha256": "3b8ba0a765e1089d11bba9a919d0d8789ecd9a6833ea078d8d9114e1db093863",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-926ccaa13a8c5894",
+      "path": "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js",
+      "sha256": "9401353df38f8010ad7035fe8d666bce6a4902bc1cff809afc4ab23fa2e0bdaa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20352,6 +20369,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-356eac9f42f687b8",
+      "path": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+      "sha256": "808e5ef62fe27e73c4a5651cf755fbcd1bb3c829f507a62ffcb2c4acbaeb34ea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a24ed6b998974bde",
       "path": "tdf-mobile/src/lib/api.ts",
       "sha256": "4395c833e024308d1f59287254bdd3d0345bb61a60507ea8f3fd2eac18920955",
@@ -20757,6 +20780,18 @@
       "id": "SURFACE-170f8ccb5c8eba22",
       "path": "tdf-mobile/tsconfig.json",
       "sha256": "235a3431fcf05ff379c5027fcc07a65ad7b34128bee3bf85bb4725c31e1d69c5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9c0085c076f97ad3",
+      "path": "tdf-mobile/vendor/decode-uri-component/index.cjs",
+      "sha256": "d37c0eb2888700a268e79c7f49f1789f40625076bb0325705aaaf3e16bc09fac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-96f4d37d77970170",
+      "path": "tdf-mobile/vendor/decode-uri-component/package.json",
+      "sha256": "4046c5d32cb9956f3effd5c446bfe4f7d70f69e6f71d2f9b0ddf19191e5e6e6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29245,7 +29280,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "daede6c26a448b034729db6a263acc506a4788f3c25e1c1a1f681a5217455e00",
+      "sha256": "4a0d9d4106d22569b697c5c0747ac1d938dc51e0a56ddc2db25074a8af3ea149",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -29294,7 +29329,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "5c7c7a228ad56bafd07f331eb40c7a4dbcbaede0cd117cb626aa6bdb9f0d47a1",
+      "sha256": "110491315eee899949c31a958e2c57d2d0fe2faccce46a3506e6e616a720e694",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29448,14 +29483,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "fecc3f6a7bb2da3cb62767f0a22b190b4cd04a00a16e2e62ed7d8286258cf12f",
+      "sha256": "1c0ebc90035f3f4cefe817c052bfaf6e2710a0d23052abfeb24b4c62d12815de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "80e14859fa727ff124a8b6ee6246b12fdfc7c4b48267054ae32361a641472dbd",
+      "sha256": "03daf0b423977b5c66861f129f7e4e745b875e55dfeba33e1e64f12523ac5cbe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30113,14 +30148,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e6b3865ef19f7182968ff49a080df3a4bffa6385798dadc48d462329758e2d7d",
+      "sha256": "b3c6aa0fd662c5949a699a8d100002220223e1c9b759a263f6aa9489b61a1522",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "67e8b2e4fc1d6d9cb1589942a30134b484c28aeb86655aa3081fd90fd9444e51",
+      "sha256": "e80a93b4baf24c1ad660c241c9135a507f6712cb48bbdccac2ee2091822f3892",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30212,6 +30247,13 @@
     {
       "path": "formal/system/ui-test-worker-memory.md",
       "sha256": "f3fcc4520c26967111489988a67ad527973fec4158abe19222ed8e8f1a6bc8bf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/uri-decoder.md",
+      "sha256": "76b05e52e50e782016c33dd0d0500b30f4d9b6555898fb7c3045865020e9cbbc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
