@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b"
+    "tdf-hq/tdf-hq.cabal": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca"
   },
   "obligations": [
     {
@@ -392,6 +392,49 @@
       "currentSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
       "change": "Compose protected main video-campaign registrations with the two Datafast library modules and DatafastConfigSpec test registration.",
       "semanticReview": "Removing exactly the three Datafast module-registration lines reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match both parents. Both original context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "c6c519e7e9baf1bf3f00165eb4e945ac0c1d08ac",
+      "previousSha256": "6288646e0e490e1f2ece27a6ff7bb2b00230ab7a250cc71e4c906bf4d84a29a3",
+      "currentSha256": "0ad432ae63df95570343809ec585e90de2da1cda2cdde9f60116fcc336fbcd2e",
+      "change": "PR #704 (event city, multi-artist and past filters) adds one package field, extra-source-files: sql/queries/social-event-city-match.sql, so Cabal tracks the embedded city-matching query as a build input. No other line changes.",
+      "semanticReview": "The field only declares a non-Haskell file as a build dependency; it alters no module, flag, extension or dependency, and the query is not a source of the verified predicates. The verified obligations are unaffected and the pin is refreshed to the new file."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "bf99bf6443094d872bc470129c43e4256ae69d8efab282da7051a71f69b781a6",
+      "change": "Merge preserves protected main's cabal file (including the TDF.API.ContentStorage and TDF.ContentStorage modules from PR #703) and adds only PR #704's extra-source-files: sql/queries/social-event-city-match.sql line.",
+      "semanticReview": "The added field only declares a non-Haskell build input; it changes no module, flag, extension or dependency, and the query is not a source of the verified predicates. Both parent source-context reviews are retained. Fresh solver/replay execution remains required; this pin refresh is not a proof or release authorization."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "7a41f893ee14b4346907e9d53b65c2aa54506cfb",
+      "previousSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "currentSha256": "0bd93299339758b3e6ca27f6a960b7d6d4ad319f68c4df17559ebbd8ae7f2068",
+      "change": "Preserve exact main Cabal including credential-cache registrations, plus only the existing704 SQL-query extra-source-files declaration.",
+      "semanticReview": "Exact byte comparison after removing this single non-Haskell packaging line reproduces protected main. No module, dependency, flags or predicate implementation changes. Fresh source verifiers required; no release or implementation-refinement proof implied."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "f19bb30e9eab8622dae5fc2bff308ca6025edd6b",
+      "retainedSource": "e4b804b35b2e2ede4bb01f4ba1e8363a04ff6070",
+      "previousSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "currentSha256": "268b65a01160a575b03a636ee2051495bdc93dc62218d0f4d7a041a1c87d617c",
+      "change": "Normal current-main composition retains all protected declarations and adds only the existing704 extra-source-files: sql/queries/social-event-city-match.sql declaration. Removing exactly that one non-Haskell packaging line reproduces mainf19 Cabal bytes.",
+      "semanticReview": "No existing module registration, dependency, bound, source directory, compiler/CPP option or Stack input changes. Every other reviewed source matches current main exactly. Both parents source-context histories and all obligations/claims/assumptions remain intact. The embedded city query is not a source of the conditional authorization predicates or recovery arithmetic. This packaging correspondence does not establish integrated handler, SQL, HTTP or whole-program correctness.",
+      "qualification": "Fresh current-source hosted solver/replay/negative controls and independent protected review remain required. No prior solver/native/browser result is relabelled as current execution; full implementation/refinement remains UNPROVEN and no merge/deployment authority is granted."
+    },
+    {
+      "reviewedAgainst": "6033b84e2bb892c40f87e1e64f373a7f3fc2131b",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "change": "Compose protected main (Datafast and video-campaign registrations) with the event-discovery extra-source-files entry for sql/queries/social-event-city-match.sql.",
+      "semanticReview": "Removing exactly the single extra-source-files line reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match protected main. Both context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
     }
   ]

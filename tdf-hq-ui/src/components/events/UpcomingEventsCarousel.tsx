@@ -49,9 +49,9 @@ const formatStart = (value: string, locale: string, timeZone?: string | null): s
 };
 
 const REFRESH_MS = 5 * 60_000;
-const notStarted = (event: PublicUpcomingEventDTO, now: number) => {
-  const start = Date.parse(event.publicUpcomingEventStart);
-  return Number.isNaN(start) || start > now;
+const notEnded = (event: PublicUpcomingEventDTO, now: number) => {
+  const effectiveEnd = Date.parse(event.publicUpcomingEventEnd ?? event.publicUpcomingEventStart);
+  return Number.isNaN(effectiveEnd) || effectiveEnd >= now;
 };
 
 const readDismissed = () => {
@@ -72,7 +72,7 @@ export default function UpcomingEventsCarousel() {
   const artistRoute = matchPath('/artista/:slugOrId', location.pathname) ?? matchPath('/a/:slugOrId', location.pathname);
   const artistSegment = artistRoute?.params.slugOrId;
   const onArtistProfile = Boolean(artistSegment && artistSegment !== 'crear');
-  // Wall-clock time, so a started event leaves even if no refetch succeeds.
+  // Wall-clock time, so an ended event leaves even if no refetch succeeds.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!enabled) return undefined;
@@ -113,14 +113,14 @@ export default function UpcomingEventsCarousel() {
   });
   // This sits in both shells: an unexpected response must hide the carousel, never break the page.
   const artistEvents = onArtistProfile && Array.isArray(artistEventsQuery.data) ? artistEventsQuery.data : [];
-  // Keep every future artist date, including those outside the general eight-card window.
+  // Keep every upcoming/ongoing artist date, including those outside the general eight-card window.
   const events = Array.from(new Map([
     ...artistEvents,
     ...(Array.isArray(eventsQuery.data) ? eventsQuery.data : []),
-  ].filter((event) => notStarted(event, now))
+  ].filter((event) => notEnded(event, now))
     .map((event) => [event.publicUpcomingEventId, event])).values());
   const listRef = useRef<HTMLDivElement>(null);
-  const hasArtistEvents = artistEvents.some((event) => notStarted(event, now));
+  const hasArtistEvents = artistEvents.some((event) => notEnded(event, now));
   useLayoutEffect(() => {
     // Scroll snapping can preserve the old general card when artist dates are
     // prepended. Start at the artist's first date, also when switching profiles.

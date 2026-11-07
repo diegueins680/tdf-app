@@ -601,17 +601,26 @@ export const SocialEventsAPI = {
     const path = `/social-events/upcoming${qs}`;
     return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as PublicUpcomingEventDTO[];
   },
-  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; venueId?: string }) => {
+  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; artistIds?: readonly string[]; venueId?: string; limit?: number; offset?: number; signal?: AbortSignal }) => {
     const qs = buildQuery({
       city: opts?.city,
       start_after: opts?.startAfter,
       event_type_id: opts?.eventTypeId,
       workflow_state_id: opts?.workflowStateId,
-      artistId: opts?.artistId,
+      artistId: opts?.artistIds?.length ? [...new Set(opts.artistIds)].join(',') : opts?.artistId,
       venueId: opts?.venueId,
+      limit: opts?.limit,
+      offset: opts?.offset,
     });
-    return await getUnknown(`/social-events/events${qs}`) as SocialEventDTO[];
+    const path = `/social-events/events${qs}`;
+    return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as SocialEventDTO[];
   },
+  listArtists: async (opts?: { name?: string; signal?: AbortSignal }) => {
+    const path = `/social-events/artists${buildQuery({ name: opts?.name, limit: 50 })}`;
+    return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as SocialArtistDTO[];
+  },
+  getArtist: async (artistId: string, signal?: AbortSignal) =>
+    await getUnknown(`/social-events/artists/${encodeURIComponent(artistId)}`, { signal }) as SocialArtistDTO,
   createEvent: async (payload: SocialEventDTO) =>
     await postUnknown('/social-events/events', payload) as SocialEventDTO,
   updateEvent: async (eventId: string, payload: SocialEventDTO) =>
@@ -652,6 +661,8 @@ export const SocialEventsAPI = {
     const qs = buildQuery({ city: opts?.city });
     return await getUnknown(`/social-events/venues${qs}`) as SocialVenueDTO[];
   },
+  getVenue: async (venueId: string, signal?: AbortSignal) =>
+    await getUnknown(`/social-events/venues/${encodeURIComponent(venueId)}`, { signal }) as SocialVenueDTO,
   listInvitations: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/invitations`) as SocialInvitationDTO[],
   sendInvitation: async (eventId: string, payload: SocialInvitationCreatePayload) =>
