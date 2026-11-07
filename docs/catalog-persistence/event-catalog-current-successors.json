@@ -370,12 +370,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "be0b1503a04f9fa295ee",
+      "currentId": "4b9923e0291fcb70bfb4",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 244,
-      "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
+      "valueCount": 246,
+      "change": "Preserve every exact object of the protected 244-entry manifest and its complete review graph; append the original featured preference and source-health migrations. The current review archives its 244-entry predecessor without making a stale fingerprint active. No production execution is authorized.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -511,7 +511,8 @@
         "ef3b8933af3854450a02",
         "050f309300a1688162fa",
         "d7fc1df6cbade4a92d25",
-        "255ec943da9a86e36cc7"
+        "255ec943da9a86e36cc7",
+        "be0b1503a04f9fa295ee"
       ],
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",

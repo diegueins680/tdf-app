@@ -678,9 +678,9 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "be0b1503a04f9fa295ee",
+      "replacementId": "4b9923e0291fcb70bfb4",
       "reason": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
-      "previousReplacementId": "050f309300a1688162fa",
+      "previousReplacementId": "be0b1503a04f9fa295ee",
       "currentResolution": {
         "id": "be0b1503a04f9fa295ee",
         "valueCount": 244,

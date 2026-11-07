@@ -23,6 +23,8 @@ const REGISTRY_REFRESH_ENTRY = '2026-09-18_identity_review_dependencies';
 // interleaved at index 227, ahead of the seven audit migrations. The audit's
 // earlier reviews are verified over the manifest without that entry.
 const SESSION_EXPIRY_ENTRY = '2026-10-31_api_token_session_expiry';
+const playerMigrationIds = new Set(['2026-10-30_artist_featured_track', '2026-11-06_music_media_health']);
+const beforePlayer = entries => entries.filter(entry => !playerMigrationIds.has(entry.id));
 const auditView = entries => entries.filter(entry => entry.id !== SESSION_EXPIRY_ENTRY);
 const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
   if (entry.id !== REGISTRY_REFRESH_ENTRY) return entry;
@@ -149,7 +151,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   const storageMerge = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
   const rawManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => !storageMerge.storageMigrationIds.includes(entry.id));
-  const manifest = asReviewedBeforeRegistryRefresh(rawManifest);
+  const manifest = asReviewedBeforeRegistryRefresh(beforePlayer(rawManifest));
   assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
   assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
   const protectedFinancialPrefixHash = 'c025cf3d2ab92f64bfb92d3656384d7fe0da6919457440d3c24301d7f6b8f232';
@@ -198,7 +200,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(decision220.evidence.valueCount, 220);
   const pointer = successors.find(entry => entry.name === 'migrations');
   const latestCurrent = active.find(entry => entry.id === pointer.currentId);
-  const finalCurrent = latestCurrent.previousDecision;
+  const finalCurrent = latestCurrent.previousDecision.previousDecision;
   assert.equal(finalCurrent?.reviewed, true);
   const history = []; const seen = new Set();
   const visit = value => {
@@ -730,13 +732,20 @@ test('storage/main integration preserves both exact parent reviews and manifest 
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
   const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations;
   const { active, successors } = await readReconciliation();
-  const current = active.find(entry => entry.id === ledger.currentDecisionId);
+  const tip = active.find(entry => entry.id === successors.find(row => row.name === 'migrations').currentId);
+  const current = tip.previousDecision;
+  assert.equal(current.id, ledger.currentDecisionId);
+  const reviewedManifest = beforePlayer(manifest);
+  assert.equal(manifest.length, 246);
+  assert.deepEqual(manifest.slice(0, 244), reviewedManifest);
+  assert.deepEqual(manifest.slice(244).map(entry => entry.id), [...playerMigrationIds]);
   const canonicalHash = value => createHash('sha256').update(JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
-  assert.equal(manifest.length, 244);
-  assert.equal(canonicalHash(manifest.slice(0, 239)), ledger.protectedMainPrefixCanonicalSha256);
-  assert.equal(canonicalHash(manifest.filter(entry => !ledger.mainOnlyMigrationIds.includes(entry.id))), ledger.storageViewCanonicalSha256);
+  assert.equal(reviewedManifest.length, 244);
+  assert.equal(canonicalHash(reviewedManifest.slice(0, 239)), ledger.protectedMainPrefixCanonicalSha256);
+  assert.equal(canonicalHash(reviewedManifest.filter(entry => !ledger.mainOnlyMigrationIds.includes(entry.id))), ledger.storageViewCanonicalSha256);
   assert.equal(current.evidence.valueCount, 244);
-  assert.equal(successors.find(entry => entry.name === 'migrations').currentId, current.id);
+  assert.equal(successors.find(entry => entry.name === 'migrations').currentId, tip.id);
+  assert.equal(tip.evidence.valueCount, 246);
   for (const parent of ledger.parentReviews) {
     const entry = [current.previousDecision, ...current.concurrentReviewHistory].find(item => item.id === parent.id);
     assert.equal(canonicalHash(entry), parent.canonicalSha256);

@@ -22631,7 +22631,10 @@
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
-        "line": 3
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 246
       },
       "reviewBatch": "universal-player-2026-11-06",
       "previousDecision": {
