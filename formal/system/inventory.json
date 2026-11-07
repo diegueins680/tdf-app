@@ -548,6 +548,7 @@
       "scripts/test-event-task-revision-migration.sh",
       "scripts/test-event-task-revisioned-read-migration.sh",
       "scripts/test-feature-migrations.sh",
+      "scripts/test-google-account-name-verifier.py",
       "scripts/test-hetzner-backup.py",
       "scripts/test-hetzner-inspection.py",
       "scripts/test-hetzner-restore.py",
@@ -5297,7 +5298,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a294b53a8d4b6587c4fe5a53146ddf855cc147afcc5d9afb05f82a3c707df216",
+      "sha256": "39a0ca074229ea88921f190ae548dd658438a06d6059fde587ad47c04bc0c958",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6195,6 +6196,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-25d21d29a24eded2",
+      "path": "scripts/test-google-account-name-verifier.py",
+      "sha256": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b8d7df5c0ea7535d",
       "path": "scripts/test-hetzner-backup.py",
       "sha256": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -6911,7 +6918,7 @@
     {
       "id": "SURFACE-0c79563c67a4f75d",
       "path": "scripts/verify-google-account-name.py",
-      "sha256": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
+      "sha256": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30218,7 +30225,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
+      "sha256": "9d345e92d8d95710b3efd1eb3414d3d37b90f083d7cc64032f5f11c81d76f902",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -9198,7 +9198,8 @@
         "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
         "scripts/verify-google-account-name.py",
-        "tdf-hq-ui/src/utils/inAppBrowser.test.ts"
+        "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+        "scripts/test-google-account-name-verifier.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -17701,7 +17702,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "a294b53a8d4b6587c4fe5a53146ddf855cc147afcc5d9afb05f82a3c707df216",
+    "scripts/quality-repo.sh": "39a0ca074229ea88921f190ae548dd658438a06d6059fde587ad47c04bc0c958",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -17756,6 +17757,7 @@
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
+    "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
@@ -17844,7 +17846,7 @@
     "scripts/verify-cors-boundary.py": "3eaa65583fd4a282cf0cab35afecde249ed7667c9b55e13ead8a11f7db823506",
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
-    "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
+    "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
     "scripts/verify-inductive-proofs.sh": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -28847,6 +28849,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-google-account-name-verifier.py": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": [
       {
         "requirement": "MKT-CART-001",
@@ -38525,7 +38533,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a294b53a8d4b6587c4fe5a53146ddf855cc147afcc5d9afb05f82a3c707df216",
+      "sha256": "39a0ca074229ea88921f190ae548dd658438a06d6059fde587ad47c04bc0c958",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40104,6 +40112,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-25d21d29a24eded2",
+      "path": "scripts/test-google-account-name-verifier.py",
+      "sha256": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b8d7df5c0ea7535d",
       "path": "scripts/test-hetzner-backup.py",
       "sha256": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -41643,7 +41663,7 @@
     {
       "id": "SURFACE-0c79563c67a4f75d",
       "path": "scripts/verify-google-account-name.py",
-      "sha256": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
+      "sha256": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68864,7 +68884,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
+      "sourceSha256": "9d345e92d8d95710b3efd1eb3414d3d37b90f083d7cc64032f5f11c81d76f902",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -68892,7 +68912,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
+      "sourceSha256": "9d345e92d8d95710b3efd1eb3414d3d37b90f083d7cc64032f5f11c81d76f902",
       "definition": {
         "states": [
           "absent",
@@ -68922,7 +68942,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
+      "sourceSha256": "9d345e92d8d95710b3efd1eb3414d3d37b90f083d7cc64032f5f11c81d76f902",
       "definition": {
         "export": [
           "queued",
