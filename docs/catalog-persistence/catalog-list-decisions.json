@@ -145704,7 +145704,7 @@
       "id": "0c10f345090f1e3a64a0",
       "classification": "genuine-technical-constant",
       "disposition": "retain-reviewed-provider-issuer-allowlist",
-      "specializedModel": "OIDC provider identity cryptographic issuer boundary",
+      "specializedModel": "technical_constant_allowlist",
       "risk": "Arbitrary or broadened provider issuers could alias external subjects to credentials; rollback must not discard bound identities.",
       "justification": "Exactly the existing Google issuer and cryptographically verified Apple issuer; a validated known-shape constraint and bounded exclusive lock precede recreation. NOT NULL, subject rules, composite identity key and credential FK remain unchanged. Not editable business configuration. Actual invalid issuer/NULL/duplicate, three shape controls, full248apply/replay and populatedDOWNrefusal evidence is retained; no production execution.",
       "reviewed": true,
@@ -145716,7 +145716,8 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2
-      }
+      },
+      "technicalBoundary": "OIDC provider identity cryptographic issuer boundary"
     }
   ]
 }
