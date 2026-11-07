@@ -1,0 +1,327 @@
+- generic [ref=f11e7]:
+  - generic [ref=f11e9]:
+    - generic [ref=f11e12]:
+      - link [ref=f11e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f11e22]
+      - generic [ref=f11e25]:
+        - link [ref=f11e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f11e35]
+        - link [ref=f11e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f11e45]
+        - link [ref=f11e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f11e55]:
+            - img "Messages" [ref=f11e57]
+            - generic "Direct messaging - 6 new notifications link" [ref=f11e59]: "6"
+        - link [ref=f11e65] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f11e70]
+        - link [ref=f11e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f11e83]
+        - link [ref=f11e91] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f11e96]
+        - link [ref=f11e101] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f11e106]
+        - link [ref=f11e113] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f11e118]:
+            - img "tdf.records.label's profile picture" [ref=f11e119]
+      - generic [ref=f11e120]:
+        - link [ref=f11e123] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f11e128]
+        - link [ref=f11e133] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f11e138]
+    - main [ref=f11e142]:
+      - generic [ref=f11e147]:
+        - navigation "Thread list" [ref=f11e148]:
+          - generic [ref=f11e149]:
+            - generic [ref=f11e150]:
+              - button [ref=f11e151] [cursor=pointer]:
+                - heading "tdf.records.label" [level=2] [ref=f11e153]
+                - img "Verified" [ref=f11e156]
+                - img "Down chevron icon" [ref=f11e159]
+              - generic [ref=f11e162]:
+                - button [ref=f11e163] [cursor=pointer]:
+                  - img "More options" [ref=f11e165]
+                - button [ref=f11e169] [cursor=pointer]:
+                  - img "New message" [ref=f11e171]
+            - tablist [ref=f11e176]:
+              - tab "Primary" [selected] [ref=f11e177] [cursor=pointer]
+              - tab "General" [ref=f11e180] [cursor=pointer]
+              - tab "From ads" [ref=f11e183] [cursor=pointer]
+              - tab "Requests" [ref=f11e187] [cursor=pointer]
+            - generic [ref=f11e193]:
+              - img "Search" [ref=f11e195]
+              - textbox "Search" [ref=f11e198]
+            - generic [ref=f11e199]:
+              - generic [ref=f11e201]:
+                - list [ref=f11e203]:
+                  - listitem [ref=f11e204]
+                  - listitem [ref=f11e205]:
+                    - button "First note in a while... Your note" [ref=f11e207] [cursor=pointer]:
+                      - generic [ref=f11e208]:
+                        - generic [ref=f11e209]: First note in a while...
+                        - generic [ref=f11e215]:
+                          - link [ref=f11e217]
+                          - generic [ref=f11e218]: Your note
+                  - listitem [ref=f11e220]:
+                    - button "YA TENGO OUTFIIITTT roma.mpeg's profile picture roma ☆" [ref=f11e223] [cursor=pointer]:
+                      - generic [ref=f11e224]:
+                        - generic [ref=f11e225]: YA TENGO OUTFIIITTT
+                        - generic [ref=f11e232]:
+                          - link [ref=f11e234]:
+                            - img "roma.mpeg's profile picture" [ref=f11e235]
+                          - generic [ref=f11e236]: roma ☆
+                  - listitem [ref=f11e239]:
+                    - button "🧘🏻‍♀️ kamala9music's profile picture 𝒦𝒶𝓂𝒶𝓁𝒶 ❀" [ref=f11e242] [cursor=pointer]:
+                      - generic [ref=f11e243]:
+                        - generic [ref=f11e244]: 🧘🏻‍♀️
+                        - generic [ref=f11e251]:
+                          - link [ref=f11e253]:
+                            - img "kamala9music's profile picture" [ref=f11e254]
+                          - generic [ref=f11e255]: 𝒦𝒶𝓂𝒶𝓁𝒶 ❀
+                  - listitem [ref=f11e258]:
+                    - button "Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻 djmelissasantamaria's profile picture Melissa Santa María" [ref=f11e261] [cursor=pointer]:
+                      - generic [ref=f11e262]:
+                        - generic [ref=f11e263]: Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻
+                        - generic [ref=f11e270]:
+                          - link [ref=f11e272]:
+                            - img "djmelissasantamaria's profile picture" [ref=f11e273]
+                          - generic [ref=f11e274]: Melissa Santa María
+                  - listitem [ref=f11e277]:
+                    - button "ya sáquenme de ec 😮‍💨 rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f11e280] [cursor=pointer]:
+                      - generic [ref=f11e281]:
+                        - generic [ref=f11e282]: ya sáquenme de ec 😮‍💨
+                        - generic [ref=f11e289]:
+                          - link [ref=f11e291]:
+                            - img "rojelioelrojorojas's profile picture" [ref=f11e292]
+                          - generic [ref=f11e293]: Andrés Martín Arauz
+                  - listitem [ref=f11e296]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Hueso y Carne Explicit Sam27 tamagochi_bb's profile picture Tamagochi" [ref=f11e299] [cursor=pointer]:
+                      - generic [ref=f11e300]:
+                        - generic [ref=f11e306]:
+                          - generic [ref=f11e307]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e309]
+                            - generic [ref=f11e313]: Hueso y Carne
+                            - img "Explicit" [ref=f11e315]
+                          - generic [ref=f11e317]: Sam27
+                        - generic [ref=f11e318]:
+                          - link [ref=f11e320]:
+                            - img "tamagochi_bb's profile picture" [ref=f11e321]
+                          - generic [ref=f11e322]: Tamagochi
+                  - listitem [ref=f11e325]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Fear Of The Dark (Live; 1998 Remastered Version) Iron Maiden ES HOY 🖤🔥 saraking30's profile picture Sara King" [ref=f11e328] [cursor=pointer]:
+                      - generic [ref=f11e329]:
+                        - generic [ref=f11e335]:
+                          - generic [ref=f11e336]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e338]
+                            - generic [ref=f11e342]: Fear Of The Dark (Live; 1998 Remastered Version)
+                          - generic [ref=f11e343]: Iron Maiden
+                          - generic [ref=f11e344]: ES HOY 🖤🔥
+                        - generic [ref=f11e345]:
+                          - link [ref=f11e347]:
+                            - img "saraking30's profile picture" [ref=f11e348]
+                          - generic [ref=f11e349]: Sara King
+                  - listitem [ref=f11e352]:
+                    - button "A la extrema derecha le gusta auto esclavuzarse jajajaja jofiel.arch.music's profile picture Jofiel.arch.music" [ref=f11e355] [cursor=pointer]:
+                      - generic [ref=f11e356]:
+                        - generic [ref=f11e357]: A la extrema derecha le gusta auto esclavuzarse jajajaja
+                        - generic [ref=f11e364]:
+                          - link [ref=f11e366]:
+                            - img "jofiel.arch.music's profile picture" [ref=f11e367]
+                          - generic [ref=f11e368]: Jofiel.arch.music
+                  - listitem [ref=f11e371]:
+                    - button "💛 ceallii's profile picture Selina ⵥ" [ref=f11e374] [cursor=pointer]:
+                      - generic [ref=f11e375]:
+                        - generic [ref=f11e376]: 💛
+                        - generic [ref=f11e383]:
+                          - link [ref=f11e385]:
+                            - img "ceallii's profile picture" [ref=f11e386]
+                          - generic [ref=f11e387]: Selina ⵥ
+                - button "Next" [ref=f11e390] [cursor=pointer]
+              - generic [ref=f11e394]:
+                - button "Partnership inbox icon Partnership messages Chevron icon to indicate entering the partnership inbox window" [ref=f11e395] [cursor=pointer]:
+                  - generic [ref=f11e397]:
+                    - img "Partnership inbox icon" [ref=f11e400]
+                    - generic [ref=f11e404]: Partnership messages
+                    - img "Chevron icon to indicate entering the partnership inbox window" [ref=f11e410]
+                - generic [ref=f11e412]:
+                  - 'button "user-profile-picture 𝗗𝗷 𝗚𝗮𝘃𝗲𝘇 - 𝗘𝗗𝗠 - 𝗜𝗻𝗳𝗹𝘂𝗲𝗻𝗰𝗲𝗿 You: ¡Hola, Gavez! Gracias por revisar 🙌 En Comunidad prueba «Electrónica» o «Todos los géneros»: los DJs y productores que publican su perfil se exploran junto a los demás artistas. El registro crea tu cuenta en TDF para seguir proyectos y, si quieres, publicar tu perfil con una bio y enlaces a tu música. Abre este enlace y completa «Crear cuenta»; si te aparece «Iniciar sesión», cambia a «Crear cuenta»: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Después puedes entrar en Comunidad → Perfil de artista. ¿En qué paso te quedaste? — TDF Records 6 minutes ago" [ref=f11e416] [cursor=pointer]':
+                    - generic [ref=f11e418]:
+                      - img "user-profile-picture" [ref=f11e422]
+                      - generic [ref=f11e425]:
+                        - generic [ref=f11e426]: 𝗗𝗷 𝗚𝗮𝘃𝗲𝘇 - 𝗘𝗗𝗠 - 𝗜𝗻𝗳𝗹𝘂𝗲𝗻𝗰𝗲𝗿
+                        - generic [ref=f11e432]:
+                          - generic [ref=f11e433]: "You: ¡Hola, Gavez! Gracias por revisar 🙌 En Comunidad prueba «Electrónica» o «Todos los géneros»: los DJs y productores que publican su perfil se exploran junto a los demás artistas. El registro crea tu cuenta en TDF para seguir proyectos y, si quieres, publicar tu perfil con una bio y enlaces a tu música. Abre este enlace y completa «Crear cuenta»; si te aparece «Iniciar sesión», cambia a «Crear cuenta»: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Después puedes entrar en Comunidad → Perfil de artista. ¿En qué paso te quedaste? — TDF Records"
+                          - generic [ref=f11e435]:
+                            - generic [ref=f11e436]: ·
+                            - generic "6 minutes ago" [ref=f11e441]: 6m
+                  - button "user-profile-picture DjFaricho | Dj & Productor Verified Saludos 7 minutes ago Unread" [ref=f11e445] [cursor=pointer]:
+                    - generic [ref=f11e447]:
+                      - img "user-profile-picture" [ref=f11e451]
+                      - generic [ref=f11e454]:
+                        - generic [ref=f11e456]:
+                          - generic [ref=f11e457]: DjFaricho | Dj & Productor
+                          - img "Verified" [ref=f11e460]
+                        - generic [ref=f11e464]:
+                          - generic [ref=f11e465]: Saludos
+                          - generic [ref=f11e467]:
+                            - generic [ref=f11e468]: ·
+                            - generic "7 minutes ago" [ref=f11e473]: 7m
+                      - generic [ref=f11e474]: Unread
+                  - button "user-profile-picture Fusion Imperium Thank you 🙏🏼 8 minutes ago Unread" [ref=f11e481] [cursor=pointer]:
+                    - generic [ref=f11e483]:
+                      - img "user-profile-picture" [ref=f11e487]
+                      - generic [ref=f11e490]:
+                        - generic [ref=f11e491]: Fusion Imperium
+                        - generic [ref=f11e497]:
+                          - generic [ref=f11e498]: Thank you 🙏🏼
+                          - generic [ref=f11e500]:
+                            - generic [ref=f11e501]: ·
+                            - generic "8 minutes ago" [ref=f11e506]: 8m
+                      - generic [ref=f11e507]: Unread
+                  - button "user-profile-picture Oldboy You sent an attachment. 14 minutes ago Unread" [ref=f11e514] [cursor=pointer]:
+                    - generic [ref=f11e516]:
+                      - img "user-profile-picture" [ref=f11e520]
+                      - generic [ref=f11e523]:
+                        - generic [ref=f11e524]: Oldboy
+                        - generic [ref=f11e530]:
+                          - generic [ref=f11e531]: You sent an attachment.
+                          - generic [ref=f11e533]:
+                            - generic [ref=f11e534]: ·
+                            - generic "14 minutes ago" [ref=f11e539]: 14m
+                      - generic [ref=f11e540]: Unread
+                  - button "user-profile-picture Oracle Saint Rigel 𓆘 You sent an attachment. 3 hours ago" [ref=f11e547] [cursor=pointer]:
+                    - generic [ref=f11e549]:
+                      - img "user-profile-picture" [ref=f11e553]
+                      - generic [ref=f11e556]:
+                        - generic [ref=f11e557]: Oracle Saint Rigel 𓆘
+                        - generic [ref=f11e563]:
+                          - generic [ref=f11e564]: You sent an attachment.
+                          - generic [ref=f11e566]:
+                            - generic [ref=f11e567]: ·
+                            - generic "3 hours ago" [ref=f11e572]: 3h
+                  - button [ref=f11e604] [cursor=pointer]:
+                    - generic [ref=f11e606]:
+                      - status "Loading..." [ref=f11e609]
+                      - generic [ref=f11e612]:
+                        - status "Loading..." [ref=f11e614]
+                        - status "Loading..." [ref=f11e616]
+        - generic [ref=f11e621]:
+          - generic [ref=f11e625]:
+            - link "Open the profile page of djchristianleft" [ref=f11e626] [cursor=pointer]:
+              - /url: /djchristianleft/
+              - generic [ref=f11e627]:
+                - img "user-profile-picture" [ref=f11e631]
+                - generic [ref=f11e632]:
+                  - heading "Christian Left" [level=2] [ref=f11e634]
+                  - generic [ref=f11e636]: djchristianleft
+            - generic [ref=f11e640]:
+              - button [ref=f11e641] [cursor=pointer]:
+                - img "Audio call" [ref=f11e643]
+              - button [ref=f11e645] [cursor=pointer]:
+                - img "Video call" [ref=f11e647]
+              - button [ref=f11e650] [cursor=pointer]:
+                - img "Conversation information" [ref=f11e652]
+          - generic [ref=f11e656]:
+            - generic [ref=f11e660]:
+              - generic [ref=f11e661]:
+                - img "user-profile-picture" [ref=f11e665]
+                - generic [ref=f11e666]:
+                  - heading "Christian Left" [level=2] [ref=f11e669]
+                  - generic [ref=f11e671]: djchristianleft · Instagram
+                  - link "View profile" [ref=f11e674] [cursor=pointer]:
+                    - /url: /djchristianleft/
+              - generic [ref=f11e675]:
+                - generic [ref=f11e682]:
+                  - generic [ref=f11e683]: 5/27/22, 1:25 PM
+                  - group [ref=f11e686]:
+                    - generic [ref=f11e687]:
+                      - generic [ref=f11e688]:
+                        - link "Open the profile page of djchristianleft" [ref=f11e691] [cursor=pointer]:
+                          - /url: /djchristianleft
+                          - img "user-profile-picture" [ref=f11e694]
+                        - generic [ref=f11e696]:
+                          - article "Que hermoso muchas gracias genial" [ref=f11e697]
+                          - generic [ref=f11e701]:
+                            - group "Message actions":
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - button "React to message from djchristianleft":
+                                      - generic:
+                                        - img "React to message from djchristianleft"
+                                - generic:
+                                  - generic:
+                                    - button "Reply to message from djchristianleft":
+                                      - generic:
+                                        - img "Reply to message from djchristianleft"
+                                - generic:
+                                  - generic:
+                                    - button "See more options for message from djchristianleft":
+                                      - generic:
+                                        - img "See more options for message from djchristianleft"
+                      - button "❤️" [ref=f11e704] [cursor=pointer]
+                - generic [ref=f11e709]:
+                  - generic [ref=f11e710]: 10:42 PM
+                  - group [ref=f11e713]:
+                    - generic [ref=f11e716]:
+                      - article [ref=f11e717]:
+                        - generic [ref=f11e719]:
+                          - generic [ref=f11e722]:
+                            - text: Hola, Christian
+                            - img "👋" [ref=f11e724]
+                            - text: "Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí:"
+                            - link "https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta" [ref=f11e726] [cursor=pointer]:
+                              - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta
+                            - text: "Y consulta cómo probar la app móvil aquí:"
+                            - link "https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app" [ref=f11e728] [cursor=pointer]:
+                              - /url: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app
+                            - text: Cualquier comentario nos sirve muchísimo. — TDF Records
+                          - link "TDF Records" [ref=f11e729] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta
+                      - generic [ref=f11e734]:
+                        - group "Message actions":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button "React to message from tdf.records.label":
+                                  - generic:
+                                    - img "React to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "Reply to message from tdf.records.label":
+                                  - generic:
+                                    - img "Reply to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "See more options for message from tdf.records.label":
+                                  - generic:
+                                    - img "See more options for message from tdf.records.label"
+            - generic [ref=f11e744]:
+              - button [ref=f11e747] [cursor=pointer]:
+                - img "Choose an emoji" [ref=f11e749]
+              - generic [ref=f11e751]:
+                - textbox [active] [ref=f11e752]:
+                  - paragraph [ref=f11e753]
+                - generic: Message...
+              - generic [ref=f11e754]:
+                - button [ref=f11e755] [cursor=pointer]:
+                  - img "Voice Clip" [ref=f11e757]
+                - button [ref=f11e760] [cursor=pointer]:
+                  - img "Add Photo or Video" [ref=f11e762]
+                - button [ref=f11e767] [cursor=pointer]:
+                  - img "Choose a GIF or sticker" [ref=f11e769]
+  - button [ref=f11e776] [cursor=pointer]:
+    - tooltip "Like 2" [ref=f11e778]:
+      - generic [ref=f11e781]:
+        - generic "Like" [ref=f11e782]
+        - generic [ref=f11e783]: "2"

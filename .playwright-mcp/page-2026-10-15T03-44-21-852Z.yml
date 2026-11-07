@@ -1,0 +1,4 @@
+- button "Messages Messages" [ref=f19e10] [cursor=pointer]:
+  - generic [ref=f19e12]:
+    - img "Messages" [ref=f19e14]
+    - generic [ref=f19e17]: Messages

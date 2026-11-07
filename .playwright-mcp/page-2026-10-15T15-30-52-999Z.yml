@@ -1,0 +1,357 @@
+- generic [ref=f54e9]:
+  - generic [ref=f54e12]:
+    - link [ref=f54e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f54e22]
+    - generic [ref=f54e25]:
+      - link [ref=f54e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f54e35]
+      - link [ref=f54e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f54e45]
+      - link [ref=f54e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f54e55]:
+          - img "Messages" [ref=f54e57]
+          - generic "Direct messaging - 2 new notifications link" [ref=f54e59]: "2"
+      - link [ref=f54e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f54e70]
+      - link [ref=f54e78] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f54e83]
+      - link [ref=f54e91] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f54e96]
+      - link [ref=f54e101] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f54e106]
+      - link [ref=f54e113] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f54e118]:
+          - img "tdf.records.label's profile picture" [ref=f54e119]
+    - generic [ref=f54e120]:
+      - link [ref=f54e123] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f54e128]
+      - link [ref=f54e133] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f54e138]
+  - main [ref=f54e142]:
+    - generic [ref=f54e147]:
+      - navigation "Thread list" [ref=f54e148]:
+        - generic [ref=f54e149]:
+          - generic [ref=f54e150]:
+            - button [ref=f54e151] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f54e153]
+              - img "Verified" [ref=f54e156]
+              - img "Down chevron icon" [ref=f54e159]
+            - generic [ref=f54e162]:
+              - button [ref=f54e163] [cursor=pointer]:
+                - img "More options" [ref=f54e165]
+              - button [ref=f54e169] [cursor=pointer]:
+                - img "New message" [ref=f54e171]
+          - tablist [ref=f54e176]:
+            - tab "Primary" [selected] [ref=f54e177] [cursor=pointer]
+            - tab "General" [ref=f54e180] [cursor=pointer]
+            - tab "From ads" [ref=f54e183] [cursor=pointer]
+            - tab "Requests" [ref=f54e187] [cursor=pointer]
+          - generic [ref=f54e193]:
+            - img "Search" [ref=f54e195]
+            - textbox "Search" [ref=f54e198]
+          - generic [ref=f54e199]:
+            - generic [ref=f54e201]:
+              - list [ref=f54e203]:
+                - listitem [ref=f54e204]
+                - listitem [ref=f54e205]:
+                  - button "First note in a while... Your note" [ref=f54e207] [cursor=pointer]:
+                    - generic [ref=f54e208]:
+                      - generic [ref=f54e209]: First note in a while...
+                      - generic [ref=f54e215]:
+                        - link [ref=f54e217]
+                        - generic [ref=f54e218]: Your note
+                - listitem [ref=f54e220]:
+                  - button "ya sáquenme de ec 😮‍💨 rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f54e223] [cursor=pointer]:
+                    - generic [ref=f54e224]:
+                      - generic [ref=f54e225]: ya sáquenme de ec 😮‍💨
+                      - generic [ref=f54e232]:
+                        - link [ref=f54e234]:
+                          - img "rojelioelrojorojas's profile picture" [ref=f54e235]
+                        - generic [ref=f54e236]: Andrés Martín Arauz
+                - listitem [ref=f54e239]:
+                  - button "🧘🏻‍♀️ kamala9music's profile picture 𝒦𝒶𝓂𝒶𝓁𝒶 ❀" [ref=f54e242] [cursor=pointer]:
+                    - generic [ref=f54e243]:
+                      - generic [ref=f54e244]: 🧘🏻‍♀️
+                      - generic [ref=f54e251]:
+                        - link [ref=f54e253]:
+                          - img "kamala9music's profile picture" [ref=f54e254]
+                        - generic [ref=f54e255]: 𝒦𝒶𝓂𝒶𝓁𝒶 ❀
+                - listitem [ref=f54e258]:
+                  - button "Te extrañaba mayita😭💻 agamycreamy's profile picture Dany Cadena" [ref=f54e261] [cursor=pointer]:
+                    - generic [ref=f54e262]:
+                      - generic [ref=f54e263]: Te extrañaba mayita😭💻
+                      - generic [ref=f54e270]:
+                        - link [ref=f54e272]:
+                          - img "agamycreamy's profile picture" [ref=f54e273]
+                        - generic [ref=f54e274]: Dany Cadena
+                - listitem [ref=f54e277]:
+                  - button "Sin plato escupen mi comida :P anajusegovia's profile picture Ana Julia" [ref=f54e280] [cursor=pointer]:
+                    - generic [ref=f54e281]:
+                      - generic [ref=f54e282]: Sin plato escupen mi comida :P
+                      - generic [ref=f54e289]:
+                        - link [ref=f54e291]:
+                          - img "anajusegovia's profile picture" [ref=f54e292]
+                        - generic [ref=f54e293]: Ana Julia
+                - listitem [ref=f54e296]:
+                  - button "Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻 djmelissasantamaria's profile picture Melissa Santa María" [ref=f54e299] [cursor=pointer]:
+                    - generic [ref=f54e300]:
+                      - generic [ref=f54e301]: Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻
+                      - generic [ref=f54e308]:
+                        - link [ref=f54e310]:
+                          - img "djmelissasantamaria's profile picture" [ref=f54e311]
+                        - generic [ref=f54e312]: Melissa Santa María
+                - listitem [ref=f54e315]:
+                  - button "Tranquila Avicci nicolas.bast_'s profile picture Nicolas Bast" [ref=f54e318] [cursor=pointer]:
+                    - generic [ref=f54e319]:
+                      - generic [ref=f54e320]: Tranquila Avicci
+                      - generic [ref=f54e327]:
+                        - link [ref=f54e329]:
+                          - img "nicolas.bast_'s profile picture" [ref=f54e330]
+                        - generic [ref=f54e331]: Nicolas Bast
+                - listitem [ref=f54e334]:
+                  - button "no les pasa q los guayacos hablan con flow roma.mpeg's profile picture roma ☆" [ref=f54e337] [cursor=pointer]:
+                    - generic [ref=f54e338]:
+                      - generic [ref=f54e339]: no les pasa q los guayacos hablan con flow
+                      - generic [ref=f54e346]:
+                        - link [ref=f54e348]:
+                          - img "roma.mpeg's profile picture" [ref=f54e349]
+                        - generic [ref=f54e350]: roma ☆
+                - listitem [ref=f54e353]:
+                  - button "🖤🌑 quirola_777's profile picture QUIROLA" [ref=f54e356] [cursor=pointer]:
+                    - generic [ref=f54e357]:
+                      - generic [ref=f54e358]: 🖤🌑
+                      - generic [ref=f54e365]:
+                        - link [ref=f54e367]:
+                          - img "quirola_777's profile picture" [ref=f54e368]
+                        - generic [ref=f54e369]: QUIROLA
+              - button "Next" [ref=f54e372] [cursor=pointer]
+            - generic [ref=f54e376]:
+              - button "Partnership inbox icon Partnership messages Chevron icon to indicate entering the partnership inbox window" [ref=f54e377] [cursor=pointer]:
+                - generic [ref=f54e379]:
+                  - img "Partnership inbox icon" [ref=f54e382]
+                  - generic [ref=f54e386]: Partnership messages
+                  - img "Chevron icon to indicate entering the partnership inbox window" [ref=f54e392]
+              - generic [ref=f54e394]:
+                - 'button "user-profile-picture DjFaricho | Dj & Productor Verified You: ¡Hola, Faricho! Ese enlace abre el registro de la plataforma de TDF Records. Con tu cuenta puedes seguir proyectos y, si quieres, crear tu perfil público con una bio y enlaces a tu música o sets. Nos gustaría que la pruebes y nos cuentes qué te serviría como DJ. — TDF Records a few seconds ago" [pressed] [ref=f54e398] [cursor=pointer]':
+                  - generic [ref=f54e400]:
+                    - img "user-profile-picture" [ref=f54e404]
+                    - generic [ref=f54e407]:
+                      - generic [ref=f54e409]:
+                        - generic [ref=f54e410]: DjFaricho | Dj & Productor
+                        - img "Verified" [ref=f54e413]
+                      - generic [ref=f54e417]:
+                        - generic [ref=f54e418]: "You: ¡Hola, Faricho! Ese enlace abre el registro de la plataforma de TDF Records. Con tu cuenta puedes seguir proyectos y, si quieres, crear tu perfil público con una bio y enlaces a tu música o sets. Nos gustaría que la pruebes y nos cuentes qué te serviría como DJ. — TDF Records"
+                        - generic [ref=f54e420]:
+                          - generic [ref=f54e421]: ·
+                          - generic "a few seconds ago" [ref=f54e426]: 1m
+                - button "user-profile-picture Señor Siniestro Dj Reacted 🤘 to your message about an hour ago" [ref=f54e430] [cursor=pointer]:
+                  - generic [ref=f54e432]:
+                    - img "user-profile-picture" [ref=f54e436]
+                    - generic [ref=f54e439]:
+                      - generic [ref=f54e440]: Señor Siniestro Dj
+                      - generic [ref=f54e446]:
+                        - generic [ref=f54e447]: Reacted 🤘 to your message
+                        - generic [ref=f54e449]:
+                          - generic [ref=f54e450]: ·
+                          - generic "about an hour ago" [ref=f54e455]: 1h
+                - button "user-profile-picture Dj Cristian Viveros No son mi línea gracias siga participando 9 hours ago" [ref=f54e459] [cursor=pointer]:
+                  - generic [ref=f54e461]:
+                    - img "user-profile-picture" [ref=f54e465]
+                    - generic [ref=f54e468]:
+                      - generic [ref=f54e469]: Dj Cristian Viveros
+                      - generic [ref=f54e475]:
+                        - generic [ref=f54e476]: No son mi línea gracias siga participando
+                        - generic [ref=f54e478]:
+                          - generic [ref=f54e479]: ·
+                          - generic "9 hours ago" [ref=f54e484]: 9h
+                - 'button "user-profile-picture Luis Viteri | Músico Indie You: Hola, Luis 👋 Vimos que tocas la guitarra y el piano, y tu trabajo como músico indie. Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records 11 hours ago" [ref=f54e488] [cursor=pointer]':
+                  - generic [ref=f54e490]:
+                    - img "user-profile-picture" [ref=f54e494]
+                    - generic [ref=f54e497]:
+                      - generic [ref=f54e498]: Luis Viteri | Músico Indie
+                      - generic [ref=f54e504]:
+                        - generic [ref=f54e505]: "You: Hola, Luis 👋 Vimos que tocas la guitarra y el piano, y tu trabajo como músico indie. Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records"
+                        - generic [ref=f54e507]:
+                          - generic [ref=f54e508]: ·
+                          - generic "11 hours ago" [ref=f54e513]: 11h
+                - 'button "user-profile-picture Brooww You: Hola, Brooww 👋 Vimos tu trabajo como DJ profesional y en producción de eventos. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records 11 hours ago" [ref=f54e517] [cursor=pointer]':
+                  - generic [ref=f54e519]:
+                    - img "user-profile-picture" [ref=f54e523]
+                    - generic [ref=f54e526]:
+                      - generic [ref=f54e527]: Brooww
+                      - generic [ref=f54e533]:
+                        - generic [ref=f54e534]: "You: Hola, Brooww 👋 Vimos tu trabajo como DJ profesional y en producción de eventos. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records"
+                        - generic [ref=f54e536]:
+                          - generic [ref=f54e537]: ·
+                          - generic "11 hours ago" [ref=f54e542]: 11h
+                - button [ref=f54e574] [cursor=pointer]:
+                  - generic [ref=f54e576]:
+                    - status "Loading..." [ref=f54e579]
+                    - generic [ref=f54e582]:
+                      - status "Loading..." [ref=f54e584]
+                      - status "Loading..." [ref=f54e586]
+      - generic [ref=f54e591]:
+        - generic [ref=f54e595]:
+          - link "Open the profile page of djfaricho" [ref=f54e596] [cursor=pointer]:
+            - /url: /djfaricho/
+            - generic [ref=f54e597]:
+              - img "user-profile-picture" [ref=f54e601]
+              - generic [ref=f54e602]:
+                - generic [ref=f54e603]:
+                  - heading "DjFaricho | Dj & Productor" [level=2] [ref=f54e604]
+                  - img "Verified" [ref=f54e607]
+                - generic [ref=f54e609]: djfaricho
+          - generic [ref=f54e613]:
+            - button [ref=f54e614] [cursor=pointer]:
+              - img "Audio call" [ref=f54e616]
+            - button [ref=f54e618] [cursor=pointer]:
+              - img "Video call" [ref=f54e620]
+            - button [ref=f54e623] [cursor=pointer]:
+              - img "Conversation information" [ref=f54e625]
+        - generic [ref=f54e629]:
+          - generic [ref=f54e633]:
+            - generic [ref=f54e634]:
+              - img "user-profile-picture" [ref=f54e638]
+              - generic [ref=f54e639]:
+                - generic [ref=f54e641]:
+                  - heading "DjFaricho | Dj & Productor" [level=2] [ref=f54e642]
+                  - img "Verified" [ref=f54e645]
+                - generic [ref=f54e647]: djfaricho · Instagram
+                - link "View profile" [ref=f54e650] [cursor=pointer]:
+                  - /url: /djfaricho/
+            - generic [ref=f54e651]:
+              - generic [ref=f54e654]:
+                - generic [ref=f54e655]: Wed 10:33 PM
+                - group [ref=f54e658]:
+                  - generic [ref=f54e661]:
+                    - article [ref=f54e662]:
+                      - generic [ref=f54e664]:
+                        - generic [ref=f54e667]:
+                          - text: Hola, Faricho
+                          - img "👋" [ref=f54e669]
+                          - text: "Vimos tu trabajo como DJ y productor, y tus más de 15 años creando experiencias. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional:"
+                          - link "https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a" [ref=f54e671] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+                          - text: — TDF Records
+                        - link "TDF Records" [ref=f54e672] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+                    - generic [ref=f54e677]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from tdf.records.label":
+                                - generic:
+                                  - img "React to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from tdf.records.label":
+                                - generic:
+                                  - img "Reply to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from tdf.records.label":
+                                - generic:
+                                  - img "See more options for message from tdf.records.label"
+              - group [ref=f54e681]:
+                - generic [ref=f54e682]:
+                  - generic [ref=f54e683]:
+                    - link "Open the profile page of djfaricho" [ref=f54e686] [cursor=pointer]:
+                      - /url: /djfaricho
+                      - img "user-profile-picture" [ref=f54e689]
+                    - generic [ref=f54e691]:
+                      - article "Saludos" [ref=f54e692]
+                      - generic [ref=f54e696]:
+                        - group "Message actions":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button "React to message from djfaricho":
+                                  - generic:
+                                    - img "React to message from djfaricho"
+                            - generic:
+                              - generic:
+                                - button "Reply to message from djfaricho":
+                                  - generic:
+                                    - img "Reply to message from djfaricho"
+                            - generic:
+                              - generic:
+                                - button "See more options for message from djfaricho":
+                                  - generic:
+                                    - img "See more options for message from djfaricho"
+                  - button "❤️" [ref=f54e699] [cursor=pointer]
+              - generic [ref=f54e704]:
+                - generic [ref=f54e705]: Wed 11:16 PM
+                - group [ref=f54e708]:
+                  - generic [ref=f54e710]:
+                    - link "Open the profile page of djfaricho" [ref=f54e713] [cursor=pointer]:
+                      - /url: /djfaricho
+                      - img "user-profile-picture" [ref=f54e716]
+                    - generic [ref=f54e718]:
+                      - article "Ese enlace de que se trata" [ref=f54e719]
+                      - generic [ref=f54e723]:
+                        - group "Message actions":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button "React to message from djfaricho":
+                                  - generic:
+                                    - img "React to message from djfaricho"
+                            - generic:
+                              - generic:
+                                - button "Reply to message from djfaricho":
+                                  - generic:
+                                    - img "Reply to message from djfaricho"
+                            - generic:
+                              - generic:
+                                - button "See more options for message from djfaricho":
+                                  - generic:
+                                    - img "See more options for message from djfaricho"
+              - generic [ref=f54e726]:
+                - generic [ref=f54e727]: 10:30 AM
+                - group [ref=f54e730]:
+                  - generic [ref=f54e733]:
+                    - article "¡Hola, Faricho! Ese enlace abre el registro de la plataforma de TDF Records. Con tu cuenta puedes seguir proyectos y, si quieres, crear tu perfil público con una bio y enlaces a tu música o sets. Nos gustaría que la pruebes y nos cuentes qué te serviría como DJ. — TDF Records" [ref=f54e734]
+                    - generic [ref=f54e738]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from tdf.records.label":
+                                - generic:
+                                  - img "React to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from tdf.records.label":
+                                - generic:
+                                  - img "Reply to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from tdf.records.label":
+                                - generic:
+                                  - img "See more options for message from tdf.records.label"
+          - generic [ref=f54e748]:
+            - button [ref=f54e751] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f54e753]
+            - generic [ref=f54e755]:
+              - textbox [active] [ref=f54e756]:
+                - paragraph [ref=f54e757]
+              - generic: Message...
+            - generic [ref=f54e758]:
+              - button [ref=f54e759] [cursor=pointer]:
+                - img "Voice Clip" [ref=f54e761]
+              - button [ref=f54e764] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f54e766]
+              - button [ref=f54e771] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f54e773]

@@ -1,0 +1,220 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=e55]:
+          - img "Messages" [ref=e57]
+          - generic "Direct messaging - 5 new notifications link" [ref=e59]: "5"
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e70]
+      - link [ref=e627] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e632]
+      - link [ref=e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e93]
+      - link [ref=e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e103]
+      - link [ref=e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e115]:
+          - img "tdf.records.label's profile picture" [ref=e116]
+    - generic [ref=e117]:
+      - link [ref=e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e125]
+      - link [ref=e130] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e135]
+  - main [ref=e139]:
+    - generic [ref=e144]:
+      - navigation "Thread list" [ref=e145]:
+        - generic [ref=e146]:
+          - generic [ref=e147]:
+            - button [ref=e148] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e150]
+              - img "Verified" [ref=e153]
+              - img "Down chevron icon" [ref=e156]
+            - generic [ref=e159]:
+              - button [ref=e160] [cursor=pointer]:
+                - img "More options" [ref=e162]
+              - button [ref=e166] [cursor=pointer]:
+                - img "New message" [ref=e168]
+          - tablist [ref=e173]:
+            - tab "Primary" [ref=e174] [cursor=pointer]
+            - tab "General" [active] [selected] [ref=e177] [cursor=pointer]
+            - tab "From ads" [ref=e180] [cursor=pointer]
+            - tab "Requests" [ref=e184] [cursor=pointer]
+          - generic [ref=e190]:
+            - img "Search" [ref=e192]
+            - textbox "Search" [ref=e195]
+          - generic [ref=e196]:
+            - generic [ref=e198]:
+              - list [ref=e200]:
+                - listitem [ref=e201]
+                - listitem [ref=e202]:
+                  - button "First note in a while... Your note" [ref=e204] [cursor=pointer]:
+                    - generic [ref=e205]:
+                      - generic [ref=e206]: First note in a while...
+                      - generic [ref=e212]:
+                        - link [ref=e214]
+                        - generic [ref=e215]: Your note
+                - listitem [ref=e217]:
+                  - button "YA TENGO OUTFIIITTT roma.mpeg's profile picture roma ☆" [ref=e220] [cursor=pointer]:
+                    - generic [ref=e221]:
+                      - generic [ref=e222]: YA TENGO OUTFIIITTT
+                      - generic [ref=e229]:
+                        - link [ref=e231]:
+                          - img "roma.mpeg's profile picture" [ref=e232]
+                        - generic [ref=e233]: roma ☆
+                - listitem [ref=e236]:
+                  - button "Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻 djmelissasantamaria's profile picture Melissa Santa María" [ref=e239] [cursor=pointer]:
+                    - generic [ref=e240]:
+                      - generic [ref=e241]: Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻
+                      - generic [ref=e248]:
+                        - link [ref=e250]:
+                          - img "djmelissasantamaria's profile picture" [ref=e251]
+                        - generic [ref=e252]: Melissa Santa María
+                - listitem [ref=e255]:
+                  - button "🧘🏻‍♀️ kamala9music's profile picture 𝒦𝒶𝓂𝒶𝓁𝒶 ❀" [ref=e258] [cursor=pointer]:
+                    - generic [ref=e259]:
+                      - generic [ref=e260]: 🧘🏻‍♀️
+                      - generic [ref=e267]:
+                        - link [ref=e269]:
+                          - img "kamala9music's profile picture" [ref=e270]
+                        - generic [ref=e271]: 𝒦𝒶𝓂𝒶𝓁𝒶 ❀
+                - listitem [ref=e274]:
+                  - button "ya sáquenme de ec 😮‍💨 rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=e277] [cursor=pointer]:
+                    - generic [ref=e278]:
+                      - generic [ref=e279]: ya sáquenme de ec 😮‍💨
+                      - generic [ref=e286]:
+                        - link [ref=e288]:
+                          - img "rojelioelrojorojas's profile picture" [ref=e289]
+                        - generic [ref=e290]: Andrés Martín Arauz
+                - listitem [ref=e293]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner La Gloria Eres Tú Los Tres Diamantes giann__fer's profile picture Gian" [ref=e296] [cursor=pointer]:
+                    - generic [ref=e297]:
+                      - generic [ref=e303]:
+                        - generic [ref=e304]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e306]
+                          - generic [ref=e310]: La Gloria Eres Tú
+                        - generic [ref=e311]: Los Tres Diamantes
+                      - generic [ref=e312]:
+                        - link [ref=e314]:
+                          - img "giann__fer's profile picture" [ref=e315]
+                        - generic [ref=e316]: Gian
+                - listitem [ref=e319]:
+                  - button "A la extrema derecha le gusta auto esclavuzarse jajajaja jofiel.arch.music's profile picture Jofiel.arch.music" [ref=e322] [cursor=pointer]:
+                    - generic [ref=e323]:
+                      - generic [ref=e324]: A la extrema derecha le gusta auto esclavuzarse jajajaja
+                      - generic [ref=e331]:
+                        - link [ref=e333]:
+                          - img "jofiel.arch.music's profile picture" [ref=e334]
+                        - generic [ref=e335]: Jofiel.arch.music
+                - listitem [ref=e338]:
+                  - button "Sabios, abuelos y mamas guiando el camino 🙏🏽🌱 gary_galactico's profile picture Gary Galáctico" [ref=e341] [cursor=pointer]:
+                    - generic [ref=e342]:
+                      - generic [ref=e343]: Sabios, abuelos y mamas guiando el camino 🙏🏽🌱
+                      - generic [ref=e350]:
+                        - link [ref=e352]:
+                          - img "gary_galactico's profile picture" [ref=e353]
+                        - generic [ref=e354]: Gary Galáctico
+                - listitem [ref=e357]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Fear Of The Dark (Live; 1998 Remastered Version) Iron Maiden ES HOY 🖤🔥 saraking30's profile picture Sara King" [ref=e360] [cursor=pointer]:
+                    - generic [ref=e361]:
+                      - generic [ref=e367]:
+                        - generic [ref=e368]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e370]
+                          - generic [ref=e374]: Fear Of The Dark (Live; 1998 Remastered Version)
+                        - generic [ref=e375]: Iron Maiden
+                        - generic [ref=e376]: ES HOY 🖤🔥
+                      - generic [ref=e377]:
+                        - link [ref=e379]:
+                          - img "saraking30's profile picture" [ref=e380]
+                        - generic [ref=e381]: Sara King
+              - button "Next" [ref=e384] [cursor=pointer]
+            - generic [ref=e406]:
+              - button "user-profile-picture Active Jofiel.arch.music Claro, ahora resido fuera del país pero les apoyo 5 days ago" [ref=e811] [cursor=pointer]:
+                - generic [ref=e813]:
+                  - generic [ref=e815]:
+                    - img "user-profile-picture" [ref=e817]
+                    - generic [ref=e818]: Active
+                  - generic [ref=e824]:
+                    - generic [ref=e825]: Jofiel.arch.music
+                    - generic [ref=e831]:
+                      - generic [ref=e832]: Claro, ahora resido fuera del país pero les apoyo
+                      - generic [ref=e834]:
+                        - generic [ref=e835]: ·
+                        - generic "5 days ago" [ref=e840]: 5d
+              - button "user-profile-picture Labii Labii sent an attachment. 4 weeks ago" [ref=e844] [cursor=pointer]:
+                - generic [ref=e846]:
+                  - img "user-profile-picture" [ref=e850]
+                  - generic [ref=e853]:
+                    - generic [ref=e854]: Labii
+                    - generic [ref=e860]:
+                      - generic [ref=e861]: Labii sent an attachment.
+                      - generic [ref=e863]:
+                        - generic [ref=e864]: ·
+                        - generic "4 weeks ago" [ref=e869]: 4w
+              - button "user-profile-picture Instagram User Liked a message a year ago" [ref=e873] [cursor=pointer]:
+                - generic [ref=e875]:
+                  - img "user-profile-picture" [ref=e879]
+                  - generic [ref=e882]:
+                    - generic [ref=e883]: Instagram User
+                    - generic [ref=e889]:
+                      - generic [ref=e890]: Liked a message
+                      - generic [ref=e892]:
+                        - generic [ref=e893]: ·
+                        - generic "a year ago" [ref=e898]: 1y
+              - button "user-profile-picture Everaldho Everaldho sent an attachment. a year ago" [ref=e902] [cursor=pointer]:
+                - generic [ref=e904]:
+                  - img "user-profile-picture" [ref=e908]
+                  - generic [ref=e911]:
+                    - generic [ref=e912]: Everaldho
+                    - generic [ref=e918]:
+                      - generic [ref=e919]: Everaldho sent an attachment.
+                      - generic [ref=e921]:
+                        - generic [ref=e922]: ·
+                        - generic "a year ago" [ref=e927]: 1y
+              - 'button "user-profile-picture Renato Goyes García You: Primero empiezas con teoría obvio jeje a year ago" [ref=e931] [cursor=pointer]':
+                - generic [ref=e933]:
+                  - img "user-profile-picture" [ref=e937]
+                  - generic [ref=e940]:
+                    - generic [ref=e941]: Renato Goyes García
+                    - generic [ref=e947]:
+                      - generic [ref=e948]: "You: Primero empiezas con teoría obvio jeje"
+                      - generic [ref=e950]:
+                        - generic [ref=e951]: ·
+                        - generic "a year ago" [ref=e956]: 1y
+              - button "user-profile-picture Diego Jaramillo Diego sent an attachment. 2 years ago" [ref=e960] [cursor=pointer]:
+                - generic [ref=e962]:
+                  - img "user-profile-picture" [ref=e966]
+                  - generic [ref=e969]:
+                    - generic [ref=e970]: Diego Jaramillo
+                    - generic [ref=e976]:
+                      - generic [ref=e977]: Diego sent an attachment.
+                      - generic [ref=e979]:
+                        - generic [ref=e980]: ·
+                        - generic "2 years ago" [ref=e985]: 2y
+              - button [ref=e595] [cursor=pointer]:
+                - generic [ref=e597]:
+                  - status "Loading..." [ref=e600]
+                  - generic [ref=e603]:
+                    - status "Loading..." [ref=e605]
+                    - status "Loading..." [ref=e607]
+      - generic [ref=e612]:
+        - heading "Your messages" [level=2] [ref=e619]
+        - generic [ref=e620]: Send a message to start a chat.
+        - button "Send message" [ref=e624] [cursor=pointer]

@@ -1,0 +1,30 @@
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e9]:
+      - navigation "App navigation" [ref=e10]:
+        - generic [ref=e11]:
+          - button "Home" [ref=e13] [cursor=pointer]
+          - button "Space" [ref=e18] [cursor=pointer]
+          - button "Scheduled" [ref=e23] [cursor=pointer]
+          - button "Plugins" [ref=e28] [cursor=pointer]
+          - button "Explore" [ref=e33] [cursor=pointer]
+        - button "Open profile menu" [disabled] [ref=e43]:
+          - status [ref=e45]: Loading profile
+      - navigation "Scheduled task folders" [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - generic [ref=e55]:
+              - heading "Scheduled" [level=1] [ref=e56]
+              - generic [ref=e57]:
+                - button "Search scheduled tasks" [ref=e59] [cursor=pointer]
+                - button "Toggle sidebar" [expanded] [ref=e65] [cursor=pointer]
+            - button "New task" [ref=e71] [cursor=pointer]
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - generic [ref=e82]: Upcoming
+              - button "Filter tasks" [ref=e85] [cursor=pointer]
+            - generic [ref=e94]:
+              - list
+    - generic:
+      - separator
+  - main [ref=e98]

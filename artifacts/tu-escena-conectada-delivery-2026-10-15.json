@@ -1,0 +1,323 @@
+{
+  "date": "2026-10-15",
+  "timezone": "America/Guayaquil",
+  "new_profiles": 20,
+  "help_replies": 1,
+  "daily_cap": 20,
+  "help": {
+    "handle": "djfaricho",
+    "crm": 301,
+    "thread": "111538720239937",
+    "time": "10:30",
+    "message": "¡Hola, Faricho! Ese enlace abre el registro de la plataforma de TDF Records. Con tu cuenta puedes seguir proyectos y, si quieres, crear tu perfil público con una bio y enlaces a tu música o sets. Nos gustaría que la pruebes y nos cuentes qué te serviría como DJ. — TDF Records"
+  },
+  "rejection": {
+    "handle": "dj_cristian.viveros",
+    "crm": 307,
+    "excluded_permanently": true
+  },
+  "deliveries": [
+    {
+      "id": 313,
+      "handle": "k_dj_project",
+      "account": false,
+      "notes": "[2026-10-15 10:38 America/Guayaquil] Campaña tu_escena_conectada_piloto; dj_productor_a en inglés; CONTACTADO. Seguidor actual de TDF. Bio propia inglesa: Ecuadorian Roots, House Beats; founder rooom.selectors y pause.ec,122 publicaciones/616 seguidores. Identidad musical pública coherente, sin dudas de edad observadas. Hilo17843344523130149 vacío antes; sin coincidencia CRM305 ni envío previo. Texto exacto455 caracteres antes, una aparición en hilo y compositor vacío, sin Sending/error después. Registro/activación no confirmados.\nMensaje enviado:\nHi, Pablo 👋 We saw your house music project.\nYour scene deserves a space of its own, where connections made on the dancefloor can continue.\nOn TDF you can explore artist profiles and releases, and create an account to follow projects you enjoy:\nhttps://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records",
+      "thread": "17843344523130149",
+      "time": "10:38"
+    },
+    {
+      "id": 314,
+      "handle": "djmelissasantamaria",
+      "account": false,
+      "notes": "[2026-10-15 10:39 America/Guayaquil] Campaña tu_escena_conectada_piloto; plantilla historial; CONTACTADA. Seguidora TDF, DJ/productora electrónica, integrante TGTHR,302 publicaciones/4826 seguidores, actividad profesional desde2019. Hilo101036021293108: conversación musical2023, respuestas propias españolas, sin campaña anterior observada. CRM306 sin coincidencia.594 caracteres exactos antes; una aparición en hilo, compositor vacío, sin Sending/error. Registro/activación sin confirmar. No contactar TGTHR adicionalmente hoy por integrante compartida.\nMensaje enviado:\nHola, Melissa 👋 Te escribimos de TDF Records.\nEstamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil.\n¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta\nY consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app\nCualquier comentario nos sirve muchísimo. — TDF Records",
+      "thread": "101036021293108",
+      "time": "10:39"
+    },
+    {
+      "id": 315,
+      "handle": "djonas_bonilla",
+      "account": false,
+      "notes": "[2026-10-15 10:40 America/Guayaquil] Campaña tu_escena_conectada_piloto; dj_productor_a; CONTACTADO. Seguidor TDF, DJ/productor316 publicaciones/7034 seguidores; bio Booking/contratos, bassick_lab/kiubrecords; post propio español #uio y agradecimiento Ecuador prueban idioma/escena. Sin dudas de edad/identidad observadas. Hilo17843731628191209 vacío; CRM306 sin coincidencia, sin envío documental anterior.534 caracteres exactos antes; una aparición, compositor vacío, sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Jonas 👋 Vimos tu trabajo como DJ y productor, y tus sets en Quito.\nTu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella.\nEn TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional:\nhttps://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records",
+      "thread": "17843731628191209",
+      "time": "10:40"
+    },
+    {
+      "id": 316,
+      "handle": "alexei_chontasi",
+      "account": false,
+      "notes": "[2026-10-15 10:43 America/Guayaquil] Campaña tu_escena_conectada_piloto; historial; CONTACTADO. Mentor musical/trombonista, Lic. música contemporánea,154 publicaciones/1474 seguidores, bio/captions propias españolas. Relación TDF por menciones2024/2025 y reacción, sin campaña previa observada. Adulto profesional, identidad coherente. CRM308 sin coincidencia. Hilo120803405973421. 593 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Alexei 👋 Te escribimos de TDF Records.\nEstamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil.\n¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta\nY consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app\nCualquier comentario nos sirve muchísimo. — TDF Records",
+      "thread": "120803405973421",
+      "time": "10:43"
+    },
+    {
+      "id": 317,
+      "handle": "cult_of_mariakatherina",
+      "account": false,
+      "notes": "[2026-10-15 10:43 America/Guayaquil] Campaña tu_escena_conectada_piloto; artista_a; CONTACTADO. Vocalista/synthpop, M.A Educación Artística,764 publicaciones/2201 seguidores. Bio/captions españolas y post propio sobre Quito como su ciudad; identidad profesional adulta. Solo reacción suya a historiaTDF mayo2025, sin invitación previa ni mensajes TDF. CRM308 sin coincidencia. Hilo118973876155072. 541 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, María Katherina 👋 Vimos tu trabajo como vocalista y tu propuesta de experimentación visual y sonora.\nTu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF.\nPuedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena.\nhttps://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records",
+      "thread": "118973876155072",
+      "time": "10:43"
+    },
+    {
+      "id": 318,
+      "handle": "gabinotorresmusic",
+      "account": false,
+      "notes": "[2026-10-15 10:43 America/Guayaquil] Campaña tu_escena_conectada_piloto; artista_a; CONTACTADO. Músico/productor/actor, CEO avispastudioec,1413 publicaciones/6205 seguidores. Bio/captions españolas, concierto Teatro San Gabriel, película Ecuador con13añosdehistoria; identidad profesional adulta. Hilo vacío, CRM308 sin coincidencia. Hilo102659537801016. 534 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Gabino 👋 Vimos tu trabajo como músico y productor, y tus conciertos en el Teatro San Gabriel.\nTu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF.\nPuedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena.\nhttps://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records",
+      "thread": "102659537801016",
+      "time": "10:43"
+    },
+    {
+      "id": 319,
+      "handle": "boris_medina_",
+      "account": false,
+      "notes": "[2026-10-15 10:46 America/Guayaquil] Campaña tu_escena_conectada_piloto; historial; CONTACTADO. Músico/Ing Agrícola,290 publicaciones/831 seguidores, EC explícito y música propia en territorio Shuar; bio/captions españolas. Historial2025 sobre curso, sin invitación de campaña. Consulta antigua sobre modalidad online queda para Diego; no se prometen precios/clases. Identidad adulta profesional coherente; CRM311 sin coincidencia. Hilo104385337629451. 592 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Boris 👋 Te escribimos de TDF Records.\nEstamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil.\n¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta\nY consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app\nCualquier comentario nos sirve muchísimo. — TDF Records",
+      "thread": "104385337629451",
+      "time": "10:46"
+    },
+    {
+      "id": 320,
+      "handle": "josuegranizo",
+      "account": false,
+      "notes": "[2026-10-15 10:46 America/Guayaquil] Campaña tu_escena_conectada_piloto; musico_a; CONTACTADO. Músico/productor, técnico sonido/acústica,116 publicaciones/1547 seguidores, bio española y EC explícito; créditos de grabación Samarina_ec. Hilo vacío, CRM311 sin coincidencia, reserva anterior sin envío y ahora evidencia actual. Identidad profesional adulta coherente. Hilo114290893301209. 463 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Josué 👋 Vimos tu trabajo como músico y productor en Pankino Estudio.\nTu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros.\nEn TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general:\nhttps://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records",
+      "thread": "114290893301209",
+      "time": "10:46"
+    },
+    {
+      "id": 321,
+      "handle": "carlosquilumba.music",
+      "account": false,
+      "notes": "[2026-10-15 10:46 America/Guayaquil] Campaña tu_escena_conectada_piloto; musico_a; CONTACTADO. Músico/compositor/arreglista,156 publicaciones/1972 seguidores, Quito-Ecuador explícito. Caption propio español sobre solo de flauta prueba idioma; identidad profesional adulta coherente. Hilo vacío; CRM311 sin coincidencia. Hilo107864607276636. 475 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Carlos 👋 Vimos tu trabajo con el saxo, la flauta y el clarinete, y tus arreglos.\nTu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros.\nEn TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general:\nhttps://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records",
+      "thread": "107864607276636",
+      "time": "10:46"
+    },
+    {
+      "id": 322,
+      "handle": "jfsaa_music",
+      "account": false,
+      "notes": "[2026-10-15 10:47 America/Guayaquil] Campaña tu_escena_conectada_piloto; historial; CONTACTADO. Guitarrista Madbrain,184 publicaciones/779 seguidores, publicaciones propias españolas y concierto compartido Quito. Destacados2019–2025, identidad profesional adulta coherente. Historial2022 compartidos/no compatibles, sin campaña observada; CRM311 sin coincidencia. Hilo111441906915259. 600 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Juan Fernando 👋 Te escribimos de TDF Records.\nEstamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil.\n¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta\nY consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app\nCualquier comentario nos sirve muchísimo. — TDF Records",
+      "thread": "111441906915259",
+      "time": "10:47"
+    },
+    {
+      "id": 323,
+      "handle": "unpoquitomasproductions",
+      "account": false,
+      "notes": "[2026-10-15 10:47 America/Guayaquil] Campaña tu_escena_conectada_piloto; aliado_a; CONTACTADO. Proyecto musical/medios/eventos profesional,58 publicaciones/2024 seguidores, Quito-Lima-California explícito; post propio bilingüe demuestra español. Hilo vacío, CRM311 sin coincidencia. Descarte anterior solo idioma inglés sustituido por evidencia actual, sin envío previo. Sin propuesta comercial. Hilo17845162446659707. 523 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, equipo de un poQUITO mas 👋 Vimos su trabajo con música en vivo, entrevistas y producción en Quito.\nTu escena necesita un espacio propio; nos interesa escuchar a quienes ya sostienen encuentros para la música.\nLes invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar:\nhttps://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a — TDF Records",
+      "thread": "17845162446659707",
+      "time": "10:47"
+    },
+    {
+      "id": 324,
+      "handle": "charlievh_music",
+      "account": false,
+      "notes": "[2026-10-15 10:49 America/Guayaquil] Campaña tu_escena_conectada_piloto; musico_a; CONTACTADO. Músico/luthier/profesor/Ing Comercial,241 publicaciones/1793 seguidores, bio española y destacados SonidosEcuador/Quitofest; identidad profesional adulta coherente. Hilo vacío; CRM316 sin coincidencia. Hilo109156317149628. 495 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Charlie 👋 Vimos tu trabajo como músico, luthier y profesor de música, y tu participación en TAM TAM.\nTu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros.\nEn TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general:\nhttps://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records",
+      "thread": "109156317149628",
+      "time": "10:49"
+    },
+    {
+      "id": 325,
+      "handle": "partisano.music",
+      "account": false,
+      "notes": "[2026-10-15 10:49 America/Guayaquil] Campaña tu_escena_conectada_piloto; historial; CONTACTADO. DJ/productor,12 publicaciones/573 seguidores, releases BS-LTD03/BNSD-DGT004, caption español conciertoCuenca. Relación profesionalTDF2022 con respuestas propias españolas, sin campaña actual. No se copian datos privados antiguos. Identidad coherente sin dudas observadas de edad; CRM316 sin coincidencia. Hilo112496600145475. 594 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Gabriel 👋 Te escribimos de TDF Records.\nEstamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil.\n¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta\nY consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app\nCualquier comentario nos sirve muchísimo. — TDF Records",
+      "thread": "112496600145475",
+      "time": "10:49"
+    },
+    {
+      "id": 326,
+      "handle": "dev.musica",
+      "account": false,
+      "notes": "[2026-10-15 10:50 America/Guayaquil] Campaña tu_escena_conectada_piloto; historial; CONTACTADO. Músico/bateristaMalkeataka y fundadorLaLiga,19 publicaciones/402 seguidores, captions propias españolas como docenteUHemisferios y producciónMariela. Identidad profesional adulta coherente. Historial2021/2022 emojis sin campaña; CRM316 sin coincidencia. Hilo111502140242055. 592 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, David 👋 Te escribimos de TDF Records.\nEstamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil.\n¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta\nY consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app\nCualquier comentario nos sirve muchísimo. — TDF Records",
+      "thread": "111502140242055",
+      "time": "10:50"
+    },
+    {
+      "id": 327,
+      "handle": "drfeelgood_music",
+      "account": false,
+      "notes": "[2026-10-15 10:50 America/Guayaquil] Campaña tu_escena_conectada_piloto; dj_productor_a; CONTACTADO. DJ65publicaciones/726seguidores, bio inglesa propia Doctor by day Dj by night, estilos house/techno/garage/breaks; Quitoexplícito y colaboraciónElSemillero/Mixmag. Identidad profesional adulta coherente. Hilo vacío; CRM316 sin coincidencia. Inglés demostrado enbio, no inferido por ubicación. Hilo17848332725807412. 517 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHi, Sebastián 👋 We saw your DJ work with El Semillero in Quito, spanning house, techno, garage and breaks.\nYour scene deserves a space of its own, where connections made on the dancefloor can continue.\nOn TDF you can explore artist profiles and releases, and create an account to follow projects you enjoy:\nhttps://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records",
+      "thread": "17848332725807412",
+      "time": "10:50"
+    },
+    {
+      "id": 328,
+      "handle": "cosmos.music.lab",
+      "account": false,
+      "notes": "[2026-10-15 10:50 America/Guayaquil] Campaña tu_escena_conectada_piloto; aliado_a; CONTACTADO. Estudio profesional183publicaciones/982seguidores, bio española, colaboraciónFractalSoundsQuito explícita. Hilo vacío; CRM316 sin coincidencia. Invitaciónplataforma sin condiciones comerciales. Hilo114126956644088. 555 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, equipo de Cosmos Music Lab 👋 Vimos su trabajo de grabación, ensayos y producción sonora, y su vínculo con Fractal Sounds en Quito.\nTu escena necesita un espacio propio; nos interesa escuchar a quienes ya sostienen encuentros para la música.\nLes invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar:\nhttps://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a — TDF Records",
+      "thread": "114126956644088",
+      "time": "10:50"
+    },
+    {
+      "id": 329,
+      "handle": "adrianhs.music",
+      "account": false,
+      "notes": "[2026-10-15 10:50 America/Guayaquil] Campaña tu_escena_conectada_piloto; musico_a; CONTACTADO. Músico/bateristaTAMTAM129publicaciones/1704seguidores, bio y post propios españoles; trayectoria desde2022 y gira compartida conregresoEcuador. Identidad profesional adulta coherente. Hilo vacío; CRM316 sin coincidencia. Distinta persona deCharlie. Hilo100927621311733. 456 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Adrián 👋 Vimos tu trabajo como músico y baterista en TAM TAM.\nTu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros.\nEn TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general:\nhttps://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records",
+      "thread": "100927621311733",
+      "time": "10:50"
+    },
+    {
+      "id": 330,
+      "handle": "shadito.mendieta",
+      "account": false,
+      "notes": "[2026-10-15 10:53 America/Guayaquil] Campaña tu_escena_conectada_piloto; artista_a; CONTACTADO. BandaEcuatorianadeRockExperimental,837publicaciones/2735seguidores, bio/captions propias españolas y #MúsicaQuito. Identidad musical profesional consolidada sin dudas de edad. Hilo vacío, CRM322 sin coincidencia, sin envío documental anterior. Hilo105302144199971. 545 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, Shadito y su Banda de Peluches 👋 Vimos su propuesta de rock experimental y el álbum «Inclusión Radical».\nTu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF.\nPueden empezar su perfil de artista, reunir los enlaces de su música y explorar a otros proyectos de la escena.\nhttps://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records",
+      "thread": "105302144199971",
+      "time": "10:53"
+    },
+    {
+      "id": 331,
+      "handle": "infiltro_banda",
+      "account": false,
+      "notes": "[2026-10-15 10:53 America/Guayaquil] Campaña tu_escena_conectada_piloto; artista_a; CONTACTADO. Banda534publicaciones/1459seguidores, disco vivo masterizadoEQBORecords, bio/captions españolas y escenaquiteña explícita. Identidad musical profesional consolidada sin dudas de edad. Hilo vacío; CRM322 sin coincidencia, sin envío documental anterior. Hilo116484589741235. 517 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, InFiLtRo 👋 Vimos su disco grabado en vivo y su trabajo en la escena quiteña.\nTu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF.\nPueden empezar su perfil de artista, reunir los enlaces de su música y explorar a otros proyectos de la escena.\nhttps://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records",
+      "thread": "116484589741235",
+      "time": "10:53"
+    },
+    {
+      "id": 332,
+      "handle": "graba_estudio",
+      "account": false,
+      "notes": "[2026-10-15 10:54 America/Guayaquil] Campaña tu_escena_conectada_piloto; historial; CONTACTADO. Estudio musical especializado grabación/mezcla/mastering,2051publicaciones/2742seguidores, bio española propia y colaboraciónSantamuerteQuito. Historial2024 conversaciónTeleférico/Quito con respuestas propias españolas, sin campaña observada; CRM324 sin coincidencia. Identidad profesional consolidada. Hilo107318053996898. 613 caracteres exactos antes; una aparición en hilo, compositor vacío y sin Sending/error después. Registro/activación sin confirmar.\nMensaje enviado:\nHola, equipo de Graba Estudio 👋 Les escribimos de TDF Records.\nEstamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil.\n¿Nos ayudan a probarla? Abran su cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta\nY consulten cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app\nCualquier comentario nos sirve muchísimo. — TDF Records",
+      "thread": "107318053996898",
+      "time": "10:54"
+    }
+  ],
+  "crm_reconciliation": [
+    {
+      "handle": "k_dj_project",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 313,
+      "account": false
+    },
+    {
+      "handle": "djmelissasantamaria",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 314,
+      "account": false
+    },
+    {
+      "handle": "djonas_bonilla",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 315,
+      "account": false
+    },
+    {
+      "handle": "alexei_chontasi",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 316,
+      "account": false
+    },
+    {
+      "handle": "cult_of_mariakatherina",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 317,
+      "account": false
+    },
+    {
+      "handle": "gabinotorresmusic",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 318,
+      "account": false
+    },
+    {
+      "handle": "boris_medina_",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 319,
+      "account": false
+    },
+    {
+      "handle": "josuegranizo",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 320,
+      "account": false
+    },
+    {
+      "handle": "carlosquilumba.music",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 321,
+      "account": false
+    },
+    {
+      "handle": "jfsaa_music",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 322,
+      "account": false
+    },
+    {
+      "handle": "unpoquitomasproductions",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 323,
+      "account": false
+    },
+    {
+      "handle": "charlievh_music",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 324,
+      "account": false
+    },
+    {
+      "handle": "partisano.music",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 325,
+      "account": false
+    },
+    {
+      "handle": "dev.musica",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 326,
+      "account": false
+    },
+    {
+      "handle": "drfeelgood_music",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 327,
+      "account": false
+    },
+    {
+      "handle": "cosmos.music.lab",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 328,
+      "account": false
+    },
+    {
+      "handle": "adrianhs.music",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 329,
+      "account": false
+    },
+    {
+      "handle": "shadito.mendieta",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 330,
+      "account": false
+    },
+    {
+      "handle": "infiltro_banda",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 331,
+      "account": false
+    },
+    {
+      "handle": "graba_estudio",
+      "matches": 1,
+      "exactMessage": true,
+      "crm": 332,
+      "account": false
+    }
+  ]
+}

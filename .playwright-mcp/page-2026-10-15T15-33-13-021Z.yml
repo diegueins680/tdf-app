@@ -1,0 +1,243 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - link:
+          - /url: "#_R_3ndjqctdbntccgud5hl75_"
+          - text: Skip to content
+      - generic:
+        - complementary [ref=f5e5]:
+          - generic [ref=f5e9]:
+            - navigation [ref=f5e109]:
+              - generic [ref=f5e11]:
+                - button [ref=f5e110] [cursor=pointer]:
+                  - generic [ref=f5e14]: Home
+                - button [ref=f5e111] [cursor=pointer]:
+                  - generic [ref=f5e112]: Space
+                - button [ref=f5e116] [cursor=pointer]:
+                  - generic [ref=f5e24]: Scheduled
+                - button [ref=f5e117] [cursor=pointer]:
+                  - generic [ref=f5e29]: Plugins
+                - button [ref=f5e118] [cursor=pointer]:
+                  - generic [ref=f5e34]: Explore
+                - button [ref=f5e121] [cursor=pointer]:
+                  - generic [ref=f5e122]: Sites
+              - button [ref=f5e126] [cursor=pointer]
+            - navigation [ref=f5e127]:
+              - generic [ref=f5e128]:
+                - generic [ref=f5e129]:
+                  - generic [ref=f5e130]:
+                    - heading [level=1] [ref=f5e131]: Scheduled
+                    - generic [ref=f5e132]:
+                      - button [ref=f5e134] [cursor=pointer]
+                      - button [expanded] [ref=f5e140] [cursor=pointer]
+                  - button [ref=f5e146] [cursor=pointer]:
+                    - generic [ref=f5e147]: New task
+                - generic [ref=f5e155]:
+                  - generic [ref=f5e156]:
+                    - generic [ref=f5e157]: Upcoming
+                    - button [ref=f5e160] [cursor=pointer]
+                  - list [ref=f5e170]:
+                    - listitem [ref=f5e171]:
+                      - button [ref=f5e174] [cursor=pointer]:
+                        - generic [ref=f5e177]:
+                          - generic [ref=f5e178]: Quito Electronic Event Watch
+                          - generic [ref=f5e184]: Monitoring
+                        - button [ref=f5e188]
+                    - listitem [ref=f5e192]:
+                      - button [ref=f5e195] [cursor=pointer]:
+                        - generic [ref=f5e198]:
+                          - generic [ref=f5e199]: TDF — Tu escena, conectada · diario 08:00
+                          - generic [ref=f5e205]: Paused·Daily
+                        - button [ref=f5e209]
+                    - listitem [ref=f5e213]:
+                      - button [ref=f5e214] [cursor=pointer]:
+                        - generic [ref=f5e215]: Show more
+          - generic:
+            - separator
+        - generic:
+          - generic:
+            - generic:
+              - main:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - region:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - separator:
+                                        - time: Today 8:07 AM
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic:
+                                                - generic:
+                                                  - generic:
+                                                    - generic:
+                                                      - generic:
+                                                        - generic:
+                                                          - paragraph: Continúa automáticamente la campaña «Tu Escena Conectada» de TDF Records todos los días. Inicia a las 08:00 America/Guayaquil, incluidos domingos, sin fecha de fin. Reporta en español.
+                                                          - paragraph: "AUTORIZACIÓN VIGENTE DE DIEGO: el 6/oct autorizó nuevas invitaciones diarias sin aprobar lote por lote; el 8/oct autorizó la plantilla «historial» para relaciones anteriores; el 10/oct aclaró que el máximo son 20 PERFILES, no 20 mensajes; el 12/oct eliminó la línea «Si no te interesa…»; el 14/oct reiteró «Continue with the \"Tu Escena Conectada\" campaign automatically every day» y amplió el cierre finalmente a 23:00. Estas instrucciones sustituyen los límites y prohibiciones de nuevos destinatarios del piloto del 4/oct y los seguimientos vencidos del 5–7/oct. No reutilices aprobaciones, precios ni eventos antiguos."
+                                                          - paragraph: "VENTANA Y CUPO: enviar solo entre 08:00 y 23:00 America/Guayaquil. Objetivo al menos 10 perfiles elegibles/día y hasta 20 cuando haya candidatos verificados y acceso disponible. Máximo 20 perfiles únicos contactados por día local, sumando canales y operadores. Una invitación o plantilla historial consume cupo por perfil; ayuda de registro y respuesta de seguimiento dentro de un hilo ya abierto no consume cupo. Antes de actuar cuenta los envíos ya realizados hoy. No reinicies cupo al reanudar ni repitas invitaciones de días anteriores. Si faltan candidatos o tiempo, informa el déficit sin relajar los filtros."
+                                                          - paragraph:
+                                                            - text: "ACCESO: verifica navegador autorizado autenticado como @tdf.records.label y CRM"
+                                                            - link:
+                                                              - /url: https://www.tdfrecords.net/crm/contactos
+                                                              - generic: https://www.tdfrecords.net/crm/contactos
+                                                            - text: . Una ejecución cloud no debe asumir acceso al navegador local o al repositorio. Si faltan sesión, herramientas, CRM o historial suficiente, detén la operación afectada y reporta claramente el bloqueo; no declares envíos ni capacidad autónoma no comprobados, no solicites contraseñas/códigos ni eludas rechazos. Cada revisión y envío de Instagram se realiza individualmente por su interfaz visible; no usar APIs privadas de Instagram, bots externos ni envíos masivos. Evita operadores simultáneos. Si un perfil de navegador está ocupado por otra sesión, no interrumpas trabajo ajeno sin comprobar su estado.
+                                                          - paragraph: "FUENTES: si están disponibles, lee instrucciones de /Users/diegosaa/GitHub/tdf-app, MEMORY.md, memoria reciente y docs/campaigns/tu-escena-conectada-revision-2026-09-30.md. Sin repo, usa estas reglas y comprueba CRM/hilos vivos; los datos de este prompt son antecedentes, no sustituyen las comprobaciones actuales. Respeta instrucciones posteriores verificadas de Diego."
+                                                          - paragraph: "ORDEN DIARIO:"
+                                                          - list:
+                                                            - listitem: Revisar respuestas de campaña. Contestar ayuda básica de registro/perfil/primera acción con producto verificado. Precios, condiciones, visitas, booking, alianzas o reclamos sensibles se escalan a Diego, sin ofrecer compromisos.
+                                                            - listitem: Revisar CRM y registro del día; normalizar handles quitando @, espacios y mayúsculas. Coincidencia EXACTA en campo instagram; no excluir por parecido de nombre. Si tiene cuenta, omitir nueva invitación; si existe sin cuenta, conservar su ficha y notas. Comprobar paginación y no tratar una respuesta truncada como base completa.
+                                                            - listitem: "Seleccionar seguidores/interacciones pertinentes a música y la comunidad de TDF, priorizando vínculo local verificable. Leer perfil e hilo, comprobar identidad, pertinencia y ausencia de dudas de edad. Excluir menores/edad incierta, falsos o datos insuficientes. No inferir idioma por nombre, nacionalidad o apariencia: usar idioma declarado o demostrado en contenido propio/respuestas; si falta, dejar pendiente. No aceptar solicitudes de mensaje pendientes automáticamente."
+                                                            - listitem: "Deduplicar documentos/CRM/hilo antes de cada envío. Si ya recibió invitación de campaña, no repetir. Historial anterior ajeno a la campaña NO excluye automáticamente: usar plantilla historial cuando corresponda. Rechazo/no-contacto: exclusión permanente, sin más promoción. No enviar recordatorios nuevos por una aprobación histórica vencida."
+                                                            - listitem: "Preparar texto personalizado fiel a evidencia, comprobar destinatario, idioma, enlaces, texto exacto y guiones bajos antes del envío. Después comprobar el panel de ese hilo, no la vista previa de la bandeja: un único mensaje visible, compositor vacío y ausencia de fallo o estado Sending. Un resultado incierto se comprueba antes de cualquier reintento; no repetir a ciegas."
+                                                            - listitem: "Solo tras envío confirmado, crear/actualizar CRM y añadir nota fechada sin sobrescribir: handle, nombre público, segmento/plantilla, hora Ecuador, campaña, mensaje exacto, estado y evidencia mínima. No copiar cédulas, teléfonos, correos u otros datos privados de conversaciones antiguas. No crear cuentas por los destinatarios. Si usas el endpoint CRM con Idempotency-Key, usa 16–128 letras ASCII, dígitos, guiones o guiones bajos; los puntos del handle no son válidos en esa cabecera."
+                                                            - listitem: Registrar cierre diario, total de perfiles y respuestas de ayuda por separado, pendientes y bloqueos. Distinguir envío visible, lectura, interés, registro, perfil completo y activación; nunca inferir conversiones, clics o métricas.
+                                                          - paragraph: "PLANTILLAS: mantener saludo con nombre público y referencia cierta al trabajo observado; personalizar solo hechos comprobados. Nuevas invitaciones: 4 líneas, con enlace en la última y cierre «— TDF Records». NO incluir «Si no te interesa…» ni variantes. Para DJ: «Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella.» + «En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional:». Para músicos: «Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros.» + invitar a explorar artistas/lanzamientos y abrir cuenta general. Artistas/bandas: invitar a crear perfil con bio/enlaces y explorar otros proyectos. Fans: descubrir y seguir perfiles. Aliados: explorar y comentar qué les serviría; una conversación inicial no es una alianza acordada. Adaptar plural e idioma demostrado sin cambiar los destinos técnicos."
+                                                          - paragraph: "HISTORIAL (5 líneas, adaptar nombre/plural/idioma): Hola, [nombre] 👋 Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí: [registro general, utm_content=historial_cuenta] Y consulta cómo probar la app móvil aquí: [enlace /app, utm_content=historial_app] Cualquier comentario nos sirve muchísimo. — TDF Records"
+                                                          - paragraph:
+                                                            - text: "ENLACES: solo"
+                                                            - link:
+                                                              - /url: https://www.tdfrecords.net
+                                                              - generic: https://www.tdfrecords.net
+                                                            - text: ", destinos comprobados y UTM sin handles, nombres, correos, IDs personales ni referidos. Rechazar borradores con pages.dev. No invitar a eventos pasados ni prometer funciones, permisos automáticos o disponibilidad no comprobados. Explicar acceso móvil desde /app antes de promover instalación. Todos llevan utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto. Artista: /login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a DJ: /login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Músico general: /login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Fan: /login?signup=1&intent=follow_artists&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Aliado: /login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Historial cuenta: /login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta Historial app: /app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app"
+                                                          - paragraph: "ESTADO CONFIRMADO 14/oct/2026 22:51 Ecuador: diez perfiles contactados en la continuación local, todos verificados en hilo y CRM: djfaricho (301), djchristianleft (303), siniestrodj (304), mcbreker (305), metal.01.dj (306), dj_cristian.viveros (307), djcesargarcia23 (308), nax.dj.ec (309), djbrooww_ec (310), dj.luxopunk (311). Ayuda a djgavez (302), sin consumir cupo. No repetirlos. Último CRM304 contactos completos; verificar dato vivo antes de operar. MAEZ/daddymaez tiene solicitud pendiente, no aceptada; k_dj_project y dj_zyborg aún requieren más revisión. Los lotes previos del 12 y 13/oct también fueron enviados: revisar documento/CRM/hilos, no suponer pendientes. El Reel del piloto ya está publicado: no republicar. Estado del acceso cloud aún sin prueba de ejecución; si no dispone de navegador autenticado/CRM, reportar bloqueo sin enviar."
+                                                          - paragraph: Ante advertencias, CAPTCHA, restricción, fallo de identidad, duplicación, envío incierto o rechazo de herramienta, detener la acción afectada sin eludir controles. No publicar, borrar mensajes, cambiar producto, desplegar ni negociar condiciones por esta tarea. Cierra cada ejecución con un informe breve y veraz.
+                                                  - generic: …
+                                                - button:
+                                                  - generic: Show more
+                                            - generic:
+                                              - generic:
+                                                - generic: 8:07 AM
+                                                - generic:
+                                                  - generic:
+                                                    - button
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - paragraph: Your task is scheduled. Its next run is Oct 16, 8:00 AM GMT-5.
+                                          - generic:
+                                            - generic:
+                                              - generic:
+                                                - generic:
+                                                  - button:
+                                                    - generic:
+                                                      - generic:
+                                                        - generic: TDF — Tu escena, conectada · diario 08:00
+                                                        - generic: Paused
+                                                      - generic [ref=f5e217] [cursor=pointer]: Open
+                                            - generic:
+                                              - generic:
+                                                - button
+                                              - generic: 8:07 AM
+                                - generic [ref=f5e228]:
+                                  - button [ref=f5e233] [cursor=pointer]
+                                  - textbox [ref=f5e240]:
+                                    - paragraph: Reply about this task…
+                                  - generic [ref=f5e243]:
+                                    - button [ref=f5e248] [cursor=pointer]:
+                                      - generic [ref=f5e249]: Medium
+                                    - generic [ref=f5e259]:
+                                      - button [ref=f5e263] [cursor=pointer]
+                                      - button [disabled] [ref=f5e268] [cursor=pointer]
+            - status
+  - status
+  - dialog [ref=f5e272]:
+    - generic [ref=f5e273]:
+      - heading "Edit task" [level=2] [ref=f5e275]
+      - group [ref=f5e278]:
+        - generic [ref=f5e279]:
+          - textbox "Name" [ref=f5e280]:
+            - /placeholder: Task name
+            - text: TDF — Tu escena, conectada · diario 08:00
+          - textbox "Instructions…" [ref=f5e282]:
+            - paragraph [ref=f5e283]: Continúa automáticamente la campaña «Tu Escena Conectada» de TDF Records todos los días. Inicia a las 08:00 America/Guayaquil, incluidos domingos, sin fecha de fin. Reporta en español.
+            - paragraph [ref=f5e284]
+            - paragraph [ref=f5e285]: "AUTORIZACIÓN VIGENTE DE DIEGO: el 6/oct autorizó nuevas invitaciones diarias sin aprobar lote por lote; el 8/oct autorizó la plantilla «historial» para relaciones anteriores; el 10/oct aclaró que el máximo son 20 PERFILES, no 20 mensajes; el 12/oct eliminó la línea «Si no te interesa…»; el 14/oct reiteró «Continue with the \"Tu Escena Conectada\" campaign automatically every day» y amplió el cierre finalmente a 23:00. Estas instrucciones sustituyen los límites y prohibiciones de nuevos destinatarios del piloto del 4/oct y los seguimientos vencidos del 5–7/oct. No reutilices aprobaciones, precios ni eventos antiguos."
+            - paragraph [ref=f5e286]
+            - paragraph [ref=f5e287]: "VENTANA Y CUPO: enviar solo entre 08:00 y 23:00 America/Guayaquil. Objetivo al menos 10 perfiles elegibles/día y hasta 20 cuando haya candidatos verificados y acceso disponible. Máximo 20 perfiles únicos contactados por día local, sumando canales y operadores. Una invitación o plantilla historial consume cupo por perfil; ayuda de registro y respuesta de seguimiento dentro de un hilo ya abierto no consume cupo. Antes de actuar cuenta los envíos ya realizados hoy. No reinicies cupo al reanudar ni repitas invitaciones de días anteriores. Si faltan candidatos o tiempo, informa el déficit sin relajar los filtros."
+            - paragraph [ref=f5e288]
+            - paragraph [ref=f5e289]: "ACCESO: verifica navegador autorizado autenticado como @tdf.records.label y CRM https://www.tdfrecords.net/crm/contactos. Una ejecución cloud no debe asumir acceso al navegador local o al repositorio. Si faltan sesión, herramientas, CRM o historial suficiente, detén la operación afectada y reporta claramente el bloqueo; no declares envíos ni capacidad autónoma no comprobados, no solicites contraseñas/códigos ni eludas rechazos. Cada revisión y envío de Instagram se realiza individualmente por su interfaz visible; no usar APIs privadas de Instagram, bots externos ni envíos masivos. Evita operadores simultáneos. Si un perfil de navegador está ocupado por otra sesión, no interrumpas trabajo ajeno sin comprobar su estado."
+            - paragraph [ref=f5e290]
+            - paragraph [ref=f5e291]: "FUENTES: si están disponibles, lee instrucciones de /Users/diegosaa/GitHub/tdf-app, MEMORY.md, memoria reciente y docs/campaigns/tu-escena-conectada-revision-2026-09-30.md. Sin repo, usa estas reglas y comprueba CRM/hilos vivos; los datos de este prompt son antecedentes, no sustituyen las comprobaciones actuales. Respeta instrucciones posteriores verificadas de Diego."
+            - paragraph [ref=f5e292]
+            - paragraph [ref=f5e293]: "ORDEN DIARIO:"
+            - paragraph [ref=f5e294]: 1. Revisar respuestas de campaña. Contestar ayuda básica de registro/perfil/primera acción con producto verificado. Precios, condiciones, visitas, booking, alianzas o reclamos sensibles se escalan a Diego, sin ofrecer compromisos.
+            - paragraph [ref=f5e295]: 2. Revisar CRM y registro del día; normalizar handles quitando @, espacios y mayúsculas. Coincidencia EXACTA en campo instagram; no excluir por parecido de nombre. Si tiene cuenta, omitir nueva invitación; si existe sin cuenta, conservar su ficha y notas. Comprobar paginación y no tratar una respuesta truncada como base completa.
+            - paragraph [ref=f5e296]: "3. Seleccionar seguidores/interacciones pertinentes a música y la comunidad de TDF, priorizando vínculo local verificable. Leer perfil e hilo, comprobar identidad, pertinencia y ausencia de dudas de edad. Excluir menores/edad incierta, falsos o datos insuficientes. No inferir idioma por nombre, nacionalidad o apariencia: usar idioma declarado o demostrado en contenido propio/respuestas; si falta, dejar pendiente. No aceptar solicitudes de mensaje pendientes automáticamente."
+            - paragraph [ref=f5e297]: "4. Deduplicar documentos/CRM/hilo antes de cada envío. Si ya recibió invitación de campaña, no repetir. Historial anterior ajeno a la campaña NO excluye automáticamente: usar plantilla historial cuando corresponda. Rechazo/no-contacto: exclusión permanente, sin más promoción. No enviar recordatorios nuevos por una aprobación histórica vencida."
+            - paragraph [ref=f5e298]: "5. Preparar texto personalizado fiel a evidencia, comprobar destinatario, idioma, enlaces, texto exacto y guiones bajos antes del envío. Después comprobar el panel de ese hilo, no la vista previa de la bandeja: un único mensaje visible, compositor vacío y ausencia de fallo o estado Sending. Un resultado incierto se comprueba antes de cualquier reintento; no repetir a ciegas."
+            - paragraph [ref=f5e299]: "6. Solo tras envío confirmado, crear/actualizar CRM y añadir nota fechada sin sobrescribir: handle, nombre público, segmento/plantilla, hora Ecuador, campaña, mensaje exacto, estado y evidencia mínima. No copiar cédulas, teléfonos, correos u otros datos privados de conversaciones antiguas. No crear cuentas por los destinatarios. Si usas el endpoint CRM con Idempotency-Key, usa 16–128 letras ASCII, dígitos, guiones o guiones bajos; los puntos del handle no son válidos en esa cabecera."
+            - paragraph [ref=f5e300]: 7. Registrar cierre diario, total de perfiles y respuestas de ayuda por separado, pendientes y bloqueos. Distinguir envío visible, lectura, interés, registro, perfil completo y activación; nunca inferir conversiones, clics o métricas.
+            - paragraph [ref=f5e301]
+            - paragraph [ref=f5e302]: "PLANTILLAS: mantener saludo con nombre público y referencia cierta al trabajo observado; personalizar solo hechos comprobados. Nuevas invitaciones: 4 líneas, con enlace en la última y cierre «— TDF Records». NO incluir «Si no te interesa…» ni variantes. Para DJ: «Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella.» + «En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional:». Para músicos: «Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros.» + invitar a explorar artistas/lanzamientos y abrir cuenta general. Artistas/bandas: invitar a crear perfil con bio/enlaces y explorar otros proyectos. Fans: descubrir y seguir perfiles. Aliados: explorar y comentar qué les serviría; una conversación inicial no es una alianza acordada. Adaptar plural e idioma demostrado sin cambiar los destinos técnicos."
+            - paragraph [ref=f5e303]
+            - paragraph [ref=f5e304]: "HISTORIAL (5 líneas, adaptar nombre/plural/idioma):"
+            - paragraph [ref=f5e305]: Hola, [nombre] 👋 Te escribimos de TDF Records.
+            - paragraph [ref=f5e306]: "Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil."
+            - paragraph [ref=f5e307]: "¿Nos ayudas a probarla? Abre tu cuenta aquí: [registro general, utm_content=historial_cuenta]"
+            - paragraph [ref=f5e308]: "Y consulta cómo probar la app móvil aquí: [enlace /app, utm_content=historial_app]"
+            - paragraph [ref=f5e309]: Cualquier comentario nos sirve muchísimo. — TDF Records
+            - paragraph [ref=f5e310]
+            - paragraph [ref=f5e311]: "ENLACES: solo https://www.tdfrecords.net, destinos comprobados y UTM sin handles, nombres, correos, IDs personales ni referidos. Rechazar borradores con pages.dev. No invitar a eventos pasados ni prometer funciones, permisos automáticos o disponibilidad no comprobados. Explicar acceso móvil desde /app antes de promover instalación."
+            - paragraph [ref=f5e312]: Todos llevan utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto.
+            - paragraph [ref=f5e313]: "Artista: /login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a"
+            - paragraph [ref=f5e314]: "DJ: /login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a"
+            - paragraph [ref=f5e315]: "Músico general: /login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a"
+            - paragraph [ref=f5e316]: "Fan: /login?signup=1&intent=follow_artists&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a"
+            - paragraph [ref=f5e317]: "Aliado: /login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a"
+            - paragraph [ref=f5e318]: "Historial cuenta: /login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta"
+            - paragraph [ref=f5e319]: "Historial app: /app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app"
+            - paragraph [ref=f5e320]
+            - paragraph [ref=f5e321]: "ESTADO CONFIRMADO 14/oct/2026 22:51 Ecuador: diez perfiles contactados en la continuación local, todos verificados en hilo y CRM: djfaricho (301), djchristianleft (303), siniestrodj (304), mcbreker (305), metal.01.dj (306), dj_cristian.viveros (307), djcesargarcia23 (308), nax.dj.ec (309), djbrooww_ec (310), dj.luxopunk (311). Ayuda a djgavez (302), sin consumir cupo. No repetirlos. Último CRM304 contactos completos; verificar dato vivo antes de operar. MAEZ/daddymaez tiene solicitud pendiente, no aceptada; k_dj_project y dj_zyborg aún requieren más revisión. Los lotes previos del 12 y 13/oct también fueron enviados: revisar documento/CRM/hilos, no suponer pendientes. El Reel del piloto ya está publicado: no republicar. Estado del acceso cloud aún sin prueba de ejecución; si no dispone de navegador autenticado/CRM, reportar bloqueo sin enviar."
+            - paragraph [ref=f5e322]
+            - paragraph [ref=f5e323]: Ante advertencias, CAPTCHA, restricción, fallo de identidad, duplicación, envío incierto o rechazo de herramienta, detener la acción afectada sin eludir controles. No publicar, borrar mensajes, cambiar producto, desplegar ni negociar condiciones por esta tarea. Cierra cada ejecución con un informe breve y veraz.
+          - generic [ref=f5e326]:
+            - generic [ref=f5e327]:
+              - generic [ref=f5e328]: Repeat task
+              - switch "Repeat task" [checked] [ref=f5e332] [cursor=pointer]
+            - generic [ref=f5e335]:
+              - generic [ref=f5e336]: Repeat
+              - button "Repeat schedule" [ref=f5e340] [cursor=pointer]:
+                - generic [ref=f5e341]: Daily
+            - generic [ref=f5e344]:
+              - generic [ref=f5e345]: Time
+              - generic [ref=f5e349]:
+                - combobox "Time" [ref=f5e350] [cursor=pointer]: 8:00 AM Ecuador Time
+                - button "Time" [ref=f5e351] [cursor=pointer]
+            - generic [ref=f5e354]:
+              - generic [ref=f5e355]: End repeat
+              - button "End repeat" [ref=f5e359] [cursor=pointer]:
+                - generic [ref=f5e360]: Never
+          - generic [ref=f5e363]:
+            - button [expanded] [active] [ref=f5e364] [cursor=pointer]
+            - region "Advanced" [ref=f5e377]:
+              - generic [ref=f5e379]:
+                - generic [ref=f5e380]:
+                  - generic [ref=f5e381]: Time zone
+                  - button "Time zone" [ref=f5e385] [cursor=pointer]:
+                    - generic [ref=f5e386]: Ecuador Time
+                - generic [ref=f5e389]:
+                  - generic [ref=f5e390]: Runs in
+                  - generic [ref=f5e393]: Same chat for every run
+                - generic [ref=f5e395]:
+                  - generic [ref=f5e396]: Model
+                  - button "Model" [ref=f5e400] [cursor=pointer]:
+                    - generic [ref=f5e401]: GPT-6.1 Sol
+                - generic [ref=f5e405]:
+                  - generic [ref=f5e406]: Effort
+                  - button "Reasoning" [ref=f5e410] [cursor=pointer]:
+                    - generic [ref=f5e411]: Light
+      - generic [ref=f5e369]:
+        - group [ref=f5e370]:
+          - button "Resume" [ref=f5e371] [cursor=pointer]
+        - button "Save" [disabled] [ref=f5e372]
+    - button "Close dialog" [ref=f5e373] [cursor=pointer]

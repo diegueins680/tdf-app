@@ -13,5 +13,6 @@
   "ciTimeoutMinutes": 45,
   "stopOnNoChanges": false,
   "iterationDelaySeconds": 20,
-  "allowPushToMain": false
+  "allowPushToMain": false,
+  "pushBranch": "continuous-improvement/auto"
 }

@@ -1,0 +1,6 @@
+Artwork generated with the built-in image_gen tool.
+
+Prompt:
+Use case: illustration-story. Asset type: full-page artwork for a printable PDF of cute cats. Create a beautifully finished portrait illustration packed with twelve adorable kittens, in a charming hand-painted watercolor and colored-pencil storybook style on warm ivory paper. Varied ginger tabby, calico, tuxedo, gray, and white kittens with round expressive faces, tiny pink noses, fluffy fur and natural feline anatomy. Several snuggle in pairs, a few nap curled up, one stretches, one peeks out, and two sit with their tails curled around their paws. Arrange the kittens in a harmonious airy collage across the whole page, all bodies and ears fully inside the frame with comfortable print margins. Gentle pastel accents, soft shadows, cozy joyful mood, fine paper texture. No text, no lettering, no watermark. Portrait aspect ratio.
+
+PDF: A4 portrait with artwork fitted proportionally inside 18pt margins.

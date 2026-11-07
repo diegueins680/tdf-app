@@ -1,0 +1,210 @@
+- generic [ref=f78e7]:
+  - generic [ref=f78e9]:
+    - generic [ref=f78e12]:
+      - link [ref=f78e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f78e22]
+      - generic [ref=f78e25]:
+        - link [ref=f78e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f78e35]
+        - link [ref=f78e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f78e45]
+        - link [ref=f78e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f78e57]
+        - link [ref=f78e62] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f78e67]
+        - link [ref=f78e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f78e80]
+        - link [ref=f78e88] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f78e93]
+        - link [ref=f78e98] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f78e103]
+        - link [ref=f78e110] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f78e115]:
+            - img "tdf.records.label's profile picture" [ref=f78e116]
+      - generic [ref=f78e117]:
+        - link [ref=f78e120] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f78e125]
+        - link [ref=f78e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f78e135]
+    - main [ref=f78e139]:
+      - navigation "Thread list" [ref=f78e145]:
+        - generic [ref=f78e146]:
+          - generic [ref=f78e147]:
+            - button [ref=f78e148] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f78e150]
+              - img "Verified" [ref=f78e153]
+              - img "Down chevron icon" [ref=f78e156]
+            - generic [ref=f78e159]:
+              - button [ref=f78e160] [cursor=pointer]:
+                - img "More options" [ref=f78e162]
+              - button [ref=f78e166] [cursor=pointer]:
+                - img "New message" [ref=f78e168]
+          - tablist [ref=f78e173]:
+            - tab "Primary" [selected] [ref=f78e174] [cursor=pointer]
+            - tab "General" [ref=f78e177] [cursor=pointer]
+            - tab "From ads" [ref=f78e180] [cursor=pointer]
+            - tab "Requests" [ref=f78e184] [cursor=pointer]
+          - generic [ref=f78e190]:
+            - img "Search" [ref=f78e192]
+            - textbox "Search" [ref=f78e195]
+          - generic [ref=f78e196]:
+            - generic [ref=f78e198]:
+              - list [ref=f78e200]:
+                - listitem [ref=f78e201]
+                - listitem [ref=f78e202]:
+                  - button "First note in a while... Your note" [ref=f78e204] [cursor=pointer]:
+                    - generic [ref=f78e205]:
+                      - generic [ref=f78e206]: First note in a while...
+                      - generic [ref=f78e212]:
+                        - link [ref=f78e214]
+                        - generic [ref=f78e215]: Your note
+                - listitem [ref=f78e217]:
+                  - button "ya sáquenme de ec 😮‍💨 rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f78e220] [cursor=pointer]:
+                    - generic [ref=f78e221]:
+                      - generic [ref=f78e222]: ya sáquenme de ec 😮‍💨
+                      - generic [ref=f78e229]:
+                        - link [ref=f78e231]:
+                          - img "rojelioelrojorojas's profile picture" [ref=f78e232]
+                        - generic [ref=f78e233]: Andrés Martín Arauz
+                - listitem [ref=f78e236]:
+                  - button "🧘🏻‍♀️ kamala9music's profile picture 𝒦𝒶𝓂𝒶𝓁𝒶 ❀" [ref=f78e239] [cursor=pointer]:
+                    - generic [ref=f78e240]:
+                      - generic [ref=f78e241]: 🧘🏻‍♀️
+                      - generic [ref=f78e248]:
+                        - link [ref=f78e250]:
+                          - img "kamala9music's profile picture" [ref=f78e251]
+                        - generic [ref=f78e252]: 𝒦𝒶𝓂𝒶𝓁𝒶 ❀
+                - listitem [ref=f78e255]:
+                  - button "Me hace falta piercings reemus___'s profile picture REEMUS" [ref=f78e258] [cursor=pointer]:
+                    - generic [ref=f78e259]:
+                      - generic [ref=f78e260]: Me hace falta piercings
+                      - generic [ref=f78e267]:
+                        - link [ref=f78e269]:
+                          - img "reemus___'s profile picture" [ref=f78e270]
+                        - generic [ref=f78e271]: REEMUS
+                - listitem [ref=f78e274]:
+                  - button "Tranquila Avicci nicolas.bast_'s profile picture Nicolas Bast" [ref=f78e277] [cursor=pointer]:
+                    - generic [ref=f78e278]:
+                      - generic [ref=f78e279]: Tranquila Avicci
+                      - generic [ref=f78e286]:
+                        - link [ref=f78e288]:
+                          - img "nicolas.bast_'s profile picture" [ref=f78e289]
+                        - generic [ref=f78e290]: Nicolas Bast
+                - listitem [ref=f78e293]:
+                  - button "Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻 djmelissasantamaria's profile picture Melissa Santa María" [ref=f78e296] [cursor=pointer]:
+                    - generic [ref=f78e297]:
+                      - generic [ref=f78e298]: Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻
+                      - generic [ref=f78e305]:
+                        - link [ref=f78e307]:
+                          - img "djmelissasantamaria's profile picture" [ref=f78e308]
+                        - generic [ref=f78e309]: Melissa Santa María
+                - listitem [ref=f78e312]:
+                  - button "Te extrañaba mayita😭💻 agamycreamy's profile picture Dany Cadena" [ref=f78e315] [cursor=pointer]:
+                    - generic [ref=f78e316]:
+                      - generic [ref=f78e317]: Te extrañaba mayita😭💻
+                      - generic [ref=f78e324]:
+                        - link [ref=f78e326]:
+                          - img "agamycreamy's profile picture" [ref=f78e327]
+                        - generic [ref=f78e328]: Dany Cadena
+                - listitem [ref=f78e331]:
+                  - button "Tengo una salsita en la punta de la lengua 🎶 jofiel.arch.music's profile picture Jofiel.arch.music" [ref=f78e334] [cursor=pointer]:
+                    - generic [ref=f78e335]:
+                      - generic [ref=f78e336]: Tengo una salsita en la punta de la lengua 🎶
+                      - generic [ref=f78e343]:
+                        - link [ref=f78e345]:
+                          - img "jofiel.arch.music's profile picture" [ref=f78e346]
+                        - generic [ref=f78e347]: Jofiel.arch.music
+                - listitem [ref=f78e350]:
+                  - button "🖤🌑 quirola_777's profile picture QUIROLA" [ref=f78e353] [cursor=pointer]:
+                    - generic [ref=f78e354]:
+                      - generic [ref=f78e355]: 🖤🌑
+                      - generic [ref=f78e362]:
+                        - link [ref=f78e364]:
+                          - img "quirola_777's profile picture" [ref=f78e365]
+                        - generic [ref=f78e366]: QUIROLA
+              - button "Next" [ref=f78e369] [cursor=pointer]
+            - generic [ref=f78e373]:
+              - button "Partnership inbox icon Partnership messages Chevron icon to indicate entering the partnership inbox window" [ref=f78e374] [cursor=pointer]:
+                - generic [ref=f78e376]:
+                  - img "Partnership inbox icon" [ref=f78e379]
+                  - generic [ref=f78e383]: Partnership messages
+                  - img "Chevron icon to indicate entering the partnership inbox window" [ref=f78e389]
+              - generic [ref=f78e391]:
+                - 'button "user-profile-picture Josue Granizo Vallejo | Productor Musical You: Hola, Josué 👋 Vimos tu trabajo como músico y productor en Pankino Estudio. Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records a few seconds ago" [pressed] [ref=f78e395] [cursor=pointer]':
+                  - generic [ref=f78e397]:
+                    - img "user-profile-picture" [ref=f78e401]
+                    - generic [ref=f78e404]:
+                      - generic [ref=f78e405]: Josue Granizo Vallejo | Productor Musical
+                      - generic [ref=f78e411]:
+                        - generic [ref=f78e412]: "You: Hola, Josué 👋 Vimos tu trabajo como músico y productor en Pankino Estudio. Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a — TDF Records"
+                        - generic [ref=f78e414]:
+                          - generic [ref=f78e415]: ·
+                          - generic "a few seconds ago" [ref=f78e420]: 1m
+                - 'button "user-profile-picture Active Boris Medina | Músico, Ing Agrícola, permacultor, Emprendedor You: Hola, Boris 👋 Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta Y consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app Cualquier comentario nos sirve muchísimo. — TDF Records a few seconds ago" [ref=f78e424] [cursor=pointer]':
+                  - generic [ref=f78e426]:
+                    - generic [ref=f78e428]:
+                      - img "user-profile-picture" [ref=f78e430]
+                      - generic [ref=f78e431]: Active
+                    - generic [ref=f78e437]:
+                      - generic [ref=f78e438]: Boris Medina | Músico, Ing Agrícola, permacultor, Emprendedor
+                      - generic [ref=f78e444]:
+                        - generic [ref=f78e445]: "You: Hola, Boris 👋 Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta Y consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app Cualquier comentario nos sirve muchísimo. — TDF Records"
+                        - generic [ref=f78e447]:
+                          - generic [ref=f78e448]: ·
+                          - generic "a few seconds ago" [ref=f78e453]: 1m
+                - 'button "user-profile-picture Gabino Torres Music You: Hola, Gabino 👋 Vimos tu trabajo como músico y productor, y tus conciertos en el Teatro San Gabriel. Tu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF. Puedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena. https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records 2 minutes ago" [ref=f78e457] [cursor=pointer]':
+                  - generic [ref=f78e459]:
+                    - img "user-profile-picture" [ref=f78e463]
+                    - generic [ref=f78e466]:
+                      - generic [ref=f78e467]: Gabino Torres Music
+                      - generic [ref=f78e473]:
+                        - generic [ref=f78e474]: "You: Hola, Gabino 👋 Vimos tu trabajo como músico y productor, y tus conciertos en el Teatro San Gabriel. Tu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF. Puedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena. https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records"
+                        - generic [ref=f78e476]:
+                          - generic [ref=f78e477]: ·
+                          - generic "2 minutes ago" [ref=f78e482]: 2m
+                - 'button "user-profile-picture María Katherina Music You: Hola, María Katherina 👋 Vimos tu trabajo como vocalista y tu propuesta de experimentación visual y sonora. Tu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF. Puedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena. https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records 2 minutes ago" [ref=f78e486] [cursor=pointer]':
+                  - generic [ref=f78e488]:
+                    - img "user-profile-picture" [ref=f78e492]
+                    - generic [ref=f78e495]:
+                      - generic [ref=f78e496]: María Katherina Music
+                      - generic [ref=f78e502]:
+                        - generic [ref=f78e503]: "You: Hola, María Katherina 👋 Vimos tu trabajo como vocalista y tu propuesta de experimentación visual y sonora. Tu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF. Puedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena. https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a — TDF Records"
+                        - generic [ref=f78e505]:
+                          - generic [ref=f78e506]: ·
+                          - generic "2 minutes ago" [ref=f78e511]: 2m
+                - 'button "user-profile-picture Mentor musical | clases | asesorías You: Hola, Alexei 👋 Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta Y consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app Cualquier comentario nos sirve muchísimo. — TDF Records 3 minutes ago" [ref=f78e515] [cursor=pointer]':
+                  - generic [ref=f78e517]:
+                    - img "user-profile-picture" [ref=f78e521]
+                    - generic [ref=f78e524]:
+                      - generic [ref=f78e525]: Mentor musical | clases | asesorías
+                      - generic [ref=f78e531]:
+                        - generic [ref=f78e532]: "You: Hola, Alexei 👋 Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta Y consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app Cualquier comentario nos sirve muchísimo. — TDF Records"
+                        - generic [ref=f78e534]:
+                          - generic [ref=f78e535]: ·
+                          - generic "3 minutes ago" [ref=f78e540]: 3m
+                - button [ref=f78e575] [cursor=pointer]:
+                  - generic [ref=f78e577]:
+                    - status "Loading..." [ref=f78e580]
+                    - generic [ref=f78e583]:
+                      - status "Loading..." [ref=f78e585]
+                      - status "Loading..." [ref=f78e587]
+  - button [ref=f78e592] [cursor=pointer]:
+    - tooltip "Comments 1 Like 2" [ref=f78e594]:
+      - generic [ref=f78e596]:
+        - generic [ref=f78e597]:
+          - generic "Comments" [ref=f78e598]
+          - generic [ref=f78e599]: "1"
+        - generic [ref=f78e601]:
+          - generic "Like" [ref=f78e602]
+          - generic [ref=f78e603]: "2"

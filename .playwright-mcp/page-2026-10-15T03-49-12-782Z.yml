@@ -1,0 +1,328 @@
+- generic [ref=f39e7]:
+  - generic [ref=f39e9]:
+    - generic [ref=f39e12]:
+      - link [ref=f39e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f39e22]
+      - generic [ref=f39e25]:
+        - link [ref=f39e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f39e35]
+        - link [ref=f39e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f39e45]
+        - link [ref=f39e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f39e55]:
+            - img "Messages" [ref=f39e57]
+            - generic "Direct messaging - 4 new notifications link" [ref=f39e59]: "4"
+        - link [ref=f39e65] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f39e70]
+        - link [ref=f39e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f39e83]
+        - link [ref=f39e91] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f39e96]
+        - link [ref=f39e101] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f39e106]
+        - link [ref=f39e113] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f39e118]:
+            - img "tdf.records.label's profile picture" [ref=f39e119]
+      - generic [ref=f39e120]:
+        - link [ref=f39e123] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f39e128]
+        - link [ref=f39e133] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f39e138]
+    - main [ref=f39e142]:
+      - generic [ref=f39e147]:
+        - navigation "Thread list" [ref=f39e148]:
+          - generic [ref=f39e149]:
+            - generic [ref=f39e150]:
+              - button [ref=f39e151] [cursor=pointer]:
+                - heading "tdf.records.label" [level=2] [ref=f39e153]
+                - img "Verified" [ref=f39e156]
+                - img "Down chevron icon" [ref=f39e159]
+              - generic [ref=f39e162]:
+                - button [ref=f39e163] [cursor=pointer]:
+                  - img "More options" [ref=f39e165]
+                - button [ref=f39e169] [cursor=pointer]:
+                  - img "New message" [ref=f39e171]
+            - tablist [ref=f39e176]:
+              - tab "Primary" [selected] [ref=f39e177] [cursor=pointer]
+              - tab "General" [ref=f39e180] [cursor=pointer]
+              - tab "From ads" [ref=f39e183] [cursor=pointer]
+              - tab "Requests" [ref=f39e187] [cursor=pointer]
+            - generic [ref=f39e193]:
+              - img "Search" [ref=f39e195]
+              - textbox "Search" [ref=f39e198]
+            - generic [ref=f39e199]:
+              - generic [ref=f39e201]:
+                - list [ref=f39e203]:
+                  - listitem [ref=f39e204]
+                  - listitem [ref=f39e205]:
+                    - button "First note in a while... Your note" [ref=f39e207] [cursor=pointer]:
+                      - generic [ref=f39e208]:
+                        - generic [ref=f39e209]: First note in a while...
+                        - generic [ref=f39e215]:
+                          - link [ref=f39e217]
+                          - generic [ref=f39e218]: Your note
+                  - listitem [ref=f39e220]:
+                    - button "Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻 djmelissasantamaria's profile picture Melissa Santa María" [ref=f39e223] [cursor=pointer]:
+                      - generic [ref=f39e224]:
+                        - generic [ref=f39e225]: Coyote Vs Acme increíble analogía a la experimentación en animales👌🏻
+                        - generic [ref=f39e232]:
+                          - link [ref=f39e234]:
+                            - img "djmelissasantamaria's profile picture" [ref=f39e235]
+                          - generic [ref=f39e236]: Melissa Santa María
+                  - listitem [ref=f39e239]:
+                    - button "ya sáquenme de ec 😮‍💨 rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f39e242] [cursor=pointer]:
+                      - generic [ref=f39e243]:
+                        - generic [ref=f39e244]: ya sáquenme de ec 😮‍💨
+                        - generic [ref=f39e251]:
+                          - link [ref=f39e253]:
+                            - img "rojelioelrojorojas's profile picture" [ref=f39e254]
+                          - generic [ref=f39e255]: Andrés Martín Arauz
+                  - listitem [ref=f39e258]:
+                    - button "YA TENGO OUTFIIITTT roma.mpeg's profile picture roma ☆" [ref=f39e261] [cursor=pointer]:
+                      - generic [ref=f39e262]:
+                        - generic [ref=f39e263]: YA TENGO OUTFIIITTT
+                        - generic [ref=f39e270]:
+                          - link [ref=f39e272]:
+                            - img "roma.mpeg's profile picture" [ref=f39e273]
+                          - generic [ref=f39e274]: roma ☆
+                  - listitem [ref=f39e277]:
+                    - button "🧘🏻‍♀️ kamala9music's profile picture 𝒦𝒶𝓂𝒶𝓁𝒶 ❀" [ref=f39e280] [cursor=pointer]:
+                      - generic [ref=f39e281]:
+                        - generic [ref=f39e282]: 🧘🏻‍♀️
+                        - generic [ref=f39e289]:
+                          - link [ref=f39e291]:
+                            - img "kamala9music's profile picture" [ref=f39e292]
+                          - generic [ref=f39e293]: 𝒦𝒶𝓂𝒶𝓁𝒶 ❀
+                  - listitem [ref=f39e296]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Fear Of The Dark (Live; 1998 Remastered Version) Iron Maiden ES HOY 🖤🔥 saraking30's profile picture Sara King" [ref=f39e299] [cursor=pointer]:
+                      - generic [ref=f39e300]:
+                        - generic [ref=f39e306]:
+                          - generic [ref=f39e307]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f39e309]
+                            - generic [ref=f39e313]: Fear Of The Dark (Live; 1998 Remastered Version)
+                          - generic [ref=f39e314]: Iron Maiden
+                          - generic [ref=f39e315]: ES HOY 🖤🔥
+                        - generic [ref=f39e316]:
+                          - link [ref=f39e318]:
+                            - img "saraking30's profile picture" [ref=f39e319]
+                          - generic [ref=f39e320]: Sara King
+                  - listitem [ref=f39e323]:
+                    - button "💛 ceallii's profile picture Selina ⵥ" [ref=f39e326] [cursor=pointer]:
+                      - generic [ref=f39e327]:
+                        - generic [ref=f39e328]: 💛
+                        - generic [ref=f39e335]:
+                          - link [ref=f39e337]:
+                            - img "ceallii's profile picture" [ref=f39e338]
+                          - generic [ref=f39e339]: Selina ⵥ
+                  - listitem [ref=f39e342]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner La Gloria Eres Tú Los Tres Diamantes giann__fer's profile picture Gian" [ref=f39e345] [cursor=pointer]:
+                      - generic [ref=f39e346]:
+                        - generic [ref=f39e352]:
+                          - generic [ref=f39e353]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f39e355]
+                            - generic [ref=f39e359]: La Gloria Eres Tú
+                          - generic [ref=f39e360]: Los Tres Diamantes
+                        - generic [ref=f39e361]:
+                          - link [ref=f39e363]:
+                            - img "giann__fer's profile picture" [ref=f39e364]
+                          - generic [ref=f39e365]: Gian
+                  - listitem [ref=f39e368]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Hueso y Carne Explicit Sam27 tamagochi_bb's profile picture Tamagochi" [ref=f39e371] [cursor=pointer]:
+                      - generic [ref=f39e372]:
+                        - generic [ref=f39e378]:
+                          - generic [ref=f39e379]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f39e381]
+                            - generic [ref=f39e385]: Hueso y Carne
+                            - img "Explicit" [ref=f39e387]
+                          - generic [ref=f39e389]: Sam27
+                        - generic [ref=f39e390]:
+                          - link [ref=f39e392]:
+                            - img "tamagochi_bb's profile picture" [ref=f39e393]
+                          - generic [ref=f39e394]: Tamagochi
+                - button "Next" [ref=f39e397] [cursor=pointer]
+              - generic [ref=f39e401]:
+                - button "Partnership inbox icon Partnership messages Chevron icon to indicate entering the partnership inbox window" [ref=f39e402] [cursor=pointer]:
+                  - generic [ref=f39e404]:
+                    - img "Partnership inbox icon" [ref=f39e407]
+                    - generic [ref=f39e411]: Partnership messages
+                    - img "Chevron icon to indicate entering the partnership inbox window" [ref=f39e417]
+                - generic [ref=f39e419]:
+                  - 'button "user-profile-picture Xavo Almeida | NAX Dj | Dj Crossover You: Hola, Xavo 👋 Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta Y consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app Cualquier comentario nos sirve muchísimo. — TDF Records a few seconds ago" [pressed] [ref=f39e423] [cursor=pointer]':
+                    - generic [ref=f39e425]:
+                      - img "user-profile-picture" [ref=f39e429]
+                      - generic [ref=f39e432]:
+                        - generic [ref=f39e433]: Xavo Almeida | NAX Dj | Dj Crossover
+                        - generic [ref=f39e439]:
+                          - generic [ref=f39e440]: "You: Hola, Xavo 👋 Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta Y consulta cómo probar la app móvil aquí: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app Cualquier comentario nos sirve muchísimo. — TDF Records"
+                          - generic [ref=f39e442]:
+                            - generic [ref=f39e443]: ·
+                            - generic "a few seconds ago" [ref=f39e448]: 1m
+                  - 'button "user-profile-picture Dj César García You: Hola, César 👋 Vimos tu trabajo como DJ de afro house, tech house y deep house. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records a few seconds ago" [ref=f39e452] [cursor=pointer]':
+                    - generic [ref=f39e454]:
+                      - img "user-profile-picture" [ref=f39e458]
+                      - generic [ref=f39e461]:
+                        - generic [ref=f39e462]: Dj César García
+                        - generic [ref=f39e468]:
+                          - generic [ref=f39e469]: "You: Hola, César 👋 Vimos tu trabajo como DJ de afro house, tech house y deep house. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records"
+                          - generic [ref=f39e471]:
+                            - generic [ref=f39e472]: ·
+                            - generic "a few seconds ago" [ref=f39e477]: 1m
+                  - 'button "user-profile-picture Dj Cristian Viveros You: Hola, Cristian 👋 Vimos tu trabajo como DJ y productor. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records a few seconds ago" [ref=f39e481] [cursor=pointer]':
+                    - generic [ref=f39e483]:
+                      - img "user-profile-picture" [ref=f39e487]
+                      - generic [ref=f39e490]:
+                        - generic [ref=f39e491]: Dj Cristian Viveros
+                        - generic [ref=f39e497]:
+                          - generic [ref=f39e498]: "You: Hola, Cristian 👋 Vimos tu trabajo como DJ y productor. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records"
+                          - generic [ref=f39e500]:
+                            - generic [ref=f39e501]: ·
+                            - generic "a few seconds ago" [ref=f39e506]: 1m
+                  - 'button "user-profile-picture Diego Villacís You: Hola, Diego 👋 Vimos tu trabajo como DJ y productor de acid techno. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records a few seconds ago" [ref=f39e510] [cursor=pointer]':
+                    - generic [ref=f39e512]:
+                      - img "user-profile-picture" [ref=f39e516]
+                      - generic [ref=f39e519]:
+                        - generic [ref=f39e520]: Diego Villacís
+                        - generic [ref=f39e526]:
+                          - generic [ref=f39e527]: "You: Hola, Diego 👋 Vimos tu trabajo como DJ y productor de acid techno. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records"
+                          - generic [ref=f39e529]:
+                            - generic [ref=f39e530]: ·
+                            - generic "a few seconds ago" [ref=f39e535]: 1m
+                  - 'button "user-profile-picture mc breker SINGER&DJ You: Hola, MC Breker 👋 Vimos tus DJ sessions y tu recorrido entre deep, afro, funky y sonidos latinos. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records 6 minutes ago" [ref=f39e539] [cursor=pointer]':
+                    - generic [ref=f39e541]:
+                      - img "user-profile-picture" [ref=f39e545]
+                      - generic [ref=f39e548]:
+                        - generic [ref=f39e549]: mc breker SINGER&DJ
+                        - generic [ref=f39e555]:
+                          - generic [ref=f39e556]: "You: Hola, MC Breker 👋 Vimos tus DJ sessions y tu recorrido entre deep, afro, funky y sonidos latinos. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a — TDF Records"
+                          - generic [ref=f39e558]:
+                            - generic [ref=f39e559]: ·
+                            - generic "6 minutes ago" [ref=f39e564]: 6m
+                  - button [ref=f39e599] [cursor=pointer]:
+                    - generic [ref=f39e601]:
+                      - status "Loading..." [ref=f39e604]
+                      - generic [ref=f39e607]:
+                        - status "Loading..." [ref=f39e609]
+                        - status "Loading..." [ref=f39e611]
+        - generic [ref=f39e616]:
+          - generic [ref=f39e620]:
+            - link "Open the profile page of nax.dj.ec" [ref=f39e621] [cursor=pointer]:
+              - /url: /nax.dj.ec/
+              - generic [ref=f39e622]:
+                - img "user-profile-picture" [ref=f39e626]
+                - generic [ref=f39e627]:
+                  - heading "Xavo Almeida | NAX Dj | Dj Crossover" [level=2] [ref=f39e629]
+                  - generic [ref=f39e631]: nax.dj.ec
+            - generic [ref=f39e635]:
+              - button [ref=f39e636] [cursor=pointer]:
+                - img "Audio call" [ref=f39e638]
+              - button [ref=f39e640] [cursor=pointer]:
+                - img "Video call" [ref=f39e642]
+              - button [ref=f39e645] [cursor=pointer]:
+                - img "Conversation information" [ref=f39e647]
+          - generic [ref=f39e651]:
+            - generic [ref=f39e655]:
+              - generic [ref=f39e656]:
+                - img "user-profile-picture" [ref=f39e660]
+                - generic [ref=f39e661]:
+                  - heading "Xavo Almeida | NAX Dj | Dj Crossover" [level=2] [ref=f39e664]
+                  - generic [ref=f39e666]: nax.dj.ec · Instagram
+                  - link "View profile" [ref=f39e669] [cursor=pointer]:
+                    - /url: /nax.dj.ec/
+              - generic [ref=f39e670]:
+                - generic [ref=f39e683]:
+                  - generic [ref=f39e684]: 8/7/25, 11:48 AM
+                  - group [ref=f39e687]:
+                    - generic [ref=f39e690]:
+                      - article [ref=f39e691]:
+                        - generic [ref=f39e694]:
+                          - text: Hola Xavo, ¡qué emoción que estés interesado! Soy Camila de TDF Estudio
+                          - img "🎶" [ref=f39e696]
+                          - text: ". Te comparto información sobre nuestro curso de producción musical: * Duración: 24 horas de clases (4 por semana durante 6 semanas). * Teoría: Música 1, construcción, armonía, historia de la música electrónica, entre otros. * Proyecto final: Terminarás con tu propia canción lista para lanzar. * Gestión profesional: Te ayudamos a crear tus perfiles en plataformas de streaming para que tu música llegue a todo el mundo."
+                          - img "🚀" [ref=f39e698]
+                          - text: "* Costo: $480 Nuestras clases son 100% individuales y personalizadas, con horarios flexibles para adaptarnos a ti. Además, te ofrecemos una clase de prueba gratuita, para que experimentes todo lo que TDF tiene para ti antes de empezar."
+                          - img "📍" [ref=f39e700]
+                          - text: Estamos en la Quito, en la Félix Oralabal y calle C, Quito. Dime si tienes alguna pregunta o quieres apartar tu cupo.
+                      - generic [ref=f39e701]:
+                        - group "Message actions":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button "React to message from tdf.records.label":
+                                  - generic:
+                                    - img "React to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "Reply to message from tdf.records.label":
+                                  - generic:
+                                    - img "Reply to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "See more options for message from tdf.records.label":
+                                  - generic:
+                                    - img "See more options for message from tdf.records.label"
+                - generic [ref=f39e704]:
+                  - generic [ref=f39e705]: 10:49 PM
+                  - group [ref=f39e708]:
+                    - generic [ref=f39e711]:
+                      - article [ref=f39e712]:
+                        - generic [ref=f39e714]:
+                          - generic [ref=f39e717]:
+                            - text: Hola, Xavo
+                            - img "👋" [ref=f39e719]
+                            - text: "Te escribimos de TDF Records. Estamos abriendo la plataforma de TDF para la escena: perfiles de artistas, lanzamientos y nuestra app móvil. ¿Nos ayudas a probarla? Abre tu cuenta aquí:"
+                            - link "https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta" [ref=f39e721] [cursor=pointer]:
+                              - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta
+                            - text: "Y consulta cómo probar la app móvil aquí:"
+                            - link "https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app" [ref=f39e723] [cursor=pointer]:
+                              - /url: https://www.tdfrecords.net/app?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_app
+                            - text: Cualquier comentario nos sirve muchísimo. — TDF Records
+                          - link "TDF Records" [ref=f39e724] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=historial_cuenta
+                      - generic [ref=f39e729]:
+                        - group "Message actions":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button "React to message from tdf.records.label":
+                                  - generic:
+                                    - img "React to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "Reply to message from tdf.records.label":
+                                  - generic:
+                                    - img "Reply to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "See more options for message from tdf.records.label":
+                                  - generic:
+                                    - img "See more options for message from tdf.records.label"
+            - generic [ref=f39e739]:
+              - button [ref=f39e742] [cursor=pointer]:
+                - img "Choose an emoji" [ref=f39e744]
+              - generic [ref=f39e746]:
+                - textbox [active] [ref=f39e747]:
+                  - paragraph [ref=f39e748]
+                - generic: Message...
+              - generic [ref=f39e749]:
+                - button [ref=f39e750] [cursor=pointer]:
+                  - img "Voice Clip" [ref=f39e752]
+                - button [ref=f39e755] [cursor=pointer]:
+                  - img "Add Photo or Video" [ref=f39e757]
+                - button [ref=f39e762] [cursor=pointer]:
+                  - img "Choose a GIF or sticker" [ref=f39e764]
+  - button [ref=f39e771] [cursor=pointer]:
+    - tooltip "Like 2" [ref=f39e773]:
+      - generic [ref=f39e776]:
+        - generic "Like" [ref=f39e777]
+        - generic [ref=f39e778]: "2"
