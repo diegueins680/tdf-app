@@ -25927,6 +25927,77 @@
         "reason": "The visual asset pipeline is specified; current verification receipts record the tested source and browser, while canonical publication and OS cache behavior are separate obligations."
       },
       "property": "Generated icon artwork preserves official SVG geometry, has sufficient foreground/background contrast, matches its declared dimensions and is reachable through the page and manifest icon references."
+    },
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001",
+      "title": "Consistent event finance reporting currency",
+      "statement": "Refuse single-currency summary and budget totals until every contributing nonzero amount matches the resolved event currency. Refuse an unreportable budget edit before its first write; preserve intentional foreign-currency entry authoring.",
+      "domain": "PAY",
+      "authority": "Explicit owner decision 2026-10-29: Refuse totals until contributing amounts match the event currency. Existing authoring validator and compatibility tests permit explicit foreign currencies.",
+      "source": "formal/system/event-finance-report-currency.md",
+      "contract": "formal/system/event-finance-report-currency.md",
+      "property": "No successful total relabels, converts or discards a nonzero contributing currency mismatch. Existing contributor filters, canonical exclusion, free tickets and foreign void/cancelled/unrelated rows remain.",
+      "actors": [
+        "Authorized event manager",
+        "Event budget/finance report reader"
+      ],
+      "preconditions": [
+        "Existing authorization and stored metadata/dimension validation",
+        "Existing observed contributor boundaries"
+      ],
+      "inputs": [
+        "Resolved event reporting currency",
+        "Selected manual, legacy and canonical ticket amounts",
+        "Budget-line observed posted actual entries"
+      ],
+      "state": {
+        "initial": "Selected persisted report inputs",
+        "terminal": [
+          "Consistent single-currency response",
+          "HTTP500 currency refusal before budget edit writes"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain explicit foreign-currency entries for individual reporting",
+        "Report amounts matching explicit or default event currency",
+        "Ignore only rows already outside contribution filters and zero amounts"
+      ],
+      "forbiddenTransitions": [
+        "Label foreign contributions with the event currency",
+        "Silently drop or convert a contributing foreign amount",
+        "Begin budget edit writes before refusing observed foreign actuals"
+      ],
+      "effects": [
+        "Read-only monetary reporting",
+        "Existing authorized budget update after its actual is reportable"
+      ],
+      "authorization": "No change to event management, provider, strict-admin or settlement authority.",
+      "privacy": "Synthetic native fixtures; no real customer/provider data.",
+      "concurrency": "Existing separate reads remain; no new serializable snapshot guarantee.",
+      "idempotency": "Same observed inputs produce same currency decision; no new provider calls or retry authority.",
+      "failure": "HTTP500 contributing-currency mismatch; range and existing stored metadata refusals retained.",
+      "recovery": "Authorized source correction or an explicitly specified future currency conversion design; do not modify financial rows to hide a mismatch.",
+      "observability": "Source-bound real handler baseline assertions, mutation controls and CI source selection.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real-handler regression and compatibility executions; source-bounded native receipts recorded separately. No complete refinement proof.",
+      "evidence": "formal/system/event-finance-report-currency.md; reports/event-finance-report-currency-2026-10-29.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Explicit owner policy and actual create/store/summary counterexample; runtime qualification bound to source commits.",
+      "ambiguity": [
+        "Historical mixed-currency rows may block reports until authorized reconciliation; no exchange rates are available.",
+        "Production PostgreSQL concurrency/provider/deployment correspondence remains unproven."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite native real-handler verification; complete implementation and refinement proofs remain unknown."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -27525,7 +27596,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "94690a5d558fa02fb4bc228da9fb7adff08e96a49998aa4950215a25a6d18ce3",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "be6673f9cb711b9ab8c7c841bb3b345935e0fbdc445b4f207eb2a930f2d24e9a",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
@@ -27644,7 +27715,7 @@
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
-    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "71751f49567e1053855c6423f1cbce2f8bcd907757fa0875f16a275cb922e705",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "09b751900fbcf2f2b7132cbe057e69c65b3d202a45351144bd4dc45d634707c0",
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -33407,6 +33478,10 @@
       {
         "requirement": "EVT-PLANNING-UX-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": [
@@ -33568,6 +33643,10 @@
       },
       {
         "requirement": "EVT-CITY-SUBSCRIPTION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
         "relationship": "tests"
       }
     ],
@@ -70831,7 +70910,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "94690a5d558fa02fb4bc228da9fb7adff08e96a49998aa4950215a25a6d18ce3",
+      "sha256": "be6673f9cb711b9ab8c7c841bb3b345935e0fbdc445b4f207eb2a930f2d24e9a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70956,6 +71035,10 @@
         },
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
           "relationship": "implementation"
         }
       ]
@@ -73658,7 +73741,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "71751f49567e1053855c6423f1cbce2f8bcd907757fa0875f16a275cb922e705",
+      "sha256": "09b751900fbcf2f2b7132cbe057e69c65b3d202a45351144bd4dc45d634707c0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73711,6 +73794,10 @@
         },
         {
           "requirement": "EVT-CITY-SUBSCRIPTION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
           "relationship": "tests"
         }
       ]
@@ -79640,7 +79727,8 @@
     "CONTRACT-STORE-001",
     "ID-PARTY-REFERENCE-REGISTRY-001",
     "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
-    "PAY-DATAFAST-001"
+    "PAY-DATAFAST-001",
+    "PAY-EVENT-REPORT-CURRENCY-001"
   ],
   "stateMachines": [
     {
@@ -80757,7 +80845,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d64212cc2b5ff71b2205678c8ac884987445376dff66006e37112fff8adbff43",
+      "sourceSha256": "59d562fd9c23d57c35c96f602c3c0245d2a344ed1752018b142c9d0635589ea0",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -80785,7 +80873,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d64212cc2b5ff71b2205678c8ac884987445376dff66006e37112fff8adbff43",
+      "sourceSha256": "59d562fd9c23d57c35c96f602c3c0245d2a344ed1752018b142c9d0635589ea0",
       "definition": {
         "states": [
           "absent",
@@ -80815,7 +80903,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d64212cc2b5ff71b2205678c8ac884987445376dff66006e37112fff8adbff43",
+      "sourceSha256": "59d562fd9c23d57c35c96f602c3c0245d2a344ed1752018b142c9d0635589ea0",
       "definition": {
         "export": [
           "queued",
@@ -103768,7 +103856,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 199,
+    "PARTIAL": 200,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
