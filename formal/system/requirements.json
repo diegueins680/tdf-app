@@ -8398,7 +8398,8 @@
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.ts",
         "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
-        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql",
+        "scripts/lib/test-child-completion.mjs"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
