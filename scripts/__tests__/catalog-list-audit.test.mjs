@@ -24,6 +24,16 @@ const REGISTRY_REFRESH_ENTRY = '2026-09-18_identity_review_dependencies';
 // earlier reviews are verified over the manifest without that entry.
 const SESSION_EXPIRY_ENTRY = '2026-10-31_api_token_session_expiry';
 const auditView = entries => entries.filter(entry => entry.id !== SESSION_EXPIRY_ENTRY);
+// Only this PR's exact two appended entries are omitted from older historical
+// views. A separate current248 assertion below validates both rows and all246
+// unchanged entries; unrelated future additions are never filtered away.
+const EVENT_WATCH_AUTH_ENTRY = '2026-10-21_event_watch_service_auth';
+const EVENT_WATCH_GUARD_ENTRY = '2026-11-07_event_watch_archived_actor_guard';
+const beforeEventWatchEntries = entries => entries.filter(entry =>
+  entry.id !== EVENT_WATCH_AUTH_ENTRY && entry.id !== EVENT_WATCH_GUARD_ENTRY);
+const beforeEventWatchReview = decision => decision.id === '43457df535d339e95879'
+  ? decision.previousDecision : decision;
+
 const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
   if (entry.id !== REGISTRY_REFRESH_ENTRY) return entry;
   const { compatibleAppliedChecksums, ...reviewed } = entry;
@@ -148,7 +158,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.ok(!active.some(entry => entry.id === previous.id));
   const storageMerge = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
   const rawManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && !storageMerge.storageMigrationIds.includes(entry.id));
+    'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== EVENT_WATCH_AUTH_ENTRY && entry.id !== EVENT_WATCH_GUARD_ENTRY && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && !storageMerge.storageMigrationIds.includes(entry.id));
   const manifest = asReviewedBeforeRegistryRefresh(rawManifest);
   assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
   assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
@@ -198,7 +208,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(decision220.evidence.valueCount, 220);
   const pointer = successors.find(entry => entry.name === 'migrations');
   const latestCurrent = active.find(entry => entry.id === pointer.currentId);
-  const finalCurrent = latestCurrent.previousDecision.previousDecision.previousDecision;
+  const finalCurrent = beforeEventWatchReview(latestCurrent).previousDecision.previousDecision.previousDecision;
   assert.equal(finalCurrent?.reviewed, true);
   const history = []; const seen = new Set();
   const visit = value => {
@@ -432,12 +442,12 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
   assert.equal(pointer.currentId, latestCurrent.id);
-  assert.equal(pointer.valueCount, 246);
+  assert.equal(pointer.valueCount, 248);
   assert.equal(pointer.change, latestCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, latestCurrent.id);
   assert.equal(retirement.currentResolution.id, latestCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 246);
+  assert.equal(retirement.currentResolution.valueCount, 248);
   assert.equal(retirement.reason, latestCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
@@ -728,10 +738,10 @@ test('ticket main merge retains stale approvals only as provenance', async () =>
 
 test('storage/main integration preserves both exact parent reviews and manifest views', async () => {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references');
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== EVENT_WATCH_AUTH_ENTRY && entry.id !== EVENT_WATCH_GUARD_ENTRY && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references');
   const { active, successors } = await readReconciliation();
   const extension = active.find(entry => entry.id === successors.find(item => item.name === 'migrations').currentId);
-  const current = extension.previousDecision.previousDecision;
+  const current = beforeEventWatchReview(extension).previousDecision.previousDecision;
   const canonicalHash = value => createHash('sha256').update(JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
   assert.equal(manifest.length, 244);
   assert.equal(canonicalHash(manifest.slice(0, 239)), ledger.protectedMainPrefixCanonicalSha256);
@@ -750,12 +760,12 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   const main = 'e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324';
   const introduction = '4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5';
   const old = JSON.parse((await execFileAsync('git', ['show', `${main}:scripts/production-migrations.json`], { cwd: workspaceRoot })).stdout).migrations;
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations;
+  const current = beforeEventWatchEntries(JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations);
   const decisionsPath = 'docs/catalog-persistence/catalog-list-decisions.json';
   const priorDecisions = JSON.parse((await execFileAsync('git', ['show', `${main}:${decisionsPath}`], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout);
   const decisions = JSON.parse(await fs.readFile(path.join(workspaceRoot, decisionsPath), 'utf8'));
   const latest = decisions.decisions.find(item => item.evidence?.file === 'scripts/production-migrations.json');
-  const videoReview = latest.previousDecision;
+  const videoReview = beforeEventWatchReview(latest).previousDecision;
   assert.equal(videoReview.id, '969410f2f45854cc54fc');
   assert.deepEqual(videoReview.previousDecision,
     priorDecisions.decisions.find(item => item.id === 'be0b1503a04f9fa295ee'));
@@ -774,4 +784,48 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   assert.deepEqual(videoReview, priorReview);
   assert.equal(await fs.readFile(path.join(workspaceRoot, current[245].path), 'utf8'), (await execFileAsync('git', ['show', forward + ':' + current[245].path], { cwd: workspaceRoot })).stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', forward, 'HEAD'], { cwd: workspaceRoot });
+});
+
+
+test('event-watch248 preserves the complete protected246 manifest/review and exact additive source introductions', async () => {
+  const main = 'f615c862b1a7d50406cc0506d21d7650e607fa5f';
+  const manifestPath = 'scripts/production-migrations.json';
+  const prior = JSON.parse((await execFileAsync('git', ['show', `${main}:${manifestPath}`], { cwd: workspaceRoot })).stdout).migrations;
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8')).migrations;
+  assert.equal(prior.length, 246);
+  assert.equal(current.length, 248);
+  assert.deepEqual(current.slice(0, 246), prior);
+  assert.deepEqual(beforeEventWatchEntries(current), prior);
+  assert.deepEqual(current[246], { id: EVENT_WATCH_AUTH_ENTRY, path: 'tdf-hq/sql/2026-10-21_event_watch_service_auth.sql', introducedBy: '1cb1dada1ec2bfdd1abc3d4d4053979ba482f287' });
+  assert.deepEqual(current[247], { id: EVENT_WATCH_GUARD_ENTRY, path: 'tdf-hq/sql/2026-11-07_event_watch_archived_actor_guard.sql', introducedBy: '06d425070c47b1668c9136d5258656d98a9eb158' });
+  for (const entry of current.slice(246)) {
+    assert.equal(await fs.readFile(path.join(workspaceRoot, entry.path), 'utf8'),
+      (await execFileAsync('git', ['show', `${entry.introducedBy}:${entry.path}`], { cwd: workspaceRoot })).stdout);
+    await execFileAsync('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: workspaceRoot });
+  }
+  const decisionsPath = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const oldDecisions = JSON.parse((await execFileAsync('git', ['show', `${main}:${decisionsPath}`], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout);
+  const { active, successors, integration } = await readReconciliation();
+  const review = active.find(entry => entry.id === '43457df535d339e95879');
+  assert.equal(review.reviewed, true);
+  assert.equal(review.evidence.valueCount, 248);
+  assert.deepEqual(review.previousDecision, oldDecisions.decisions.find(entry => entry.id === '806180f5957fc4a7520f'));
+  const oldPointers = JSON.parse((await execFileAsync('git', ['show', `${main}:docs/catalog-persistence/event-catalog-current-successors.json`], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout);
+  const pointer = successors.find(entry => entry.name === 'migrations');
+  assert.equal(pointer.currentId, review.id);
+  assert.equal(pointer.valueCount, 248);
+  const reconstructedPointer = { ...pointer, ...pointer.eventWatchPreviousResolution,
+    sourceReviewReferences: pointer.sourceReviewReferences.slice(0, -1), previousCurrentIds: pointer.previousCurrentIds.slice(0, -1) };
+  delete reconstructedPointer.eventWatchPreviousResolution;
+  assert.deepEqual(reconstructedPointer, oldPointers.successors.find(entry => entry.name === 'migrations'));
+  assert.ok(pointer.previousCurrentIds.includes(review.previousDecision.id));
+  const oldRetirements = JSON.parse((await execFileAsync('git', ['show', `${main}:docs/catalog-persistence/event-integration-retirements.json`], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout);
+  const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
+  assert.equal(retirement.replacementId, review.id);
+  assert.equal(retirement.currentResolution.valueCount, 248);
+  const reconstructedRetirement = { ...retirement, ...retirement.eventWatchPreviousResolution,
+    sourceReviewReferences: retirement.sourceReviewReferences.slice(0, -1), previousReplacementIds: retirement.previousReplacementIds.slice(0, -1) };
+  delete reconstructedRetirement.eventWatchPreviousResolution;
+  assert.deepEqual(reconstructedRetirement, oldRetirements.retirements.find(entry => entry.source.name === 'migrations'));
+  assert.ok(retirement.previousReplacementIds.includes(review.previousDecision.id));
 });
